@@ -21,8 +21,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+
+from ....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ....application.prorrata_register.service import ProrrataRegisterService
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES

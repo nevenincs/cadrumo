@@ -18,13 +18,13 @@ from ...domain.modelos.protocols import (
     TransactionParticipationIndexRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
 )
-from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
-from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
 from .verification_repository_ports import WorkflowRunRepositoryProtocol
 

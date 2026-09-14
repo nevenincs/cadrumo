@@ -546,6 +546,8 @@ def test_non_canonical_iva_rate_is_reported() -> None:
 
     assert result.observations == ()
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+
+
 def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
     old_row = _transaction("row-old", booked_date=date(2026, 1, 5), value_date=date(2026, 1, 5))
     usd_row = _transaction("row-usd", currency="USD")
@@ -687,18 +689,6 @@ def test_no_devengo_basis_selector_exists_on_iva_aggregation_surface() -> None:
     assert not any(token in symbol.lower() for symbol in iva_ledger.__all__ for token in forbidden_tokens), (
         iva_ledger.__all__
     )
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def test_internal_transfer_is_reported_as_unsupported_direction() -> None:

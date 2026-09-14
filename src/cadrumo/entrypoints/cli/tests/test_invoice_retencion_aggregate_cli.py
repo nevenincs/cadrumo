@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -40,7 +42,6 @@ from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

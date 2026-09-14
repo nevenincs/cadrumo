@@ -28,8 +28,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import UnsecuredModeRefusedError
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..master_key import UnsecuredMasterKeyProvider, refuse_unsecured_with_real_nif
 from ..master_key_tax_id import looks_like_real_tax_id
 

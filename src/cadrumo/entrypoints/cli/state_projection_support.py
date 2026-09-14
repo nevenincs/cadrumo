@@ -6,6 +6,8 @@ from typing import cast
 
 import typer
 
+from ...application.aggregation.percepciones_observations_repository import PercepcionObservationPortsFactory
+from ...application.aggregation.retencion_observations_repository import RetencionObservationPortsFactory
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.auth.operator_probe_ports import OperatorProbePorts
 from ...application.auth.operator_scope_ports import OperatorScopePorts
@@ -13,31 +15,29 @@ from ...application.bienes_inversion.ports import BienesInversionIvaRegisterRepo
 from ...application.diagnostics_ports import DiagnosticsPorts
 from ...application.filing.draft_review_ports import DraftReviewPortsFactory
 from ...application.inventory.ports import InventoryServicePortsFactory
-from ...application.live.borrador_100 import Borrador100SnapshotRepositoryFactory
-from ...application.live.censo_ports import CensalFetchPort
-from ...application.aggregation.percepciones_observations_repository import PercepcionObservationPortsFactory
-from ...application.aggregation.retencion_observations_repository import RetencionObservationPortsFactory
 from ...application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
 from ...application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
+from ...application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
 from ...application.ledger.evidence_ports import LedgerEvidencePortsFactory
 from ...application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
-from ...application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
+from ...application.live.borrador_100 import Borrador100SnapshotRepositoryFactory
+from ...application.live.censo_ports import CensalFetchPort
 from ...application.live.expedientes_ports import ExpedientesPortsFactory
 from ...application.modelo.amendment_action_ports import AmendmentActionPortsFactory
 from ...application.modelo.calculation_action_ports import CalculationActionPortsFactory
-from ...application.modelo.export_ports import ModeloExportPortsFactory
 from ...application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from ...application.modelo.export_ports import ModeloExportPortsFactory
 from ...application.modelo.filing_action_ports import FilingActionPortsFactory
 from ...application.modelo.history_ports import ModeloHistoryPortsFactory
-from ...application.modelo.participation_index_rebuild_ports import ParticipationIndexRebuildPortsFactory
 from ...application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPortsFactory
-from ...application.modelo.m145_communication_records_ports import M145CommunicationRecordsPortsFactory
 from ...application.modelo.m036_lifecycle_ports import M036LifecyclePortsFactory
-from ...application.modelo.work_lifecycle_ports import WorkLifecyclePortsFactory
-from ...application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPortsFactory
+from ...application.modelo.m145_communication_records_ports import M145CommunicationRecordsPortsFactory
+from ...application.modelo.participation_index_rebuild_ports import ParticipationIndexRebuildPortsFactory
 from ...application.modelo.recipient_encryption import RecipientEncryptionCapabilityFactory
+from ...application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPortsFactory
 from ...application.modelo.review_package_signing_ports import ReviewPackageSigningKeypairCapabilityFactory
 from ...application.modelo.verification_repository_ports import VerificationRepositoryBundleFactory
+from ...application.modelo.work_lifecycle_ports import WorkLifecyclePortsFactory
 from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFactory
 from ...application.state_projection_ports import StateProjectionReadPorts
 from ...application.user_profile.custody_ports import ProfileBucketStoragePort
@@ -305,43 +305,45 @@ def review_package_signing_keypair_capability_factory(
 ) -> ReviewPackageSigningKeypairCapabilityFactory:
     """Return the review-package signing-keypair capability from the CLI root."""
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
-    return cast(ReviewPackageSigningKeypairCapabilityFactory, root_state[_REVIEW_PACKAGE_SIGNING_KEYPAIR_CAPABILITY_FACTORY_KEY])
+    return cast(
+        ReviewPackageSigningKeypairCapabilityFactory, root_state[_REVIEW_PACKAGE_SIGNING_KEYPAIR_CAPABILITY_FACTORY_KEY]
+    )
 
 
 __all__ = [
-    "bucket_storage",
-    "certificate_secret_backend_factory",
     "amendment_action_ports_factory",
-    "borrador_100_snapshot_repository_factory",
-    "censal_fetch_port",
-    "calculation_action_ports_factory",
-    "retencion_observation_ports_factory",
-    "percepcion_observation_ports_factory",
-    "draft_review_ports_factory",
-    "filing_action_ports_factory",
     "bienes_inversion_repository_factory",
-    "expedientes_ports_factory",
-    "inventory_service_ports_factory",
-    "ledger_evidence_ports_factory",
-    "invoice_confirmation_ports_factory",
-    "counterparty_establishment_repository_factory",
+    "borrador_100_snapshot_repository_factory",
+    "bucket_storage",
+    "calculation_action_ports_factory",
     "catalogue_creation_ports_factory",
     "catalogue_lifecycle_ports_factory",
+    "censal_fetch_port",
+    "certificate_secret_backend_factory",
+    "counterparty_establishment_repository_factory",
     "diagnostics_ports",
-    "modelo_export_ports_factory",
-    "modelo_edit_receipt_repository_factory",
-    "modelo_history_ports_factory",
-    "participation_index_rebuild_ports_factory",
-    "prorrata_register_repository_factory",
-    "modelo_iva_wallet_seed_ports_factory",
-    "m145_communication_records_ports_factory",
+    "draft_review_ports_factory",
+    "expedientes_ports_factory",
+    "filing_action_ports_factory",
+    "inventory_service_ports_factory",
+    "invoice_confirmation_ports_factory",
+    "ledger_evidence_ports_factory",
     "m036_lifecycle_ports_factory",
-    "work_lifecycle_ports_factory",
-    "recipient_fingerprint_registry_ports_factory",
+    "m145_communication_records_ports_factory",
+    "modelo_edit_receipt_repository_factory",
+    "modelo_export_ports_factory",
+    "modelo_history_ports_factory",
+    "modelo_iva_wallet_seed_ports_factory",
     "operator_probe_ports",
     "operator_scope_ports",
+    "participation_index_rebuild_ports_factory",
+    "percepcion_observation_ports_factory",
+    "prorrata_register_repository_factory",
     "recipient_encryption_capability_factory",
+    "recipient_fingerprint_registry_ports_factory",
+    "retencion_observation_ports_factory",
     "review_package_signing_keypair_capability_factory",
     "state_projection_read_ports",
     "verification_repository_bundle_factory",
+    "work_lifecycle_ports_factory",
 ]

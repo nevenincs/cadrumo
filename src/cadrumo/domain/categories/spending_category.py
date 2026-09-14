@@ -104,6 +104,7 @@ class SpendingCategoryFamily(StrEnum):
     DIRECT_COSTS = "direct_costs"
     TAXES = "taxes"
 
+
 # The family pair is a mechanical grouping used for dwelling-ratio routing.
 # Category membership itself is projected from the facts registry.
 HOME_OFFICE_FAMILIES: frozenset[SpendingCategoryFamily] = frozenset(

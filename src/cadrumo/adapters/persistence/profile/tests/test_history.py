@@ -14,12 +14,8 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.period import Period
-from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
-from cadrumo.domain.modelos.errors import ModeloError
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
 from cadrumo.application.modelo.history import assemble_work_unit_history
 from cadrumo.application.modelo.history_ports import ModeloHistoryPorts
@@ -27,6 +23,10 @@ from cadrumo.application.modelo.work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )
+from cadrumo.core.period import Period
+from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.modelos.errors import ModeloError
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

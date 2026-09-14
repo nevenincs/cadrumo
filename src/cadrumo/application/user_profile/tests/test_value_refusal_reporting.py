@@ -19,10 +19,10 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors.severity import BaseSeverity
-from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import ProfileValueRefusalKind
+from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import (
     _ISSUE_CODE_BY_REFUSAL_KIND,

@@ -29,14 +29,6 @@ the prior-quarter negative result carried forward "sin signo".
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
@@ -46,21 +38,37 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.registry_observations import (    registry_grounded_modelo_observation,
+from cadrumo.domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
     revision_id_for_coordinates,
     revision_id_for_observation,
 )
-from cadrumo.domain.deadlines.models import (    IVARegime,
+from cadrumo.domain.deadlines.models import (
+    IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,
@@ -71,14 +79,7 @@ from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import ready_clave_settings
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -374,7 +375,9 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
     )
 
     q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository())
+    report = resolve_bindings_from_local_store(
+        q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
+    )
 
     # Both M130 previous_filing bindings auto-resolve from the local store:
     # the prior-quarter carry-forward and the prior-year Renta net income.
@@ -407,7 +410,9 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     )
 
     q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
+    resolved = resolve_bindings_from_local_store(
+        q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
+    ).binding_values
 
     # Q2 cumulative (Jan-Jun): ingresos 8000, gastos 2000 -> rendimiento 6000,
     # casilla 04 = 1200. Both carry-forward casilla 15 and the prior-year net
@@ -489,7 +494,9 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
     )
 
     q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
-    resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
+    resolved = resolve_bindings_from_local_store(
+        q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
+    ).binding_values
     assert resolved.get(_CARRY_FORWARD_BINDING) == Decimal("62.00")
     assert resolved.get(_PREV_YEAR_BINDING) == Decimal("20000")
 
@@ -621,7 +628,9 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     )
 
     snapshot_3t = bundled_authority().snapshot("130", filing_year=2026, period="3T")
-    resolved = resolve_bindings_from_local_store(snapshot_3t, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()).binding_values
+    resolved = resolve_bindings_from_local_store(
+        snapshot_3t, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
+    ).binding_values
 
     # Independent identity (a different code path than the span binding): the
     # positive part of each prior 07 minus each prior 16, computed here from the

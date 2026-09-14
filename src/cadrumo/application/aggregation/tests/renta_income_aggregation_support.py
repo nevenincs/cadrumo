@@ -4,7 +4,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.invoices.models import InvoiceCatalogue
@@ -18,6 +17,7 @@ from ....domain.transactions.models import (
     TransactionCatalogue,
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
 
 class _InvoiceCatalogueReader:

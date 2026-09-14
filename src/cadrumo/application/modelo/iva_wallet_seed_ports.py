@@ -16,8 +16,8 @@ from typing import Protocol
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..calculations.observations_repository import CalculationObservationPorts
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
+from ..calculations.observations_repository import CalculationObservationPorts
 
 
 @dataclass(frozen=True, slots=True)

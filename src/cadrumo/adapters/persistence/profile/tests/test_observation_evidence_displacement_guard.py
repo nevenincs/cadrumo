@@ -21,13 +21,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.errors import ObservationEvidenceDisplacementError
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.application.calculations.errors import ObservationEvidenceDisplacementError
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 if TYPE_CHECKING:
     from pathlib import Path

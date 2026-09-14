@@ -33,7 +33,6 @@ source years are also modelled. Unsupported historical years must fail closed.
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -41,7 +40,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -56,9 +59,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -163,7 +163,11 @@ def _calculate_200(
     # dotaciones-deterioro 01494/01495) from the local observation store; any the
     # store cannot satisfy default to zero (present-or-zero-carry), so the
     # available-value projector below receives every carry this scenario seeds.
-    prefilled = resolve_bindings_from_local_store(snapshot, repository=CalculationObservationRepository(), iva_history_repository=IvaCompensationHistoryRepository()).binding_values
+    prefilled = resolve_bindings_from_local_store(
+        snapshot,
+        repository=CalculationObservationRepository(),
+        iva_history_repository=IvaCompensationHistoryRepository(),
+    ).binding_values
     carry_defaults = {
         c.binding: Decimal("0") for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding
     }

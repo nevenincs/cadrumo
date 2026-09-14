@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import SubprocessLLMClassifier
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -20,7 +21,6 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.llm import prompt_spec_with_saturation_fields
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import SubprocessLLMClassifier
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "17171717-1717-4717-8717-171717171717"

@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienesInversionIvaRegister
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ..declare_command import (
     BienInversionDeclarationCommand,

@@ -11,29 +11,7 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.observed_header_fact import ObservedHeaderFact
-from cadrumo.core.period import Period
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
-    registry_grounded_modelo_observation,
-    registry_grounded_observations,
-    revision_id_for_observation,
-)
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.calculations.iva_compensation_annual_partition import (
-    IvaCompensationAnnualPartitionSourceResolver,
-    resolve_iva_compensation_annual_partition_binding_values,
-)
-from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError
-from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, ResultDispositionProjection
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import (
     _BOX_97_BINDING,
     _BOX_662_BINDING,
@@ -47,6 +25,31 @@ from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_suppor
     _M303_RESULTADO_CASILLA,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
     _modelo_390_annual_snapshot,
+)
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.calculations.iva_compensation_annual_partition import (
+    IvaCompensationAnnualPartitionSourceResolver,
+    resolve_iva_compensation_annual_partition_binding_values,
+)
+from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError
+from cadrumo.application.calculations.observations_repository import (
+    ObservationEnvelopePayload,
+    ResultDispositionProjection,
+)
+from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.observed_header_fact import ObservedHeaderFact
+from cadrumo.core.period import Period
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
+from cadrumo.domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    registry_grounded_observations,
+    revision_id_for_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

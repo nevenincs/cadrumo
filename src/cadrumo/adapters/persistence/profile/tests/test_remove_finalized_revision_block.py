@@ -7,9 +7,10 @@ import pytest
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.actions_lifecycle import remove_manual_transaction
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.transactions.errors import TransactionValidationError
-from cadrumo.application.ledger.actions_lifecycle import remove_manual_transaction
+
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,

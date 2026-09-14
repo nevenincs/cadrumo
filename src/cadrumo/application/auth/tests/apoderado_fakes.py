@@ -39,6 +39,7 @@ class InMemoryApoderadoConfigurationRepositoryFactory:
         self.settings_by_bucket[canonical_id] = settings
         return InMemoryApoderadoConfigurationRepository(bucket_id=canonical_id, records=self.records)
 
+
 __all__ = [
     "InMemoryApoderadoConfigurationRepository",
     "InMemoryApoderadoConfigurationRepositoryFactory",

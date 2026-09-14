@@ -31,6 +31,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
@@ -40,7 +41,6 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_adapter]
 
@@ -230,5 +230,3 @@ def test_the_provenance_enum_names_every_supplying_path_and_no_catch_all() -> No
         "operator_seed",
         "operator_correction",
     }
-
-

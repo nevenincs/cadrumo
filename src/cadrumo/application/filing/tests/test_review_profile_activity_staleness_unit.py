@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import pytest
 
-from .filing_support import empty_profile_activity_fingerprint
 from ..draft_review import _profile_activity_fingerprint
+from .filing_support import empty_profile_activity_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

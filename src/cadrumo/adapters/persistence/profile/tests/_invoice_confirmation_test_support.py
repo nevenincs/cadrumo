@@ -26,8 +26,14 @@ from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
 from cadrumo.adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from cadrumo.adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from cadrumo.adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
-from cadrumo.adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
-from cadrumo.adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
+from cadrumo.adapters.outbound.llm.evidence_draft_text import (
+    TextInvoiceFieldExtractor,
+    extract_invoice_fields_from_text,
+)
+from cadrumo.adapters.outbound.llm.evidence_draft_vision import (
+    LocalVisionDocumentTranscriber,
+    transcribe_document_images,
+)
 from cadrumo.adapters.outbound.llm.models import MultimodalImageInput
 from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from cadrumo.adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
@@ -42,11 +48,12 @@ from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceRepositoryAdapter,
 )
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from cadrumo.application.ledger.document_transcription import DocumentTranscription
 from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPorts
+from cadrumo.application.ledger.document_transcription import DocumentTranscription
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from cadrumo.application.ledger.evidence_input import (
@@ -56,13 +63,14 @@ from cadrumo.application.ledger.evidence_input import (
 )
 from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
-from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from cadrumo.application.ledger.evidence_reference import (
     EvidenceReferenceOutcome,
     classify_evidence_reference,
     refuse_reference_without_document_bytes,
     refuse_unresolved_evidence_reference,
 )
+from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
+from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from cadrumo.application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
@@ -76,8 +84,8 @@ from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.optional_extras import MissingOptionalExtraError
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.iva.supply_nature import SupplyNature
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -85,13 +93,9 @@ from cadrumo.tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 
 _BUCKET_ID = "29292929-2929-4929-8929-292929292929"
-_EVIDENCE_CORPUS = (
-    Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
-)
+_EVIDENCE_CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 

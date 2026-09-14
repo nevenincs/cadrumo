@@ -7,8 +7,8 @@ from typing import NamedTuple
 from ....core.modelo import Modelo
 from ....core.period import Period, registry_period_kind
 from ....core.result_disposition import ResultDisposition
-from .schema_deadlines import DeadlineWindowDefinition
 from .irnr_tipo_renta import m210_tipo_renta_code_projection
+from .schema_deadlines import DeadlineWindowDefinition
 
 
 class DeadlineSemanticCoordinate(NamedTuple):

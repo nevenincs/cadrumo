@@ -28,6 +28,8 @@ from ._record_field_renderer import (
     m303_complementaria_marker,
     m303_no_activity_marker,
     projection_field_value,
+)
+from ._record_field_renderer import (
     render_record as _render_record_fields,
 )
 from .producer_snapshot import FilingProducerSnapshot

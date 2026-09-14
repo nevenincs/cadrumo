@@ -9,12 +9,12 @@ never embeds an operator's tax amounts into source or snapshots.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 from datetime import date
 from urllib.parse import urlsplit
 
 import pytest
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from ......application.auth.sessions import ensure_authenticated_aeat_session
 from ......core.auth_provider import AuthProviderKind

@@ -16,7 +16,12 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.modelo.calculation_actions import get_calculation_revision
+from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -25,11 +30,6 @@ from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRec
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.calculation_actions import get_calculation_revision
-from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 
 _Repos = tuple[
     WorkUnitCatalogueRepository,

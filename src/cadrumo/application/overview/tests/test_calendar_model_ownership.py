@@ -7,8 +7,8 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from ...live.notifications import PersistedNotificationsSnapshot
 from ...live.notification_ports import RemoteNotification
+from ...live.notifications import PersistedNotificationsSnapshot
 from .. import calendar_models as _calendar_models
 from ..calendar import calendar_events_from_notification_snapshots
 from ..calendar_models import OverviewCalendarEvent, OverviewCalendarRange

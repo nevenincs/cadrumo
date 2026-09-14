@@ -44,6 +44,7 @@ from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from .errors import LiveApplicationInputError
 from .notification_documents import NotificationDocumentService
@@ -53,7 +54,6 @@ from .notification_ports import (
     RemoteNotification,
 )
 from .session import active_verified_session
-from ..auth.operator_scope_ports import OperatorScopePorts
 from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,

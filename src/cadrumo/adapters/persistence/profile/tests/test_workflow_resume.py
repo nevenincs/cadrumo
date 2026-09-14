@@ -10,6 +10,8 @@ from typing import TypedDict
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+
 from .....adapters.outbound.aeat.browser.site_health_records import (
     SiteHealthEvidence,
     SiteHealthStatus,
@@ -53,7 +55,6 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.repository import upsert_work_unit
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .....tests.aeat_literal_fixtures import aeat_url
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository

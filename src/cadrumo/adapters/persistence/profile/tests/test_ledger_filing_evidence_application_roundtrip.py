@@ -46,6 +46,7 @@ _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
+
 def _txn() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="provider-row-evidence",
@@ -82,6 +83,7 @@ def _txn() -> Transaction:
             "classified_by": "manual",
         },
     )
+
 
 def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
     period = Period.from_year_and_code(2025, "1T")
@@ -126,6 +128,7 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
+
 
 def test_evidence_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
     txn = _txn()

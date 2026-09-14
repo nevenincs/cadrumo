@@ -44,6 +44,7 @@ __all__ = ["FacturaeInvoiceClass", "ParsedEInvoice", "ParsedEInvoiceLine", "pars
 # names the person-type/residence explicitly.
 _IVA_SCHEME_TOKENS = frozenset({"va", "vat", "vatid"})
 
+
 class FacturaeInvoiceClass(StrEnum):
     """Class code stated by Facturae's ``InvoiceHeader/InvoiceClass``."""
 

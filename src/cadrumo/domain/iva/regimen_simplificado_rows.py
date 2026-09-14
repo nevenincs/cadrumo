@@ -14,9 +14,9 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, Field, GetCoreSchemaHandler, StringConstraints, field_validator, model_validator
 from pydantic_core import CoreSchema, core_schema
 
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_projection_ref import M303_MESA_FACTS, M303_REPEATING_FACTS, M303RegimenSimplificadoFact
 from ...core.filing_year import FilingYear
-from ...core.errors.hierarchy import CoreValidationError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..filing_evidence import FilingEvidenceReference
 from .errors import IvaValidationError

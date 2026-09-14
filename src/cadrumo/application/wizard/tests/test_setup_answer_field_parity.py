@@ -18,11 +18,11 @@ from __future__ import annotations
 
 import pytest
 
+from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS, project_setup_answers
 from ....domain.user_profile.setup_answers import (
     PROFILE_OUTPUT_LANGUAGE_PATH,
     SetupAnswers,
 )
-from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS, project_setup_answers
 from ..catalogue import SETUP_FLOW
 from ..models import WizardQuestion
 from ..persistence import project_answers

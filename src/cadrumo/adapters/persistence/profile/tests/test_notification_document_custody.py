@@ -42,15 +42,16 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
-from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.hashing import sha256_hex
-from cadrumo.domain.attachments.enums import AttachmentKind
 from cadrumo.application.live.errors import LiveApplicationInputError
 from cadrumo.application.live.notification_documents import (
     NotificationDocumentNotFoundError,
     NotificationDocumentService,
     notification_document_object_key,
 )
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.hashing import sha256_hex
+from cadrumo.domain.attachments.enums import AttachmentKind
+
 from .notification_document_support import (
     BUCKET_ID as _BUCKET_ID,
 )

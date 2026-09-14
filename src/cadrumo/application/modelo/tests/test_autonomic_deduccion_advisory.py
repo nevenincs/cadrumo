@@ -32,7 +32,10 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+
 import pytest
+
+from cadrumo.application.user_profile.projections import profile_fact_index
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
@@ -40,7 +43,6 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
-from cadrumo.application.user_profile.projections import profile_fact_index
 from .. import _autonomic_deduccion_advisory as advisory_module
 from .._autonomic_deduccion_advisory import madrid_nacimiento_adopcion_eligibility_advisory_finding
 from ..profile_binding import (

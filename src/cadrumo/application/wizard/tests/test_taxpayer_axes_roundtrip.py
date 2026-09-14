@@ -13,10 +13,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.user_profile.setup_answers import SetupAnswers
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 from ....domain.deadlines.profiles import taxpayer_profile_from_mapping
+from ....domain.user_profile.setup_answers import SetupAnswers
 from ..catalogue import SETUP_FLOW
 from ..persistence import project_answers, serialise_answers
 

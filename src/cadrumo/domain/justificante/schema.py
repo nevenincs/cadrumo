@@ -20,10 +20,10 @@ from ...core.identity.aeat_csv import AeatCsv
 from ...core.identity.aeat_presentation import AeatPresentationId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.tax_id import same_tax_identifier
-from ..calculations.registry.tax_id_format import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, PeriodError
 from ...core.time.utc import UtcInstant
+from ..calculations.registry.tax_id_format import SubjectTaxId
 
 
 class JustificanteParserBackend(StrEnum):

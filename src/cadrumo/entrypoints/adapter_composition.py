@@ -19,14 +19,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..application.bienes_inversion.ports import (
-        BienesInversionIvaRegisterRepositoryFactory,
-        BienesInversionIvaRegisterRepositoryProtocol,
-    )
-    from ..application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
-    from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
-    from ..application.auth.operator_probe_ports import OperatorProbePorts
-    from ..application.auth.operator_scope_ports import OperatorScopePorts
     from ..application.aggregation.percepciones_observations_repository import (
         PercepcionObservationPorts,
         PercepcionObservationPortsFactory,
@@ -35,59 +27,67 @@ if TYPE_CHECKING:
         RetencionObservationPorts,
         RetencionObservationPortsFactory,
     )
+    from ..application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
+    from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ..application.auth.operator_probe_ports import OperatorProbePorts
+    from ..application.auth.operator_scope_ports import OperatorScopePorts
+    from ..application.bienes_inversion.ports import (
+        BienesInversionIvaRegisterRepositoryFactory,
+        BienesInversionIvaRegisterRepositoryProtocol,
+    )
     from ..application.diagnostics_ports import DiagnosticsPorts
     from ..application.filing.draft_review_ports import DraftReviewPorts, DraftReviewPortsFactory
+    from ..application.inventory.ports import InventoryServicePorts, InventoryServicePortsFactory
     from ..application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
     from ..application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
-    from ..application.modelo.calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
-    from ..application.modelo.amendment_action_ports import AmendmentActionPorts, AmendmentActionPortsFactory
-    from ..application.modelo.filing_action_ports import FilingActionPorts, FilingActionPortsFactory
-    from ..application.modelo.export_ports import ModeloExportPorts, ModeloExportPortsFactory
-    from ..application.modelo.edit_receipt_ports import (
-        ModeloEditReceiptRepositoryFactory,
-        ModeloEditReceiptRepositoryPort,
-    )
-    from ..application.modelo.history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
-    from ..application.modelo.review_package_signing_ports import (
-        ReviewPackageSigningKeypairCapabilityFactory,
-    )
-    from ..application.modelo.participation_index_rebuild_ports import (
-        ParticipationIndexRebuildPorts,
-        ParticipationIndexRebuildPortsFactory,
-    )
-    from ..application.modelo.iva_wallet_seed_ports import (
-        ModeloIvaWalletSeedPorts,
-        ModeloIvaWalletSeedPortsFactory,
-    )
-    from ..application.modelo.m145_communication_records_ports import (
-        M145CommunicationRecordsPortsFactory,
-    )
-    from ..application.modelo.m036_lifecycle_ports import M036LifecyclePortsFactory
-    from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts, WorkLifecyclePortsFactory
-    from ..application.modelo.review_package_recipient_registry_ports import (
-        RecipientFingerprintRegistryPortsFactory,
-    )
-    from ..application.prorrata_register.ports import (
-        ProrrataRegisterRepositoryFactory,
-        ProrrataRegisterServiceRepositoryProtocol,
-    )
-    from ..application.inventory.ports import InventoryServicePorts, InventoryServicePortsFactory
+    from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
+    from ..application.ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
+    from ..application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
     from ..application.live.borrador_100 import (
         Borrador100SnapshotRepository,
         Borrador100SnapshotRepositoryFactory,
     )
     from ..application.live.censo_ports import CensalFetchPort
     from ..application.live.expedientes_ports import ExpedientesPorts, ExpedientesPortsFactory
-    from ..application.ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
-    from ..application.ledger.invoice_confirmation_ports import InvoiceConfirmationPortsFactory
-    from ..application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryFactory
+    from ..application.modelo.amendment_action_ports import AmendmentActionPorts, AmendmentActionPortsFactory
+    from ..application.modelo.calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
+    from ..application.modelo.edit_receipt_ports import (
+        ModeloEditReceiptRepositoryFactory,
+        ModeloEditReceiptRepositoryPort,
+    )
+    from ..application.modelo.export_ports import ModeloExportPorts, ModeloExportPortsFactory
+    from ..application.modelo.filing_action_ports import FilingActionPorts, FilingActionPortsFactory
+    from ..application.modelo.history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
+    from ..application.modelo.iva_wallet_seed_ports import (
+        ModeloIvaWalletSeedPorts,
+        ModeloIvaWalletSeedPortsFactory,
+    )
+    from ..application.modelo.m036_lifecycle_ports import M036LifecyclePortsFactory
+    from ..application.modelo.m145_communication_records_ports import (
+        M145CommunicationRecordsPortsFactory,
+    )
+    from ..application.modelo.participation_index_rebuild_ports import (
+        ParticipationIndexRebuildPorts,
+        ParticipationIndexRebuildPortsFactory,
+    )
     from ..application.modelo.recipient_encryption import RecipientEncryptionCapabilityFactory
+    from ..application.modelo.review_package_recipient_registry_ports import (
+        RecipientFingerprintRegistryPortsFactory,
+    )
+    from ..application.modelo.review_package_signing_ports import (
+        ReviewPackageSigningKeypairCapabilityFactory,
+    )
     from ..application.modelo.verification_repository_ports import (
         VerificationRepositoryBundleFactory,
     )
+    from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts, WorkLifecyclePortsFactory
+    from ..application.prorrata_register.ports import (
+        ProrrataRegisterRepositoryFactory,
+        ProrrataRegisterServiceRepositoryProtocol,
+    )
+    from ..application.state_projection_ports import StateProjectionReadPorts
     from ..application.storage.calc_sheets.parity_harness import CalcSheetsParityApplyPort
     from ..application.storage.calc_sheets.records import SheetExportPlan
-    from ..application.state_projection_ports import StateProjectionReadPorts
     from ..application.user_profile.custody_ports import ProfileBucketStoragePort
     from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
     from ..domain.calculations.registry.tax_id_format import SubjectTaxId
@@ -211,6 +211,10 @@ def build_modelo_export_ports(
     """Compose every persisted authority required by one Modelo export."""
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.calculation_observations import (
+        CalculationObservationRepository,
+        IvaWalletDecisionRepository,
+    )
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -219,11 +223,6 @@ def build_modelo_export_ports(
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ..adapters.persistence.profile.calculation_observations import (
-        CalculationObservationRepository,
-        IvaWalletDecisionRepository,
-    )
-
     from ..application.modelo.export_ports import ModeloExportPorts
 
     normalized_bucket_id = bucket_id.strip()
@@ -533,6 +532,8 @@ def build_inventory_service_ports(*, bucket_id: str) -> InventoryServicePorts:
 
 def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100SnapshotRepository:
     """Bind the encrypted borrador snapshot adapter to one profile bucket."""
+    from pydantic import ValidationError
+
     from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
     from ..adapters.persistence.storage.errors import StorageError
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -544,7 +545,6 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
     )
     from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
     from ..application.persistence_errors import PersistenceDegradationError
-    from pydantic import ValidationError
 
     normalized_bucket_id = bucket_id.strip()
 
@@ -666,8 +666,12 @@ def build_percepcion_observation_ports(*, bucket_id: str) -> PercepcionObservati
 
 def build_calculation_action_ports(*, bucket_id: str) -> CalculationActionPorts:
     """Compose every persisted authority required by one Modelo calculation."""
-    from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+    from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.calculation_observations import (
+        CalculationObservationRepository,
+        IvaWalletDecisionRepository,
+    )
     from ..adapters.persistence.profile.calculation_revision_override_migration import (
         migrate_stored_relation_overrides_to_binding_ids,
     )
@@ -675,22 +679,18 @@ def build_calculation_action_ports(*, bucket_id: str) -> CalculationActionPorts:
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ..adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ..adapters.persistence.profile.calculation_observations import (
-        CalculationObservationRepository,
-        IvaWalletDecisionRepository,
-    )
-    from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-    from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
-    from ..application.modelo.calculation_action_ports import CalculationActionPorts
     from ..application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
     from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
+    from ..application.modelo.calculation_action_ports import CalculationActionPorts
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 
     normalized_bucket_id = bucket_id.strip()
@@ -908,6 +908,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
     from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..adapters.persistence.storage.secure_object_namespaces import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+    from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
     from ..application.live.expedientes import (
         ExpedientesSnapshotNotFoundError,
         PersistedExpedientesSnapshot,
@@ -919,7 +920,6 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         ExpedientesPorts,
         ExpedientesRegisterProtocol,
     )
-    from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
     from ..core.config import Settings
 
     def snapshot_repository_factory(bucket: str) -> SecureSnapshotRepository[PersistedExpedientesSnapshot]:
@@ -947,21 +947,21 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         """Translate the Sede row DTO before it enters application state."""
         try:
             return ExpedientesDeclaration(
-                modelo=getattr(row, "modelo"),
-                ejercicio=getattr(row, "ejercicio"),
-                period=getattr(row, "period"),
-                expediente_id=getattr(row, "expediente_id"),
-                estado=getattr(row, "estado"),
-                tipo_solicitud=getattr(row, "tipo_solicitud"),
-                observaciones=getattr(row, "observaciones"),
-                presented_at=getattr(row, "presented_at"),
-                justificante_link_text=getattr(row, "justificante_link_text"),
-                archive_link_text=getattr(row, "archive_link_text"),
-                declaration_copy_link_text=getattr(row, "declaration_copy_link_text"),
-                justificante_cell_index=getattr(row, "justificante_cell_index"),
-                archive_cell_index=getattr(row, "archive_cell_index"),
-                declaration_copy_cell_index=getattr(row, "declaration_copy_cell_index"),
-                mode=getattr(row, "mode"),
+                modelo=row.modelo,
+                ejercicio=row.ejercicio,
+                period=row.period,
+                expediente_id=row.expediente_id,
+                estado=row.estado,
+                tipo_solicitud=row.tipo_solicitud,
+                observaciones=row.observaciones,
+                presented_at=row.presented_at,
+                justificante_link_text=row.justificante_link_text,
+                archive_link_text=row.archive_link_text,
+                declaration_copy_link_text=row.declaration_copy_link_text,
+                justificante_cell_index=row.justificante_cell_index,
+                archive_cell_index=row.archive_cell_index,
+                declaration_copy_cell_index=row.declaration_copy_cell_index,
+                mode=row.mode,
             )
         except Exception as exc:
             raise LiveApplicationError(
@@ -977,7 +977,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
 
         async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
             try:
-                rows = await getattr(self._register, "walk")(modelo=modelo, ejercicio=ejercicio)
+                rows = await self._register.walk(modelo=modelo, ejercicio=ejercicio)
                 return tuple(translate_declaration(row) for row in rows)
             except LiveApplicationError:
                 raise
@@ -1014,28 +1014,28 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
 
 __all__ = [
     "ProfileAdapterComposition",
+    "build_active_work_lifecycle_ports",
     "build_amendment_action_ports",
+    "build_bienes_inversion_repository",
     "build_borrador_100_snapshot_repository",
-    "build_censal_fetch_port",
     "build_calc_sheets_parity_apply_port",
     "build_calculation_action_ports",
-    "build_bienes_inversion_repository",
-    "build_work_lifecycle_ports",
-    "build_active_work_lifecycle_ports",
-    "build_retencion_observation_ports",
+    "build_censal_fetch_port",
     "build_diagnostics_ports",
     "build_draft_review_ports",
     "build_expedientes_ports",
-    "build_inventory_service_ports",
     "build_filing_action_ports",
+    "build_inventory_service_ports",
     "build_ledger_evidence_ports",
-    "build_modelo_export_ports",
     "build_modelo_edit_receipt_repository",
+    "build_modelo_export_ports",
     "build_modelo_history_ports",
-    "build_percepcion_observation_ports",
-    "build_participation_index_rebuild_ports",
     "build_modelo_iva_wallet_seed_ports",
+    "build_participation_index_rebuild_ports",
+    "build_percepcion_observation_ports",
     "build_prorrata_register_repository",
+    "build_retencion_observation_ports",
+    "build_work_lifecycle_ports",
     "profile_adapter_composition",
 ]
 
@@ -1055,28 +1055,29 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..adapters.outbound.aeat.auth.session_store import build_session_store
     from ..adapters.outbound.llm.column_role_mapping import resolve_column_roles as resolve_outbound_column_roles
     from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
-    from ..adapters.persistence.profile.catalogue_creation import (
-        build_catalogue_creation_ports,
-        build_catalogue_lifecycle_ports,
-    )
     from ..adapters.persistence.profile.buckets import (
         BucketEventHistoryRepository,
         build_bucket_event_history_repository,
     )
+    from ..adapters.persistence.profile.calculation_observations import (
+        CalculationObservationRepository,
+        IvaWalletDecisionRepository,
+    )
+    from ..adapters.persistence.profile.catalogue_creation import (
+        build_catalogue_creation_ports,
+        build_catalogue_lifecycle_ports,
+    )
     from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
-    from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
-    from ..adapters.persistence.profile.justificante import JustificanteRepository
-    from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
-    from ..adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
     from ..adapters.persistence.profile.counterparty_establishment import (
         build_counterparty_establishment_repository,
     )
+    from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+    from ..adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
+    from ..adapters.persistence.profile.justificante import JustificanteRepository
+    from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
+    from ..adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
     from ..adapters.persistence.profile.m145_communication_records import (
         build_m145_communication_records_ports,
-    )
-    from ..adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
-    from ..adapters.persistence.profile.review_package_recipient_registry import (
-        build_recipient_fingerprint_registry_ports,
     )
     from ..adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -1086,6 +1087,9 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ..adapters.persistence.profile.review_package_recipient_encryption import (
         build_recipient_encryption_capability,
+    )
+    from ..adapters.persistence.profile.review_package_recipient_registry import (
+        build_recipient_fingerprint_registry_ports,
     )
     from ..adapters.persistence.profile.review_package_signing import (
         build_review_package_signing_keypair_capability,
@@ -1099,19 +1103,15 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     )
     from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
     from ..adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
+    from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
     from ..adapters.persistence.storage.profile_custody import build_profile_custody_port
     from ..adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..adapters.persistence.workflow import build_workflow_persistence_port
     from ..application.auth.operator_probe_ports import OperatorProbePorts
     from ..application.auth.protocols import bind_session_store
     from ..application.auth.providers import bind_auth_provider_selector
     from ..application.bucket_event_repository import bind_bucket_event_history_repository_factory
-    from ..adapters.persistence.profile.calculation_observations import (
-        CalculationObservationRepository,
-        IvaWalletDecisionRepository,
-    )
     from ..application.ledger.column_roles import bind_column_role_mapping_resolver
     from ..application.ledger.confirmation_record import bind_confirmation_record_repository_factory
     from ..application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory

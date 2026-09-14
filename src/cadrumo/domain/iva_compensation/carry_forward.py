@@ -16,11 +16,12 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
+
 from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
-from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

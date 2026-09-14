@@ -138,6 +138,7 @@ def test_crash_evidence_never_resolves_an_uncertain_delivery() -> None:
             assert reconciled.crash_classification is (OperationFinancialOperandCrashClassification.DELIVERY_UNCERTAIN)
             assert reconciled.state is not _STATE.DELIVERY_ACKNOWLEDGED
 
+
 def test_non_retention_holds_across_every_record_and_signature() -> None:
     """No record field and no return type carries an amount out of its call."""
     forbidden = ("amount", "digest", "hash", "fingerprint", "checksum")

@@ -282,7 +282,9 @@ def work_verify(
         )
         lines.append(noop_message)
     notices.extend(
-        m184_socio_handoff_notices(get_calculation_revision(selected_revision.calculation_revision_id, ports=calculation_ports))
+        m184_socio_handoff_notices(
+            get_calculation_revision(selected_revision.calculation_revision_id, ports=calculation_ports)
+        )
     )
     emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
     if not report.granted_verificado_completo:

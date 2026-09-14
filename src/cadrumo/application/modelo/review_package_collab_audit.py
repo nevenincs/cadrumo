@@ -75,9 +75,9 @@ from .revision_persistence import emit_modelo_bucket_event
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEvent
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+    from .recipient_encryption import RecipientEncryptedPackage
     from .review_package_counter_sign import CounterSignedReceipt
     from .review_package_feedback import ImportedFeedback
-    from .recipient_encryption import RecipientEncryptedPackage
 
 
 def emit_collab_recipient_registered_event(

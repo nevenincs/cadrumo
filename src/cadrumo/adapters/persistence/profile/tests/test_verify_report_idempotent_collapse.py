@@ -12,17 +12,10 @@ against the real registry and the encrypted report catalogue - no mocks.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
-from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.filing_actions import list_verification_reports
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     DEFAULT_180_BINDING_VALUES,
     DEFAULT_180_RELATION_VALUES,
@@ -34,6 +27,12 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     seed_modelo_180_work_unit,
     workflow_profile,
 )
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.filing_actions import list_verification_reports
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

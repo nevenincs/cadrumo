@@ -23,21 +23,21 @@ from pydantic import ValidationError
 
 from ...application.ledger.action_ports import LedgerActionPorts
 from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
-from ...application.prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ...application.ledger.models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from ...application.prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.prorrata_exclusions import Art104TresExclusion
+from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
-from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import (
     BusinessClassification,
@@ -73,7 +73,6 @@ from ._ledger_support import (
     validate_category_id,
 )
 from .common import bad, current_workflow_state, emit_envelope, profile_to_taxpayer, transaction_catalogue_repo
-from .state_projection_support import prorrata_register_repository_factory
 from .ledger_lifecycle_cli import (
     ledger_archive,
     ledger_attach,
@@ -85,6 +84,7 @@ from .ledger_lifecycle_cli import (
     ledger_split,
     ledger_stash,
 )
+from .state_projection_support import prorrata_register_repository_factory
 
 __all__ = [
     "ledger_archive",

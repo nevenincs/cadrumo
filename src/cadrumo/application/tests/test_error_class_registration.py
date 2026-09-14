@@ -126,6 +126,7 @@ def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
 # Narrowed except-clause types do not swallow programmer errors
 # ---------------------------------------------------------------------------
 
+
 def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(tmp_path) -> None:
     """The application probe propagates an unrelated inward-port failure."""
     from ...core.auth_provider import AuthProviderKind

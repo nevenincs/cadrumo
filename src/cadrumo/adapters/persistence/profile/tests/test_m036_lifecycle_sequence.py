@@ -18,7 +18,11 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.m036_lifecycle import M036DeclarationCommand, list_m036_declarations, record_m036_declaration
+from cadrumo.application.modelo.m036_lifecycle import (
+    M036DeclarationCommand,
+    list_m036_declarations,
+    record_m036_declaration,
+)
 from cadrumo.application.modelo.m036_lifecycle_ports import M036LifecyclePorts
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from cadrumo.domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError

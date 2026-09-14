@@ -7,8 +7,8 @@ isolation guarantees.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 import sqlite3
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 

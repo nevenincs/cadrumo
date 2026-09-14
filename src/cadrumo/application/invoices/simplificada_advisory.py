@@ -40,8 +40,8 @@ if TYPE_CHECKING:
 
 __all__ = [
     "SimplificadaTaxIdAdvisory",
-    "resolve_simplificada_tax_id_legal_refs",
     "resolve_simplificada_tax_id_advisory",
+    "resolve_simplificada_tax_id_legal_refs",
 ]
 
 

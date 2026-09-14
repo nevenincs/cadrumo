@@ -19,6 +19,7 @@ from .irpf_categories import (
 )
 from .retencion_facts import maximum_supported_activity_retencion_rate
 
+
 def _activity_withholding_is_supported(
     *,
     taxable_base: Decimal,

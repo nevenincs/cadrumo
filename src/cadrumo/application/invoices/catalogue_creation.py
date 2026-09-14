@@ -45,10 +45,10 @@ from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.currency.service import resolve_fx_conversion_stamp
 from ...domain.invoices.enums import (
-    default_invoice_class,
     InvoiceClass,
     IvaRate,
     PaymentStatus,
+    default_invoice_class,
     operation_performed_role,
 )
 from ...domain.invoices.enums import (
@@ -518,6 +518,7 @@ def create_catalogue_invoice(
     bucket_id = invoice.bucket_id
     if bucket_id is None:
         raise InvoiceValidationError("a catalogue invoice must declare its bucket_id before persistence")
+
     def _add(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
         """Rebuild the catalogue with this invoice, refusing an identity it already holds."""
         if invoice.invoice_id in catalogue:

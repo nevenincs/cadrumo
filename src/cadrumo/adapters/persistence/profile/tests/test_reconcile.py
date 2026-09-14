@@ -7,20 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 
 from cadrumo.adapters.inbound.justificante.parser import parse_justificante
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.core.period import Period
-from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
 from cadrumo.application.modelo.reconciliation import (
     ModeloReconciliationCommand,
@@ -33,6 +28,13 @@ from cadrumo.application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
+from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.core.period import Period
+from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.tests.inventory import FIXTURES_DIR
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -386,5 +388,3 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     assert build_error_envelope(error).action is None
     # The raw cause is preserved for diagnostics off the operator surface.
     assert error.__cause__ is not None
-
-

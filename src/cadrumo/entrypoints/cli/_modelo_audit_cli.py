@@ -14,9 +14,9 @@ def _evidence_bundle_service(*, bucket_id: str):
         EvidenceBundleRepository,
         EvidenceBundleWorkUnitRepository,
     )
-    from ...application.evidence.service import EvidenceBundleService
-    from ...application.evidence.ports import EvidenceBundlePorts
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ...application.evidence.ports import EvidenceBundlePorts
+    from ...application.evidence.service import EvidenceBundleService
 
     objects = secure_object_repository_for_bucket(bucket_id)
     return EvidenceBundleService(

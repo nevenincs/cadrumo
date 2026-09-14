@@ -25,6 +25,12 @@ from typing import ClassVar, override
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    open_test_profile_session,
+    set_active_test_profile_facts,
+)
+
 from ....adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from ....adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from ....adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
@@ -51,8 +57,6 @@ from ....tests.loopback_llm import (
     write_json_response,
 )
 from ....tests.pdf_fixtures import text_pdf_bytes
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, set_active_test_profile_facts
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

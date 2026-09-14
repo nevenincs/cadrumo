@@ -45,7 +45,19 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    load_test_profile_record,
+    open_test_profile_session,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.application.user_profile.validation import reject_invalid_profile_facts
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
@@ -55,16 +67,6 @@ from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    load_test_profile_record,
-    open_test_profile_session,
-)
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
-from cadrumo.application.user_profile.projections import record_to_path_values
-from cadrumo.application.user_profile.validation import reject_invalid_profile_facts
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

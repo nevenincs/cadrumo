@@ -11,6 +11,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from ....adapters.persistence.storage.master_key.active_session import activate_session
 from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -20,7 +22,6 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.classification.policies import SensitivityClass
 from ....core.config import override_settings
 from ....core.logging import default_log_file_path
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

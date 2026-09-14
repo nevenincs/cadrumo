@@ -11,11 +11,29 @@ from functools import cache
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.calculations.cross_period_clean_state import (
+    cross_period_dependency_requirements,
+    evaluate_cross_period_clean_state,
+)
+from cadrumo.application.calculations.cross_period_external_evidence import filing_external_evidence_blockers
+from cadrumo.application.calculations.cross_period_models import (
+    CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyEvidence,
+    CrossPeriodDependencyRequirement,
+    CrossPeriodExpectedMemberSet,
+)
+from cadrumo.application.calculations.observations_repository import ObservationSourceKind
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
@@ -33,6 +51,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -52,25 +71,6 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.calculations.cross_period_clean_state import (
-    cross_period_dependency_requirements,
-    evaluate_cross_period_clean_state,
-)
-from cadrumo.application.calculations.cross_period_external_evidence import filing_external_evidence_blockers
-from cadrumo.application.calculations.cross_period_models import (
-    CrossPeriodCleanStateBlocker,
-    CrossPeriodCleanStateVerdict,
-    CrossPeriodDependencyEvidence,
-    CrossPeriodDependencyRequirement,
-    CrossPeriodExpectedMemberSet,
-)
-from cadrumo.application.calculations.observations_repository import ObservationSourceKind
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"
 _BUCKET_ID = _PROFILE_ID

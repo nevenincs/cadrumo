@@ -133,7 +133,7 @@ class RetencionObservationRepositoryAdapter(
                     captured_at=captured_at,
                     source_metadata=source_metadata,
                 )
-            )
+            ),
         )
 
     @override

@@ -46,13 +46,13 @@ from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, require_eu_mem
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 from .enums import (
-    advance_payment_received_role,
-    default_invoice_class,
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,
     IvaRate,
     PaymentStatus,
+    advance_payment_received_role,
+    default_invoice_class,
     invoice_class_rectificativa,
     invoice_class_simplificada,
     iva_rate_percentage,
@@ -609,10 +609,7 @@ class Invoice(BaseModel):
             "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
         )
         devengo_date = self.operation_date or self.issued_at
-        all_non_numeric = all(
-            iva_rate_percentage(line.iva_rate, devengo_date) is None
-            for line in self.lines
-        )
+        all_non_numeric = all(iva_rate_percentage(line.iva_rate, devengo_date) is None for line in self.lines)
         if all_non_numeric:
             # Checked before the grand-total equality below so the operator is
             # told which component is impossible, rather than being handed a
@@ -825,18 +822,15 @@ class Invoice(BaseModel):
                     "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
                 ),
                 (
-                    (self.invoice_class == rectificativa, not self.rectifies_invoice_number)
-                    == (True, True),
+                    (self.invoice_class == rectificativa, not self.rectifies_invoice_number) == (True, True),
                     "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
                 ),
                 (
-                    (self.invoice_class != rectificativa, self.rectifies_invoice_number is not None)
-                    == (True, True),
+                    (self.invoice_class != rectificativa, self.rectifies_invoice_number is not None) == (True, True),
                     "rectifies_invoice_number only applies to a factura rectificativa",
                 ),
                 (
-                    (self.invoice_class, category)
-                    == (simplificada, require_iva_category("intra_community_supply")),
+                    (self.invoice_class, category) == (simplificada, require_iva_category("intra_community_supply")),
                     "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
                     "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
                 ),

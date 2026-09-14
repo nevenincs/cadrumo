@@ -51,23 +51,53 @@ from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.prorrata_register import (
     ProrrataActivityRowType as _ProrrataActivityRowType,
+)
+from ...core.prorrata_register import (
     ProrrataEspecialTransitionKind as _ProrrataEspecialTransitionKind,
+)
+from ...core.prorrata_register import (
     ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance,
+)
+from ...core.prorrata_register import (
     ProrrataRegisterRegime as _ProrrataRegisterRegime,
+)
+from ...core.prorrata_register import (
     SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
 )
 from ..calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance as _carried_prior_definitiva,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime as _especial_regime,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime as _general_regime,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     ninguna_prorrata_register_regime as _ninguna_regime,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     opcion_prorrata_transition as _opcion_transition,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     prorrata_provenance_precedence as _provenance_precedence_from_registry,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     prorrata_referenced_provenances as _referenced_provenances_from_registry,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     require_prorrata_provenance as _require_provenance,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     require_prorrata_register_regime as _require_regime,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     require_prorrata_transition as _require_transition,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     require_sector_diferenciado_letra as _require_sector_letter,
+)
+from ..calculations.registry.prorrata_register_catalogue import (
     revocacion_prorrata_transition as _revocacion_transition,
 )
 from ..calculations.registry.schema_references import RegistrySnapshotRef
@@ -90,6 +120,7 @@ PRORRATA_REGISTER_SCHEMA_VERSION = "2"
 # one applied. The domain note they carried is worth keeping: IVA prorrata
 # (LIVA arts. 102-106) predates the lower bound, but a pre-2000 ejercicio can
 # never be a modelled filing year.
+
 
 def _referenced_provenances() -> frozenset[_ProrrataProvisionalProvenance]:
     """Resolve the registry-declared document-backed provenance partition."""
@@ -374,10 +405,7 @@ def _validate_settlement_field_coupling(entry: ProrrataRegisterEntry) -> None:
 
 def _validate_source_observation_provenance(entry: ProrrataRegisterEntry) -> None:
     """Restrict source observations to the carried-prior-definitive lifecycle."""
-    if (
-        entry.source_observation_ref is not None
-        and entry.provisional_provenance != _carried_prior_definitiva()
-    ):
+    if entry.source_observation_ref is not None and entry.provisional_provenance != _carried_prior_definitiva():
         raise ProrrataRegisterValidationError(
             "source_observation_ref is permitted only for a carried_prior_definitiva entry"
         )
@@ -395,11 +423,7 @@ def _validate_especial_transition_regime(entry: ProrrataRegisterEntry) -> None:
     transition = entry.especial_transition
     if transition is None:
         return
-    required_regime = (
-        _especial_regime()
-        if transition.kind == _opcion_transition()
-        else _general_regime()
-    )
+    required_regime = _especial_regime() if transition.kind == _opcion_transition() else _general_regime()
     if entry.regime != required_regime:
         verb = "option" if transition.kind == _opcion_transition() else "revocation"
         raise ProrrataRegisterValidationError(

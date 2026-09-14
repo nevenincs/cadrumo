@@ -25,6 +25,8 @@ from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
+from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
@@ -32,10 +34,9 @@ from cadrumo.application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from cadrumo.application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
-from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.domain.iva.classification import InvoiceKind
+
 from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

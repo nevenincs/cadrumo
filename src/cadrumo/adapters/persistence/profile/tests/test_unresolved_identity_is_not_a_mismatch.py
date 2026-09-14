@@ -25,7 +25,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import _persist_justificante_metadata
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.cross_period_external_evidence import filing_external_evidence_blockers
+from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
@@ -35,9 +38,6 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from cadrumo.application.calculations.cross_period_external_evidence import filing_external_evidence_blockers
-from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import _persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -10,9 +10,9 @@ from __future__ import annotations
 import pytest
 
 from .....core.identity.documents import IdentityError, validate_identity
+from .....core.redaction.rules import redact_for_cli_output, redact_for_log
 from ..nif_iva_catalogue import nif_iva_format_for_country
 from ..tax_id_format import runtime_tax_id_format
-from .....core.redaction.rules import redact_for_cli_output, redact_for_log
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

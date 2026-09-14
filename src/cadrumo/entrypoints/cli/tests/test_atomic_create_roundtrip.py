@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.custody_transactions import ProfileCustodyDuplicateLabelError
@@ -29,7 +31,6 @@ from ....application.user_profile.registration import ProfileRegistrationError
 from ....core.config import load_settings, override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

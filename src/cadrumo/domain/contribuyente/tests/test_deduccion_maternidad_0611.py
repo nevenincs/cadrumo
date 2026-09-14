@@ -35,8 +35,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.descendant_relacion import DescendantRelacion
-from ...calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,

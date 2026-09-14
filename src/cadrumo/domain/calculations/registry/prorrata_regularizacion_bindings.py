@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 from collections.abc import Iterable
+from enum import StrEnum
 from typing import Literal, Protocol
 
 from pydantic import BaseModel, field_validator

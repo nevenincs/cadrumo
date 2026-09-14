@@ -19,11 +19,11 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import Field, ValidationInfo, model_validator
 
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.iva_category_catalogue import (
     IvaCategoryCatalogue,
     resolve_iva_category_catalogue,
 )
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.schema_base import DateAxis
 from .classification import InvoiceKind
 from .errors import IvaValidationError
@@ -441,10 +441,12 @@ class IvaCategoryComponents(IvaStrictFrozen):
         required = {
             component_vocabulary.require_retencion_expectation("expected"): expected_by_kind,
             component_vocabulary.require_retencion_expectation("possible"): expected_by_kind,
-            component_vocabulary.require_retencion_expectation("not_expected"):
-                component_vocabulary.require_retencion_role("none"),
-            component_vocabulary.require_retencion_expectation("unknown"):
-                component_vocabulary.require_retencion_role("unknown"),
+            component_vocabulary.require_retencion_expectation(
+                "not_expected"
+            ): component_vocabulary.require_retencion_role("none"),
+            component_vocabulary.require_retencion_expectation("unknown"): component_vocabulary.require_retencion_role(
+                "unknown"
+            ),
         }[expectation]
         role = component_vocabulary.require_retencion_role(self.retencion_role)
         if role != required:
@@ -1123,10 +1125,10 @@ __all__ = [
     "category_cuota_is_zero_by_law",
     "cuota_less_m303_categories_from_table",
     "registry_category_projection",
-    "registry_cuota_settlement_catalogue",
+    "registry_component_catalogue",
     "registry_component_presence_token",
     "registry_component_vocabulary",
-    "registry_component_catalogue",
+    "registry_cuota_settlement_catalogue",
     "registry_kind_applicability_token",
     "registry_retencion_expectation_token",
     "registry_retencion_role_token",

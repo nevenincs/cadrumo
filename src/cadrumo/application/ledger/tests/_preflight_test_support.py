@@ -14,7 +14,6 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 
 

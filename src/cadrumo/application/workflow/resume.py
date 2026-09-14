@@ -64,11 +64,11 @@ from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ..modelo.calculation_action_ports import CalculationActionPorts
 from .abort import WorkflowAbortReason
 from .errors import WorkflowError
 from .persistence import list_runs, load_run
 from .run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
-from ..modelo.calculation_action_ports import CalculationActionPorts
 
 if TYPE_CHECKING:
     #: ``RevisionId`` is an ``Annotated[str, ...]`` alias, but importing it from

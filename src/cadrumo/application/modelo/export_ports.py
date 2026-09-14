@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
+
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (

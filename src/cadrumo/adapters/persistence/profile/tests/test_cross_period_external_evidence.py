@@ -10,12 +10,6 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.period import Period
-from cadrumo.domain.justificante.schema import Justificante
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
-from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
-from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
     BUCKET_ID as _BUCKET_ID,
 )
@@ -31,6 +25,12 @@ from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_suppor
 from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
     persist_justificante_metadata as _persist_justificante_metadata,
 )
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
+from cadrumo.core.period import Period
+from cadrumo.domain.justificante.schema import Justificante
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
+from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

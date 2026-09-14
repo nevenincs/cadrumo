@@ -103,8 +103,7 @@ class LineageAttestation(RegistryModel):
             )
         if self.from_revision == self.to_revision:
             raise RegistryValidationError(
-                f"lineage attestation {self.family!r}/{self.identity!r} must span two "
-                "different revisions",
+                f"lineage attestation {self.family!r}/{self.identity!r} must span two different revisions",
             )
         if not self.origin.continues_a_chain:
             raise RegistryValidationError(
@@ -118,8 +117,7 @@ class LineageAttestation(RegistryModel):
             )
         if self.evidence is not None and not self.evidence.strip():
             raise RegistryValidationError(
-                f"lineage attestation {self.family!r}/{self.identity!r} evidence must "
-                "be non-empty",
+                f"lineage attestation {self.family!r}/{self.identity!r} evidence must be non-empty",
             )
         return self
 
@@ -159,8 +157,7 @@ def _validate_unique_targets(attestations: Iterable[LineageAttestation]) -> tupl
         target_key = attestation.target_key()
         if target_key in seen_targets:
             raise RegistryValidationError(
-                f"lineage sidecar declares duplicate or many-to-one target identity "
-                f"{target_key!r}",
+                f"lineage sidecar declares duplicate or many-to-one target identity {target_key!r}",
             )
         seen_targets.add(target_key)
 
@@ -194,8 +191,7 @@ def _members_for(
         )
     if any(not isinstance(member, str) for member in family_members):
         raise RegistryValidationError(
-            f"lineage membership index for {family!r}/{revision!r} contains a "
-            "non-string member identity",
+            f"lineage membership index for {family!r}/{revision!r} contains a non-string member identity",
         )
     return frozenset(family_members)
 

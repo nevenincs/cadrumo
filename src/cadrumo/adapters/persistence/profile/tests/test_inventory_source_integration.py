@@ -12,7 +12,10 @@ from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerReposi
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    TestRuntimeProfile,
+    mutate_encrypted_secure_object_json,
+)
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.aggregation.inventory import InventorySourceResolver
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext

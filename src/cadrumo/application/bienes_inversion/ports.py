@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from ...domain.bienes_inversion.register import BienInversionIvaRecord, BienesInversionIvaRegister
+from ...domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 
 
 class BienesInversionIvaRegisterRepositoryProtocol(Protocol):

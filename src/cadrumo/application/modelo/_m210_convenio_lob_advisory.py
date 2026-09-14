@@ -37,10 +37,10 @@ from collections.abc import Mapping
 from datetime import date
 
 from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.errors import ModeloError
-from ...domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,

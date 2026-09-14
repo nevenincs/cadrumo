@@ -26,8 +26,8 @@ from pathlib import Path
 import pytest
 import typer
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.wizard.catalogue import SETUP_FLOW
 from cadrumo.application.wizard.commands import build_wizard_command
 from cadrumo.core.config import override_settings

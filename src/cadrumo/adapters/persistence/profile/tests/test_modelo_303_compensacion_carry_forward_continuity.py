@@ -52,12 +52,15 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
+from cadrumo.application.calculations.observations_repository import observation_key
+from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -69,9 +72,6 @@ from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalcula
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.application.calculations.observations_repository import observation_key
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

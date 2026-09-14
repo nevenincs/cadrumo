@@ -80,6 +80,7 @@ def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
         typed[field] = (raw == "true" if raw else "") if spec.answer_type is bool else raw
     return SetupAnswers.model_validate(typed)
 
+
 __all__ = [
     "SETUP_ANSWER_FIELDS",
     "SetupFieldSpec",

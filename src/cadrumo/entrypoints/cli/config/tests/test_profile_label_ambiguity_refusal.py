@@ -22,11 +22,12 @@ from uuid import UUID
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.custody.tests.support import forge_colliding_capsule_label
+
 from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
 )
-from cadrumo.adapters.persistence.storage.custody.tests.support import forge_colliding_capsule_label
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -62,8 +62,16 @@ def _command(
 
 def test_create_m145_communication_record_persists_bucket_scoped_registry_record(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        record = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
-        read_back = read_m145_communication_record(record.communication_record_id[:12], bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        record = create_m145_communication_record(
+            _command(),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
+        read_back = read_m145_communication_record(
+            record.communication_record_id[:12],
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     assert isinstance(record, M145CommunicationRecord)
     assert record.bucket_id == runtime.bucket_id
@@ -88,7 +96,11 @@ def test_create_m145_communication_record_persists_bucket_scoped_registry_record
 
 def test_create_m145_communication_record_persists_to_secure_namespace(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        record = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        record = create_m145_communication_record(
+            _command(),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
         envelope = runtime.repository.load(
             M145_COMMUNICATION_RECORD_NAMESPACE.namespace,
@@ -103,8 +115,16 @@ def test_create_m145_communication_record_persists_to_secure_namespace(tmp_path:
 
 def test_create_m145_communication_record_is_idempotent_for_identical_content(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        first = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
-        second = create_m145_communication_record(_command(note="Ignored replay note"), bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        first = create_m145_communication_record(
+            _command(),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
+        second = create_m145_communication_record(
+            _command(note="Ignored replay note"),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     assert second == first
     assert second.communication_record_id == first.communication_record_id
@@ -113,17 +133,26 @@ def test_create_m145_communication_record_is_idempotent_for_identical_content(tm
 
 def test_create_m145_communication_record_distinguishes_variation_period(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        communication = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        communication = create_m145_communication_record(
+            _command(),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
         variation = create_m145_communication_record(
             _command(period_token=M145CommunicationPeriod.VARIATION),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         communication_read = read_m145_communication_record(
-            communication.communication_record_id, bucket_id=runtime.bucket_id,
+            communication.communication_record_id,
+            bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
-        variation_read = read_m145_communication_record(variation.communication_record_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        variation_read = read_m145_communication_record(
+            variation.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     assert variation.period_token is M145CommunicationPeriod.VARIATION
     assert variation.communication_record_id != communication.communication_record_id
@@ -139,7 +168,11 @@ def test_create_m145_communication_record_refuses_undeclared_casilla_id(tmp_path
         field_values={"perceptor.no-declarado": "x"},
     )
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime, pytest.raises(ValueError, match="undeclared casilla"):
-        create_m145_communication_record(command, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        create_m145_communication_record(
+            command,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
 
 def test_create_m145_communication_record_uses_real_registry_membership() -> None:

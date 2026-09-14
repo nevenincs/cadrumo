@@ -1,13 +1,6 @@
 """Filing-grade Modelo gates for cross-period clean-state proof."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -16,22 +9,52 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+
 __all__ = ["register_wizard_catalogue"]
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
+from cadrumo.application.calculations.cross_period_models import (
+    CrossPeriodExpectedMemberSet,
+    NoPriorObligationProvenanceKind,
+)
+from cadrumo.application.calculations.observations_repository import (
+    APP_FILING_SOURCE_KIND,
+    ObservationSourceKind,
+    is_official_aeat_observation_source,
+)
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.action_errors import ModeloCrossPeriodCleanStateError
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+from cadrumo.application.modelo.filing_actions import file_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.contribuyente.entity_type import EntityType
-from cadrumo.domain.deadlines.models import (    CrossPeriodGroupMemberRoster,
+from cadrumo.domain.deadlines.models import (
+    CrossPeriodGroupMemberRoster,
     IrpfIncomeCategory,
     IVARegime,
     M303RegimeComposition,
@@ -40,11 +63,13 @@ from cadrumo.domain.deadlines.models import (    CrossPeriodGroupMemberRoster,
     TaxpayerProfile,
 )
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (    CalculationRevision,
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.filing_record import (    ExternalEvidence,
+from cadrumo.domain.modelos.filing_record import (
+    ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
@@ -54,29 +79,12 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import ready_clave_settings
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
-from cadrumo.application.calculations.cross_period_models import (    CrossPeriodExpectedMemberSet,
-    NoPriorObligationProvenanceKind,
-)
-from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ObservationSourceKind, is_official_aeat_observation_source
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo.action_errors import ModeloCrossPeriodCleanStateError
-from cadrumo.application.modelo.calculation_actions import (    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    
     from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(

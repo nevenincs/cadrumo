@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.aggregation import BindingSourceKind
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.operator_action_enums import NoRecoveryOutcome
@@ -38,7 +39,6 @@ from ....domain.transactions.models import (
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
-from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .._preconditions import AggregationPreconditionCondition
 from ..errors import (
     AggregationValidationError,

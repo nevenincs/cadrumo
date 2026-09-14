@@ -18,8 +18,6 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from cadrumo.domain.submission.models import ModeloDraftStatus
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -29,6 +27,8 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     seed_work_unit,
     verify_revision,
 )
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.domain.submission.models import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

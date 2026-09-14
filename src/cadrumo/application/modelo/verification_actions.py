@@ -140,7 +140,6 @@ from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
-from .pulled_filing_reconcile import pulled_filing_divergence_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
@@ -161,6 +160,7 @@ from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from .preconditions import ModeloPreconditionFailure
+from .pulled_filing_reconcile import pulled_filing_divergence_findings
 from .revision_persistence import (
     emit_modelo_bucket_event as _emit_bucket_event,
 )
@@ -179,18 +179,18 @@ from .verification_preconditions import (
     build_verification_precondition_failure,
     project_verification_findings,
 )
-from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
-from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
-from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 from .verification_repository_ports import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
     VerificationRepositoryBundle,
 )
+from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
+from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
+from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
-    from ..auth.operator_scope_ports import OperatorScopePorts
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ..auth.operator_scope_ports import OperatorScopePorts
 
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from .verification_predicates import (
@@ -1008,10 +1008,10 @@ def verify_modelo_revision(
 ) -> VerificationReport:
     """Persist and return the domain verification report without transport recovery data.
 
-        The thin arm over :func:`verify_modelo_revision_with_preconditions`, for
-        callers that want the report and none of the transport-recovery envelope.
-        It takes the same required application-owned repository bundle the gates
-        are evaluated against.
+    The thin arm over :func:`verify_modelo_revision_with_preconditions`, for
+    callers that want the report and none of the transport-recovery envelope.
+    It takes the same required application-owned repository bundle the gates
+    are evaluated against.
     """
     return verify_modelo_revision_with_preconditions(
         calculation_revision_id,

@@ -31,8 +31,6 @@ Ley 37/1992 art. 116.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
@@ -43,10 +41,23 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
+from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.filing_actions import file_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
@@ -61,16 +72,6 @@ from cadrumo.domain.deadlines.models import (
     TaxpayerProfile,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
-from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

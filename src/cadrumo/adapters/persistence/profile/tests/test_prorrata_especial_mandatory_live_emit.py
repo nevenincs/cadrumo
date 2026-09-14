@@ -39,10 +39,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
+from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from cadrumo.application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
+from cadrumo.application.prorrata_register.service import ProrrataRegisterService
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import (
@@ -57,11 +62,6 @@ from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry, Sec
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.prorrata_register.service import ProrrataRegisterService
-from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from cadrumo.application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

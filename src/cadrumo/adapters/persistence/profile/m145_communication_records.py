@@ -69,8 +69,7 @@ def _record_ambiguous(
 ) -> M145CommunicationRecordAmbiguousError:
     """Build the application ambiguous-prefix error for the generic repository."""
     return M145CommunicationRecordAmbiguousError(
-        f"Modelo 145 communication record prefix {communication_record_id!r} is ambiguous; "
-        f"matches {list(full_ids)!r}",
+        f"Modelo 145 communication record prefix {communication_record_id!r} is ambiguous; matches {list(full_ids)!r}",
         context={"communication_record_id": communication_record_id, "match_count": len(full_ids)},
     )
 

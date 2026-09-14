@@ -54,8 +54,8 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError, ModeloPreconditionErrorMixin
-from .calculation_actions import get_calculation_revision
 from .calculation_action_ports import CalculationActionPorts
+from .calculation_actions import get_calculation_revision
 from .preconditions import (
     build_modelo_precondition_failure_for_scenario,
     build_modelo_work_file_unverified_revision_failure,

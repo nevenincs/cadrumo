@@ -69,6 +69,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ...domain.calculations.registry.iva_wallet_carry_targets import (
     iva_wallet_owned_binding_ids_for_revision,
 )
@@ -87,7 +88,6 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
-from ...domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
@@ -95,7 +95,6 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
-from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
 )
@@ -141,14 +140,15 @@ from ._m349_ledger_guard import (
 from ._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
-from .calculation_action_ports import (
-    CalculationActionPorts,
-    CalculationTransactionRepositoryProtocol,
-)
 from .action_errors import (
     CalculationRevisionNotFoundError,
     ModeloAggregationBindingError,
 )
+from .calculation_action_ports import (
+    CalculationActionPorts,
+    CalculationTransactionRepositoryProtocol,
+)
+from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_revision_gate import require_calculation_revision_coordinates_current

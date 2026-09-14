@@ -21,6 +21,12 @@ from ....core.money.rounding import round_to_cents as _quantize
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_filing_year
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
+from ._anexo_d_records import InventoryAnexoDResult
+from .closing_authority_records import (
+    InventoryClosingAuthorityRecord,
+    InventoryClosingConflictDiagnostic,
+    InventoryClosingResolution,
+)
 
 # The record module completes the cycle-breaking model bootstrap before these
 # concrete model modules are imported directly.  Import it first: its bootstrap
@@ -38,12 +44,6 @@ from .records import (
     ValuationMethod,
     resolve_inventory_authoritative_closing,
 )
-from .closing_authority_records import (
-    InventoryClosingAuthorityRecord,
-    InventoryClosingConflictDiagnostic,
-    InventoryClosingResolution,
-)
-from ._anexo_d_records import InventoryAnexoDResult
 
 
 @dataclass(frozen=True, slots=True)

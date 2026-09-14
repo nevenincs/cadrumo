@@ -9,15 +9,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    OperationLifecycle,
-    OperationTerminalCondition,
-)
 from cadrumo.application.operations.capabilities import (
     OperationOwnedResource,
     OperationReplayPolicy,
@@ -33,6 +24,16 @@ from cadrumo.application.operations.persistence.leases import (
     operation_conflict_scope_reference,
 )
 from cadrumo.application.operations.registry import OperationReconciliationPolicy
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
+
 from .test_supervisor import (
     _NOW,
     DeadlineAcknowledgingExecutor,

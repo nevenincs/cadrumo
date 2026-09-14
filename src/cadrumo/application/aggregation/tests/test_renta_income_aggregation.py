@@ -6,7 +6,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-
 from pydantic import ValidationError
 
 from ....domain.invoices.models import InvoiceCatalogue
@@ -23,8 +22,8 @@ from .renta_income_aggregation_support import (
     _M130_INGRESOS_CASILLA,
     _Q1_2024,
     _Q2_2024,
-    _income_transaction,
     _catalogue_read_ports,
+    _income_transaction,
     raw_transaction,
 )
 

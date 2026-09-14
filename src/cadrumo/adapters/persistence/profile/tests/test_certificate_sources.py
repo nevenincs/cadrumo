@@ -13,7 +13,9 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
 from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
@@ -100,8 +102,15 @@ def test_register_two_sources_are_both_enumerable(tmp_path: Path) -> None:
     apoderado = tmp_path / "apoderado-acme.p12"
     apoderado.write_bytes(b"placeholder apoderado cert")
 
-    register_operator_certificate_source(name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(name="apoderado-acme", certificate_path=apoderado, friendly_name="ACME SL", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
+    register_operator_certificate_source(
+        name="apoderado-acme",
+        certificate_path=apoderado,
+        friendly_name="ACME SL",
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
 
     report = list_operator_certificate_sources()
 
@@ -127,8 +136,12 @@ def test_select_one_source_activates_it_and_leaves_the_other_inactive(tmp_path: 
     apoderado.write_bytes(b"placeholder apoderado cert")
 
     configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
+    register_operator_certificate_source(
+        name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     result = select_operator_certificate_source(name="apoderado-acme", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
@@ -161,8 +174,12 @@ def test_selecting_a_second_source_switches_the_active_selection(tmp_path: Path)
     apoderado = tmp_path / "apoderado-acme.p12"
     apoderado.write_bytes(b"placeholder apoderado cert")
 
-    register_operator_certificate_source(name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
+    register_operator_certificate_source(
+        name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     select_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     select_operator_certificate_source(name="apoderado-acme", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
@@ -203,8 +220,12 @@ def test_re_registering_an_existing_name_repoints_its_path(tmp_path: Path) -> No
     renewed = tmp_path / "personal-v2.p12"
     renewed.write_bytes(b"v2")
 
-    register_operator_certificate_source(name="personal", certificate_path=original, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(name="personal", certificate_path=renewed, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=original, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
+    register_operator_certificate_source(
+        name="personal", certificate_path=renewed, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     report = list_operator_certificate_sources()
     assert len(report.sources) == 1, "re-registering the same name must not duplicate the entry"
@@ -217,7 +238,9 @@ def test_remove_source_clears_registration_and_active_selection(tmp_path: Path) 
     personal = tmp_path / "personal.p12"
     personal.write_bytes(b"placeholder personal cert")
 
-    register_operator_certificate_source(name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=personal, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     select_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     result = remove_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
@@ -264,8 +287,12 @@ def test_certificate_source_registry_roundtrips_through_encrypted_workflow_state
     apoderado = tmp_path / "apoderado-acme.p12"
     apoderado.write_bytes(b"placeholder apoderado cert")
 
-    register_operator_certificate_source(name="personal", certificate_path=personal, friendly_name="Yo mismo", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=personal, friendly_name="Yo mismo", operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
+    register_operator_certificate_source(
+        name="apoderado-acme", certificate_path=apoderado, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     select_operator_certificate_source(name="apoderado-acme", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     reloaded = workflow_state_repository().load()

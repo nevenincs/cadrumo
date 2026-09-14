@@ -14,9 +14,9 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.bienes_inversion.register import (
+    BienesInversionIvaRegister,
     BienInversionDisposal,
     BienInversionIvaRecord,
-    BienesInversionIvaRegister,
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ....domain.calculations.registry.authority import bundled_authority

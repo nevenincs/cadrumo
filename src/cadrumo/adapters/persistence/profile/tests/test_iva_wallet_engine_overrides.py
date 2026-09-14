@@ -1,7 +1,6 @@
 """Override behavior for AEAT IVA wallet decisions in Modelo 303."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date
 from decimal import Decimal
@@ -14,31 +13,9 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.application.calculations.observations_repository import CalculationObservationPorts
-from cadrumo.application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationOverride
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
-from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from cadrumo.application.modelo.iva_wallet_seed import (
-    ModeloIvaWalletOverrideFreshWalletError,
-    ModeloIvaWalletOverrideSealedError,
-    record_iva_compensation_override_for_bucket,
-)
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _BUCKET_ID,
     _DECIDED_AT,
@@ -59,6 +36,29 @@ from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support impor
     _work_unit_and_revision_for_wallet_gate,
     _work_unit_repositories_with_modelo_303_work_unit,
 )
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from cadrumo.application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
+from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from cadrumo.application.calculations.observations_repository import CalculationObservationPorts
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.application.modelo.iva_wallet_seed import (
+    ModeloIvaWalletOverrideFreshWalletError,
+    ModeloIvaWalletOverrideSealedError,
+    record_iva_compensation_override_for_bucket,
+)
+from cadrumo.application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationOverride
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from cadrumo.domain.modelos.repository import upsert_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

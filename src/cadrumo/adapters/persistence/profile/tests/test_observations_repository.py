@@ -17,19 +17,19 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.errors.error_codes import build_error_envelope
-from cadrumo.core.period import Period
-from cadrumo.domain.iva_compensation.reconciliation import (
-    IvaCompensationAuthoritySource,
-    IvaCompensationReconciliationDecision,
-)
+from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
 from cadrumo.application.calculations.errors import ObservationKeyError
 from cadrumo.application.calculations.observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
     observation_key,
 )
-from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
+from cadrumo.core.errors.error_codes import build_error_envelope
+from cadrumo.core.period import Period
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -205,8 +205,8 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
     keyed with iva_wallet_decision_key (hashed) and must be returned directly.
     """
 
-    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
     decided_at = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
     decision = IvaCompensationReconciliationDecision(

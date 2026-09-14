@@ -23,8 +23,8 @@ from pathlib import Path
 import pytest
 
 from ....core.config import load_settings
-from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.document_shape import DocumentShape
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError

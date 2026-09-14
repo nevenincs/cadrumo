@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-
-
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -18,6 +15,21 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.errors import (
+    AggregationValidationError,
+)
+from cadrumo.application.aggregation.modelo_bindings_renta_expenses import (
+    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+)
+from cadrumo.application.aggregation.renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
+from cadrumo.application.aggregation.renta_ledger import (
+    RentaLedgerAggregationIssueReason,
+    RentaLedgerExpenseAggregation,
+    aggregate_renta_ledger_expenses_from_repositories,
+)
+from cadrumo.application.aggregation.source_mesh import (
+    CalculationSourceContext,
+)
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.i18n.translatable import Translatable as tr
@@ -43,21 +55,6 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
-from cadrumo.application.aggregation.errors import (
-    AggregationValidationError,
-)
-from cadrumo.application.aggregation.modelo_bindings_renta_expenses import (
-    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
-)
-from cadrumo.application.aggregation.renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
-from cadrumo.application.aggregation.renta_ledger import (
-    RentaLedgerAggregationIssueReason,
-    RentaLedgerExpenseAggregation,
-    aggregate_renta_ledger_expenses_from_repositories,
-)
-from cadrumo.application.aggregation.source_mesh import (
-    CalculationSourceContext,
-)
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
@@ -624,16 +621,6 @@ def test_repository_backed_aggregation_rejects_unbound_invoice_repository(
         )
 
 
-
-
-
-
-
-
-
-
-
-
 def test_repository_backed_aggregation_admits_a_transaction_whose_invoice_date_is_in_window_but_own_date_is_not(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -735,18 +722,6 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
     assert result.issues[0].transaction_id == out_of_year.transaction_id
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 # ---------------------------------------------------------------------------
 # Territorial-regime region-scoped deductibility (region-Renta D1/D2/D4)
 # ---------------------------------------------------------------------------
@@ -779,12 +754,6 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
             notes=tr("Override territorial de prueba."),
         ),
     )
-
-
-
-
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -893,4 +862,3 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
     assert other_region.issues == ()
     assert other_region.observations[0].proportionality_kind is not ProportionalityKind.FIXED_PERCENTAGE
     assert other_region.observations[0].deductible_amount == Decimal("100.00")
-

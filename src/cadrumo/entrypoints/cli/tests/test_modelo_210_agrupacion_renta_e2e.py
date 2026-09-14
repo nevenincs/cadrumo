@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -27,7 +29,6 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

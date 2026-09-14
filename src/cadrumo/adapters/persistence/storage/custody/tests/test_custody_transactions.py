@@ -231,8 +231,8 @@ def _hold_transaction_lock_in_sibling(
     is timing a Windows spawn plus a cadrumo import -- seconds of startup that
     swallow any window short enough to be a useful contention probe.
     """
-    from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
     from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
+    from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
 
     with composed_profile_persistence_ports():
         result_queue.put("ready")
@@ -248,8 +248,8 @@ def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result
     transaction is the only work left, so a caller timing "did the sibling get
     in?" measures the lock rather than the seconds a spawn spends importing.
     """
-    from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
     from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
+    from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 
     with composed_profile_persistence_ports():
         result_queue.put("ready")

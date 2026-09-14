@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+
 import pytest
 
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence

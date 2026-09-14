@@ -1,13 +1,6 @@
 """Art. 109 current-period activity-income coverage tests."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
@@ -18,21 +11,13 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.period import Period
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests.verification_substance_support import (    _CASILLA_01,
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.profile.tests.verification_substance_support import (
+    _CASILLA_01,
     _CASILLA_02,
     _CASILLA_05,
     _CASILLA_06,
@@ -46,6 +31,19 @@ from cadrumo.adapters.persistence.profile.tests.verification_substance_support i
     _seed_ready_profile,
     workflow_profile,
 )
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.core.period import Period
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

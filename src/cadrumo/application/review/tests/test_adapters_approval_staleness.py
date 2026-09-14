@@ -25,12 +25,12 @@ from ...filing.draft_review import ModeloApprovalStaleReason, describe_stale_rea
 from ..enums import ReviewSeverity, ReviewState
 from ..operator import _to_row
 from ..source_adapters import _to_stale_approval_item, drafts_pending
+from ._fakes import draft_review_ports
 from .test_adapters import (
     _PROFILE_ID,
     _build_settings,
     _draft,
 )
-from ._fakes import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

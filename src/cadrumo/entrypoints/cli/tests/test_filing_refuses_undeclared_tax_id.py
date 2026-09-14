@@ -22,12 +22,13 @@ from datetime import date
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
 )
 from ....domain.user_profile.values import UserProfileFact
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ..common import cli_policy_refusal_projection, declared_tax_id
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 from .cli_runner import cadrumo_click_command, invoke_cached_cli
@@ -80,8 +81,12 @@ def _persist_facts(*, include_tax_id: bool) -> None:
     entry: the path is simply never among the facts written, which is what makes
     absence unambiguous.
     """
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+        load_test_profile_record,
+        replace_test_profile_record,
+    )
+
     from ....core.bucket_pointer import resolve_active_bucket_id
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "profile create must install an active-profile pointer"
@@ -102,8 +107,9 @@ def _persist_facts(*, include_tax_id: bool) -> None:
 
 
 def _active_record():
-    from ....core.bucket_pointer import resolve_active_bucket_id
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None

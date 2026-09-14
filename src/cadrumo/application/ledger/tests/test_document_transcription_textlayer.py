@@ -18,8 +18,8 @@ from importlib.metadata import version
 
 import pytest
 
-from ....core.field_origin import FieldOrigin
 from ....core.document_shape import DocumentShape
+from ....core.field_origin import FieldOrigin
 from ....tests.pdf_fixtures import multi_page_text_pdf_bytes
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -51,9 +51,7 @@ _PAGE_TWO_LINES = (
     "Continuacion pagina 2",
     f"Total factura {_PRINTED_TOTAL}",
 )
-_TEXT_LAYER_PORTS = text_layer_ports_for_pages(
-    ("\n".join(_PAGE_ONE_LINES), "\n".join(_PAGE_TWO_LINES))
-)
+_TEXT_LAYER_PORTS = text_layer_ports_for_pages(("\n".join(_PAGE_ONE_LINES), "\n".join(_PAGE_TWO_LINES)))
 
 
 def _evidence_input(data: bytes, mime_type: str, *, document_shape: DocumentShape) -> EvidenceInput:

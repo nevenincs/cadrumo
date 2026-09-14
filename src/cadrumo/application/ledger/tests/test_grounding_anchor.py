@@ -16,8 +16,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.decimal.coercion import coerce_finite_european_decimal
-from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.document_shape import DocumentShape
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL

@@ -7,7 +7,7 @@ from hashlib import sha256
 
 from pydantic import SecretStr
 
-from ..certificate_secret_backend import CertificateSecretBackend, CertificateSecretBackendFactory
+from ..certificate_secret_backend import CertificateSecretBackend
 
 
 class InMemoryCertificateSecretBackend:

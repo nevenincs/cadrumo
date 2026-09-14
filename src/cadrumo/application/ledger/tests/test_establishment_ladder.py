@@ -51,8 +51,10 @@ from ..counterparty_establishment import (
     ConfirmedCounterpartyResolution,
     record_confirmed_counterparty_facts,
 )
-from ..counterparty_establishment_ports import CounterpartyEstablishmentPersistenceError
-from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
+from ..counterparty_establishment_ports import (
+    CounterpartyEstablishmentPersistenceError,
+    CounterpartyEstablishmentRepositoryProtocol,
+)
 from ..establishment_ladder import (
     CounterpartyEstablishment,
     EstablishmentRung,
@@ -770,6 +772,7 @@ class TestRungReachabilityFromADraft:
         assert resolved.scope is None
         assert resolved.rung is None
         assert territorial_scope_for_spanish_postal_code(_LAS_PALMAS) is IvaTerritorialScope.ES_CANARIAS
+
 
 # -- the rate walk must see every carrier a reader can fill -----------------
 #

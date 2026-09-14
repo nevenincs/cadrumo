@@ -1,28 +1,46 @@
 """Secure-store behavioral proof for the Modelo 210 IRNR income source."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from pathlib import Path
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (    isolated_injected_secure_object_repository,
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    isolated_injected_secure_object_repository,
     isolated_runtime_profile,
 )
+from cadrumo.application.aggregation.irnr_income_ledger import (
+    IrnrIncomeLedgerAggregation,
+    IrnrIncomeLedgerAggregationIssueReason,
+    aggregate_irnr_income_ledger_from_repositories,
+)
+from cadrumo.application.aggregation.ledger_filing_snapshot import (
+    compute_ledger_filing_evidence,
+    compute_ledger_filing_snapshot,
+    evaluate_ledger_filing_staleness,
+)
+from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
+from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.irnr import M210GrossIncomeSourceMode, M210PayerMode
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -32,22 +50,6 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.m210_income_classification import M210IncomeClassification
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import ready_clave_settings
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
-from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.application.aggregation.irnr_income_ledger import (    IrnrIncomeLedgerAggregation,
-    IrnrIncomeLedgerAggregationIssueReason,
-    aggregate_irnr_income_ledger_from_repositories,
-)
-from cadrumo.application.aggregation.ledger_filing_snapshot import (    compute_ledger_filing_evidence,
-    compute_ledger_filing_snapshot,
-    evaluate_ledger_filing_staleness,
-)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -14,22 +14,8 @@ from sqlalchemy import event
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelector
 from cadrumo.application.modelo.work_addressing import (
@@ -51,6 +37,20 @@ from cadrumo.application.modelo.work_selection import (
     ModeloWorkSelectorState,
     select_modelo_work_resolution,
 )
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

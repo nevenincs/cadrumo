@@ -22,12 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.ledger.llm_classification_ports import LLMSplitSuggestion
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.application.ledger.llm_classification import suggest_evidence_split
 from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support import (
     _BUCKET,
     _seed_parent,
@@ -37,6 +32,11 @@ from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support impo
 from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support import (
     repositories as repositories,
 )
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.llm_classification import suggest_evidence_split
+from cadrumo.application.ledger.llm_classification_ports import LLMSplitSuggestion
+from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

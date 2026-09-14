@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from cadrumo.application.auth.operator_scope_ports import OperatorScopeStorageError
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+import pytest
+from pydantic import SecretStr
+
+from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     InwardOperatorScopeStorage,
     build_inward_operator_scope_ports,
@@ -11,7 +17,6 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.application.auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
 from cadrumo.application.auth.certificate_source_operations import (
     register_operator_certificate_source,
@@ -21,23 +26,19 @@ from cadrumo.application.auth.certificate_source_operations import (
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
 from cadrumo.application.auth.operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_results import (
-    AuthOperationScopeConflictError,
     AuthOperationRequiresCustodySessionError,
+    AuthOperationScopeConflictError,
     AuthProviderNotConfiguredError,
 )
 from cadrumo.application.auth.operator_scope import auth_mutation_span
+from cadrumo.application.auth.operator_scope_ports import OperatorScopeStorageError
 from cadrumo.application.auth.sessions import load_persisted_session, storage_state_paths
-from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
 from cadrumo.application.user_profile.profile_keys import profile_keys
+from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
-from datetime import UTC, datetime, timedelta
-from pathlib import Path
-
-import pytest
-from pydantic import SecretStr
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -91,7 +92,9 @@ def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
         paths = storage.resolve(settings.cadrumo_local_storage_root, _PROFILE_A)
 
         def attempt_auth_mutation() -> None:
-            with auth_mutation_span(settings=settings, bucket_id=_PROFILE_A, operator_scope_ports=_OPERATOR_SCOPE_PORTS):
+            with auth_mutation_span(
+                settings=settings, bucket_id=_PROFILE_A, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            ):
                 pass
 
         storage.block(_PROFILE_A)
@@ -281,8 +284,12 @@ def test_reset_removes_certificate_registry_and_secure_secret(tmp_path: Path) ->
         cert_path.write_bytes(b"placeholder")
         _create_profile(_PROFILE_A, provider="certificate")
         with open_test_profile_session(_PROFILE_A):
-            register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-            set_operator_certificate_source_secret(name="personal", secret=SecretStr("do-not-leak"), operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            register_operator_certificate_source(
+                name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
+            set_operator_certificate_source_secret(
+                name="personal", secret=SecretStr("do-not-leak"), operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             assert resolve_certificate_source_secret(name="personal", bucket_id=_PROFILE_A) is not None
 
         first = _reset(provider="certificate")

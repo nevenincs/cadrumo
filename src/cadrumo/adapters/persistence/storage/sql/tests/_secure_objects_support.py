@@ -9,8 +9,8 @@ from typing import Any
 
 import pytest
 
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..secure_objects import SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

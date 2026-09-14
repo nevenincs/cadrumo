@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 import asyncio
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
@@ -18,17 +16,16 @@ from pydantic import SecretStr
 
 from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.storage.errors import RepositoryError
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
-from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.config import load_settings
-from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
-from cadrumo.application.user_profile.profile_keys import profile_keys
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.application.workflow.persistence import WorkflowStateRepository, workflow_state_repository
-from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.adapters.persistence.storage.errors import RepositoryError
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    isolated_profile_storage_root,
+    isolated_runtime_profile,
+)
 from cadrumo.application.auth.acquisition_lock import acquire_auth_acquisition_lock
 from cadrumo.application.auth.actions import update_auth
 from cadrumo.application.auth.certificate_source_operations import (
@@ -44,9 +41,19 @@ from cadrumo.application.auth.operator import (
     reset_operator_auth,
 )
 from cadrumo.application.auth.operator_cleanup import build_auth_cleanup_intent
-from cadrumo.application.auth.operator_results import AuthCleanupInProgressError, CertificateSecretMutationInProgressError
+from cadrumo.application.auth.operator_results import (
+    AuthCleanupInProgressError,
+    CertificateSecretMutationInProgressError,
+)
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.sessions import ensure_authenticated_aeat_session, storage_state_paths
+from cadrumo.application.user_profile.profile_keys import profile_keys
+from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
+from cadrumo.application.workflow.persistence import WorkflowStateRepository, workflow_state_repository
+from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.core.auth_provider import AuthProviderKind
+from cadrumo.core.config import load_settings
+from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -54,6 +61,7 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 def _workflow_database_path(storage_root: Path, bucket_id: str) -> Path:
     """Return the test database location without importing the persistence adapter."""
     return storage_root / "buckets" / bucket_id / "db" / "workflow.sqlite3"
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -288,7 +296,9 @@ def test_certificate_secret_set_event_failure_resumes_original_set_once(
         blocked_path.write_bytes(b"blocked")
         _create_profile(provider="certificate")
         with open_test_profile_session(_BUCKET_ID):
-            register_operator_certificate_source(name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            register_operator_certificate_source(
+                name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             repository = workflow_state_repository()
             db_path = _workflow_database_path(storage_root, _BUCKET_ID)
 
@@ -363,7 +373,9 @@ def test_certificate_secret_rotation_event_failure_resumes_original_rotation_onc
         certificate_path.write_bytes(b"certificate")
         _create_profile(provider="certificate")
         with open_test_profile_session(_BUCKET_ID):
-            register_operator_certificate_source(name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            register_operator_certificate_source(
+                name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             set_operator_certificate_source_secret(
                 name="personal",
                 secret=SecretStr("original-passphrase"),
@@ -410,7 +422,9 @@ def test_certificate_secret_remove_event_failure_reports_original_removal_once(
         certificate_path.write_bytes(b"certificate")
         _create_profile(provider="certificate")
         with open_test_profile_session(_BUCKET_ID):
-            register_operator_certificate_source(name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            register_operator_certificate_source(
+                name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             set_operator_certificate_source_secret(
                 name="personal",
                 secret=SecretStr("private-passphrase"),
@@ -430,8 +444,12 @@ def test_certificate_secret_remove_event_failure_reports_original_removal_once(
             assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
             assert _event_count(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED) == 0
 
-            resumed = remove_operator_certificate_source_secret(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-            repeated = remove_operator_certificate_source_secret(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            resumed = remove_operator_certificate_source_secret(
+                name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
+            repeated = remove_operator_certificate_source_secret(
+                name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             final = repository.load()
             events = _events(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED)
 
@@ -511,8 +529,12 @@ def test_reset_write_failure_resumes_real_cleanup_and_emits_effects_once(
                 operation="reset-recovery-test",
             ),
         ):
-            register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-            set_operator_certificate_source_secret(name="personal", secret=SecretStr("private"), operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            register_operator_certificate_source(
+                name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
+            set_operator_certificate_source_secret(
+                name="personal", secret=SecretStr("private"), operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
             session_store.save(
                 session_path,
@@ -571,8 +593,12 @@ def test_pending_cleanup_refuses_new_auth_configuration_source_and_secret_writes
         blocked_path.write_bytes(b"blocked")
         _create_profile(provider="certificate")
         with open_test_profile_session(_BUCKET_ID):
-            register_operator_certificate_source(name="old", certificate_path=old_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-            set_operator_certificate_source_secret(name="old", secret=SecretStr("old-secret"), operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            register_operator_certificate_source(
+                name="old", certificate_path=old_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
+            set_operator_certificate_source_secret(
+                name="old", secret=SecretStr("old-secret"), operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             _seed_cleanup_intent(operation_kind=AuthCleanupOperationKind.RESET)
 
             with pytest.raises(AuthCleanupInProgressError):
@@ -643,7 +669,9 @@ def test_failed_reset_serializes_and_refuses_concurrent_central_session_writer(
         def failing_reset() -> None:
             with open_test_profile_session(_BUCKET_ID):
                 settings = load_settings()
-                with auth_mutation_span(settings=settings, bucket_id=_BUCKET_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS):
+                with auth_mutation_span(
+                    settings=settings, bucket_id=_BUCKET_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                ):
                     reset_locked.set()
                     assert continue_reset.wait(timeout=10)
                     reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)

@@ -26,13 +26,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.casilla_value_kind import CasillaValueKind
-from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
-from cadrumo.core.period import Period
-from cadrumo.core.register_scoping_signal import RegisterScopingSignal
-from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.application.live.filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
@@ -44,6 +37,13 @@ from cadrumo.application.live.filed_data_capture import (
     filed_history_discovery_report,
     recapture_divergence_notices,
 )
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.casilla_value_kind import CasillaValueKind
+from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
+from cadrumo.core.period import Period
+from cadrumo.core.register_scoping_signal import RegisterScopingSignal
+from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -668,10 +668,10 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
     production entry point -- against a REAL persisted stored observation, so
     the proof is not confined to the pure comparator in isolation.
     """
+    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
@@ -712,10 +712,10 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
 
 def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path: Path) -> None:
     """The mutation-based counterpart: a genuine divergence still reaches the operator as a Notice."""
+    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()

@@ -61,13 +61,13 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
-    ProrrataRegularizacionProvider,
-    prorrata_source_casilla_ids,
-)
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     especial_prorrata_register_regime,
     regime_apportions_deduction,
+)
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataRegularizacionProvider,
+    prorrata_source_casilla_ids,
 )
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
@@ -556,7 +556,9 @@ def _missing_current_year_casillas(
     revision: ModeloRevision,
 ) -> tuple[CasillaId, ...]:
     return tuple(
-        casilla_id for casilla_id in prorrata_source_casilla_ids(revision.bindings) if casilla_id not in current_year_values
+        casilla_id
+        for casilla_id in prorrata_source_casilla_ids(revision.bindings)
+        if casilla_id not in current_year_values
     )
 
 

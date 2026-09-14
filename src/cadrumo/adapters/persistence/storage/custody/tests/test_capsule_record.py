@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.storage.custody.records import (
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordIntegrityError,
     ProfileRecordSession,
@@ -24,7 +25,6 @@ from cadrumo.application.user_profile.capsule_record import (
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

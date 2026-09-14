@@ -29,7 +29,6 @@ The four behaviours under test:
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
@@ -39,36 +38,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.iva_wallet_carry_targets import (
-    MODELO_303_IVA_COMPENSATION_BINDING_ID,
-    iva_wallet_owned_binding_ids_for_revision,
-)
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
-    registry_grounded_observations,
-    revision_id_for_observation,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
-from cadrumo.application.modelo.calculation_actions import (
-    calculate_modelo_revision,
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    resolve_bucket_source_mesh,
-)
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
     _M130_AGRARIAN_VOLUME_CASILLA,
@@ -82,6 +57,31 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     _Repos,
     _verify_revision,
 )
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+    resolve_bucket_source_mesh,
+)
+from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.iva_wallet_carry_targets import (
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
+    iva_wallet_owned_binding_ids_for_revision,
+)
+from cadrumo.domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -392,10 +392,10 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     """
     from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-    from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
     from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
     from cadrumo.application.modelo.verification_cross_period import cross_period_clean_state_verdict_for_work_unit
+    from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+    from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
@@ -510,9 +510,9 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     the enrolled resolver receives the registry-declared iva-wallet-owned set as
     ``excluded_binding_ids`` so the iva-wallet decision remains the sole owner.
     """
-    from cadrumo.core.period import Period
     from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
     from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
+    from cadrumo.core.period import Period
 
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
@@ -613,10 +613,13 @@ def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate()
 
     snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
     reused_binding_id = MODELO_303_IVA_COMPENSATION_BINDING_ID
-    assert iva_wallet_owned_binding_ids_for_revision(
-        modelo_id=snapshot.modelo.id,
-        revision_id=snapshot.revision.id,
-    ) == frozenset()
+    assert (
+        iva_wallet_owned_binding_ids_for_revision(
+            modelo_id=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+        )
+        == frozenset()
+    )
     assert reused_binding_id not in iva_wallet_owned_binding_ids_for_revision(
         modelo_id=snapshot.modelo.id,
         revision_id=snapshot.revision.id,

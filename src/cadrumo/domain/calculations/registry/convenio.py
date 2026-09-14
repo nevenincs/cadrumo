@@ -294,9 +294,7 @@ def resolve_convenio_override(
         raise RegistryValidationError(f"convenio override resolved non-override fact {resolved.fact_id!r}")
     raw_kind = resolved.payload.override_code
     declared_override_codes = frozenset(
-        code
-        for variant in fact.variants
-        if isinstance(code := getattr(variant.payload, "override_code", None), str)
+        code for variant in fact.variants if isinstance(code := getattr(variant.payload, "override_code", None), str)
     )
     if raw_kind not in declared_override_codes:
         raise RegistryValidationError(

@@ -24,10 +24,11 @@ from pathlib import Path
 
 import pytest
 
-from .....application.user_profile.profile_record_repository import ProfileRecordRepository
-from .....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+
+from .....application.user_profile.profile_record_repository import ProfileRecordRepository
+from .....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ...storage.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

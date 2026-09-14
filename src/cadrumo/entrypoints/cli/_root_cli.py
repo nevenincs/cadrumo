@@ -92,7 +92,9 @@ def root_command(
     state["work_lifecycle_ports_factory"] = composed.work_lifecycle_ports_factory
     state["recipient_fingerprint_registry_ports_factory"] = composed.recipient_fingerprint_registry_ports_factory
     state["recipient_encryption_capability_factory"] = composed.recipient_encryption_capability_factory
-    state["review_package_signing_keypair_capability_factory"] = composed.review_package_signing_keypair_capability_factory
+    state["review_package_signing_keypair_capability_factory"] = (
+        composed.review_package_signing_keypair_capability_factory
+    )
     state["apoderado_config_repository_factory"] = composed.apoderado_config_repository_factory
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile

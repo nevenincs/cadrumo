@@ -10,15 +10,18 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.sede.notifications import NotificationDocument, RemoteNotification
 from cadrumo.adapters.persistence.profile.tests.notification_document_support import (
     build_service,
     sancion_pdf_bytes,
     served_document,
 )
+
+from ....adapters.outbound.aeat.sede.notifications import NotificationDocument, RemoteNotification
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.hashing import sha256_hex
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
 from .cli_runner import invoke_cached_cli

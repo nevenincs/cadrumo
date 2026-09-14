@@ -6,7 +6,9 @@ import json
 
 import pytest
 
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....tests.cli_envelope import unwrap_cli_result
 from .._bienes_inversion_payloads import (
     BienesInversionDeclareResult,

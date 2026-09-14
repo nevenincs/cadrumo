@@ -33,6 +33,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal
 
+from ...domain.iva.components import registry_category_projection
 from ...domain.iva.flow import (
     IvaFlowDirection,
     derive_flow_for_classification,
@@ -40,7 +41,6 @@ from ...domain.iva.flow import (
     is_deducible_flow,
     is_devengada_flow,
 )
-from ...domain.iva.components import registry_category_projection
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionLifecycleState
 from ...domain.transactions.models import Transaction

@@ -34,12 +34,12 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
     general_prorrata_register_regime,
     prorrata_referenced_provenances,
 )
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register.register import ProrrataRegisterEntry
 from ..calculations.cross_period_models import CrossPeriodCleanStateBlocker

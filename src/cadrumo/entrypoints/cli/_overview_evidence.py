@@ -285,9 +285,9 @@ def local_calendar_filing_evidence(
     """
     try:
         from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+        from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
         from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-        from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
         from ._app_live_justificante_composition import build_justificante_capture_service
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())

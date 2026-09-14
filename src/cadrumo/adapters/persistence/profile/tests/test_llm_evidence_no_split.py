@@ -7,17 +7,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
-from cadrumo.domain.transactions.errors import TransactionValidationError
-from cadrumo.application.ledger.llm_classification import (
-    apply_evidence_classification,
-    apply_evidence_split,
-    suggest_evidence_split,
-)
 from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support import (
     _BUCKET,
     _NOW,
@@ -29,6 +18,17 @@ from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support impo
 from cadrumo.adapters.persistence.profile.tests._llm_evidence_split_support import (
     repositories as repositories,
 )
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.llm_classification import (
+    apply_evidence_classification,
+    apply_evidence_split,
+    suggest_evidence_split,
+)
+from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
+from cadrumo.domain.transactions.errors import TransactionValidationError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

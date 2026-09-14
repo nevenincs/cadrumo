@@ -28,14 +28,24 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.invoice_confirmation import InvoiceConfirmationResult, confirm_invoice_draft_from_evidence
+from cadrumo.application.ledger.invoice_confirmation import (
+    InvoiceConfirmationResult,
+    confirm_invoice_draft_from_evidence,
+)
 from cadrumo.core.config import Settings
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.iva.classification import InvoiceKind
-from ._invoice_confirmation_test_support import _BUCKET_ID, _EVIDENCE_CORPUS, _make_svc, invoice_confirmation_kwargs
+
+from ._invoice_confirmation_test_support import (
+    _BUCKET_ID,
+    _EVIDENCE_CORPUS,
+    _make_svc,
+    invoice_confirmation_kwargs,
+    isolated_settings,
+    secure_objects,
+)
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from ._invoice_confirmation_test_support import isolated_settings, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]

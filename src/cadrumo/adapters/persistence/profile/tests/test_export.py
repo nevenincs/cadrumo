@@ -20,12 +20,18 @@ __all__ = ["isolated_backend"]
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.core.config import override_settings
-from cadrumo.core.period import Period
-from cadrumo.domain.filing.schema import ModeloCasillaProvenance
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.errors import ModeloExportError
+from cadrumo.adapters.persistence.profile.tests._export_test_support import (
+    _M130_RENDIMIENTO_NETO_CASILLA,
+    _casilla_id_from_payload,
+    _profile,
+    _seed_profile,
+    _seed_revision,
+)
+from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import (
+    empty_modelo_export_ports_for_test,
+    modelo_export_ports_for_test,
+)
+from cadrumo.application.filing.export import export_layout_renderability_reason
 from cadrumo.application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -40,18 +46,12 @@ from cadrumo.application.modelo.export import (
     ModeloIvaWalletDecisionProvenance,
     export_modelo_revision,
 )
-from cadrumo.application.filing.export import export_layout_renderability_reason
-from cadrumo.adapters.persistence.profile.tests._export_test_support import (
-    _M130_RENDIMIENTO_NETO_CASILLA,
-    _casilla_id_from_payload,
-    _profile,
-    _seed_profile,
-    _seed_revision,
-)
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import (
-    empty_modelo_export_ports_for_test,
-    modelo_export_ports_for_test,
-)
+from cadrumo.core.config import override_settings
+from cadrumo.core.period import Period
+from cadrumo.domain.filing.schema import ModeloCasillaProvenance
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.errors import ModeloExportError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

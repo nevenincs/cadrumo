@@ -8,12 +8,12 @@ from functools import cache
 
 import pytest
 
+import cadrumo.application.aggregation.modelo_bindings as modelo_bindings
 from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-import cadrumo.application.aggregation.modelo_bindings as modelo_bindings
 from cadrumo.application.aggregation.errors import AggregationValidationError
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -158,5 +158,3 @@ def test_the_screen_now_catches_a_recargo_absent_from_the_ledger(
     # The recargo tier is named specifically, so the refusal tells the operator
     # which figure is missing rather than only that something is.
     assert "modelo-303-recargo-equivalencia-general-cuota" in excess
-
-

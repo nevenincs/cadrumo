@@ -7,12 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ...secret_store.store import SecretRecord
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...tests.storage_path_grammar import assert_path_matches_grammar
 from ..blob_store import EncryptedBlobStore
 from ..materialisation import get_secret_store

@@ -20,8 +20,8 @@ from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .auth.credentials import project_active_certificate_credentials
 from .auth.operator_probe_ports import OperatorProbePorts
-from .auth.operator_scope_ports import OperatorScopePorts
 from .auth.operator_probes import bind_profile_auth_settings, probe_provider_credentials
+from .auth.operator_scope_ports import OperatorScopePorts
 from .auth.probes import ProviderProbeResult
 from .auth.providers import select_provider
 from .auth_credentials import ActiveCertificateCredentials

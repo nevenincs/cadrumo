@@ -20,7 +20,6 @@ from .facts.schema import FactSelector
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
-
 _FACT_ID = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"
 _VOCABULARY_SELECTOR = FactSelector(name="scope", value="vocabulary")
 

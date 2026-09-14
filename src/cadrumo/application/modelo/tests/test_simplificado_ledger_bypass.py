@@ -27,6 +27,9 @@ from typing import cast
 
 import pytest
 
+from cadrumo.application.modelo import _calculation_preparation
+from cadrumo.application.modelo._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
+from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.deadlines.models import IVARegime
@@ -43,9 +46,6 @@ from cadrumo.domain.transactions.models import (
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
-from cadrumo.application.modelo import _calculation_preparation
-from cadrumo.application.modelo._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

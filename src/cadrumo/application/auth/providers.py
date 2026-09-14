@@ -11,8 +11,8 @@ from ...core.auth_provider import AuthProviderDescription, AuthProviderKind
 from ..auth_credentials import ActiveCertificateCredentials
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .credentials import resolve_active_certificate_credentials
-from .protocols import BrowserSessionFactoryPort
 from .operator_scope_ports import OperatorScopePorts
+from .protocols import BrowserSessionFactoryPort
 from .session_types import AeatLoginAssertion, AeatSession
 
 if TYPE_CHECKING:

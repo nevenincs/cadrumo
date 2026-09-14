@@ -52,23 +52,13 @@ from cadrumo.adapters.persistence.profile.review_package_recipient_encryption im
     _recipient_encryption_key_object_key,
 )
 from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
+from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_bytes
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
 )
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from cadrumo.application.modelo.recipient_encryption import (
     RecipientEncryptedPackage,
     RecipientEncryptionKeypair,
@@ -87,7 +77,17 @@ from cadrumo.application.modelo.review_package_recipient_registry import (
     public_key_hex_from_raw_bytes,
 )
 from cadrumo.application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_bytes
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -180,9 +180,7 @@ def test_encrypt_then_decrypt_with_matching_key_recovers_original_bytes(tmp_path
     )
 
     envelope = encrypt_review_package_for_recipient(
-        package_bytes,
-        recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
     )
 
     assert envelope.recipient_public_key_hex == recipient_public_key_hex
@@ -191,8 +189,9 @@ def test_encrypt_then_decrypt_with_matching_key_recovers_original_bytes(tmp_path
     # Ephemeral sender key is fresh per call -- not the recipient's own key.
     assert envelope.ephemeral_public_key_hex != recipient_public_key_hex
 
-    recovered = decrypt_review_package_for_recipient(envelope, recipient_private_key_hex=recipient_private_key,
-        recipient_encryption=_CRYPTO_CAPABILITY)
+    recovered = decrypt_review_package_for_recipient(
+        envelope, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+    )
     assert recovered.package_bytes == package_bytes
     assert recovered.review_only is False
 
@@ -207,23 +206,27 @@ def test_two_encryptions_of_same_bytes_use_distinct_ephemeral_keys_nonces_and_ci
         recipient_private_key.public_key().public_bytes_raw(),
     )
 
-    first = encrypt_review_package_for_recipient(package_bytes, recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY)
-    second = encrypt_review_package_for_recipient(package_bytes, recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY)
+    first = encrypt_review_package_for_recipient(
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
+    )
+    second = encrypt_review_package_for_recipient(
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
+    )
 
     assert first.ephemeral_public_key_hex != second.ephemeral_public_key_hex
     assert first.ciphertext != second.ciphertext
     assert first.envelope_nonce_hex != second.envelope_nonce_hex
     # Both still decrypt correctly under the same recipient key.
     assert (
-        decrypt_review_package_for_recipient(first, recipient_private_key_hex=recipient_private_key,
-            recipient_encryption=_CRYPTO_CAPABILITY).package_bytes
+        decrypt_review_package_for_recipient(
+            first, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+        ).package_bytes
         == package_bytes
     )
     assert (
-        decrypt_review_package_for_recipient(second, recipient_private_key_hex=recipient_private_key,
-            recipient_encryption=_CRYPTO_CAPABILITY).package_bytes
+        decrypt_review_package_for_recipient(
+            second, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+        ).package_bytes
         == package_bytes
     )
 
@@ -237,14 +240,13 @@ def test_decrypt_fails_with_wrong_recipient_private_key(tmp_path: Path) -> None:
     wrong_private_key = X25519PrivateKey.generate()
 
     envelope = encrypt_review_package_for_recipient(
-        package_bytes,
-        recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
     )
 
     with pytest.raises(RecipientDecryptionError):
-        decrypt_review_package_for_recipient(envelope, recipient_private_key_hex=wrong_private_key,
-            recipient_encryption=_CRYPTO_CAPABILITY)
+        decrypt_review_package_for_recipient(
+            envelope, recipient_private_key_hex=wrong_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+        )
 
 
 def test_decrypt_fails_when_ciphertext_is_tampered(tmp_path: Path) -> None:
@@ -255,16 +257,15 @@ def test_decrypt_fails_when_ciphertext_is_tampered(tmp_path: Path) -> None:
     )
 
     envelope = encrypt_review_package_for_recipient(
-        package_bytes,
-        recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
     )
     tampered_ciphertext = envelope.ciphertext[:-1] + bytes([envelope.ciphertext[-1] ^ 0xFF])
     tampered = envelope.model_copy(update={"ciphertext": tampered_ciphertext})
 
     with pytest.raises(RecipientDecryptionError):
-        decrypt_review_package_for_recipient(tampered, recipient_private_key_hex=recipient_private_key,
-            recipient_encryption=_CRYPTO_CAPABILITY)
+        decrypt_review_package_for_recipient(
+            tampered, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+        )
 
 
 def test_decrypt_fails_when_ephemeral_public_key_is_swapped(tmp_path: Path) -> None:
@@ -275,23 +276,27 @@ def test_decrypt_fails_when_ephemeral_public_key_is_swapped(tmp_path: Path) -> N
         recipient_private_key.public_key().public_bytes_raw(),
     )
 
-    first = encrypt_review_package_for_recipient(package_bytes, recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY)
-    second = encrypt_review_package_for_recipient(package_bytes, recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY)
+    first = encrypt_review_package_for_recipient(
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
+    )
+    second = encrypt_review_package_for_recipient(
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
+    )
     swapped = first.model_copy(update={"ephemeral_public_key_hex": second.ephemeral_public_key_hex})
 
     with pytest.raises(RecipientDecryptionError):
-        decrypt_review_package_for_recipient(swapped, recipient_private_key_hex=recipient_private_key,
-            recipient_encryption=_CRYPTO_CAPABILITY)
+        decrypt_review_package_for_recipient(
+            swapped, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+        )
 
 
 def test_encrypt_refuses_malformed_recipient_public_key(tmp_path: Path) -> None:
     package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-f")
 
     with pytest.raises(RecipientEncryptionError):
-        encrypt_review_package_for_recipient(package_bytes, recipient_public_key_hex="not-hex-at-all",
-            recipient_encryption=_CRYPTO_CAPABILITY)
+        encrypt_review_package_for_recipient(
+            package_bytes, recipient_public_key_hex="not-hex-at-all", recipient_encryption=_CRYPTO_CAPABILITY
+        )
 
 
 def test_registered_recipient_public_key_is_the_encryption_target(tmp_path: Path) -> None:
@@ -315,12 +320,11 @@ def test_registered_recipient_public_key_is_the_encryption_target(tmp_path: Path
         registered = get_recipient_fingerprint("my-accountant", ports=ports)
 
     envelope = encrypt_review_package_for_recipient(
-        package_bytes,
-        recipient_public_key_hex=registered.public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        package_bytes, recipient_public_key_hex=registered.public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
     )
-    recovered = decrypt_review_package_for_recipient(envelope, recipient_private_key_hex=recipient_private_key,
-        recipient_encryption=_CRYPTO_CAPABILITY)
+    recovered = decrypt_review_package_for_recipient(
+        envelope, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+    )
     assert recovered.package_bytes == package_bytes
 
 
@@ -336,7 +340,7 @@ def test_encrypt_with_no_valid_for_never_expires(tmp_path: Path) -> None:
         package_bytes,
         recipient_public_key_hex=recipient_public_key_hex,
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert envelope.valid_until is None
 
@@ -345,7 +349,7 @@ def test_encrypt_with_no_valid_for_never_expires(tmp_path: Path) -> None:
         envelope,
         recipient_private_key_hex=recipient_private_key,
         now=far_future,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert recovered.package_bytes == package_bytes
 
@@ -362,7 +366,7 @@ def test_decrypt_succeeds_inside_the_validity_window(tmp_path: Path) -> None:
         recipient_public_key_hex=recipient_public_key_hex,
         valid_for=timedelta(days=7),
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert envelope.valid_until == _NOW + timedelta(days=7)
 
@@ -370,7 +374,7 @@ def test_decrypt_succeeds_inside_the_validity_window(tmp_path: Path) -> None:
         envelope,
         recipient_private_key_hex=recipient_private_key,
         now=_NOW + timedelta(days=6),
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert recovered.package_bytes == package_bytes
 
@@ -388,7 +392,7 @@ def test_decrypt_refuses_a_package_presented_past_its_expiry(tmp_path: Path) -> 
         recipient_public_key_hex=recipient_public_key_hex,
         valid_for=timedelta(days=7),
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
 
     with pytest.raises(RecipientPackageExpiredError):
@@ -396,7 +400,7 @@ def test_decrypt_refuses_a_package_presented_past_its_expiry(tmp_path: Path) -> 
             envelope,
             recipient_private_key_hex=recipient_private_key,
             now=_NOW + timedelta(days=7, seconds=1),
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -413,7 +417,7 @@ def test_decrypt_refuses_a_package_presented_exactly_at_its_expiry(tmp_path: Pat
         recipient_public_key_hex=recipient_public_key_hex,
         valid_for=timedelta(days=7),
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
 
     with pytest.raises(RecipientPackageExpiredError):
@@ -421,7 +425,7 @@ def test_decrypt_refuses_a_package_presented_exactly_at_its_expiry(tmp_path: Pat
             envelope,
             recipient_private_key_hex=recipient_private_key,
             now=envelope.valid_until,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -444,7 +448,7 @@ def test_expired_check_precedes_cryptographic_work_even_with_tampered_ciphertext
         recipient_public_key_hex=recipient_public_key_hex,
         valid_for=timedelta(days=1),
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     tampered_ciphertext = envelope.ciphertext[:-1] + bytes([envelope.ciphertext[-1] ^ 0xFF])
     tampered_and_expired = envelope.model_copy(update={"ciphertext": tampered_ciphertext})
@@ -454,7 +458,7 @@ def test_expired_check_precedes_cryptographic_work_even_with_tampered_ciphertext
             tampered_and_expired,
             recipient_private_key_hex=recipient_private_key,
             now=_NOW + timedelta(days=2),
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -469,7 +473,7 @@ def test_encrypt_refuses_non_positive_valid_for(tmp_path: Path) -> None:
             package_bytes,
             recipient_public_key_hex=recipient_public_key_hex,
             valid_for=timedelta(0),
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -492,7 +496,7 @@ def test_encrypt_refuses_a_naive_or_non_utc_issued_at(tmp_path: Path, issued_at:
             package_bytes,
             recipient_public_key_hex=recipient_public_key_hex,
             issued_at=issued_at,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -509,15 +513,12 @@ def test_review_only_envelope_decrypts_but_carries_the_flag(tmp_path: Path) -> N
         recipient_public_key_hex=recipient_public_key_hex,
         review_only=True,
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert envelope.review_only is True
 
     recovered = decrypt_review_package_for_recipient(
-        envelope,
-        recipient_private_key_hex=recipient_private_key,
-        now=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        envelope, recipient_private_key_hex=recipient_private_key, now=_NOW, recipient_encryption=_CRYPTO_CAPABILITY
     )
     assert recovered.package_bytes == package_bytes
     assert recovered.review_only is True
@@ -529,8 +530,9 @@ def test_default_envelope_is_not_review_only(tmp_path: Path) -> None:
         X25519PrivateKey.generate().public_key().public_bytes_raw(),
     )
 
-    envelope = encrypt_review_package_for_recipient(package_bytes, recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY)
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
+    )
     assert envelope.review_only is False
 
 
@@ -546,7 +548,7 @@ def test_replay_guard_refuses_a_second_presentation_of_the_same_envelope_nonce(t
         package_bytes,
         recipient_public_key_hex=recipient_public_key_hex,
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1d9c0483-98fe-4896-9eb2-1ccb660f2983") as profile:
@@ -554,10 +556,7 @@ def test_replay_guard_refuses_a_second_presentation_of_the_same_envelope_nonce(t
 
         # First presentation: decrypts and the nonce is recorded consumed.
         first_pass = decrypt_review_package_for_recipient(
-            envelope,
-            recipient_private_key_hex=recipient_private_key,
-            now=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            envelope, recipient_private_key_hex=recipient_private_key, now=_NOW, recipient_encryption=_CRYPTO_CAPABILITY
         )
         guard.mark_consumed(envelope.envelope_nonce_hex, consumed_at=_NOW)
         assert first_pass.package_bytes == package_bytes
@@ -566,10 +565,7 @@ def test_replay_guard_refuses_a_second_presentation_of_the_same_envelope_nonce(t
         # succeeds (it is a pure cryptographic primitive with no ledger
         # dependency), but the composed replay check refuses it.
         second_pass = decrypt_review_package_for_recipient(
-            envelope,
-            recipient_private_key_hex=recipient_private_key,
-            now=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            envelope, recipient_private_key_hex=recipient_private_key, now=_NOW, recipient_encryption=_CRYPTO_CAPABILITY
         )
         assert second_pass.package_bytes == package_bytes
         assert guard.is_consumed(envelope.envelope_nonce_hex) is True
@@ -585,10 +581,12 @@ def test_envelope_nonce_is_independent_across_two_encryptions_of_identical_input
         X25519PrivateKey.generate().public_key().public_bytes_raw(),
     )
 
-    first = encrypt_review_package_for_recipient(package_bytes, recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY)
-    second = encrypt_review_package_for_recipient(package_bytes, recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY)
+    first = encrypt_review_package_for_recipient(
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
+    )
+    second = encrypt_review_package_for_recipient(
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
+    )
 
     assert first.envelope_nonce_hex != second.envelope_nonce_hex
 
@@ -624,9 +622,7 @@ def test_envelope_json_round_trip_preserves_ciphertext_bytes(tmp_path: Path) -> 
     )
 
     envelope = encrypt_review_package_for_recipient(
-        package_bytes,
-        recipient_public_key_hex=recipient_public_key_hex,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        package_bytes, recipient_public_key_hex=recipient_public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
     )
 
     # AEAD ciphertext is high-entropy bytes; assert it genuinely is not valid
@@ -639,8 +635,9 @@ def test_envelope_json_round_trip_preserves_ciphertext_bytes(tmp_path: Path) -> 
     assert reloaded.ciphertext == envelope.ciphertext
     assert reloaded == envelope
 
-    recovered = decrypt_review_package_for_recipient(reloaded, recipient_private_key_hex=recipient_private_key,
-        recipient_encryption=_CRYPTO_CAPABILITY)
+    recovered = decrypt_review_package_for_recipient(
+        reloaded, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+    )
     assert recovered.package_bytes == package_bytes
 
 
@@ -648,10 +645,12 @@ def test_ensure_recipient_encryption_keypair_mints_once_and_reuses(tmp_path: Pat
     """``ensure_recipient_encryption_keypair`` mirrors the signing keypair's idempotent-reuse contract."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df") as profile:
         minted = ensure_recipient_encryption_keypair(
-            bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df", recipient_encryption=RecipientEncryptionAdapter(repository=profile.repository)
+            bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df",
+            recipient_encryption=RecipientEncryptionAdapter(repository=profile.repository),
         )
         reused = ensure_recipient_encryption_keypair(
-            bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df", recipient_encryption=RecipientEncryptionAdapter(repository=profile.repository)
+            bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df",
+            recipient_encryption=RecipientEncryptionAdapter(repository=profile.repository),
         )
         assert reused.private_key_hex == minted.private_key_hex
         assert reused.public_key_hex == minted.public_key_hex
@@ -747,7 +746,10 @@ def test_recipient_encryption_keypair_refuses_foreign_or_whitespace_payload_buck
         )
 
         with pytest.raises(RecipientEncryptionError, match="does not belong"):
-            ensure_recipient_encryption_keypair(bucket_id=target_bucket_id, recipient_encryption=RecipientEncryptionAdapter(repository=profile.repository))
+            ensure_recipient_encryption_keypair(
+                bucket_id=target_bucket_id,
+                recipient_encryption=RecipientEncryptionAdapter(repository=profile.repository),
+            )
 
         unchanged = profile.repository.load(
             _ENCRYPTION_KEY_NAMESPACE.namespace,
@@ -796,7 +798,9 @@ def test_concurrent_recipient_encryption_keypair_mint_reuses_one_encrypted_key_a
         assert errors == [], f"concurrent keypair mint failures: {errors}"
         assert len(minted) == worker_count
 
-        loaded = ensure_recipient_encryption_keypair(bucket_id=bucket_id, recipient_encryption=RecipientEncryptionAdapter(repository=profile.repository))
+        loaded = ensure_recipient_encryption_keypair(
+            bucket_id=bucket_id, recipient_encryption=RecipientEncryptionAdapter(repository=profile.repository)
+        )
         assert {keypair.private_key_hex for keypair in minted} == {loaded.private_key_hex}
         assert {keypair.public_key_hex for keypair in minted} == {loaded.public_key_hex}
 
@@ -815,13 +819,13 @@ def test_concurrent_recipient_encryption_keypair_mint_reuses_one_encrypted_key_a
             package_bytes,
             recipient_public_key_hex=loaded.public_key_hex,
             issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
         recovered = decrypt_review_package_for_recipient(
             envelope,
             recipient_private_key_hex=loaded.private_key_hex,
             now=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
         assert recovered.package_bytes == package_bytes
 

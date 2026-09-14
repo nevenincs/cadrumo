@@ -26,8 +26,8 @@ from ..operator_probes import probe_local_session
 from ..operator_results import AuthOperationRequiresCustodySessionError
 from ..operator_scope import active_profile_storage_span
 from ..operator_scope_ports import OperatorScopeSession
-from ._operator_scope_fakes import build_inward_operator_scope_ports
 from ._operator_probe_fakes import fake_operator_probe_ports
+from ._operator_scope_fakes import build_inward_operator_scope_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,7 +69,10 @@ def test_span_refuses_a_bucket_the_open_session_does_not_serve() -> None:
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
 
-    with pytest.raises(AuthOperationRequiresCustodySessionError) as raised, active_profile_storage_span(settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS):
+    with (
+        pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
+        active_profile_storage_span(settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS),
+    ):
         pytest.fail("the span must refuse before yielding a borrowed session")
 
     context = raised.value.context
@@ -81,7 +84,9 @@ def test_span_refuses_an_explicit_target_bucket_argument_it_cannot_serve() -> No
     """The ``target_bucket_id`` argument is guarded on the same terms as the route."""
     with (
         pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
-        active_profile_storage_span(load_settings(), target_bucket_id=_BUCKET_B, operator_scope_ports=_OPERATOR_SCOPE_PORTS),
+        active_profile_storage_span(
+            load_settings(), target_bucket_id=_BUCKET_B, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        ),
     ):
         pytest.fail("an explicit target bucket must not bypass the custody guard")
 
@@ -160,7 +165,10 @@ def test_refusal_carries_its_own_code_and_an_actionable_remedy() -> None:
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
 
-    with pytest.raises(AuthOperationRequiresCustodySessionError) as raised, active_profile_storage_span(settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS):
+    with (
+        pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
+        active_profile_storage_span(settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS),
+    ):
         pytest.fail("the span must refuse before yielding a borrowed session")
 
     error = raised.value
@@ -172,8 +180,7 @@ def test_refusal_carries_its_own_code_and_an_actionable_remedy() -> None:
     assert _BUCKET_B in message
 
 
-def test_operator_auth_test_surfaces_the_refusal_for_an_unbound_explicit_target(
-) -> None:
+def test_operator_auth_test_surfaces_the_refusal_for_an_unbound_explicit_target() -> None:
     """``auth test`` on an explicit unbound profile refuses rather than reporting on A.
 
     The alternative -- probing whichever profile happens to be bound -- would
@@ -216,8 +223,7 @@ def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all() 
         assert report.available is False
 
 
-def test_live_auth_preflight_surfaces_the_refusal_for_an_unbound_explicit_target(
-) -> None:
+def test_live_auth_preflight_surfaces_the_refusal_for_an_unbound_explicit_target() -> None:
     """The live-read preflight refuses when a session is open for ANOTHER profile.
 
     The distinction against the test above is the whole of the narrowing:
@@ -246,7 +252,9 @@ def test_local_session_probe_degrades_to_absent_instead_of_raising() -> None:
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
 
-    probe = probe_local_session(AuthProviderKind.CERTIFICATE.value, settings=settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    probe = probe_local_session(
+        AuthProviderKind.CERTIFICATE.value, settings=settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     assert probe.present is False
     assert probe.state == "no_session"

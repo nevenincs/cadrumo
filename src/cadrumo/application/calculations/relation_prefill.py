@@ -84,12 +84,12 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.calculations.registry.iva_wallet_carry_targets import is_iva_wallet_owned_carry_target
 from ...domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_normal_token,
     irpf_estimation_regime_directa_simplificada_token,
     irpf_estimation_regime_objetiva_token,
 )
+from ...domain.calculations.registry.iva_wallet_carry_targets import is_iva_wallet_owned_carry_target
 from ...domain.calculations.registry.observation_fold import resolve_observed_requirement_value
 from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.relations import (
@@ -1356,6 +1356,6 @@ class RelationPrefillSourceResolver:
 
 __all__ = [
     "RelationPrefillSourceResolver",
-    "scoped_relation_source_requirements",
     "resolve_relations_from_local_store",
+    "scoped_relation_source_requirements",
 ]

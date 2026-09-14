@@ -10,6 +10,12 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    open_test_profile_session,
+    set_active_test_profile_facts,
+)
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
@@ -17,12 +23,10 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.diagnostics import build_cli_version_report
 from ....core.config import load_settings, override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, set_active_test_profile_facts
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -140,11 +144,12 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 ) -> None:
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+
     from ....application.filing.runtime import filing_profile_from_taxpayer
     from ....application.user_profile.projections import fact_value
     from ....application.wizard.status import load_active_taxpayer_profile
     from ....application.workflow.persistence import workflow_state_repository
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 
     register_cli_profile(
         label="operator",

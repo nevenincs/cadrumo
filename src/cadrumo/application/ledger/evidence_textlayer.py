@@ -122,9 +122,7 @@ def extract_evidence_text(
         PurchaseInvoiceEvidenceInputError: When the evidence is not a PDF, or the
             PDF has no usable text layer (scan-only / XFA).
     """
-    return "\n".join(
-        page for page in extract_evidence_pages(evidence, text_layer_ports=text_layer_ports) if page
-    )
+    return "\n".join(page for page in extract_evidence_pages(evidence, text_layer_ports=text_layer_ports) if page)
 
 
 def transcribe_text_layer(

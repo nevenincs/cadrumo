@@ -26,26 +26,28 @@ from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_date as _parse_date_canonical
 from ...core.parsing.utils import parse_bool as _parse_bool
 from ...core.period import Period
-from ..user_profile.setup_answers import SetupAnswers
-from ..contribuyente.entity_type import EntityType, LegalEntityForm, entity_type_natural_person_token
-from ..contribuyente.renta_codes import FiscalResidency
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.iva_schema_vocabulary import (
-    default_iva_regime as _default_iva_regime,
-    iva_regime_no_aplica_token,
-    m303_regime_composition_choices,
-    m303_tax_territory_choices,
-    require_m303_regime_composition,
-    require_m303_tax_territory,
-    require_iva_regime,
-)
-from ..calculations.registry.irpf_regimes import require_irpf_special_regime
 from ..calculations.registry.irpf_income_categories import (
     irpf_income_category_actividad_economica_token,
     require_irpf_income_category,
 )
+from ..calculations.registry.irpf_regimes import require_irpf_special_regime
+from ..calculations.registry.iva_schema_vocabulary import (
+    default_iva_regime as _default_iva_regime,
+)
+from ..calculations.registry.iva_schema_vocabulary import (
+    iva_regime_no_aplica_token,
+    m303_regime_composition_choices,
+    m303_tax_territory_choices,
+    require_iva_regime,
+    require_m303_regime_composition,
+    require_m303_tax_territory,
+)
 from ..calculations.registry.renta_codes_catalogue import require_fiscal_residency
 from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
+from ..contribuyente.entity_type import EntityType, LegalEntityForm, entity_type_natural_person_token
+from ..contribuyente.renta_codes import FiscalResidency
+from ..user_profile.setup_answers import SetupAnswers
 from .errors import ProfileError
 from .models import (
     CrossPeriodGroupMemberRoster,
@@ -514,8 +516,7 @@ def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
         raise ProfileError("Modelo IVA tax-territory vocabulary is unavailable from the facts registry") from exc
     if not raw.strip():
         raise ProfileError(
-            f"tax_residence.jurisdiction_scope must be explicitly declared for Modelo IVA; "
-            f"accepted values: {accepted}",
+            f"tax_residence.jurisdiction_scope must be explicitly declared for Modelo IVA; accepted values: {accepted}",
         )
     try:
         return require_m303_tax_territory(raw)

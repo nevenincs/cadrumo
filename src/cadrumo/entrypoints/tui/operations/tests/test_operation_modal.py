@@ -8,8 +8,6 @@ never see more than the public frontend contracts C0 already froze.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 import asyncio
 from collections.abc import Awaitable, Callable, Generator
 from contextlib import contextmanager
@@ -24,6 +22,8 @@ from pydantic import ValidationError
 from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Static
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from .....adapters.persistence.operations.journal import OperationJournalRepository
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository

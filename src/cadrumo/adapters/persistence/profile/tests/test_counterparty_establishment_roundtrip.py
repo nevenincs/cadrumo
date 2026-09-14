@@ -20,19 +20,18 @@ import json
 from datetime import UTC, datetime
 
 import pytest
-
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.ledger.counterparty_establishment import ConfirmedCounterpartyFacts
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.classifier_input_source import ClassifierInputSource
 from cadrumo.domain.iva.classification import IvaTerritorialScope
 from cadrumo.domain.iva.schema import EUMemberState
-from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
-from cadrumo.application.ledger.counterparty_establishment import ConfirmedCounterpartyFacts
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,6 +44,7 @@ def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepositor
     """Provide the real encrypted-object repository for this adapter suite."""
 
     return runtime_profile.repository
+
 
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 

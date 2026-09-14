@@ -77,9 +77,8 @@ def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
     sensitive_item_id = "review-client-tax-id-12345678Z-private-note"
 
     bucket_id = "23232323-2323-4232-8232-232323232323"
-    with override_settings(cadrumo_active_profile=bucket_id):
-        with pytest.raises(ReviewError) as exc_info:
-            project_review_item(sensitive_item_id, settings=Settings(), ports=draft_review_ports())
+    with override_settings(cadrumo_active_profile=bucket_id), pytest.raises(ReviewError) as exc_info:
+        project_review_item(sensitive_item_id, settings=Settings(), ports=draft_review_ports())
 
     assert exc_info.value.translated_message == "review.operator.errors.item_not_found"
     assert exc_info.value.context is None

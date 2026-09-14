@@ -63,7 +63,6 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..workflow.engine import WorkflowEngine
 from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
-from .prior_domiciliation import resolveprior_domiciliation_election
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -82,6 +81,7 @@ from .iva_wallet_gate import (
 )
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from .preconditions import build_modelo_work_file_unverified_revision_failure
+from .prior_domiciliation import resolveprior_domiciliation_election
 from .result_disposition_resolution import resolve_modelo_result_disposition
 from .revision_persistence import persist_filed_revision, require_filing_instance_evidence_for_work_unit
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
@@ -90,8 +90,8 @@ from .workflow_gate import build_revision_workflow_engine as _build_revision_wor
 from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
-    from ..auth.operator_scope_ports import OperatorScopePorts
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ..auth.operator_scope_ports import OperatorScopePorts
 
 
 class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):

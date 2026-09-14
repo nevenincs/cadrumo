@@ -32,24 +32,22 @@ See Also:
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage import certificate_secret_backend as _backend_module
 from cadrumo.adapters.persistence.storage.blob_store.blob_store import EncryptedBlobStore
-from cadrumo.adapters.persistence.storage.secret_store.store import SecretStore
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import (
     SecureStorageCertificateSecretBackend,
     build_certificate_secret_backend,
 )
-from .ephemeral_master_key import EphemeralMasterKeyProvider
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.secret_store.store import SecretStore
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage import certificate_secret_backend as _backend_module
 from cadrumo.application.auth.certificate_source_operations import (
     register_operator_certificate_source,
     remove_operator_certificate_source_secret,
@@ -57,6 +55,8 @@ from cadrumo.application.auth.certificate_source_operations import (
 )
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
 from cadrumo.application.auth.operator_results import CertificateSourceNotFoundError
+
+from .ephemeral_master_key import EphemeralMasterKeyProvider
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -209,7 +209,9 @@ def test_set_then_resolve_roundtrips_the_secret(tmp_path: Path) -> None:
     _register_operator_profile()
     cert_path = tmp_path / "personal.p12"
     cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     result = set_operator_certificate_source_secret(
         certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -238,7 +240,9 @@ def test_set_operator_certificate_source_secret_never_carries_secret_in_result(
     _register_operator_profile()
     cert_path = tmp_path / "personal.p12"
     cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     result = set_operator_certificate_source_secret(
         certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -258,7 +262,9 @@ def test_set_operator_certificate_source_secret_twice_reports_rotated(
     _register_operator_profile()
     cert_path = tmp_path / "personal.p12"
     cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     first = set_operator_certificate_source_secret(
         certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -291,7 +297,9 @@ def test_remove_operator_certificate_source_secret_is_idempotent(
     _register_operator_profile()
     cert_path = tmp_path / "personal.p12"
     cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=build_certificate_secret_backend,
         name="personal",
@@ -329,7 +337,9 @@ def test_resolve_certificate_source_secret_is_none_when_never_set(
     _register_operator_profile()
     cert_path = tmp_path / "personal.p12"
     cert_path.write_bytes(b"placeholder cert")
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     assert (
         resolve_certificate_source_secret(

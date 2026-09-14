@@ -136,7 +136,9 @@ def resolve_lorca_reduction(
     if effective_date.year != ejercicio:
         raise RegistryValidationError("Lorca reduction fact exercise does not match its query date")
     source_content_digest = _required(entries, _SOURCE_CONTENT_DIGEST_KEY)
-    if len(source_content_digest) != 64 or any(character not in "0123456789abcdef" for character in source_content_digest):
+    if len(source_content_digest) != 64 or any(
+        character not in "0123456789abcdef" for character in source_content_digest
+    ):
         raise RegistryValidationError("Lorca reduction source content digest must be lowercase SHA-256")
     if _required(entries, _LEGAL_REF_KEY) != legal_ref:
         raise RegistryValidationError("Lorca reduction payload legal reference disagrees with variant evidence")

@@ -43,11 +43,11 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.text_bounds import NonEmptyStr
+from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
+from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
+from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
-from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
-from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (

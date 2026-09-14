@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ....domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
 from ....domain.calculations.registry.irpf_regimes import irpf_estimation_regime_tokens, irpf_special_regime_tokens
+from ....domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
 from ..command_spec import (
     FLAG_VALUE,
     PATH_VALUE,

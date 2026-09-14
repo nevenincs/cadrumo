@@ -5,8 +5,8 @@ from __future__ import annotations
 import secrets
 from datetime import timedelta
 
-from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.operations.financial_operand_custody import (
@@ -15,12 +15,13 @@ from ..adapters.persistence.operations.financial_operand_custody import (
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
+from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,
 )
+from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.export.google_operation import (
     GoogleSheetsExportAuthDependencyError,
     GoogleSheetsExportClientMissingError,
@@ -35,15 +36,15 @@ from ..application.live.filed_history_operation import (
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
 )
+from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
+from ..application.modelo.calculation_action_ports import CalculationActionPortsFactory
+from ..application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
+from ..application.modelo.export_ports import ModeloExportPortsFactory
+from ..application.modelo.filing_action_ports import FilingActionPortsFactory
 from ..application.modelo.operation_definitions import (
     build_modelo_lifecycle_operation_definitions,
     build_modelo_lifecycle_operation_registrations,
 )
-from ..application.modelo.calculation_action_ports import CalculationActionPortsFactory
-from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
-from ..application.modelo.filing_action_ports import FilingActionPortsFactory
-from ..application.modelo.export_ports import ModeloExportPortsFactory
-from ..application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from ..application.modelo.work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from ..application.operations.composition import (
     OperationComposedServices,
@@ -59,7 +60,6 @@ from ..application.user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
 )
-from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -68,11 +68,11 @@ from ..core.config import Settings, load_settings
 from ..core.paths import effective_storage_root
 from ..core.time.clock import now
 from .adapter_composition import (
+    build_active_work_lifecycle_ports,
     build_amendment_action_ports,
     build_calculation_action_ports,
     build_censal_fetch_port,
     build_filing_action_ports,
-    build_active_work_lifecycle_ports,
     build_modelo_edit_receipt_repository,
     build_modelo_export_ports,
 )
@@ -219,9 +219,7 @@ def build_production_operation_registry(
                 *build_auth_operation_registrations(resolved_auth_definitions),
                 *build_user_profile_operation_registrations(profile_definitions),
                 *build_modelo_lifecycle_operation_registrations(modelo_definitions),
-                build_censal_operation_registration(
-                    resolved_censal_definition
-                ),
+                build_censal_operation_registration(resolved_censal_definition),
                 build_filed_history_operation_registration(filed_history_definition),
                 build_google_sheets_export_operation_registration(resolved_google_export_definition),
             ),

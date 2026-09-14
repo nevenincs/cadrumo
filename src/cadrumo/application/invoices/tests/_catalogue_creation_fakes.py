@@ -6,9 +6,9 @@ from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
-from ..catalogue_creation_ports import CatalogueCreationPorts
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.invoices.models import InvoiceCatalogue
+from ..catalogue_creation_ports import CatalogueCreationPorts
 
 
 class _InMemoryInvoiceRepository:

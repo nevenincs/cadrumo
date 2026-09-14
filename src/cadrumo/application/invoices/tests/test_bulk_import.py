@@ -19,9 +19,9 @@ See Also:
 
 from __future__ import annotations
 
+import zipfile
 from collections.abc import Iterator
 from contextlib import contextmanager
-import zipfile
 from decimal import Decimal
 from pathlib import Path
 
@@ -31,8 +31,8 @@ from pydantic import ValidationError
 
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
-from ..catalogue_creation_ports import CatalogueCreationPorts
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source
+from ..catalogue_creation_ports import CatalogueCreationPorts
 from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

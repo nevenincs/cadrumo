@@ -61,8 +61,8 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_order_key
 from ...domain.iva.prorrata import especial_mandatory_rule
 from ...domain.iva.prorrata_especial_parameters import (
@@ -82,8 +82,8 @@ from ..calculations.prorrata_regularizacion import (
     buildprorrata_regularizacion_advisory,
     derive_prorrata_applicability,
 )
-from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 __all__ = ["collect_prorrata_regularizacion_diagnostics"]

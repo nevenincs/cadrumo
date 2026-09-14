@@ -76,10 +76,7 @@ def test_clave_movil_failure_exposes_application_mode(
 
 def test_clave_movil_configuration_exposes_wrong_identity() -> None:
     """The provider-specific configuration refusal has an app-level mode."""
-    assert (
-        ClaveMovilConfigurationError().live_iva_failure_mode
-        is LiveIvaAcquisitionFailureMode.WRONG_IDENTITY
-    )
+    assert ClaveMovilConfigurationError().live_iva_failure_mode is LiveIvaAcquisitionFailureMode.WRONG_IDENTITY
 
 
 @pytest.mark.parametrize(

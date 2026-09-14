@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.buckets.event import BucketEventHistoryCatalogue
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
@@ -26,7 +27,6 @@ from ....domain.transactions.models import (
     Transaction,
     TransactionCatalogue,
 )
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..history_query import (

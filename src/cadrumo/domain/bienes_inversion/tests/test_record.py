@@ -26,11 +26,11 @@ from ..register import (
     compute_registro_transmisiones,
     validate_investment_asset_reciprocity,
 )
-from ..vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ..regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
+from ..vocabulary import BienInversionDisposalRegime, BienInversionKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

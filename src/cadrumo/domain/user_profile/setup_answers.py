@@ -35,8 +35,16 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.utils import parse_bool
 from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.spanish_postcode import OptionalSpanishPostcode
-from ..contribuyente.ccaa import CCAA
+from ..calculations.registry.activity_kind_catalogue import require_irpf_activity_kind
 from ..calculations.registry.ccaa_catalogue import default_ccaa, require_ccaa
+from ..calculations.registry.entity_type import require_entity_type, require_legal_entity_form
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.irpf_income_categories import require_irpf_income_category
+from ..calculations.registry.irpf_regimes import require_irpf_estimation_regime, require_irpf_special_regime
+from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
+from ..calculations.registry.situacion_familiar_catalogue import require_situacion_familiar
+from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
+from ..contribuyente.ccaa import CCAA
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import (
     FiscalResidency,
@@ -45,14 +53,6 @@ from ..contribuyente.renta_codes import (
     RentaSexCode,
     SituacionFamiliar,
 )
-from ..calculations.registry.entity_type import require_entity_type, require_legal_entity_form
-from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
-from ..calculations.registry.activity_kind_catalogue import require_irpf_activity_kind
-from ..calculations.registry.irpf_income_categories import require_irpf_income_category
-from ..calculations.registry.irpf_regimes import require_irpf_estimation_regime, require_irpf_special_regime
-from ..calculations.registry.situacion_familiar_catalogue import require_situacion_familiar
-from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ..deadlines.models import IVARegime
 
 

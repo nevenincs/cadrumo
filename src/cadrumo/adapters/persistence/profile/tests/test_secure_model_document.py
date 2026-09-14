@@ -14,8 +14,8 @@ from sqlalchemy.engine import Engine
 
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from .....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
-from ..inventory import InventoryLedgerRepository
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ..inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

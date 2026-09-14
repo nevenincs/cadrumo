@@ -354,9 +354,7 @@ class TestSettingsRouting:
         svc = ApoderadoService(repository_factory=repository_factory, settings=isolated_settings)
         wrong_root = tmp_path / "wrong-storage-root"
 
-        with override_settings(
-            cadrumo_local_storage_root=wrong_root, cadrumo_active_profile=_PROFILE_BUCKET_ID
-        ):
+        with override_settings(cadrumo_local_storage_root=wrong_root, cadrumo_active_profile=_PROFILE_BUCKET_ID):
             config = svc.configure(
                 bucket_id=_PROFILE_BUCKET_ID,
                 represented_nif="12345678Z",

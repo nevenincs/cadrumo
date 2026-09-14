@@ -8,10 +8,29 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    load_test_profile_record,
+    replace_test_profile_record,
+    seed_test_profile_record,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError, WorkUnitMutationRefusedError
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.profile_readiness_gate import (
+    modelo_applicability_refusal,
+    pre_activity_period_refusal,
+    profile_activity_start_date,
+)
+from cadrumo.application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
@@ -28,21 +47,6 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
-from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-from cadrumo.application.user_profile.projections import record_to_path_values
-from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError, WorkUnitMutationRefusedError
-from cadrumo.application.modelo.calculation_actions import (
-    calculate_modelo_revision,
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
-from cadrumo.application.modelo.profile_readiness_gate import (
-    profile_activity_start_date,
-    modelo_applicability_refusal,
-    pre_activity_period_refusal,
-)
-from cadrumo.application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

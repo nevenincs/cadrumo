@@ -47,12 +47,12 @@ from cadrumo.application.user_profile.profile_record_repository import (
 )
 from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
 from cadrumo.application.user_profile.recovery_custody import mint_profile_creation_recovery
+from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

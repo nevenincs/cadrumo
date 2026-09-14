@@ -70,8 +70,8 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from .reconcile_casilla import detect_casilla_divergences
 from ._reconcile_population import resolve_casilla_population_scope
+from .reconcile_casilla import detect_casilla_divergences
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId

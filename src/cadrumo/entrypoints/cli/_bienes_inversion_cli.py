@@ -14,14 +14,14 @@ import typer
 
 from ...application.bienes_inversion.service import BienesInversionRegisterService
 from ...core.i18n.render import tr
+from ...domain.bienes_inversion.register import BienInversionIvaRecord
+from ...domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ...domain.calculations.registry.bienes_inversion_catalogue import (
     bien_inversion_disposal_regime_choices,
     require_bien_inversion_disposal_regime,
     require_bien_inversion_kind,
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.bienes_inversion.register import BienInversionIvaRecord
-from ...domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ._bienes_inversion_payloads import (
     BienesInversionDeclareResult,
     BienesInversionListResult,

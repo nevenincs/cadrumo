@@ -541,6 +541,8 @@ _RentaDeductibilityEvaluator = Callable[
     [RentaDeductibleExpenseFact, ProportionalityRule, RentaDeductibilityContext, Decimal],
     _RentaDeductibilityDecision,
 ]
+
+
 def _evaluator_for_proportionality_kind(
     kind: ProportionalityKind,
 ) -> _RentaDeductibilityEvaluator | None:

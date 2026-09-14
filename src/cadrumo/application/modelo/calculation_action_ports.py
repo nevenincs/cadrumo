@@ -23,19 +23,19 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
-from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from ..aggregation.inventory import InventoryLedgerRepositoryProtocol
+from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
+from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..invoices.source_resolver_ports import InvoiceSourceResolverPorts
+from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
+from ..user_profile.profile_read_ports import ProfileReadPorts
 from .verification_repository_ports import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
-from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
-from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
-from ..user_profile.profile_read_ports import ProfileReadPorts
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 

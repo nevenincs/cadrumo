@@ -170,6 +170,7 @@ def compose_runtime_ports() -> Iterator[None]:
         load_usage_ratios_with_censo_guard,
         save_usage_ratios,
     )
+    from .adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
     from .adapters.persistence.workflow import build_workflow_persistence_port
     from .application.auth.protocols import bind_session_store
     from .application.auth.providers import bind_auth_provider_selector
@@ -190,7 +191,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .application.workflow.persistence import bind_workflow_persistence_port
-    from .adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 
     with (
         composed_profile_persistence_ports(),

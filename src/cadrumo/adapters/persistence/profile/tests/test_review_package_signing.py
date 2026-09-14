@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.review_package_signing import ReviewPackageSigningKeypairAdapter
+from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_path
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
 )
@@ -38,7 +39,6 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -328,22 +328,21 @@ def test_counter_signer_keys_never_stored_as_plaintext(tmp_path: Path) -> None:
     """The adapter's accountant keypair is persisted only as ciphertext."""
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        with runtime.switch_to_secondary():
-            accountant_keypair = ReviewPackageSigningKeypairAdapter(
-                repository=runtime.secondary.repository,
-                bucket_id=runtime.secondary.bucket_id,
-            ).ensure_keypair(bucket_id=runtime.secondary.bucket_id)
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime, runtime.switch_to_secondary():
+        accountant_keypair = ReviewPackageSigningKeypairAdapter(
+            repository=runtime.secondary.repository,
+            bucket_id=runtime.secondary.bucket_id,
+        ).ensure_keypair(bucket_id=runtime.secondary.bucket_id)
 
-            from sqlalchemy import select
+        from sqlalchemy import select
 
-            with session_scope(runtime.secondary.repository._engine) as session:
-                row = session.execute(
-                    select(SecureObjectRow).where(
-                        SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
-                    ),
-                ).scalar_one()
-                ciphertext_bytes = bytes(row.payload)
+        with session_scope(runtime.secondary.repository._engine) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
+                ),
+            ).scalar_one()
+            ciphertext_bytes = bytes(row.payload)
 
     assert accountant_keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes
     assert bytes.fromhex(accountant_keypair.private_key_hex) not in ciphertext_bytes

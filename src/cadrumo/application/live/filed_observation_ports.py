@@ -23,11 +23,11 @@ if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.calculations.registry.bindings import RegistryModeloObservation
     from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+    from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ...domain.justificante.protocols import JustificanteRepositoryProtocol
     from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
-    from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ..calculations.observations_repository import ObservationEnvelopePayload, ObservationSourceKind
     from ..modelo.external_import_actions import ExternalFilingBaselineSource
 

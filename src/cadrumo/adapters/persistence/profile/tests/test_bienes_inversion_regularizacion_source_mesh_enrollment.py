@@ -32,6 +32,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
@@ -41,7 +42,6 @@ from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceReso
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
 from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period

@@ -37,10 +37,11 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from ....adapters.persistence.storage.bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage, isolated_profile_storage_root
 from ....tests.cli_envelope import unwrap_schema_envelope
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 from .privacy_helpers import assert_public_profile_id_not_leaked
 

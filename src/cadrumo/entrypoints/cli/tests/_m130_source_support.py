@@ -6,12 +6,13 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 
 def seed_m130_income_transaction(

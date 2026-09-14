@@ -70,7 +70,9 @@ def expedientes_pull(
     from ._app_live_expedientes_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     ports = expedientes_ports_factory(ctx)(bucket_id=bucket_id)
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:

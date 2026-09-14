@@ -17,8 +17,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.aggregation import IntracomOperationType
-from ....domain.iva.schema import IvaCategory
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ....domain.iva.schema import IvaCategory
 from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,9 +36,7 @@ def test_every_publicly_declared_invoice_clave_round_trips_to_its_category() -> 
     expected = {
         "issued.intra_community_supply": IvaCategory.INTRA_COMMUNITY_SUPPLY,
         "issued.intra_community_service_supply": IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-        "received.intra_community_acquisition_reverse_charge": (
-            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
-        ),
+        "received.intra_community_acquisition_reverse_charge": (IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE),
         "received.intra_community_service_acquisition_reverse_charge": (
             IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
         ),

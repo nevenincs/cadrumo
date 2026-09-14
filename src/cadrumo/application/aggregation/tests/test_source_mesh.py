@@ -16,8 +16,8 @@ from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.row_casilla import DirectRowMaterializationProvenance
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
-from ..errors import AggregationValidationError
 from ...persistence_errors import PersistenceDegradationError
+from ..errors import AggregationValidationError
 from ..source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

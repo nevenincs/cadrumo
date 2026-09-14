@@ -80,8 +80,8 @@ from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
 from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,

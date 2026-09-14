@@ -18,8 +18,6 @@ proved here:
 
 from __future__ import annotations
 
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 import logging
 from collections.abc import Iterator, Mapping
 from contextlib import ExitStack
@@ -32,6 +30,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.bucket.tests.bucket_layout import provision_bucket_directory
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
@@ -64,8 +63,9 @@ from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.core.period import Period
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+
 from ._operator_probe_fakes import fake_operator_probe_ports
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

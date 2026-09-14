@@ -36,13 +36,13 @@ from ...domain.calculations.registry.applicability import (
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
     build_profile_grounding_index,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -704,11 +704,11 @@ def require_profile_ready_for_work_unit(work_unit: WorkUnit, *, enforce_applicab
 __all__ = [
     "BLOCKING_APPLICABILITY_VERDICTS",
     "modelo_applicability_refusal",
-    "profile_activity_start_date",
     "modelo_work_profile_baseline_missing_paths",
     "modelo_work_profile_baseline_validation_issues",
     "modelo_work_profile_preflight_report",
     "pre_activity_period_refusal",
+    "profile_activity_start_date",
     "require_existing_profile_baseline_ready_for_modelo_work",
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",

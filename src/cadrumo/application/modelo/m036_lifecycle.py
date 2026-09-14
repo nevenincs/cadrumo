@@ -29,6 +29,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import date, datetime
+
 from pydantic import BaseModel, Field
 
 from ...core.hashing import sha256_hex
@@ -445,8 +446,8 @@ def record_m036_declaration(
 
 
 __all__ = [
-    "M036DeclarationCommand",
     "M036DeclarationAmbiguousError",
+    "M036DeclarationCommand",
     "M036DeclarationNotFoundError",
     "M036DeclarationResult",
     "derive_m036_declaration_id",

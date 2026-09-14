@@ -37,11 +37,10 @@ from ...core.secure_object_write import SecureObjectWrite
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
-from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_action_ports import CalculationActionPorts
+from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
-from .edit_receipt_ports import ModeloEditReceiptRepositoryPort
 from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
@@ -60,6 +59,7 @@ from .edit_models import (
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
 )
+from .edit_receipt_ports import ModeloEditReceiptRepositoryPort
 from .edit_services import RESPONSIBLE_OWNER as _RESPONSIBLE_OWNER
 from .edit_services import (
     detail_row_natural_key,

@@ -25,22 +25,25 @@ from pydantic import (
 )
 from pydantic_core import CoreSchema, core_schema
 
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
+
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
-from ..contribuyente.entity_type import EntityType, LegalEntityForm
-from ..contribuyente.renta_codes import FiscalResidency
 from ..calculations.registry.renta_codes_catalogue import (
     fiscal_residency_requires_country,
+)
+from ..calculations.registry.renta_codes_catalogue import (
     is_ue_eea_country_code as _registry_is_ue_eea_country_code,
 )
+from ..contribuyente.entity_type import EntityType, LegalEntityForm
+from ..contribuyente.renta_codes import FiscalResidency
 from .errors import DeadlineValidationError
 from .fact_context import DeadlineFactResolutionContext
 
@@ -847,7 +850,10 @@ class TaxpayerProfile(BaseModel):
         """Reject the active special-regime token without its start date."""
         from ..calculations.registry.irpf_regimes import irpf_special_regime_impatriado_token
 
-        if self.irpf_special_regime == irpf_special_regime_impatriado_token() and self.special_regime_start_date is None:
+        if (
+            self.irpf_special_regime == irpf_special_regime_impatriado_token()
+            and self.special_regime_start_date is None
+        ):
             raise DeadlineValidationError(
                 "special_regime_start_date is required when "
                 "irpf_special_regime is IMPATRIADO (Art. 93 LIRPF / RIRPF Art. 116)",

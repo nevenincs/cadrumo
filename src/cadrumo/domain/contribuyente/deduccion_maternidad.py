@@ -62,9 +62,7 @@ def _resolve_maternidad_formula_spec(
 
     missing = _REQUIRED_FORMULA_SPEC_KEYS - declarations.keys()
     if missing:
-        raise RegistryValidationError(
-            f"maternity formula specification is missing required keys {sorted(missing)!r}"
-        )
+        raise RegistryValidationError(f"maternity formula specification is missing required keys {sorted(missing)!r}")
     return authority, effective_date, declarations
 
 

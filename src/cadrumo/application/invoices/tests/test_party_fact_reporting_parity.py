@@ -19,8 +19,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.aggregation import IntracomOperationType
-from ....domain.iva.classification import PartyFact, classifiable_categories
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ....domain.iva.classification import PartyFact, classifiable_categories
 from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

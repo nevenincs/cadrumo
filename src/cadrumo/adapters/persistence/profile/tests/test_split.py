@@ -37,6 +37,7 @@ from cadrumo.domain.transactions.enums import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+
 from ._split_test_support import _BUCKET_ID, _create_parent, _repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

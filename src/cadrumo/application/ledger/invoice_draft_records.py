@@ -375,8 +375,7 @@ def facturae_invoice_class_findings(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED,
                 detail=(
-                    f"Facturae InvoiceClass {declared.source_code!r} declares recapitulativa, "
-                    "which is not modelled"
+                    f"Facturae InvoiceClass {declared.source_code!r} declares recapitulativa, which is not modelled"
                 ),
             ),
         )

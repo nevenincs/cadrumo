@@ -9,13 +9,6 @@ bucket event.
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -33,36 +26,21 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.config import Settings
-from cadrumo.core.period import Period
-from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
+    workflow_profile,
 )
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-from cadrumo.domain.modelos.filing_record import (    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-)
-from cadrumo.domain.modelos.filing_repository import upsert_filing_record
-from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
-from cadrumo.application.modelo.action_errors import (    AmendmentEvidenceMissingError,
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.action_errors import (
+    AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
     CalculationRevisionStateError,
@@ -76,12 +54,37 @@ from cadrumo.application.modelo.export import (
 )
 from cadrumo.application.modelo.filing_actions import get_filing_record
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import (    create_work_unit,
+from cadrumo.application.modelo.work_lifecycle import (
+    create_work_unit,
     get_work_unit,
 )
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import (    workflow_profile,
+from cadrumo.core.auth_provider import AuthProviderKind
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.config import Settings
+from cadrumo.core.period import Period
+from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+from cadrumo.domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
+from cadrumo.domain.modelos.filing_repository import upsert_filing_record
+from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

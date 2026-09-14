@@ -21,12 +21,26 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.errors import EnvelopeVersionError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
+)
+from cadrumo.application.calculations.errors import ObservationCasillaReferenceError
+from cadrumo.application.calculations.observations_repository import (
+    IvaWalletDecisionEnvelopePayload,
+    ObservationEnvelopePayload,
+    ObservationSourceKind,
+    ResultDispositionProjection,
+    iva_wallet_decision_event_key,
+    iva_wallet_decision_key,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
@@ -41,10 +55,6 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
-from cadrumo.application.calculations.errors import ObservationCasillaReferenceError
-from cadrumo.application.calculations.observations_repository import IvaWalletDecisionEnvelopePayload, ObservationEnvelopePayload, ObservationSourceKind, ResultDispositionProjection, iva_wallet_decision_event_key, iva_wallet_decision_key
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
-from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

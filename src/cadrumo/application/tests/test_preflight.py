@@ -21,7 +21,6 @@ from ...core.auth_provider import AuthProviderKind
 from ...core.config import override_settings
 from ..auth.operator_probe_ports import ClaveIdentityFailure
 from ..auth.probes import ProviderProbeResult
-from ._operator_probe_fakes import fake_operator_probe_ports
 from ..preflight import (
     _ERROR_PROBE_RESULTS,
     _OK_PROBE_RESULTS,
@@ -35,6 +34,7 @@ from ..preflight import (
     probe_storage_corpus_env,
     run_preflight_checks,
 )
+from ._operator_probe_fakes import fake_operator_probe_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -37,6 +37,18 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.ledger.evidence import MediaKind
+from cadrumo.application.ledger.evidence_errors import (
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceNotFoundError,
+)
+from cadrumo.application.ledger.evidence_input import EvidenceInput
+from cadrumo.application.ledger.evidence_textlayer import transcribe_text_layer
+from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
+from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
+from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
+from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
 from cadrumo.core.config import Settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.document_shape import DocumentShape
@@ -46,21 +58,18 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.llm_vision_evidence_support import json_array, run_against_loopback_ollama
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.ledger.evidence import MediaKind
-from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
-from cadrumo.application.ledger.evidence_input import EvidenceInput
-from cadrumo.application.ledger.evidence_textlayer import transcribe_text_layer
-from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
-from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
-from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
-from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
-from ._invoice_confirmation_test_support import _BUCKET_ID, _make_svc, invoice_confirmation_kwargs
+
+from ._invoice_confirmation_test_support import (
+    _BUCKET_ID,
+    _make_svc,
+    evidence_text_layer_ports_for_test,
+    invoice_confirmation_kwargs,
+    isolated_settings,
+    secure_objects,
+    serving_a_loopback_reader,
+)
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from ._invoice_confirmation_test_support import isolated_settings, secure_objects
-from ._invoice_confirmation_test_support import serving_a_loopback_reader
-from ._invoice_confirmation_test_support import evidence_text_layer_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]

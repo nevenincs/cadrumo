@@ -69,6 +69,7 @@ from ...adapters.persistence.profile.recipient_replay_guard import (
 )
 from ...application.modelo.action_errors import CalculationRevisionNotFoundError
 from ...application.modelo.operator_inputs import ModeloReviewPackageBuildOperatorInput
+from ...application.modelo.recipient_encryption import RecipientEncryptedPackage
 from ...application.modelo.review_package import (
     ReviewPackageError,
     ReviewPackageIntegrityError,
@@ -90,7 +91,6 @@ from ...application.modelo.review_package_feedback import (
     encrypt_feedback_package_for_originator,
     import_feedback_package,
 )
-from ...application.modelo.recipient_encryption import RecipientEncryptedPackage
 from ...application.modelo.review_package_recipient_encryption import (
     RecipientDecryptionError,
     RecipientEncryptionError,
@@ -99,8 +99,8 @@ from ...application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
 )
 from ...application.modelo.review_package_recipient_registry import (
-    get_recipient_fingerprint,
     RecipientNotRegisteredError,
+    get_recipient_fingerprint,
 )
 from ...application.modelo.review_package_signing import (
     ReviewPackageSigningError,
@@ -120,13 +120,6 @@ from ._modelo_cli_support import (
     resolve_explicit_or_active_bucket_id,
 )
 from ._modelo_export_cli import export_modelo_revision_for_cli
-from .state_projection_support import (
-    calculation_action_ports_factory,
-    modelo_export_ports_factory,
-    recipient_fingerprint_registry_ports_factory,
-    recipient_encryption_capability_factory,
-    review_package_signing_keypair_capability_factory,
-)
 from ._modelo_review_package_rendering import (
     review_package_build_result_lines,
     review_package_build_result_payload,
@@ -141,6 +134,13 @@ from ._modelo_review_package_rendering import (
     review_package_verify_signature_result,
 )
 from .common import emit_envelope, filing_taxpayer_or_refuse
+from .state_projection_support import (
+    calculation_action_ports_factory,
+    modelo_export_ports_factory,
+    recipient_encryption_capability_factory,
+    recipient_fingerprint_registry_ports_factory,
+    review_package_signing_keypair_capability_factory,
+)
 
 
 def review_package_build(

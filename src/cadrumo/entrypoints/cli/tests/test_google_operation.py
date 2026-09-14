@@ -37,9 +37,9 @@ from ....core.operations import (
     OperationEventKind,
     OperationTerminalCondition,
 )
+from ...operation_composition import compose_operation_dependencies
 from ..errors import CliRefusedBoundaryError
 from ..modelo_spreadsheet_cli import execute_google_sheets_export, google_operation_error
-from ...operation_composition import compose_operation_dependencies
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

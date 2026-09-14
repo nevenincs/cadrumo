@@ -177,7 +177,9 @@ def resolve_situacion_familiar_m145_catalogue(
             ) from exc
         prefix = f"{_PREFIX}{raw_token}"
         if _required(entries, f"{prefix}{_VALUE_SUFFIX}") != raw_token:
-            raise RegistryValidationError(f"Modelo 145 family-situation token {raw_token!r} declares a mismatched value")
+            raise RegistryValidationError(
+                f"Modelo 145 family-situation token {raw_token!r} declares a mismatched value"
+            )
         definitions.append(
             SituacionFamiliarM145Definition(
                 token=token,
@@ -224,10 +226,14 @@ def situacion_familiar_m145_is_eligible_for_supplementary_reduction(
     authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return the registry-declared supplementary-reduction eligibility."""
-    return resolve_situacion_familiar_m145_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).definition(value).supplementary_reduction_eligible
+    return (
+        resolve_situacion_familiar_m145_catalogue(
+            effective_date=effective_date,
+            authority=authority,
+        )
+        .definition(value)
+        .supplementary_reduction_eligible
+    )
 
 
 __all__ = [

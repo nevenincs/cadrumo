@@ -18,10 +18,10 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import SecureObjectWrite
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...crypto.encrypted_columns import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..secure_object_records import SecureObjectDeletion
 from ..secure_objects import SecureObjectRepository
 

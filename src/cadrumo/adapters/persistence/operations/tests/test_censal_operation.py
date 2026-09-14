@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 import asyncio
 from datetime import timedelta
 from pathlib import Path
@@ -12,6 +10,7 @@ import pytest
 
 from cadrumo.adapters.outbound.aeat.sede.censal_datos import parse_censal_datos
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.interactions import (
     OperationApplyResponse,

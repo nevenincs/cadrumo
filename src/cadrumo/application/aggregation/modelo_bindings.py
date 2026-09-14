@@ -712,9 +712,7 @@ def _resolve_impatriado_registry_declarations(
         raw_tokens = value.split(",")
         if not raw_tokens or any(not token.strip() for token in raw_tokens):
             return None
-        normalized = tuple(
-            token.strip().upper() if uppercase else token.strip().casefold() for token in raw_tokens
-        )
+        normalized = tuple(token.strip().upper() if uppercase else token.strip().casefold() for token in raw_tokens)
         if len(set(normalized)) != len(normalized):
             return None
         if any(not token or any(not (char.isalnum() or char in "_-.") for char in token) for token in normalized):

@@ -10,7 +10,6 @@ import pytest
 
 from ....core.period import Period
 from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
-from ..filed_data_ports import FiledRegisterDeclarationProtocol
 from ..filed_data_capture import (
     _await_filed_register_walk,
     _walk_or_failure_row,
@@ -18,6 +17,7 @@ from ..filed_data_capture import (
     filed_data_capture_failure_row,
     list_filed_data_bulk,
 )
+from ..filed_data_ports import FiledRegisterDeclarationProtocol
 from ..remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
@@ -228,7 +228,9 @@ def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
     refusal wording that pushed its counts past the bound would arrive with the
     only actionable part cut off.
     """
-    assert issubclass(LiveApplicationError, Exception), "the bulk walk arm catches Exception; a refusal outside it escapes"
+    assert issubclass(LiveApplicationError, Exception), (
+        "the bulk walk arm catches Exception; a refusal outside it escapes"
+    )
 
     refusal = LiveApplicationError(
         "declaraciones register modelo 100 ejercicio 2026 rendered 3 row(s) but its pager "

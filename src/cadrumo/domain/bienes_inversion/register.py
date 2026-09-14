@@ -73,6 +73,8 @@ from .regularizacion_parameters import (
 )
 from .vocabulary import (
     BienInversionDisposalRegime as _BienInversionDisposalRegime,
+)
+from .vocabulary import (
     BienInversionKind as _BienInversionKind,
 )
 
@@ -432,10 +434,14 @@ def _transmision_uncapped_amount(
     parameters: BienesInversionRegularizacionParameters,
 ) -> tuple[Decimal, Decimal]:
     """Return the art-109 divisor and art-110 amount before regla-1ª capping."""
-    prorrata_imputada_pct = HUNDRED if is_bien_inversion_disposal_regime(
-        regime,
-        "disposal_regime.subject_not_exempt_token",
-    ) else Decimal("0")
+    prorrata_imputada_pct = (
+        HUNDRED
+        if is_bien_inversion_disposal_regime(
+            regime,
+            "disposal_regime.subject_not_exempt_token",
+        )
+        else Decimal("0")
+    )
     divisor = _divisor(kind, parameters)
     deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
     deduccion_imputada = cuota_soportada * prorrata_imputada_pct / HUNDRED

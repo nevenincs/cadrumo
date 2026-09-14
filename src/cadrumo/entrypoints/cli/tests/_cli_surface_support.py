@@ -4,9 +4,10 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.config import override_settings
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 

@@ -12,15 +12,15 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.sync_runs import SyncRunRecordRepository
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import SYNC_RUN_RECORDS_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.storage.sync_runs.persist import record_sync_run
 from cadrumo.application.storage.sync_runs.records import SyncRunCoverage, SyncRunRecord
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.sync_surface import SyncSurface
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.application.workflow.persistence import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

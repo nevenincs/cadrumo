@@ -26,12 +26,16 @@ from typing import Annotated, Final
 
 from pydantic import BeforeValidator, Field, field_validator
 
+from .errors import RegistryValidationError
 from .keyed_families import (
     CASILLAS_FAMILY,
+)
+from .keyed_families import (
     INHERITED_FAMILIES as CANONICAL_INHERITED_FAMILIES,
+)
+from .keyed_families import (
     RESTATABLE_FAMILIES as CANONICAL_RESTATABLE_FAMILIES,
 )
-from .errors import RegistryValidationError
 from .schema_base import RegistryModel, coerce_enum_member
 
 __all__ = (

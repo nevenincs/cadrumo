@@ -24,6 +24,9 @@ from ...core.operations import (
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...core.time.clock import now
 from ...domain.deadlines.models import TaxpayerProfile
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.operator_scope_ports import OperatorScopePorts
+from ..auth.protocols import BrowserSessionFactoryPort
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -43,9 +46,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
-from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ..auth.operator_scope_ports import OperatorScopePorts
-from ..auth.protocols import BrowserSessionFactoryPort
 from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_DECLARATION_REFUSAL_CODE,

@@ -29,6 +29,8 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
@@ -37,7 +39,6 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.classification.policies import SensitivityClass
 from ....domain.user_profile.loader import load_user_profile_schema
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import FieldEditScreen, ProfileManagerScreen

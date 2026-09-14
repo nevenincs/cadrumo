@@ -5,6 +5,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
+    _file_flow_runtime,
+    _FileFlowRuntime,
+    _Repos,
+    _repos,
+)
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     TestRuntimeProfile,
@@ -12,7 +18,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     reset_secure_object_store,
 )
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import _file_flow_runtime, _FileFlowRuntime, _Repos, _repos
+
 from .ledger_action_persistence_support import _BUCKET_ID
 
 # These suites exercise the profile-bound secure-object adapter through an

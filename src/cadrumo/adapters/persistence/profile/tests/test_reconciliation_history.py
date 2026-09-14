@@ -20,6 +20,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
@@ -38,7 +39,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.tests.inventory import FIXTURES_DIR
 
 __all__ = ["isolated_backend"]

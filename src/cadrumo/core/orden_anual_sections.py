@@ -143,18 +143,13 @@ def extract_lorca_2022_reduction(
             f"annual Orden source {source_label!r} municipal reduction has ambiguous exercise identity",
         )
     municipalities = tuple(
-        dict.fromkeys(
-            match.group("municipality").strip()
-            for match in _REDUCTION_MUNICIPALITY_RE.finditer(iva_clause)
-        )
+        dict.fromkeys(match.group("municipality").strip() for match in _REDUCTION_MUNICIPALITY_RE.finditer(iva_clause))
     )
     if len(municipalities) != 1:
         raise OrdenAnualHtmlParseError(
             f"annual Orden source {source_label!r} municipal reduction has ambiguous municipality identity",
         )
-    annexes = tuple(
-        dict.fromkeys(match.group("annex").upper() for match in _REDUCTION_ANNEX_RE.finditer(iva_clause))
-    )
+    annexes = tuple(dict.fromkeys(match.group("annex").upper() for match in _REDUCTION_ANNEX_RE.finditer(iva_clause)))
     if len(annexes) != 1:
         raise OrdenAnualHtmlParseError(
             f"annual Orden source {source_label!r} municipal reduction has ambiguous annex scope",
@@ -185,10 +180,7 @@ def _find_lorca_2022_heading(soup: BeautifulSoup, *, source_label: str) -> Tag |
         tag
         for tag in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
         if _contains_all_markers(normalise_html_text(tag.get_text(" ", strip=True)), _REDUCTION_HEADING_MARKERS)
-        and any(
-            _contains_all_markers(text, _REDUCTION_IVA_MARKERS)
-            for text in _lorca_2022_paragraphs(tag)
-        )
+        and any(_contains_all_markers(text, _REDUCTION_IVA_MARKERS) for text in _lorca_2022_paragraphs(tag))
     )
     if not headings:
         return None

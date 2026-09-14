@@ -6,14 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.ledger.llm_classification_ports import OperatorIvaDerivationResult
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.transactions.enums import BusinessClassification
-from cadrumo.domain.transactions.errors import TransactionValidationError
-from cadrumo.application.ledger.llm_classification import derive_operator_iva_substrate
 from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
     _BUCKET,
     _NOW,
@@ -23,6 +16,13 @@ from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
 from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
     repositories as repositories,
 )
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.application.ledger.llm_classification import derive_operator_iva_substrate
+from cadrumo.application.ledger.llm_classification_ports import OperatorIvaDerivationResult
+from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.transactions.enums import BusinessClassification
+from cadrumo.domain.transactions.errors import TransactionValidationError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

@@ -8,9 +8,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.application.ledger.actions_import import import_ledger_source, import_ledger_transactions
 from cadrumo.application.ledger.models import LedgerSourceImportCommand
+from cadrumo.domain.transactions.enums import TransactionDirection
+
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,

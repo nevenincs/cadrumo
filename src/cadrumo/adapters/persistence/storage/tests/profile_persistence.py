@@ -9,11 +9,11 @@ from contextlib import ExitStack, contextmanager
 @contextmanager
 def composed_profile_persistence_ports() -> Generator[None]:
     """Bind the production custody and login-session adapters for one test host."""
-    from ..profile_custody import build_profile_custody_port
-    from ..profile_login_session import build_profile_login_session_port
     from .....application.user_profile.custody_ports import bind_profile_custody_port
     from .....application.user_profile.language_resolver import register_language_resolver
     from .....application.user_profile.login_session_port import bind_profile_login_session_port
+    from ..profile_custody import build_profile_custody_port
+    from ..profile_login_session import build_profile_login_session_port
 
     with ExitStack() as composition:
         composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))

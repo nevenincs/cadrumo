@@ -52,13 +52,14 @@ def test_profile_schema_identities_preserve_compound_leaf_tokens() -> None:
     leaves = tuple(spec for spec in PROFILE_COMMAND_SPECS if spec.result_schema.identity is not None)
 
     assert all(
-        spec.result_schema.identity
-        == f"{spec.parent_key.replace('_', '.')}.{spec.token.replace('-', '_')}"
+        spec.result_schema.identity == f"{spec.parent_key.replace('_', '.')}.{spec.token.replace('-', '_')}"
         for spec in leaves
         if spec.parent_key is not None
     )
     complete_setup = next(
-        spec for spec in leaves if spec.token == "complete-setup"  # noqa: S105 - public CLI token
+        spec
+        for spec in leaves
+        if spec.token == "complete-setup"  # noqa: S105 - public CLI token
     )
     assert complete_setup.result_schema.identity == "config.profile.complete_setup"
 

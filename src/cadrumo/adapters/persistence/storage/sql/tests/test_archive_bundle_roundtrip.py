@@ -34,8 +34,8 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from ......core.classification.policies import SensitivityClass
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..orm import Base
 from ..secure_object_records import SecureObjectRawRow
 from ..secure_objects import SecureObjectRepository

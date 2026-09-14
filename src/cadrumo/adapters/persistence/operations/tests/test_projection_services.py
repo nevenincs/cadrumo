@@ -14,17 +14,6 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    OperationLifecycle,
-    OperationTerminalCondition,
-)
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -63,7 +52,11 @@ from cadrumo.application.operations.frontend_requests import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
-from cadrumo.application.operations.interactions import OperationInteractionRequest, OperationPendingInteraction, OperationResponseIntent
+from cadrumo.application.operations.interactions import (
+    OperationInteractionRequest,
+    OperationPendingInteraction,
+    OperationResponseIntent,
+)
 from cadrumo.application.operations.models import (
     OperationIdentity,
     OperationRequest,
@@ -102,6 +95,17 @@ from cadrumo.application.operations.registry import (
     operation_public_schema_reference,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

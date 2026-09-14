@@ -10,6 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+
 from .....application.diagnostic_models import (
     ConfigRepairReport,
     DiagnosticCheck,
@@ -18,8 +20,8 @@ from .....application.diagnostic_models import (
     ensure_models_rebuilt,
 )
 from .....application.diagnostics import (
-    build_profile_check,
     build_config_repair_report,
+    build_profile_check,
     preview_quarantine_unreadable_secure_objects,
     quarantine_unreadable_secure_objects,
     render_config_repair_text,
@@ -31,9 +33,6 @@ from .....application.overview.next_actions import declare_next_action
 from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from .ephemeral_master_key import EphemeralMasterKeyProvider
-from .secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ..errors import StorageValidationError
 from ..master_key.active_session import (
     NoActiveBucketSessionError,
@@ -42,11 +41,15 @@ from ..master_key.active_session import (
     suspend_active_session,
 )
 from ..master_key.bucket_session import BucketSession
-from ..runtime_repository import secure_object_repository_for_active_bucket
-from ..runtime_repository import secure_object_repository_for_active_bucket_or_default_route
+from ..runtime_repository import (
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_active_bucket_or_default_route,
+)
 from ..secure_object_namespaces import SECURE_OBJECT_WORKFLOW_STATE_KEY
 from ..sql.engine import dispose_engine
 from ..sql.secure_objects import SecureObjectRepository
+from .ephemeral_master_key import EphemeralMasterKeyProvider
+from .secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -488,6 +491,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     authenticated) and asserting the report shape across each.
     """
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
     from .....application.auth.actions import update_auth
     from .....application.workflow.persistence import workflow_state_repository
 
@@ -945,8 +949,8 @@ def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:
 def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> None:
     """build_error_envelope must produce a well-formed envelope for DiagnosticModelError."""
 
-    from .....core.errors.error_codes import build_error_envelope
     from .....application.errors import DiagnosticModelError
+    from .....core.errors.error_codes import build_error_envelope
 
     err = DiagnosticModelError("invariant violated")
     envelope = build_error_envelope(err)

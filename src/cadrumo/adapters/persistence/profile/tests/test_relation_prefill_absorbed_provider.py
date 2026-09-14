@@ -16,7 +16,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.calculations.relation_prefill import (
+    RelationPrefillSourceResolver,
+    resolve_relations_from_local_store,
+)
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -34,10 +41,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

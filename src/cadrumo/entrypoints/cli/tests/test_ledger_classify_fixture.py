@@ -16,8 +16,10 @@ import pytest
 from click.testing import Result
 
 from ....adapters.inbound.financial.providers.csv import CsvProvider
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....domain.transactions.models import derive_transaction_id
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.inventory import FIXTURES_DIR
 from ._ledger_corpus_support import _match
 from .cli_runner import invoke_cached_cli

@@ -19,8 +19,8 @@ from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
-    from ....application.auth.operator_scope_ports import OperatorScopePorts
     from ....application.auth.operator_results import AuthConfigureResult
+    from ....application.auth.operator_scope_ports import OperatorScopePorts
 
 
 def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
@@ -304,7 +304,11 @@ def auth_login(
     from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
     from ....application.auth.operator import login_operator_auth
     from ..config_payloads import AuthLoginPayload
-    from ..state_projection_support import certificate_secret_backend_factory, operator_probe_ports, operator_scope_ports
+    from ..state_projection_support import (
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+    )
 
     try:
         result = asyncio.run(

@@ -7,9 +7,9 @@ from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ..filed_observation_ports import FiledObservationPersistencePorts
 from ..errors import LiveApplicationError
 from ..filed_data_ports import FiledDataCapturePort
+from ..filed_observation_ports import FiledObservationPersistencePorts
 from ..iva_remote_state_ports import IvaRemoteStatePort
 
 
@@ -276,6 +276,7 @@ class _UnavailableFiledDataCapturePort:
         """Return no source rows because source capture is outside these tests."""
         del args, kwargs
         return ()
+
 
 @dataclass(frozen=True, slots=True)
 class InMemoryFiledObservationTestBundle:

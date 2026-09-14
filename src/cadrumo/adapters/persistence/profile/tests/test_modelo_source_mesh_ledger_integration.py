@@ -82,7 +82,9 @@ def _transaction(provider_id: str) -> Transaction:
     )
 
 
-def _resolver(*, transaction_repository: TransactionCatalogueRepository, objects: object) -> LedgerIvaAggregationSourceResolver:
+def _resolver(
+    *, transaction_repository: TransactionCatalogueRepository, objects: object
+) -> LedgerIvaAggregationSourceResolver:
     invoice_repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     return LedgerIvaAggregationSourceResolver(
         transaction_repository=transaction_repository,

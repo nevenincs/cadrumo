@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 if TYPE_CHECKING:
     from datetime import datetime
     from pathlib import Path
 
-    from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload
+    from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 
 
 def _find_modelo_observation(

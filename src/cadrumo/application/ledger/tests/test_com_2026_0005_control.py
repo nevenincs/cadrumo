@@ -66,9 +66,7 @@ _SUPPLIER_CIF_BAD_CHECKSUM = "B1234567X"
 #: The OTHER identifier on the page -- the recipient's, which is valid. This is
 #: the id the defect returns as ``supplier_tax_id``.
 _RECIPIENT_CIF = "B17283946"
-_TEXT_LAYER_PORTS = text_layer_ports_for_pages(
-    (_SUPPLIER_CIF_BAD_CHECKSUM, _RECIPIENT_CIF, "SIN-NUMERO")
-)
+_TEXT_LAYER_PORTS = text_layer_ports_for_pages((_SUPPLIER_CIF_BAD_CHECKSUM, _RECIPIENT_CIF, "SIN-NUMERO"))
 
 
 def _control_fixtures() -> dict[str, Path]:

@@ -86,6 +86,7 @@ def _base_total(aggregation: ImpatriadoIncomeLedgerAggregation) -> Decimal:
     values = aggregation.casilla_aggregation.casilla_values
     return next((v for c, v in values.items() if str(c) == _BASE_CASILLA), Decimal("0"))
 
+
 def test_repository_backed_aggregation_reports_out_of_period_catalogue_transactions(
     tmp_path: Path,
 ) -> None:

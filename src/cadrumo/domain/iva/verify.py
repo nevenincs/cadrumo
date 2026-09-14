@@ -26,7 +26,6 @@ from ...core.logging import get_logger
 from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from .schema import (
     IvaCatalogue,
-    IvaCategory,
     IvaCitation,
     IvaVerificationIssue,
     IvaVerificationReport,

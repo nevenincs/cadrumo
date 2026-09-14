@@ -254,7 +254,9 @@ def _select_partition_revision(
     )
 
 
-def _partition_repository(repository: CalculationObservationRepositoryProtocol | None) -> CalculationObservationRepositoryProtocol:
+def _partition_repository(
+    repository: CalculationObservationRepositoryProtocol | None,
+) -> CalculationObservationRepositoryProtocol:
     """Require the observation repository composed by the caller."""
     if repository is not None:
         return repository

@@ -31,14 +31,14 @@ import asyncio
 
 import pytest
 
+from ..declarations_schema import Declaracion
+from ..errors import SedeParseError
 from .declarations_register_test_support import (
     aeat_sede_fixture,
     declared_register_total,
     open_routed_declarations_register,
     rendered_register_rows,
 )
-from ..declarations_schema import Declaracion
-from ..errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

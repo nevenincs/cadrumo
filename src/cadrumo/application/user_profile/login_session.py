@@ -75,6 +75,7 @@ from .custody_ports import (
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
 )
+from .login_handover import HandoverPhase, ProfileLoginHandoverJournal
 from .login_session_port import (
     ProfileBucketSessionPort,
     ProfileLoginSessionPort,
@@ -82,7 +83,6 @@ from .login_session_port import (
     ProfileSessionResumeOutcomePort,
     profile_login_session_port,
 )
-from .login_handover import HandoverPhase, ProfileLoginHandoverJournal
 from .profile_pointer import (
     ActiveProfilePointerTransaction,
     ActiveProfilePointerTransactionError,

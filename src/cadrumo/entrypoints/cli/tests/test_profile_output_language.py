@@ -29,9 +29,10 @@ from collections.abc import Mapping, Sequence
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -80,9 +81,10 @@ def test_registration_writes_profile_output_language() -> None:
     them at and asserting the wizard's events here would assert a path the
     product no longer runs.
     """
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
     from ....application.user_profile.projections import fact_value
     from ....application.workflow.persistence import workflow_state_repository
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
     profile_id = _seed_profile(
         "default",
@@ -108,9 +110,10 @@ def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
     registration door and then patched, because ``edit`` is the surviving
     surface that takes an ``--output-language`` flag.
     """
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
     from ....application.user_profile.projections import fact_value
     from ....application.workflow.persistence import workflow_state_repository
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
     profile_id = _seed_profile(
         "default",
@@ -144,9 +147,10 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     left exactly as stored.
     """
 
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
     from ....application.user_profile.projections import fact_value
     from ....application.workflow.persistence import workflow_state_repository
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
     profile_id = _seed_profile(
         "default",

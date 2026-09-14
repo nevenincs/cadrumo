@@ -319,9 +319,7 @@ class TransactionKindCatalogue:
     def for_supply_nature(self, supply_nature: str) -> TransactionKind:
         """Return the unique kind projection for a registry supply-nature token."""
         matches = tuple(
-            definition.token
-            for definition in self.definitions
-            if definition.supply_nature == supply_nature
+            definition.token for definition in self.definitions if definition.supply_nature == supply_nature
         )
         if len(matches) != 1:
             raise IvaValidationError(
@@ -331,11 +329,7 @@ class TransactionKindCatalogue:
 
     def kinds_for_oss_regime(self, oss_regime: str) -> frozenset[TransactionKind]:
         """Return registry kinds routed through one OSS regime token."""
-        matches = frozenset(
-            definition.token
-            for definition in self.definitions
-            if definition.oss_regime == oss_regime
-        )
+        matches = frozenset(definition.token for definition in self.definitions if definition.oss_regime == oss_regime)
         if not matches:
             raise IvaValidationError(
                 f"OSS regime {oss_regime!r} must map to at least one transaction kind",
@@ -390,8 +384,7 @@ def _classification_vocabulary_group(
         declared = _required_classification_entry(entries, f"{prefix}.{raw_token}.value")
         if declared != raw_token:
             raise IvaValidationError(
-                f"IVA classification mapping {prefix}.{raw_token!s}.value declares {declared!r}, "
-                f"not {raw_token!r}",
+                f"IVA classification mapping {prefix}.{raw_token!s}.value declares {declared!r}, not {raw_token!r}",
             )
         tokens.append(token_type._from_registry(raw_token))
     declared_set = frozenset(str(token) for token in tokens)
@@ -562,10 +555,7 @@ def domestic_rate_tier_is_required(
         issuer_residency == mainland
         and customer_residency in outside_territories
         and kind == services_kind
-        and (
-            customer_tax_status is None
-            or customer_tax_status == vocabulary.customer_tax_status_alias("b2c_consumer")
-        )
+        and (customer_tax_status is None or customer_tax_status == vocabulary.customer_tax_status_alias("b2c_consumer"))
         and art_69_dos_service is None
     )
 

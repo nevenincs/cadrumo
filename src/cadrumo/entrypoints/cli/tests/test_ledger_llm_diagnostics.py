@@ -24,6 +24,9 @@ from pydantic import ValidationError
 from ....adapters.outbound.llm.models import LLMResponse
 from ....adapters.outbound.llm.usage import UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....core.config import override_settings
 from ....core.config_support import LLMProvider
 from ....core.i18n.render import clear_output_language_cache, tr
@@ -31,7 +34,6 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import set_classification
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
 from .._ledger_rule_payloads import (

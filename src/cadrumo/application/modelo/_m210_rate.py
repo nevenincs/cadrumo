@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING
 from ...core.decimal.constants import ZERO
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr, tipo_renta_pension_token
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,

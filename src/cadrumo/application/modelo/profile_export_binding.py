@@ -18,9 +18,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition

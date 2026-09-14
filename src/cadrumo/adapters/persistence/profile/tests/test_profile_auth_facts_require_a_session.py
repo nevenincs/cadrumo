@@ -25,18 +25,18 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.auth_provider import ClaveMovilRoute
-from cadrumo.core.config import override_settings
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.application.auth.sessions import ClaveAuthFacts, clave_auth_facts_from_profile_values
 from cadrumo.application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
     profile_record_session_if_authenticated,
 )
 from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.core.auth_provider import ClaveMovilRoute
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.core.config import override_settings
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]

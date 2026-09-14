@@ -30,8 +30,8 @@ from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..filing.draft_review import ModeloApprovalStaleReason
-from ..filing.draft_revision_gate import require_modelo_draft_coordinates_current
 from ..filing.draft_review_ports import DraftReviewPorts, DraftReviewProfileRepositoryProtocol
+from ..filing.draft_revision_gate import require_modelo_draft_coordinates_current
 from .enums import ReviewSeverity
 from .errors import ReviewSourceLoadError
 from .models import (

@@ -6,9 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.period import Period
-from cadrumo.application.modelo.action_errors import ExternalModeloImportError
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M303_PRINTED_RESULT_TOKEN,
@@ -21,6 +18,9 @@ from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     _seed_work_unit,
     repos,
 )
+from cadrumo.application.modelo.action_errors import ExternalModeloImportError
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.core.period import Period
 
 __all__ = ["repos"]
 

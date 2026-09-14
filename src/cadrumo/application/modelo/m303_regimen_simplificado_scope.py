@@ -5,11 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.deadlines.models import M303RegimeComposition, TaxpayerProfile
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from ...domain.deadlines.models import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError

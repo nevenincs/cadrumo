@@ -15,6 +15,29 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.calculations.registry.ccaa_catalogue import ccaa_choices, default_ccaa
+from ...domain.calculations.registry.irpf_income_categories import (
+    irpf_income_category_actividad_economica_token,
+    irpf_income_category_choices,
+)
+from ...domain.calculations.registry.irpf_regimes import (
+    irpf_estimation_regime_objetiva_token,
+    irpf_estimation_regime_tokens,
+    irpf_special_regime_impatriado_token,
+    irpf_special_regime_tokens,
+)
+from ...domain.calculations.registry.iva_schema_vocabulary import (
+    default_iva_regime,
+    iva_regime_choices,
+    m303_regime_composition_choices,
+    m303_tax_territory_choices,
+)
+from ...domain.calculations.registry.renta_codes_catalogue import (
+    default_fiscal_residency,
+    fiscal_residency_choices,
+    fiscal_residency_requires_country,
+)
+from ...domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
+from ...domain.calculations.registry.third_party_declaration_roles import third_party_declaration_role_choices
 from ...domain.contribuyente.entity_type import (
     entity_type_attribution_entity_token,
     entity_type_legal_entity_token,
@@ -28,29 +51,6 @@ from ...domain.contribuyente.renta_codes import (
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
-)
-from ...domain.calculations.registry.iva_schema_vocabulary import (
-    default_iva_regime,
-    iva_regime_choices,
-    m303_regime_composition_choices,
-    m303_tax_territory_choices,
-)
-from ...domain.calculations.registry.irpf_income_categories import (
-    irpf_income_category_actividad_economica_token,
-    irpf_income_category_choices,
-)
-from ...domain.calculations.registry.irpf_regimes import (
-    irpf_estimation_regime_objetiva_token,
-    irpf_estimation_regime_tokens,
-    irpf_special_regime_impatriado_token,
-    irpf_special_regime_tokens,
-)
-from ...domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
-from ...domain.calculations.registry.third_party_declaration_roles import third_party_declaration_role_choices
-from ...domain.calculations.registry.renta_codes_catalogue import (
-    default_fiscal_residency,
-    fiscal_residency_choices,
-    fiscal_residency_requires_country,
 )
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from .models import (
@@ -154,9 +154,7 @@ _ENTITY_TYPE_CHOICES: tuple[WizardChoice, ...] = tuple(
 # Only the forms whose choice carries curated explainer copy; the registry
 # metadata owns this selector so an unlisted member never mints an
 # unresolvable description ref.
-_DESCRIBED_LEGAL_ENTITY_FORMS = frozenset(
-    member.value for member in legal_entity_form_choice_description_tokens()
-)
+_DESCRIBED_LEGAL_ENTITY_FORMS = frozenset(member.value for member in legal_entity_form_choice_description_tokens())
 
 _LEGAL_ENTITY_FORM_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
@@ -381,10 +379,7 @@ _IVA_REGIME_VISIBLE = WizardVisibility(
 # sat on this one, so answering "no" to ROI without declaring a regime built a
 # claimed block the wizard never finished asking about.
 _IVA_BLOCK_CLAIMED = WizardVisibility(
-    any_of=tuple(
-        WizardCondition(question_id="iva-regime", equals=token.value)
-        for token in _IVA_REGIME_TOKENS
-    ),
+    any_of=tuple(WizardCondition(question_id="iva-regime", equals=token.value) for token in _IVA_REGIME_TOKENS),
 )
 
 

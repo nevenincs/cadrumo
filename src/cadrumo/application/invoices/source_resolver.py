@@ -44,12 +44,12 @@ from ...domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue, require_iva_category
-from ...domain.calculations.registry.travel_agency_mediation import (
-    is_travel_agency_air_passenger_transport,
-)
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category, resolve_iva_category_catalogue
 from ...domain.calculations.registry.third_party_declaration_roles import (
     resolve_third_party_declaration_role_catalogue,
+)
+from ...domain.calculations.registry.travel_agency_mediation import (
+    is_travel_agency_air_passenger_transport,
 )
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.models import Invoice
@@ -105,6 +105,7 @@ _PAYABLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
     },
 )
 
+
 #: The claves an invoice's IVA category alone determines, keyed by side.
 #:
 #: Values are :class:`~cadrumo.core.IntracomOperationType` MEMBERS, never the
@@ -139,7 +140,9 @@ def _clave_by_kind_and_category() -> dict[tuple[InvoiceKind, IvaCategory], Intra
         (
             InvoiceKind.RECEIVED,
             catalogue.require("intra_community_service_acquisition_reverse_charge"),
-        ): IntracomOperationType(catalogue.operation_type("received.intra_community_service_acquisition_reverse_charge")),
+        ): IntracomOperationType(
+            catalogue.operation_type("received.intra_community_service_acquisition_reverse_charge")
+        ),
         (
             InvoiceKind.RECEIVED,
             catalogue.require("intra_community_acquisition_reverse_charge"),
@@ -817,17 +820,11 @@ def _m347_role_operation_clave(
     declaration_roles: frozenset[ThirdPartyDeclarationRole],
 ) -> str | None:
     role_catalogue = resolve_third_party_declaration_role_catalogue()
-    if (
-        invoice.collected_on_behalf_of_tax_id is not None
-        and declaration_roles & role_catalogue.roles_for_clave("C")
-    ):
+    if invoice.collected_on_behalf_of_tax_id is not None and declaration_roles & role_catalogue.roles_for_clave("C"):
         return "C"
     if invoice.outside_economic_activity is True and declaration_roles & role_catalogue.roles_for_clave("D"):
         return "D"
-    if (
-        invoice.is_subvencion_ayuda is True
-        and declaration_roles & role_catalogue.roles_for_clave("E")
-    ):
+    if invoice.is_subvencion_ayuda is True and declaration_roles & role_catalogue.roles_for_clave("E"):
         return "E"
     return None
 

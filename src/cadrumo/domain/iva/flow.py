@@ -91,8 +91,8 @@ from typing import Self
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
 from ...core.errors.hierarchy import CoreValidationError
+from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
 from .classification import InvoiceKind
 from .schema import IvaCategory
 

@@ -32,14 +32,14 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.iva_schema_vocabulary import (
+    iva_regime_simplificado_token,
+    require_iva_regime,
+)
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
-)
-from ...domain.calculations.registry.iva_schema_vocabulary import (
-    iva_regime_simplificado_token,
-    require_iva_regime,
 )
 from ...domain.deadlines.models import IVARegime
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue

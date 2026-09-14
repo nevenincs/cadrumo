@@ -48,7 +48,6 @@ See Also:
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -56,7 +55,17 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
+from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
+from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
+from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
 from cadrumo.core.period import Period
@@ -68,15 +77,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
-from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -573,7 +573,12 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
             )
         )
         snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-        report = resolve_bindings_from_local_store(snapshot_n1, repository=repo, captured_at=_CLOCK_N_PLUS_1, iva_history_repository=IvaCompensationHistoryRepository())
+        report = resolve_bindings_from_local_store(
+            snapshot_n1,
+            repository=repo,
+            captured_at=_CLOCK_N_PLUS_1,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+        )
 
     assert dict(report.binding_values) == {
         _CUENTAS_BASELINE_BINDING: _CUENTAS_N,
@@ -695,7 +700,12 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
         snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         with pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"):
-            resolve_bindings_from_local_store(snapshot_n1, repository=repo, captured_at=_CLOCK_N_PLUS_1, iva_history_repository=IvaCompensationHistoryRepository())
+            resolve_bindings_from_local_store(
+                snapshot_n1,
+                repository=repo,
+                captured_at=_CLOCK_N_PLUS_1,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+            )
 
 
 def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_delta_is_below_threshold() -> None:

@@ -109,6 +109,7 @@ from .work_addressing import (
     law_selected_revision_for_work_target,
 )
 from .work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
+from .work_lifecycle_ports import WorkLifecyclePorts
 from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
@@ -116,7 +117,6 @@ from .work_selection import (
     select_modelo_work_resolution,
 )
 from .work_unit_repository import work_unit_catalogue_repository
-from .work_lifecycle_ports import WorkLifecyclePorts
 
 
 @dataclass(frozen=True, slots=True)
@@ -324,7 +324,9 @@ def _resolve_external_source_work_unit(
     clock: datetime | None,
 ) -> WorkUnit:
     """Resolve the active target or create one when the target is absent."""
-    resolution = _select_external_source_work_unit(source, catalogue=ports.work_unit_repository.load(), bucket_id=bucket_id)
+    resolution = _select_external_source_work_unit(
+        source, catalogue=ports.work_unit_repository.load(), bucket_id=bucket_id
+    )
     if resolution.work_unit is not None:
         return resolution.work_unit
     return _create_external_source_work_unit(

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
@@ -18,7 +19,6 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .._registry_helpers import assert_revision_content_integrity
 from ..action_errors import StoredCalculationDriftError
 

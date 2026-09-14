@@ -8,9 +8,8 @@ small structural ports by an outer composition root.
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable, Sequence
+from collections.abc import Callable, Sequence
 from contextlib import AbstractAsyncContextManager
-from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.period import Period

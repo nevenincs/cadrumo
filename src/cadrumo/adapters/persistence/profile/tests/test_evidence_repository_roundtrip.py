@@ -24,6 +24,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+
 from ._evidence_test_support import secure_objects
 
 __all__ = ["secure_objects"]
@@ -32,12 +33,12 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import PurchaseInvoiceEvidenceRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.application.ledger.evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceDocument,
 )
+from cadrumo.core.classification.policies import SensitivityClass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

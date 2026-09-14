@@ -12,8 +12,8 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
-from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.domain.buckets.event import BucketEventType
@@ -39,10 +39,14 @@ from cadrumo.domain.contribuyente.inventory.records import (
 if TYPE_CHECKING:
     from cadrumo.domain.contribuyente.inventory import closing_authority_records as _closing_types
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from cadrumo.domain.filing_evidence import FilingEvidenceReference
-from cadrumo.application.inventory.errors import InventoryActividadConflictError, InventoryActividadNotFoundError, InventoryServiceInputError
+from cadrumo.application.inventory.errors import (
+    InventoryActividadConflictError,
+    InventoryActividadNotFoundError,
+    InventoryServiceInputError,
+)
 from cadrumo.application.inventory.ports import InventoryServicePorts
 from cadrumo.application.inventory.service import InventoryMovementCommand, InventoryService
+from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -22,13 +22,13 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_runtime_profile_fixture,
 )
 from cadrumo.application.user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

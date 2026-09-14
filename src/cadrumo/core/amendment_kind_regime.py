@@ -111,7 +111,9 @@ def resolve_amendment_kind_regime(
     caller that has already projected an alternate boundary mapping; it does
     not provide a default policy or a fallback vocabulary.
     """
-    table = policy.rectificativa_effective_from if rectificativa_effective_from is None else rectificativa_effective_from
+    table = (
+        policy.rectificativa_effective_from if rectificativa_effective_from is None else rectificativa_effective_from
+    )
     boundary = table.get(modelo)
     if boundary is None:
         return AmendmentKindRegime(
@@ -179,9 +181,9 @@ def classify_amendment_liability_direction(
 
 
 __all__ = [
-    "AmendmentRegimePolicy",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
+    "AmendmentRegimePolicy",
     "classify_amendment_liability_direction",
     "permitted_amendment_kind_values",
     "resolve_amendment_kind_regime",

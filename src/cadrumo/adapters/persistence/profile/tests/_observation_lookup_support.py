@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
-from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload
+from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 
 
 def find_observation(

@@ -140,10 +140,13 @@ class TestResultSummaryNarrowing:
 
         monkeypatch.setattr(result_summary, "_resolve_registry_snapshot_for_work_unit", _capture_grade)
 
-        assert result_summary.calculation_result_summary(
-            self._revision(),
-            work_unit_resolver=lambda _work_unit_id: SimpleNamespace(work_unit_id="observed"),  # type: ignore[arg-type,return-value]
-        ) is None
+        assert (
+            result_summary.calculation_result_summary(
+                self._revision(),
+                work_unit_resolver=lambda _work_unit_id: SimpleNamespace(work_unit_id="observed"),  # type: ignore[arg-type,return-value]
+            )
+            is None
+        )
         assert observed == [RegistryAuthorityGrade.CALCULATION]
 
     def test_runtime_error_from_get_work_unit_propagates(self) -> None:

@@ -28,11 +28,11 @@ from ....domain.bienes_inversion.register import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
-from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
+from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_base import ThresholdComparison

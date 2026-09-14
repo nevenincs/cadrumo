@@ -37,8 +37,8 @@ from ...application.invoices.catalogue_lifecycle import (
 )
 from ...application.invoices.simplificada_advisory import (
     SimplificadaTaxIdAdvisory,
-    resolve_simplificada_tax_id_legal_refs,
     resolve_simplificada_tax_id_advisory,
+    resolve_simplificada_tax_id_legal_refs,
 )
 from ...application.invoices.source_resolver import iva_category_for_operation_type
 from ...core.aggregation import IntracomOperationType
@@ -295,11 +295,7 @@ def invoice_add(
             ),
             retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
             retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
-            invoice_class=(
-                default_invoice_class()
-                if invoice_class is None
-                else require_invoice_class(invoice_class)
-            ),
+            invoice_class=(default_invoice_class() if invoice_class is None else require_invoice_class(invoice_class)),
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
             recargo_amount=parse_optional_decimal_amount(recargo, label="recargo"),

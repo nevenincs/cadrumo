@@ -25,18 +25,6 @@ from pydantic import BaseModel, Field
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.core.hashing import content_hash_hex
-from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    OperationLifecycle,
-    OperationTerminalCondition,
-)
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -71,6 +59,18 @@ from cadrumo.application.operations.registry import (
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.supervisor_context import SupervisorExecutorContext
+from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

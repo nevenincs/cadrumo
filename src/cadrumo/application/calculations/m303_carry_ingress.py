@@ -163,11 +163,7 @@ def _translated_error(entries: Mapping[str, str] | None, key: str) -> str:
 
 
 def _mapping_tokens(entries: Mapping[str, str], key: str) -> frozenset[str]:
-    tokens = frozenset(
-        token.strip()
-        for token in _required_registry_value(entries, key).split(",")
-        if token.strip()
-    )
+    tokens = frozenset(token.strip() for token in _required_registry_value(entries, key).split(",") if token.strip())
     if not tokens:
         raise ValueError(f"M303 carry mapping {key!r} has no values")
     return tokens

@@ -19,8 +19,8 @@ from cadrumo.domain.invoices.models import InvoiceCatalogue as _InvoiceCatalogue
 from cadrumo.domain.transactions.enums import BusinessClassification as _BusinessClassification
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction as _Transaction
-from .ledger_action_persistence_support import _BUCKET_ID, _repositories
-from .ledger_action_persistence_support import purchase_invoice
+
+from .ledger_action_persistence_support import _BUCKET_ID, _repositories, purchase_invoice
 
 __all__ = [
     "POST_UPDATE_EVENT_PAYLOADS",

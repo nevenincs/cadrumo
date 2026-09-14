@@ -17,6 +17,7 @@ from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+
 from .._calculation_helpers import resolve_registry_snapshot_for_work_unit
 from ..action_errors import WorkUnitRevisionDivergenceError
 from ..calculate_input import _revision_for_work_unit

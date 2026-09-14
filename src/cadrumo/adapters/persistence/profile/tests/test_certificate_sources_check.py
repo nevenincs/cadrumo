@@ -17,6 +17,13 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.outbound.aeat.auth import session_store
+from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
+from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.actions import update_auth
 from cadrumo.application.auth.certificate_source_operations import (
@@ -46,12 +53,7 @@ from cadrumo.application.auth.probes import ProviderProbeResult
 from cadrumo.application.auth.providers import select_provider
 from cadrumo.application.auth.sessions import load_persisted_session, storage_state_paths
 from cadrumo.application.state_projection import build_operator_state_projection
-from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
-from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
 from cadrumo.core.config import load_settings, override_settings
@@ -142,7 +144,9 @@ def _register_select_with_secret(
         name="personal",
         subject_cn="gestor-personal",
     )
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="personal",
@@ -245,7 +249,9 @@ def test_selected_source_without_secret_fails_closed_no_global_credential_leak(
         name="personal",
         subject_cn="gestor-personal",
     )
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     select_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     with override_settings(
@@ -277,9 +283,13 @@ def test_central_provider_and_explicit_or_omitted_probes_fail_closed_without_nam
         name="personal",
         subject_cn="gestor-personal",
     )
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     select_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
         provider_description = select_provider(
@@ -333,7 +343,9 @@ def test_bound_named_secret_wins_over_wrong_global_through_central_and_omitted_r
 ) -> None:
     """The selected secure-storage secret feeds the central factory and omitted probes."""
     cert_path = _register_select_with_secret(tmp_path, certificate_secret_backend_factory)
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     with override_settings(
         cadrumo_certificate_password_secret=SecretStr("intentionally-wrong-global"),
@@ -382,7 +394,9 @@ def test_reregistering_active_source_keeps_resolver_provider_status_and_test_on_
         name="selected-v2",
         subject_cn="selected-v2",
     )
-    register_operator_certificate_source(name="selected", certificate_path=cert_v1, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="selected", certificate_path=cert_v1, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="selected",
@@ -390,8 +404,12 @@ def test_reregistering_active_source_keeps_resolver_provider_status_and_test_on_
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_v1, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    register_operator_certificate_source(name="selected", certificate_path=cert_v2, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_v1, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
+    register_operator_certificate_source(
+        name="selected", certificate_path=cert_v2, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     cert_v1.unlink()
 
     with override_settings(cadrumo_certificate_password_secret=SecretStr("intentionally-wrong-global")):
@@ -435,7 +453,9 @@ def test_resolver_preserves_unnamed_single_certificate_credential_when_no_named_
     _register_operator_profile()
     registered_path = tmp_path / "registered-but-inactive.p12"
     registered_path.write_bytes(b"registered source bytes")
-    register_operator_certificate_source(name="inactive", certificate_path=registered_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="inactive", certificate_path=registered_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     global_path = tmp_path / "unnamed-certificate.p12"
     global_path.write_bytes(b"unnamed single-certificate bytes")
     global_password = SecretStr("unnamed-certificate-password")
@@ -471,7 +491,9 @@ def test_central_provider_preserves_unnamed_single_certificate_credential_withou
         name="legacy-global",
         subject_cn="legacy-global",
     )
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=global_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=global_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     with override_settings(
         cadrumo_certificate_path=global_path,
@@ -522,7 +544,9 @@ def test_explicit_global_settings_path_overrides_stale_workflow_mirror_for_statu
         name="explicit-settings",
         subject_cn="explicit-settings",
     )
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=stale_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=stale_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     stale_path.unlink()
 
     with override_settings(
@@ -569,7 +593,9 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
         name="configured-file",
         subject_cn="configured-file",
     )
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=configured_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=configured_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     with override_settings(
         cadrumo_certificate_path=None,
@@ -612,7 +638,9 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
             name="route-a",
             subject_cn="route-a",
         )
-        register_operator_certificate_source(name="selected", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="selected", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
@@ -620,7 +648,9 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        configure_operator_auth(
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         settings_a = load_settings()
 
     root_b_fixture = tmp_path / "route-b"
@@ -640,7 +670,9 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
             subject_cn="route-b",
             password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
-        register_operator_certificate_source(name="selected", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="selected", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         with override_settings(cadrumo_blob_store_dir=tmp_path / "route-b-explicit-blobs") as settings_b:
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -649,7 +681,9 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
             select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-            configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            configure_operator_auth(
+                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             credentials_b = resolve_active_certificate_credentials(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 settings=settings_b,
@@ -715,7 +749,9 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             subject_cn="same-id-route-b",
             password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
-        register_operator_certificate_source(name="selected", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="selected", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
@@ -723,7 +759,9 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        configure_operator_auth(
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         settings_b = load_settings()
 
     root_a_fixture = tmp_path / "same-id-route-a"
@@ -740,7 +778,9 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             name="same-id-route-a",
             subject_cn="same-id-route-a",
         )
-        register_operator_certificate_source(name="selected", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="selected", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
@@ -748,7 +788,9 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        configure_operator_auth(
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         configure_operator_auth(AuthProviderKind.CLAVE_MOVIL.value, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
         ambient_before = _OPERATOR_SCOPE_PORTS.session.current()
@@ -823,7 +865,9 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
         subject_cn="retained-state-a",
         password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
     )
-    register_operator_certificate_source(name="selected", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="selected", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="selected",
@@ -831,7 +875,9 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     workflow_state_repository().update(
         lambda state: update_auth(
             state,
@@ -855,7 +901,9 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
             subject_cn="retained-state-b",
             password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
-        register_operator_certificate_source(name="selected", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="selected", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
@@ -863,7 +911,9 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        configure_operator_auth(
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
 
     with open_test_profile_session(_BUCKET_B):
         projected_credentials = project_active_certificate_credentials(
@@ -912,7 +962,9 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
         subject_cn="snapshot-b",
         password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
     )
-    register_operator_certificate_source(name="source-a", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="source-a", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="source-a",
@@ -920,13 +972,17 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     select_operator_certificate_source(name="source-a", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     snapshot_a = resolve_active_certificate_credentials(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
-    register_operator_certificate_source(name="source-b", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="source-b", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="source-b",
@@ -976,7 +1032,9 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
         subject_cn="route-snapshot-a",
         password=CERTIFICATE_BUNDLE_PASSPHRASE,
     )
-    register_operator_certificate_source(name="selected", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="selected", certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="selected",
@@ -984,7 +1042,9 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     session_captured_at = _NOW
     session_a_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
     session_store.save(
@@ -1011,7 +1071,9 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             subject_cn="route-snapshot-b",
             password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
-        register_operator_certificate_source(name="selected", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="selected", certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
@@ -1019,7 +1081,9 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        configure_operator_auth(
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
         session_b_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
         session_store.save(
             session_b_path,
@@ -1144,7 +1208,9 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
         name="bucket-a",
         subject_cn="bucket-a",
     )
-    register_operator_certificate_source(name="selected", certificate_path=cert_a, friendly_name="bucket-a", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="selected", certificate_path=cert_a, friendly_name="bucket-a", operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="selected",
@@ -1152,7 +1218,9 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
 
     with open_test_profile_session(_BUCKET_B):
         register_minimal_profile(
@@ -1167,7 +1235,12 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
             subject_cn="bucket-b",
             password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
-        register_operator_certificate_source(name="selected", certificate_path=cert_b, friendly_name="bucket-b", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        register_operator_certificate_source(
+            name="selected",
+            certificate_path=cert_b,
+            friendly_name="bucket-b",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
@@ -1175,7 +1248,9 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-        configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        configure_operator_auth(
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        )
 
     ambient_before = _OPERATOR_SCOPE_PORTS.session.current()
     assert ambient_before is not None
@@ -1305,9 +1380,13 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
         name="unrelated-global",
         subject_cn="unrelated-global",
     )
-    register_operator_certificate_source(name="selected", certificate_path=selected_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="selected", certificate_path=selected_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     select_operator_certificate_source(name="selected", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
-    configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=selected_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth(
+        AuthProviderKind.CERTIFICATE.value, certificate_path=selected_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     selected_path.unlink()
 
     with (
@@ -1347,7 +1426,9 @@ def test_check_named_source_without_secret_never_inherits_a_valid_global_passwor
         name="personal",
         subject_cn="gestor-personal",
     )
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     select_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
@@ -1376,7 +1457,9 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
         name="personal",
         subject_cn="gestor-personal",
     )
-    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(
+        name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+    )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="personal",

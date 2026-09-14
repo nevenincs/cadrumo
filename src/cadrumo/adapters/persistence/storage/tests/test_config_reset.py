@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 import shutil
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -15,10 +13,11 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
-from cadrumo.core.bucket_pointer import read_pointer
-from cadrumo.core.directory_scan import iter_directory, scan_directory
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
+from cadrumo.core.bucket_pointer import read_pointer
+from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -163,10 +162,10 @@ def _persist_filing(
     locks on unopened targets does not have.
     """
     from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
     from cadrumo.core.period import Period
     from cadrumo.domain.modelos.codes import ModeloCode
     from cadrumo.domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
-    from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
 
     work_unit_id = (seed * 64)[:64]
     revision_id = ((chr(ord(seed) + 1)) * 64)[:64]
@@ -251,12 +250,6 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
     clearing it is a contract the reset actually holds.
     """
     from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
-    from cadrumo.core.auth_provider import AuthProviderKind
-    from cadrumo.core.bucket_pointer import pointer_path
-    from cadrumo.core.config import load_settings
-    from cadrumo.core.storage_taxonomy import StorageCategory
-    from cadrumo.core.storage_taxonomy_locations import storage_location
-    from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
     from cadrumo.application.auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
     from cadrumo.application.auth.certificate_source_operations import (
         register_operator_certificate_source,
@@ -268,6 +261,12 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
         ConfigResetOperationStatus,
         ConfigResetTargetPhase,
     )
+    from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
+    from cadrumo.core.auth_provider import AuthProviderKind
+    from cadrumo.core.bucket_pointer import pointer_path
+    from cadrumo.core.config import load_settings
+    from cadrumo.core.storage_taxonomy import StorageCategory
+    from cadrumo.core.storage_taxonomy_locations import storage_location
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
@@ -391,8 +390,6 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
     revocation the reset cannot reach is recorded as unreached rather than
     reported as done.
     """
-    from cadrumo.core.auth_provider import AuthProviderKind
-    from cadrumo.core.config import load_settings
     from cadrumo.application.auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
     from cadrumo.application.config_reset import start_config_reset
     from cadrumo.application.config_reset_models import (
@@ -400,6 +397,8 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
         ConfigResetOperationStatus,
         ConfigResetTargetPhase,
     )
+    from cadrumo.core.auth_provider import AuthProviderKind
+    from cadrumo.core.config import load_settings
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
@@ -449,10 +448,10 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
     while destroying the distinction, so the paired assertion is that a
     profile whose recorded snapshot is REMOVED refuses again.
     """
-    from cadrumo.domain.buckets.errors import BucketDeleteRefusedError
     from cadrumo.application.bucket_maintenance.contracts import AssessBucketDeletionCommand
     from cadrumo.application.bucket_maintenance.service import BucketMaintenanceService
     from cadrumo.application.filing.retention import FilingRetentionAuthority
+    from cadrumo.domain.buckets.errors import BucketDeleteRefusedError
 
     with _isolated_reset_root(tmp_path) as root:
         from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
@@ -475,7 +474,6 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
 def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
     tmp_path: Path,
 ) -> None:
-    from cadrumo.core.bucket_pointer import pointer_path
     from cadrumo.application.config_reset import (
         ConfigResetAlreadyRunningError,
         resume_config_reset,
@@ -486,6 +484,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
         ConfigResetPauseReason,
         ConfigResetTargetPhase,
     )
+    from cadrumo.core.bucket_pointer import pointer_path
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
@@ -597,8 +596,8 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
 
 
 def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
-    from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
     from cadrumo.application.config_reset import config_reset_status, start_config_reset
+    from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
 
     with _isolated_reset_root(tmp_path):
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")

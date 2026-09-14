@@ -31,8 +31,8 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
-from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary

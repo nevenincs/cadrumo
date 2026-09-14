@@ -8,8 +8,9 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.application.ledger.actions_import import import_ledger_transactions
+from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,

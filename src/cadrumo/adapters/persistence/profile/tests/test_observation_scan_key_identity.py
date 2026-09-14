@@ -28,9 +28,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, observation_key
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
@@ -39,8 +41,6 @@ from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bind
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, observation_key
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

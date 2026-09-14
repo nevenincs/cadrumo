@@ -30,6 +30,11 @@ from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.ledger.batch_ingest import BatchItemResult, BatchRunResult, run_evidence_batch
+from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
+from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
+from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts
+from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from cadrumo.application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
@@ -38,17 +43,13 @@ from cadrumo.application.provisioning import (
     probe_hardware_profile,
 )
 from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
-from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
-from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
-from cadrumo.application.ledger.batch_ingest import BatchItemResult, BatchRunResult, run_evidence_batch
-from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
-from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts
+
 from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

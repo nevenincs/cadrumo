@@ -56,7 +56,25 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.binding_prefill import (
+    extract_modelo_303_local_iva_compensation_recurrence,
+    observation_from_iva_compensation_history,
+)
+from cadrumo.application.calculations.iva_compensation_annual_partition import (
+    period_state_from_303_envelope,
+    resolve_iva_compensation_annual_partition_binding_values,
+)
+from cadrumo.application.calculations.iva_compensation_history import (
+    correct_iva_compensation_period,
+    seed_iva_compensation_period,
+)
+from cadrumo.application.calculations.iva_wallet_balance import query_iva_wallet_balance
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
+from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.config import Settings
@@ -75,24 +93,6 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
-from cadrumo.application.calculations.binding_prefill import (
-    observation_from_iva_compensation_history,
-    extract_modelo_303_local_iva_compensation_recurrence,
-)
-from cadrumo.application.calculations.iva_compensation_annual_partition import (
-    period_state_from_303_envelope,
-    resolve_iva_compensation_annual_partition_binding_values,
-)
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.application.calculations.iva_compensation_history import (
-    correct_iva_compensation_period,
-    seed_iva_compensation_period,
-)
-from cadrumo.application.calculations.iva_wallet_balance import query_iva_wallet_balance
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

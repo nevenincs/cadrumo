@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
-from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     _T1,
     _TAX_ID,
@@ -15,6 +13,8 @@ from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     _seed_work_unit,
     repos,
 )
+from cadrumo.application.modelo.action_errors import ExternalModeloImportError
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 
 __all__ = ["repos"]
 

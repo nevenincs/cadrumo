@@ -8,11 +8,11 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from .profile import IvaDeductibilityHint
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.schema_base import DateAxis
+from .profile import IvaDeductibilityHint
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import ValidatedRegistryAuthority

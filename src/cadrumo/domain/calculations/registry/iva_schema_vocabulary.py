@@ -114,11 +114,7 @@ class IvaRegimeCatalogue:
 
     @property
     def selectable_regimes(self) -> tuple[IVARegime, ...]:
-        return tuple(
-            definition.token
-            for definition in self.definitions
-            if definition.token != self.no_aplica_token
-        )
+        return tuple(definition.token for definition in self.definitions if definition.token != self.no_aplica_token)
 
     def require(self, value: object) -> IVARegime:
         return _require_token(value, IVARegime, self.all_regimes, "IVA regime")
@@ -722,10 +718,14 @@ def m303_regime_composition_export_code(
     authority: GovernedFactSource | None = None,
 ) -> str:
     """Return the registry-declared Modelo 303 composition export code."""
-    return resolve_m303_regime_composition_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).definition(value).export_code
+    return (
+        resolve_m303_regime_composition_catalogue(
+            effective_date=effective_date,
+            authority=authority,
+        )
+        .definition(value)
+        .export_code
+    )
 
 
 def m303_regime_composition_simplified_scope(
@@ -735,10 +735,14 @@ def m303_regime_composition_simplified_scope(
     authority: GovernedFactSource | None = None,
 ) -> M303RegimenSimplificadoScope:
     """Project the registry-declared simplified-regime scope for a composition."""
-    scope = resolve_m303_regime_composition_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).definition(value).simplified_scope
+    scope = (
+        resolve_m303_regime_composition_catalogue(
+            effective_date=effective_date,
+            authority=authority,
+        )
+        .definition(value)
+        .simplified_scope
+    )
     return M303RegimenSimplificadoScope._from_registry(scope)
 
 
@@ -902,12 +906,12 @@ __all__ = [
     "IvaCashAccountingTreatmentDefinition",
     "IvaExemptionArticleCatalogue",
     "IvaExemptionArticleDefinition",
+    "IvaRegimeCatalogue",
+    "IvaRegimeDefinition",
     "M303RegimeCompositionCatalogue",
     "M303RegimeCompositionDefinition",
     "M303TaxTerritoryCatalogue",
     "M303TaxTerritoryDefinition",
-    "IvaRegimeCatalogue",
-    "IvaRegimeDefinition",
     "default_iva_cash_accounting_treatment",
     "default_iva_regime",
     "iva_regime_choices",
@@ -916,20 +920,20 @@ __all__ = [
     "iva_regime_reagp_token",
     "iva_regime_self_assessment_tokens",
     "iva_regime_simplificado_token",
+    "m303_regime_composition_choices",
+    "m303_regime_composition_export_code",
+    "m303_regime_composition_simplified_scope",
     "m303_tax_territory_choices",
     "m303_tax_territory_exclusively_foral_mark",
     "m303_tax_territory_is_foral",
     "m303_tax_territory_state_attribution_ratio",
-    "m303_regime_composition_choices",
-    "m303_regime_composition_export_code",
-    "m303_regime_composition_simplified_scope",
     "require_iva_art69_dos_service",
     "require_iva_cash_accounting_treatment",
-    "require_registry_declared_iva_cash_accounting_treatment",
     "require_iva_exemption_article",
     "require_iva_regime",
     "require_m303_regime_composition",
     "require_m303_tax_territory",
+    "require_registry_declared_iva_cash_accounting_treatment",
     "resolve_iva_art69_dos_service_catalogue",
     "resolve_iva_cash_accounting_catalogue",
     "resolve_iva_exemption_article_catalogue",

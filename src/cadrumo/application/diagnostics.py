@@ -897,10 +897,10 @@ def quarantine_unreadable_secure_objects(*, ports: DiagnosticsPorts) -> _SecureO
 
 
 __all__ = [
-    "is_missing_active_bucket_session_failure",
-    "build_profile_check",
     "build_cli_version_report",
     "build_config_repair_report",
+    "build_profile_check",
+    "is_missing_active_bucket_session_failure",
     "preview_quarantine_unreadable_secure_objects",
     "quarantine_unreadable_secure_objects",
     "render_cli_version_text",

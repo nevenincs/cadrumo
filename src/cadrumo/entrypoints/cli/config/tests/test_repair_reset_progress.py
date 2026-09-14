@@ -7,6 +7,8 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....adapters.persistence.storage.tests.secure_sql import (
@@ -15,7 +17,6 @@ from .....adapters.persistence.storage.tests.secure_sql import (
 from .....application.workflow.persistence import workflow_state_repository
 from .....application.workflow.state_models import WorkflowState
 from .....domain.buckets.event import BucketEventType
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

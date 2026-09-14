@@ -62,10 +62,7 @@ def _declared_values(declarations: Mapping[str, str], key: str) -> frozenset[str
 
 def _declared_flow_values(declarations: Mapping[str, str], key: str) -> frozenset[str]:
     """Resolve 0085 flow relations against the canonical 0083 vocabulary."""
-    return frozenset(
-        require_iva_flow_direction(value).value
-        for value in _declared_values(declarations, key)
-    )
+    return frozenset(require_iva_flow_direction(value).value for value in _declared_values(declarations, key))
 
 
 def required_deduction_evidence_authority(kind: IvaDeductionFactKind) -> IvaDeductionEvidenceAuthority:

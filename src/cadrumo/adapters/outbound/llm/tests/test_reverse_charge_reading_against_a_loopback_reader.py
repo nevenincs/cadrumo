@@ -53,16 +53,19 @@ from cadrumo.application.ledger.invoice_draft_extraction_ports import (
     InvoiceDraftExtractionPorts,
     StructuredInvoiceReadError,
 )
-from cadrumo.application.ledger.regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
+from cadrumo.application.ledger.regime_contradiction import (
+    draft_prints_a_repercutido_line,
+    regime_contradiction_finding,
+)
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.document_shape import DocumentShape
+from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from cadrumo.domain.calculations.registry.iva_category_catalogue import (
     registry_category_projection,
     require_iva_category,
 )
+from cadrumo.domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from cadrumo.tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -78,6 +81,7 @@ def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPort
     """Bind deterministic page text locally for this outbound reader integration."""
 
     return EvidenceTextLayerPorts(extract_pages_text=lambda _data: pages)
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -127,6 +131,7 @@ def _reader_ports(evidence: EvidenceInput) -> InvoiceDraftExtractionPorts:
         transcribe_vision=vision_not_expected,
         consent_binding_error=lambda _facts: RuntimeError("consent binding was not expected"),
     )
+
 
 _BASE_REPLY: dict[str, str | None] = {
     "supplier_tax_id": "B1234567X",

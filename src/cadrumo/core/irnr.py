@@ -157,9 +157,7 @@ class ConvenioOverrideKind(str):
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
         if not _registry_validated:
-            raise TypeError(
-                "ConvenioOverrideKind tokens must be projected from the registry"
-            )
+            raise TypeError("ConvenioOverrideKind tokens must be projected from the registry")
         if not isinstance(value, str) or not value:
             raise ValueError("ConvenioOverrideKind token must be a non-empty string")
         return str.__new__(cls, value)
@@ -172,9 +170,7 @@ class ConvenioOverrideKind(str):
     def _require_registry_token(cls, value: object) -> Self:
         if isinstance(value, cls):
             return value
-        raise CoreValidationError(
-            "ConvenioOverrideKind must be projected from the governed registry"
-        )
+        raise CoreValidationError("ConvenioOverrideKind must be projected from the governed registry")
 
     @classmethod
     def __get_pydantic_core_schema__(

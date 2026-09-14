@@ -19,15 +19,27 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 
 from cadrumo.adapters.inbound.justificante.parser import parse_justificante
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.application.modelo.reconciliation import (
+    reconcile_parsed_justificante,
+)
+from cadrumo.application.modelo.reconciliation_records import (
+    ModeloReconciliationDiffKind,
+    ModeloReconciliationEvidenceKind,
+    ModeloReconciliationVerdict,
+    list_modelo_reconciliations,
+)
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -42,16 +54,6 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.application.modelo.reconciliation import (
-    reconcile_parsed_justificante,
-)
-from cadrumo.application.modelo.reconciliation_records import (
-    ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationVerdict,
-    list_modelo_reconciliations,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -255,5 +257,3 @@ def test_history_persists_which_total_diverged_not_just_a_count() -> None:
     assert entry.diffs[0].diff_kind is ModeloReconciliationDiffKind.TOTAL
     assert entry.diffs[0].field_name == "total_ingresar"
     assert "rd-439-2007:art-110" in entry.diffs[0].legal_refs
-
-

@@ -21,18 +21,18 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.period import Period
-from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.modelo.work_lifecycle import (
     discard_work_unit,
     get_work_unit,
     list_work_units,
     rename_work_unit,
 )
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.period import Period
+from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType
+from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

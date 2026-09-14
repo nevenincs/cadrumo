@@ -50,9 +50,7 @@ class _InMemoryTransactionCatalogueRepository(TransactionCatalogueRepositoryProt
 
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
         return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if start <= transaction.raw.booked_date <= end
+            transaction for transaction in self._catalogue if start <= transaction.raw.booked_date <= end
         )
 
     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
@@ -64,11 +62,7 @@ class _InMemoryTransactionCatalogueRepository(TransactionCatalogueRepositoryProt
         )
 
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
-        in_window = tuple(
-            transaction
-            for transaction in self._catalogue
-            if start <= transaction.raw.booked_date <= end
-        )
+        in_window = tuple(transaction for transaction in self._catalogue if start <= transaction.raw.booked_date <= end)
         out_of_window = tuple(
             OutOfWindowTransactionIndexEntry(
                 transaction_id=transaction.transaction_id,

@@ -38,11 +38,11 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
-from .parse_cache import parse_committed_justificante_fixture
 from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf.source_provenance import source_pdf_reference_path
 from .._parsers.text_extraction import TEXT_CACHE, extract_text
 from ..parser import parse_justificante, parse_justificante_bytes
+from .parse_cache import parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

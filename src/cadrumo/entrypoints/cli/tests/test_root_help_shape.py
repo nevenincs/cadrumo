@@ -24,9 +24,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ._profile_storage_fixtures import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
+
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 from ....application.operator_surface.help import build_help_document
 from ....core.bucket_pointer import BucketPointer, write_pointer
@@ -37,7 +40,6 @@ from ....core.i18n.render import tr
 from ....core.package_version import PACKAGE_VERSION as __version__
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ._isolated_profile_storage_fixtures import _isolated_state
 from .cli_runner import invoke_cached_cli
 
@@ -444,9 +446,10 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
     cli_executable = _installed_cli_executable()
     env = _console_env(tmp_path)
 
+    from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
     from ....core.config import load_settings, override_settings
     from ....core.config_support import SecretStoreBackend
-    from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "storage",

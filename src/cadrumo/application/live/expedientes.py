@@ -33,13 +33,13 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from .errors import LiveApplicationInputError
 from .expedientes_ports import ExpedientesDeclaration, ExpedientesPorts
 from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
 from .remote_state_outcomes import bounded_context_text
 from .session import active_verified_session
-from ..auth.operator_scope_ports import OperatorScopePorts
 from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,

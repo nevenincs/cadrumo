@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -33,8 +36,6 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ._m303_filing_evidence_support import write_m303_filing_evidence
 from .cli_runner import invoke_cached_cli
 
@@ -265,7 +266,10 @@ def _m100_activity_expense_transaction(
 
 
 def _seed_m100_profile_facts(bucket_id: str) -> None:
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+        load_test_profile_record,
+        replace_test_profile_record,
+    )
 
     record = load_test_profile_record(bucket_id)
     additions = (
@@ -664,6 +668,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     # while leaving the ledger mesh assertions meaningful.
     with open_test_profile_session(bucket_id):
         from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+
         from ....domain.iva_compensation.reconciliation import (
             IvaCompensationAuthoritySource,
             IvaCompensationReconciliationDecision,
@@ -831,6 +836,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     advisory assertions meaningful.
     """
     from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+
     from ....domain.iva_compensation.reconciliation import (
         IvaCompensationAuthoritySource,
         IvaCompensationReconciliationDecision,

@@ -279,7 +279,9 @@ def irpf_estimation_regime_tokens(
 ) -> tuple[IrpfEstimationRegime, ...]:
     return tuple(
         item.token
-        for item in resolve_irpf_regime_vocabulary(effective_date=effective_date, authority=authority).estimation_regimes
+        for item in resolve_irpf_regime_vocabulary(
+            effective_date=effective_date, authority=authority
+        ).estimation_regimes
     )
 
 

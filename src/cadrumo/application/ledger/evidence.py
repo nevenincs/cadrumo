@@ -48,6 +48,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
+
 from pydantic import BaseModel, Field, field_serializer
 
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
@@ -774,6 +775,7 @@ class PurchaseInvoiceEvidenceService:
                 facts={"evidence_record_present": False},
             ),
         )
+
 
 # Public supporting contract for sibling ledger action services, matching the
 # shape `_actions_common` declares. The evidence event emitter is shared: this

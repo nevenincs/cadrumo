@@ -14,14 +14,8 @@ if TYPE_CHECKING:
 
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.period import Period
-from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.work_addressing import ModeloVisibleFilingTarget
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.workspace import (
@@ -59,6 +53,12 @@ from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceSchemaRecordV1,
     ModeloWorkspaceVisibleFilingTargetV1,
 )
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.period import Period
+from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -308,9 +308,12 @@ def test_static_inspection_work_review_facet_is_unmeasured_with_no_review() -> N
 
 def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatalogueRepository):
     """Build every piece needed for schema_facet tests, real captures throughout."""
+    from cadrumo.application.modelo.workspace_producers import (
+        ModeloWorkspaceFieldManifestPortV1,
+        ModeloWorkspaceLocaleCataloguePortV1,
+    )
     from cadrumo.core.external_constants import OutputLanguage
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-    from cadrumo.application.modelo.workspace_producers import ModeloWorkspaceFieldManifestPortV1, ModeloWorkspaceLocaleCataloguePortV1
 
     authority = bundled_authority()
     work_capture, registry_capture, _axes = capture_modelo_workspace_target_captures(
@@ -376,7 +379,10 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
     inspection = capture.projection
     assert isinstance(inspection, RegistryRevisionInspection)
 
-    from cadrumo.application.modelo.workspace_models import ModeloWorkspaceResolvedTargetV1, ModeloWorkspaceRevisionAssertionV1
+    from cadrumo.application.modelo.workspace_models import (
+        ModeloWorkspaceResolvedTargetV1,
+        ModeloWorkspaceRevisionAssertionV1,
+    )
 
     # A minimal, directly constructed resolved target is legitimate here: this
     # test targets record construction from the inspection, not the capture
@@ -400,7 +406,10 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
         ),
     )
 
-    from cadrumo.application.modelo.workspace_models import ModeloWorkspaceCasillaReferenceV1, ModeloWorkspaceLocalizedTextV1
+    from cadrumo.application.modelo.workspace_models import (
+        ModeloWorkspaceCasillaReferenceV1,
+        ModeloWorkspaceLocalizedTextV1,
+    )
 
     records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
 
@@ -566,7 +575,10 @@ def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_s
 
 
 def test_static_inspection_binding_schema_records_use_the_real_binding_definitions() -> None:
-    from cadrumo.application.modelo.workspace_models import ModeloWorkspaceBindingReferenceV1, ModeloWorkspaceTechnicalLabelV1
+    from cadrumo.application.modelo.workspace_models import (
+        ModeloWorkspaceBindingReferenceV1,
+        ModeloWorkspaceTechnicalLabelV1,
+    )
 
     inspection = _real_303_inspection()
     records = binding_schema_records(inspection.binding_ids, inspection.bindings)
@@ -591,7 +603,10 @@ def test_static_inspection_binding_schema_records_use_the_real_binding_definitio
 
 
 def test_static_inspection_formula_schema_records_carry_their_own_full_operand_set() -> None:
-    from cadrumo.application.modelo.workspace_models import ModeloWorkspaceFormulaReferenceV1, ModeloWorkspaceTechnicalLabelV1
+    from cadrumo.application.modelo.workspace_models import (
+        ModeloWorkspaceFormulaReferenceV1,
+        ModeloWorkspaceTechnicalLabelV1,
+    )
 
     inspection = _real_303_inspection()
     records = formula_schema_records(inspection.formulas)
@@ -640,7 +655,10 @@ def test_static_inspection_schema_records_covers_all_five_reference_kinds_determ
 
 
 def _minimal_resolved_target(inspection):
-    from cadrumo.application.modelo.workspace_models import ModeloWorkspaceResolvedTargetV1, ModeloWorkspaceRevisionAssertionV1
+    from cadrumo.application.modelo.workspace_models import (
+        ModeloWorkspaceResolvedTargetV1,
+        ModeloWorkspaceRevisionAssertionV1,
+    )
 
     return ModeloWorkspaceResolvedTargetV1(
         bucket_id="test-bucket-0000-0000-0000-000000000000",
@@ -735,8 +753,8 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
     the caller believed it was continuing, which is the failure the cursor
     exists to make impossible.
     """
-    from cadrumo.core.external_constants import OutputLanguage
     from cadrumo.application.modelo.workspace import ModeloWorkspaceStaleCursorError
+    from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
@@ -1129,12 +1147,12 @@ def test_an_overflowing_facet_built_without_a_cursor_still_refuses(
 
 
 def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "2022"):
-    from cadrumo.core.revision_review import RevisionReviewStatus
-    from cadrumo.domain.modelos.work_unit import WorkUnitState
     from cadrumo.application.modelo.workspace_models import (
         ModeloWorkspaceResolvedTargetV1,
         ModeloWorkspaceRevisionAssertionV1,
     )
+    from cadrumo.core.revision_review import RevisionReviewStatus
+    from cadrumo.domain.modelos.work_unit import WorkUnitState
 
     return ModeloWorkspaceResolvedTargetV1(
         bucket_id="test-bucket-0000-0000-0000-000000000000",

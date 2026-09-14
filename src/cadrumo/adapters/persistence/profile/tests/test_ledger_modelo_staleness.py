@@ -43,6 +43,7 @@ from .....application.aggregation.ledger_filing_snapshot import (
     evaluate_ledger_filing_staleness,
     stale_filed_revisions,
 )
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.ledger.actions_manual import update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionPatch
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -62,12 +63,11 @@ from .....domain.transactions.enums import BusinessClassification, TransactionDi
 from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from .secure_objects_fixture import secure_objects
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

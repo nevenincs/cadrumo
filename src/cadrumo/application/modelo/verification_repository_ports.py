@@ -114,8 +114,8 @@ VerificationRepositoryBundleFactory = Callable[[str], VerificationRepositoryBund
 
 
 __all__ = [
-    "CalculationObservationRepositoryProtocol",
     "CalculationObservationPayloadProtocol",
+    "CalculationObservationRepositoryProtocol",
     "IvaWalletDecisionRepositoryProtocol",
     "VerificationRepositoryBundle",
     "VerificationRepositoryBundleFactory",

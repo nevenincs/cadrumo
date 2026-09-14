@@ -13,6 +13,7 @@ from cadrumo.application.ledger.actions_split_merge import merge_transactions, s
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, SplitChildCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
+
 from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

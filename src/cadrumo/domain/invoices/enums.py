@@ -370,9 +370,7 @@ def invoice_legal_mention_declarations(
             references = tuple(ref.strip() for ref in values[f"{prefix}legal_refs"].split(",") if ref.strip())
             expects_line = values[f"{prefix}expects_repercutido_line"]
         except KeyError as exc:
-            raise RegistryValidationError(
-                f"invoice legal-mention catalogue is missing {prefix}{exc.args[0]}"
-            ) from exc
+            raise RegistryValidationError(f"invoice legal-mention catalogue is missing {prefix}{exc.args[0]}") from exc
         if declared_value != token or not phrase or not provision or not references:
             raise RegistryValidationError(f"invoice legal-mention catalogue has invalid declaration for {token}")
         if expects_line not in {"true", "false"}:
@@ -647,8 +645,6 @@ def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:
 
 
 __all__ = [
-    "advance_payment_received_role",
-    "default_invoice_class",
     "InvoiceClass",
     "InvoiceLegalMention",
     "InvoiceLegalMentionDeclaration",
@@ -656,10 +652,12 @@ __all__ = [
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
-    "invoice_legal_mention_declarations",
+    "advance_payment_received_role",
+    "default_invoice_class",
     "invoice_class_ordinaria",
     "invoice_class_rectificativa",
     "invoice_class_simplificada",
+    "invoice_legal_mention_declarations",
     "iva_rate_kind",
     "iva_rate_percentage",
     "operation_performed_role",

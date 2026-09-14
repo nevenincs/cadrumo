@@ -14,9 +14,15 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.evidence_input import EvidenceInput, resolve_purchase_invoice_evidence_input
 from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.core.config import Settings
-from ._evidence_input_test_support import _added_record, evidence_input_ports, pdf_file
+
+from ._evidence_input_test_support import (
+    _added_record,
+    evidence_input_ports,
+    isolated_settings,
+    pdf_file,
+    secure_objects,
+)
 from ._evidence_input_test_support import runtime_profile as runtime_profile
-from ._evidence_input_test_support import isolated_settings, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 __all__ = ["evidence_input_ports", "isolated_settings", "pdf_file", "runtime_profile", "secure_objects"]

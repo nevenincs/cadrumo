@@ -32,6 +32,12 @@ from unittest.mock import Mock
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
+    advisory_profile_bucket,  # noqa: F401
+)
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
+from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.descendant_relacion import DescendantRelacion
 from cadrumo.core.modelo import Modelo
@@ -40,10 +46,6 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
-from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
-from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import advisory_profile_bucket  # noqa: F401
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

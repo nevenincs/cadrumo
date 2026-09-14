@@ -40,9 +40,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
+
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
-from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....core.secure_object_write import SecureObjectWrite

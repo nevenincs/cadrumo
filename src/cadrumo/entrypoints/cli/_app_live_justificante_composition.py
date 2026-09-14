@@ -17,9 +17,9 @@ from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage.envelope.contract import Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
-from ...application.live.errors import LiveApplicationInputError
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.auth.operator_scope_ports import OperatorScopePorts
+from ...application.live.errors import LiveApplicationInputError
 from ...application.live.justificante import (
     JustificanteCaptureSnapshot,
     JustificanteCaptureSnapshotNotFoundError,

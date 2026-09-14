@@ -21,7 +21,6 @@ from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
-
 _FACT_ID = "deadline-calendar-territory-catalogue"
 _ORDER_KEY = "calendar_ccaa.order"
 _PREFIX = "calendar_ccaa."

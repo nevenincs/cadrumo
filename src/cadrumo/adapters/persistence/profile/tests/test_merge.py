@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.actions_split_merge import merge_transactions
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import SplitRole, TransactionLifecycleState
+
 from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

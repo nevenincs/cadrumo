@@ -20,13 +20,13 @@ from ....domain.filing.validator import ModeloValidator
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.models import TransactionCatalogue
-from .filing_support import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
 from ..draft_construction import binding_provenance, build_draft
 from ..draft_review import (
     approve_draft,
     refresh_review_status,
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .filing_support import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

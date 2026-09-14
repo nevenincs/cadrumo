@@ -60,7 +60,6 @@ from .operator_cleanup import (
     delete_scoped_sessions,
 )
 from .operator_probe_ports import OperatorProbePorts
-from .operator_scope_ports import OperatorScopePorts
 from .operator_probes import (
     live_auth_identity_kind as _live_auth_identity_kind,
 )
@@ -109,6 +108,7 @@ from .operator_scope import (
     auth_operator_settings_scope as _auth_operator_settings_scope,
 )
 from .operator_scope import resolve_auth_operation_scope
+from .operator_scope_ports import OperatorScopePorts
 from .protocols import BrowserSessionFactoryPort
 from .sessions import (
     ensure_authenticated_aeat_session,

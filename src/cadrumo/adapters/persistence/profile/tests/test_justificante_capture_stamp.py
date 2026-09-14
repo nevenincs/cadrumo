@@ -10,6 +10,7 @@ from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_
     active_profile_isolated_backend_fixture,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 
 __all__ = ["isolated_backend"]
@@ -17,6 +18,13 @@ __all__ = ["isolated_backend"]
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._justificante_reconcile_support import (
+    MODELO_130_FIXTURE,
+    _active_bucket_id,
+    _persist_capture,
+    _seed_unverified_filing,
+    _seed_work_unit,
+)
 from cadrumo.application.live.errors import LiveApplicationInputError
 from cadrumo.application.live.justificante import register_capture_as_filing_evidence
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
@@ -25,13 +33,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.adapters.persistence.profile.tests._justificante_reconcile_support import (
-    MODELO_130_FIXTURE,
-    _active_bucket_id,
-    _persist_capture,
-    _seed_unverified_filing,
-    _seed_work_unit,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

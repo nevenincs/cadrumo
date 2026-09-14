@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...crypto.aead import KEY_SIZE
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...tests.fixed_master_key import fixed_master_key  # noqa: F401
 from ..blob_store import EncryptedBlobStore
 

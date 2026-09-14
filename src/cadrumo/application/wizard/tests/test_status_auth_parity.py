@@ -18,12 +18,12 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ._operator_probe_fakes import fake_operator_probe_ports
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...state_projection_auth import build_auth_readiness
 from ...workflow.state_models import WorkflowState
 from ..status import build_wizard_status
+from ._operator_probe_fakes import fake_operator_probe_ports
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

@@ -8,8 +8,6 @@ hand-authored calculation result is involved.
 
 from __future__ import annotations
 
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -25,10 +23,28 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+)
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
+from cadrumo.application.calculations.m303_regimen_simplificado_annual_summary import (
+    M303RegimenSimplificadoAnnualSummaryHandoffError,
+)
+from cadrumo.application.calculations.tests.filing_evidence import (
+    general_m303_filing_evidence,
+    regimen_simplificado_filing_evidence,
+)
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export_ports import ModeloExportPorts
+from cadrumo.application.modelo.filing_actions import file_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
@@ -52,7 +68,10 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from cadrumo.domain.modelos.calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_repository import (
+    CalculationRevisionPersistenceError,
+    upsert_calculation_revision,
+)
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -67,15 +86,8 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummaryHandoffError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.export_ports import ModeloExportPorts
-from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
+
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

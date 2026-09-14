@@ -8,8 +8,6 @@ reader spends all three rather than collapsing the first two.
 
 from __future__ import annotations
 
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 from datetime import UTC, datetime
 
 import pytest
@@ -37,6 +35,7 @@ from ..workspace import (
     project_aeat_sync_workspace,
 )
 from ..workspace_reader import read_local_aeat_sync_workspace_projection
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

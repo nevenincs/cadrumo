@@ -22,10 +22,10 @@ from cadrumo.application.ledger.confirmation_record import (
     load_confirmation_records,
     write_confirmation_record,
 )
+from cadrumo.application.ledger.invoice_draft_records import FieldAmbiguityCandidate
 from cadrumo.core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.application.ledger.invoice_draft_records import FieldAmbiguityCandidate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -90,6 +90,7 @@ def _populated_record() -> InvoiceConfirmationRecord:
             ),
         ),
     )
+
 
 def test_the_confirmation_record_survives_the_real_encrypted_boundary(profile: TestRuntimeProfile) -> None:
     """Strict equality across the real store, every defaultable field non-default.

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.iva_compensation_history import seed_iva_compensation_period
 from ....core.period import Period
 from ....tests.cli_envelope import require_schema_envelope

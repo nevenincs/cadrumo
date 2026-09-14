@@ -13,8 +13,6 @@ by, or claiming an action nothing granted, is.
 
 from __future__ import annotations
 
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 import ast
 import pickle
 from datetime import UTC, date, datetime
@@ -24,10 +22,10 @@ from typing import Any, TypedDict, Unpack, cast
 import pytest
 from pydantic import ValidationError
 
-from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
+from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from ...operator_actions.models import ActionReference
@@ -66,6 +64,7 @@ from ..workspace import (
     aeat_sync_workspace_sources,
     project_aeat_sync_workspace,
 )
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

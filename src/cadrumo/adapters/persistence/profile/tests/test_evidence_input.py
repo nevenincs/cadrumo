@@ -30,16 +30,18 @@ from cadrumo.core.config import Settings
 from cadrumo.core.document_shape import PDF_CONTAINER_SHAPES, DocumentShape
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
+
 from ._evidence_input_test_support import (
     _BUCKET_ID,
     _PDF_BYTES,
     _added_record,
     _make_svc,
     evidence_input_ports,
+    isolated_settings,
     pdf_file,
+    secure_objects,
 )
 from ._evidence_input_test_support import runtime_profile as runtime_profile
-from ._evidence_input_test_support import isolated_settings, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 __all__ = ["evidence_input_ports", "isolated_settings", "pdf_file", "runtime_profile", "secure_objects"]

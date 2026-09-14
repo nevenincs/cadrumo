@@ -88,10 +88,9 @@ from ..operations.registry import (
 )
 from ._edit_execution import apply_modelo_edit
 from .amendment_action_ports import AmendmentActionPortsFactory
-from .calculation_action_ports import CalculationActionPortsFactory
 from .amendment_actions import amend_modelo_revision
+from .calculation_action_ports import CalculationActionPortsFactory
 from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
-from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
@@ -112,6 +111,7 @@ from .edit_models import (
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
+from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
 from .export import ModeloExportCommand, export_modelo_revision
 from .export_ports import ModeloExportPortsFactory
@@ -123,10 +123,10 @@ from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
-    from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
-    from ..auth.operator_scope_ports import OperatorScopePorts
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloScalar
+    from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ..auth.operator_scope_ports import OperatorScopePorts
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
 

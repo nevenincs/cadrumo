@@ -16,7 +16,6 @@ from ...core.i18n.render import tr
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ._modelo_behavior_support import require_active_profile
-from .state_projection_support import m036_lifecycle_ports_factory
 from ._modelo_payloads_m036 import (
     M036DeclarationListResult,
     M036DeclarationRecordResult,
@@ -24,6 +23,7 @@ from ._modelo_payloads_m036 import (
     M036DeclarationShowResult,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
+from .state_projection_support import m036_lifecycle_ports_factory
 
 
 def _declaration_row(declaration: M036DeclarationResult) -> M036DeclarationRowPayload:

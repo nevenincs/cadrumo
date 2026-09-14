@@ -470,10 +470,7 @@ def _seed_findings_with_existing_entry(
     )
     _refuse_blocking_findings(cross_findings)
     standing_provenance = existing.provisional_provenance
-    if (
-        standing_provenance is not None
-        and standing_provenance != carried_prior_definitiva_prorrata_provenance()
-    ):
+    if standing_provenance is not None and standing_provenance != carried_prior_definitiva_prorrata_provenance():
         raise bad(
             tr(
                 "cli.app.ledger.prorrata.seed_regulated_override_standing",

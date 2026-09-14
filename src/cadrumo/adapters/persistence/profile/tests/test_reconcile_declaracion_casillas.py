@@ -32,6 +32,19 @@ from cadrumo.adapters.inbound.declaracion.schema import InboundDeclaracionObserv
 from cadrumo.adapters.inbound.pdf.extracted_casilla import ExtractedCasilla
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
+from cadrumo.application.modelo.reconciliation import (
+    ReconciliationDeclaracionSourceUnsupportedError,
+    reconcile_parsed_declaracion,
+)
+from cadrumo.application.modelo.reconciliation_records import (
+    ModeloReconciliationDiffKind,
+    ModeloReconciliationEvidenceKind,
+    ModeloReconciliationVerdict,
+)
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
@@ -48,17 +61,6 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.application.modelo.reconciliation import (
-    ReconciliationDeclaracionSourceUnsupportedError,
-    reconcile_parsed_declaracion,
-)
-from cadrumo.application.modelo.reconciliation_records import (
-    ModeloReconciliationDiffKind,
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationVerdict,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

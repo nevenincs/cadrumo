@@ -22,11 +22,11 @@ from .....adapters.persistence.profile.buckets import BucketEventHistoryReposito
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.storage.calc_sheets.engine import build_export_plan
+from .....application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from .....core.sync_surface import SyncSurface
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.google_credentials import unused_google_credentials
-from .....application.storage.calc_sheets.export_service import export_modelo_to_sheets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
