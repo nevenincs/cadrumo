@@ -80,6 +80,11 @@ def test_ordinary_migration_and_family_drop_relocate_the_same_claim(tmp_path: Pa
     ordinary_source = tmp_path / "ordinary-source"
     ordinary_source.mkdir()
     shutil.copytree(lineage_tree(ordinary_source), ordinary_directory)
+    successor_manifest = ordinary_directory / "revisions" / "2025" / "revision.toml"
+    successor_manifest.write_text(
+        successor_manifest.read_text(encoding="utf-8").replace('predecessor = "2024"\n', ""),
+        encoding="utf-8",
+    )
     outcome = migrate_modelo(
         registry_root=registry_root,
         modelo_id="999",

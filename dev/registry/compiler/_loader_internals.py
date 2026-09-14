@@ -965,7 +965,11 @@ def _inherit_casillas(
         rows.append(row if _row_id(row) in storage_overridden else _without_lineage_claims(row))
         carried_origin = None if inherited_label_origins is None else inherited_label_origins[index]
         label_origins.append(
-            None if _row_id(row) in storage_overridden else carried_origin if carried_origin is not None else predecessor_id
+            None
+            if _row_id(row) in storage_overridden
+            else carried_origin
+            if carried_origin is not None
+            else predecessor_id
         )
         row_id = _row_id(row)
         if row_id is not None:
