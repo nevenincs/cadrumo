@@ -5,12 +5,10 @@ tags:
 date: '2026-09-12'
 modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:11cfc1add1c73e0ab3f5a8d1079aa6ae081c790d07e6ac7b9edcc60eeeb9f4b7'
+body_hash: 'sha256:92e9602426c1b02a5c62ccf467b3eff3119862645b785ca7269dd35e371279a6'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
-
-
 
 # `registry-authority-artifact-boundary` audit: `package boundary`
 
@@ -24,7 +22,6 @@ also tests whether the archive policy can detect future package-root widening
 independently of the mutable build declaration.
 
 ## Findings
-
 
 ### package-allowlist-gate | high | The archive allowlist follows the declaration it is meant to constrain
 

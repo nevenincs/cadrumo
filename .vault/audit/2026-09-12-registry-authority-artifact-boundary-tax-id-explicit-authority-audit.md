@@ -71,7 +71,3 @@ The captured DGOJ official page is pinned as `dgoj-nif-nie-control` with its cor
 - For `subject-tax-id-documentation-caller`, move the API data-alias ownership entry and its expectations to `cadrumo.domain.calculations.registry.tax_id_format`, update every stale qualified docstring reference, and rerun the API stub and qualified-reference suites.
 - For `tax-id-fact-grounding`, bind each operative declaration family to specific official evidence whose anchored text establishes the asserted values; keep the capability non-filing-grade until that evidence passes the normal legal/source grounding gates.
 - Retain the resolved caller, lint, and candidate-ownership entries as the rolling review log and rerun their focused gates after concurrent artifact/source state stabilizes.
-
-
-
-

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#binding-schema'
 date: '2026-09-11'
-modified: '2026-09-12'
+modified: '2026-09-13'
 body_schema: 'body-v2'
-body_hash: 'sha256:791d05ce52905d2c9ab9b32772a32c693ed8006bdd7577ee649e353dc21d2d73'
+body_hash: 'sha256:7c7fb4b41a01764057df1ab1babebbb4dcd51d3bc659d56fb29bdebe9a24c01c'
 related:
   - '[[2026-09-11-binding-schema-P01-S01]]'
   - '[[2026-09-11-binding-schema-P01-S02]]'
@@ -48,6 +48,7 @@ related:
   - '[[2026-09-11-binding-schema-provider-enrollment-design-research]]'
   - '[[2026-09-11-binding-schema-research]]'
   - '[[2026-09-12-binding-schema-tooling-review-audit]]'
+  - '[[2026-09-13-binding-schema-overnight-repair-audit]]'
 ---
 
 # `binding-schema` feature index
@@ -63,6 +64,7 @@ Auto-generated index of all documents tagged with `#binding-schema`.
 ### audit
 
 - `2026-09-12-binding-schema-tooling-review-audit` - `binding-schema` audit: `binding order gate, family identities, lift, 714 rename, predecessor cause, period overrides`
+- `2026-09-13-binding-schema-overnight-repair-audit` - `binding-schema` audit: `Binding-schema overnight repair and hardening`
 
 ### exec
 
