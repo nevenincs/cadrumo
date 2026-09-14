@@ -7,6 +7,13 @@
 # with a legitimately zero base (BIN compensation, correcciones) is possible, so
 # this surfaces an operator-facing advisory rather than refusing the draft, until
 # the base imponible is derived directly from resultado contable.
+[[revisions."2024".verification_predicates]]
+id = "implies-nonzero:base-imponible-determinada-cuando-resultado-positivo"
+predicate_id = "modelo-200-base-imponible-determinada-cuando-resultado-positivo"
+expression = 'implies_nonzero(["00501", "DP200014:00552"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-27-2014:art-30"]
+
 # Soundness gate (accounting-result stage): the pre-IS-tax accounting result must
 # be determined when the entity reports a positive after-tax accounting result.
 # casilla 00500 (RESULTADO DE LA CUENTA DE PÉRDIDAS Y GANANCIAS, after-tax) and
@@ -20,15 +27,34 @@
 # its antecedent. ADVISORY (non-blocking) and the earliest link in the IS-result
 # chain (00500→00501→00552→00562→00592); mirrors the no-silent-under-declaration
 # stance and the 00501→00552 base-determination advisory above.
+[[revisions."2024".verification_predicates]]
+id = "implies-nonzero:resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
+predicate_id = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
+expression = 'implies_nonzero(["00500", "00501"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-30"]
+
 # Elective-cap BLOCKING gate (LIS art. 26.1): the operator-elective applied BIN
 # compensation (DP200014:00547) must NOT exceed the computed art.26.1 ceiling
 # (DP200014:bin-aplicada-maxima = min(stock, max(1M, 70%·base previa))). When the
 # ceiling is positive, an applied amount above it is an over-compensation the
 # verify gate refuses; electing LESS than the ceiling is permitted (compensation
 # is a right, not a mandate). cap_le_when_positive holds when the ceiling <= 0.
+[[revisions."2024".verification_predicates]]
+id = "cap-le-when-positive:compensacion-bin-no-excede-limite-art-26"
+predicate_id = "modelo-200-compensacion-bin-no-excede-limite-art-26"
+expression = 'cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])'
+legal_refs = ["ley-27-2014:art-26"]
+
 # Stock BLOCKING gate (LIS art. 26): the applied BIN compensation cannot exceed
 # the BIN stock available at the start of the period (casilla 00670). You cannot
 # compensate more negative bases than you hold.
+[[revisions."2024".verification_predicates]]
+id = "cap-le-when-positive:compensacion-bin-no-excede-stock-disponible"
+predicate_id = "modelo-200-compensacion-bin-no-excede-stock-disponible"
+expression = 'cap_le_when_positive(["DP200014:00547", "00670"])'
+legal_refs = ["ley-27-2014:art-26"]
+
 # Art. 13 dotaciones-deterioro carry-integration advisory. The dotaciones por
 # deterioro de créditos pending at the start of the period that HAVE met their
 # deducibility conditions (casilla 01495, carried from the prior ejercicio's
@@ -41,6 +67,13 @@
 # carries forward via 01499→next-year 01495) — but the silent case is surfaced so
 # the operator confirms rather than overlooks the deductible carry. Mirrors the
 # no-silent-under-declaration advisory stance (positive input, zero dependent).
+[[revisions."2024".verification_predicates]]
+id = "implies-nonzero:dotaciones-deterioro-cumplido-disponible-integrar"
+predicate_id = "modelo-200-dotaciones-deterioro-cumplido-disponible-integrar"
+expression = 'implies_nonzero(["01495", "01496"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-27-2014:art-13"]
+
 # BIN closing-stock roll-forward continuity ADVISORY (LIS art. 26). casilla 00671
 # (Detalle compensación BIN — TOTAL — pendiente de aplicación en periodos futuros)
 # is the closing stock of negative tax bases carried to future years, entered as a
@@ -56,45 +89,9 @@
 # legitimately-zero closing (all applied, none generated) stays permissible — the
 # guard fires only on a genuine discontinuity, mirroring the M200 base/dotaciones
 # advisories and no-silent-under-declaration.
-
-[[revisions.2024.verification_predicates]]
-id = "implies-nonzero:base-imponible-determinada-cuando-resultado-positivo"
-predicate_id = "modelo-200-base-imponible-determinada-cuando-resultado-positivo"
-expression = "implies_nonzero([\"00501\", \"DP200014:00552\"])"
-finding_kind = "ADVISORY"
-legal_refs = ["ley-27-2014:art-30"]
-
-[[revisions.2024.verification_predicates]]
-id = "implies-nonzero:resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
-predicate_id = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
-expression = "implies_nonzero([\"00500\", \"00501\"])"
-finding_kind = "ADVISORY"
-legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-30"]
-
-[[revisions.2024.verification_predicates]]
-id = "cap-le-when-positive:compensacion-bin-no-excede-limite-art-26"
-predicate_id = "modelo-200-compensacion-bin-no-excede-limite-art-26"
-expression = "cap_le_when_positive([\"DP200014:00547\", \"DP200014:bin-aplicada-maxima\"])"
-finding_kind = "BLOCKING_RULE"
-legal_refs = ["ley-27-2014:art-26"]
-
-[[revisions.2024.verification_predicates]]
-id = "cap-le-when-positive:compensacion-bin-no-excede-stock-disponible"
-predicate_id = "modelo-200-compensacion-bin-no-excede-stock-disponible"
-expression = "cap_le_when_positive([\"DP200014:00547\", \"00670\"])"
-finding_kind = "BLOCKING_RULE"
-legal_refs = ["ley-27-2014:art-26"]
-
-[[revisions.2024.verification_predicates]]
-id = "implies-nonzero:dotaciones-deterioro-cumplido-disponible-integrar"
-predicate_id = "modelo-200-dotaciones-deterioro-cumplido-disponible-integrar"
-expression = "implies_nonzero([\"01495\", \"01496\"])"
-finding_kind = "ADVISORY"
-legal_refs = ["ley-27-2014:art-13"]
-
-[[revisions.2024.verification_predicates]]
+[[revisions."2024".verification_predicates]]
 id = "roll-forward-balances:bin-stock-cierre-reconcilia-roll-forward"
 predicate_id = "modelo-200-bin-stock-cierre-reconcilia-roll-forward"
-expression = "roll_forward_balances([\"00671\", \"00670\", \"DP200014:00547\", \"DP200014:00552\"])"
+expression = 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-26"]

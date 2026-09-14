@@ -5,8 +5,7 @@
 # 2022, 2023 and 2026 added 2026-09-12: open-ended from 2010 with windows only
 # for 2024 and 2025. Same art 4 closure quoted above -- 30 September of the
 # following year, opening the day after the ejercicio closes.
-
-[[revisions.2010-y-siguientes.deadline_windows]]
+[[revisions."2010-y-siguientes".deadline_windows]]
 id = "modelo-360-2022-ad-hoc"
 filing_year = 2022
 period = "2022 AD-HOC"
@@ -16,7 +15,7 @@ closes_on = 2023-09-30
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
 source_refs = ["boe-modelo-360-2010-form", "aeat-modelo-360-procedure"]
 
-[[revisions.2010-y-siguientes.deadline_windows]]
+[[revisions."2010-y-siguientes".deadline_windows]]
 id = "modelo-360-2023-ad-hoc"
 filing_year = 2023
 period = "2023 AD-HOC"
@@ -26,7 +25,7 @@ closes_on = 2024-09-30
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
 source_refs = ["boe-modelo-360-2010-form", "aeat-modelo-360-procedure"]
 
-[[revisions.2010-y-siguientes.deadline_windows]]
+[[revisions."2010-y-siguientes".deadline_windows]]
 id = "modelo-360-2026-ad-hoc"
 filing_year = 2026
 period = "2026 AD-HOC"
@@ -36,7 +35,7 @@ closes_on = 2027-09-30
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
 source_refs = ["boe-modelo-360-2010-form", "aeat-modelo-360-procedure"]
 
-[[revisions.2010-y-siguientes.deadline_windows]]
+[[revisions."2010-y-siguientes".deadline_windows]]
 id = "modelo-360-2024-ad-hoc"
 filing_year = 2024
 period = "2024 AD-HOC"
@@ -46,7 +45,7 @@ closes_on = 2025-09-30
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
 source_refs = ["boe-modelo-360-2010-form", "aeat-modelo-360-procedure"]
 
-[[revisions.2010-y-siguientes.deadline_windows]]
+[[revisions."2010-y-siguientes".deadline_windows]]
 id = "modelo-360-2025-ad-hoc"
 filing_year = 2025
 period = "2025 AD-HOC"

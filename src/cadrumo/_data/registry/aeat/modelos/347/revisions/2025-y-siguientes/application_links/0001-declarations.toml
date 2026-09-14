@@ -1,4 +1,4 @@
-[[revisions.2025-y-siguientes.application_links]]
+[[revisions."2025-y-siguientes".application_links]]
 id = "modelo-347-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -6,14 +6,14 @@ requires_snapshot = true
 legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
 additional_source_refs = ["aeat-modelo-347-procedure"]
 
-[[revisions.2025-y-siguientes.application_links]]
+
+[[revisions."2025-y-siguientes".application_links]]
 id = "modelo-347-extractor"
 surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.application_links]]
+[[revisions."2025-y-siguientes".application_links]]
 id = "modelo-347-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"

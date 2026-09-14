@@ -7,7 +7,10 @@ source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2018-2022"]
 
 [[revisions.2019-2022.parameters.source_citations]]
 source_ref = "aeat-modelo-202-instructions-2018-2022"
-required_text = ["porcentaje del 18%", "base del pago fraccionado"]
+required_text = [
+    "porcentaje del 18%",
+    "base del pago fraccionado",
+]
 
 [[revisions.2019-2022.parameters.values]]
 value = "18"

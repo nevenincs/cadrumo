@@ -17,10 +17,9 @@
 # at or below zero, so a retenedor with no arrendadores in the year never fires
 # it. It stays advisory because the relation fold-in can legitimately be
 # mid-population when the operator calculates, and because the operator files.
-
-[[revisions.2019-2022.verification_predicates]]
+[[revisions."2019-2022".verification_predicates]]
 id = "implies-nonzero:base-anual-cuando-perceptores-declarados"
 predicate_id = "modelo-180-base-anual-cuando-perceptores-declarados"
-expression = "implies_nonzero([\"decl.total-perceptores\", \"decl.base-total\"])"
+expression = 'implies_nonzero(["decl.total-perceptores", "decl.base-total"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "ley-35-2006:art-101"]

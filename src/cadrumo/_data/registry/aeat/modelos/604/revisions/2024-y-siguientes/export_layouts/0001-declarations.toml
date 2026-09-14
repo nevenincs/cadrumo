@@ -11,6 +11,159 @@
 # @101+9; that is a known DEFECT, not a precedent, and is not copied here.
 # @101+9 is left unwritten (see below) and @93+4 is filler pending a ruling on
 # whether these slots can carry a real runtime-supplied identity at all.
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-604-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records]]
+id = "modelo-604-604-00"
+record_type = "envelope_header"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+required = true
+
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-lit-1"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-lit-3"
+offset = 3
+length = 3
+kind = "literal"
+literal = "604"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-lit-6"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-draft-filing-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-draft-period-code"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-lit-13"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-lit-18"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-reservado-23"
+offset = 23
+length = 30
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-decl-idioma"
+offset = 53
+length = 1
+kind = "casilla"
+casilla_id = "decl.idioma"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-604-604-00-reservado-54"
+offset = 54
+length = 39
+kind = "filler"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
 # EEDD slots, deliberately UNWRITTEN: @93+4 "Version del Programa (**)" and
 # @101+9 "NIF Empresa Desarrollo (**)". AEAT's note (**) on aeat-dr-604-2024 reads
 # "A cumplimentar por las entidades desarrolladoras (EEDD)" -- both belong to the
@@ -27,206 +180,8 @@
 # @101+9 and this modelo followed it. The presenter is not the software developer;
 # that was a defect, never a precedent. Both slots are now unwritten here, which
 # matches 111/115/117/122/123/126/128/130/131/216/341/390/714.
-# @101+9 is deliberately LEFT UNWRITTEN. AEAT names it "NIF Empresa Desarrollo"
-# and marks it, with @53+1 and @93+4, "(**) A cumplimentar por las entidades
-# desarrolladoras (EEDD)" -- it identifies the software house that produced the
-# file, which is not the presenter and not the taxpayer. Writing
-# presenter.tax_id here would put a confidently wrong NIF into a real filing.
-# No producer key carries a developer identity, so the honest state is an
-# unwritten slot: the coverage gate counts it as a genuine shortfall, which is
-# accurate, rather than reporting full marks over a wrong value.
-# Modelo 604 fichero BOE fixed-width layout for the 2024 era, transcribed
-# position-by-position from aeat-dr-604-2024 (03-604-ejercicio-2024.xlsx,
-# sha256 98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68).
-# Three records, each tiling its declared extent exactly once with no gap and
-# no overlap: Pag. 0 envelope 1..328, Pag. 1 1..1000, Pag. 2 1..700.
-#
-# The three "(**) A cumplimentar por las entidades desarrolladoras (EEDD)" slots
-# in the Pag. 0 envelope -- @53+1 idioma, @93+4 version del programa, @101+9 NIF
-# Empresa Desarrollo -- identify the SOFTWARE HOUSE that produced the file, not
-# the presenter and not the taxpayer. Modelo 390 writes presenter.tax_id at
-# @101+9; that is a known DEFECT, not a precedent, and is not copied here.
-# @101+9 is left unwritten (see below) and @93+4 is filler pending a ruling on
-# whether these slots can carry a real runtime-supplied identity at all.
-# AEAT declares this slot's Contenido as "En blanco" and admits NO other value
-# on this modelo -- contrast Modelo 490, whose same-coordinate indicator admits
-# "C o blanco". Blank is therefore the declared constant for every page this
-# application emits, so it is authored as that constant rather than as a pad:
-# a filler asserts "no datum here", a literal asserts "the datum is blank",
-# and only the second is what the design says.
-# Modelo 604 fichero BOE fixed-width layout for the 2024 era, transcribed
-# position-by-position from aeat-dr-604-2024 (03-604-ejercicio-2024.xlsx,
-# sha256 98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68).
-# Three records, each tiling its declared extent exactly once with no gap and
-# no overlap: Pag. 0 envelope 1..328, Pag. 1 1..1000, Pag. 2 1..700.
-#
-# The three "(**) A cumplimentar por las entidades desarrolladoras (EEDD)" slots
-# in the Pag. 0 envelope -- @53+1 idioma, @93+4 version del programa, @101+9 NIF
-# Empresa Desarrollo -- identify the SOFTWARE HOUSE that produced the file, not
-# the presenter and not the taxpayer. Modelo 390 writes presenter.tax_id at
-# @101+9; that is a known DEFECT, not a precedent, and is not copied here.
-# @101+9 is left unwritten (see below) and @93+4 is filler pending a ruling on
-# whether these slots can carry a real runtime-supplied identity at all.
-# AEAT declares this slot's Contenido as "En blanco" and admits NO other value
-# on this modelo -- contrast Modelo 490, whose same-coordinate indicator admits
-# "C o blanco". Blank is therefore the declared constant for every page this
-# application emits, so it is authored as that constant rather than as a pad:
-# a filler asserts "no datum here", a literal asserts "the datum is blank",
-# and only the second is what the design says.
 
-[[revisions.2024-y-siguientes.export_layouts]]
-id = "modelo-604-fichero-boe"
-format = "fixed_width"
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records]]
-id = "modelo-604-604-00"
-record_type = "envelope_header"
-order = 0
-encoding = "iso-8859-1"
-line_ending = "none"
-required = true
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-lit-1"
-offset = 1
-length = 2
-kind = "literal"
-literal = "<T"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-lit-3"
-offset = 3
-length = 3
-kind = "literal"
-literal = "604"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-lit-6"
-offset = 6
-length = 1
-kind = "literal"
-literal = "0"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-draft-filing-year"
-offset = 7
-length = 4
-kind = "draft"
-draft_attribute = "filing_year"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-draft-period-code"
-offset = 11
-length = 2
-kind = "draft"
-draft_attribute = "period_code"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-lit-13"
-offset = 13
-length = 5
-kind = "literal"
-literal = "0000>"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-lit-18"
-offset = 18
-length = 5
-kind = "literal"
-literal = "<AUX>"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-reservado-23"
-offset = 23
-length = 30
-kind = "filler"
-data_type = "text"
-required = false
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-decl-idioma"
-offset = 53
-length = 1
-kind = "casilla"
-casilla_id = "decl.idioma"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
-id = "modelo-604-604-00-reservado-54"
-offset = 54
-length = 39
-kind = "filler"
-data_type = "text"
-required = false
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
-
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-00-reservado-97"
 offset = 97
 length = 4
@@ -239,7 +194,16 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+# @101+9 is deliberately LEFT UNWRITTEN. AEAT names it "NIF Empresa Desarrollo"
+# and marks it, with @53+1 and @93+4, "(**) A cumplimentar por las entidades
+# desarrolladoras (EEDD)" -- it identifies the software house that produced the
+# file, which is not the presenter and not the taxpayer. Writing
+# presenter.tax_id here would put a confidently wrong NIF into a real filing.
+# No producer key carries a developer identity, so the honest state is an
+# unwritten slot: the coverage gate counts it as a genuine shortfall, which is
+# accurate, rather than reporting full marks over a wrong value.
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-00-reservado-110"
 offset = 110
 length = 213
@@ -252,7 +216,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-00-lit-323"
 offset = 323
 length = 6
@@ -265,8 +229,26 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
+# Modelo 604 fichero BOE fixed-width layout for the 2024 era, transcribed
+# position-by-position from aeat-dr-604-2024 (03-604-ejercicio-2024.xlsx,
+# sha256 98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68).
+# Three records, each tiling its declared extent exactly once with no gap and
+# no overlap: Pag. 0 envelope 1..328, Pag. 1 1..1000, Pag. 2 1..700.
+#
+# The three "(**) A cumplimentar por las entidades desarrolladoras (EEDD)" slots
+# in the Pag. 0 envelope -- @53+1 idioma, @93+4 version del programa, @101+9 NIF
+# Empresa Desarrollo -- identify the SOFTWARE HOUSE that produced the file, not
+# the presenter and not the taxpayer. Modelo 390 writes presenter.tax_id at
+# @101+9; that is a known DEFECT, not a precedent, and is not copied here.
+# @101+9 is left unwritten (see below) and @93+4 is filler pending a ruling on
+# whether these slots can carry a real runtime-supplied identity at all.
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-604-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records]]
+[[revisions."2024-y-siguientes".export_layouts.records]]
 id = "modelo-604-604-01"
 record_type = "604-01"
 order = 1
@@ -274,7 +256,8 @@ encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-lit-1"
 offset = 1
 length = 2
@@ -288,7 +271,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-lit-3"
 offset = 3
 length = 3
@@ -302,7 +285,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-lit-6"
 offset = 6
 length = 5
@@ -316,7 +299,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-lit-11"
 offset = 11
 length = 1
@@ -330,7 +313,13 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+# AEAT declares this slot's Contenido as "En blanco" and admits NO other value
+# on this modelo -- contrast Modelo 490, whose same-coordinate indicator admits
+# "C o blanco". Blank is therefore the declared constant for every page this
+# application emits, so it is authored as that constant rather than as a pad:
+# a filler asserts "no datum here", a literal asserts "the datum is blank",
+# and only the second is what the design says.
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-indicador-pagina-complementaria"
 offset = 12
 length = 1
@@ -344,7 +333,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-decl-tipo-autoliquidacion"
 offset = 13
 length = 1
@@ -358,7 +347,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-taxpayer-tax-id"
 offset = 14
 length = 9
@@ -372,7 +361,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-taxpayer-full-name"
 offset = 23
 length = 80
@@ -386,7 +375,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-draft-filing-year"
 offset = 103
 length = 4
@@ -400,7 +389,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-draft-period-code"
 offset = 107
 length = 2
@@ -414,7 +403,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-sp-codigo-lei"
 offset = 109
 length = 20
@@ -428,7 +417,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-sp-codigo-bic"
 offset = 129
 length = 11
@@ -442,7 +431,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-tipo-via"
 offset = 140
 length = 5
@@ -456,7 +445,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-nombre-via"
 offset = 145
 length = 50
@@ -470,7 +459,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-tipo-numeracion"
 offset = 195
 length = 3
@@ -484,7 +473,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-numero-casa"
 offset = 198
 length = 5
@@ -498,7 +487,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-calificador-numero"
 offset = 203
 length = 3
@@ -512,7 +501,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-bloque"
 offset = 206
 length = 3
@@ -526,7 +515,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-portal"
 offset = 209
 length = 3
@@ -540,7 +529,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-escalera"
 offset = 212
 length = 3
@@ -554,7 +543,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-planta"
 offset = 215
 length = 3
@@ -568,7 +557,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-puerta"
 offset = 218
 length = 3
@@ -582,7 +571,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-complemento"
 offset = 221
 length = 40
@@ -596,7 +585,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-localidad"
 offset = 261
 length = 30
@@ -610,7 +599,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-codigo-postal"
 offset = 291
 length = 5
@@ -624,7 +613,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-municipio"
 offset = 296
 length = 30
@@ -638,7 +627,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-codigo-provincia"
 offset = 326
 length = 2
@@ -652,7 +641,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-es-provincia"
 offset = 328
 length = 20
@@ -666,7 +655,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-ex-domicilio"
 offset = 348
 length = 50
@@ -680,7 +669,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-ex-complemento"
 offset = 398
 length = 40
@@ -694,7 +683,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-ex-poblacion"
 offset = 438
 length = 30
@@ -708,7 +697,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-ex-codigo-postal"
 offset = 468
 length = 10
@@ -722,7 +711,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-ex-provincia-region-estado"
 offset = 478
 length = 30
@@ -736,7 +725,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-ex-pais"
 offset = 508
 length = 30
@@ -750,7 +739,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-dom-ex-codigo-pais"
 offset = 538
 length = 2
@@ -764,7 +753,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-sp-persona-contacto"
 offset = 540
 length = 40
@@ -778,7 +767,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-sp-telefono-contacto"
 offset = 580
 length = 16
@@ -792,7 +781,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-anexo-numero-justificante"
 offset = 596
 length = 13
@@ -806,7 +795,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-01-base-imponible"
 offset = 609
 length = 18
@@ -820,7 +809,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-02-cuota"
 offset = 627
 length = 18
@@ -834,7 +823,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-03-signo-base-rectificaciones"
 offset = 645
 length = 1
@@ -848,7 +837,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-03-base-rectificaciones"
 offset = 646
 length = 18
@@ -862,7 +851,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-04-signo-cuota-rectificaciones"
 offset = 664
 length = 1
@@ -876,7 +865,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-04-cuota-rectificaciones"
 offset = 665
 length = 18
@@ -890,7 +879,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-05-operaciones-exentas"
 offset = 683
 length = 18
@@ -904,7 +893,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-08-diferencia"
 offset = 701
 length = 18
@@ -918,7 +907,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-09-cuota-estado"
 offset = 719
 length = 18
@@ -932,7 +921,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-10-signo-cuota-rectificaciones-estado"
 offset = 737
 length = 1
@@ -946,7 +935,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-10-cuota-rectificaciones-estado"
 offset = 738
 length = 18
@@ -960,7 +949,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-11-porcentaje-atribuible-estado"
 offset = 756
 length = 7
@@ -975,7 +964,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-12-resultado-estado"
 offset = 763
 length = 18
@@ -989,7 +978,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-06-a-deducir"
 offset = 781
 length = 18
@@ -1003,7 +992,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-liq-07-resultado"
 offset = 799
 length = 18
@@ -1017,7 +1006,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-compl-declaracion-complementaria"
 offset = 817
 length = 1
@@ -1031,7 +1020,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-compl-numero-justificante-anterior"
 offset = 818
 length = 13
@@ -1045,7 +1034,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-reservado-831"
 offset = 831
 length = 145
@@ -1058,7 +1047,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-reservado-976"
 offset = 976
 length = 13
@@ -1071,7 +1060,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-01-lit-989"
 offset = 989
 length = 12
@@ -1084,8 +1073,26 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
+# Modelo 604 fichero BOE fixed-width layout for the 2024 era, transcribed
+# position-by-position from aeat-dr-604-2024 (03-604-ejercicio-2024.xlsx,
+# sha256 98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68).
+# Three records, each tiling its declared extent exactly once with no gap and
+# no overlap: Pag. 0 envelope 1..328, Pag. 1 1..1000, Pag. 2 1..700.
+#
+# The three "(**) A cumplimentar por las entidades desarrolladoras (EEDD)" slots
+# in the Pag. 0 envelope -- @53+1 idioma, @93+4 version del programa, @101+9 NIF
+# Empresa Desarrollo -- identify the SOFTWARE HOUSE that produced the file, not
+# the presenter and not the taxpayer. Modelo 390 writes presenter.tax_id at
+# @101+9; that is a known DEFECT, not a precedent, and is not copied here.
+# @101+9 is left unwritten (see below) and @93+4 is filler pending a ruling on
+# whether these slots can carry a real runtime-supplied identity at all.
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-604-fichero-boe"
+format = "fixed_width"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records]]
+[[revisions."2024-y-siguientes".export_layouts.records]]
 id = "modelo-604-604-02"
 record_type = "604-02"
 order = 2
@@ -1093,7 +1100,8 @@ encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-lit-1"
 offset = 1
 length = 2
@@ -1107,7 +1115,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-lit-3"
 offset = 3
 length = 3
@@ -1121,7 +1129,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-lit-6"
 offset = 6
 length = 5
@@ -1135,7 +1143,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-lit-11"
 offset = 11
 length = 1
@@ -1149,7 +1157,13 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+# AEAT declares this slot's Contenido as "En blanco" and admits NO other value
+# on this modelo -- contrast Modelo 490, whose same-coordinate indicator admits
+# "C o blanco". Blank is therefore the declared constant for every page this
+# application emits, so it is authored as that constant rather than as a pad:
+# a filler asserts "no datum here", a literal asserts "the datum is blank",
+# and only the second is what the design says.
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-indicador-pagina-complementaria"
 offset = 12
 length = 1
@@ -1163,7 +1177,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-taxpayer-tax-id"
 offset = 13
 length = 9
@@ -1177,7 +1191,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-taxpayer-full-name"
 offset = 22
 length = 80
@@ -1191,7 +1205,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-alava-cuota-sujetas-no-exentas"
 offset = 102
 length = 18
@@ -1205,7 +1219,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-alava-signo-cuota-rectificaciones"
 offset = 120
 length = 1
@@ -1219,7 +1233,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-alava-cuota-rectificaciones"
 offset = 121
 length = 18
@@ -1233,7 +1247,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-alava-cuota-total-atribuible"
 offset = 139
 length = 18
@@ -1247,7 +1261,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-alava-porcentaje-atribuible"
 offset = 157
 length = 7
@@ -1262,7 +1276,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-alava-importe-operaciones-exentas"
 offset = 164
 length = 18
@@ -1276,7 +1290,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-guipuzcoa-cuota-sujetas-no-exentas"
 offset = 182
 length = 18
@@ -1290,7 +1304,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-guipuzcoa-signo-cuota-rectificaciones"
 offset = 200
 length = 1
@@ -1304,7 +1318,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-guipuzcoa-cuota-rectificaciones"
 offset = 201
 length = 18
@@ -1318,7 +1332,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-guipuzcoa-cuota-total-atribuible"
 offset = 219
 length = 18
@@ -1332,7 +1346,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-guipuzcoa-porcentaje-atribuible"
 offset = 237
 length = 7
@@ -1347,7 +1361,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-guipuzcoa-importe-operaciones-exentas"
 offset = 244
 length = 18
@@ -1361,7 +1375,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-vizcaya-cuota-sujetas-no-exentas"
 offset = 262
 length = 18
@@ -1375,7 +1389,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-vizcaya-signo-cuota-rectificaciones"
 offset = 280
 length = 1
@@ -1389,7 +1403,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-vizcaya-cuota-rectificaciones"
 offset = 281
 length = 18
@@ -1403,7 +1417,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-vizcaya-cuota-total-atribuible"
 offset = 299
 length = 18
@@ -1417,7 +1431,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-vizcaya-porcentaje-atribuible"
 offset = 317
 length = 7
@@ -1432,7 +1446,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-vizcaya-importe-operaciones-exentas"
 offset = 324
 length = 18
@@ -1446,7 +1460,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-navarra-cuota-sujetas-no-exentas"
 offset = 342
 length = 18
@@ -1460,7 +1474,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-navarra-signo-cuota-rectificaciones"
 offset = 360
 length = 1
@@ -1474,7 +1488,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-navarra-cuota-rectificaciones"
 offset = 361
 length = 18
@@ -1488,7 +1502,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-navarra-cuota-total-atribuible"
 offset = 379
 length = 18
@@ -1502,7 +1516,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-navarra-porcentaje-atribuible"
 offset = 397
 length = 7
@@ -1517,7 +1531,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-navarra-importe-operaciones-exentas"
 offset = 404
 length = 18
@@ -1531,7 +1545,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-estado-cuota-sujetas-no-exentas"
 offset = 422
 length = 18
@@ -1545,7 +1559,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-estado-signo-cuota-rectificaciones"
 offset = 440
 length = 1
@@ -1559,7 +1573,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-estado-cuota-rectificaciones"
 offset = 441
 length = 18
@@ -1573,7 +1587,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-estado-cuota-total-atribuible"
 offset = 459
 length = 18
@@ -1587,7 +1601,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-estado-porcentaje-atribuible"
 offset = 477
 length = 7
@@ -1602,7 +1616,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-terr-estado-importe-operaciones-exentas"
 offset = 484
 length = 18
@@ -1616,7 +1630,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-reservado-502"
 offset = 502
 length = 187
@@ -1629,7 +1643,7 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-02-lit-689"
 offset = 689
 length = 12

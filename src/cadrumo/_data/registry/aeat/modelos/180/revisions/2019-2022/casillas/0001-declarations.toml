@@ -1,3 +1,268 @@
+[[revisions.2019-2022.casillas]]
+id = "decl.base-total"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+number = "145-160"
+section = ["declarante", "resumen"]
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "computed"
+formula = "modelo-180-base-total"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"], additional_source_refs = ["boe-modelo-180-2014-form"] }
+[[revisions.2019-2022.casillas]]
+id = "decl.complementaria-sustitutiva"
+continuidad_id = "declaracion-complementaria-sustitutiva"
+number = "121-122"
+section = ["declarante", "identificacion"]
+data_type = "text"
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+[[revisions.2019-2022.casillas]]
+id = "decl.numero-identificativo-anterior"
+continuidad_id = "numero-identificativo-declaracion-anterior"
+number = "123-135"
+section = ["declarante", "identificacion"]
+data_type = "text"
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+[[revisions.2019-2022.casillas]]
+id = "decl.numero-identificativo"
+continuidad_id = "numero-identificativo-declaracion"
+number = "108-120"
+section = ["declarante", "identificacion"]
+data_type = "text"
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+[[revisions.2019-2022.casillas]]
+id = "decl.retenciones-total"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+number = "161-175"
+section = ["declarante", "resumen"]
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "computed"
+formula = "modelo-180-retenciones-total"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"], additional_source_refs = ["boe-modelo-180-2014-form"] }
+[[revisions.2019-2022.casillas]]
+id = "decl.total-perceptores"
+number = "136-144"
+section = ["declarante", "resumen"]
+data_type = "integer"
+semantic_role = "total_perceptores_count"
+continuidad_id = "total-perceptores-count"
+required = true
+input_kind = "bound"
+binding = "modelo-180-115-perceptores-anual"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.base"
+continuidad_id = "perc-base"
+number = "79-92"
+section = ["perceptor", "renta"]
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+required = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"], additional_source_refs = ["boe-modelo-180-2014-form"] }
+[[revisions.2019-2022.casillas]]
+id = "perc.ejercicio-devengo"
+number = "110-113"
+section = ["perceptor", "renta"]
+data_type = "year"
+semantic_role = "devengo_year"
+continuidad_id = "devengo-year"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-bloque"
+number = "201-203"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_bloque"
+continuidad_id = "payee-inmueble-bloque"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-calificador-numero"
+number = "198-200"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_calificador_numero"
+continuidad_id = "payee-inmueble-calificador-numero"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-codigo-municipio"
+number = "316-320"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "municipality_code"
+semantic_role = "payee_inmueble_codigo_municipio"
+continuidad_id = "payee-inmueble-codigo-municipio"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-codigo-postal"
+number = "323-327"
+section = ["perceptor", "inmueble"]
+data_type = "postal_code"
+semantic_role = "payee_inmueble_codigo_postal"
+continuidad_id = "payee-inmueble-codigo-postal"
+required = true
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-complemento"
+number = "216-255"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_complemento"
+continuidad_id = "payee-inmueble-complemento"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-escalera"
+number = "207-209"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_escalera"
+continuidad_id = "payee-inmueble-escalera"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-localidad"
+number = "256-285"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_localidad"
+continuidad_id = "payee-inmueble-localidad"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-municipio"
+number = "286-315"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_municipio"
+continuidad_id = "payee-inmueble-municipio"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-nombre-via"
+number = "140-189"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_nombre_via"
+continuidad_id = "payee-inmueble-nombre-via"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-numero-casa"
+number = "193-197"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_numero_casa"
+continuidad_id = "payee-inmueble-numero-casa"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-planta"
+number = "210-212"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_planta"
+continuidad_id = "payee-inmueble-planta"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-portal"
+number = "204-206"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_portal"
+continuidad_id = "payee-inmueble-portal"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-provincia"
+number = "321-322"
+section = ["perceptor", "inmueble"]
+data_type = "province_code"
+semantic_role = "payee_inmueble_provincia"
+continuidad_id = "payee-inmueble-provincia"
+required = true
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-puerta"
+number = "213-215"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_puerta"
+continuidad_id = "payee-inmueble-puerta"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-tipo-numeracion"
+number = "190-192"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_tipo_numeracion"
+continuidad_id = "payee-inmueble-tipo-numeracion"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.inmueble-tipo-via"
+number = "135-139"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+semantic_role = "payee_inmueble_tipo_via"
+continuidad_id = "payee-inmueble-tipo-via"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.modalidad"
+number = "78"
+section = ["perceptor", "renta"]
+data_type = "text"
+semantic_role = "payee_modalidad_renta"
+continuidad_id = "payee-modalidad-renta"
+required = true
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.nif-representante-legal"
+number = "27-35"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "payee_representative_nif"
+continuidad_id = "payee-representative-nif"
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.nif"
+number = "18-26"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "payee_nif"
+continuidad_id = "payee-nif"
+required = true
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.nombre"
+number = "36-75"
+section = ["perceptor", "identificacion"]
+data_type = "name"
+semantic_role = "payee_name"
+continuidad_id = "payee-name"
+required = true
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["boe-modelo-180-2014-form"]
+[[revisions.2019-2022.casillas]]
+id = "perc.porcentaje-retencion"
+number = "93-96"
+section = ["perceptor", "renta"]
 # "decimal", not "ratio": this codebase's "ratio" data_type carries an
 # established 0-1 fractional convention elsewhere in the registry (e.g. a
 # 50% reduction parameter stores 0.50), disambiguated for parameters by a
@@ -5,416 +270,48 @@
 # this field as a percentage NUMBER split into entero+decimal sub-parts
 # (93-94 / 95-96), i.e. 15.00 for 15%, not 0.15 -- "ratio" would silently
 # invite the wrong convention here with no field to catch it.
-
-[[revisions.2019-2022.casillas]]
-id = "decl.base-total"
-continuidad_id = "base-retenciones-ingresos-a-cuenta"
-number = "145-160"
-data_type = "money"
-semantic_role = "base_retenciones_ingresos_a_cuenta"
-required = true
-input_kind = "computed"
-formula = "modelo-180-base-total"
-section = ["declarante", "resumen"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[revisions.2019-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "decl.complementaria-sustitutiva"
-continuidad_id = "declaracion-complementaria-sustitutiva"
-number = "121-122"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["declarante", "identificacion"]
-legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-
-[[revisions.2019-2022.casillas]]
-id = "decl.numero-identificativo-anterior"
-continuidad_id = "numero-identificativo-declaracion-anterior"
-number = "123-135"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["declarante", "identificacion"]
-legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-
-[[revisions.2019-2022.casillas]]
-id = "decl.numero-identificativo"
-continuidad_id = "numero-identificativo-declaracion"
-number = "108-120"
-data_type = "text"
-required = false
-input_kind = "manual"
-section = ["declarante", "identificacion"]
-legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-
-[[revisions.2019-2022.casillas]]
-id = "decl.retenciones-total"
-continuidad_id = "retenciones-ingresos-a-cuenta"
-number = "161-175"
-data_type = "money"
-semantic_role = "retenciones_ingresos_a_cuenta"
-required = true
-input_kind = "computed"
-formula = "modelo-180-retenciones-total"
-section = ["declarante", "resumen"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[revisions.2019-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "decl.total-perceptores"
-number = "136-144"
-data_type = "integer"
-semantic_role = "total_perceptores_count"
-continuidad_id = "total-perceptores-count"
-required = true
-input_kind = "bound"
-binding = "modelo-180-115-perceptores-anual"
-section = ["declarante", "resumen"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.base"
-continuidad_id = "perc-base"
-number = "79-92"
-data_type = "money"
-semantic_role = "base_retenciones_ingresos_a_cuenta"
-required = true
-input_kind = "manual"
-section = ["perceptor", "renta"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[revisions.2019-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.ejercicio-devengo"
-number = "110-113"
-data_type = "year"
-semantic_role = "devengo_year"
-continuidad_id = "devengo-year"
-required = false
-input_kind = "manual"
-section = ["perceptor", "renta"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-bloque"
-number = "201-203"
-data_type = "text"
-semantic_role = "payee_inmueble_bloque"
-continuidad_id = "payee-inmueble-bloque"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-calificador-numero"
-number = "198-200"
-data_type = "text"
-semantic_role = "payee_inmueble_calificador_numero"
-continuidad_id = "payee-inmueble-calificador-numero"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-codigo-municipio"
-number = "316-320"
-data_type = "municipality_code"
-semantic_role = "payee_inmueble_codigo_municipio"
-continuidad_id = "payee-inmueble-codigo-municipio"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-codigo-postal"
-number = "323-327"
-data_type = "postal_code"
-semantic_role = "payee_inmueble_codigo_postal"
-continuidad_id = "payee-inmueble-codigo-postal"
-required = true
-input_kind = "manual"
-section = ["perceptor", "inmueble"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-complemento"
-number = "216-255"
-data_type = "text"
-semantic_role = "payee_inmueble_complemento"
-continuidad_id = "payee-inmueble-complemento"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-escalera"
-number = "207-209"
-data_type = "text"
-semantic_role = "payee_inmueble_escalera"
-continuidad_id = "payee-inmueble-escalera"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-localidad"
-number = "256-285"
-data_type = "text"
-semantic_role = "payee_inmueble_localidad"
-continuidad_id = "payee-inmueble-localidad"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-municipio"
-number = "286-315"
-data_type = "text"
-semantic_role = "payee_inmueble_municipio"
-continuidad_id = "payee-inmueble-municipio"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-nombre-via"
-number = "140-189"
-data_type = "text"
-semantic_role = "payee_inmueble_nombre_via"
-continuidad_id = "payee-inmueble-nombre-via"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-numero-casa"
-number = "193-197"
-data_type = "text"
-semantic_role = "payee_inmueble_numero_casa"
-continuidad_id = "payee-inmueble-numero-casa"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-planta"
-number = "210-212"
-data_type = "text"
-semantic_role = "payee_inmueble_planta"
-continuidad_id = "payee-inmueble-planta"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-portal"
-number = "204-206"
-data_type = "text"
-semantic_role = "payee_inmueble_portal"
-continuidad_id = "payee-inmueble-portal"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-provincia"
-number = "321-322"
-data_type = "province_code"
-semantic_role = "payee_inmueble_provincia"
-continuidad_id = "payee-inmueble-provincia"
-required = true
-input_kind = "manual"
-section = ["perceptor", "inmueble"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-puerta"
-number = "213-215"
-data_type = "text"
-semantic_role = "payee_inmueble_puerta"
-continuidad_id = "payee-inmueble-puerta"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-tipo-numeracion"
-number = "190-192"
-data_type = "text"
-semantic_role = "payee_inmueble_tipo_numeracion"
-continuidad_id = "payee-inmueble-tipo-numeracion"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.inmueble-tipo-via"
-number = "135-139"
-data_type = "text"
-semantic_role = "payee_inmueble_tipo_via"
-continuidad_id = "payee-inmueble-tipo-via"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble", "direccion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.modalidad"
-number = "78"
-data_type = "text"
-semantic_role = "payee_modalidad_renta"
-continuidad_id = "payee-modalidad-renta"
-required = true
-input_kind = "manual"
-section = ["perceptor", "renta"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.nif-representante-legal"
-number = "27-35"
-data_type = "nif"
-semantic_role = "payee_representative_nif"
-continuidad_id = "payee-representative-nif"
-required = false
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.nif"
-number = "18-26"
-data_type = "nif"
-semantic_role = "payee_nif"
-continuidad_id = "payee-nif"
-required = true
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.nombre"
-number = "36-75"
-data_type = "name"
-semantic_role = "payee_name"
-continuidad_id = "payee-name"
-required = true
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
-legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[[revisions.2019-2022.casillas]]
-id = "perc.porcentaje-retencion"
-number = "93-96"
 data_type = "decimal"
 semantic_role = "porcentaje_retencion"
 continuidad_id = "porcentaje-retencion"
 required = true
-input_kind = "manual"
-section = ["perceptor", "renta"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]
-
 [[revisions.2019-2022.casillas]]
 id = "perc.provincia"
 number = "76-77"
+section = ["perceptor", "identificacion"]
 data_type = "province_code"
 semantic_role = "payee_province"
 continuidad_id = "payee-province"
 required = true
-input_kind = "manual"
-section = ["perceptor", "identificacion"]
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]
-
 [[revisions.2019-2022.casillas]]
 id = "perc.referencia-catastral"
 number = "115-134"
+section = ["perceptor", "inmueble"]
 data_type = "text"
 semantic_role = "payee_inmueble_referencia_catastral"
 continuidad_id = "payee-inmueble-referencia-catastral"
-required = false
-input_kind = "manual"
-section = ["perceptor", "inmueble"]
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]
-
 [[revisions.2019-2022.casillas]]
 id = "perc.retenciones"
 continuidad_id = "perc-retenciones"
 number = "97-109"
-data_type = "money"
+section = ["perceptor", "renta"]
 semantic_role = "retenciones_ingresos_a_cuenta"
 required = true
-input_kind = "manual"
-section = ["perceptor", "renta"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]
-
-[revisions.2019-2022.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-additional_source_refs = ["boe-modelo-180-2014-form"]
-
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"], additional_source_refs = ["boe-modelo-180-2014-form"] }
 [[revisions.2019-2022.casillas]]
 id = "perc.situacion-inmueble"
 number = "114"
+section = ["perceptor", "inmueble"]
 data_type = "text"
 semantic_role = "payee_inmueble_situacion"
 continuidad_id = "payee-inmueble-situacion"
 required = true
-input_kind = "manual"
-section = ["perceptor", "inmueble"]
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 additional_source_refs = ["boe-modelo-180-2014-form"]

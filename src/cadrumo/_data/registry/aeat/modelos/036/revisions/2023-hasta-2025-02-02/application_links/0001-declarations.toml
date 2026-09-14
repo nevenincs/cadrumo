@@ -20,6 +20,7 @@
 # only source_ref on the successor is aeat-modelo-036-procedure, which this
 # span cannot cite; it would have to be authored from different grounding
 # rather than mirrored, and nothing here needs it.
+
 #
 # THIS LINK DOES NOT YET VALIDATE, AND THE REASON IS A CATALOGUE AMBIGUITY
 # RATHER THAN ANYTHING MISSING HERE. The schema requires a filing link to carry
@@ -43,11 +44,15 @@
 # own page carried "Ejercicio 2020 y siguientes" and settled it, nothing in this
 # page dates itself. Citing either id to make this link pass would assert a
 # window the corpus does not establish.
-
-[[revisions.2023-hasta-2025-02-02.application_links]]
+[[revisions."2023-hasta-2025-02-02".application_links]]
 id = "modelo-036-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
-legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+]
 source_refs = ["aeat-dr-036-2023"]

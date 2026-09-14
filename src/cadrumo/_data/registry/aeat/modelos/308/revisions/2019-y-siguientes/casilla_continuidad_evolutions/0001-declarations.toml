@@ -6,11 +6,8 @@
 # evolution of one grounded chain, not a retirement or reintroduction inferred
 # from labels or row numbers. `repurposed` is the schema marker for this
 # non-label/non-legal surface change; continuidad_id still proves identity.
-# The tax-year header is unchanged in the four official designs. The filing
-# revision expands its references beyond the form-approval article retained by
-# the historical applicability revisions; these records cover each prior pair.
 
-[[revisions.2019-y-siguientes.casilla_continuidad_evolutions]]
+[[revisions."2019-y-siguientes".casilla_continuidad_evolutions]]
 id = "filing-period-from-2016-representation-evolved"
 continuidad_id = "filing-period"
 from_revision = "2016-2018"
@@ -18,8 +15,11 @@ to_revision = "2019-y-siguientes"
 evolution_kind = "repurposed"
 legal_refs = ["orden-eha-3786-2008:art-2", "ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2016", "aeat-dr-308-2019"]
+# The tax-year header is unchanged in the four official designs. The filing
+# revision expands its references beyond the form-approval article retained by
+# the historical applicability revisions; these records cover each prior pair.
 
-[[revisions.2019-y-siguientes.casilla_continuidad_evolutions]]
+[[revisions."2019-y-siguientes".casilla_continuidad_evolutions]]
 id = "filing-year-from-2009-legal-refs-evolved"
 continuidad_id = "filing-year"
 from_revision = "2009-2011-junio"
@@ -28,7 +28,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-eha-3786-2008:art-2", "ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2009", "aeat-dr-308-2019"]
 
-[[revisions.2019-y-siguientes.casilla_continuidad_evolutions]]
+[[revisions."2019-y-siguientes".casilla_continuidad_evolutions]]
 id = "filing-year-from-2011-legal-refs-evolved"
 continuidad_id = "filing-year"
 from_revision = "2011-julio-2015"
@@ -37,7 +37,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-eha-3786-2008:art-2", "ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2011-july", "aeat-dr-308-2019"]
 
-[[revisions.2019-y-siguientes.casilla_continuidad_evolutions]]
+[[revisions."2019-y-siguientes".casilla_continuidad_evolutions]]
 id = "filing-year-from-2016-legal-refs-evolved"
 continuidad_id = "filing-year"
 from_revision = "2016-2018"

@@ -17,62 +17,46 @@
 # because the perceptor detail rows are not themselves modelled as a
 # repeating record in this revision.
 
-[[revisions.2023-y-siguientes.casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-perceptores"
 continuidad_id = "total-perceptores-count"
 continuidad_origin = "seeded"
 number = "138-146"
+section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "total_perceptores_count"
 required = true
-input_kind = "manual"
-section = ["declarante", "resumen"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 
-[[revisions.2023-y-siguientes.casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-importe-premios"
 continuidad_id = "m270-total-importe-premios"
 continuidad_origin = "seeded"
 number = "147-163"
-data_type = "money"
+section = ["declarante", "resumen"]
 semantic_role = "m270_total_importe_premios"
 required = true
-input_kind = "manual"
-section = ["declarante", "resumen"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
 
-[revisions.2023-y-siguientes.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2023-y-siguientes.casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-base-retencion"
 continuidad_id = "base-retenciones-ingresos-a-cuenta"
 continuidad_origin = "seeded"
 number = "164-180"
-data_type = "money"
+section = ["declarante", "resumen"]
 semantic_role = "base_retenciones_ingresos_a_cuenta"
 required = true
-input_kind = "manual"
-section = ["declarante", "resumen"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
 
-[revisions.2023-y-siguientes.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[[revisions.2023-y-siguientes.casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-retenciones"
 continuidad_id = "retenciones-ingresos-a-cuenta"
 continuidad_origin = "seeded"
 number = "181-197"
-data_type = "money"
+section = ["declarante", "resumen"]
 semantic_role = "retenciones_ingresos_a_cuenta"
 required = true
-input_kind = "manual"
-section = ["declarante", "resumen"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-
-[revisions.2023-y-siguientes.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"] }

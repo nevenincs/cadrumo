@@ -1,18 +1,1581 @@
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-andalucia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de Andalucía", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "28000"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "28000"
+upper_bound = "35200"
+fixed_addition = "3282.75"
+marginal_rate = "0.159"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "50000"
+fixed_addition = "4427.55"
+marginal_rate = "0.188"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "50000"
+upper_bound = "60000"
+fixed_addition = "7209.95"
+marginal_rate = "0.191"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "120000"
+fixed_addition = "9119.95"
+marginal_rate = "0.231"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "120000"
+fixed_addition = "22979.95"
+marginal_rate = "0.243"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-aragon-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de Aragón", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1245"
+marginal_rate = "0.125"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "34000"
+fixed_addition = "2213.75"
+marginal_rate = "0.155"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "34000"
+upper_bound = "50000"
+fixed_addition = "4352.75"
+marginal_rate = "0.19"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "50000"
+upper_bound = "60000"
+fixed_addition = "7392.75"
+marginal_rate = "0.21"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "70000"
+fixed_addition = "9492.75"
+marginal_rate = "0.22"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "70000"
+upper_bound = "90000"
+fixed_addition = "11692.75"
+marginal_rate = "0.225"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "130000"
+fixed_addition = "16192.75"
+marginal_rate = "0.235"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "130000"
+upper_bound = "150000"
+fixed_addition = "25592.75"
+marginal_rate = "0.245"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "150000"
+fixed_addition = "30492.75"
+marginal_rate = "0.25"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-asturias-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Principado de Asturias", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "17707.20"
+fixed_addition = "1245"
+marginal_rate = "0.12"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "17707.20"
+upper_bound = "33007.20"
+fixed_addition = "1875.86"
+marginal_rate = "0.14"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "33007.20"
+upper_bound = "53407.20"
+fixed_addition = "4017.86"
+marginal_rate = "0.185"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "53407.20"
+upper_bound = "70000"
+fixed_addition = "7791.86"
+marginal_rate = "0.215"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "70000"
+upper_bound = "90000"
+fixed_addition = "11359.32"
+marginal_rate = "0.225"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "175000"
+fixed_addition = "15859.32"
+marginal_rate = "0.25"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "175000"
+fixed_addition = "37109.32"
+marginal_rate = "0.255"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-baleares-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Illes Balears", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "10000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "10000"
+upper_bound = "18000"
+fixed_addition = "950"
+marginal_rate = "0.1175"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "18000"
+upper_bound = "30000"
+fixed_addition = "1890"
+marginal_rate = "0.1475"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "30000"
+upper_bound = "48000"
+fixed_addition = "3660"
+marginal_rate = "0.1775"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "48000"
+upper_bound = "70000"
+fixed_addition = "6855"
+marginal_rate = "0.1925"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "70000"
+upper_bound = "90000"
+fixed_addition = "11090"
+marginal_rate = "0.22"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "120000"
+fixed_addition = "15490"
+marginal_rate = "0.23"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "120000"
+upper_bound = "175000"
+fixed_addition = "22390"
+marginal_rate = "0.24"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "175000"
+fixed_addition = "35590"
+marginal_rate = "0.25"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-canarias-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de Canarias", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "17707.20"
+fixed_addition = "1120.50"
+marginal_rate = "0.115"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "17707.20"
+upper_bound = "33007.20"
+fixed_addition = "1725.08"
+marginal_rate = "0.14"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "33007.20"
+upper_bound = "53407.20"
+fixed_addition = "3867.08"
+marginal_rate = "0.185"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "53407.20"
+upper_bound = "90000"
+fixed_addition = "7641.08"
+marginal_rate = "0.235"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "120000"
+fixed_addition = "16240.39"
+marginal_rate = "0.25"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "120000"
+fixed_addition = "23740.39"
+marginal_rate = "0.26"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-cantabria-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de Cantabria", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "34000"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "34000"
+upper_bound = "46000"
+fixed_addition = "4182.75"
+marginal_rate = "0.185"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "46000"
+upper_bound = "60000"
+fixed_addition = "6402.75"
+marginal_rate = "0.195"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "90000"
+fixed_addition = "9132.75"
+marginal_rate = "0.245"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "90000"
+fixed_addition = "16482.75"
+marginal_rate = "0.255"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-castilla-la-mancha-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "35200"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4362.75"
+marginal_rate = "0.185"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+fixed_addition = "8950.75"
+marginal_rate = "0.225"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-castilla-y-leon-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad de Castilla y León", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "35200"
+fixed_addition = "2112.75"
+marginal_rate = "0.14"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "53407.20"
+fixed_addition = "4212.75"
+marginal_rate = "0.185"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "53407.20"
+fixed_addition = "7581.08"
+marginal_rate = "0.215"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-cataluna-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de Cataluña", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "17707.20"
+fixed_addition = "0"
+marginal_rate = "0.12"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "17707.20"
+upper_bound = "33007.20"
+fixed_addition = "2124.86"
+marginal_rate = "0.14"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "33007.20"
+upper_bound = "53407.20"
+fixed_addition = "4266.86"
+marginal_rate = "0.185"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "53407.20"
+upper_bound = "90000"
+fixed_addition = "8040.86"
+marginal_rate = "0.215"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "120000"
+fixed_addition = "15908.31"
+marginal_rate = "0.235"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "120000"
+upper_bound = "175000"
+fixed_addition = "22958.31"
+marginal_rate = "0.245"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "175000"
+fixed_addition = "36433.31"
+marginal_rate = "0.255"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-comunidad-valenciana-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunitat Valenciana", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "17000"
+fixed_addition = "1245"
+marginal_rate = "0.11"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "17000"
+upper_bound = "30000"
+fixed_addition = "1745.50"
+marginal_rate = "0.139"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "30000"
+upper_bound = "50000"
+fixed_addition = "3552.50"
+marginal_rate = "0.18"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "50000"
+upper_bound = "65000"
+fixed_addition = "7152.50"
+marginal_rate = "0.235"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "65000"
+upper_bound = "80000"
+fixed_addition = "10677.50"
+marginal_rate = "0.245"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "80000"
+upper_bound = "120000"
+fixed_addition = "14352.50"
+marginal_rate = "0.25"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "120000"
+fixed_addition = "24352.50"
+marginal_rate = "0.255"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-extremadura-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.125"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "24200"
+fixed_addition = "2151.50"
+marginal_rate = "0.155"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "24200"
+upper_bound = "35200"
+fixed_addition = "2771.50"
+marginal_rate = "0.165"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4586.50"
+marginal_rate = "0.205"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "80200"
+fixed_addition = "9670.50"
+marginal_rate = "0.235"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "80200"
+upper_bound = "99200"
+fixed_addition = "14417.50"
+marginal_rate = "0.24"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "99200"
+upper_bound = "120200"
+fixed_addition = "18977.50"
+marginal_rate = "0.245"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "120200"
+fixed_addition = "24122.50"
+marginal_rate = "0.25"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-galicia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de Galicia", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.1175"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "27700"
+fixed_addition = "2093.38"
+marginal_rate = "0.155"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "27700"
+upper_bound = "35200"
+fixed_addition = "3255.88"
+marginal_rate = "0.17"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "47600"
+fixed_addition = "4530.88"
+marginal_rate = "0.185"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "47600"
+upper_bound = "60000"
+fixed_addition = "6824.88"
+marginal_rate = "0.205"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+fixed_addition = "9366.88"
+marginal_rate = "0.225"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-la-rioja-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad Autónoma de La Rioja", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1120.50"
+marginal_rate = "0.116"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "35200"
+fixed_addition = "2019.50"
+marginal_rate = "0.146"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "50000"
+fixed_addition = "4209.50"
+marginal_rate = "0.188"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "50000"
+upper_bound = "60000"
+fixed_addition = "6991.90"
+marginal_rate = "0.195"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "120000"
+fixed_addition = "8941.90"
+marginal_rate = "0.25"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "120000"
+fixed_addition = "23941.90"
+marginal_rate = "0.27"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-madrid-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad de Madrid", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "17707.20"
+fixed_addition = "1120.50"
+marginal_rate = "0.112"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "17707.20"
+upper_bound = "33007.20"
+fixed_addition = "1709.31"
+marginal_rate = "0.133"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "33007.20"
+upper_bound = "53407.20"
+fixed_addition = "3744.21"
+marginal_rate = "0.179"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "53407.20"
+fixed_addition = "7395.81"
+marginal_rate = "0.21"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-murcia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Región de Murcia", "escala autonómica"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.098"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1220.10"
+marginal_rate = "0.1198"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "34000"
+fixed_addition = "2148.55"
+marginal_rate = "0.1462"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "34000"
+upper_bound = "60000"
+fixed_addition = "4166.11"
+marginal_rate = "0.1886"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+fixed_addition = "9069.71"
+marginal_rate = "0.231"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-estatal-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63-2015"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["escala general", "base liquidable general"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "35200"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4362.75"
+marginal_rate = "0.185"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "60000"
+fixed_addition = "8950.75"
+marginal_rate = "0.225"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-ejercicio-amendment-year"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "2024"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-rehab-lookback-years"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
 # LIRPF art. 23.2.c counts 'los dos anos anteriores a la fecha de la
 # celebracion del contrato' DE FECHA A FECHA, not in days. This parameter
 # declared 730 days, which is one day short whenever the two-year span
 # contains a 29 de febrero, and denied tier c) to a rehabilitation finished
 # exactly two calendar years before the contract. The figure was never the
 # defect; the unit was.
+[[revisions."2020".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-joven-tenant-age-min"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "18"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-joven-tenant-age-max"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "35"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-reduccion-rate-tier-50"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "0.50"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-reduccion-rate-tier-60"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "0.60"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-reduccion-rate-tier-70"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "0.70"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-reduccion-rate-tier-90"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "0.90"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-prior-rent-rebaja-threshold"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "0.05"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "actividades económicas"]
+
+[[revisions."2020".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-439-2007:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "actividades económicas"]
+
+[[revisions."2020".parameters.values]]
+value = "2000"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-estatal-base-ahorro"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-66-2015"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "6000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "6000"
+upper_bound = "50000"
+fixed_addition = "570"
+marginal_rate = "0.105"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "50000"
+fixed_addition = "5190"
+marginal_rate = "0.115"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-escala-autonomica-base-ahorro"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-76-2015"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "6000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "6000"
+upper_bound = "50000"
+fixed_addition = "570"
+marginal_rate = "0.105"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters.brackets]]
+lower_bound = "50000"
+fixed_addition = "5190"
+marginal_rate = "0.115"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-rental-amortizacion-rate"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "amortización"]
+
+[[revisions."2020".parameters.values]]
+value = "0.03"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-contribuyente-base"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-57"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo del contribuyente"]
+
+[[revisions."2020".parameters.values]]
+value = "5550"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-contribuyente-edad-65-74"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-57"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo del contribuyente"]
+
+[[revisions."2020".parameters.values]]
+value = "1150"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-contribuyente-edad-75"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-57"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo del contribuyente"]
+
+[[revisions."2020".parameters.values]]
+value = "1400"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-primer-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por descendientes", "primero"]
+
+[[revisions."2020".parameters.values]]
+value = "2400"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-segundo-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por descendientes", "segundo"]
+
+[[revisions."2020".parameters.values]]
+value = "2700"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-tercer-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por descendientes", "tercero"]
+
+[[revisions."2020".parameters.values]]
+value = "4000"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-cuarto-y-siguientes"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por descendientes"]
+
+[[revisions."2020".parameters.values]]
+value = "4500"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-menor-tres-anos"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por descendientes", "menor de tres"]
+
+[[revisions."2020".parameters.values]]
+value = "2800"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-ascendientes-mayor-65"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-59"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por ascendientes"]
+
+[[revisions."2020".parameters.values]]
+value = "1150"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-ascendientes-mayor-75"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-59"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por ascendientes"]
+
+[[revisions."2020".parameters.values]]
+value = "1400"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-discapacidad-grado-33"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-60"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por discapacidad"]
+
+[[revisions."2020".parameters.values]]
+value = "3000"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-discapacidad-grado-65"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-60"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por discapacidad"]
+
+[[revisions."2020".parameters.values]]
+value = "9000"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-discapacidad-gastos-asistencia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-60"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por discapacidad"]
+
+[[revisions."2020".parameters.values]]
+value = "3000"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-madrid-tercer-hijo"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad de Madrid", "4.400 euros anuales por el tercero"]
+
+[[revisions."2020".parameters.values]]
+value = "4400"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-madrid-cuarto-y-siguientes"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["madrid-dl-1-2010:art-2"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Comunidad de Madrid", "4.950 euros anuales por el cuarto y siguientes"]
+
+[[revisions."2020".parameters.values]]
+value = "4950"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
 # Modelo 100 Art. 58.1 LIRPF rentas ceiling conditioning the mínimo por
 # descendientes. A descendant holding rentas anuales (excluidas las exentas)
 # above this figure generates no mínimo, so the ceiling is an eligibility
 # threshold rather than an amount paid.
+
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-rentas-anuales-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = [
+    "que el descendiente no haya obtenido en el ejercicio 2020 rentas superiores a 8.000 euros anuales, excluidas las rentas exentas del impuesto",
+]
+
+[[revisions."2020".parameters.values]]
+value = "8000"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
 # Modelo 100 Art. 61 norma 2ª LIRPF own-return exclusion. When the descendant
 # who generates the entitlement files their own declaración for this Impuesto
 # with rentas above this figure, the mínimo por descendientes does not apply at
 # all. Distinct from the Art. 58.1 rentas ceiling: this one tests the
 # descendant's OWN filing, not their income alone.
+
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-declaracion-propia-rentas-limite"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = [
+    "que el descendiente no presente declaración del IRPF con rentas superiores a 1.800",
+    "si las rentas son superiores a 1.800 euros, ninguno de ellos puede aplicar el mínimo por descendientes",
+]
+
+[[revisions."2020".parameters.values]]
+value = "1800"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
 # Modelo 100 Art. 61 norma 4a LIRPF death-in-period flat minimo por descendientes.
 # A descendant who dies during the periodo impositivo and generates the minimo
 # takes THIS flat figure instead of the Art. 58.1 birth-order tranche that would
@@ -34,6 +1597,25 @@
 # every younger sibling by leaving them at a rank the deceased should have
 # vacated. Citing it here makes the whole rule fail loudly if the manual passage
 # this reading depends on ever moves.
+
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendientes-fallecimiento"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-4"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = [
+    "En caso de fallecimiento de un descendiente que genere derecho al mínimo por este concepto, la cuantía aplicable es de 2.400 euros",
+    "sin computar a estos efectos aquellos descendientes que, en su caso, hubieran fallecido en el ejercicio con anterioridad a la fecha de devengo del impuesto",
+]
+
+[[revisions."2020".parameters.values]]
+value = "2400"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
 # Modelo 2020 Art. 81.1 LIRPF deduccion por maternidad figures.
 #
 # Authored because these existed ONLY as Python literals in
@@ -46,6 +1628,38 @@
 # The raised cap (ordinary cap plus increment) is deliberately NOT authored: it
 # is a DERIVED total, and storing it independently is how it drifts from the two
 # inputs that compose it.
+
+[[revisions."2020".parameters]]
+id = "renta-maternidad-mensual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["la misma es de 100 euros por cada mes del período impositivo en que concurran de forma"]
+
+[[revisions."2020".parameters.values]]
+value = "100"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters]]
+id = "renta-maternidad-cap-anual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-81"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Hasta 1.200 euros anuales."]
+
+[[revisions."2020".parameters.values]]
+value = "1200"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
 # Modelo 2020 LIRPF art. 58 / 61 QUALIFYING CONDITIONS for the minimo familiar.
 #
 # The minimo AMOUNTS of art. 58 are already registry parameters in this revision.
@@ -54,6 +1668,54 @@
 # existed only as Python literals, so a consumer could resolve the money but not
 # the rule that awards it. The sibling age-band parameters carry their band in the
 # FILENAME rather than in a field, which is the same gap from the other side.
+
+[[revisions."2020".parameters]]
+id = "renta-minimo-descendiente-edad-maxima"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["a) Que el descendiente, en los términos anteriormente comentados, sea menor de 25 años a"]
+
+[[revisions."2020".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters]]
+id = "renta-minimo-menor-tres-edad-maxima"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-35-2006:art-58"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Cuando el descendiente sea menor de tres años, el mínimo que corresponda de los indicados"]
+
+[[revisions."2020".parameters.values]]
+value = "3"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters]]
+id = "renta-minimo-custodia-compartida-prorrata"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["ley-35-2006:art-61"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["los hijos menores de edad y mayores incapacitados, por partes iguales,"]
+
+[[revisions."2020".parameters.values]]
+value = "0.5"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
 # Modelo 2020 LIRPF art. 23.1.a) carry-forward window for gastos de reparacion y
 # conservacion.
 #
@@ -68,1716 +1730,17 @@
 # figure in Python, so it stays a Python constant until its provision is
 # catalogued.
 
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-andalucia-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de Andalucía", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1182.75"
-marginal_rate = "0.12"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "28000"
-fixed_addition = "2112.75"
-marginal_rate = "0.15"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "28000"
-upper_bound = "35200"
-fixed_addition = "3282.75"
-marginal_rate = "0.159"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "35200"
-upper_bound = "50000"
-fixed_addition = "4427.55"
-marginal_rate = "0.188"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "50000"
-upper_bound = "60000"
-fixed_addition = "7209.95"
-marginal_rate = "0.191"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-upper_bound = "120000"
-fixed_addition = "9119.95"
-marginal_rate = "0.231"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "120000"
-fixed_addition = "22979.95"
-marginal_rate = "0.243"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-aragon-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de Aragón", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.10"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1245"
-marginal_rate = "0.125"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "34000"
-fixed_addition = "2213.75"
-marginal_rate = "0.155"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "34000"
-upper_bound = "50000"
-fixed_addition = "4352.75"
-marginal_rate = "0.19"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "50000"
-upper_bound = "60000"
-fixed_addition = "7392.75"
-marginal_rate = "0.21"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-upper_bound = "70000"
-fixed_addition = "9492.75"
-marginal_rate = "0.22"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "70000"
-upper_bound = "90000"
-fixed_addition = "11692.75"
-marginal_rate = "0.225"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "90000"
-upper_bound = "130000"
-fixed_addition = "16192.75"
-marginal_rate = "0.235"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "130000"
-upper_bound = "150000"
-fixed_addition = "25592.75"
-marginal_rate = "0.245"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "150000"
-fixed_addition = "30492.75"
-marginal_rate = "0.25"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-asturias-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Principado de Asturias", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.10"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "17707.20"
-fixed_addition = "1245"
-marginal_rate = "0.12"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "17707.20"
-upper_bound = "33007.20"
-fixed_addition = "1875.86"
-marginal_rate = "0.14"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "33007.20"
-upper_bound = "53407.20"
-fixed_addition = "4017.86"
-marginal_rate = "0.185"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "53407.20"
-upper_bound = "70000"
-fixed_addition = "7791.86"
-marginal_rate = "0.215"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "70000"
-upper_bound = "90000"
-fixed_addition = "11359.32"
-marginal_rate = "0.225"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "90000"
-upper_bound = "175000"
-fixed_addition = "15859.32"
-marginal_rate = "0.25"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "175000"
-fixed_addition = "37109.32"
-marginal_rate = "0.255"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-baleares-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Illes Balears", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "10000"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "10000"
-upper_bound = "18000"
-fixed_addition = "950"
-marginal_rate = "0.1175"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "18000"
-upper_bound = "30000"
-fixed_addition = "1890"
-marginal_rate = "0.1475"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "30000"
-upper_bound = "48000"
-fixed_addition = "3660"
-marginal_rate = "0.1775"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "48000"
-upper_bound = "70000"
-fixed_addition = "6855"
-marginal_rate = "0.1925"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "70000"
-upper_bound = "90000"
-fixed_addition = "11090"
-marginal_rate = "0.22"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "90000"
-upper_bound = "120000"
-fixed_addition = "15490"
-marginal_rate = "0.23"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "120000"
-upper_bound = "175000"
-fixed_addition = "22390"
-marginal_rate = "0.24"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "175000"
-fixed_addition = "35590"
-marginal_rate = "0.25"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-canarias-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de Canarias", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.09"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "17707.20"
-fixed_addition = "1120.50"
-marginal_rate = "0.115"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "17707.20"
-upper_bound = "33007.20"
-fixed_addition = "1725.08"
-marginal_rate = "0.14"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "33007.20"
-upper_bound = "53407.20"
-fixed_addition = "3867.08"
-marginal_rate = "0.185"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "53407.20"
-upper_bound = "90000"
-fixed_addition = "7641.08"
-marginal_rate = "0.235"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "90000"
-upper_bound = "120000"
-fixed_addition = "16240.39"
-marginal_rate = "0.25"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "120000"
-fixed_addition = "23740.39"
-marginal_rate = "0.26"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-cantabria-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de Cantabria", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1182.75"
-marginal_rate = "0.12"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "34000"
-fixed_addition = "2112.75"
-marginal_rate = "0.15"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "34000"
-upper_bound = "46000"
-fixed_addition = "4182.75"
-marginal_rate = "0.185"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "46000"
-upper_bound = "60000"
-fixed_addition = "6402.75"
-marginal_rate = "0.195"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-upper_bound = "90000"
-fixed_addition = "9132.75"
-marginal_rate = "0.245"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "90000"
-fixed_addition = "16482.75"
-marginal_rate = "0.255"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-castilla-la-mancha-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1182.75"
-marginal_rate = "0.12"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "35200"
-fixed_addition = "2112.75"
-marginal_rate = "0.15"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "35200"
-upper_bound = "60000"
-fixed_addition = "4362.75"
-marginal_rate = "0.185"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-fixed_addition = "8950.75"
-marginal_rate = "0.225"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-castilla-y-leon-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad de Castilla y León", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1182.75"
-marginal_rate = "0.12"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "35200"
-fixed_addition = "2112.75"
-marginal_rate = "0.14"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "35200"
-upper_bound = "53407.20"
-fixed_addition = "4212.75"
-marginal_rate = "0.185"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "53407.20"
-fixed_addition = "7581.08"
-marginal_rate = "0.215"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-cataluna-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de Cataluña", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "17707.20"
-fixed_addition = "0"
-marginal_rate = "0.12"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "17707.20"
-upper_bound = "33007.20"
-fixed_addition = "2124.86"
-marginal_rate = "0.14"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "33007.20"
-upper_bound = "53407.20"
-fixed_addition = "4266.86"
-marginal_rate = "0.185"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "53407.20"
-upper_bound = "90000"
-fixed_addition = "8040.86"
-marginal_rate = "0.215"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "90000"
-upper_bound = "120000"
-fixed_addition = "15908.31"
-marginal_rate = "0.235"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "120000"
-upper_bound = "175000"
-fixed_addition = "22958.31"
-marginal_rate = "0.245"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "175000"
-fixed_addition = "36433.31"
-marginal_rate = "0.255"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-comunidad-valenciana-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunitat Valenciana", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.10"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "17000"
-fixed_addition = "1245"
-marginal_rate = "0.11"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "17000"
-upper_bound = "30000"
-fixed_addition = "1745.50"
-marginal_rate = "0.139"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "30000"
-upper_bound = "50000"
-fixed_addition = "3552.50"
-marginal_rate = "0.18"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "50000"
-upper_bound = "65000"
-fixed_addition = "7152.50"
-marginal_rate = "0.235"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "65000"
-upper_bound = "80000"
-fixed_addition = "10677.50"
-marginal_rate = "0.245"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "80000"
-upper_bound = "120000"
-fixed_addition = "14352.50"
-marginal_rate = "0.25"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "120000"
-fixed_addition = "24352.50"
-marginal_rate = "0.255"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-extremadura-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1182.75"
-marginal_rate = "0.125"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "24200"
-fixed_addition = "2151.50"
-marginal_rate = "0.155"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "24200"
-upper_bound = "35200"
-fixed_addition = "2771.50"
-marginal_rate = "0.165"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "35200"
-upper_bound = "60000"
-fixed_addition = "4586.50"
-marginal_rate = "0.205"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-upper_bound = "80200"
-fixed_addition = "9670.50"
-marginal_rate = "0.235"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "80200"
-upper_bound = "99200"
-fixed_addition = "14417.50"
-marginal_rate = "0.24"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "99200"
-upper_bound = "120200"
-fixed_addition = "18977.50"
-marginal_rate = "0.245"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "120200"
-fixed_addition = "24122.50"
-marginal_rate = "0.25"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-galicia-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de Galicia", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1182.75"
-marginal_rate = "0.1175"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "27700"
-fixed_addition = "2093.38"
-marginal_rate = "0.155"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "27700"
-upper_bound = "35200"
-fixed_addition = "3255.88"
-marginal_rate = "0.17"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "35200"
-upper_bound = "47600"
-fixed_addition = "4530.88"
-marginal_rate = "0.185"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "47600"
-upper_bound = "60000"
-fixed_addition = "6824.88"
-marginal_rate = "0.205"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-fixed_addition = "9366.88"
-marginal_rate = "0.225"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-la-rioja-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad Autónoma de La Rioja", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.09"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1120.50"
-marginal_rate = "0.116"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "35200"
-fixed_addition = "2019.50"
-marginal_rate = "0.146"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "35200"
-upper_bound = "50000"
-fixed_addition = "4209.50"
-marginal_rate = "0.188"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "50000"
-upper_bound = "60000"
-fixed_addition = "6991.90"
-marginal_rate = "0.195"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-upper_bound = "120000"
-fixed_addition = "8941.90"
-marginal_rate = "0.25"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "120000"
-fixed_addition = "23941.90"
-marginal_rate = "0.27"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-madrid-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad de Madrid", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.09"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "17707.20"
-fixed_addition = "1120.50"
-marginal_rate = "0.112"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "17707.20"
-upper_bound = "33007.20"
-fixed_addition = "1709.31"
-marginal_rate = "0.133"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "33007.20"
-upper_bound = "53407.20"
-fixed_addition = "3744.21"
-marginal_rate = "0.179"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "53407.20"
-fixed_addition = "7395.81"
-marginal_rate = "0.21"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-murcia-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-74"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Región de Murcia", "escala autonómica"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.098"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1220.10"
-marginal_rate = "0.1198"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "34000"
-fixed_addition = "2148.55"
-marginal_rate = "0.1462"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "34000"
-upper_bound = "60000"
-fixed_addition = "4166.11"
-marginal_rate = "0.1886"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-fixed_addition = "9069.71"
-marginal_rate = "0.231"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-estatal-base-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63-2015"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["escala general", "base liquidable general"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "12450"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "12450"
-upper_bound = "20200"
-fixed_addition = "1182.75"
-marginal_rate = "0.12"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "20200"
-upper_bound = "35200"
-fixed_addition = "2112.75"
-marginal_rate = "0.15"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "35200"
-upper_bound = "60000"
-fixed_addition = "4362.75"
-marginal_rate = "0.185"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "60000"
-fixed_addition = "8950.75"
-marginal_rate = "0.225"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-ejercicio-amendment-year"
-data_type = "integer"
-unit = "year"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "2024"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-rehab-lookback-years"
-data_type = "integer"
-unit = "years"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "2"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-joven-tenant-age-min"
-data_type = "integer"
-unit = "years"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "18"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-joven-tenant-age-max"
-data_type = "integer"
-unit = "years"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "35"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-reduccion-rate-tier-50"
-data_type = "ratio"
-unit = "ratio"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "0.50"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-reduccion-rate-tier-60"
-data_type = "ratio"
-unit = "ratio"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "0.60"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-reduccion-rate-tier-70"
-data_type = "ratio"
-unit = "ratio"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "0.70"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-reduccion-rate-tier-90"
-data_type = "ratio"
-unit = "ratio"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "0.90"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-prior-rent-rebaja-threshold"
-data_type = "ratio"
-unit = "ratio"
-legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "reducción"]
-
-[[revisions.2020.parameters.values]]
-value = "0.05"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
-data_type = "ratio"
-unit = "percent"
-legal_refs = ["rd-439-2007:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["estimación directa", "actividades económicas"]
-
-[[revisions.2020.parameters.values]]
-value = "5"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["rd-439-2007:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["estimación directa", "actividades económicas"]
-
-[[revisions.2020.parameters.values]]
-value = "2000"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-estatal-base-ahorro"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-66-2015"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["base liquidable del ahorro", "tipos de gravamen"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "6000"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "6000"
-upper_bound = "50000"
-fixed_addition = "570"
-marginal_rate = "0.105"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "50000"
-fixed_addition = "5190"
-marginal_rate = "0.115"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-escala-autonomica-base-ahorro"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-76-2015"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["base liquidable del ahorro", "tipos de gravamen"]
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "0"
-upper_bound = "6000"
-fixed_addition = "0"
-marginal_rate = "0.095"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "6000"
-upper_bound = "50000"
-fixed_addition = "570"
-marginal_rate = "0.105"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters.brackets]]
-lower_bound = "50000"
-fixed_addition = "5190"
-marginal_rate = "0.115"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-rental-amortizacion-rate"
-data_type = "ratio"
-unit = "ratio"
-legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "amortización"]
-
-[[revisions.2020.parameters.values]]
-value = "0.03"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-contribuyente-base"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-57"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo del contribuyente"]
-
-[[revisions.2020.parameters.values]]
-value = "5550"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-contribuyente-edad-65-74"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-57"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo del contribuyente"]
-
-[[revisions.2020.parameters.values]]
-value = "1150"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-contribuyente-edad-75"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-57"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo del contribuyente"]
-
-[[revisions.2020.parameters.values]]
-value = "1400"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-primer-hijo"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-58"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por descendientes", "primero"]
-
-[[revisions.2020.parameters.values]]
-value = "2400"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-segundo-hijo"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-58"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por descendientes", "segundo"]
-
-[[revisions.2020.parameters.values]]
-value = "2700"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-tercer-hijo"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-58"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por descendientes", "tercero"]
-
-[[revisions.2020.parameters.values]]
-value = "4000"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-cuarto-y-siguientes"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-58"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por descendientes"]
-
-[[revisions.2020.parameters.values]]
-value = "4500"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-menor-tres-anos"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-58"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por descendientes", "menor de tres"]
-
-[[revisions.2020.parameters.values]]
-value = "2800"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-ascendientes-mayor-65"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-59"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por ascendientes"]
-
-[[revisions.2020.parameters.values]]
-value = "1150"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-ascendientes-mayor-75"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-59"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por ascendientes"]
-
-[[revisions.2020.parameters.values]]
-value = "1400"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-discapacidad-grado-33"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-60"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por discapacidad"]
-
-[[revisions.2020.parameters.values]]
-value = "3000"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-discapacidad-grado-65"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-60"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por discapacidad"]
-
-[[revisions.2020.parameters.values]]
-value = "9000"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-discapacidad-gastos-asistencia"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-60"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Mínimo por discapacidad"]
-
-[[revisions.2020.parameters.values]]
-value = "3000"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-madrid-tercer-hijo"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["madrid-dl-1-2010:art-2"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad de Madrid", "4.400 euros anuales por el tercero"]
-
-[[revisions.2020.parameters.values]]
-value = "4400"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-madrid-cuarto-y-siguientes"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["madrid-dl-1-2010:art-2"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Comunidad de Madrid", "4.950 euros anuales por el cuarto y siguientes"]
-
-[[revisions.2020.parameters.values]]
-value = "4950"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-rentas-anuales-limite"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["que el descendiente no haya obtenido en el ejercicio 2020 rentas superiores a 8.000 euros anuales, excluidas las rentas exentas del impuesto"]
-
-[[revisions.2020.parameters.values]]
-value = "8000"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-declaracion-propia-rentas-limite"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["que el descendiente no presente declaración del IRPF con rentas superiores a 1.800", "si las rentas son superiores a 1.800 euros, ninguno de ellos puede aplicar el mínimo por descendientes"]
-
-[[revisions.2020.parameters.values]]
-value = "1800"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendientes-fallecimiento"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-4"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["En caso de fallecimiento de un descendiente que genere derecho al mínimo por este concepto, la cuantía aplicable es de 2.400 euros", "sin computar a estos efectos aquellos descendientes que, en su caso, hubieran fallecido en el ejercicio con anterioridad a la fecha de devengo del impuesto"]
-
-[[revisions.2020.parameters.values]]
-value = "2400"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-maternidad-mensual"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-81"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["la misma es de 100 euros por cada mes del período impositivo en que concurran de forma"]
-
-[[revisions.2020.parameters.values]]
-value = "100"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-maternidad-cap-anual"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-81"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Hasta 1.200 euros anuales."]
-
-[[revisions.2020.parameters.values]]
-value = "1200"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-descendiente-edad-maxima"
-data_type = "integer"
-unit = "years"
-legal_refs = ["ley-35-2006:art-58"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["a) Que el descendiente, en los términos anteriormente comentados, sea menor de 25 años a"]
-
-[[revisions.2020.parameters.values]]
-value = "25"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-menor-tres-edad-maxima"
-data_type = "integer"
-unit = "years"
-legal_refs = ["ley-35-2006:art-58"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["Cuando el descendiente sea menor de tres años, el mínimo que corresponda de los indicados"]
-
-[[revisions.2020.parameters.values]]
-value = "3"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
-id = "renta-minimo-custodia-compartida-prorrata"
-data_type = "ratio"
-unit = "fraction"
-legal_refs = ["ley-35-2006:art-61"]
-
-[[revisions.2020.parameters.source_citations]]
-source_ref = "aeat-renta-2020-manual-parte1"
-required_text = ["los hijos menores de edad y mayores incapacitados, por partes iguales,"]
-
-[[revisions.2020.parameters.values]]
-value = "0.5"
-date_axis = "filing_period"
-valid_from = 2020-01-01
-valid_to = 2020-12-31
-
-[[revisions.2020.parameters]]
+[[revisions."2020".parameters]]
 id = "renta-gastos-carry-forward-anos"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-35-2006:art-23"]
 
-[[revisions.2020.parameters.source_citations]]
+[[revisions."2020".parameters.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["El exceso se podrá deducir en los cuatro años siguientes, sin que pueda exceder,"]
 
-[[revisions.2020.parameters.values]]
+[[revisions."2020".parameters.values]]
 value = "4"
 date_axis = "filing_period"
 valid_from = 2020-01-01

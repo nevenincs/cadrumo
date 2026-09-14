@@ -1,3 +1,9 @@
+[revisions.2023-y-siguientes]
+binding_source_refs = ["aeat-modelo-180-ayuda-resumen-datos", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+formula_source_refs = ["aeat-modelo-180-ayuda-resumen-datos", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+predecessor = "2019-2022"
+casilla_source_refs = ["aeat-dr-180-2023"]
+reviewed_against = "2019-2022"
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -23,31 +29,61 @@
 # What it does NOT establish: that the figures a filing produces are correct
 # against AEAT. That is a tax review against official sources, and it is what an
 # operator re-stamping this to 'operator_reviewed' would be attesting.
-[revisions.2023-y-siguientes]
-predecessor = "2019-2022"
-reviewed_against = "2019-2022"
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
 id = "2023-y-siguientes"
 valid_from = 2023-01-01
-binding_source_refs = ["aeat-modelo-180-ayuda-resumen-datos", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
-formula_source_refs = ["aeat-modelo-180-ayuda-resumen-datos", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
-casilla_source_refs = ["aeat-dr-180-2023"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-orden_aplicabilidad = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
-source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "aeat-modelo-180-ayuda-resumen-datos", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+period_selector = { year_from = 2023, periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-100",
+    "orden-hap-1732-2014:art-2",
+    "orden-hfp-1284-2023:art-7",
+    "rd-439-2007:art-108",
+    "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
+]
+orden_aplicabilidad = [
+    "orden-hap-1732-2014:art-2",
+    "orden-hfp-1284-2023:art-7",
+]
+source_refs = [
+    "aeat-dr-180-2023",
+    "aeat-modelo-180-procedure",
+    "aeat-modelo-180-ayuda-presentacion",
+    "aeat-modelo-180-ayuda-resumen-datos",
+    "boe-modelo-180-2014-form",
+    "boe-modelo-180-2023-form",
+]
 
-[revisions.2023-y-siguientes.period_selector]
-year_from = 2023
-periods = ["0A"]
-[revisions.2023-y-siguientes.family_dispositions.projection_endpoints]
-reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-180-fichero-boe-2023) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "aeat-modelo-180-ayuda-resumen-datos", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+[revisions."2023-y-siguientes".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-180-fichero-boe-2023) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through \
+the same revision."""
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-100",
+    "orden-hap-1732-2014:art-2",
+    "orden-hfp-1284-2023:art-7",
+    "rd-439-2007:art-108",
+    "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-180-2023",
+    "aeat-modelo-180-procedure",
+    "aeat-modelo-180-ayuda-presentacion",
+    "aeat-modelo-180-ayuda-resumen-datos",
+    "boe-modelo-180-2014-form",
+    "boe-modelo-180-2023-form",
+]
 
-[revisions.2023-y-siguientes.family_dispositions.parameters]
-reason = "A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 180 applies none. Measured on the revision itself, both of its formulas are op = 'copy' over a relation: decl.base-total copies modelo-180-rel-115-base-anual and decl.retenciones-total copies modelo-180-rel-115-retenciones-anual. A copy applies nothing to what it carries. The retencion rate governing these figures was applied by the retenedor at payment time and consumed by the quarterly modelo 115, whose casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate) -- that is where this registry holds the rate, and modelo 180 receives the already-withheld annual totals. Empty by the shape of this modelo's calculation rather than by omission."
+[revisions."2023-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 180 applies none. Measured on the revision itself, both of its formulas are op = 'copy' over a relation: decl.base-total copies modelo-180-rel-115-base-anual and decl.retenciones-total copies modelo-180-rel-115-retenciones-anual. A copy applies nothing to what it carries. The retencion rate governing these figures was applied by the retenedor at payment time and consumed by the \
+quarterly modelo 115, whose casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate) -- that is where this registry holds the rate, and modelo 180 receives the already-withheld annual totals. Empty by the shape of this modelo's calculation rather than by omission."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hfp-1284-2023:art-7", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form"]
+

@@ -59,6 +59,11 @@ AUTHORED_FACT_PROVIDER_ID = "authored-facts"
 FACTS_CANDIDATE_SCHEMA = "cadrumo-governed-facts-candidate-v1"
 """Versioned schema marker for the deterministic facts-only candidate bytes."""
 
+_MODELO_SCOPED_AUTHORED_FACTS: Mapping[str, str] = {
+    "liva-orden-lorca-reduction": "303",
+}
+"""Authored facts whose legal authority is compiled with one modelo's supplements."""
+
 
 class FactProviderCompiler(Protocol):
     """Compile one provider's declarations relative to a registry root."""
@@ -238,6 +243,7 @@ def compile_registered_fact_providers(
 ) -> GovernedFactCatalogue:
     """Compile every registered provider into one identity-keyed catalogue."""
     compiled_modelos = None if modelos is None else tuple(modelos)
+    present_modelo_ids = None if compiled_modelos is None else {str(modelo.id) for modelo in compiled_modelos}
     facts: dict[str, GovernedFact] = {}
     owner_by_fact_id: dict[str, str] = {}
     for registration in FACT_PROVIDER_REGISTRATIONS:
@@ -245,6 +251,9 @@ def compile_registered_fact_providers(
         if compiled_modelos is not None and registration.project_modelos is not None:
             compiled = (*compiled, *registration.project_modelos(compiled_modelos))
         for fact in compiled:
+            required_modelo = _MODELO_SCOPED_AUTHORED_FACTS.get(fact.fact_id)
+            if required_modelo is not None and present_modelo_ids is not None and required_modelo not in present_modelo_ids:
+                continue
             previous_owner = owner_by_fact_id.get(fact.fact_id)
             if previous_owner is not None:
                 raise RegistryValidationError(

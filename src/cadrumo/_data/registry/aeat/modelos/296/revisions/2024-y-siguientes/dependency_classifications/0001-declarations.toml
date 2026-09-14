@@ -9,11 +9,10 @@
 # requires the mechanism that carries the values, and "it depends on 216" without
 # one is a claim with no content. Both relations now exist and are named here.
 
-[[revisions.2024-y-siguientes.dependency_classifications]]
+[[revisions."2024-y-siguientes".dependency_classifications]]
 id = "modelo-296-dep-216"
 source_modelo = "216"
 treatment = "direct_annual_settlement"
-taxpayer_files_source = true
 target_constructs = ["modelo-296-calculation-construct"]
 binding_refs = ["modelo-296-prev-216-base-retenciones", "modelo-296-prev-216-retenciones-total"]
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]

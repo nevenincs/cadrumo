@@ -15,12 +15,12 @@
 # in the amendment -- so a mismatch here is far more likely to be the extraction
 # than the filing.
 
-[[revisions.2023.verification_expectations]]
+[[revisions."2023".verification_expectations]]
 id = "modelo-721-informative-summary-verification"
+computed_casilla_ids = ["ejercicio", "tipo-declaracion"]
 tolerance = "0.00"
 rounding = "none"
 min_coverage = "1.0"
-computed_casilla_ids = ["ejercicio", "tipo-declaracion"]
 discrepancy_causes = ["extraction_unreliable"]
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
 source_refs = ["aeat-modelo-721-procedure"]

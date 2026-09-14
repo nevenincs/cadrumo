@@ -19,12 +19,8 @@
 # valid_from for the 2022 ejercicio. That is the normal annual shape and is what
 # the revision's own legal_refs already declare: an annual modelo's ejercicio is
 # declared the following January, so the governing orden postdates the ejercicio.
-# source_refs names the document that CONTAINS the cited article. It is the
-# honest citation for this surface even where its tier is layout_authority:
-# the field is required, and naming a document that does state the plazo is
-# better than naming a guidance page that does not.
 
-[[revisions.2024.application_links]]
+[[revisions."2024".application_links]]
 id = "modelo-345-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -32,10 +28,14 @@ requires_snapshot = true
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-5"]
 source_refs = ["aeat-modelo-345-procedure", "aeat-dr-345-2024", "boe-modelo-345-base-order"]
 
-[[revisions.2024.application_links]]
+[[revisions."2024".application_links]]
 id = "modelo-345-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hfp-823-2022:art-4"]
+# source_refs names the document that CONTAINS the cited article. It is the
+# honest citation for this surface even where its tier is layout_authority:
+# the field is required, and naming a document that does state the plazo is
+# better than naming a guidance page that does not.
 source_refs = ["boe-modelo-345-base-order"]

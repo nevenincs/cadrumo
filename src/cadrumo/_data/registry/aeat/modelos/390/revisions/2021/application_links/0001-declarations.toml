@@ -1,4 +1,4 @@
-[[revisions.2021.application_links]]
+[[revisions."2021".application_links]]
 id = "modelo-390-extractor"
 surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"

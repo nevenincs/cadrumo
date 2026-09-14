@@ -28,9 +28,9 @@
 # no base in the year never fires it, and the operator files outside this
 # application, so an alert they can weigh is the safeguard available here.
 
-[[revisions.2024-y-siguientes.verification_predicates]]
+[[revisions."2024-y-siguientes".verification_predicates]]
 id = "implies-nonzero:retenciones-declaradas-cuando-base-positiva"
 predicate_id = "modelo-296-retenciones-declaradas-cuando-base-positiva"
-expression = "implies_nonzero([\"02\", \"03\"])"
+expression = 'implies_nonzero(["02", "03"])'
 finding_kind = "ADVISORY"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]

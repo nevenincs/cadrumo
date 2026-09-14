@@ -13,25 +13,14 @@
 # The parte del ahorro (art. 93.2.e.2º → art. 25.1.f TRLIRNR) is intentionally
 # excluded from this base ("excluida la parte del ahorro" on the casilla label);
 # its source-scoped savings base and escala are a separate, corpus-first build.
-
-[[revisions.2015-2022.bindings]]
+[[revisions."2015-2022".bindings]]
 id = "modelo-151-impatriado-base-liquidable-general"
+provider = { kind = "ledger_impatriado_income_aggregation", modelo = "151", target_casilla_id = "impatriado.base-liquidable-general", fact = "ingresos_integros_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure"]
 
-[[revisions.2015-2022.bindings.source_citations]]
+[[revisions."2015-2022".bindings.source_citations]]
 source_ref = "aeat-modelo-151-procedure"
 required_text = ["Modelo 151"]
-
-[revisions.2015-2022.bindings.provider]
-kind = "ledger_impatriado_income_aggregation"
-modelo = "151"
-target_casilla_id = "impatriado.base-liquidable-general"
-fact = "ingresos_integros_sum"
-
-[revisions.2015-2022.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2015-2022.bindings.aggregation]
-op = "sum"

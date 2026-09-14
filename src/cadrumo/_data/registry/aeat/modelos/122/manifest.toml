@@ -3,7 +3,6 @@ id = "122"
 tax_domain = "irpf"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"
-output_sensitivity = "financial"
 legal_refs = [
     "orden-hfp-105-2017:art-5",
     "orden-hfp-105-2017:art-7",

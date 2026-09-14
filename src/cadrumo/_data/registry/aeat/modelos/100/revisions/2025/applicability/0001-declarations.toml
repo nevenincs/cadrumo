@@ -1,7 +1,10 @@
-# The revision-wide Modelo 100 applicability declaration lives in
-# 0001-applicability.toml. A second rule here would make selection ambiguous;
-# this retained fragment contributes no additional rule. The maritime formula
-# and bindings are scoped within that one revision rule.
+# Original commentary: 0002-maritime-exempt-income.toml
+# # The revision-wide Modelo 100 applicability declaration lives in
+# # 0001-applicability.toml. A second rule here would make selection ambiguous;
+# # this retained fragment contributes no additional rule. The maritime formula
+# # and bindings are scoped within that one revision rule.
+# [revisions."2025"]
+# applicability = []
 
 [[revisions.2025.applicability]]
 id = "m100-seed"

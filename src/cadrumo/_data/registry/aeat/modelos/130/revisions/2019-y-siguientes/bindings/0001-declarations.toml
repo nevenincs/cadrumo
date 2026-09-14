@@ -8,6 +8,22 @@
 # trimestres within the same ejercicio. Casilla 15 at 1T is
 # materialised as Decimal("0") through the absent-by-design path
 # with provenance marker on the resulting CasillaObservation.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-resultados-negativos-anteriores"
+provider = { kind = "previous_filing", source_modelo = "130", source_casilla_id = "saldo-negativo-fin-periodo", temporal = { kind = "target_period_offset", periods = -1, within_filing_year = true } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+    "importe (sin signo) de los resultados negativos",
+    "cualquiera de las autoliquidaciones anteriores",
+    "no hubieran sido deducidos anteriormente",
+    "en ningún caso podrá figurar en la casilla 15 un importe superior",
+]
+
 # AEAT Modelo 130 instrucciones, casilla 05 ("Pagos fraccionados
 # anteriores"): the same-ejercicio carry of prior-quarter payments.
 # Verbatim rule: "la suma de las cantidades positivas consignadas en la
@@ -24,6 +40,31 @@
 # observed casilla-16 minoracion. The registry presence policy requires 07;
 # an absent 16 is treated as zero and surfaced by the application advisory.
 # Casilla 07 = 04 - 05 - 06 reads the populated casilla 05 unchanged.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-pagos-fraccionados-anteriores"
+provider = { kind = "previous_filing", source_modelo = "130", source_casilla_ids = ["07", "16"], required_source_casilla_ids = ["07"], temporal = { kind = "prior_quarter_expanding_span" } }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "prior_pagos_fraccionados" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+    "suma de las cantidades positivas consignadas en la casilla 07",
+    "minorada en el importe de la suma de las cantidades consignadas en la casilla 16",
+    "No se computaran las cantidades negativas consignadas en la casilla 07",
+]
+[[revisions."2019-y-siguientes".bindings]]
+id = "irpf.previous_year_economic_activity_net_income"
+provider = { kind = "previous_filing", source_modelo = "100", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] }, source_casilla_ids = ["0224", "1479", "1553", "1577"], required_source_casilla_ids = [] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 13.", "casillas 0224, 1479, 1553 y/o 1577"]
 # Casilla 01 — "la totalidad de los ingresos íntegros fiscalmente
 # computables" (AEAT M130 instructions). IVA repercutido is collected on
 # behalf of Hacienda and is NOT fiscally computable income, so a
@@ -32,6 +73,17 @@
 # transaction (no declared base) falls back to its gross transfer
 # amount, the sole available measure. The per-observation fallback is
 # the `ingresos_integros_sum` fact.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-ingresos-cumulative"
+provider = { kind = "ledger_renta_income_aggregation", modelo = "130", target_casilla_id = "01", fact = "ingresos_integros_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Ingresos íntegros", "Ingresos"]
+
 # Alternative income binding that uses the IVA-exclusive taxable_base
 # (base imponible) from tagged invoices rather than the gross amount.
 # Activated when transactions carry an explicit taxable_base field.
@@ -40,11 +92,34 @@
 # A row carrying no declared taxable_base contributes nothing here: this
 # fact sums DECLARED bases, and inventing one from cash would fabricate a
 # legal figure.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-ingresos-taxable-base-cumulative"
+provider = { kind = "ledger_renta_income_aggregation", modelo = "130", target_casilla_id = "01", fact = "taxable_base_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Ingresos íntegros", "Ingresos"]
+
 # RD 439/2007 art. 110.2 — rendimiento neto de actividades económicas en
 # estimación directa. Sums the IVA-exclusive base imponible (taxable_base)
 # across actividad-económica income observations within the cumulative YTD
 # window. Feeds casilla 03 directly from the ledger when transactions carry
 # an explicit taxable_base; observations without taxable_base contribute 0.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-rendimiento-neto-cumulative"
+provider = { kind = "ledger_renta_income_aggregation", modelo = "130", target_casilla_id = "01", fact = "taxable_base_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Rendimiento neto", "Casilla 03"]
+
 # NOTE ON `target_casilla_id = "01"` BELOW — read this before "fixing" it to "06".
 # This field is doing double duty and reads as a contradiction against the
 # `required_text` two lines down (which cites "Casilla 06"). It is not a typo.
@@ -70,6 +145,16 @@
 # expressing "match on X's observations, output to Y's casilla" honestly was tried
 # and reverted: it reopens the cross-domain routing-table design T-05 governs, and
 # that needs a superseding ADR, not an implementation-choice workaround.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-retenciones-cumulative"
+provider = { kind = "ledger_renta_income_aggregation", modelo = "130", target_casilla_id = "01", fact = "withheld_amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 06.", "Suma de las retenciones e ingresos a cuenta soportados"]
 # Casilla 02 — "Gastos" (AEAT M130 instructions): the deductible business
 # expenses (gastos fiscalmente deducibles) accumulated from the start of the
 # fiscal year through the end of the declared quarter, the expense side of the
@@ -80,186 +165,14 @@
 # rather than gross-folded. Resolved by the ledger_renta_gastos_pago_fraccionado_aggregation
 # source — the OUTGOING sibling of modelo-130-actividad-economica-ingresos-
 # cumulative — over the same cumulative year-to-date quarterly window.
-
-[[revisions.2019-y-siguientes.bindings]]
-id = "modelo-130-resultados-negativos-anteriores"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-
-[[revisions.2019-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-130-instructions"
-required_text = ["importe (sin signo) de los resultados negativos", "cualquiera de las autoliquidaciones anteriores", "no hubieran sido deducidos anteriormente", "en ningún caso podrá figurar en la casilla 15 un importe superior"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "previous_filing"
-source_modelo = "130"
-source_casilla_id = "saldo-negativo-fin-periodo"
-
-[revisions.2019-y-siguientes.bindings.provider.temporal]
-kind = "target_period_offset"
-periods = -1
-within_filing_year = true
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-y-siguientes.bindings.aggregation]
-op = "copy"
-
-[[revisions.2019-y-siguientes.bindings]]
-id = "modelo-130-pagos-fraccionados-anteriores"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-
-[[revisions.2019-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-130-instructions"
-required_text = ["suma de las cantidades positivas consignadas en la casilla 07", "minorada en el importe de la suma de las cantidades consignadas en la casilla 16", "No se computaran las cantidades negativas consignadas en la casilla 07"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "previous_filing"
-source_modelo = "130"
-source_casilla_ids = ["07", "16"]
-required_source_casilla_ids = ["07"]
-
-[revisions.2019-y-siguientes.bindings.provider.temporal]
-kind = "prior_quarter_expanding_span"
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-y-siguientes.bindings.aggregation]
-op = "prior_pagos_fraccionados"
-
-[[revisions.2019-y-siguientes.bindings]]
-id = "irpf.previous_year_economic_activity_net_income"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
-
-[[revisions.2019-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-130-instructions"
-required_text = ["Casilla 13.", "casillas 0224, 1479, 1553 y/o 1577"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "previous_filing"
-source_modelo = "100"
-source_casilla_ids = ["0224", "1479", "1553", "1577"]
-required_source_casilla_ids = []
-
-[revisions.2019-y-siguientes.bindings.provider.temporal]
-kind = "filing_year_offset"
-years = -1
-source_periods = ["0A"]
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-y-siguientes.bindings.aggregation]
-op = "sum"
-
-[[revisions.2019-y-siguientes.bindings]]
-id = "modelo-130-actividad-economica-ingresos-cumulative"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
-
-[[revisions.2019-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-130-instructions"
-required_text = ["Ingresos íntegros", "Ingresos"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "ledger_renta_income_aggregation"
-modelo = "130"
-target_casilla_id = "01"
-fact = "ingresos_integros_sum"
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-y-siguientes.bindings.aggregation]
-op = "sum"
-
-[[revisions.2019-y-siguientes.bindings]]
-id = "modelo-130-actividad-economica-ingresos-taxable-base-cumulative"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
-
-[[revisions.2019-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-130-instructions"
-required_text = ["Ingresos íntegros", "Ingresos"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "ledger_renta_income_aggregation"
-modelo = "130"
-target_casilla_id = "01"
-fact = "taxable_base_sum"
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-y-siguientes.bindings.aggregation]
-op = "sum"
-
-[[revisions.2019-y-siguientes.bindings]]
-id = "modelo-130-actividad-economica-rendimiento-neto-cumulative"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
-
-[[revisions.2019-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-130-instructions"
-required_text = ["Rendimiento neto", "Casilla 03"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "ledger_renta_income_aggregation"
-modelo = "130"
-target_casilla_id = "01"
-fact = "taxable_base_sum"
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-y-siguientes.bindings.aggregation]
-op = "sum"
-
-[[revisions.2019-y-siguientes.bindings]]
-id = "modelo-130-actividad-economica-retenciones-cumulative"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-
-[[revisions.2019-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-130-instructions"
-required_text = ["Casilla 06.", "Suma de las retenciones e ingresos a cuenta soportados"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "ledger_renta_income_aggregation"
-modelo = "130"
-target_casilla_id = "01"
-fact = "withheld_amount_sum"
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-y-siguientes.bindings.aggregation]
-op = "sum"
-
-[[revisions.2019-y-siguientes.bindings]]
+[[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-actividad-economica-gastos-cumulative"
+provider = { kind = "ledger_renta_gastos_pago_fraccionado_aggregation", modelo = "130", target_casilla_id = "02", fact = "deductible_amount_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
-[[revisions.2019-y-siguientes.bindings.source_citations]]
+[[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
 required_text = ["Gastos"]
-
-[revisions.2019-y-siguientes.bindings.provider]
-kind = "ledger_renta_gastos_pago_fraccionado_aggregation"
-modelo = "130"
-target_casilla_id = "02"
-fact = "deductible_amount_sum"
-
-[revisions.2019-y-siguientes.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2019-y-siguientes.bindings.aggregation]
-op = "sum"

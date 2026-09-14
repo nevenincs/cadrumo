@@ -1,3 +1,11 @@
+[[revisions."2025".verification_expectations]]
+id = "modelo-100-cuota-chain-verification"
+computed_casilla_ids = [
+    "0519", "0520", "0521", "0522", "0523", "0524",
+    "0432", "0435", "0460", "0500", "0510",
+    "0532", "0533", "0545", "0546",
+    "0570", "0571", "0585", "0586",
+]
 # Casillas for which an AEAT-authoritative oracle FIGURE exists, captured from
 # AEAT's own Renta WEB Open open simulator for ejercicio 2025.
 #
@@ -11,6 +19,19 @@
 # The capture corpus is a repository-only development quality signal and is
 # not part of the distributed package, so nothing in a user's installation
 # depends on it.
+externally_grounded_casilla_ids = ["0519", "0520"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-68", "ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
 # Per-casilla export_refs are not declared for this revision. The xml_dictionary
 # layout maps casilla numbers directly to dictionary keys via the AEAT-published
 # data dictionary (aeat-dr-100-2025-dictionary). There are no separate
@@ -24,6 +45,207 @@
 # enrolling a situational casilla never lowers coverage or flips a
 # legitimate filing's verdict (min_coverage = 0). Grounded in the
 # revision's AEAT DR / framework-law refs (reused from modelo-100-2025-cuota-chain-verification).
+[[revisions."2025".verification_expectations]]
+id = "modelo-100-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "0007",
+    "0012",
+    "0017",
+    "0018",
+    "0019",
+    "0022",
+    "0025",
+    "0036",
+    "0038",
+    "0040",
+    "0041",
+    "0052",
+    "0054",
+    "0056",
+    "0060",
+    "0089",
+    "0149",
+    "0154",
+    "0155",
+    "0156",
+    "0159",
+    "0180",
+    "0218",
+    "0220",
+    "0221",
+    "0222",
+    "0223",
+    "0224",
+    "0226",
+    "0231",
+    "0235",
+    "0245",
+    "0246",
+    "0247",
+    "0265",
+    "0270",
+    "0280",
+    "0286",
+    "0288",
+    "0289",
+    "0290",
+    "0296",
+    "0297",
+    "0306",
+    "0307",
+    "0320",
+    "0324",
+    "0325",
+    "0336",
+    "0339",
+    "0340",
+    "0351",
+    "0354",
+    "0355",
+    "0385",
+    "0386",
+    "0387",
+    "0390",
+    "0393",
+    "0396",
+    "0400",
+    "0411",
+    "0412",
+    "0418",
+    "0419",
+    "0420",
+    "0421",
+    "0422",
+    "0423",
+    "0424",
+    "0425",
+    "0433",
+    "0436",
+    "0446",
+    "0461",
+    "0467",
+    "0468",
+    "0501",
+    "0505",
+    "0511",
+    "0512",
+    "0513",
+    "0514",
+    "0527",
+    "0528",
+    "0529",
+    "0530",
+    "0531",
+    "0534",
+    "0535",
+    "0536",
+    "0537",
+    "0538",
+    "0539",
+    "0540",
+    "0541",
+    "0542",
+    "0543",
+    "0547",
+    "0548",
+    "0550",
+    "0551",
+    "0552",
+    "0553",
+    "0560",
+    "0561",
+    "0562",
+    "0563",
+    "0567",
+    "0587",
+    "0595",
+    "0598",
+    "0604",
+    "0609",
+    "0610",
+    "0670",
+    "0671",
+    "0672",
+    "0675",
+    "0695",
+    "0728",
+    "0731",
+    "0845",
+    "0879",
+    "1039",
+    "1128",
+    "1224",
+    "1257",
+    "1270",
+    "1283",
+    "1390",
+    "1482",
+    "1484",
+    "1490",
+    "1493",
+    "1496",
+    "1499",
+    "1502",
+    "1505",
+    "1508",
+    "1511",
+    "1514",
+    "1517",
+    "1520",
+    "1523",
+    "1526",
+    "1529",
+    "1532",
+    "1535",
+    "1537",
+    "1539",
+    "1548",
+    "1549",
+    "1550",
+    "1551",
+    "1554",
+    "1555",
+    "1558",
+    "1560",
+    "1568",
+    "1575",
+    "1583",
+    "1594",
+    "1601",
+    "1602",
+    "1603",
+    "1604",
+    "1605",
+    "1606",
+    "1607",
+    "1608",
+    "1609",
+    "1638",
+    "1640",
+    "1645",
+    "1649",
+    "1653",
+    "1807",
+    "1809",
+    "1811",
+    "1812",
+    "1813",
+    "1814",
+    "1826",
+    "1830",
+    "1831",
+    "1833",
+    "1836",
+    "1840",
+    "1844",
+    "1845",
+    "1846",
+    "1919",
+    "2211",
+    "2232",
+    "base-liq-neg-general-2024-aplicada-maxima",
+]
 # Casillas for which an AEAT-authoritative oracle FIGURE exists, captured from
 # AEAT's own Renta WEB Open open simulator for ejercicio 2025.
 #
@@ -37,26 +259,10 @@
 # The capture corpus is a repository-only development quality signal and is
 # not part of the distributed package, so nothing in a user's installation
 # depends on it.
-
-[[revisions.2025.verification_expectations]]
-id = "modelo-100-cuota-chain-verification"
-tolerance = "0.01"
-rounding = "money-2"
-min_coverage = "1"
-computed_casilla_ids = ["0519", "0520", "0521", "0522", "0523", "0524", "0432", "0435", "0460", "0500", "0510", "0532", "0533", "0545", "0546", "0570", "0571", "0585", "0586"]
-externally_grounded_casilla_ids = ["0519", "0520"]
-discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-68", "ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
-source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
-
-[[revisions.2025.verification_expectations]]
-id = "modelo-100-reconcile-when-present"
+externally_grounded_casilla_ids = ["0610", "0670"]
 tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "0"
-computed_casilla_ids = []
-reconcile_when_present_casilla_ids = ["0007", "0012", "0017", "0018", "0019", "0022", "0025", "0036", "0038", "0040", "0041", "0052", "0054", "0056", "0060", "0089", "0149", "0154", "0155", "0156", "0159", "0180", "0218", "0220", "0221", "0222", "0223", "0224", "0226", "0231", "0235", "0245", "0246", "0247", "0265", "0270", "0280", "0286", "0288", "0289", "0290", "0296", "0297", "0306", "0307", "0320", "0324", "0325", "0336", "0339", "0340", "0351", "0354", "0355", "0385", "0386", "0387", "0390", "0393", "0396", "0400", "0411", "0412", "0418", "0419", "0420", "0421", "0422", "0423", "0424", "0425", "0433", "0436", "0446", "0461", "0467", "0468", "0501", "0505", "0511", "0512", "0513", "0514", "0527", "0528", "0529", "0530", "0531", "0534", "0535", "0536", "0537", "0538", "0539", "0540", "0541", "0542", "0543", "0547", "0548", "0550", "0551", "0552", "0553", "0560", "0561", "0562", "0563", "0567", "0587", "0595", "0598", "0604", "0609", "0610", "0670", "0671", "0672", "0675", "0695", "0728", "0731", "0845", "0879", "1039", "1128", "1224", "1257", "1270", "1283", "1390", "1482", "1484", "1490", "1493", "1496", "1499", "1502", "1505", "1508", "1511", "1514", "1517", "1520", "1523", "1526", "1529", "1532", "1535", "1537", "1539", "1548", "1549", "1550", "1551", "1554", "1555", "1558", "1560", "1568", "1575", "1583", "1594", "1601", "1602", "1603", "1604", "1605", "1606", "1607", "1608", "1609", "1638", "1640", "1645", "1649", "1653", "1807", "1809", "1811", "1812", "1813", "1814", "1826", "1830", "1831", "1833", "1836", "1840", "1844", "1845", "1846", "1919", "2211", "2232", "base-liq-neg-general-2024-aplicada-maxima"]
-externally_grounded_casilla_ids = ["0610", "0670"]
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-68", "ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]

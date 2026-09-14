@@ -1,46 +1,47 @@
-# This schema's record design carries no total-cuota position: the design
-# prints per-destination base and cuota detail rows only. Verified across
-# every sheet of this schema. Not filed_via_binding_field -- that would
-# assert the value IS written, and no binding writes it either.
-
-[[revisions.esquema-importacion.casillas]]
+[[revisions."esquema-importacion".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
+section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.esquema-importacion.casillas]]
+[[revisions."esquema-importacion".casillas]]
 id = "decl.periodo"
 number = "periodo"
+section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 legal_refs = ["orden-hac-610-2021:art-2"]
 
-[[revisions.esquema-importacion.casillas]]
+[[revisions."esquema-importacion".casillas]]
 id = "iva.importacion.de.low-value-cuota"
 number = "iva.importacion.de.low-value-cuota"
-data_type = "money"
+section = ["iva", "importacion", "destino_de"]
 semantic_role = "iva_ioss_importacion_low_value_cuota"
-required = false
 input_kind = "bound"
 binding = "modelo-369-importacion-de-low-value-21pct"
-section = ["iva", "importacion", "destino_de"]
 legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
 
-[[revisions.esquema-importacion.casillas]]
+[[revisions."esquema-importacion".casillas]]
 id = "iva.importacion.cuota-total"
 number = "iva.importacion.cuota-total"
-data_type = "money"
+section = ["iva", "importacion", "totales"]
 semantic_role = "iva_ioss_importacion_cuota_total"
-required = false
 input_kind = "computed"
 formula = "modelo-369-importacion-cuota-total"
+legal_refs = [
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+    "orden-hac-610-2021:art-1",
+]
+# This schema's record design carries no total-cuota position: the design
+# prints per-destination base and cuota detail rows only. Verified across
+# every sheet of this schema. Not filed_via_binding_field -- that would
+# assert the value IS written, and no binding writes it either.
 export_exemption_reason = "not_in_record_design"
-section = ["iva", "importacion", "totales"]
-legal_refs = ["ley-37-1992:art-163-quinvicies", "ley-37-1992:art-163-sexvicies", "ley-37-1992:art-163-septvicies", "ley-37-1992:art-163-octovicies", "orden-hac-610-2021:art-1"]

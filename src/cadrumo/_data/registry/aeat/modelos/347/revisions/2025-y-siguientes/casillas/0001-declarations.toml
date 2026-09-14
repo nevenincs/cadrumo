@@ -1,431 +1,313 @@
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.provincia-codigo"
 continuidad_id = "contraparte-provincia-codigo"
 continuidad_origin = "seeded"
 number = "contraparte.provincia-codigo"
+section = ["contraparte", "identificacion"]
 data_type = "text"
 semantic_role = "contraparte_provincia_codigo"
-required = false
-input_kind = "manual"
-section = ["contraparte", "identificacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.pais-codigo"
 continuidad_id = "contraparte-pais-codigo"
 continuidad_origin = "seeded"
 number = "contraparte.pais-codigo"
+section = ["contraparte", "identificacion"]
 data_type = "country_code"
 semantic_role = "contraparte_pais_codigo"
-required = false
-input_kind = "manual"
-section = ["contraparte", "identificacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "rd-1065-2007:art-33", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.representante-legal-nif"
 continuidad_id = "representante-legal-nif"
 continuidad_origin = "seeded"
 number = "contraparte.representante-legal-nif"
+section = ["contraparte", "identificacion"]
 data_type = "nif"
 semantic_role = "representante_legal_nif"
-required = false
-input_kind = "manual"
-section = ["contraparte", "identificacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-anual"
 continuidad_id = "importe-anual-operaciones"
 continuidad_origin = "seeded"
 number = "contraparte.importe-anual"
-data_type = "money"
-semantic_role = "importe_anual_operaciones"
-required = false
-input_kind = "manual"
 section = ["contraparte", "importes"]
+semantic_role = "importe_anual_operaciones"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.operacion-seguro"
 continuidad_id = "operacion-seguro"
 continuidad_origin = "seeded"
 number = "contraparte.operacion-seguro"
+section = ["contraparte", "operacion"]
 data_type = "text"
 semantic_role = "operacion_seguro"
-required = false
-input_kind = "manual"
-section = ["contraparte", "operacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.arrendamiento-local-negocio"
 continuidad_id = "arrendamiento-local-negocio"
 continuidad_origin = "seeded"
 number = "contraparte.arrendamiento-local-negocio"
+section = ["contraparte", "operacion"]
 data_type = "text"
 semantic_role = "arrendamiento_local_negocio"
-required = false
-input_kind = "manual"
-section = ["contraparte", "operacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-metalico"
 continuidad_id = "importe-percibido-metalico"
 continuidad_origin = "seeded"
 number = "contraparte.importe-metalico"
-data_type = "money"
-semantic_role = "importe_percibido_metalico"
-required = false
-input_kind = "manual"
 section = ["contraparte", "importes"]
+semantic_role = "importe_percibido_metalico"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-inmuebles"
 continuidad_id = "importe-transmisiones-inmuebles"
 continuidad_origin = "seeded"
 number = "contraparte.importe-transmisiones-inmuebles"
-data_type = "money"
-semantic_role = "importe_transmisiones_inmuebles"
-required = false
-input_kind = "manual"
 section = ["contraparte", "importes"]
+semantic_role = "importe_transmisiones_inmuebles"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.ejercicio-operacion"
 continuidad_id = "ejercicio-operacion"
 continuidad_origin = "seeded"
 number = "contraparte.ejercicio-operacion"
+section = ["contraparte", "operacion"]
 data_type = "year"
 semantic_role = "ejercicio_operacion"
-required = false
-input_kind = "manual"
-section = ["contraparte", "operacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-Q1"
 continuidad_id = "importe-transmisiones-q1"
 continuidad_origin = "seeded"
 number = "contraparte.importe-transmisiones-Q1"
-data_type = "money"
-semantic_role = "importe_transmisiones_q1"
-required = false
-input_kind = "manual"
 section = ["contraparte", "importes"]
+semantic_role = "importe_transmisiones_q1"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-Q2"
 continuidad_id = "importe-transmisiones-q2"
 continuidad_origin = "seeded"
 number = "contraparte.importe-transmisiones-Q2"
-data_type = "money"
-semantic_role = "importe_transmisiones_q2"
-required = false
-input_kind = "manual"
 section = ["contraparte", "importes"]
+semantic_role = "importe_transmisiones_q2"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-Q3"
 continuidad_id = "importe-transmisiones-q3"
 continuidad_origin = "seeded"
 number = "contraparte.importe-transmisiones-Q3"
-data_type = "money"
-semantic_role = "importe_transmisiones_q3"
-required = false
-input_kind = "manual"
 section = ["contraparte", "importes"]
+semantic_role = "importe_transmisiones_q3"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-transmisiones-Q4"
 continuidad_id = "importe-transmisiones-q4"
 continuidad_origin = "seeded"
 number = "contraparte.importe-transmisiones-Q4"
-data_type = "money"
-semantic_role = "importe_transmisiones_q4"
-required = false
-input_kind = "manual"
 section = ["contraparte", "importes"]
+semantic_role = "importe_transmisiones_q4"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.nif-operador-comunitario"
 continuidad_id = "nif-operador-comunitario"
 continuidad_origin = "seeded"
 number = "contraparte.nif-operador-comunitario"
+section = ["contraparte", "identificacion"]
 data_type = "text"
 semantic_role = "nif_operador_comunitario"
-required = false
-input_kind = "manual"
-section = ["contraparte", "identificacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.criterio-caja"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.md:784 declares position 281, Alfabetico, 'OPERACIONES REGIMEN ESPECIAL CRITERIO DE CAJA'. The predecessor design corpus/aeat_official/disenos_registro/modelo_347/files/04-347-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf.extracted.md, which edition 2011-2024 pins as its sole casilla_source_ref, does not mention the criterio de caja regime anywhere: 0 occurrences of 'CRITERIO DE CAJA' against 19 in the 2025 design. The regime was introduced after that design was published, so no field of it can exist on the predecessor form."
 number = "contraparte.criterio-caja"
+section = ["contraparte", "operacion"]
 data_type = "text"
 semantic_role = "operacion_criterio_caja_iva"
-required = false
-input_kind = "manual"
-section = ["contraparte", "operacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.inversion-sujeto-pasivo"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.md:802 declares position 282, Alfabetico, 'OPERACION CON INVERSION DEL SUJETO PASIVO'. The predecessor design corpus/aeat_official/disenos_registro/modelo_347/files/04-347-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf.extracted.md contains 0 occurrences of 'INVERSI' in any form, against 1 in the 2025 design. The concept is absent from the predecessor form, not merely undeclared by its edition."
 number = "contraparte.inversion-sujeto-pasivo"
+section = ["contraparte", "operacion"]
 data_type = "text"
 semantic_role = "operacion_inversion_sujeto_pasivo"
-required = false
-input_kind = "manual"
-section = ["contraparte", "operacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.bienes-vinculados"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.md:808 declares position 283, Alfabetico, 'OPERACION CON BIENES VINCULADOS O DESTINADOS A'. The predecessor design corpus/aeat_official/disenos_registro/modelo_347/files/04-347-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf.extracted.md contains 0 occurrences of 'VINCULADOS' against 2 in the 2025 design."
 number = "contraparte.bienes-vinculados"
+section = ["contraparte", "operacion"]
 data_type = "text"
 semantic_role = "operacion_bienes_vinculados"
-required = false
-input_kind = "manual"
-section = ["contraparte", "operacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-criterio-caja"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "EVIDENCE IS REGIME-LEVEL, NOT FIELD-LEVEL, and is stated as such. No distinct positional line for a criterio-de-caja importe was located in corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.md; the general importe field at 284-299 is not it. The claim rests on the predecessor design corpus/aeat_official/disenos_registro/modelo_347/files/04-347-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf.extracted.md containing 0 occurrences of 'CRITERIO DE CAJA' against 19 in the 2025 design: an importe OF criterio de caja operations cannot exist on a form that never mentions the regime. If a later reader locates the field's own line, this evidence should be replaced with it."
 number = "contraparte.importe-criterio-caja"
-data_type = "money"
-semantic_role = "importe_anual_criterio_caja"
-required = false
-input_kind = "manual"
 section = ["contraparte", "importes"]
+semantic_role = "importe_anual_criterio_caja"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.numero-convocatoria-bdns"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_347/files/01-347-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1431-2025-de-3-de-diciembre-332-kb.pdf.extracted.md:842 declares positions 300-305, Numerico, 'NUMERO DE CONVOCATORIA BDNS'. The predecessor design corpus/aeat_official/disenos_registro/modelo_347/files/04-347-orden-eha-3378-2011-de-1-de-diciembre-579-kb-pdf.pdf.extracted.md contains 0 occurrences of 'BDNS' against 2 in the 2025 design. The 2011 record's own tail reads '334-500 BLANCOS' and its positional fields end at 329-333."
 number = "contraparte.numero-convocatoria-bdns"
+section = ["contraparte", "operacion"]
 data_type = "text"
 semantic_role = "numero_convocatoria_bdns"
-required = false
-input_kind = "manual"
-section = ["contraparte", "operacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.numero-justificante"
 continuidad_id = "numero-justificante"
 continuidad_origin = "seeded"
 number = "decl.numero-justificante"
+section = ["declarante", "declarante"]
 data_type = "text"
 semantic_role = "numero_justificante"
-required = false
-input_kind = "manual"
-section = ["declarante", "declarante"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.complementaria-sustitutiva"
 continuidad_id = "complementaria-sustitutiva"
 continuidad_origin = "seeded"
 number = "decl.complementaria-sustitutiva"
+section = ["declarante", "declarante"]
 data_type = "text"
 semantic_role = "complementaria_sustitutiva"
-required = false
-input_kind = "manual"
-section = ["declarante", "declarante"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.total-personas-entidades"
 continuidad_id = "total-personas-entidades"
 continuidad_origin = "seeded"
 number = "decl.total-personas-entidades"
+section = ["declarante", "declarante"]
 data_type = "integer"
 semantic_role = "total_personas_entidades"
-required = false
-input_kind = "manual"
-section = ["declarante", "declarante"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.importe-total-anual"
 continuidad_id = "importe-total-anual-operaciones"
 continuidad_origin = "seeded"
 number = "decl.importe-total-anual"
-data_type = "money"
-semantic_role = "importe_total_anual_operaciones"
-required = false
-input_kind = "manual"
 section = ["declarante", "declarante"]
+semantic_role = "importe_total_anual_operaciones"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.total-inmuebles"
 continuidad_id = "total-inmuebles"
 continuidad_origin = "seeded"
 number = "decl.total-inmuebles"
+section = ["declarante", "declarante"]
 data_type = "integer"
 semantic_role = "total_inmuebles"
-required = false
-input_kind = "manual"
-section = ["declarante", "declarante"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.importe-total-arrendamiento-locales"
 continuidad_id = "importe-total-arrendamiento-locales"
 continuidad_origin = "seeded"
 number = "decl.importe-total-arrendamiento-locales"
-data_type = "money"
-semantic_role = "importe_total_arrendamiento_locales"
-required = false
-input_kind = "manual"
 section = ["declarante", "declarante"]
+semantic_role = "importe_total_arrendamiento_locales"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-relacion"
 continuidad_id = "persona-con-quien-relacionarse"
 continuidad_origin = "seeded"
 number = "decl.persona-relacion"
+section = ["declarante", "declarante"]
 data_type = "text"
 semantic_role = "persona_con_quien_relacionarse"
-required = false
-input_kind = "manual"
-section = ["declarante", "declarante"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-relacion-telefono"
 continuidad_id = "persona-con-quien-relacionarse-telefono"
 continuidad_origin = "seeded"
 number = "decl.persona-relacion-telefono"
+section = ["declarante", "declarante"]
 data_type = "text"
 semantic_role = "persona_con_quien_relacionarse_telefono"
-required = false
-input_kind = "manual"
-section = ["declarante", "declarante"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.representante-legal-nif"
 continuidad_id = "declarante-representante-legal-nif"
 continuidad_origin = "seeded"
 number = "decl.representante-legal-nif"
+section = ["declarante", "declarante"]
 data_type = "nif"
 semantic_role = "declarante_representante_legal_nif"
-required = false
-input_kind = "manual"
-section = ["declarante", "declarante"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "decl.tipo-soporte"
 continuidad_id = "tipo-soporte"
 continuidad_origin = "seeded"
 number = "decl.tipo-soporte"
+section = ["declarante", "declarante"]
 data_type = "text"
 semantic_role = "tipo_soporte"
-required = false
-input_kind = "manual"
-section = ["declarante", "declarante"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.arrendatario-nif"
 continuidad_id = "arrendatario-nif"
 continuidad_origin = "seeded"
 number = "inmueble.arrendatario-nif"
+section = ["inmueble", "identificacion"]
 data_type = "nif"
 semantic_role = "arrendatario_nif"
-required = false
-input_kind = "manual"
-section = ["inmueble", "identificacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.representante-legal-nif"
 continuidad_id = "arrendatario-representante-legal-nif"
 continuidad_origin = "seeded"
 number = "inmueble.representante-legal-nif"
+section = ["inmueble", "identificacion"]
 data_type = "nif"
 semantic_role = "arrendatario_representante_legal_nif"
-required = false
-input_kind = "manual"
-section = ["inmueble", "identificacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.arrendatario-nombre"
 continuidad_id = "arrendatario-nombre"
 continuidad_origin = "seeded"
 number = "inmueble.arrendatario-nombre"
+section = ["inmueble", "identificacion"]
 data_type = "text"
 semantic_role = "arrendatario_nombre"
-required = false
-input_kind = "manual"
-section = ["inmueble", "identificacion"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.importe-operacion"
 continuidad_id = "importe-operacion-arrendamiento"
 continuidad_origin = "seeded"
 number = "inmueble.importe-operacion"
-data_type = "money"
-semantic_role = "importe_operacion_arrendamiento"
-required = false
-input_kind = "manual"
 section = ["inmueble", "importes"]
+semantic_role = "importe_operacion_arrendamiento"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.situacion"
 continuidad_id = "situacion-inmueble"
 continuidad_origin = "seeded"
 number = "inmueble.situacion"
+section = ["inmueble", "inmueble"]
 data_type = "integer"
 semantic_role = "situacion_inmueble"
-required = false
-input_kind = "manual"
-section = ["inmueble", "inmueble"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.referencia-catastral"
 continuidad_id = "referencia-catastral"
 continuidad_origin = "seeded"
 number = "inmueble.referencia-catastral"
+section = ["inmueble", "inmueble"]
 data_type = "text"
 semantic_role = "referencia_catastral"
-required = false
-input_kind = "manual"
-section = ["inmueble", "inmueble"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-
-[[revisions.2025-y-siguientes.casillas]]
+[[revisions."2025-y-siguientes".casillas]]
 id = "inmueble.direccion"
 continuidad_id = "direccion-inmueble"
 continuidad_origin = "seeded"
 number = "inmueble.direccion"
+section = ["inmueble", "inmueble"]
 data_type = "text"
 semantic_role = "direccion_inmueble"
-required = false
-input_kind = "manual"
-section = ["inmueble", "inmueble"]
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]

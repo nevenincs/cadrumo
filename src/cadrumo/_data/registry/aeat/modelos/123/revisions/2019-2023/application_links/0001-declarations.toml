@@ -1,4 +1,4 @@
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-calculation"
 surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry"
@@ -6,7 +6,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["boe-modelo-123-2007-form-text"]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -14,7 +14,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-modelo-123-procedure"]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
@@ -22,15 +22,19 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13"]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text", "boe-modelo-123-2007-form-text"]
+source_refs = [
+    "aeat-dr-123-2019-2023-v13",
+    "aeat-dr-123-2019-2023-v13-form-text",
+    "boe-modelo-123-2007-form-text",
+]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-approval"
 surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
@@ -38,15 +42,19 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-modelo-123-procedure"]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-reconciliation"
 surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text", "boe-modelo-123-2007-form-text"]
+source_refs = [
+    "aeat-dr-123-2019-2023-v13",
+    "aeat-dr-123-2019-2023-v13-form-text",
+    "boe-modelo-123-2007-form-text",
+]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-extractor"
 surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion"
@@ -54,7 +62,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-portal-cross-reference"
 surface = "portal"
 consumer = "portal_m123_retenciones_capital"
@@ -62,7 +70,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure"]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-filed-declarations-observation"
 surface = "portal"
 consumer = "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation"
@@ -70,15 +78,14 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure"]
 
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-workflow"
 surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-modelo-123-procedure"]
-
-[[revisions.2019-2023.application_links]]
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"

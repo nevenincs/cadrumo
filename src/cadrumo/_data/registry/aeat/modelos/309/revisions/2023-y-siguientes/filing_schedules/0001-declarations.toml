@@ -1,7 +1,6 @@
-[[revisions.2023-y-siguientes.filing_schedules]]
+[[revisions."2023-y-siguientes".filing_schedules]]
 id = "modelo-309-ad-hoc"
 period_kind = "ad_hoc"
-profile_condition_mode = "all"
 periods = ["AD-HOC"]
 legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["boe-modelo-309-2003-form", "aeat-modelo-309-procedure"]

@@ -10,12 +10,8 @@
 # procedure page here; that page contains no statement of this modelo's plazo,
 # so citing it would satisfy the source-tier gate with a document silent on the
 # claim. The article is the grounding and nothing further is asserted.
-# source_refs names the document that CONTAINS the cited article. It is the
-# honest citation for this surface even where its tier is layout_authority:
-# the field is required, and naming a document that does state the plazo is
-# better than naming a guidance page that does not.
 
-[[revisions.2022-2024.application_links]]
+[[revisions."2022-2024".application_links]]
 id = "modelo-280-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -23,10 +19,14 @@ requires_snapshot = true
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-5", "orden-hac-1276-2019:art-quinto"]
 source_refs = ["aeat-modelo-280-procedure", "aeat-dr-280-2022", "boe-modelo-280-base-order", "boe-modelo-280-2019-amendment-hac-1276"]
 
-[[revisions.2022-2024.application_links]]
+[[revisions."2022-2024".application_links]]
 id = "modelo-280-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hap-2118-2015:art-4"]
+# source_refs names the document that CONTAINS the cited article. It is the
+# honest citation for this surface even where its tier is layout_authority:
+# the field is required, and naming a document that does state the plazo is
+# better than naming a guidance page that does not.
 source_refs = ["boe-modelo-280-base-order"]

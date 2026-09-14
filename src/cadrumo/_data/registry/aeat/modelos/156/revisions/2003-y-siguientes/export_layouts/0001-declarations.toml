@@ -63,104 +63,26 @@
 #    a ceros por la izquierda sin signos y sin empaquetar."
 #   "Para los caracteres especificos del idioma se utilizara la codificacion
 #    ISO-8859-1."
-# Registro de tipo 1: registro de declarante. 250 bytes, 11 numbered campos plus the BLANCOS trailer.
-# 1+3+4+9+40+1+49+13+2+13+9+106 = 250.
-# Posicion 1. TIPO DE REGISTRO. Constante numero '1'.
-# Posiciones 2-4. MODELO DECLARACION. Constante '156'.
-# Posiciones 5-8. EJERCICIO. "Las cuatro cifras del ejercicio fiscal al que
-# corresponde la declaracion" -- the draft's own filing year.
-# Posiciones 9-17. N.I.F. DEL DECLARANTE. A NIF exactly fills its 9-byte slot;
-# left-zero padding would strip real leading digits from a low-numbered DNI on
-# the parse side.
-# Posiciones 18-57. RAZON SOCIAL DEL DECLARANTE.
-# Posicion 58. TIPO DE SOPORTE. The design admits 'C' (cartucho magnetico),
-# 'D' (disquete) and 'T' (transmision telematica). Cadrumo emits a file for
-# telematic presentation and cannot produce either physical medium, so 'T' is
-# the only clave this producer can correctly write.
-# Posiciones 59-107. PERSONA CON QUIEN RELACIONARSE. The design subdivides the
-# slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares ONE top-level
-# campo of 49 bytes.
-# Posiciones 108-120. NUMERO DE JUSTIFICANTE DE LA DECLARACION.
-# Posiciones 121-122. DECLARACION COMPLEMENTARIA O SUSTITUTIVA: 121 "C", 122 "S".
-# Posiciones 123-135. NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR.
-# "En cualquier otro caso debera rellenarse a CEROS."
-# Posiciones 136-144. NUMERO TOTAL DE REGISTROS DE AFILIADOS O MUTUALISTAS.
-# Posiciones 145-250. BLANCOS.
-# Registro de tipo 2: registro de afiliado o mutualista. 250 bytes, 20 numbered campos plus the BLANCOS trailer.
-# 1+3+4+9+9+9+40+12+(12*9)+55 = 250.
-# Posicion 1. TIPO DE REGISTRO. Constante '2'.
-# Posiciones 2-4. MODELO DECLARACION. Constante '156'.
-# Posiciones 5-8. EJERCICIO. "Consignar lo contenido en estas mismas posiciones
-# del registro de tipo 1" -- so it reads the same draft attribute tipo 1 reads.
-# Posiciones 9-17. N.I.F. DEL DECLARANTE. "Consignar lo contenido en estas
-# mismas posiciones del registro de tipo 1" -- same producer key as tipo 1.
-# Posiciones 18-26. N.I.F. DEL AFILIADO O MUTUALISTA.
-# Posiciones 27-35. BLANCO. The design declares no datum here.
-# Posiciones 36-75. APELLIDOS Y NOMBRE DEL AFILIADO O MUTUALISTA.
-# Posiciones 76-87. NUMERO DE AFILIACION.
-# Posiciones 88-96. ENERO. Subdivided 88 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 89-96 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (89-94 entera, 95-96 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 97-105. FEBRERO. Subdivided 97 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 98-105 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (98-103 entera, 104-105 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 106-114. MARZO. Subdivided 106 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 107-114 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (107-112 entera, 113-114 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 115-123. ABRIL. Subdivided 115 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 116-123 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (116-121 entera, 122-123 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 124-132. MAYO. Subdivided 124 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 125-132 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (125-130 entera, 131-132 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 133-141. JUNIO. Subdivided 133 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 134-141 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (134-139 entera, 140-141 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 142-150. JULIO. Subdivided 142 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 143-150 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (143-148 entera, 149-150 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 151-159. AGOSTO. Subdivided 151 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 152-159 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (152-157 entera, 158-159 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 160-168. SEPTIEMBRE. Subdivided 160 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 161-168 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (161-166 entera, 167-168 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 169-177. OCTUBRE. Subdivided 169 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 170-177 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (170-175 entera, 176-177 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 178-186. NOVIEMBRE. Subdivided 178 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 179-186 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (179-184 entera, 185-186 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 187-195. DICIEMBRE. Subdivided 187 SITUACION MENSUAL DE LAS
-# COTIZACIONES ('S' o 'N') and 188-195 IMPORTE CUOTA DE COTIZACION
-# DEVENGADA (188-193 entera, 194-195 decimal); one top-level
-# alfanumerico campo of 9 bytes.
-# Posiciones 196-250. BLANCOS.
 
-[[revisions.2003-y-siguientes.export_layouts]]
+[[revisions."2003-y-siguientes".export_layouts]]
 id = "modelo-156-fichero-hac-3580-2003"
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
+# Registro de tipo 1: registro de declarante. 250 bytes, 11 numbered campos plus the BLANCOS trailer.
+# 1+3+4+9+40+1+49+13+2+13+9+106 = 250.
 
-[[revisions.2003-y-siguientes.export_layouts.records]]
+[[revisions."2003-y-siguientes".export_layouts]]
+id = "modelo-156-fichero-hac-3580-2003"
+
+[[revisions."2003-y-siguientes".export_layouts.records]]
 id = "modelo-156-declarante"
 record_type = "declarante"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posicion 1. TIPO DE REGISTRO. Constante numero '1'.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-record-type"
 offset = 1
 length = 1
@@ -174,7 +96,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 2-4. MODELO DECLARACION. Constante '156'.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-modelo"
 offset = 2
 length = 3
@@ -188,7 +111,9 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 5-8. EJERCICIO. "Las cuatro cifras del ejercicio fiscal al que
+# corresponde la declaracion" -- the draft's own filing year.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-ejercicio"
 offset = 5
 length = 4
@@ -202,7 +127,10 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 9-17. N.I.F. DEL DECLARANTE. A NIF exactly fills its 9-byte slot;
+# left-zero padding would strip real leading digits from a low-numbered DNI on
+# the parse side.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-nif-declarante"
 offset = 9
 length = 9
@@ -216,7 +144,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 18-57. RAZON SOCIAL DEL DECLARANTE.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-razon-social"
 offset = 18
 length = 40
@@ -230,7 +159,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posicion 58. TIPO DE SOPORTE. The design admits 'C' (cartucho magnetico),
+# 'D' (disquete) and 'T' (transmision telematica). Cadrumo emits a file for
+# telematic presentation and cannot produce either physical medium, so 'T' is
+# the only clave this producer can correctly write.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-tipo-soporte"
 offset = 58
 length = 1
@@ -244,7 +177,10 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 59-107. PERSONA CON QUIEN RELACIONARSE. The design subdivides the
+# slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares ONE top-level
+# campo of 49 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-persona-relacion"
 offset = 59
 length = 49
@@ -258,7 +194,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 108-120. NUMERO DE JUSTIFICANTE DE LA DECLARACION.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-numero-justificante"
 offset = 108
 length = 13
@@ -272,7 +209,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 121-122. DECLARACION COMPLEMENTARIA O SUSTITUTIVA: 121 "C", 122 "S".
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-complementaria-sustitutiva"
 offset = 121
 length = 2
@@ -286,7 +224,9 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 123-135. NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR.
+# "En cualquier otro caso debera rellenarse a CEROS."
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-numero-identificativo-anterior"
 offset = 123
 length = 13
@@ -300,7 +240,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 136-144. NUMERO TOTAL DE REGISTROS DE AFILIADOS O MUTUALISTAS.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-numero-total-afiliados"
 offset = 136
 length = 9
@@ -314,7 +255,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 145-250. BLANCOS.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t1-blancos"
 offset = 145
 length = 106
@@ -326,15 +268,21 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
+# Registro de tipo 2: registro de afiliado o mutualista. 250 bytes, 20 numbered campos plus the BLANCOS trailer.
+# 1+3+4+9+9+9+40+12+(12*9)+55 = 250.
 
-[[revisions.2003-y-siguientes.export_layouts.records]]
+[[revisions."2003-y-siguientes".export_layouts]]
+id = "modelo-156-fichero-hac-3580-2003"
+
+[[revisions."2003-y-siguientes".export_layouts.records]]
 id = "modelo-156-afiliado"
 record_type = "afiliado"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posicion 1. TIPO DE REGISTRO. Constante '2'.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-record-type"
 offset = 1
 length = 1
@@ -348,7 +296,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 2-4. MODELO DECLARACION. Constante '156'.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-modelo"
 offset = 2
 length = 3
@@ -362,7 +311,9 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 5-8. EJERCICIO. "Consignar lo contenido en estas mismas posiciones
+# del registro de tipo 1" -- so it reads the same draft attribute tipo 1 reads.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-ejercicio"
 offset = 5
 length = 4
@@ -376,7 +327,9 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 9-17. N.I.F. DEL DECLARANTE. "Consignar lo contenido en estas
+# mismas posiciones del registro de tipo 1" -- same producer key as tipo 1.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-nif-declarante"
 offset = 9
 length = 9
@@ -390,7 +343,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 18-26. N.I.F. DEL AFILIADO O MUTUALISTA.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-afiliado-nif"
 offset = 18
 length = 9
@@ -404,7 +358,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 27-35. BLANCO. The design declares no datum here.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-blanco-27"
 offset = 27
 length = 9
@@ -417,7 +372,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 36-75. APELLIDOS Y NOMBRE DEL AFILIADO O MUTUALISTA.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-afiliado-nombre"
 offset = 36
 length = 40
@@ -431,7 +387,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 76-87. NUMERO DE AFILIACION.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-numero-afiliacion"
 offset = 76
 length = 12
@@ -445,7 +402,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 88-96. ENERO. Subdivided 88 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 89-96 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (89-94 entera, 95-96 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-enero"
 offset = 88
 length = 9
@@ -459,7 +420,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 97-105. FEBRERO. Subdivided 97 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 98-105 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (98-103 entera, 104-105 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-febrero"
 offset = 97
 length = 9
@@ -473,7 +438,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 106-114. MARZO. Subdivided 106 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 107-114 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (107-112 entera, 113-114 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-marzo"
 offset = 106
 length = 9
@@ -487,7 +456,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 115-123. ABRIL. Subdivided 115 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 116-123 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (116-121 entera, 122-123 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-abril"
 offset = 115
 length = 9
@@ -501,7 +474,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 124-132. MAYO. Subdivided 124 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 125-132 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (125-130 entera, 131-132 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-mayo"
 offset = 124
 length = 9
@@ -515,7 +492,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 133-141. JUNIO. Subdivided 133 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 134-141 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (134-139 entera, 140-141 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-junio"
 offset = 133
 length = 9
@@ -529,7 +510,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 142-150. JULIO. Subdivided 142 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 143-150 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (143-148 entera, 149-150 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-julio"
 offset = 142
 length = 9
@@ -543,7 +528,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 151-159. AGOSTO. Subdivided 151 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 152-159 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (152-157 entera, 158-159 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-agosto"
 offset = 151
 length = 9
@@ -557,7 +546,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 160-168. SEPTIEMBRE. Subdivided 160 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 161-168 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (161-166 entera, 167-168 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-septiembre"
 offset = 160
 length = 9
@@ -571,7 +564,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 169-177. OCTUBRE. Subdivided 169 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 170-177 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (170-175 entera, 176-177 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-octubre"
 offset = 169
 length = 9
@@ -585,7 +582,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 178-186. NOVIEMBRE. Subdivided 178 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 179-186 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (179-184 entera, 185-186 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-noviembre"
 offset = 178
 length = 9
@@ -599,7 +600,11 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 187-195. DICIEMBRE. Subdivided 187 SITUACION MENSUAL DE LAS
+# COTIZACIONES ('S' o 'N') and 188-195 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (188-193 entera, 194-195 decimal); one top-level
+# alfanumerico campo of 9 bytes.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-cotizacion-diciembre"
 offset = 187
 length = 9
@@ -613,7 +618,8 @@ signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-layout"]
 
-[[revisions.2003-y-siguientes.export_layouts.records.fields]]
+# Posiciones 196-250. BLANCOS.
+[[revisions."2003-y-siguientes".export_layouts.records.fields]]
 id = "modelo-156-t2-blancos"
 offset = 196
 length = 55

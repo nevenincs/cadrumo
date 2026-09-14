@@ -1,3 +1,142 @@
+[[revisions."2025".casillas]]
+id = "01"
+number = "01"
+section = ["actividades_economicas_estimacion_objetiva"]
+semantic_role = "irpf_pf_modulos_suma_rendimientos"
+continuidad_id = "irpf-pf-modulos-suma-rendimientos"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "02"
+number = "02"
+section = ["actividades_economicas_estimacion_objetiva"]
+semantic_role = "pago_fraccionado_previo_datos_base"
+continuidad_id = "pago-fraccionado-previo-datos-base"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "03"
+number = "03"
+section = ["actividades_sin_datos_base"]
+semantic_role = "irpf_pf_modulos_volumen_sin_datos_base"
+continuidad_id = "irpf-pf-modulos-volumen-sin-datos-base"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "04"
+number = "04"
+section = ["actividades_sin_datos_base"]
+semantic_role = "pago_fraccionado_previo_sin_datos_base"
+continuidad_id = "pago-fraccionado-previo-sin-datos-base"
+input_kind = "computed"
+formula = "modelo-131-pago-fraccionado-sin-datos-base"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "05"
+number = "05"
+section = ["actividades_agricolas_ganaderas_forestales"]
+semantic_role = "irpf_pf_modulos_volumen_agrario"
+continuidad_id = "irpf-pf-modulos-volumen-agrario"
+input_kind = "bound"
+binding = "modelo-131-volumen-ingresos-agrario"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "06"
+number = "06"
+section = ["actividades_agricolas_ganaderas_forestales"]
+semantic_role = "pago_fraccionado_previo_agrario"
+continuidad_id = "pago-fraccionado-previo-agrario"
+input_kind = "computed"
+formula = "modelo-131-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "07"
+number = "07"
+section = ["total_liquidacion"]
+semantic_role = "pago_fraccionado_previo"
+continuidad_id = "pago-fraccionado-previo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+input_kind = "computed"
+formula = "modelo-131-suma-pagos-previos"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "08"
+number = "08"
+section = ["total_liquidacion"]
+semantic_role = "retenciones_ingresos_a_cuenta"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"] }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "09"
+number = "09"
+section = ["total_liquidacion"]
+semantic_role = "minoracion_rendimientos_actividades_economicas"
+continuidad_id = "minoracion-rendimientos-actividades-economicas"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "10"
+number = "10"
+section = ["total_liquidacion"]
+semantic_role = "irpf_pf_modulos_diferencia"
+continuidad_id = "irpf-pf-modulos-diferencia"
+input_kind = "computed"
+formula = "modelo-131-diferencia"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "11"
+number = "11"
+section = ["total_liquidacion"]
+semantic_role = "irpf_pf_modulos_resultados_negativos_anteriores"
+continuidad_id = "irpf-pf-modulos-resultados-negativos-anteriores"
+input_kind = "bound"
+binding = "modelo-131-resultados-negativos-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "12"
+number = "12"
+section = ["total_liquidacion"]
+semantic_role = "prestamo_vivienda_habitual"
+continuidad_id = "prestamo-vivienda-habitual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "13"
+number = "13"
+section = ["total_liquidacion"]
+semantic_role = "irpf_pf_modulos_total"
+continuidad_id = "irpf-pf-modulos-total"
+input_kind = "computed"
+formula = "modelo-131-total"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "14"
+number = "14"
+section = ["complementaria"]
+semantic_role = "resultado_anteriores_autoliquidaciones"
+continuidad_id = "resultado-anteriores-autoliquidaciones"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".casillas]]
+id = "15"
+number = "15"
+section = ["resultado"]
+semantic_role = "irpf_pf_modulos_resultado_declaracion"
+continuidad_id = "irpf-pf-modulos-resultado-declaracion"
+input_kind = "computed"
+formula = "modelo-131-resultado"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
 # M131 estimación-objetiva módulos engine (fase 1ª "rendimiento neto
 # previo" + fase 4ª "reducción general", tabled IAE
 # activities). The eight operator-declared unit-count inputs (epígrafe + up to
@@ -31,512 +170,229 @@
 # HAC/1347/2024 disposición adicional primera (5 por ciento reducción general,
 # explicitly extended to the 2025 pagos fraccionados by apartado 3) for fase
 # 4ª.
-
-[[revisions.2025.casillas]]
-id = "01"
-number = "01"
-data_type = "money"
-semantic_role = "irpf_pf_modulos_suma_rendimientos"
-continuidad_id = "irpf-pf-modulos-suma-rendimientos"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "02"
-number = "02"
-data_type = "money"
-semantic_role = "pago_fraccionado_previo_datos_base"
-continuidad_id = "pago-fraccionado-previo-datos-base"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "03"
-number = "03"
-data_type = "money"
-semantic_role = "irpf_pf_modulos_volumen_sin_datos_base"
-continuidad_id = "irpf-pf-modulos-volumen-sin-datos-base"
-required = false
-input_kind = "manual"
-section = ["actividades_sin_datos_base"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "04"
-number = "04"
-data_type = "money"
-semantic_role = "pago_fraccionado_previo_sin_datos_base"
-continuidad_id = "pago-fraccionado-previo-sin-datos-base"
-required = false
-input_kind = "computed"
-formula = "modelo-131-pago-fraccionado-sin-datos-base"
-section = ["actividades_sin_datos_base"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "05"
-number = "05"
-data_type = "money"
-semantic_role = "irpf_pf_modulos_volumen_agrario"
-continuidad_id = "irpf-pf-modulos-volumen-agrario"
-required = false
-input_kind = "bound"
-binding = "modelo-131-volumen-ingresos-agrario"
-section = ["actividades_agricolas_ganaderas_forestales"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "06"
-number = "06"
-data_type = "money"
-semantic_role = "pago_fraccionado_previo_agrario"
-continuidad_id = "pago-fraccionado-previo-agrario"
-required = false
-input_kind = "computed"
-formula = "modelo-131-pago-fraccionado-agrario"
-section = ["actividades_agricolas_ganaderas_forestales"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "07"
-number = "07"
-data_type = "money"
-semantic_role = "pago_fraccionado_previo"
-continuidad_id = "pago-fraccionado-previo"
-required = false
-input_kind = "computed"
-formula = "modelo-131-suma-pagos-previos"
-section = ["total_liquidacion"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "08"
-number = "08"
-data_type = "money"
-semantic_role = "retenciones_ingresos_a_cuenta"
-continuidad_id = "retenciones-ingresos-a-cuenta"
-required = false
-input_kind = "manual"
-section = ["total_liquidacion"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "09"
-number = "09"
-data_type = "money"
-semantic_role = "minoracion_rendimientos_actividades_economicas"
-continuidad_id = "minoracion-rendimientos-actividades-economicas"
-required = false
-input_kind = "manual"
-section = ["total_liquidacion"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "10"
-number = "10"
-data_type = "money"
-semantic_role = "irpf_pf_modulos_diferencia"
-continuidad_id = "irpf-pf-modulos-diferencia"
-required = false
-input_kind = "computed"
-formula = "modelo-131-diferencia"
-section = ["total_liquidacion"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "11"
-number = "11"
-data_type = "money"
-semantic_role = "irpf_pf_modulos_resultados_negativos_anteriores"
-continuidad_id = "irpf-pf-modulos-resultados-negativos-anteriores"
-required = false
-input_kind = "bound"
-binding = "modelo-131-resultados-negativos-anteriores"
-section = ["total_liquidacion"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["rd-439-2007:art-110"]
-source_refs = ["aeat-modelo-131-instructions"]
-
-[[revisions.2025.casillas]]
-id = "12"
-number = "12"
-data_type = "money"
-semantic_role = "prestamo_vivienda_habitual"
-continuidad_id = "prestamo-vivienda-habitual"
-required = false
-input_kind = "manual"
-section = ["total_liquidacion"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "13"
-number = "13"
-data_type = "money"
-semantic_role = "irpf_pf_modulos_total"
-continuidad_id = "irpf-pf-modulos-total"
-required = false
-input_kind = "computed"
-formula = "modelo-131-total"
-section = ["total_liquidacion"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "14"
-number = "14"
-data_type = "money"
-semantic_role = "resultado_anteriores_autoliquidaciones"
-continuidad_id = "resultado-anteriores-autoliquidaciones"
-required = false
-input_kind = "manual"
-section = ["complementaria"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
-id = "15"
-number = "15"
-data_type = "money"
-semantic_role = "irpf_pf_modulos_resultado_declaracion"
-continuidad_id = "irpf-pf-modulos-resultado-declaracion"
-required = false
-input_kind = "computed"
-formula = "modelo-131-resultado"
-section = ["resultado"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-epigrafe"
 number = "modulos-epigrafe"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "text"
 semantic_role = "irpf_pf_modulos_epigrafe_iae"
 continuidad_id = "irpf-pf-modulos-epigrafe-iae"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-1-unidades"
 number = "modulos-1-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_1_unidades"
 continuidad_id = "irpf-pf-modulos-1-unidades"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:art-4"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-1-unidades-anterior"
 number = "modulos-1-unidades-anterior"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_1_unidades_anterior"
 continuidad_id = "irpf-pf-modulos-1-unidades-anterior"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:instruccion-2-2-a"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:instruccion-2-2-a"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-2-unidades"
 number = "modulos-2-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_2_unidades"
 continuidad_id = "irpf-pf-modulos-2-unidades"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:art-4"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-3-unidades"
 number = "modulos-3-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_3_unidades"
 continuidad_id = "irpf-pf-modulos-3-unidades"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:art-4"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-4-unidades"
 number = "modulos-4-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_4_unidades"
 continuidad_id = "irpf-pf-modulos-4-unidades"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:art-4"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-5-unidades"
 number = "modulos-5-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_5_unidades"
 continuidad_id = "irpf-pf-modulos-5-unidades"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:art-4"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-6-unidades"
 number = "modulos-6-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_6_unidades"
 continuidad_id = "irpf-pf-modulos-6-unidades"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:art-4"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-7-unidades"
 number = "modulos-7-unidades"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_7_unidades"
 continuidad_id = "irpf-pf-modulos-7-unidades"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:art-4"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:art-4"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-minoracion-inversion"
 continuidad_id = "irpf-pf-modulos-minoracion-inversion"
 continuidad_origin = "seeded"
 number = "modulos-minoracion-inversion"
-data_type = "money"
-semantic_role = "irpf_pf_modulos_minoracion_inversion"
-required = false
-input_kind = "manual"
 section = ["actividades_economicas_estimacion_objetiva"]
+semantic_role = "irpf_pf_modulos_minoracion_inversion"
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:instruccion-2-2-b"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-b"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:instruccion-2-2-b"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-indice-pequena-dimension"
 continuidad_id = "irpf-pf-modulos-indice-pequena-dimension"
 continuidad_origin = "seeded"
 number = "modulos-indice-pequena-dimension"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_indice_pequena_dimension"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-indice-temporada"
 continuidad_id = "irpf-pf-modulos-indice-temporada"
 continuidad_origin = "seeded"
 number = "modulos-indice-temporada"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_indice_temporada"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-indice-inicio-actividad"
 continuidad_id = "irpf-pf-modulos-indice-inicio-actividad"
 continuidad_origin = "seeded"
 number = "modulos-indice-inicio-actividad"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_indice_inicio_actividad"
-required = false
-input_kind = "manual"
-section = ["actividades_economicas_estimacion_objetiva"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"] }
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-pequena-dimension-ignorado-flag"
 continuidad_id = "irpf-pf-modulos-pequena-dimension-ignorado-flag"
 continuidad_origin = "seeded"
 number = "modulos-pequena-dimension-ignorado-flag"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_pequena_dimension_ignorado_flag"
-required = false
 input_kind = "computed"
 formula = "modelo-131-modulos-pequena-dimension-ignorado-flag"
 internal_only = true
-section = ["actividades_economicas_estimacion_objetiva"]
 legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
 
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-temporada-inicio-actividad-conflicto-flag"
 continuidad_id = "irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag"
 continuidad_origin = "seeded"
 number = "modulos-temporada-inicio-actividad-conflicto-flag"
+section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_temporada_inicio_actividad_conflicto_flag"
-required = false
 input_kind = "computed"
 formula = "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"
 internal_only = true
-section = ["actividades_economicas_estimacion_objetiva"]
 legal_refs = ["orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
 
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-previo"
 continuidad_id = "irpf-pf-modulos-rendimiento-neto-previo"
 continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-previo"
-data_type = "money"
+section = ["actividades_economicas_estimacion_objetiva"]
 semantic_role = "irpf_pf_modulos_rendimiento_neto_previo"
-required = false
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-31"] }
 input_kind = "computed"
 formula = "modelo-131-modulos-rendimiento-neto-previo"
 internal_only = true
-section = ["actividades_economicas_estimacion_objetiva"]
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
 
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-35-2006:art-31"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-minorado"
 continuidad_id = "irpf-pf-modulos-rendimiento-neto-minorado"
 continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-minorado"
-data_type = "money"
+section = ["actividades_economicas_estimacion_objetiva"]
 semantic_role = "irpf_pf_modulos_rendimiento_neto_minorado"
-required = false
 input_kind = "computed"
 formula = "modelo-131-modulos-rendimiento-neto-minorado"
 internal_only = true
-section = ["actividades_economicas_estimacion_objetiva"]
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-2-a", "orden-hac-1347-2024:instruccion-2-2-b"]
 
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-modulos"
 continuidad_id = "irpf-pf-modulos-rendimiento-neto-modulos"
 continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-modulos"
-data_type = "money"
+section = ["actividades_economicas_estimacion_objetiva"]
 semantic_role = "irpf_pf_modulos_rendimiento_neto_modulos"
-required = false
 input_kind = "computed"
 formula = "modelo-131-modulos-rendimiento-neto-modulos"
 internal_only = true
-section = ["actividades_economicas_estimacion_objetiva"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:instruccion-2-3-b-3", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4", "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades"]
+legal_refs = [
+    "ley-35-2006:art-31",
+    "orden-hac-1347-2024:instruccion-2-3-b-3",
+    "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1",
+    "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2",
+    "orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4",
+    "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades",
+]
 
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "modulos-rendimiento-neto-actividad"
 continuidad_id = "irpf-pf-modulos-rendimiento-neto-actividad"
 continuidad_origin = "seeded"
 number = "modulos-rendimiento-neto-actividad"
-data_type = "money"
+section = ["actividades_economicas_estimacion_objetiva"]
 semantic_role = "irpf_pf_modulos_rendimiento_neto_actividad"
-required = false
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-31"] }
 input_kind = "computed"
 formula = "modelo-131-modulos-rendimiento-neto-actividad"
 internal_only = true
-section = ["actividades_economicas_estimacion_objetiva"]
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:da-1"]
-
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["ley-35-2006:art-31"]
-
-[[revisions.2025.casillas]]
+[[revisions."2025".casillas]]
 id = "saldo-negativo-fin-periodo"
 number = "saldo-negativo-fin-periodo"
-data_type = "money"
+section = ["computed_carry_forward"]
 semantic_role = "irpf_pf_saldo_negativo_fin_periodo"
 continuidad_id = "irpf-pf-saldo-negativo-fin-periodo"
-required = false
 input_kind = "computed"
 formula = "modelo-131-saldo-negativo-fin-periodo"
-export_exemption_reason = "not_in_record_design"
-section = ["computed_carry_forward"]
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
-
-[revisions.2025.casillas.constraints]
-sign = "non_negative"
-legal_refs = ["rd-439-2007:art-110"]
-source_refs = ["aeat-modelo-131-instructions"]
+export_exemption_reason = "not_in_record_design"

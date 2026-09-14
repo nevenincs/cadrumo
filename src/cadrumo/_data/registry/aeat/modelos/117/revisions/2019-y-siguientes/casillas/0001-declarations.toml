@@ -1,118 +1,85 @@
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "01"
 number = "01"
+section = ["liquidacion", "iic_transmisiones_reembolsos"]
 data_type = "integer"
 semantic_role = "iic_transmision_perceptores"
-required = false
-input_kind = "manual"
-section = ["liquidacion", "iic_transmisiones_reembolsos"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "02"
 number = "02"
-data_type = "money"
-semantic_role = "iic_transmision_base"
-required = false
-input_kind = "manual"
 section = ["liquidacion", "iic_transmisiones_reembolsos"]
+semantic_role = "iic_transmision_base"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "03"
 number = "03"
-data_type = "money"
-semantic_role = "iic_transmision_retenciones"
-required = false
-input_kind = "manual"
 section = ["liquidacion", "iic_transmisiones_reembolsos"]
+semantic_role = "iic_transmision_retenciones"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "04"
 number = "04"
+section = ["liquidacion", "derechos_suscripcion"]
 data_type = "integer"
 semantic_role = "derechos_suscripcion_perceptores"
-required = false
-input_kind = "manual"
-section = ["liquidacion", "derechos_suscripcion"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "05"
 number = "05"
-data_type = "money"
-semantic_role = "derechos_suscripcion_base"
-required = false
-input_kind = "manual"
 section = ["liquidacion", "derechos_suscripcion"]
+semantic_role = "derechos_suscripcion_base"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "06"
 number = "06"
-data_type = "money"
-semantic_role = "derechos_suscripcion_retenciones"
-required = false
-input_kind = "manual"
 section = ["liquidacion", "derechos_suscripcion"]
+semantic_role = "derechos_suscripcion_retenciones"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "07"
 number = "07"
-data_type = "money"
-semantic_role = "pago_a_cuenta_base"
-required = false
-input_kind = "manual"
 section = ["liquidacion", "pago_a_cuenta"]
+semantic_role = "pago_a_cuenta_base"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "08"
 number = "08"
-data_type = "money"
-semantic_role = "pago_a_cuenta_importe"
-required = false
-input_kind = "manual"
 section = ["liquidacion", "pago_a_cuenta"]
+semantic_role = "pago_a_cuenta_importe"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "09"
 number = "09"
-data_type = "money"
+section = ["liquidacion", "total_liquidacion"]
 semantic_role = "total_liquidacion"
-required = false
 input_kind = "computed"
 formula = "modelo-117-total-liquidacion"
-section = ["liquidacion", "total_liquidacion"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "10"
 number = "10"
-data_type = "money"
-semantic_role = "anteriores_declaraciones_resultado_ingresar"
-required = false
-input_kind = "manual"
 section = ["liquidacion", "complementaria"]
+semantic_role = "anteriores_declaraciones_resultado_ingresar"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 
-[[revisions.2019-y-siguientes.casillas]]
+[[revisions."2019-y-siguientes".casillas]]
 id = "11"
 number = "11"
-data_type = "money"
+section = ["liquidacion", "resultado"]
 semantic_role = "cuota_a_ingresar"
-required = false
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"], source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"] }
 input_kind = "computed"
 formula = "modelo-117-resultado-ingresar"
-section = ["liquidacion", "resultado"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
-source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
-
-[revisions.2019-y-siguientes.casillas.constraints]
-sign = "non_negative"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]

@@ -17,18 +17,31 @@
 # annual one additionally cites art. 13.1.h, which is what makes that renta
 # annual rather than per-devengo.
 
-[[revisions.2024.filing_schedules]]
+[[revisions."2024".filing_schedules]]
 id = "modelo-210-devengo-event"
 period_kind = "ad_hoc"
-profile_condition_mode = "all"
 periods = ["EVENT-N"]
-legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-5", "trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a"]
-source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-base-order"]
+legal_refs = [
+    "orden-eha-3316-2010:art-1",
+    "orden-eha-3316-2010:art-5",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "boe-modelo-210-base-order",
+]
 
-[[revisions.2024.filing_schedules]]
+[[revisions."2024".filing_schedules]]
 id = "modelo-210-renta-imputada-anual"
 period_kind = "annual"
-profile_condition_mode = "all"
 periods = ["0A"]
-legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-5", "trlirnr-rdleg-5-2004:art-13.1.h"]
-source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+legal_refs = [
+    "orden-eha-3316-2010:art-1",
+    "orden-eha-3316-2010:art-5",
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "aeat-irnr-renta-imputada-inmueble-urbano",
+]

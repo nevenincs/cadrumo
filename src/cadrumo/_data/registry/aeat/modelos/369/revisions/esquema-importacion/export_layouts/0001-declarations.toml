@@ -11,26 +11,20 @@
 # Slots where AEAT states an enumeration rather than a constant are left as
 # operator input rather than frozen to a literal, so no value this tool has
 # no authority to choose is ever emitted.
-# Design sheet 'T3690 Estruc. gral': 9 positions, extent 328.
-# Design sheet 'T36900 Info Adicional': 6 positions, extent 110.
-# Design sheet 'T36910 Imp': 164 positions, extent 1454.
-# Design sheet 'T36911 Imp': 147 positions, extent 763.
-# Design sheet 'T36912 Imp': 7 positions, extent 2947.
-
-[[revisions.esquema-importacion.export_layouts]]
+[[revisions."esquema-importacion".export_layouts]]
 id = "modelo-369-importacion-fichero"
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
-[[revisions.esquema-importacion.export_layouts.records]]
+# Design sheet 'T3690 Estruc. gral': 9 positions, extent 328.
+[[revisions."esquema-importacion".export_layouts.records]]
 id = "modelo-369-importacion-envelope"
 record_type = "t3690-estruc-gral"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-importacion-envelope"
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-envelope-1-inicio-del-identificador-de-modelo-y-pag"
 offset = 1
 length = 2
@@ -43,8 +37,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-envelope-3-modelo"
 offset = 3
 length = 3
@@ -57,8 +50,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-envelope-6-discriminante"
 offset = 6
 length = 1
@@ -71,8 +63,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-envelope-7-ejercicio-de-devengo-eeee"
 offset = 7
 length = 4
@@ -85,8 +76,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-envelope-11-periodo"
 offset = 11
 length = 2
@@ -99,8 +89,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-envelope-18-reservado"
 offset = 18
 length = 92
@@ -112,8 +101,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-envelope-110-nif-del-titular"
 offset = 110
 length = 9
@@ -126,8 +114,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-envelope-119-reservado"
 offset = 119
 length = 210
@@ -140,14 +127,14 @@ signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
-[[revisions.esquema-importacion.export_layouts.records]]
+# Design sheet 'T36900 Info Adicional': 6 positions, extent 110.
+[[revisions."esquema-importacion".export_layouts.records]]
 id = "modelo-369-importacion-info-adicional"
 record_type = "t36900-info-adicional"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-info-adicional-1-inicio-del-identificador-de-modelo-y-pag"
 offset = 1
 length = 2
@@ -160,8 +147,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-info-adicional-3-modelo"
 offset = 3
 length = 3
@@ -174,8 +160,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-info-adicional-6-pagina"
 offset = 6
 length = 2
@@ -188,8 +173,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-info-adicional-8-fin-de-identificador-de-modelo"
 offset = 8
 length = 1
@@ -202,8 +186,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-info-adicional-9-reservado"
 offset = 9
 length = 93
@@ -215,8 +198,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-info-adicional-102-constante-t36900"
 offset = 102
 length = 9
@@ -230,15 +212,15 @@ signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
-[[revisions.esquema-importacion.export_layouts.records]]
+# Design sheet 'T36910 Imp': 164 positions, extent 1454.
+[[revisions."esquema-importacion".export_layouts.records]]
 id = "modelo-369-importacion-t36910"
 record_type = "t36910-imp"
 order = 2
 encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-importacion-t36910"
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-1-inicio-del-identificador-de-modelo-y-pag"
 offset = 1
 length = 2
@@ -251,8 +233,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-3-modelo"
 offset = 3
 length = 3
@@ -265,8 +246,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-6-pagina"
 offset = 6
 length = 2
@@ -279,8 +259,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-8-fin-de-identificador-de-modelo"
 offset = 8
 length = 1
@@ -293,8 +272,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-55-complementaria"
 offset = 55
 length = 1
@@ -307,8 +285,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-58-1-declarante-nif"
 offset = 58
 length = 15
@@ -321,8 +298,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-88-1-declarante-apellidos-y-nombre-o-razon"
 offset = 88
 length = 125
@@ -335,8 +311,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-1429-reservado"
 offset = 1429
 length = 17
@@ -348,8 +323,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36910-1446-constante-t36910"
 offset = 1446
 length = 9
@@ -363,15 +337,15 @@ signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
-[[revisions.esquema-importacion.export_layouts.records]]
+# Design sheet 'T36911 Imp': 147 positions, extent 763.
+[[revisions."esquema-importacion".export_layouts.records]]
 id = "modelo-369-importacion-t36911"
 record_type = "t36911-imp"
 order = 3
 encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "modelo-369-importacion-t36911"
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36911-1-inicio-del-identificador-de-modelo-y-pag"
 offset = 1
 length = 2
@@ -384,8 +358,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36911-3-modelo"
 offset = 3
 length = 3
@@ -398,8 +371,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36911-6-pagina"
 offset = 6
 length = 2
@@ -412,8 +384,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36911-8-fin-de-identificador-de-modelo"
 offset = 8
 length = 1
@@ -426,8 +397,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36911-9-complementaria"
 offset = 9
 length = 1
@@ -440,8 +410,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36911-738-reservado"
 offset = 738
 length = 17
@@ -453,8 +422,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36911-755-constante-t36911"
 offset = 755
 length = 9
@@ -468,14 +436,14 @@ signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
-[[revisions.esquema-importacion.export_layouts.records]]
+# Design sheet 'T36912 Imp': 7 positions, extent 2947.
+[[revisions."esquema-importacion".export_layouts.records]]
 id = "modelo-369-importacion-t36912"
 record_type = "t36912-imp"
 order = 4
 encoding = "iso-8859-1"
 line_ending = "none"
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36912-1-inicio-del-identificador-de-modelo-y-pag"
 offset = 1
 length = 2
@@ -488,8 +456,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36912-3-modelo"
 offset = 3
 length = 3
@@ -502,8 +469,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36912-6-pagina"
 offset = 6
 length = 2
@@ -516,8 +482,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36912-8-fin-de-identificador-de-modelo"
 offset = 8
 length = 1
@@ -530,8 +495,7 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36912-9-complementaria"
 offset = 9
 length = 1
@@ -544,8 +508,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36912-10-reservado"
 offset = 10
 length = 2929
@@ -557,8 +520,7 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
-
-[[revisions.esquema-importacion.export_layouts.records.fields]]
+[[revisions."esquema-importacion".export_layouts.records.fields]]
 id = "modelo-369-importacion-t36912-2939-constante-t36912"
 offset = 2939
 length = 9

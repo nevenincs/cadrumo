@@ -27,7 +27,7 @@
 # aeat-modelo-280-procedure IS NOT CITED here, though the 2025 sibling's rows do
 # cite it. Its window opens 2025-01-01 and overlaps no year of this revision.
 
-[[revisions.2022-2024.deadline_windows]]
+[[revisions."2022-2024".deadline_windows]]
 id = "modelo-280-2022-0a"
 filing_year = 2022
 period = "2022 0A"
@@ -37,7 +37,7 @@ closes_on = 2023-02-28
 legal_refs = ["orden-hap-2118-2015:art-4"]
 source_refs = ["boe-modelo-280-base-order", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2022-2024.deadline_windows]]
+[[revisions."2022-2024".deadline_windows]]
 id = "modelo-280-2023-0a"
 filing_year = 2023
 period = "2023 0A"
@@ -47,7 +47,7 @@ closes_on = 2024-02-29
 legal_refs = ["orden-hap-2118-2015:art-4"]
 source_refs = ["boe-modelo-280-base-order", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2022-2024.deadline_windows]]
+[[revisions."2022-2024".deadline_windows]]
 id = "modelo-280-2024-0a"
 filing_year = 2024
 period = "2024 0A"

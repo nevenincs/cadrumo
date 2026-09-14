@@ -3,8 +3,7 @@
 # end date. It is the SAME artefact the 2023-y-siguientes edition names, which
 # is why the fixture id is the same one: a distinct id would imply a distinct
 # fixture, and no such fixture exists.
-
-[[revisions.2022.workbook_parity_refs]]
+[[revisions."2022".workbook_parity_refs]]
 id = "modelo-188-record-design"
 workbook_source = "boe-modelo-188-form-layout"
 fixture_id = "modelo-188-record-design-layout"

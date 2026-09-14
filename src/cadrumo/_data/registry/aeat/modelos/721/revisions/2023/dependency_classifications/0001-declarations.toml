@@ -13,7 +13,7 @@
 # here and nothing is settled, so that treatment would be both false and
 # unprovable.
 
-[[revisions.2023.dependency_classifications]]
+[[revisions."2023".dependency_classifications]]
 id = "modelo-721-dep-721"
 source_modelo = "721"
 treatment = "factual_evidence"

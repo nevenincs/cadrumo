@@ -5,7 +5,7 @@
 # following each natural quarter. The monthly grandes-empresas modality of
 # art 4 is out of this revision's scope.
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2024-1t"
 filing_year = 2024
 period = "2024 1T"
@@ -16,7 +16,7 @@ payment_cutoff_on = 2024-04-17
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2024-2t"
 filing_year = 2024
 period = "2024 2T"
@@ -27,7 +27,7 @@ payment_cutoff_on = 2024-07-17
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2024-3t"
 filing_year = 2024
 period = "2024 3T"
@@ -38,7 +38,7 @@ payment_cutoff_on = 2024-10-16
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2024"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2024-4t"
 filing_year = 2024
 period = "2024 4T"
@@ -49,7 +49,7 @@ payment_cutoff_on = 2025-01-15
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2025-1t"
 filing_year = 2025
 period = "2025 1T"
@@ -60,7 +60,7 @@ payment_cutoff_on = 2025-04-15
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2025-2t"
 filing_year = 2025
 period = "2025 2T"
@@ -71,7 +71,7 @@ payment_cutoff_on = 2025-07-16
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2025-3t"
 filing_year = 2025
 period = "2025 3T"
@@ -82,7 +82,7 @@ payment_cutoff_on = 2025-10-15
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2025"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2025-4t"
 filing_year = 2025
 period = "2025 4T"
@@ -93,7 +93,7 @@ payment_cutoff_on = 2026-01-15
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2026-1t"
 filing_year = 2026
 period = "2026 1T"
@@ -104,7 +104,7 @@ payment_cutoff_on = 2026-04-15
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2026-2t"
 filing_year = 2026
 period = "2026 2T"
@@ -115,7 +115,7 @@ payment_cutoff_on = 2026-07-15
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2026-3t"
 filing_year = 2026
 period = "2026 3T"
@@ -126,7 +126,7 @@ payment_cutoff_on = 2026-10-15
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-modelo-216-procedure", "aeat-calendario-contribuyente-2026"]
 
-[[revisions.2024-y-siguientes.deadline_windows]]
+[[revisions."2024-y-siguientes".deadline_windows]]
 id = "modelo-216-2026-4t"
 filing_year = 2026
 period = "2026 4T"

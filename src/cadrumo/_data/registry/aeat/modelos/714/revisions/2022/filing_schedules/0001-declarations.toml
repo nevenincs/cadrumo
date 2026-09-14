@@ -5,8 +5,7 @@
 # Carries no profile_conditions, the shape 41 of the tree's 69 schedules
 # already use (modelo 100's annual rows among them); an absent condition
 # states no obligation claim, it defers that question to applicability.
-
-[[revisions.2022.filing_schedules]]
+[[revisions."2022".filing_schedules]]
 id = "modelo-714-anual"
 period_kind = "annual"
 periods = ["0A"]

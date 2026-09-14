@@ -2,7 +2,7 @@
 # cite the filing regulation in addition to the approval order, while the
 # historical field cites the older general return references.
 
-[[revisions.2018-2022.casilla_continuidad_evolutions]]
+[[revisions."2018-2022".casilla_continuidad_evolutions]]
 id = "filing-year-from-2004-legal-refs-evolved"
 continuidad_id = "filing-year"
 from_revision = "2004-2015"

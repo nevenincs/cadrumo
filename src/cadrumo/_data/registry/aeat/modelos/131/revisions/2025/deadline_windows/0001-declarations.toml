@@ -6,7 +6,7 @@
 # recomputed here. payment_cutoff_on is omitted: the domiciliacion cutoff is a
 # separate AEAT operational date with no grounded source in this corpus.
 
-[[revisions.2025.deadline_windows]]
+[[revisions."2025".deadline_windows]]
 id = "modelo-131-2025-1t"
 filing_year = 2025
 period = "2025 1T"
@@ -16,7 +16,7 @@ closes_on = 2025-04-21
 legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
 
-[[revisions.2025.deadline_windows.applicability_conditions]]
+[[revisions."2025".deadline_windows.applicability_conditions]]
 field = "irpf.estimation_regime"
 op = "equals"
 value = "objetiva"
@@ -24,7 +24,7 @@ explanation = "Modelo 131 corresponde al contribuyente en estimacion objetiva; l
 legal_refs = ["rd-439-2007:art-111", "orden-eha-672-2007:art-3"]
 source_refs = ["aeat-modelo-131-instructions"]
 
-[[revisions.2025.deadline_windows]]
+[[revisions."2025".deadline_windows]]
 id = "modelo-131-2025-2t"
 filing_year = 2025
 period = "2025 2T"
@@ -34,7 +34,7 @@ closes_on = 2025-07-21
 legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
 
-[[revisions.2025.deadline_windows.applicability_conditions]]
+[[revisions."2025".deadline_windows.applicability_conditions]]
 field = "irpf.estimation_regime"
 op = "equals"
 value = "objetiva"
@@ -42,7 +42,7 @@ explanation = "Modelo 131 corresponde al contribuyente en estimacion objetiva; l
 legal_refs = ["rd-439-2007:art-111", "orden-eha-672-2007:art-3"]
 source_refs = ["aeat-modelo-131-instructions"]
 
-[[revisions.2025.deadline_windows]]
+[[revisions."2025".deadline_windows]]
 id = "modelo-131-2025-3t"
 filing_year = 2025
 period = "2025 3T"
@@ -52,7 +52,7 @@ closes_on = 2025-10-20
 legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
 
-[[revisions.2025.deadline_windows.applicability_conditions]]
+[[revisions."2025".deadline_windows.applicability_conditions]]
 field = "irpf.estimation_regime"
 op = "equals"
 value = "objetiva"
@@ -60,7 +60,7 @@ explanation = "Modelo 131 corresponde al contribuyente en estimacion objetiva; l
 legal_refs = ["rd-439-2007:art-111", "orden-eha-672-2007:art-3"]
 source_refs = ["aeat-modelo-131-instructions"]
 
-[[revisions.2025.deadline_windows]]
+[[revisions."2025".deadline_windows]]
 id = "modelo-131-2025-4t"
 filing_year = 2025
 period = "2025 4T"
@@ -70,7 +70,7 @@ closes_on = 2026-01-30
 legal_refs = ["rd-439-2007:art-111", "rd-439-2007:art-109", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
 
-[[revisions.2025.deadline_windows.applicability_conditions]]
+[[revisions."2025".deadline_windows.applicability_conditions]]
 field = "irpf.estimation_regime"
 op = "equals"
 value = "objetiva"

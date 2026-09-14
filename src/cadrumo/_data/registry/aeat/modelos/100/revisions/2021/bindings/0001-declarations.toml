@@ -1,3 +1,74 @@
+[[revisions."2021".bindings]]
+id = "renta-modelo-100-estimacion-directa-es-normal"
+provider = { kind = "manual_input", casilla_id = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2021-dictionary", "lirpf-cuota-chain-authority"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+[[revisions."2021".bindings]]
+id = "renta-profile-tax-residence-ccaa"
+provider = { kind = "profile", profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
+value = { data_type = "enum", channel = "enum", typed_enum = "CCAA" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2021"]
+[[revisions."2021".bindings]]
+id = "renta-modelo-111-retenciones-periodicas"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "111", source_casilla_id = "28", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108"]
+source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+aeat_prefilled = true
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2021"]
+[[revisions."2021".bindings]]
+id = "renta-modelo-123-retenciones-periodicas"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "123", source_casilla_id = "03", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2021"]
+[[revisions."2021".bindings]]
+id = "renta-modelo-130-pagos-fraccionados"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "130", source_casilla_id = "19", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2021"]
+[[revisions."2021".bindings]]
+id = "renta-modelo-131-pagos-fraccionados"
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "131", source_casilla_id = "15", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2021"]
 # Eligibility flag for the LIRPF art. 64/75 anualidades por alimentos separate-
 # escala régimen. Art. 64 grants the separate escala only to a payer who
 # satisfies judicial anualidades "sin derecho a la aplicación por estos últimos
@@ -7,6 +78,17 @@
 # when custody is shared (custodia compartida splits the mínimo por descendientes, so
 # the payer retains it and the régimen does not apply). Consumed by the cuota
 # escala formulas (0528/0530/0529/0531) inside the régimen predicate.
+[[revisions."2021".bindings]]
+id = "renta-profile-anualidades-sin-minimo-descendientes"
+provider = { kind = "profile", profile_key = "renta_family.anualidades_sin_minimo_descendientes_2021" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["mínimo por descendientes", "sin derecho a la aplicación"]
 # Art. 58 LIRPF mínimo por descendientes aggregate, parte estatal. The
 # derived-fact injector (`_inject_derived_minimo_descendientes_facts`) ranks
 # every Art. 58.1-eligible descendant by birth_date, sums the birth-order
@@ -18,6 +100,17 @@
 # `renta-2021-profile-minimo-descendientes-autonomico`, which resolves each
 # tranche against the filer's declared tax-residence CCAA (some comunidades,
 # e.g. Madrid, publish their own divergent figures; Ley 22/2009 art. 46.1.a).
+[[revisions."2021".bindings]]
+id = "renta-profile-minimo-descendientes-estatal"
+provider = { kind = "profile", profile_key = "renta_family.descendientes_minimos_aggregate_2021" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["Mínimo por descendientes"]
 # Art. 58/61 LIRPF mínimo por descendientes aggregate, parte autonómica. The
 # derived-fact injector (`_inject_derived_minimo_descendientes_facts`) computes
 # this aggregate using the SAME Art. 58.1/58.2 birth-order-tranche method as
@@ -29,235 +122,14 @@
 # 4.000 € / 4.500 €; the primer/segundo/menor-3 figures coincide with Art. 58
 # for this filing year); every other CCAA mirrors the estatal aggregate
 # exactly. Feeds casilla 0514 (autonómico).
-
-[[revisions.2021.bindings]]
-id = "renta-modelo-100-estimacion-directa-es-normal"
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["aeat-dr-100-2021-dictionary", "lirpf-cuota-chain-authority"]
-
-[[revisions.2021.bindings.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["estimación directa", "rendimiento neto"]
-
-[revisions.2021.bindings.provider]
-kind = "manual_input"
-casilla_id = "0168"
-data_type = "boolean"
-true_value = "N"
-false_value = "S"
-
-[revisions.2021.bindings.value]
-data_type = "boolean"
-channel = "boolean"
-
-[revisions.2021.bindings.aggregation]
-op = "copy"
-
-[[revisions.2021.bindings]]
-id = "renta-profile-tax-residence-ccaa"
-legal_refs = ["ley-35-2006:art-74"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-
-[[revisions.2021.bindings.source_citations]]
-source_ref = "aeat-renta-2021-manual-parte1"
-required_text = ["Modelo 100", "ejercicio 2021"]
-
-[revisions.2021.bindings.provider]
-kind = "profile"
-profile_model = "TaxResidenceProfile"
-field = "ccaa"
-xsd_attribute = "codigoCADeclaracion"
-dictionary_field = "ZCCAD"
-
-[revisions.2021.bindings.value]
-data_type = "enum"
-channel = "enum"
-typed_enum = "CCAA"
-
-[revisions.2021.bindings.aggregation]
-op = "copy"
-
-[[revisions.2021.bindings]]
-id = "renta-modelo-111-retenciones-periodicas"
-aeat_prefilled = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108"]
-source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-
-[[revisions.2021.bindings.source_citations]]
-source_ref = "aeat-renta-2021-manual-parte1"
-required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2021"]
-
-[revisions.2021.bindings.provider]
-kind = "relation_prefill"
-relation_kind = "cross_model_output"
-dependency_role = "direct_calculation"
-source_modelo = "111"
-source_casilla_id = "28"
-
-[revisions.2021.bindings.provider.temporal]
-kind = "same_filing_year_periods"
-source_periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-
-[revisions.2021.bindings.applicability]
-kind = "target_periods"
-periods = ["0A"]
-
-[revisions.2021.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2021.bindings.aggregation]
-op = "sum"
-
-[[revisions.2021.bindings]]
-id = "renta-modelo-123-retenciones-periodicas"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
-source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-
-[[revisions.2021.bindings.source_citations]]
-source_ref = "aeat-renta-2021-manual-parte1"
-required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2021"]
-
-[revisions.2021.bindings.provider]
-kind = "relation_prefill"
-relation_kind = "cross_model_output"
-dependency_role = "direct_calculation"
-source_modelo = "123"
-source_casilla_id = "03"
-
-[revisions.2021.bindings.provider.temporal]
-kind = "same_filing_year_periods"
-source_periods = ["1T", "2T", "3T", "4T"]
-
-[revisions.2021.bindings.applicability]
-kind = "target_periods"
-periods = ["0A"]
-
-[revisions.2021.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2021.bindings.aggregation]
-op = "sum"
-
-[[revisions.2021.bindings]]
-id = "renta-modelo-130-pagos-fraccionados"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
-source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-
-[[revisions.2021.bindings.source_citations]]
-source_ref = "aeat-renta-2021-manual-parte1"
-required_text = ["Modelo 100", "ejercicio 2021"]
-
-[revisions.2021.bindings.provider]
-kind = "relation_prefill"
-relation_kind = "cross_model_output"
-dependency_role = "instalment_to_final_settlement"
-source_modelo = "130"
-source_casilla_id = "19"
-
-[revisions.2021.bindings.provider.temporal]
-kind = "same_filing_year_periods"
-source_periods = ["1T", "2T", "3T", "4T"]
-
-[revisions.2021.bindings.applicability]
-kind = "target_periods"
-periods = ["0A"]
-
-[revisions.2021.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2021.bindings.aggregation]
-op = "sum"
-
-[[revisions.2021.bindings]]
-id = "renta-modelo-131-pagos-fraccionados"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
-source_refs = ["aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-
-[[revisions.2021.bindings.source_citations]]
-source_ref = "aeat-renta-2021-manual-parte1"
-required_text = ["Modelo 100", "ejercicio 2021"]
-
-[revisions.2021.bindings.provider]
-kind = "relation_prefill"
-relation_kind = "cross_model_output"
-dependency_role = "instalment_to_final_settlement"
-source_modelo = "131"
-source_casilla_id = "15"
-
-[revisions.2021.bindings.provider.temporal]
-kind = "same_filing_year_periods"
-source_periods = ["1T", "2T", "3T", "4T"]
-
-[revisions.2021.bindings.applicability]
-kind = "target_periods"
-periods = ["0A"]
-
-[revisions.2021.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2021.bindings.aggregation]
-op = "sum"
-
-[[revisions.2021.bindings]]
-id = "renta-profile-anualidades-sin-minimo-descendientes"
-legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions.2021.bindings.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["mínimo por descendientes", "sin derecho a la aplicación"]
-
-[revisions.2021.bindings.provider]
-kind = "profile"
-profile_key = "renta_family.anualidades_sin_minimo_descendientes_2021"
-
-[revisions.2021.bindings.value]
-data_type = "boolean"
-channel = "boolean"
-
-[revisions.2021.bindings.aggregation]
-op = "copy"
-
-[[revisions.2021.bindings]]
-id = "renta-profile-minimo-descendientes-estatal"
-legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1"]
-
-[[revisions.2021.bindings.source_citations]]
-source_ref = "aeat-renta-2021-manual-parte1"
-required_text = ["Mínimo por descendientes"]
-
-[revisions.2021.bindings.provider]
-kind = "profile"
-profile_key = "renta_family.descendientes_minimos_aggregate_2021"
-
-[revisions.2021.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2021.bindings.aggregation]
-op = "copy"
-
-[[revisions.2021.bindings]]
+[[revisions."2021".bindings]]
 id = "renta-profile-minimo-descendientes-autonomico"
+provider = { kind = "profile", profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2021" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-renta-2021-manual-parte1"]
 
-[[revisions.2021.bindings.source_citations]]
+[[revisions."2021".bindings.source_citations]]
 source_ref = "aeat-renta-2021-manual-parte1"
 required_text = ["Mínimo por descendientes"]
-
-[revisions.2021.bindings.provider]
-kind = "profile"
-profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2021"
-
-[revisions.2021.bindings.value]
-data_type = "money"
-channel = "decimal"
-
-[revisions.2021.bindings.aggregation]
-op = "copy"

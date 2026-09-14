@@ -1181,12 +1181,9 @@ def prepare_apply(
         missing = {
             field: value
             for field, value in expected.items()
-            if (field == "continuidad_id"
-            and current_id is None)
-            or (field == "continuidad_origin"
-            and current_origin is None)
-            or (field == "continuidad_evidence"
-            and current_evidence is None)
+            if (field == "continuidad_id" and current_id is None)
+            or (field == "continuidad_origin" and current_origin is None)
+            or (field == "continuidad_evidence" and current_evidence is None)
         }
         # The condition above is intentionally explicit about each field, but
         # use a second conflict check so an existing value can never be

@@ -1,3 +1,76 @@
+[[revisions."2026".formulas]]
+id = "modelo-131-pago-fraccionado-sin-datos-base"
+target_casilla_id = "04"
+expression = { op = "percent", args = [{ casilla_id = "03" }, { parameter = "irpf.objective_no_base_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+[[revisions."2026".formulas]]
+id = "modelo-131-pago-fraccionado-agrario"
+target_casilla_id = "06"
+expression = { op = "percent", args = [{ casilla_id = "05" }, { parameter = "irpf.objective_agriculture_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+[[revisions."2026".formulas]]
+id = "modelo-131-suma-pagos-previos"
+target_casilla_id = "07"
+expression = { op = "add", args = [{ casilla_id = "02" }, { casilla_id = "04" }, { casilla_id = "06" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 07", "sumar", "casillas 02, 04 y 06"]
+[[revisions."2026".formulas]]
+id = "modelo-131-diferencia"
+target_casilla_id = "10"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla_id = "07" }, { casilla_id = "08" }] },
+    { casilla_id = "09" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 10", "Casilla 07", "Casilla 08", "Casilla 09"]
+[[revisions."2026".formulas]]
+id = "modelo-131-total"
+target_casilla_id = "13"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla_id = "10" }, { casilla_id = "11" }] },
+    { casilla_id = "12" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 13", "casilla 10", "casillas 11 y 12"]
+[[revisions."2026".formulas]]
+id = "modelo-131-resultado"
+target_casilla_id = "15"
+expression = { op = "subtract", args = [{ casilla_id = "13" }, { casilla_id = "14" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 15", "casilla 13", "casilla 14"]
+[[revisions."2026".formulas]]
+id = "modelo-131-saldo-negativo-fin-periodo"
+target_casilla_id = "saldo-negativo-fin-periodo"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "negate", args = [{ casilla_id = "10" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+additional_source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
 # M131 estimación-objetiva módulos engine formulas — 2026 per-year roll-forward.
 # Replicates the 2025 revision's four-fase formula chain unchanged (same rounding, same
 # op wiring); only the parameter/legal_refs bindings are re-pointed at the
@@ -17,6 +90,29 @@
 # keyed-bracket coefficient table (m131-modulos-coeficientes-2026). An
 # untabled epígrafe or a blank epígrafe resolves to zero (see the op's
 # docstring in _formula_runtime.py).
+[[revisions."2026".formulas]]
+id = "modelo-131-modulos-rendimiento-neto-previo"
+target_casilla_id = "modulos-rendimiento-neto-previo"
+expression = { op = "m131_resolve_modulos_previo", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-1-unidades" },
+    { casilla_id = "modulos-2-unidades" },
+    { casilla_id = "modulos-3-unidades" },
+    { casilla_id = "modulos-4-unidades" },
+    { casilla_id = "modulos-5-unidades" },
+    { casilla_id = "modulos-6-unidades" },
+    { casilla_id = "modulos-7-unidades" },
+    { parameter = "m131-modulos-coeficientes" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = [
+    "el rendimiento neto correspondiente a cada actividad se calculará en función de los signos o módulos establecidos para la misma, teniendo en cuenta los",
+    "rendimientos anuales por unidad antes de amortización",
+]
+
 # Fase 2ª — rendimiento neto minorado: previo minus the sum of the minoración
 # por incentivos al empleo (Orden HAC/1425/2025 Anexo II, instrucción 2.2.a)
 # and the minoración por incentivos a la inversión (instrucción 2.2.b). The
@@ -31,6 +127,31 @@
 # the minorado, since omission only under-claims a reduction, never
 # fabricates one). Both minoraciones feed an internal advisory-support
 # casilla that never substitutes for the operator's manual casilla 01.
+[[revisions."2026".formulas]]
+id = "modelo-131-modulos-rendimiento-neto-minorado"
+target_casilla_id = "modulos-rendimiento-neto-minorado"
+expression = { op = "subtract", args = [
+    { casilla_id = "modulos-rendimiento-neto-previo" },
+    { op = "add", args = [
+        { op = "m131_resolve_modulos_minoracion_empleo", args = [
+            { casilla_id = "modulos-epigrafe" },
+            { casilla_id = "modulos-1-unidades" },
+            { casilla_id = "modulos-1-unidades-anterior" },
+            { parameter = "m131-modulos-coeficientes" },
+            { parameter = "m131-modulos-coeficiente-tramos-asalariados" },
+            { parameter = "m131-modulos-coeficiente-incremento-asalariados" },
+        ] },
+        { casilla_id = "modulos-minoracion-inversion" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:instruccion-2-2-a", "orden-hac-1425-2025:instruccion-2-2-b"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = [
+    "las minoraciones por incentivos al empleo y a la inversión",
+]
+
 # Fase 3ª — rendimiento neto de módulos: minorado adjusted by the full
 # cascade of índices correctores generales (Orden HAC/1425/2025 Anexo II,
 # instrucción 2.3, letra b): b.1 pequeña dimensión, b.2 temporada / b.4
@@ -51,344 +172,86 @@
 # frozenset. Omitting the letra a) índices keeps this an internal
 # advisory-support figure, never a substitute for the operator's manual
 # casilla 01.
+[[revisions."2026".formulas]]
+id = "modelo-131-modulos-rendimiento-neto-modulos"
+target_casilla_id = "modulos-rendimiento-neto-modulos"
+expression = { op = "m131_resolve_modulos_indices_generales", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-rendimiento-neto-minorado" },
+    { casilla_id = "modulos-indice-pequena-dimension" },
+    { casilla_id = "modulos-indice-temporada" },
+    { casilla_id = "modulos-indice-inicio-actividad" },
+    { parameter = "m131-modulos-cuantia-exceso" },
+    { parameter = "m131-modulos-indice-exceso" },
+] }
+rounding = "money-2"
+legal_refs = [
+    "ley-35-2006:art-31",
+    "orden-hac-1425-2025:instruccion-2-3-b-3",
+    "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1",
+    "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2",
+    "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4",
+    "orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades",
+]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = [
+    "los índices correctores que, en su caso, resulten aplicables",
+]
+
 # Advisory-support flag: the declared índice de pequeña dimensión (b.1) was
 # ignored because the activity carries a documented índice especial
 # (Orden HAC/1425/2025 Anexo II, instrucción 2.3). The incompatibility text
 # itself is carried by the legal_refs entry, whose required_text quotes the
 # Orden verbatim; the source citation grounds the fact that the índices
 # correctores apply to the pago fraccionado at all.
+[[revisions."2026".formulas]]
+id = "modelo-131-modulos-pequena-dimension-ignorado-flag"
+target_casilla_id = "modulos-pequena-dimension-ignorado-flag"
+expression = { op = "m131_resolve_modulos_pequena_dimension_ignorado_flag", args = [
+    { casilla_id = "modulos-epigrafe" },
+    { casilla_id = "modulos-indice-pequena-dimension" },
+] }
+legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = [
+    "los índices correctores de actividad se reflejan en el formulario de declaración",
+]
+
 # Advisory-support flag: both índice de temporada (b.2) and índice de inicio
 # de nuevas actividades (b.4) were declared simultaneously (mutually
 # exclusive per Orden HAC/1425/2025 Anexo II, instrucción 2.3).
-# Fase 4ª — rendimiento neto de la actividad: módulos minus the 5 por 100
-# reducción general (Orden HAC/1425/2025 DA-1, apartados 1 y 3).
-
-[[revisions.2026.formulas]]
-id = "modelo-131-pago-fraccionado-sin-datos-base"
-target_casilla_id = "04"
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["Casilla 04", "2 por 100", "casilla 03"]
-
-[revisions.2026.formulas.expression]
-op = "percent"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "03"
-
-[[revisions.2026.formulas.expression.args]]
-parameter = "irpf.objective_no_base_fractional_payment_rate"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-pago-fraccionado-agrario"
-target_casilla_id = "06"
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["Casilla 06", "2 por 100", "casilla 05"]
-
-[revisions.2026.formulas.expression]
-op = "percent"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "05"
-
-[[revisions.2026.formulas.expression.args]]
-parameter = "irpf.objective_agriculture_fractional_payment_rate"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-suma-pagos-previos"
-target_casilla_id = "07"
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["Casilla 07", "sumar", "casillas 02, 04 y 06"]
-
-[revisions.2026.formulas.expression]
-op = "add"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "02"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "04"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "06"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-diferencia"
-target_casilla_id = "10"
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["Casilla 10", "Casilla 07", "Casilla 08", "Casilla 09"]
-
-[revisions.2026.formulas.expression]
-op = "subtract"
-
-[[revisions.2026.formulas.expression.args]]
-op = "subtract"
-
-[[revisions.2026.formulas.expression.args.args]]
-casilla_id = "07"
-
-[[revisions.2026.formulas.expression.args.args]]
-casilla_id = "08"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "09"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-total"
-target_casilla_id = "13"
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["Casilla 13", "casilla 10", "casillas 11 y 12"]
-
-[revisions.2026.formulas.expression]
-op = "subtract"
-
-[[revisions.2026.formulas.expression.args]]
-op = "subtract"
-
-[[revisions.2026.formulas.expression.args.args]]
-casilla_id = "10"
-
-[[revisions.2026.formulas.expression.args.args]]
-casilla_id = "11"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "12"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-resultado"
-target_casilla_id = "15"
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["Casilla 15", "casilla 13", "casilla 14"]
-
-[revisions.2026.formulas.expression]
-op = "subtract"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "13"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "14"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-saldo-negativo-fin-periodo"
-target_casilla_id = "saldo-negativo-fin-periodo"
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-additional_source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["Resultados negativos"]
-
-[revisions.2026.formulas.expression]
-op = "max"
-
-[[revisions.2026.formulas.expression.args]]
-literal = "0"
-
-[[revisions.2026.formulas.expression.args]]
-op = "negate"
-
-[[revisions.2026.formulas.expression.args.args]]
-casilla_id = "10"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-modulos-rendimiento-neto-previo"
-target_casilla_id = "modulos-rendimiento-neto-previo"
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["el rendimiento neto correspondiente a cada actividad se calculará en función de los signos o módulos establecidos para la misma, teniendo en cuenta los", "rendimientos anuales por unidad antes de amortización"]
-
-[revisions.2026.formulas.expression]
-op = "m131_resolve_modulos_previo"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-epigrafe"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-1-unidades"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-2-unidades"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-3-unidades"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-4-unidades"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-5-unidades"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-6-unidades"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-7-unidades"
-
-[[revisions.2026.formulas.expression.args]]
-parameter = "m131-modulos-coeficientes"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-modulos-rendimiento-neto-minorado"
-target_casilla_id = "modulos-rendimiento-neto-minorado"
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:instruccion-2-2-a", "orden-hac-1425-2025:instruccion-2-2-b"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["las minoraciones por incentivos al empleo y a la inversión"]
-
-[revisions.2026.formulas.expression]
-op = "subtract"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-rendimiento-neto-previo"
-
-[[revisions.2026.formulas.expression.args]]
-op = "add"
-
-[[revisions.2026.formulas.expression.args.args]]
-op = "m131_resolve_modulos_minoracion_empleo"
-
-[[revisions.2026.formulas.expression.args.args.args]]
-casilla_id = "modulos-epigrafe"
-
-[[revisions.2026.formulas.expression.args.args.args]]
-casilla_id = "modulos-1-unidades"
-
-[[revisions.2026.formulas.expression.args.args.args]]
-casilla_id = "modulos-1-unidades-anterior"
-
-[[revisions.2026.formulas.expression.args.args.args]]
-parameter = "m131-modulos-coeficientes"
-
-[[revisions.2026.formulas.expression.args.args.args]]
-parameter = "m131-modulos-coeficiente-tramos-asalariados"
-
-[[revisions.2026.formulas.expression.args.args.args]]
-parameter = "m131-modulos-coeficiente-incremento-asalariados"
-
-[[revisions.2026.formulas.expression.args.args]]
-casilla_id = "modulos-minoracion-inversion"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-modulos-rendimiento-neto-modulos"
-target_casilla_id = "modulos-rendimiento-neto-modulos"
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:instruccion-2-3-b-3", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4", "orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["los índices correctores que, en su caso, resulten aplicables"]
-
-[revisions.2026.formulas.expression]
-op = "m131_resolve_modulos_indices_generales"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-epigrafe"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-rendimiento-neto-minorado"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-indice-pequena-dimension"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-indice-temporada"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-indice-inicio-actividad"
-
-[[revisions.2026.formulas.expression.args]]
-parameter = "m131-modulos-cuantia-exceso"
-
-[[revisions.2026.formulas.expression.args]]
-parameter = "m131-modulos-indice-exceso"
-
-[[revisions.2026.formulas]]
-id = "modelo-131-modulos-pequena-dimension-ignorado-flag"
-target_casilla_id = "modulos-pequena-dimension-ignorado-flag"
-legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
-
-[[revisions.2026.formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["los índices correctores de actividad se reflejan en el formulario de declaración"]
-
-[revisions.2026.formulas.expression]
-op = "m131_resolve_modulos_pequena_dimension_ignorado_flag"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-epigrafe"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-indice-pequena-dimension"
-
-[[revisions.2026.formulas]]
+[[revisions."2026".formulas]]
 id = "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"
 target_casilla_id = "modulos-temporada-inicio-actividad-conflicto-flag"
+expression = { op = "m131_resolve_modulos_temporada_inicio_conflicto_flag", args = [
+    { casilla_id = "modulos-indice-temporada" },
+    { casilla_id = "modulos-indice-inicio-actividad" },
+] }
 legal_refs = ["orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
-
-[[revisions.2026.formulas.source_citations]]
+[[revisions."2026".formulas.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
-required_text = ["los índices correctores aplicables inicialmente en cada período anual"]
+required_text = [
+    "los índices correctores aplicables inicialmente en cada período anual",
+]
 
-[revisions.2026.formulas.expression]
-op = "m131_resolve_modulos_temporada_inicio_conflicto_flag"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-indice-temporada"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-indice-inicio-actividad"
-
-[[revisions.2026.formulas]]
+# Fase 4ª — rendimiento neto de la actividad: módulos minus the 5 por 100
+# reducción general (Orden HAC/1425/2025 DA-1, apartados 1 y 3).
+[[revisions."2026".formulas]]
 id = "modelo-131-modulos-rendimiento-neto-actividad"
 target_casilla_id = "modulos-rendimiento-neto-actividad"
+expression = { op = "subtract", args = [
+    { casilla_id = "modulos-rendimiento-neto-modulos" },
+    { op = "percent", args = [
+        { casilla_id = "modulos-rendimiento-neto-modulos" },
+        { parameter = "m131-modulos-reduccion-general" },
+    ] },
+] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:da-1"]
-
-[[revisions.2026.formulas.source_citations]]
+[[revisions."2026".formulas.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
-required_text = ["las reducciones del rendimiento neto establecidas por disposiciones de carácter general para las actividades en estimación objetiva"]
-
-[revisions.2026.formulas.expression]
-op = "subtract"
-
-[[revisions.2026.formulas.expression.args]]
-casilla_id = "modulos-rendimiento-neto-modulos"
-
-[[revisions.2026.formulas.expression.args]]
-op = "percent"
-
-[[revisions.2026.formulas.expression.args.args]]
-casilla_id = "modulos-rendimiento-neto-modulos"
-
-[[revisions.2026.formulas.expression.args.args]]
-parameter = "m131-modulos-reduccion-general"
+required_text = [
+    "las reducciones del rendimiento neto establecidas por disposiciones de carácter general para las actividades en estimación objetiva",
+]

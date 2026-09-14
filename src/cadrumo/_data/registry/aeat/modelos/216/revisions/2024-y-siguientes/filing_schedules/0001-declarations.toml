@@ -6,16 +6,14 @@
 # against a selector that admits no monthly period would assert a filing this
 # revision cannot resolve. Modelling that regime is a revision-scope change, not
 # a schedule fragment.
-
-[[revisions.2024-y-siguientes.filing_schedules]]
+[[revisions."2024-y-siguientes".filing_schedules]]
 id = "modelo-216-trimestral"
 period_kind = "quarterly"
-profile_condition_mode = "all"
 periods = ["1T", "2T", "3T", "4T"]
 legal_refs = ["orden-eha-3290-2008:art-4", "orden-eha-3290-2008:art-1", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 
-[[revisions.2024-y-siguientes.filing_schedules.profile_conditions]]
+[[revisions."2024-y-siguientes".filing_schedules.profile_conditions]]
 field = "enrollment.large_company"
 op = "equals"
 value = false

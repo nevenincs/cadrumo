@@ -1,13 +1,12 @@
+[[revisions."2024".workbook_parity_refs]]
+id = "modelo-190-dr-pdf"
+workbook_source = "aeat-dr-190-2024"
 # Named for THIS edition, not the 2025 one it was copied from: the row now
 # claims parity of the 2024 design, so a fixture_id reading 2025 contradicted
 # its own workbook_source. The sibling convention is the same
 # (modelo-303-2022-record-design-layout). NOT CLAIMED: no fixture of either
 # name exists; runner_required = false, so nothing dereferences this label and
 # the rename removes a false implication rather than establishing parity.
-
-[[revisions.2024.workbook_parity_refs]]
-id = "modelo-190-dr-pdf"
-workbook_source = "aeat-dr-190-2024"
 fixture_id = "modelo-190-2024-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false

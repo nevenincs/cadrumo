@@ -8,7 +8,7 @@
 # runner_required = false because there is no XLSX fixture to run
 # against yet.
 
-[[revisions.2024.workbook_parity_refs]]
+[[revisions."2024".workbook_parity_refs]]
 id = "modelo-210-procedure-2025"
 workbook_source = "boe-modelo-210-2024-form-layout"
 fixture_id = "modelo-210-2024-procedure-skeleton"
@@ -18,7 +18,7 @@ tolerance = "0.01"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-2024-form-layout"]
 
-[[revisions.2024.workbook_parity_refs]]
+[[revisions."2024".workbook_parity_refs]]
 id = "modelo-210-procedure-2026"
 workbook_source = "boe-modelo-210-2026-form-layout"
 fixture_id = "modelo-210-2026-procedure-skeleton"

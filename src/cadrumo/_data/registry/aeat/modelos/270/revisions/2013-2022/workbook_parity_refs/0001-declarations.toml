@@ -3,7 +3,7 @@
 # 1043-byte form-spec excerpt, which carried no layout content. runner_required
 # stays false pending a verified byte-position parity run against the design.
 
-[[revisions.2013-2022.workbook_parity_refs]]
+[[revisions."2013-2022".workbook_parity_refs]]
 id = "modelo-270-orden-static-layout"
 workbook_source = "boe-dr-270-2013-2022"
 fixture_id = "modelo-270-orden-hap-2368-2013-layout"

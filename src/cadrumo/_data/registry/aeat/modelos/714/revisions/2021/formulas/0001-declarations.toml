@@ -4,6 +4,21 @@
 # base-liquidable casilla, yielding fixed_addition + (base - lower_bound) *
 # marginal_rate for the matched bracket. The escala is the STATE default
 # (subsidiaria a la escala autonómica); Phase-B implements the state baseline.
+
+[[revisions."2021".formulas]]
+id = "patrimonio-cuota-integra-escala-estatal"
+target_casilla_id = "patrimonio.cuota-integra"
+expression = { op = "lookup_bracket", args = [
+    { casilla_id = "patrimonio.base-liquidable" },
+    { parameter = "patrimonio-escala-estatal" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-30"]
+additional_source_refs = ["aeat-manual-patrimonio-2021"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "aeat-manual-patrimonio-2021"
+required_text = ["patrimonio neto"]
 # Modelo 714 casilla 39 = 80 % de la cuota íntegra del Impuesto sobre el
 # Patrimonio (suelo de la reducción por el límite conjunto IP+IRPF, Ley 19/1991
 # art. 31). The límite conjunto (art. 31) caps the combined IP+IRPF cuota at 60 %
@@ -15,6 +30,21 @@
 # art.31 parameter `patrimonio-reduccion-maxima-limite-conjunto-porcentaje`
 # and verified against the bundled authoritative corpus
 # `ley-19-1991-art-31.html`.
+
+[[revisions."2021".formulas]]
+id = "patrimonio-reduccion-limite-80-suelo"
+target_casilla_id = "patrimonio.reduccion-limite-80"
+expression = { op = "percent", args = [
+    { casilla_id = "patrimonio.cuota-integra" },
+    { parameter = "patrimonio-reduccion-maxima-limite-conjunto-porcentaje" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-31"]
+additional_source_refs = ["aeat-manual-patrimonio-2021"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "aeat-manual-patrimonio-2021"
+required_text = ["patrimonio neto"]
 # `aeat-modelo-100-procedure` is deliberately absent from the source_refs below.
 # It is AEAT's live Renta procedure landing page, retrieved 2026-05-05 and
 # applying from 2025-01-01, so it cannot evidence a filing for this ejercicio.
@@ -31,186 +61,101 @@
 # explicit M714 inputs: casillas 31, 32, 35 and 36. This avoids deriving the
 # limite conjunto from broad M100 totals alone.
 
-[[revisions.2021.formulas]]
-id = "patrimonio-cuota-integra-escala-estatal"
-target_casilla_id = "patrimonio.cuota-integra"
-rounding = "money-2"
-legal_refs = ["ley-19-1991:art-30"]
-additional_source_refs = ["aeat-manual-patrimonio-2021"]
-
-[[revisions.2021.formulas.source_citations]]
-source_ref = "aeat-manual-patrimonio-2021"
-required_text = ["patrimonio neto"]
-
-[revisions.2021.formulas.expression]
-op = "lookup_bracket"
-
-[[revisions.2021.formulas.expression.args]]
-casilla_id = "patrimonio.base-liquidable"
-
-[[revisions.2021.formulas.expression.args]]
-parameter = "patrimonio-escala-estatal"
-
-[[revisions.2021.formulas]]
-id = "patrimonio-reduccion-limite-80-suelo"
-target_casilla_id = "patrimonio.reduccion-limite-80"
-rounding = "money-2"
-legal_refs = ["ley-19-1991:art-31"]
-additional_source_refs = ["aeat-manual-patrimonio-2021"]
-
-[[revisions.2021.formulas.source_citations]]
-source_ref = "aeat-manual-patrimonio-2021"
-required_text = ["patrimonio neto"]
-
-[revisions.2021.formulas.expression]
-op = "percent"
-
-[[revisions.2021.formulas.expression.args]]
-casilla_id = "patrimonio.cuota-integra"
-
-[[revisions.2021.formulas.expression.args]]
-parameter = "patrimonio-reduccion-maxima-limite-conjunto-porcentaje"
-
-[[revisions.2021.formulas]]
+[[revisions."2021".formulas]]
 id = "patrimonio-irpf-bases-imponibles-m100"
 target_casilla_id = "patrimonio.irpf-bases-imponibles"
+expression = { op = "add", args = [
+    { binding = "m714-m100-base-imponible-general" },
+    { binding = "m714-m100-base-imponible-ahorro" },
+] }
 rounding = "money-2"
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-48", "ley-35-2006:art-49"]
 
-[[revisions.2021.formulas.source_citations]]
+[[revisions."2021".formulas.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
 required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
-[revisions.2021.formulas.expression]
-op = "add"
-
-[[revisions.2021.formulas.expression.args]]
-binding = "m714-m100-base-imponible-general"
-
-[[revisions.2021.formulas.expression.args]]
-binding = "m714-m100-base-imponible-ahorro"
-
-[[revisions.2021.formulas]]
+[[revisions."2021".formulas]]
 id = "patrimonio-limite-conjunto-art31"
 target_casilla_id = "patrimonio.limite-conjunto"
+expression = { op = "percent", args = [
+    { op = "subtract", args = [
+        { op = "add", args = [
+            { casilla_id = "patrimonio.irpf-bases-imponibles" },
+            { casilla_id = "patrimonio.dividendos-no-irpf" },
+        ] },
+        { casilla_id = "patrimonio.base-ahorro-excluida" },
+    ] },
+    { parameter = "patrimonio-limite-conjunto-porcentaje" },
+] }
 rounding = "money-2"
 legal_refs = ["ley-19-1991:art-31"]
 
-[[revisions.2021.formulas.source_citations]]
+[[revisions."2021".formulas.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
 required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
-[revisions.2021.formulas.expression]
-op = "percent"
-
-[[revisions.2021.formulas.expression.args]]
-op = "subtract"
-
-[[revisions.2021.formulas.expression.args.args]]
-op = "add"
-
-[[revisions.2021.formulas.expression.args.args.args]]
-casilla_id = "patrimonio.irpf-bases-imponibles"
-
-[[revisions.2021.formulas.expression.args.args.args]]
-casilla_id = "patrimonio.dividendos-no-irpf"
-
-[[revisions.2021.formulas.expression.args.args]]
-casilla_id = "patrimonio.base-ahorro-excluida"
-
-[[revisions.2021.formulas.expression.args]]
-parameter = "patrimonio-limite-conjunto-porcentaje"
-
-[[revisions.2021.formulas]]
+[[revisions."2021".formulas]]
 id = "patrimonio-irpf-cuotas-integras-m100"
 target_casilla_id = "patrimonio.irpf-cuotas-integras"
+expression = { op = "add", args = [
+    { binding = "m714-m100-cuota-integra-estatal" },
+    { binding = "m714-m100-cuota-integra-autonomica" },
+] }
 rounding = "money-2"
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-63", "ley-35-2006:art-74"]
 
-[[revisions.2021.formulas.source_citations]]
+[[revisions."2021".formulas.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
 required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
-[revisions.2021.formulas.expression]
-op = "add"
-
-[[revisions.2021.formulas.expression.args]]
-binding = "m714-m100-cuota-integra-estatal"
-
-[[revisions.2021.formulas.expression.args]]
-binding = "m714-m100-cuota-integra-autonomica"
-
-[[revisions.2021.formulas]]
+[[revisions."2021".formulas]]
 id = "patrimonio-suma-cuotas-limite-art31"
 target_casilla_id = "patrimonio.suma-cuotas-limite"
+expression = { op = "add", args = [
+    { op = "subtract", args = [
+        { casilla_id = "patrimonio.irpf-cuotas-integras" },
+        { casilla_id = "patrimonio.irpf-cuotas-excluidas-base-ahorro" },
+    ] },
+    { casilla_id = "patrimonio.cuota-integra-susceptible-limitacion" },
+] }
 rounding = "money-2"
 legal_refs = ["ley-19-1991:art-31"]
 
-[[revisions.2021.formulas.source_citations]]
+[[revisions."2021".formulas.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
 required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
-[revisions.2021.formulas.expression]
-op = "add"
-
-[[revisions.2021.formulas.expression.args]]
-op = "subtract"
-
-[[revisions.2021.formulas.expression.args.args]]
-casilla_id = "patrimonio.irpf-cuotas-integras"
-
-[[revisions.2021.formulas.expression.args.args]]
-casilla_id = "patrimonio.irpf-cuotas-excluidas-base-ahorro"
-
-[[revisions.2021.formulas.expression.args]]
-casilla_id = "patrimonio.cuota-integra-susceptible-limitacion"
-
-[[revisions.2021.formulas]]
+[[revisions."2021".formulas]]
 id = "patrimonio-exceso-limite-conjunto-art31"
 target_casilla_id = "patrimonio.exceso-limite-conjunto"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla_id = "patrimonio.suma-cuotas-limite" },
+        { casilla_id = "patrimonio.limite-conjunto" },
+    ] },
+    { literal = "0" },
+] }
 rounding = "money-2"
 legal_refs = ["ley-19-1991:art-31"]
 
-[[revisions.2021.formulas.source_citations]]
+[[revisions."2021".formulas.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
 required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
-[revisions.2021.formulas.expression]
-op = "max"
-
-[[revisions.2021.formulas.expression.args]]
-op = "subtract"
-
-[[revisions.2021.formulas.expression.args.args]]
-casilla_id = "patrimonio.suma-cuotas-limite"
-
-[[revisions.2021.formulas.expression.args.args]]
-casilla_id = "patrimonio.limite-conjunto"
-
-[[revisions.2021.formulas.expression.args]]
-literal = "0"
-
-[[revisions.2021.formulas]]
+[[revisions."2021".formulas]]
 id = "patrimonio-total-cuota-integra-art31"
 target_casilla_id = "patrimonio.total-cuota-integra"
+expression = { op = "subtract", args = [
+    { casilla_id = "patrimonio.cuota-integra" },
+    { op = "min", args = [
+        { casilla_id = "patrimonio.exceso-limite-conjunto" },
+        { casilla_id = "patrimonio.reduccion-limite-80" },
+    ] },
+] }
 rounding = "money-2"
 legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
 
-[[revisions.2021.formulas.source_citations]]
+[[revisions."2021".formulas.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
 required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
-
-[revisions.2021.formulas.expression]
-op = "subtract"
-
-[[revisions.2021.formulas.expression.args]]
-casilla_id = "patrimonio.cuota-integra"
-
-[[revisions.2021.formulas.expression.args]]
-op = "min"
-
-[[revisions.2021.formulas.expression.args.args]]
-casilla_id = "patrimonio.exceso-limite-conjunto"
-
-[[revisions.2021.formulas.expression.args.args]]
-casilla_id = "patrimonio.reduccion-limite-80"

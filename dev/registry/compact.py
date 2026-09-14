@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import tempfile
@@ -108,6 +109,52 @@ def field_count(value: object) -> int:
     return 0
 
 
+def replace_if_unchanged(target: Path, replacement: Path | None, expected: str | None) -> None:
+    """Capture the actual destination before comparison; never overwrite a racer.
+
+    Hard-link installation is atomic and fails if a concurrent writer creates
+    the destination during the capture/install gap. Displaced conflicting bytes
+    remain recoverable, including when restoring their original name is unsafe.
+    """
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".packing-", delete=False) as stream:
+        pending = Path(stream.name)
+    displaced: Path | None = None
+    try:
+        if replacement is not None:
+            shutil.copy2(replacement, pending)
+        if expected is not None:
+            with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".packing-displaced-", delete=False) as stream:
+                displaced = Path(stream.name)
+            displaced.unlink()
+            target.rename(displaced)
+            if hashlib.sha256(displaced.read_bytes()).hexdigest() != expected:
+                raise ValueError(f"concurrent edit captured at {displaced}")
+        if replacement is not None:
+            os.link(pending, target)
+        elif target.exists():
+            raise ValueError(f"concurrent file appeared at {target}")
+    except BaseException:
+        if displaced is not None and displaced.exists():
+            try:
+                os.link(displaced, target)
+            except FileExistsError as exc:
+                raise ValueError(
+                    f"concurrent target preserved at {target}; displaced bytes retained at {displaced}"
+                ) from exc
+            displaced.unlink()
+        raise
+    else:
+        if displaced is not None:
+            # Open handles can still edit the captured inode. Never discard
+            # those bytes merely because the installed target is correct.
+            if hashlib.sha256(displaced.read_bytes()).hexdigest() != expected:
+                raise ValueError(f"captured source changed during installation; retained at {displaced}")
+            displaced.unlink()
+    finally:
+        pending.unlink(missing_ok=True)
+
+
 def publish_staged_tree(directory: Path, staged: Path, originals: Path, before: dict[str, str]) -> None:
     """Publish exact file changes, rolling back our own writes on any late refusal.
 
@@ -126,19 +173,8 @@ def publish_staged_tree(directory: Path, staged: Path, originals: Path, before: 
             actual = hashlib.sha256(target.read_bytes()).hexdigest() if target.exists() else None
             if actual != before.get(name):
                 raise ValueError(f"concurrent edit at {target}")
-            if name in after:
-                target.parent.mkdir(parents=True, exist_ok=True)
-                # The temporary is beside the destination: replace cannot cross volumes.
-                with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".packing-", delete=False) as stream:
-                    pending = Path(stream.name)
-                try:
-                    shutil.copy2(staged / name, pending)
-                    pending.replace(target)
-                finally:
-                    pending.unlink(missing_ok=True)
-            else:
-                target.unlink()
             completed.append(name)
+            replace_if_unchanged(target, staged / name if name in after else None, before.get(name))
         if fingerprint(directory) != after:
             raise ValueError("source changed during publication")
     except BaseException as exc:
@@ -149,11 +185,10 @@ def publish_staged_tree(directory: Path, staged: Path, originals: Path, before: 
             if actual != after.get(name):
                 conflicts.append(name)
                 continue
-            if name in before:
-                target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(originals / name, target)
-            else:
-                target.unlink(missing_ok=True)
+            try:
+                replace_if_unchanged(target, originals / name if name in before else None, after.get(name))
+            except (OSError, ValueError) as recovery_error:
+                conflicts.append(f"{name}: {recovery_error}")
         raise ValueError(
             f"publication refused: {exc}; prior writes rolled back except concurrent edits {conflicts}; "
             f"original backup retained at {originals}"
@@ -197,7 +232,7 @@ def pack_modelo(directory: Path, work: Path, *, apply: bool = False) -> dict[str
         for section in sorted(edition.iterdir()):
             if not section.is_dir() or section.name in {"locales", "export"}:
                 continue
-            paths = sorted(section.glob("*.toml"))
+            paths = sorted(section.glob("*.toml"), key=lambda path: path.as_posix())
             if not paths:
                 continue
             value = revision[section.name]
@@ -206,8 +241,11 @@ def pack_modelo(directory: Path, work: Path, *, apply: bool = False) -> dict[str
             # Preserve them until their owning adjudication decides their fate.
             text = "\n".join(path.read_text(encoding="utf-8-sig").rstrip() for path in paths) + "\n"
             try:
-                rtoml.loads(text)
+                parsed = rtoml.loads(text)["revisions"][revision_id][section.name]
+                needs_merge = canonical(parsed) != canonical(value)
             except rtoml.TomlParsingError:
+                needs_merge = True
+            if needs_merge:
                 # Singleton-table fragments repeat headers. Keep comment context
                 # alongside the canonical merged declaration instead of losing it.
                 context: list[str] = []

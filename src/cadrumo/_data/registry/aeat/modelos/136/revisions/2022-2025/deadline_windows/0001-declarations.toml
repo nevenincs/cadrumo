@@ -27,7 +27,7 @@
 # founding Orden HAP/70/2013 itself (applies_from 2013-02-01) and carries art. 7
 # verbatim.
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2022-1t"
 filing_year = 2022
 period = "2022 1T"
@@ -37,7 +37,7 @@ closes_on = 2022-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2022-2t"
 filing_year = 2022
 period = "2022 2T"
@@ -47,7 +47,7 @@ closes_on = 2022-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2022-3t"
 filing_year = 2022
 period = "2022 3T"
@@ -57,7 +57,7 @@ closes_on = 2022-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2022-4t"
 filing_year = 2022
 period = "2022 4T"
@@ -67,7 +67,7 @@ closes_on = 2023-01-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2023-1t"
 filing_year = 2023
 period = "2023 1T"
@@ -77,7 +77,7 @@ closes_on = 2023-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2023-2t"
 filing_year = 2023
 period = "2023 2T"
@@ -87,7 +87,7 @@ closes_on = 2023-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2023-3t"
 filing_year = 2023
 period = "2023 3T"
@@ -97,7 +97,7 @@ closes_on = 2023-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2023-4t"
 filing_year = 2023
 period = "2023 4T"
@@ -107,7 +107,7 @@ closes_on = 2024-01-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2024-1t"
 filing_year = 2024
 period = "2024 1T"
@@ -117,7 +117,7 @@ closes_on = 2024-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2024-2t"
 filing_year = 2024
 period = "2024 2T"
@@ -127,7 +127,7 @@ closes_on = 2024-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2024-3t"
 filing_year = 2024
 period = "2024 3T"
@@ -137,7 +137,7 @@ closes_on = 2024-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2024-4t"
 filing_year = 2024
 period = "2024 4T"
@@ -147,7 +147,7 @@ closes_on = 2025-01-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2025-1t"
 filing_year = 2025
 period = "2025 1T"
@@ -157,7 +157,7 @@ closes_on = 2025-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2025-2t"
 filing_year = 2025
 period = "2025 2T"
@@ -167,7 +167,7 @@ closes_on = 2025-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2025-3t"
 filing_year = 2025
 period = "2025 3T"
@@ -177,7 +177,7 @@ closes_on = 2025-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
-[[revisions.2022-2025.deadline_windows]]
+[[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2025-4t"
 filing_year = 2025
 period = "2025 4T"

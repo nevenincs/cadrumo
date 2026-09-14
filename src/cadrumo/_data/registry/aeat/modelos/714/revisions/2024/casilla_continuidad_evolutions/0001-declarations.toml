@@ -1,18 +1,6 @@
 # Los conceptos mantienen su significado; cambia la orden anual que aprueba el modelo.
-# Los conceptos de domicilio mantienen su significado; cambia la orden anual que aprueba el modelo.
-# Identidad revisada contra las ayudas oficiales AEAT de ambos ejercicios,
-# apartados 4.1.1 (sujeto pasivo), 4.1.4 (complementaria) y 4.1.5 (residencia).
-# La ayuda 2021 corrige la referencia 2020 que conserva el diseno de ese ejercicio.
-# En 2025, la expresion o anterior explicita la continuidad de la opcion personal;
-# no cambia su ejercicio inicial ni crea otra modalidad de tributacion.
-# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_1-datos-sujeto-pasivo.html
-# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_4-complementaria.html
-# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_5-comunidad-ciudad-autonoma-residencia.html
-# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_1-datos-sujeto-pasivo.html
-# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_4-complementaria.html
-# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_5-comunidad-ciudad-autonoma-residencia.html
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-inmuebles-urbanos-no-exentos-orden-aprobacion"
 continuidad_id = "patrimonio-inmuebles-urbanos-no-exentos"
 from_revision = "2023"
@@ -21,7 +9,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-inmuebles-rusticos-orden-aprobacion"
 continuidad_id = "patrimonio-inmuebles-rusticos"
 from_revision = "2023"
@@ -30,7 +18,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-bienes-afectos-no-exentos-orden-aprobacion"
 continuidad_id = "patrimonio-bienes-afectos-no-exentos"
 from_revision = "2023"
@@ -39,7 +27,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-bienes-afectos-exentos-orden-aprobacion"
 continuidad_id = "patrimonio-bienes-afectos-exentos"
 from_revision = "2023"
@@ -48,7 +36,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-depositos-cuentas-orden-aprobacion"
 continuidad_id = "patrimonio-depositos-cuentas"
 from_revision = "2023"
@@ -57,7 +45,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-valores-cesion-capitales-negociados-orden-aprobacion"
 continuidad_id = "patrimonio-valores-cesion-capitales-negociados"
 from_revision = "2023"
@@ -66,7 +54,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-valores-cesion-capitales-no-negociados-orden-aprobacion"
 continuidad_id = "patrimonio-valores-cesion-capitales-no-negociados"
 from_revision = "2023"
@@ -75,7 +63,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-inversion-colectiva-negociada-no-exenta-orden-aprobacion"
 continuidad_id = "patrimonio-inversion-colectiva-negociada-no-exenta"
 from_revision = "2023"
@@ -84,7 +72,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-otras-entidades-negociadas-no-exentas-orden-aprobacion"
 continuidad_id = "patrimonio-otras-entidades-negociadas-no-exentas"
 from_revision = "2023"
@@ -93,7 +81,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-inversion-colectiva-no-negociada-no-exenta-orden-aprobacion"
 continuidad_id = "patrimonio-inversion-colectiva-no-negociada-no-exenta"
 from_revision = "2023"
@@ -102,7 +90,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-otras-entidades-no-negociadas-no-exentas-orden-aprobacion"
 continuidad_id = "patrimonio-otras-entidades-no-negociadas-no-exentas"
 from_revision = "2023"
@@ -111,7 +99,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-participaciones-negociadas-exentas-orden-aprobacion"
 continuidad_id = "patrimonio-participaciones-negociadas-exentas"
 from_revision = "2023"
@@ -120,7 +108,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-participaciones-no-negociadas-exentas-orden-aprobacion"
 continuidad_id = "patrimonio-participaciones-no-negociadas-exentas"
 from_revision = "2023"
@@ -129,7 +117,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-seguros-vida-orden-aprobacion"
 continuidad_id = "patrimonio-seguros-vida"
 from_revision = "2023"
@@ -138,7 +126,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-rentas-temporales-vitalicias-orden-aprobacion"
 continuidad_id = "patrimonio-rentas-temporales-vitalicias"
 from_revision = "2023"
@@ -147,7 +135,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-vehiculos-joyas-pieles-embarcaciones-aeronaves-orden-aprobacion"
 continuidad_id = "patrimonio-vehiculos-joyas-pieles-embarcaciones-aeronaves"
 from_revision = "2023"
@@ -156,7 +144,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-arte-antiguedades-orden-aprobacion"
 continuidad_id = "patrimonio-arte-antiguedades"
 from_revision = "2023"
@@ -165,7 +153,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-derechos-reales-uso-disfrute-orden-aprobacion"
 continuidad_id = "patrimonio-derechos-reales-uso-disfrute"
 from_revision = "2023"
@@ -174,7 +162,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-concesiones-administrativas-orden-aprobacion"
 continuidad_id = "patrimonio-concesiones-administrativas"
 from_revision = "2023"
@@ -183,7 +171,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-propiedad-intelectual-industrial-orden-aprobacion"
 continuidad_id = "patrimonio-propiedad-intelectual-industrial"
 from_revision = "2023"
@@ -192,7 +180,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-opciones-contractuales-orden-aprobacion"
 continuidad_id = "patrimonio-opciones-contractuales"
 from_revision = "2023"
@@ -201,7 +189,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-demas-bienes-derechos-orden-aprobacion"
 continuidad_id = "patrimonio-demas-bienes-derechos"
 from_revision = "2023"
@@ -210,7 +198,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-total-bienes-derechos-no-exentos-orden-aprobacion"
 continuidad_id = "patrimonio-total-bienes-derechos-no-exentos"
 from_revision = "2023"
@@ -219,7 +207,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-deudas-deducibles-orden-aprobacion"
 continuidad_id = "patrimonio-deudas-deducibles"
 from_revision = "2023"
@@ -228,7 +216,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-minimo-exento-orden-aprobacion"
 continuidad_id = "patrimonio-minimo-exento"
 from_revision = "2023"
@@ -237,7 +225,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["ley-19-1991:art-28", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-exento-progresividad-orden-aprobacion"
 continuidad_id = "patrimonio-exento-progresividad"
 from_revision = "2023"
@@ -246,7 +234,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-deduccion-impuestos-extranjero-orden-aprobacion"
 continuidad_id = "patrimonio-deduccion-impuestos-extranjero"
 from_revision = "2023"
@@ -255,7 +243,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-valor-neto-bienes-ceuta-melilla-orden-aprobacion"
 continuidad_id = "patrimonio-valor-neto-bienes-ceuta-melilla"
 from_revision = "2023"
@@ -264,7 +252,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-cuota-proporcional-bienes-ceuta-melilla-orden-aprobacion"
 continuidad_id = "patrimonio-cuota-proporcional-bienes-ceuta-melilla"
 from_revision = "2023"
@@ -273,7 +261,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-bonificacion-ceuta-melilla-orden-aprobacion"
 continuidad_id = "patrimonio-bonificacion-ceuta-melilla"
 from_revision = "2023"
@@ -282,7 +270,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-monedas-virtuales-orden-aprobacion"
 continuidad_id = "patrimonio-monedas-virtuales"
 from_revision = "2023"
@@ -291,7 +279,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-deducciones-autonomicas-derecho-orden-aprobacion"
 continuidad_id = "patrimonio-deducciones-autonomicas-derecho"
 from_revision = "2023"
@@ -300,7 +288,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-deducciones-autonomicas-aplicadas-orden-aprobacion"
 continuidad_id = "patrimonio-deducciones-autonomicas-aplicadas"
 from_revision = "2023"
@@ -309,7 +297,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-bonificacion-autonomica-aplicada-orden-aprobacion"
 continuidad_id = "patrimonio-bonificacion-autonomica-aplicada"
 from_revision = "2023"
@@ -318,7 +306,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-cuotas-previas-complementaria-orden-aprobacion"
 continuidad_id = "patrimonio-cuotas-previas-complementaria"
 from_revision = "2023"
@@ -327,7 +315,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-diferencia-ingresar-complementaria-orden-aprobacion"
 continuidad_id = "patrimonio-diferencia-ingresar-complementaria"
 from_revision = "2023"
@@ -336,7 +324,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-vivienda-habitual-susceptible-exencion-orden-aprobacion"
 continuidad_id = "patrimonio-vivienda-habitual-susceptible-exencion"
 from_revision = "2023"
@@ -345,7 +333,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-vivienda-habitual-exenta-orden-aprobacion"
 continuidad_id = "patrimonio-vivienda-habitual-exenta"
 from_revision = "2023"
@@ -354,7 +342,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-vivienda-habitual-no-exenta-orden-aprobacion"
 continuidad_id = "patrimonio-vivienda-habitual-no-exenta"
 from_revision = "2023"
@@ -363,7 +351,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-otros-inmuebles-urbanos-orden-aprobacion"
 continuidad_id = "patrimonio-otros-inmuebles-urbanos"
 from_revision = "2023"
@@ -372,7 +360,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-comunidad-mayor-valor-bienes-orden-aprobacion"
 continuidad_id = "patrimonio-comunidad-mayor-valor-bienes"
 from_revision = "2023"
@@ -381,7 +369,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-declaracion-complementaria-orden-aprobacion"
 continuidad_id = "patrimonio-declaracion-complementaria"
 from_revision = "2023"
@@ -390,7 +378,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-opcion-normativa-autonomica-impatriados-orden-aprobacion"
 continuidad_id = "patrimonio-opcion-normativa-autonomica-impatriados"
 from_revision = "2023"
@@ -399,7 +387,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-impuestos-satisfechos-extranjero-orden-aprobacion"
 continuidad_id = "patrimonio-impuestos-satisfechos-extranjero"
 from_revision = "2023"
@@ -408,7 +396,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-base-liquidable-gravada-extranjero-orden-aprobacion"
 continuidad_id = "patrimonio-base-liquidable-gravada-extranjero"
 from_revision = "2023"
@@ -417,7 +405,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-importe-ingreso-orden-aprobacion"
 continuidad_id = "patrimonio-importe-ingreso"
 from_revision = "2023"
@@ -426,7 +414,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-forma-pago-orden-aprobacion"
 continuidad_id = "patrimonio-forma-pago"
 from_revision = "2023"
@@ -435,7 +423,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-declaracion-negativa-orden-aprobacion"
 continuidad_id = "patrimonio-declaracion-negativa"
 from_revision = "2023"
@@ -444,7 +432,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-tipo-declaracion-orden-aprobacion"
 continuidad_id = "patrimonio-tipo-declaracion"
 from_revision = "2023"
@@ -453,7 +441,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-sexo-contribuyente-orden-aprobacion"
 continuidad_id = "patrimonio-sexo-contribuyente"
 from_revision = "2023"
@@ -462,7 +450,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-estado-civil-orden-aprobacion"
 continuidad_id = "patrimonio-estado-civil"
 from_revision = "2023"
@@ -471,7 +459,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-porcentaje-discapacidad-orden-aprobacion"
 continuidad_id = "patrimonio-porcentaje-discapacidad"
 from_revision = "2023"
@@ -480,7 +468,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-clase-discapacidad-orden-aprobacion"
 continuidad_id = "patrimonio-clase-discapacidad"
 from_revision = "2023"
@@ -489,7 +477,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-codigo-provincia-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-codigo-provincia"
 from_revision = "2023"
@@ -498,7 +486,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-nacionalidad-orden-aprobacion"
 continuidad_id = "patrimonio-nacionalidad"
 from_revision = "2023"
@@ -507,7 +495,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-regimen-economico-matrimonio-orden-aprobacion"
 continuidad_id = "patrimonio-regimen-economico-matrimonio"
 from_revision = "2023"
@@ -516,7 +504,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-representante-nif-orden-aprobacion"
 continuidad_id = "patrimonio-representante-nif"
 from_revision = "2023"
@@ -525,7 +513,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-representante-nombre-orden-aprobacion"
 continuidad_id = "patrimonio-representante-nombre"
 from_revision = "2023"
@@ -534,7 +522,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-localidad-declaracion-orden-aprobacion"
 continuidad_id = "patrimonio-localidad-declaracion"
 from_revision = "2023"
@@ -543,7 +531,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-dia-declaracion-orden-aprobacion"
 continuidad_id = "patrimonio-dia-declaracion"
 from_revision = "2023"
@@ -552,7 +540,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-mes-declaracion-orden-aprobacion"
 continuidad_id = "patrimonio-mes-declaracion"
 from_revision = "2023"
@@ -561,7 +549,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-anio-declaracion-orden-aprobacion"
 continuidad_id = "patrimonio-anio-declaracion"
 from_revision = "2023"
@@ -570,7 +558,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-idioma-declaracion-orden-aprobacion"
 continuidad_id = "patrimonio-idioma-declaracion"
 from_revision = "2023"
@@ -579,7 +567,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-bienes-afectos-no-exentos-excluidos-inmuebles-orden-aprobacion"
 continuidad_id = "patrimonio-bienes-afectos-no-exentos-excluidos-inmuebles"
 from_revision = "2023"
@@ -588,7 +576,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-inmuebles-afectos-no-exentos-orden-aprobacion"
 continuidad_id = "patrimonio-inmuebles-afectos-no-exentos"
 from_revision = "2023"
@@ -596,8 +584,9 @@ to_revision = "2024"
 evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
+# Los conceptos de domicilio mantienen su significado; cambia la orden anual que aprueba el modelo.
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-tipo-via-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-tipo-via"
 from_revision = "2023"
@@ -606,7 +595,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-nombre-via-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-nombre-via"
 from_revision = "2023"
@@ -615,7 +604,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-tipo-numeracion-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-tipo-numeracion"
 from_revision = "2023"
@@ -624,7 +613,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-numero-casa-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-numero-casa"
 from_revision = "2023"
@@ -633,7 +622,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-calificador-numero-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-calificador-numero"
 from_revision = "2023"
@@ -642,7 +631,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-bloque-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-bloque"
 from_revision = "2023"
@@ -651,7 +640,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-portal-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-portal"
 from_revision = "2023"
@@ -660,7 +649,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-escalera-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-escalera"
 from_revision = "2023"
@@ -669,7 +658,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-planta-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-planta"
 from_revision = "2023"
@@ -678,7 +667,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-puerta-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-puerta"
 from_revision = "2023"
@@ -687,7 +676,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-datos-complementarios-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-datos-complementarios"
 from_revision = "2023"
@@ -696,7 +685,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-localidad-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-localidad"
 from_revision = "2023"
@@ -705,7 +694,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-codigo-postal-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-codigo-postal"
 from_revision = "2023"
@@ -714,7 +703,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-municipio-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-municipio"
 from_revision = "2023"
@@ -723,7 +712,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-habitual-provincia-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-habitual-provincia"
 from_revision = "2023"
@@ -732,7 +721,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-extranjero-direccion-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-extranjero-direccion"
 from_revision = "2023"
@@ -741,7 +730,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-extranjero-datos-complementarios-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-extranjero-datos-complementarios"
 from_revision = "2023"
@@ -750,7 +739,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-extranjero-poblacion-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-extranjero-poblacion"
 from_revision = "2023"
@@ -759,7 +748,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-extranjero-codigo-postal-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-extranjero-codigo-postal"
 from_revision = "2023"
@@ -768,7 +757,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-extranjero-provincia-region-estado-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-extranjero-provincia-region-estado"
 from_revision = "2023"
@@ -777,7 +766,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-extranjero-pais-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-extranjero-pais"
 from_revision = "2023"
@@ -786,7 +775,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-domicilio-extranjero-codigo-pais-orden-aprobacion"
 continuidad_id = "patrimonio-domicilio-extranjero-codigo-pais"
 from_revision = "2023"
@@ -794,8 +783,20 @@ to_revision = "2024"
 evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
+# Identidad revisada contra las ayudas oficiales AEAT de ambos ejercicios,
+# apartados 4.1.1 (sujeto pasivo), 4.1.4 (complementaria) y 4.1.5 (residencia).
+# La ayuda 2021 corrige la referencia 2020 que conserva el diseno de ese ejercicio.
+# En 2025, la expresion o anterior explicita la continuidad de la opcion personal;
+# no cambia su ejercicio inicial ni crea otra modalidad de tributacion.
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_1-datos-sujeto-pasivo.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_4-complementaria.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_5-comunidad-ciudad-autonoma-residencia.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_1-datos-sujeto-pasivo.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_4-complementaria.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_5-comunidad-ciudad-autonoma-residencia.html
+
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-obligacion-real-no-residente-orden-aprobacion"
 continuidad_id = "patrimonio-obligacion-real-no-residente"
 from_revision = "2023"
@@ -804,7 +805,7 @@ evolution_kind = "label_and_legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-2", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-opcion-obligacion-personal-no-residente-orden-aprobacion"
 continuidad_id = "patrimonio-opcion-obligacion-personal-no-residente"
 from_revision = "2023"
@@ -813,7 +814,7 @@ evolution_kind = "label_and_legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-2", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-obligacion-real-regimen-impatriados-orden-aprobacion"
 continuidad_id = "patrimonio-obligacion-real-regimen-impatriados"
 from_revision = "2023"
@@ -822,7 +823,7 @@ evolution_kind = "label_and_legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-2", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-comunidad-residencia-orden-aprobacion"
 continuidad_id = "patrimonio-comunidad-residencia"
 from_revision = "2023"
@@ -831,7 +832,7 @@ evolution_kind = "label_and_legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-fecha-nacimiento-orden-aprobacion"
 continuidad_id = "patrimonio-fecha-nacimiento"
 from_revision = "2023"
@@ -840,7 +841,7 @@ evolution_kind = "legal_refs_evolved"
 legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
 
-[[revisions.2024.casilla_continuidad_evolutions]]
+[[revisions."2024".casilla_continuidad_evolutions]]
 id = "patrimonio-complementaria-cuotas-anteriores-orden-aprobacion"
 continuidad_id = "patrimonio-complementaria-cuotas-anteriores"
 from_revision = "2023"

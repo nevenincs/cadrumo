@@ -39,67 +39,419 @@
 #
 # [48] IS "Pto." AND ITS LABEL KEEPS THAT ABBREVIATION, as [79] does in Apartado V.
 # The diseno never expands it and it sits three boxes from [51] "Pta." (Puerta).
+
 # @530+1, type_code An. Clase de cuota (M, N, P o blanco). [33].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.clase-cuota"
+number = "33"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_clase_cuota"
+input_kind = "informational"
+
 # @531+2, type_code An. Provincia de la cuota provincial. [act-provincia-cuota-provincial].
 # Slug: AEAT prints no box number on this field.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.provincia-cuota-provincial"
+number = "act-provincia-cuota-provincial"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_provincia_cuota_provincial"
+input_kind = "informational"
+
 # @535+1, type_code An. Tipo de actividad (E, P o A). [34].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.tipo-actividad"
+number = "34"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_tipo_actividad"
+input_kind = "informational"
+
 # @536+1, type_code An. Local afecto indirectamente (S o blanco). [35].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.local-afecto-indirectamente"
+number = "35"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_local_afecto_indirectamente"
+input_kind = "informational"
+
 # @537+40, type_code An. Descripcion de la actividad. [36].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.descripcion"
+number = "36"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_descripcion"
+input_kind = "informational"
+
 # @577+4, type_code An. Grupo o epigrafe. [37].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.grupo-epigrafe"
+number = "37"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_grupo_epigrafe"
+input_kind = "informational"
+
 # @583+5, type_code An. Municipio (codigo). [38].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.municipio"
+number = "38"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_municipio"
+input_kind = "informational"
+
 # @618+6, type_code Num. C. Mun. (codigo de municipio). [39].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.codigo-municipio"
+number = "39"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_codigo_municipio"
+input_kind = "informational"
+
 # @581+2, type_code An. Provincia (codigo). [40].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.provincia"
+number = "40"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_provincia"
+input_kind = "informational"
+
 # @624+2, type_code An. C. Prov. (codigo de provincia). [41].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.codigo-provincia"
+number = "41"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_codigo_provincia"
+input_kind = "informational"
+
 # @626+2, type_code An. Domicilio de la actividad. SG (sigla de la via publica). [42].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-sigla-via"
+number = "42"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_sigla_via"
+input_kind = "informational"
+
 # @628+25, type_code An. Domicilio de la actividad. Nombre de la via publica. [43].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-via-publica"
+number = "43"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_via_publica"
+input_kind = "informational"
+
 # @653+5, type_code Num. Domicilio de la actividad. C. Postal. [44].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-codigo-postal"
+number = "44"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_codigo_postal"
+input_kind = "informational"
+
 # @658+2, type_code An. Domicilio de la actividad. C. Via. [45].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-codigo-via"
+number = "45"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_codigo_via"
+input_kind = "informational"
+
 # @660+5, type_code Num. Domicilio de la actividad. Num.. [46].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-numero"
+number = "46"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_numero"
+input_kind = "informational"
+
 # @665+5, type_code An. Domicilio de la actividad. Km. [47].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-kilometro"
+number = "47"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_kilometro"
+input_kind = "informational"
+
 # @670+4, type_code An. Domicilio de la actividad. Pto.. [48].
 # Label keeps the diseno abbreviation Pto.; it is never expanded and sits beside Pta. (Puerta) at [51].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-pto"
+number = "48"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_pto"
+input_kind = "informational"
+
 # @674+2, type_code An. Domicilio de la actividad. Esc.. [49].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-escalera"
+number = "49"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_escalera"
+input_kind = "informational"
+
 # @676+2, type_code An. Domicilio de la actividad. Piso. [50].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-piso"
+number = "50"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_piso"
+input_kind = "informational"
+
 # @678+2, type_code An. Domicilio de la actividad. Pta.. [51].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-puerta"
+number = "51"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_puerta"
+input_kind = "informational"
+
 # @680+9, type_code Num. Domicilio de la actividad. Telefono. [52].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.domicilio-telefono"
+number = "52"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_domicilio_telefono"
+input_kind = "informational"
+
 # @689+1, type_code An. Notas que son de aplicacion: Agrupacion 1a. [53].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-agrupacion-1"
+number = "53"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_agrupacion_primera"
+input_kind = "informational"
+
 # @690+1, type_code An. Notas que son de aplicacion: Agrupacion 2a. [act-nota-agrupacion-2].
 # Slug: [53] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-agrupacion-2"
+number = "act-nota-agrupacion-2"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_agrupacion_segunda"
+input_kind = "informational"
+
 # @691+1, type_code An. Notas que son de aplicacion: Agrupacion 3a. [act-nota-agrupacion-3].
 # Slug: [53] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-agrupacion-3"
+number = "act-nota-agrupacion-3"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_agrupacion_tercera"
+input_kind = "informational"
+
 # @692+1, type_code An. Notas que son de aplicacion: Grupo 1a. [54].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-grupo-1"
+number = "54"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_grupo_primera"
+input_kind = "informational"
+
 # @693+1, type_code An. Notas que son de aplicacion: Grupo 2a. [act-nota-grupo-2].
 # Slug: [54] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-grupo-2"
+number = "act-nota-grupo-2"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_grupo_segunda"
+input_kind = "informational"
+
 # @694+1, type_code An. Notas que son de aplicacion: Grupo 3a. [act-nota-grupo-3].
 # Slug: [54] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-grupo-3"
+number = "act-nota-grupo-3"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_grupo_tercera"
+input_kind = "informational"
+
 # @695+1, type_code An. Notas que son de aplicacion: Epigrafe 1a. [55].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-epigrafe-1"
+number = "55"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_epigrafe_primera"
+input_kind = "informational"
+
 # @696+1, type_code An. Notas que son de aplicacion: Epigrafe 2a. [act-nota-epigrafe-2].
 # Slug: [55] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-epigrafe-2"
+number = "act-nota-epigrafe-2"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_epigrafe_segunda"
+input_kind = "informational"
+
 # @697+1, type_code An. Notas que son de aplicacion: Epigrafe 3a. [act-nota-epigrafe-3].
 # Slug: [55] is carried by the first of three independent flags.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.nota-epigrafe-3"
+number = "act-nota-epigrafe-3"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_nota_epigrafe_tercera"
+input_kind = "informational"
+
 # @698+1, type_code An. Se realiza la actividad dentro de un campamento turistico. [act-campamento-turistico].
 # Slug: AEAT prints no box number here. It sits between [55] and [57] where a [56] would fall, but the diseno does not print one and none is invented.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.campamento-turistico"
+number = "act-campamento-turistico"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_campamento_turistico"
+input_kind = "informational"
+
 # @699+1, type_code An. Se realiza la recepcion de loterias y apuestas. [act-recepcion-loterias].
 # Slug: AEAT prints no box number here. See the note on the preceding field.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.recepcion-loterias"
+number = "act-recepcion-loterias"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_recepcion_loterias"
+input_kind = "informational"
+
 # @700+1, type_code An. Regla(s) que son de aplicacion: Regla 4a 2 F). [57].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.regla-4-2-f"
+number = "57"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_regla_cuarta_2_f"
+input_kind = "informational"
+
 # @701+3, type_code An. Seccion. [58].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.seccion"
+number = "58"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_seccion"
+input_kind = "informational"
+
 # @704+4, type_code An. Actividad principal. [59].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.actividad-principal"
+number = "59"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_actividad_principal"
+input_kind = "informational"
+
 # @708+51, type_code An. Exencion (1 codigo + 50 descripcion). [60].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.exencion"
+number = "60"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_exencion"
+input_kind = "informational"
+
 # @759+51, type_code An. Bonificacion (1 codigo + 50 descripcion). [61].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.bonificacion"
+number = "61"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_bonificacion"
+input_kind = "informational"
+
 # @810+8, type_code Num. Fecha de inicio, variacion, cese u otras causas. [62].
 # ONE date casilla: the diseno splits it into three component fields at @810+2 (dia), @812+2 (mes) and @814+4 (ano), and a composite component is not a casilla of its own.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.fecha-inicio-variacion-cese"
+number = "62"
+section = ["actividad"]
+data_type = "date"
+semantic_role = "act_fecha_inicio_variacion_cese"
+input_kind = "informational"
+
 # @818+26, type_code An. Causa de la baja (1 codigo + 25 descripcion). [63].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.causa-baja"
+number = "63"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_causa_baja"
+input_kind = "informational"
+
 # @844+25, type_code An. Causa de la variacion. [act-causa-variacion].
 # Slug: [63] labels TWO different causes and is carried by Causa de la baja above.
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.causa-variacion"
+number = "act-causa-variacion"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_causa_variacion"
+input_kind = "informational"
+
 # @869+25, type_code An. Causa de la declaracion complementaria. [64].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.causa-declaracion-complementaria"
+number = "64"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_causa_declaracion_complementaria"
+input_kind = "informational"
+
 # @894+4, type_code Num. Ano en que inicio la actividad por primera vez. [65].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.ano-inicio-primera-vez"
+number = "65"
+section = ["actividad"]
+data_type = "year"
+semantic_role = "act_ano_inicio_primera_vez"
+input_kind = "informational"
+
 # @898+50, type_code An. Informacion adicional. [66].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.informacion-adicional"
+number = "66"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_informacion_adicional"
+input_kind = "informational"
+
 # @948+13, type_code Num. N. Ref. [67].
+[[revisions."2003-y-siguientes".casillas]]
+id = "act.numero-referencia"
+number = "67"
+section = ["actividad"]
+data_type = "text"
+semantic_role = "act_numero_referencia"
+input_kind = "informational"
 # Modelo 840 Apartado II [16] and Apartado III -- representante, boxes [17] to [32].
 # Transcribed position-by-position from the bundled aeat-dr-840 design (Pag. 1,
 # which tiles 1..1132 exactly once with no gap and no overlap).
@@ -122,27 +474,181 @@
 #
 # The whole apartado is optional: a declaration filed without a representante
 # leaves every one of these blank, so none is `required`.
+
 # @275+13. Numero de referencia. [16].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "decl.numero-referencia"
+number = "16"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "declaracion_numero_referencia"
+input_kind = "informational"
+
 # @288+9. NIF. [17].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.nif"
+number = "17"
+section = ["representante"]
+data_type = "nif"
+semantic_role = "representante_nif"
+input_kind = "informational"
+
 # @297+125. Apellidos y nombre o razon social. [18].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.apellidos-razon-social"
+number = "18"
+section = ["representante"]
+data_type = "name"
+semantic_role = "representante_nombre_razon_social"
+input_kind = "informational"
+
 # @422+2. SG (sigla de la via publica). [19].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-sigla-via"
+number = "19"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_sigla_via"
+input_kind = "informational"
+
 # @424+25. Nombre de la via publica. [20].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-via-publica"
+number = "20"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_via_publica"
+input_kind = "informational"
+
 # @449+6. C. Via (codigo de via). [21].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-codigo-via"
+number = "21"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_codigo_via"
+input_kind = "informational"
+
 # @455+5. Num.. [22].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-numero"
+number = "22"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_numero"
+input_kind = "informational"
+
 # @460+5. Km.. [23].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-kilometro"
+number = "23"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_kilometro"
+input_kind = "informational"
+
 # @465+2. Esc.. [24].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-escalera"
+number = "24"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_escalera"
+input_kind = "informational"
+
 # @467+2. Piso. [25].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-piso"
+number = "25"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_piso"
+input_kind = "informational"
+
 # @469+2. Pta.. [26].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-puerta"
+number = "26"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_puerta"
+input_kind = "informational"
+
 # @471+9. Telefono. [27].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.telefono"
+number = "27"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_telefono"
+input_kind = "informational"
+
 # @480+5. Cod. Postal. [28].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-codigo-postal"
+number = "28"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_codigo_postal"
+input_kind = "informational"
+
 # @487+5. Municipio (codigo). [29].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-municipio"
+number = "29"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_municipio"
+input_kind = "informational"
+
 # @522+6. C. Mun. (codigo de municipio). [30].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-codigo-municipio"
+number = "30"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_codigo_municipio"
+input_kind = "informational"
+
 # @485+2. Provincia (codigo). [31].
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-provincia"
+number = "31"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_provincia"
+input_kind = "informational"
+
 # @528+2. C. Prov. (codigo de provincia). [32].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "representante.domicilio-codigo-provincia"
+number = "32"
+section = ["representante"]
+data_type = "text"
+semantic_role = "representante_domicilio_codigo_provincia"
+input_kind = "informational"
 # `number` re-grounded 2026-08-22 from slug values to AEAT's own bracket numbers,
 # read off the bundled aeat-dr-840 design: Ejercicio is [14] at @270+4 and
 # "Declaracion de:" is [15] at @274+1. Before this the coverage report read 0 of
 # 108 derived casillas covered, because a slug matches no design box.
+[[revisions."2003-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "15"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_evento_censal_iae"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-2572-2003:apartado-1", "orden-hac-2572-2003:apartado-6"]
+
+[[revisions."2003-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "14"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
 # Modelo 840 Pag. 2 -- Apartado VI (elementos tributarios) and Apartado VII (cuota),
 # boxes [84] to [108]. Transcribed from the bundled aeat-dr-840 design; Pag. 2 tiles
 # 1..1165 exactly once with no gap and no overlap.
@@ -171,45 +677,237 @@
 # declaring one casilla per number would make the coverage report read covered while
 # five real positions stay unmodelled. They need the distinguishing convention that
 # Apartado IV is waiting on.
+
 # @11+13, type_code An. Cuota consignada directamente en las tarifas. [84].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.cuota-consignada-tarifas"
+number = "84"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_cuota_consignada_tarifas"
+input_kind = "informational"
+
 # @560+13, type_code An. A) Suma de elementos tributarios del grupo o epigrafe. [85].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.grupo-epigrafe-suma"
+number = "85"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_grupo_epigrafe_suma"
+input_kind = "informational"
+
 # @850+7, type_code Num. C) Suma de Total. [87].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-suma-total"
+number = "87"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_suma_total"
+input_kind = "informational"
+
 # @857+7, type_code Num. C) Suma de Rectificada. [88].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-suma-rectificada"
+number = "88"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_suma_rectificada"
+input_kind = "informational"
+
 # @864+7, type_code Num. C) Suma de Computable. [89].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-suma-computable"
+number = "89"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_suma_computable"
+input_kind = "informational"
+
 # @871+5, type_code Num. C) Superficie deducible. [90].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-superficie-deducible"
+number = "90"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_superficie_deducible"
+input_kind = "informational"
+
 # @876+7, type_code Num. C) Superficie computable. [91].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-superficie-computable"
+number = "91"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_municipal_superficie_computable"
+input_kind = "informational"
+
 # @883+13, type_code An. C) Valor elemento tributario. [92].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-valor-elemento"
+number = "92"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_municipal_valor_elemento"
+input_kind = "informational"
+
 # @896+5, type_code An. C) Coeficiente corrector. [93].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-coeficiente-corrector"
+number = "93"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_municipal_coeficiente_corrector"
+input_kind = "informational"
+
 # @901+13, type_code An. C) Cuota elemento tributario. [94].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.municipal-cuota-elemento"
+number = "94"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_municipal_cuota_elemento"
+input_kind = "informational"
+
 # @914+5, type_code Num. D) Locales, numero de locales. [95].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-numero"
+number = "95"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_provincial_nacional_numero"
+input_kind = "informational"
+
 # @919+8, type_code Num. D) Locales, Total. [96].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-total"
+number = "96"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_provincial_nacional_total"
+input_kind = "informational"
+
 # @927+8, type_code Num. D) Locales, Rectificada. [97].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-rectificada"
+number = "97"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_provincial_nacional_rectificada"
+input_kind = "informational"
+
 # @935+8, type_code Num. D) Locales, Computable. [98].
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-computable"
+number = "98"
+section = ["elementos_tributarios"]
+data_type = "integer"
+semantic_role = "elem_trib_provincial_nacional_computable"
+input_kind = "informational"
+
 # @943+13, type_code An. D) Locales, Cuota elemento tributario. [99].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "elem-trib.provincial-nacional-cuota-elemento"
+number = "99"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "elem_trib_provincial_nacional_cuota_elemento"
+input_kind = "informational"
+
 # @956+13, type_code An. Cuota antes de bonificaciones o incrementos. [100].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.antes-bonificaciones-incrementos"
+number = "100"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_antes_bonificaciones_incrementos"
+input_kind = "informational"
+
 # @969+5, type_code An. Bonificacion. [101].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.bonificacion-clave"
+number = "101"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_bonificacion_clave"
+input_kind = "informational"
+
 # @974+13, type_code An. Bonificacion, porcentaje sobre. [102].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.bonificacion-porcentaje"
+number = "102"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_bonificacion_porcentaje"
+input_kind = "informational"
+
 # @987+13, type_code An. Bonificacion, cuota. [103].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.bonificacion-importe"
+number = "103"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_bonificacion_importe"
+input_kind = "informational"
+
 # @1000+5, type_code An. Incremento. [104].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.incremento-clave"
+number = "104"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_incremento_clave"
+input_kind = "informational"
+
 # @1005+13, type_code An. Incremento, porcentaje sobre. [105].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.incremento-porcentaje"
+number = "105"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_incremento_porcentaje"
+input_kind = "informational"
+
 # @1018+13, type_code An. Incremento, cuota. [106].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.incremento-importe"
+number = "106"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_incremento_importe"
+input_kind = "informational"
+
 # @1031+13, type_code An. Cuota despues de bonificaciones o incrementos. [107].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.despues-bonificaciones-incrementos"
+number = "107"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_despues_bonificaciones_incrementos"
+input_kind = "informational"
+
 # @1057+13, type_code An. Cuota de tarifa o importe minimo. [108].
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.tarifa-o-importe-minimo"
+number = "108"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_tarifa_o_importe_minimo"
+input_kind = "informational"
 # Modelo 840 Apartado V -- local afecto indirectamente a la actividad, boxes [68]
 # to [83]. Transcribed position-by-position from the bundled aeat-dr-840 design
 # (Pag. 1, re-verified to tile 1..1132 exactly once with no gap and no overlap).
@@ -234,22 +932,154 @@
 # Every field is text: each is a fixed-width code or free text where a leading zero
 # is significant. The whole apartado is optional -- a declaration with no
 # indirectly-affected local leaves all sixteen blank.
+
 # @961+52. Apart. V: Local afecto indirectamente a la act. Uso o destino. [68].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.uso-destino"
+number = "68"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_uso_destino"
+input_kind = "informational"
+
 # @1013+5. Apart. V: Local afecto indirectamente a la act. Cod. Postal. [69].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.codigo-postal"
+number = "69"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_codigo_postal"
+input_kind = "informational"
+
 # @1020+5. Apart. V: Local afecto indirectamente a la act. Municipio (codigo). [70].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.municipio"
+number = "70"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_municipio"
+input_kind = "informational"
+
 # @1055+6. Apart. V: Local afecto indirectamente a la act. C. Mun. (codigo de municipio). [71].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.codigo-municipio"
+number = "71"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_codigo_municipio"
+input_kind = "informational"
+
 # @1018+2. Apart. V: Local afecto indirectamente a la act. Provincia (codigo). [72].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.provincia"
+number = "72"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_provincia"
+input_kind = "informational"
+
 # @1061+2. Apart. V: Local afecto indirectamente a la act. C. Prov. (codigo de provincia). [73].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.codigo-provincia"
+number = "73"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_codigo_provincia"
+input_kind = "informational"
+
 # @1063+2. Apart. V: Local afecto indirectamente a la act. SG (sigla de la via publica). [74].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.sigla-via"
+number = "74"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_sigla_via"
+input_kind = "informational"
+
 # @1065+25. Apart. V: Local afecto indirectamente a la act. Nombre de la via publica. [75].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.via-publica"
+number = "75"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_via_publica"
+input_kind = "informational"
+
 # @1090+2. Apart. V: Local afecto indirectamente a la act. C. Via (codigo de via). [76].  Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.codigo-via"
+number = "76"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_codigo_via"
+input_kind = "informational"
+
 # @1092+5. Apart. V: Local afecto indirectamente a la act. Num.. [77].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.numero"
+number = "77"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_numero"
+input_kind = "informational"
+
 # @1097+5. Apart. V: Local afecto indirectamente a la act. Km. [78].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.kilometro"
+number = "78"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_kilometro"
+input_kind = "informational"
+
 # @1102+4. Apart. V: Local afecto indirectamente a la act. Pto.. [79].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.pto"
+number = "79"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_pto"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "AEAT abbreviates box [79] as 'Pto.' and never expands it; the role mirrors the diseno's own abbreviation rather than guessing Portal or Puerto, so it has no sibling by construction."
+input_kind = "informational"
+
 # @1106+2. Apart. V: Local afecto indirectamente a la act. Esc.. [80].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.escalera"
+number = "80"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_escalera"
+input_kind = "informational"
+
 # @1108+2. Apart. V: Local afecto indirectamente a la act. Piso. [81].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.piso"
+number = "81"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_piso"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Box [81] Piso of the indirectly-affected local; the sujeto pasivo and representante piso boxes are separate concepts on separate parties and carry their own roles."
+input_kind = "informational"
+
 # @1110+2. Apart. V: Local afecto indirectamente a la act. Pta.. [82].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.puerta"
+number = "82"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_puerta"
+input_kind = "informational"
+
 # @1112+9. Apart. V: Local afecto indirectamente a la act. Telefono. [83].
+[[revisions."2003-y-siguientes".casillas]]
+id = "local-indirecto.telefono"
+number = "83"
+section = ["local_afecto_indirectamente"]
+data_type = "text"
+semantic_role = "local_indirecto_telefono"
+input_kind = "informational"
 # Modelo 840 Pag. 2 -- the two box numbers that label MORE THAN ONE physical
 # position: [86] and [109]. This fragment settles the convention those needed, and
 # the same convention unblocks Apartado IV of Pag. 1.
@@ -284,20 +1114,60 @@
 # casilla of its own -- so they are ONE `date` casilla rather than three integers.
 # That yields three casillas for five positions, which is the honest count: two
 # independent facts plus one date.
+
 # @672+13, type_code An. Apartado VI: Maquinas recreativas o autoventa. B) Suma. [86].
 # Carries AEAT's number: this is where the box is defined.
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "maquinas.suma"
+number = "86"
+section = ["elementos_tributarios"]
+data_type = "text"
+semantic_role = "maquinas_recreativas_autoventa_suma"
+input_kind = "informational"
+
 # @1044+13, type_code An. Apartado VII: Cuota maquinas recreativas o autoventa. [86].
 # Slug number: the printed [86] already belongs to the Apartado VI sub-total above,
 # and a second casilla cannot repeat it under (segmento, number) uniqueness.
 # Reservado: cumplimentado por la Administracion.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cuota.maquinas-recreativas-autoventa"
+number = "cuota-maquinas-recreativas-autoventa"
+section = ["cuota"]
+data_type = "text"
+semantic_role = "cuota_maquinas_recreativas_autoventa"
+input_kind = "informational"
+
 # @1070+25, type_code An. Notificacion. Lugar. [109].
 # Carries AEAT's number for the notification block.
+[[revisions."2003-y-siguientes".casillas]]
+id = "notificacion.lugar"
+number = "109"
+section = ["notificacion"]
+data_type = "text"
+semantic_role = "notificacion_lugar"
+input_kind = "informational"
+
 # @1095+2 Dia, @1097+2 Mes, @1099+4 Ano, all type_code Num. [109].
 # ONE date casilla, not three integers: the diseno splits a single fecha into three
 # composite component fields, and a composite component is not a casilla of its own.
+[[revisions."2003-y-siguientes".casillas]]
+id = "notificacion.fecha"
+number = "notificacion-fecha"
+section = ["notificacion"]
+data_type = "date"
+semantic_role = "notificacion_fecha"
+input_kind = "informational"
+
 # @1103+1, type_code An. Notificacion. En calidad de titular o representante. [109].
 # Values "T", "R" or blank. An independent fact, so its own casilla with a slug.
+[[revisions."2003-y-siguientes".casillas]]
+id = "notificacion.calidad"
+number = "notificacion-calidad"
+section = ["notificacion"]
+data_type = "text"
+semantic_role = "notificacion_calidad_firmante"
+input_kind = "informational"
 # Modelo 840 Apartado I -- datos identificativos del sujeto pasivo, transcribed
 # position-by-position from the bundled aeat-dr-840 record design (Pag. 1, which
 # tiles 1..1132 exactly once with no gap and no overlap).
@@ -317,1110 +1187,122 @@
 # and an administration-reserved slot, neither of which is a taxpayer-supplied box.
 # Apartados II-V (declaracion, representante, datos de la actividad, local afecto)
 # remain unauthored; this fragment covers Apartado I only.
+
 # @36+9. Apart. I: Datos ident. del sujeto pasivo. NIF. [1]
-# @45+125. Apart. I: Datos ident. del sujeto pasivo. Apellidos y nombre o Razon social. [2]
-# @170+2. Apart. I: Datos ident. del sujeto pasivo. SG (sigla de la via publica). [3]
-# @172+25. Apart. I: Datos ident. del sujeto pasivo. Via publica. [4]
-# @197+5. Apart. I: Datos ident. del sujeto pasivo. Num.. [5]
-# @202+5. Apart. I: Datos ident. del sujeto pasivo. Km.. [6]
-# @207+2. Apart. I: Datos ident. del sujeto pasivo. Esc.. [7]
-# @209+2. Apart. I: Datos ident. del sujeto pasivo. Piso. [8]
-# @211+2. Apart. I: Datos ident. del sujeto pasivo. Pta.. [9]
-# @215+5. Apart. I: Datos ident. del sujeto pasivo. Municipio (codigo). [10]
-# @213+2. Apart. I: Datos ident. del sujeto pasivo. Provincia (codigo). [11]
-# @256+5. Apart. I: Datos ident. del sujeto pasivo. Cod. Postal. [12]
-# @261+9. Apart. I: Datos ident. del sujeto pasivo. Telefono de contacto (prefijo incluido). [13]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.clase-cuota"
-number = "33"
-data_type = "text"
-semantic_role = "act_clase_cuota"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.provincia-cuota-provincial"
-number = "act-provincia-cuota-provincial"
-data_type = "text"
-semantic_role = "act_provincia_cuota_provincial"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.tipo-actividad"
-number = "34"
-data_type = "text"
-semantic_role = "act_tipo_actividad"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.local-afecto-indirectamente"
-number = "35"
-data_type = "text"
-semantic_role = "act_local_afecto_indirectamente"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.descripcion"
-number = "36"
-data_type = "text"
-semantic_role = "act_descripcion"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.grupo-epigrafe"
-number = "37"
-data_type = "text"
-semantic_role = "act_grupo_epigrafe"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.municipio"
-number = "38"
-data_type = "text"
-semantic_role = "act_municipio"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.codigo-municipio"
-number = "39"
-data_type = "text"
-semantic_role = "act_codigo_municipio"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.provincia"
-number = "40"
-data_type = "text"
-semantic_role = "act_provincia"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.codigo-provincia"
-number = "41"
-data_type = "text"
-semantic_role = "act_codigo_provincia"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-sigla-via"
-number = "42"
-data_type = "text"
-semantic_role = "act_domicilio_sigla_via"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-via-publica"
-number = "43"
-data_type = "text"
-semantic_role = "act_domicilio_via_publica"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-codigo-postal"
-number = "44"
-data_type = "text"
-semantic_role = "act_domicilio_codigo_postal"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-codigo-via"
-number = "45"
-data_type = "text"
-semantic_role = "act_domicilio_codigo_via"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-numero"
-number = "46"
-data_type = "text"
-semantic_role = "act_domicilio_numero"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-kilometro"
-number = "47"
-data_type = "text"
-semantic_role = "act_domicilio_kilometro"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-pto"
-number = "48"
-data_type = "text"
-semantic_role = "act_domicilio_pto"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-escalera"
-number = "49"
-data_type = "text"
-semantic_role = "act_domicilio_escalera"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-piso"
-number = "50"
-data_type = "text"
-semantic_role = "act_domicilio_piso"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-puerta"
-number = "51"
-data_type = "text"
-semantic_role = "act_domicilio_puerta"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.domicilio-telefono"
-number = "52"
-data_type = "text"
-semantic_role = "act_domicilio_telefono"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-agrupacion-1"
-number = "53"
-data_type = "text"
-semantic_role = "act_nota_agrupacion_primera"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-agrupacion-2"
-number = "act-nota-agrupacion-2"
-data_type = "text"
-semantic_role = "act_nota_agrupacion_segunda"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-agrupacion-3"
-number = "act-nota-agrupacion-3"
-data_type = "text"
-semantic_role = "act_nota_agrupacion_tercera"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-grupo-1"
-number = "54"
-data_type = "text"
-semantic_role = "act_nota_grupo_primera"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-grupo-2"
-number = "act-nota-grupo-2"
-data_type = "text"
-semantic_role = "act_nota_grupo_segunda"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-grupo-3"
-number = "act-nota-grupo-3"
-data_type = "text"
-semantic_role = "act_nota_grupo_tercera"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-epigrafe-1"
-number = "55"
-data_type = "text"
-semantic_role = "act_nota_epigrafe_primera"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-epigrafe-2"
-number = "act-nota-epigrafe-2"
-data_type = "text"
-semantic_role = "act_nota_epigrafe_segunda"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.nota-epigrafe-3"
-number = "act-nota-epigrafe-3"
-data_type = "text"
-semantic_role = "act_nota_epigrafe_tercera"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.campamento-turistico"
-number = "act-campamento-turistico"
-data_type = "text"
-semantic_role = "act_campamento_turistico"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.recepcion-loterias"
-number = "act-recepcion-loterias"
-data_type = "text"
-semantic_role = "act_recepcion_loterias"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.regla-4-2-f"
-number = "57"
-data_type = "text"
-semantic_role = "act_regla_cuarta_2_f"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.seccion"
-number = "58"
-data_type = "text"
-semantic_role = "act_seccion"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.actividad-principal"
-number = "59"
-data_type = "text"
-semantic_role = "act_actividad_principal"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.exencion"
-number = "60"
-data_type = "text"
-semantic_role = "act_exencion"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.bonificacion"
-number = "61"
-data_type = "text"
-semantic_role = "act_bonificacion"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.fecha-inicio-variacion-cese"
-number = "62"
-data_type = "date"
-semantic_role = "act_fecha_inicio_variacion_cese"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.causa-baja"
-number = "63"
-data_type = "text"
-semantic_role = "act_causa_baja"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.causa-variacion"
-number = "act-causa-variacion"
-data_type = "text"
-semantic_role = "act_causa_variacion"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.causa-declaracion-complementaria"
-number = "64"
-data_type = "text"
-semantic_role = "act_causa_declaracion_complementaria"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.ano-inicio-primera-vez"
-number = "65"
-data_type = "year"
-semantic_role = "act_ano_inicio_primera_vez"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.informacion-adicional"
-number = "66"
-data_type = "text"
-semantic_role = "act_informacion_adicional"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "act.numero-referencia"
-number = "67"
-data_type = "text"
-semantic_role = "act_numero_referencia"
-required = false
-input_kind = "informational"
-section = ["actividad"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "decl.numero-referencia"
-number = "16"
-data_type = "text"
-semantic_role = "declaracion_numero_referencia"
-required = false
-input_kind = "informational"
-section = ["declarante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.nif"
-number = "17"
-data_type = "nif"
-semantic_role = "representante_nif"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.apellidos-razon-social"
-number = "18"
-data_type = "name"
-semantic_role = "representante_nombre_razon_social"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-sigla-via"
-number = "19"
-data_type = "text"
-semantic_role = "representante_domicilio_sigla_via"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-via-publica"
-number = "20"
-data_type = "text"
-semantic_role = "representante_domicilio_via_publica"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-codigo-via"
-number = "21"
-data_type = "text"
-semantic_role = "representante_domicilio_codigo_via"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-numero"
-number = "22"
-data_type = "text"
-semantic_role = "representante_domicilio_numero"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-kilometro"
-number = "23"
-data_type = "text"
-semantic_role = "representante_domicilio_kilometro"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-escalera"
-number = "24"
-data_type = "text"
-semantic_role = "representante_domicilio_escalera"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-piso"
-number = "25"
-data_type = "text"
-semantic_role = "representante_domicilio_piso"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-puerta"
-number = "26"
-data_type = "text"
-semantic_role = "representante_domicilio_puerta"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.telefono"
-number = "27"
-data_type = "text"
-semantic_role = "representante_telefono"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-codigo-postal"
-number = "28"
-data_type = "text"
-semantic_role = "representante_domicilio_codigo_postal"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-municipio"
-number = "29"
-data_type = "text"
-semantic_role = "representante_domicilio_municipio"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-codigo-municipio"
-number = "30"
-data_type = "text"
-semantic_role = "representante_domicilio_codigo_municipio"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-provincia"
-number = "31"
-data_type = "text"
-semantic_role = "representante_domicilio_provincia"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "representante.domicilio-codigo-provincia"
-number = "32"
-data_type = "text"
-semantic_role = "representante_domicilio_codigo_provincia"
-required = false
-input_kind = "informational"
-section = ["representante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "decl.tipo-declaracion"
-number = "15"
-data_type = "text"
-semantic_role = "tipo_evento_censal_iae"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-legal_refs = ["orden-hac-2572-2003:apartado-1", "orden-hac-2572-2003:apartado-6"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "decl.ejercicio"
-number = "14"
-data_type = "year"
-semantic_role = "filing_year"
-required = true
-input_kind = "informational"
-section = ["declarante"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.cuota-consignada-tarifas"
-number = "84"
-data_type = "text"
-semantic_role = "elem_trib_cuota_consignada_tarifas"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.grupo-epigrafe-suma"
-number = "85"
-data_type = "text"
-semantic_role = "elem_trib_grupo_epigrafe_suma"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.municipal-suma-total"
-number = "87"
-data_type = "integer"
-semantic_role = "elem_trib_municipal_suma_total"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.municipal-suma-rectificada"
-number = "88"
-data_type = "integer"
-semantic_role = "elem_trib_municipal_suma_rectificada"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.municipal-suma-computable"
-number = "89"
-data_type = "integer"
-semantic_role = "elem_trib_municipal_suma_computable"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.municipal-superficie-deducible"
-number = "90"
-data_type = "integer"
-semantic_role = "elem_trib_municipal_superficie_deducible"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.municipal-superficie-computable"
-number = "91"
-data_type = "integer"
-semantic_role = "elem_trib_municipal_superficie_computable"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.municipal-valor-elemento"
-number = "92"
-data_type = "text"
-semantic_role = "elem_trib_municipal_valor_elemento"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.municipal-coeficiente-corrector"
-number = "93"
-data_type = "text"
-semantic_role = "elem_trib_municipal_coeficiente_corrector"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.municipal-cuota-elemento"
-number = "94"
-data_type = "text"
-semantic_role = "elem_trib_municipal_cuota_elemento"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.provincial-nacional-numero"
-number = "95"
-data_type = "integer"
-semantic_role = "elem_trib_provincial_nacional_numero"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.provincial-nacional-total"
-number = "96"
-data_type = "integer"
-semantic_role = "elem_trib_provincial_nacional_total"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.provincial-nacional-rectificada"
-number = "97"
-data_type = "integer"
-semantic_role = "elem_trib_provincial_nacional_rectificada"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.provincial-nacional-computable"
-number = "98"
-data_type = "integer"
-semantic_role = "elem_trib_provincial_nacional_computable"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "elem-trib.provincial-nacional-cuota-elemento"
-number = "99"
-data_type = "text"
-semantic_role = "elem_trib_provincial_nacional_cuota_elemento"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.antes-bonificaciones-incrementos"
-number = "100"
-data_type = "text"
-semantic_role = "cuota_antes_bonificaciones_incrementos"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.bonificacion-clave"
-number = "101"
-data_type = "text"
-semantic_role = "cuota_bonificacion_clave"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.bonificacion-porcentaje"
-number = "102"
-data_type = "text"
-semantic_role = "cuota_bonificacion_porcentaje"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.bonificacion-importe"
-number = "103"
-data_type = "text"
-semantic_role = "cuota_bonificacion_importe"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.incremento-clave"
-number = "104"
-data_type = "text"
-semantic_role = "cuota_incremento_clave"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.incremento-porcentaje"
-number = "105"
-data_type = "text"
-semantic_role = "cuota_incremento_porcentaje"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.incremento-importe"
-number = "106"
-data_type = "text"
-semantic_role = "cuota_incremento_importe"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.despues-bonificaciones-incrementos"
-number = "107"
-data_type = "text"
-semantic_role = "cuota_despues_bonificaciones_incrementos"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.tarifa-o-importe-minimo"
-number = "108"
-data_type = "text"
-semantic_role = "cuota_tarifa_o_importe_minimo"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.uso-destino"
-number = "68"
-data_type = "text"
-semantic_role = "local_indirecto_uso_destino"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.codigo-postal"
-number = "69"
-data_type = "text"
-semantic_role = "local_indirecto_codigo_postal"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.municipio"
-number = "70"
-data_type = "text"
-semantic_role = "local_indirecto_municipio"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.codigo-municipio"
-number = "71"
-data_type = "text"
-semantic_role = "local_indirecto_codigo_municipio"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.provincia"
-number = "72"
-data_type = "text"
-semantic_role = "local_indirecto_provincia"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.codigo-provincia"
-number = "73"
-data_type = "text"
-semantic_role = "local_indirecto_codigo_provincia"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.sigla-via"
-number = "74"
-data_type = "text"
-semantic_role = "local_indirecto_sigla_via"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.via-publica"
-number = "75"
-data_type = "text"
-semantic_role = "local_indirecto_via_publica"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.codigo-via"
-number = "76"
-data_type = "text"
-semantic_role = "local_indirecto_codigo_via"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.numero"
-number = "77"
-data_type = "text"
-semantic_role = "local_indirecto_numero"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.kilometro"
-number = "78"
-data_type = "text"
-semantic_role = "local_indirecto_kilometro"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.pto"
-number = "79"
-data_type = "text"
-semantic_role = "local_indirecto_pto"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "AEAT abbreviates box [79] as 'Pto.' and never expands it; the role mirrors the diseno's own abbreviation rather than guessing Portal or Puerto, so it has no sibling by construction."
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.escalera"
-number = "80"
-data_type = "text"
-semantic_role = "local_indirecto_escalera"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.piso"
-number = "81"
-data_type = "text"
-semantic_role = "local_indirecto_piso"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "Box [81] Piso of the indirectly-affected local; the sujeto pasivo and representante piso boxes are separate concepts on separate parties and carry their own roles."
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.puerta"
-number = "82"
-data_type = "text"
-semantic_role = "local_indirecto_puerta"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "local-indirecto.telefono"
-number = "83"
-data_type = "text"
-semantic_role = "local_indirecto_telefono"
-required = false
-input_kind = "informational"
-section = ["local_afecto_indirectamente"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "maquinas.suma"
-number = "86"
-data_type = "text"
-semantic_role = "maquinas_recreativas_autoventa_suma"
-required = false
-input_kind = "informational"
-section = ["elementos_tributarios"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "cuota.maquinas-recreativas-autoventa"
-number = "cuota-maquinas-recreativas-autoventa"
-data_type = "text"
-semantic_role = "cuota_maquinas_recreativas_autoventa"
-required = false
-input_kind = "informational"
-section = ["cuota"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "notificacion.lugar"
-number = "109"
-data_type = "text"
-semantic_role = "notificacion_lugar"
-required = false
-input_kind = "informational"
-section = ["notificacion"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "notificacion.fecha"
-number = "notificacion-fecha"
-data_type = "date"
-semantic_role = "notificacion_fecha"
-required = false
-input_kind = "informational"
-section = ["notificacion"]
-
-[[revisions.2003-y-siguientes.casillas]]
-id = "notificacion.calidad"
-number = "notificacion-calidad"
-data_type = "text"
-semantic_role = "notificacion_calidad_firmante"
-required = false
-input_kind = "informational"
-section = ["notificacion"]
-
-[[revisions.2003-y-siguientes.casillas]]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.nif"
 number = "1"
+section = ["declarante"]
 data_type = "nif"
 semantic_role = "sujeto_pasivo_nif"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @45+125. Apart. I: Datos ident. del sujeto pasivo. Apellidos y nombre o Razon social. [2]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.apellidos-razon-social"
 number = "2"
+section = ["declarante"]
 data_type = "name"
 semantic_role = "sujeto_pasivo_nombre_razon_social"
 required = true
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @170+2. Apart. I: Datos ident. del sujeto pasivo. SG (sigla de la via publica). [3]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-sigla-via"
 number = "3"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_sigla_via"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @172+25. Apart. I: Datos ident. del sujeto pasivo. Via publica. [4]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-via-publica"
 number = "4"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_via_publica"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @197+5. Apart. I: Datos ident. del sujeto pasivo. Num.. [5]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-numero"
 number = "5"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_numero"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @202+5. Apart. I: Datos ident. del sujeto pasivo. Km.. [6]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-kilometro"
 number = "6"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_kilometro"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @207+2. Apart. I: Datos ident. del sujeto pasivo. Esc.. [7]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-escalera"
 number = "7"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_escalera"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @209+2. Apart. I: Datos ident. del sujeto pasivo. Piso. [8]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-piso"
 number = "8"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_piso"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @211+2. Apart. I: Datos ident. del sujeto pasivo. Pta.. [9]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-puerta"
 number = "9"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_puerta"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @215+5. Apart. I: Datos ident. del sujeto pasivo. Municipio (codigo). [10]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-municipio"
 number = "10"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_municipio"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @213+2. Apart. I: Datos ident. del sujeto pasivo. Provincia (codigo). [11]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-provincia"
 number = "11"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_provincia"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @256+5. Apart. I: Datos ident. del sujeto pasivo. Cod. Postal. [12]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.domicilio-codigo-postal"
 number = "12"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_codigo_postal"
-required = false
 input_kind = "informational"
-section = ["declarante"]
 
-[[revisions.2003-y-siguientes.casillas]]
+# @261+9. Apart. I: Datos ident. del sujeto pasivo. Telefono de contacto (prefijo incluido). [13]
+[[revisions."2003-y-siguientes".casillas]]
 id = "sujeto.telefono-contacto"
 number = "13"
+section = ["declarante"]
 data_type = "text"
 semantic_role = "sujeto_pasivo_telefono_contacto"
-required = false
 input_kind = "informational"
-section = ["declarante"]

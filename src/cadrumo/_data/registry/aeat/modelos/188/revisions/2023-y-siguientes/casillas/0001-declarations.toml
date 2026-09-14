@@ -1,14 +1,12 @@
-[[revisions.2023-y-siguientes.casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "04"
 continuidad_id = "capitalizacion-seguros-resumen-perceptores-base-negativa"
 continuidad_origin = "grounded"
 continuidad_evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
 number = "04"
+section = ["resumen"]
 data_type = "integer"
 semantic_role = "capitalizacion_seguros_resumen_perceptores_base_negativa"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Counterpart of box 01: perceptores whose base de retenciones is negative. The record design carries both counts separately, at offsets 136 and 175."
-required = false
-input_kind = "manual"
-section = ["resumen"]
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]

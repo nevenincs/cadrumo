@@ -1,7 +1,4 @@
-# Exact presentation dates transcribed from AEAT's bundled 2023 taxpayer
-# calendar. Modelo 322 is named explicitly beneath each deadline heading.
-
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-01"
 filing_year = 2023
 period = "2023 01"
@@ -11,7 +8,7 @@ closes_on = 2023-02-28
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-12"
 filing_year = 2023
 period = "2023 12"
@@ -20,8 +17,10 @@ opens_on = 2024-01-01
 closes_on = 2024-01-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2024"]
+# Exact presentation dates transcribed from AEAT's bundled 2023 taxpayer
+# calendar. Modelo 322 is named explicitly beneath each deadline heading.
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-02"
 filing_year = 2023
 period = "2023 02"
@@ -31,7 +30,7 @@ closes_on = 2023-03-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-03"
 filing_year = 2023
 period = "2023 03"
@@ -41,7 +40,7 @@ closes_on = 2023-05-02
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-04"
 filing_year = 2023
 period = "2023 04"
@@ -51,7 +50,7 @@ closes_on = 2023-05-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-05"
 filing_year = 2023
 period = "2023 05"
@@ -61,7 +60,7 @@ closes_on = 2023-06-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-06"
 filing_year = 2023
 period = "2023 06"
@@ -71,7 +70,7 @@ closes_on = 2023-07-31
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-07"
 filing_year = 2023
 period = "2023 07"
@@ -81,7 +80,7 @@ closes_on = 2023-08-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-08"
 filing_year = 2023
 period = "2023 08"
@@ -91,7 +90,7 @@ closes_on = 2023-10-02
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-09"
 filing_year = 2023
 period = "2023 09"
@@ -101,7 +100,7 @@ closes_on = 2023-10-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-10"
 filing_year = 2023
 period = "2023 10"
@@ -111,7 +110,7 @@ closes_on = 2023-11-30
 legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-322-2007-form", "aeat-modelo-322-procedure", "aeat-calendario-contribuyente-2023"]
 
-[[revisions.2023.deadline_windows]]
+[[revisions."2023".deadline_windows]]
 id = "modelo-322-2023-11"
 filing_year = 2023
 period = "2023 11"

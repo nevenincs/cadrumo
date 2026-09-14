@@ -12,7 +12,7 @@
 # design exists for modelo 136 in any year, so there is nothing to run one
 # against.
 
-[[revisions.2022-2025.workbook_parity_refs]]
+[[revisions."2022-2025".workbook_parity_refs]]
 id = "modelo-136-current-static-layout"
 workbook_source = "boe-modelo-136-current-form"
 fixture_id = "modelo-136-2018-current-form-layout"

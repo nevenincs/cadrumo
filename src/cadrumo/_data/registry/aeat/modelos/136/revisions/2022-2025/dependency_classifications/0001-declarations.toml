@@ -22,7 +22,7 @@
 # not classified here because this registry does not carry it; there is no
 # revision for a classification to name.
 
-[[revisions.2022-2025.dependency_classifications]]
+[[revisions."2022-2025".dependency_classifications]]
 id = "modelo-136-dep-100"
 source_modelo = "100"
 treatment = "non_dependency"

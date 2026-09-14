@@ -28,12 +28,6 @@ from ..compiler.loader import (
 from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
 from ..conformance.loader_directory_mode_support import (
-    MAX_TOML_FRAGMENT_LINES as _MAX_TOML_FRAGMENT_LINES,
-)
-from ..conformance.loader_directory_mode_support import (
-    MAX_TOML_ROW_CHARS as _MAX_TOML_ROW_CHARS,
-)
-from ..conformance.loader_directory_mode_support import (
     committed_modelo as _committed_modelo,
 )
 from ..conformance.loader_directory_mode_support import (
@@ -41,9 +35,6 @@ from ..conformance.loader_directory_mode_support import (
 )
 from ..conformance.loader_directory_mode_support import (
     committed_modelo_sources_by_id as _committed_modelo_sources_by_id,
-)
-from ..conformance.loader_directory_mode_support import (
-    committed_modelo_toml_paths as _committed_modelo_toml_paths,
 )
 from ..conformance.loader_directory_mode_support import (
     committed_modelos_dir as _committed_modelos_dir,
@@ -508,25 +499,16 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
     assert checked, "at least one committed directory revision must be discovered"
 
 
-def test_committed_registry_toml_files_stay_reviewable() -> None:
-    """Registry TOML files must not regress toward monolithic artifacts."""
-
-    oversized_fragments: list[str] = []
-    oversized_rows: list[str] = []
-
+def test_committed_authored_sections_are_consolidated() -> None:
+    """Non-generated sections have one declaration file, independent of row count."""
+    split_sections: list[str] = []
     modelos_dir = _committed_modelos_dir()
-    for path in _committed_modelo_toml_paths():
-        relative_path = path.relative_to(modelos_dir).as_posix()
-        lines = path.read_text(encoding="utf-8").splitlines()
-        if len(lines) > _MAX_TOML_FRAGMENT_LINES:
-            oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {_MAX_TOML_FRAGMENT_LINES}")
-        for line_number, line in enumerate(lines, start=1):
-            if len(line) <= _MAX_TOML_ROW_CHARS:
-                continue
-            oversized_rows.append(f"{relative_path}:{line_number}: {len(line)} chars > {_MAX_TOML_ROW_CHARS}")
-
-    assert oversized_fragments == []
-    assert oversized_rows == []
+    for section in modelos_dir.glob("*/revisions/*/*"):
+        if not section.is_dir() or section.name in {"export", "locales"}:
+            continue
+        if len(list(section.glob("*.toml"))) > 1:
+            split_sections.append(section.relative_to(modelos_dir).as_posix())
+    assert split_sections == []
 
 
 def test_discovery_refuses_a_single_file_modelo(tmp_path: Path) -> None:

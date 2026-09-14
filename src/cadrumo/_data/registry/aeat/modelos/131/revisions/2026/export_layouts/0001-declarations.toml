@@ -1,38 +1,21 @@
+[[revisions."2026".export_layouts]]
+id = "modelo-131-fichero-boe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
 # Pag. 0 of the Diseno de Registros: the file envelope. Positions 1-328 carry
 # the modelo/ejercicio/periodo identifier followed by the <AUX>...</AUX>
 # administration block. Positions 93-96 (Version del Programa) and 101-109 (NIF
 # Empresa Desarrollo) are the design's "Nota 1" slots, filled by the entidad
 # desarrolladora del software; no such identity is declared anywhere in this
 # project, so they are deliberately left unwritten rather than guessed.
-# Design row 5, "Indicador de pagina complementaria.", whose declared
-# contenido is exactly "En blanco": AEAT wants no datum in this position.
-# It marks a COMPLEMENTARY PAGE (a repeated instance of the same page), not
-# a complementary DECLARATION; Modelo 131 files one Pag. 1, so there is
-# never a complementary page to mark. The declaration-level flag is its own
-# row and is written there.
-# DELIBERATE, DO NOT "FIX" THIS INTO A FILLER.
-# The DPA design row 5 declares its contenido as
-# 'Blanco (No complementaria) o "C" (Complementaria)' -- unlike Pag. 1 row 5,
-# which declares 'En blanco' and is correctly a filler. This slot carries a
-# real datum, and the admitted character is "C".
-#
-# A boolean export field renders the canonical "X", which AEAT refuses here,
-# so this slot resolves the character through the computed carrier that
-# reads amendment evidence and emits "C".
 
-[[revisions.2026.export_layouts]]
-id = "modelo-131-fichero-boe"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records]]
+[[revisions."2026".export_layouts.records]]
 id = "modelo-131-envelope-header"
 record_type = "envelope_header"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-open"
 offset = 1
 length = 2
@@ -45,8 +28,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-modelo"
 offset = 3
 length = 3
@@ -59,8 +41,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-discriminante"
 offset = 6
 length = 1
@@ -73,8 +54,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-ejercicio"
 offset = 7
 length = 4
@@ -87,8 +67,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-periodo"
 offset = 11
 length = 2
@@ -101,8 +80,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-marker"
 offset = 13
 length = 5
@@ -115,8 +93,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-aux-open"
 offset = 18
 length = 5
@@ -129,8 +106,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-reserved-1"
 offset = 23
 length = 70
@@ -142,8 +118,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-reserved-2"
 offset = 97
 length = 4
@@ -155,8 +130,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-reserved-3"
 offset = 110
 length = 213
@@ -168,8 +142,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-envelope-aux-close"
 offset = 323
 length = 6
@@ -182,16 +155,14 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records]]
+[[revisions."2026".export_layouts.records]]
 id = "modelo-131-page-01"
 record_type = "page_1"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
 binding_record = "page_1"
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-page-open"
 offset = 1
 length = 2
@@ -204,8 +175,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-page-modelo"
 offset = 3
 length = 3
@@ -218,8 +188,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-page-number"
 offset = 6
 length = 5
@@ -232,8 +201,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-page-end"
 offset = 11
 length = 1
@@ -246,12 +214,17 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-complementaria-indicator"
 offset = 12
 length = 1
 kind = "filler"
+# Design row 5, "Indicador de pagina complementaria.", whose declared
+# contenido is exactly "En blanco": AEAT wants no datum in this position.
+# It marks a COMPLEMENTARY PAGE (a repeated instance of the same page), not
+# a complementary DECLARATION; Modelo 131 files one Pag. 1, so there is
+# never a complementary page to mark. The declaration-level flag is its own
+# row and is written there.
 data_type = "text"
 required = false
 padding = "right_space"
@@ -259,8 +232,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-declaration-type"
 offset = 13
 length = 1
@@ -273,8 +245,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-tax-id"
 offset = 14
 length = 9
@@ -287,8 +258,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-declarante-apellidos"
 offset = 23
 length = 60
@@ -301,8 +271,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-declarante-nombre"
 offset = 83
 length = 20
@@ -315,8 +284,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-devengo-ejercicio"
 offset = 103
 length = 4
@@ -329,8 +297,7 @@ justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-devengo-periodo"
 offset = 107
 length = 2
@@ -343,8 +310,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-01"
 offset = 325
 length = 17
@@ -357,8 +323,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-02"
 offset = 342
 length = 17
@@ -371,8 +336,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-03"
 offset = 390
 length = 17
@@ -385,8 +349,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-04"
 offset = 407
 length = 17
@@ -399,8 +362,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-05"
 offset = 488
 length = 17
@@ -413,8 +375,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-06"
 offset = 505
 length = 17
@@ -427,8 +388,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-07"
 offset = 522
 length = 17
@@ -441,8 +401,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-08"
 offset = 539
 length = 17
@@ -455,8 +414,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-09"
 offset = 562
 length = 17
@@ -469,8 +427,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-10"
 offset = 579
 length = 17
@@ -483,8 +440,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-11"
 offset = 596
 length = 17
@@ -497,8 +453,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-12"
 offset = 624
 length = 17
@@ -511,8 +466,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-13"
 offset = 641
 length = 17
@@ -525,8 +479,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-14"
 offset = 658
 length = 17
@@ -539,8 +492,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-casilla-15"
 offset = 675
 length = 17
@@ -553,8 +505,7 @@ justification = "right"
 signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-page-close"
 offset = 820
 length = 12
@@ -567,8 +518,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records]]
+[[revisions."2026".export_layouts.records]]
 id = "modelo-131-dpa"
 record_type = "DPA"
 order = 2
@@ -576,8 +526,7 @@ encoding = "iso-8859-1"
 line_ending = "none"
 repeat = "binding_rows"
 binding_record = "DPA"
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-dpa-open"
 offset = 1
 length = 2
@@ -590,8 +539,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-dpa-modelo"
 offset = 3
 length = 3
@@ -604,8 +552,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-dpa-page"
 offset = 6
 length = 5
@@ -618,8 +565,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-dpa-end"
 offset = 11
 length = 1
@@ -632,12 +578,20 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-dpa-complementaria-indicator"
 offset = 12
 length = 1
 kind = "computed"
+# DELIBERATE, DO NOT "FIX" THIS INTO A FILLER.
+# The DPA design row 5 declares its contenido as
+# 'Blanco (No complementaria) o "C" (Complementaria)' -- unlike Pag. 1 row 5,
+# which declares 'En blanco' and is correctly a filler. This slot carries a
+# real datum, and the admitted character is "C".
+#
+# A boolean export field renders the canonical "X", which AEAT refuses here,
+# so this slot resolves the character through the computed carrier that
+# reads amendment evidence and emits "C".
 computed_key = "complementaria_page_marker"
 data_type = "text"
 required = false
@@ -646,8 +600,7 @@ justification = "left"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-dpa-close"
 offset = 587
 length = 12
@@ -660,8 +613,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records]]
+[[revisions."2026".export_layouts.records]]
 id = "modelo-131-did"
 record_type = "DID"
 order = 3
@@ -670,8 +622,7 @@ line_ending = "none"
 required = false
 binding_record = "DID"
 requires_positive_casilla_id = "15"
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-did-open"
 offset = 1
 length = 2
@@ -684,8 +635,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-did-modelo"
 offset = 3
 length = 3
@@ -698,8 +648,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-did-page"
 offset = 6
 length = 5
@@ -712,8 +661,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-did-end"
 offset = 11
 length = 1
@@ -726,8 +674,7 @@ justification = "none"
 signed = false
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
-
-[[revisions.2026.export_layouts.records.fields]]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-did-close"
 offset = 246
 length = 12

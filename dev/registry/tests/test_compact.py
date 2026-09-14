@@ -1,9 +1,11 @@
 """Exercise compaction through the real canonical declaration loader."""
 
+import os
 import shutil
 from pathlib import Path
 
 import pytest
+import rtoml
 
 from dev.registry.compact import canonical, fingerprint, pack_modelo, publish_staged_tree, toml_comments
 from dev.registry.compiler.loader import load_modelo_declarations
@@ -105,15 +107,14 @@ def test_late_concurrent_edit_rolls_back_our_writes_and_preserves_the_edit(
     shutil.copytree(live, staged)
     for name in ("a.toml", "b.toml"):
         (staged / name).write_text("after", encoding="utf-8")
-    replace = Path.replace
+    link = os.link
 
-    def concurrent_replace(path: Path, target: Path) -> Path:
-        result = replace(path, target)
+    def concurrent_link(path: Path, target: Path) -> None:
+        link(path, target)
         if target == live / "a.toml":
             (live / "b.toml").write_text("concurrent", encoding="utf-8")
-        return result
 
-    monkeypatch.setattr(Path, "replace", concurrent_replace)
+    monkeypatch.setattr(os, "link", concurrent_link)
     with pytest.raises(ValueError, match="rolled back"):
         publish_staged_tree(live, staged, original, before)
     assert (live / "a.toml").read_text(encoding="utf-8") == "before"
@@ -132,15 +133,56 @@ def test_deleted_files_are_restored_if_final_verification_detects_drift(
     staged = tmp_path / "staged"
     shutil.copytree(live, original)
     staged.mkdir()
-    unlink = Path.unlink
+    rename = Path.rename
 
-    def concurrent_unlink(path: Path, missing_ok: bool = False) -> None:
-        unlink(path, missing_ok=missing_ok)
+    def concurrent_rename(path: Path, target: Path) -> Path:
+        result = rename(path, target)
         if path == live / "a.toml":
             (live / "new.toml").write_text("concurrent", encoding="utf-8")
+        return result
 
-    monkeypatch.setattr(Path, "unlink", concurrent_unlink)
+    monkeypatch.setattr(Path, "rename", concurrent_rename)
     with pytest.raises(ValueError, match="rolled back"):
         publish_staged_tree(live, staged, original, before)
     assert (live / "a.toml").read_text(encoding="utf-8") == "before"
     assert (live / "new.toml").read_text(encoding="utf-8") == "concurrent"
+
+
+def test_replace_captures_a_racing_edit_instead_of_overwriting_it(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dev.registry.compact import replace_if_unchanged
+
+    target = tmp_path / "target.toml"
+    replacement = tmp_path / "replacement.toml"
+    target.write_text("before", encoding="utf-8")
+    replacement.write_text("after", encoding="utf-8")
+    before = fingerprint(tmp_path)["target.toml"]
+    rename = Path.rename
+
+    def racing_rename(path: Path, destination: Path) -> Path:
+        if path == target:
+            target.write_text("racing writer", encoding="utf-8")
+        return rename(path, destination)
+
+    monkeypatch.setattr(Path, "rename", racing_rename)
+    with pytest.raises(ValueError, match="concurrent edit captured"):
+        replace_if_unchanged(target, replacement, before)
+    assert target.read_text(encoding="utf-8") == "racing writer"
+
+
+def test_split_construct_identity_is_not_restated_in_packed_data(tmp_path: Path) -> None:
+    directory = fixture_tree(tmp_path)
+    section = directory / "revisions" / "2025" / "constructs"
+    section.mkdir()
+    for index, box in enumerate(("B", "A"), 1):
+        (section / f"{index:04d}-construct.toml").write_text(
+            f'[[revisions."2025".constructs]]\nid = "group" # grouped boxes\ncasilla_ids = ["{box}"]\n',
+            encoding="utf-8",
+        )
+    before = canonical(load_modelo_declarations(directory))
+    pack_modelo(directory, tmp_path / "work", apply=True)
+    assert canonical(load_modelo_declarations(directory)) == before
+    data = rtoml.load(section / "0001-declarations.toml")["revisions"]["2025"]["constructs"]
+    assert data == [{"id": "group", "casilla_ids": ["B", "A"]}]

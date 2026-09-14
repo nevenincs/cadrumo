@@ -1,10 +1,29 @@
 # The declaration tax-year role is unchanged; modern header declarations
 # cite the filing regulation in addition to the approval order, while the
 # historical field cites the older general return references.
+
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
+id = "filing-year-from-2004-legal-refs-evolved"
+continuidad_id = "filing-year"
+from_revision = "2004-2015"
+to_revision = "2016-2017"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 # The complete 2004 design defines Letras etiqueta (persona fisica) and free
 # Observaciones. Neither field survives in the 2016 M30900/M30901 design.
 # The AUX software-version and developer-NIF fields are different concepts,
 # not replacement carriers for either of these historical presentation values.
+
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
+id = "retired-letras-etiqueta-persona-fisica"
+continuidad_id = "letras-etiqueta-persona-fisica"
+from_revision = "2004-2015"
+to_revision = "2016-2017"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
+
 # The official designs prove two historical wire surfaces were replaced, not
 # that either one is a one-to-one continuation. The 2004 PDF campo 9 at
 # position 34 is one 40-character An field, "Apellidos y nombre ó razón
@@ -14,40 +33,8 @@
 # description; the 2016 design's campo 15 at position 198 is a 2-character An
 # country code. The successor name and country-code rows therefore remain
 # separate modern roots while both old wire surfaces are explicitly retired.
-# The official designs prove a representation replacement, not six one-to-one
-# continuations: the 2004 PDF prints six distinct one-character A/X-or-blank
-# taxpayer-status fields at campos 11-16 (positions 88-93), while the 2016
-# M30901 design prints one one-character Num selector at campo 16 (position
-# 200) whose values 1-6 enumerate exactly those six categories. The aggregate
-# 2016 `situacion-tributaria` surface therefore remains a separate modern
-# category selector; each historical flag below is explicitly retired.
-# The official designs prove a representation replacement, not six one-to-one
-# continuations: the 2004 PDF prints six distinct one-character A/X-or-blank
-# taxable-event fields at campos 17-22 (positions 94-99), while the 2016
-# M30901 design prints one one-character Num selector at campo 17 (position
-# 201) whose values 1-6 enumerate exactly those six events. The aggregate 2016
-# `hecho-imponible` surface therefore remains a separate modern selector; each
-# historical flag below is explicitly retired.
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
-id = "filing-year-from-2004-legal-refs-evolved"
-continuidad_id = "filing-year"
-from_revision = "2004-2015"
-to_revision = "2016-2017"
-evolution_kind = "legal_refs_evolved"
-legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
-
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
-id = "retired-letras-etiqueta-persona-fisica"
-continuidad_id = "letras-etiqueta-persona-fisica"
-from_revision = "2004-2015"
-to_revision = "2016-2017"
-evolution_kind = "retired"
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
-source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
-
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-transmitente-apellidos-nombre-razon-social"
 continuidad_id = "transmitente-apellidos-nombre-razon-social"
 from_revision = "2004-2015"
@@ -56,7 +43,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-transmitente-pais-texto-historico"
 continuidad_id = "transmitente-pais-texto-historico"
 from_revision = "2004-2015"
@@ -65,7 +52,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-observaciones-presentacion"
 continuidad_id = "observaciones-presentacion"
 from_revision = "2004-2015"
@@ -74,7 +61,15 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+# The official designs prove a representation replacement, not six one-to-one
+# continuations: the 2004 PDF prints six distinct one-character A/X-or-blank
+# taxpayer-status fields at campos 11-16 (positions 88-93), while the 2016
+# M30901 design prints one one-character Num selector at campo 16 (position
+# 200) whose values 1-6 enumerate exactly those six categories. The aggregate
+# 2016 `situacion-tributaria` surface therefore remains a separate modern
+# category selector; each historical flag below is explicitly retired.
+
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-situacion-tributaria-agricola"
 continuidad_id = "situacion-tributaria-agricola"
 from_revision = "2004-2015"
@@ -83,7 +78,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-situacion-tributaria-recargo-equivalencia"
 continuidad_id = "situacion-tributaria-recargo-equivalencia"
 from_revision = "2004-2015"
@@ -92,7 +87,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-situacion-tributaria-sin-derecho-deduccion"
 continuidad_id = "situacion-tributaria-sin-derecho-deduccion"
 from_revision = "2004-2015"
@@ -101,7 +96,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-situacion-tributaria-persona-juridica-no-empresario"
 continuidad_id = "situacion-tributaria-persona-juridica-no-empresario"
 from_revision = "2004-2015"
@@ -110,7 +105,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-situacion-tributaria-persona-fisica-no-empresario"
 continuidad_id = "situacion-tributaria-persona-fisica-no-empresario"
 from_revision = "2004-2015"
@@ -119,7 +114,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-situacion-tributaria-otras"
 continuidad_id = "situacion-tributaria-otras"
 from_revision = "2004-2015"
@@ -128,7 +123,15 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+# The official designs prove a representation replacement, not six one-to-one
+# continuations: the 2004 PDF prints six distinct one-character A/X-or-blank
+# taxable-event fields at campos 17-22 (positions 94-99), while the 2016
+# M30901 design prints one one-character Num selector at campo 17 (position
+# 201) whose values 1-6 enumerate exactly those six events. The aggregate 2016
+# `hecho-imponible` surface therefore remains a separate modern selector; each
+# historical flag below is explicitly retired.
+
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-hecho-imponible-adquisicion-intracomunitaria"
 continuidad_id = "hecho-imponible-adquisicion-intracomunitaria"
 from_revision = "2004-2015"
@@ -137,7 +140,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-hecho-imponible-medios-transporte-nuevos"
 continuidad_id = "hecho-imponible-medios-transporte-nuevos"
 from_revision = "2004-2015"
@@ -146,7 +149,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-hecho-imponible-inversion-sujeto-pasivo"
 continuidad_id = "hecho-imponible-inversion-sujeto-pasivo"
 from_revision = "2004-2015"
@@ -155,7 +158,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-hecho-imponible-entrega-inversion-inmobiliaria"
 continuidad_id = "hecho-imponible-entrega-inversion-inmobiliaria"
 from_revision = "2004-2015"
@@ -164,7 +167,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-hecho-imponible-procedimiento-administrativo-judicial"
 continuidad_id = "hecho-imponible-procedimiento-administrativo-judicial"
 from_revision = "2004-2015"
@@ -173,7 +176,7 @@ evolution_kind = "retired"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
 
-[[revisions.2016-2017.casilla_continuidad_evolutions]]
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
 id = "retired-hecho-imponible-otros"
 continuidad_id = "hecho-imponible-otros"
 from_revision = "2004-2015"

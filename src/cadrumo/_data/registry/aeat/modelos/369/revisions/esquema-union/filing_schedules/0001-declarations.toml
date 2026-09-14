@@ -1,12 +1,11 @@
-[[revisions.esquema-union.filing_schedules]]
+[[revisions."esquema-union".filing_schedules]]
 id = "modelo-369-union-trimestral"
 period_kind = "quarterly"
-profile_condition_mode = "all"
 periods = ["1T", "2T", "3T", "4T"]
 legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
-[[revisions.esquema-union.filing_schedules.profile_conditions]]
+[[revisions."esquema-union".filing_schedules.profile_conditions]]
 field = "iva.oss_enrolled"
 op = "equals"
 value = true

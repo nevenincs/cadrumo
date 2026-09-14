@@ -1,6 +1,6 @@
 # Modelo 038 monthly deadline windows under Orden HAC/66/2002 art. 6.
 
-[[revisions.2024-desde-06.deadline_windows]]
+[[revisions."2024-desde-06".deadline_windows]]
 id = "modelo-038-2024-06"
 filing_year = 2024
 period = "2024 06"
@@ -10,7 +10,7 @@ closes_on = 2024-07-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions.2024-desde-06.deadline_windows]]
+[[revisions."2024-desde-06".deadline_windows]]
 id = "modelo-038-2024-07"
 filing_year = 2024
 period = "2024 07"
@@ -20,7 +20,7 @@ closes_on = 2024-08-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions.2024-desde-06.deadline_windows]]
+[[revisions."2024-desde-06".deadline_windows]]
 id = "modelo-038-2024-08"
 filing_year = 2024
 period = "2024 08"
@@ -30,7 +30,7 @@ closes_on = 2024-09-30
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions.2024-desde-06.deadline_windows]]
+[[revisions."2024-desde-06".deadline_windows]]
 id = "modelo-038-2024-09"
 filing_year = 2024
 period = "2024 09"
@@ -40,7 +40,7 @@ closes_on = 2024-10-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions.2024-desde-06.deadline_windows]]
+[[revisions."2024-desde-06".deadline_windows]]
 id = "modelo-038-2024-10"
 filing_year = 2024
 period = "2024 10"
@@ -50,7 +50,7 @@ closes_on = 2024-11-30
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions.2024-desde-06.deadline_windows]]
+[[revisions."2024-desde-06".deadline_windows]]
 id = "modelo-038-2024-11"
 filing_year = 2024
 period = "2024 11"
@@ -60,7 +60,7 @@ closes_on = 2024-12-31
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
 
-[[revisions.2024-desde-06.deadline_windows]]
+[[revisions."2024-desde-06".deadline_windows]]
 id = "modelo-038-2024-12"
 filing_year = 2024
 period = "2024 12"

@@ -1,3 +1,11 @@
+[[revisions."2022-1t".application_links]]
+id = "modelo-490-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
 # Deadline surface for this era. The 2023-y-siguientes sibling declares the same
 # link on the same article; these two editions carried filing and export but not
 # deadline, so the surface the deadlines domain consumes was undeclared for the
@@ -8,28 +16,19 @@
 # either of these spans opens. NO source_refs, exactly as the 2023 sibling
 # declares it: the legal article is the grounding and no separate AEAT guidance
 # document is asserted for this surface.
-# source_refs names the document that CONTAINS the cited article. It is the
-# honest citation for this surface even where its tier is layout_authority:
-# the field is required, and naming a document that does state the plazo is
-# better than naming a guidance page that does not.
 
-[[revisions.2022-1t.application_links]]
-id = "modelo-490-filing"
-surface = "filing"
-consumer = "cadrumo.application.filing"
-requires_snapshot = true
-legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-490-procedure"]
-
-[[revisions.2022-1t.application_links]]
+[[revisions."2022-1t".application_links]]
 id = "modelo-490-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+# source_refs names the document that CONTAINS the cited article. It is the
+# honest citation for this surface even where its tier is layout_authority:
+# the field is required, and naming a document that does state the plazo is
+# better than naming a guidance page that does not.
 source_refs = ["enrolled-modelo-490-procedure"]
-
-[[revisions.2022-1t.application_links]]
+[[revisions."2022-1t".application_links]]
 id = "modelo-490-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"

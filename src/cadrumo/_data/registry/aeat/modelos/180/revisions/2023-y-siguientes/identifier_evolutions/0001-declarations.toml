@@ -1,4 +1,4 @@
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "live_cross_references"
 identifier = "modelo-180-2014-static-official"
@@ -7,7 +7,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "live_cross_references"
 identifier = "modelo-180-2014-filed-declarations-read"
@@ -16,7 +16,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-portal-cross-reference"
@@ -25,7 +25,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-filed-declarations-observation"
@@ -34,7 +34,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-calculation"
@@ -43,7 +43,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-filing"
@@ -52,7 +52,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-export"
@@ -61,7 +61,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-extractor"
@@ -70,7 +70,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-review"
@@ -79,7 +79,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-approval"
@@ -88,7 +88,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-reconciliation"
@@ -97,7 +97,7 @@ to_revision = "2023-y-siguientes"
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2014", "aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.identifier_evolutions]]
+[[revisions."2023-y-siguientes".identifier_evolutions]]
 kind = "replaced"
 family = "application_links"
 identifier = "modelo-180-2014-workflow"

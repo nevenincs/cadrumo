@@ -1,4 +1,4 @@
-[[revisions.2025.application_links]]
+[[revisions."2025".application_links]]
 id = "modelo-345-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -6,7 +6,7 @@ requires_snapshot = true
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-5"]
 source_refs = ["aeat-modelo-345-procedure", "aeat-dr-345-2025", "boe-modelo-345-base-order"]
 
-[[revisions.2025.application_links]]
+[[revisions."2025".application_links]]
 id = "modelo-345-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
@@ -14,7 +14,8 @@ requires_snapshot = true
 legal_refs = ["orden-hfp-823-2022:art-4"]
 source_refs = ["aeat-modelo-345-deadlines", "boe-modelo-345-base-order"]
 
-[[revisions.2025.application_links]]
+
+[[revisions."2025".application_links]]
 id = "modelo-345-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
