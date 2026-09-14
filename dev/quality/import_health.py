@@ -455,7 +455,7 @@ def _graph_summary(output: str) -> _GraphSummary:
     }
 
 
-def _candidate_inventory(authority: Authority, occurrences: tuple[ImportOccurrence, ...]) -> dict[str, object]:
+def _candidate_inventory(authority: Authority, occurrences: tuple[ImportOccurrence, ...]) -> _CandidateInventory:
     hard = tuple(occurrence for occurrence in occurrences if not occurrence.contract.startswith("advisory:"))
     advisory = tuple(occurrence for occurrence in occurrences if occurrence.contract.startswith("advisory:"))
     rows, summary = _occurrence_inventory(authority, hard)
@@ -466,32 +466,40 @@ def _candidate_inventory(authority: Authority, occurrences: tuple[ImportOccurren
         target_lane = _adapter_top_level(str(row["target_module"]))
         if source_lane is not None and target_lane is not None:
             advisory_lane_pairs[f"{source_lane} -> {target_lane}"] += int(row["multiplicity"])
+    candidate_summary: _CandidateSummary = {
+        "contract_occurrences": summary["contract_occurrences"],
+        "by_contract": summary["by_contract"],
+        "by_import_form": summary["by_import_form"],
+        "non_test_scoped_occurrences": summary["non_test_scoped_occurrences"],
+        "test_scoped_occurrences": summary["test_scoped_occurrences"],
+        "inventory_digest": summary["inventory_digest"],
+        "unique_contract_occurrences": summary["unique_contract_occurrences"],
+        "unique_import_occurrences": summary["unique_import_occurrences"],
+        "advisory_by_contract": advisory_summary["by_contract"],
+        "advisory_by_lane_pair": dict(sorted(advisory_lane_pairs.items())),
+        "advisory_non_test_scoped_occurrences": advisory_summary["non_test_scoped_occurrences"],
+        "advisory_occurrences": advisory_summary["contract_occurrences"],
+        "advisory_test_scoped_occurrences": advisory_summary["test_scoped_occurrences"],
+        "advisory_unique_occurrences": advisory_summary["unique_contract_occurrences"],
+    }
     return {
         "advisory_occurrences": advisory_rows,
         "generated_at": datetime.now(tz=UTC).isoformat(),
         "occurrences": rows,
         "schema_version": _RATCHET_SCHEMA_VERSION,
-        "summary": {
-            **summary,
-            "advisory_by_contract": advisory_summary["by_contract"],
-            "advisory_by_lane_pair": dict(sorted(advisory_lane_pairs.items())),
-            "advisory_non_test_scoped_occurrences": advisory_summary["non_test_scoped_occurrences"],
-            "advisory_occurrences": advisory_summary["contract_occurrences"],
-            "advisory_test_scoped_occurrences": advisory_summary["test_scoped_occurrences"],
-            "advisory_unique_occurrences": advisory_summary["unique_contract_occurrences"],
-        },
+        "summary": candidate_summary,
     }
 
 
 def _occurrence_inventory(
     authority: Authority, occurrences: tuple[ImportOccurrence, ...]
-) -> tuple[list[dict[str, object]], dict[str, object]]:
+) -> tuple[list[_OccurrenceRow], _OccurrenceSummary]:
     """Normalize one hard or advisory occurrence class without conflating them."""
     grouped: defaultdict[str, list[ImportOccurrence]] = defaultdict(list)
     for occurrence in occurrences:
         grouped[occurrence.fingerprint].append(occurrence)
-    rows: list[dict[str, object]] = []
-    unique_import_identities: set[tuple[object, ...]] = set()
+    rows: list[_OccurrenceRow] = []
+    unique_import_identities: set[tuple[str, str, tuple[str, ...], str, str]] = set()
     production = 0
     test = 0
     by_contract: Counter[str] = Counter()
@@ -549,7 +557,7 @@ def _occurrence_inventory(
     }
 
 
-def _write_candidate_artifact(repository: Path, candidate: dict[str, object]) -> Path | None:
+def _write_candidate_artifact(repository: Path, candidate: _CandidateInventory) -> Path | None:
     raw_artifacts = os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR")
     if not raw_artifacts:
         return None
@@ -563,11 +571,10 @@ def _write_candidate_artifact(repository: Path, candidate: dict[str, object]) ->
     return path
 
 
-def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[str, object]:
+def _reconcile_ratchet(repository: Path, candidate: _CandidateInventory) -> _RatchetReport:
     path = repository / _RATCHET_RELATIVE_PATH
     rows = candidate["occurrences"]
-    assert isinstance(rows, list)
-    current = {str(row["fingerprint"]): row for row in rows if isinstance(row, dict)}
+    current = {row["fingerprint"]: row for row in rows}
     counts: Counter[str] = Counter(
         {
             "approved_active": 0,
@@ -581,13 +588,13 @@ def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[s
             "retired_verified": 0,
         }
     )
-    details: dict[str, list[object]] = defaultdict(list)
+    details: defaultdict[str, list[str]] = defaultdict(list)
     if not path.is_file():
         counts["new_unapproved"] = sum(int(row["multiplicity"]) for row in current.values())
         baseline_status = "not_required" if not current else "unestablished"
         return {
             "baseline_status": baseline_status,
-            "counts": dict(counts),
+            "counts": _ratchet_counts(counts),
             "detail_counts": {"new_unapproved": len(current)},
             "details": {"new_unapproved": sorted(current)[:20]},
             "path": str(path),
@@ -612,7 +619,7 @@ def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[s
             "schema_version": _RATCHET_SCHEMA_VERSION,
         }
 
-    approved: dict[str, dict[str, object]] = {}
+    approved: dict[str, _RatchetEntry] = {}
     today = date.today()
     for index, raw in enumerate(entries):
         if not isinstance(raw, dict):
@@ -624,21 +631,21 @@ def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[s
             counts["malformed"] += 1
             details["malformed"].append(f"entry {index} has missing or duplicate fingerprint")
             continue
-        error = _validate_ratchet_entry(raw)
-        if error is not None:
+        validated = _validate_ratchet_entry(raw)
+        if isinstance(validated, str):
             counts["malformed"] += 1
-            details["malformed"].append(f"{fingerprint}: {error}")
+            details["malformed"].append(f"{fingerprint}: {validated}")
             continue
-        approved[fingerprint] = raw
-        allowed = int(raw["multiplicity"])
-        observed = int(current.get(fingerprint, {}).get("multiplicity", 0))
-        status = str(raw["status"])
-        expires = date.fromisoformat(str(raw["expires_on"]))
+        approved[fingerprint] = validated
+        allowed = validated["multiplicity"]
+        observed = current.get(fingerprint, {}).get("multiplicity", 0)
+        status = validated["status"]
+        expires = date.fromisoformat(validated["expires_on"])
         if status == "retired":
             if observed:
                 counts["regressed_retired"] += observed
                 details["regressed_retired"].append(fingerprint)
-            elif _valid_retirement(raw.get("retirement"), repository, str(raw["capability"])):
+            elif _valid_retirement(raw.get("retirement"), repository, validated["capability"]):
                 counts["retired_verified"] += allowed
             else:
                 counts["malformed"] += allowed
@@ -653,7 +660,7 @@ def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[s
             details["expanded_existing"].append(fingerprint)
         elif observed < allowed:
             missing = allowed - observed
-            if _valid_retirement(raw.get("retirement"), repository, str(raw["capability"])):
+            if _valid_retirement(raw.get("retirement"), repository, validated["capability"]):
                 counts["retirement_ready"] += missing
                 details["retirement_ready"].append(fingerprint)
             else:
@@ -662,11 +669,11 @@ def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[s
 
     for fingerprint, row in current.items():
         if fingerprint not in approved:
-            counts["new_unapproved"] += int(row["multiplicity"])
+            counts["new_unapproved"] += row["multiplicity"]
             details["new_unapproved"].append(fingerprint)
     return {
         "baseline_status": "approved" if not counts["malformed"] else "malformed",
-        "counts": dict(counts),
+        "counts": _ratchet_counts(counts),
         "detail_counts": {key: len(values) for key, values in sorted(details.items())},
         "details": {key: sorted(values)[:20] for key, values in sorted(details.items())},
         "path": str(path),
@@ -674,7 +681,22 @@ def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[s
     }
 
 
-def _validate_ratchet_entry(entry: dict[str, object]) -> str | None:
+def _ratchet_counts(counts: Counter[str]) -> _RatchetCounts:
+    """Materialize the closed ratchet-count schema from its mutable counter."""
+    return {
+        "approved_active": counts["approved_active"],
+        "new_unapproved": counts["new_unapproved"],
+        "expanded_existing": counts["expanded_existing"],
+        "expired": counts["expired"],
+        "malformed": counts["malformed"],
+        "regressed_retired": counts["regressed_retired"],
+        "retirement_candidates": counts["retirement_candidates"],
+        "retirement_ready": counts["retirement_ready"],
+        "retired_verified": counts["retired_verified"],
+    }
+
+
+def _validate_ratchet_entry(entry: dict[str, object]) -> str | _RatchetEntry:
     required_text = (
         "fingerprint",
         "source_module",
@@ -689,21 +711,34 @@ def _validate_ratchet_entry(entry: dict[str, object]) -> str | None:
         "expires_on",
         "status",
     )
-    if any(not isinstance(entry.get(key), str) or not str(entry[key]).strip() for key in required_text):
-        return "required text field is missing"
-    if not isinstance(entry.get("imported_symbols"), list) or not all(
-        isinstance(symbol, str) for symbol in entry["imported_symbols"]
-    ):
+    text_fields: dict[str, str] = {}
+    for key in required_text:
+        value = entry.get(key)
+        if not isinstance(value, str) or not value.strip():
+            return "required text field is missing"
+        text_fields[key] = value
+
+    imported_symbols_raw = entry.get("imported_symbols")
+    if not isinstance(imported_symbols_raw, list):
         return "imported_symbols must be a string list"
-    if not isinstance(entry.get("multiplicity"), int) or int(entry["multiplicity"]) <= 0:
+    imported_symbols: list[str] = []
+    for symbol in imported_symbols_raw:
+        if not isinstance(symbol, str):
+            return "imported_symbols must be a string list"
+        imported_symbols.append(symbol)
+
+    multiplicity = entry.get("multiplicity")
+    if not isinstance(multiplicity, int) or multiplicity <= 0:
         return "multiplicity must be a positive integer"
-    if entry["import_form"] not in {"static", "local", "type_checking", "dynamic"}:
+    import_form = text_fields["import_form"]
+    if import_form not in {"static", "local", "type_checking", "dynamic"}:
         return "unknown import_form"
-    if entry["status"] not in {"active", "retired"}:
+    status = text_fields["status"]
+    if status not in {"active", "retired"}:
         return "status must be active or retired"
     try:
-        created = date.fromisoformat(str(entry["created_on"]))
-        expires = date.fromisoformat(str(entry["expires_on"]))
+        created = date.fromisoformat(text_fields["created_on"])
+        expires = date.fromisoformat(text_fields["expires_on"])
     except ValueError:
         return "created_on and expires_on must be ISO dates"
     if expires < created:
@@ -711,16 +746,31 @@ def _validate_ratchet_entry(entry: dict[str, object]) -> str | None:
     from .import_checker import import_occurrence_fingerprint
 
     expected = import_occurrence_fingerprint(
-        source_module=str(entry["source_module"]),
-        target_module=str(entry["target_module"]),
-        imported_symbols=tuple(str(symbol) for symbol in entry["imported_symbols"]),
-        import_form=str(entry["import_form"]),
-        lexical_scope=str(entry["lexical_scope"]),
-        contract=str(entry["contract"]),
+        source_module=text_fields["source_module"],
+        target_module=text_fields["target_module"],
+        imported_symbols=tuple(imported_symbols),
+        import_form=import_form,
+        lexical_scope=text_fields["lexical_scope"],
+        contract=text_fields["contract"],
     )
-    if entry["fingerprint"] != expected:
+    if text_fields["fingerprint"] != expected:
         return "fingerprint does not match normalized occurrence identity"
-    return None
+    return {
+        "fingerprint": text_fields["fingerprint"],
+        "source_module": text_fields["source_module"],
+        "target_module": text_fields["target_module"],
+        "import_form": import_form,
+        "imported_symbols": imported_symbols,
+        "lexical_scope": text_fields["lexical_scope"],
+        "contract": text_fields["contract"],
+        "owner": text_fields["owner"],
+        "reason": text_fields["reason"],
+        "capability": text_fields["capability"],
+        "multiplicity": multiplicity,
+        "created_on": text_fields["created_on"],
+        "expires_on": text_fields["expires_on"],
+        "status": status,
+    }
 
 
 def _valid_retirement(raw: object, repository: Path, capability: str) -> bool:
@@ -794,9 +844,9 @@ def _adapter_top_level(module: str) -> str | None:
 
 def _headline(
     verdict: str,
-    graph: dict[str, object],
+    graph: _GraphSummary,
     checker: CheckResult,
-    ratchet: dict[str, object],
+    ratchet: _RatchetReport,
     operational: list[str],
     failed: list[str],
 ) -> str:
