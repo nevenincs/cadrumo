@@ -7,11 +7,9 @@ service resolves the edition through
 and reports, beside the complete raw table, where every casilla row comes from
 and how far the edition's review stamp reaches.
 
-A delta edition's stamp covers only the rows it states, judged against the
-predecessor it names; each inherited row is attested by the stamp of the
-edition that states it. The complete table therefore carries no review claim
-of its own, and the report names the stamp it set aside and every edition
-whose stamp the inherited rows rest on instead.
+A comparison review covers the edition changes judged against the revision in
+``reviewed_against``. A review without that reference covers the complete
+materialised edition. Neither meaning depends on the current storage baseline.
 """
 
 from __future__ import annotations
@@ -48,6 +46,7 @@ __all__ = [
 
 _CASILLAS = "casillas"
 _REVIEW_STATUS = "review_status"
+_REVIEWED_AGAINST = "reviewed_against"
 _PENDING_REVIEW = "pending_review"
 
 
@@ -89,10 +88,8 @@ class EditionReviewScope(BaseModel):
     """How far the edition's review stamp reaches over the complete edition.
 
     ``declared_review_status`` is the status the edition's own files declare.
-    ``rendered_review_status`` is the status the complete table carries: equal
-    to the declared one when the edition states every row, and
-    ``pending_review`` for a delta edition, whose stamp never covered the rows
-    it inherits.
+    ``rendered_review_status`` is the status the complete table carries. A
+    representation-only materialisation preserves it exactly.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -217,22 +214,12 @@ def _review_scope(
     rows: tuple[EditionCasillaRow, ...],
 ) -> EditionReviewScope:
     rendered = _declared_status(edition.table)
-    if edition.inherits_from is None:
-        return EditionReviewScope(
-            declared_review_status=rendered,
-            coverage=ReviewCoverage.COMPLETE_EDITION,
-            reviewed_against=None,
-            rendered_review_status=rendered,
-            inherited_attestations=(),
-        )
-    declared = edition.withdrawn_review_status or rendered
-    # The schema requires a delta edition's review claim to name the
-    # predecessor it was judged against, and to equal the declared one.
-    reviewed_against = None if declared == _PENDING_REVIEW else edition.inherits_from
+    reviewed_against_value = edition.table.get(_REVIEWED_AGAINST)
+    reviewed_against = reviewed_against_value if isinstance(reviewed_against_value, str) else None
     counts = Counter(row.inherited_from for row in rows if row.inherited_from is not None)
     return EditionReviewScope(
-        declared_review_status=declared,
-        coverage=ReviewCoverage.STATED_ROWS,
+        declared_review_status=rendered,
+        coverage=(ReviewCoverage.STATED_ROWS if reviewed_against is not None else ReviewCoverage.COMPLETE_EDITION),
         reviewed_against=reviewed_against,
         rendered_review_status=rendered,
         inherited_attestations=tuple(

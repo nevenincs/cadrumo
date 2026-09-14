@@ -152,7 +152,7 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
         repository = CalculationObservationRepository()
         calculation_key = persist_filed_calculation_observation(
             _prior_303_observation(pending_compensation=Decimal("1200.00")),
-            repository=repository,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
         )
 
         target_snapshot = _registry_snapshot("303", 2026, "2T")
@@ -194,7 +194,7 @@ def test_filed_observation_capture_records_single_justificante_csv_metadata(tmp_
 
         persist_filed_calculation_observation(
             observation,
-            repository=repository,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
             justificante_csvs=("CSV30320261T",),
         )
 
@@ -368,7 +368,7 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
                 pending_compensation=Decimal("450.00"),
                 expediente_id="200030300000001Z",
             ),
-            repository=repository,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
         )
 
         target_snapshot = _registry_snapshot("303", 2026, "1T")
@@ -463,7 +463,9 @@ def test_direct_filed_observation_persist_refuses_non_alta_status(tmp_path: Path
                     status="BAJA",
                     presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
                 ),
-            )
+            ,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
+        )
 
         assert CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
         assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
@@ -474,7 +476,7 @@ def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_pa
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_130_justificante_observation(store)
 
-        csvs = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id).justificante_csvs
+        csvs = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id).justificante_csvs
 
         assert csvs == ("ABCD1234EFGH5678",)
         loaded = JustificanteRepository().load("ABCD1234EFGH5678")
@@ -512,7 +514,7 @@ def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_p
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_303_justificante_observation(store, expediente_id=expediente_id)
 
-        csvs = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id).justificante_csvs
+        csvs = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id).justificante_csvs
 
         assert csvs == (_MODELO_303_FIXTURE_CSV,)
         loaded = JustificanteRepository().load(_MODELO_303_FIXTURE_CSV)
@@ -550,7 +552,7 @@ def test_filed_observation_capture_refuses_invalid_justificante_metadata(
                 captured_csv=captured_csv,
             )
 
-            csvs = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id).justificante_csvs
+            csvs = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id).justificante_csvs
 
             assert csvs == (), case_id
             assert JustificanteRepository().load(_MODELO_130_FIXTURE_CSV) is None, case_id
@@ -562,7 +564,7 @@ def test_filed_observation_capture_stamps_matching_current_filing_record(tmp_pat
         observation = _stored_130_justificante_observation(store)
         filing = _seed_current_130_filing(bucket_id=bucket_id)
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
 
         assert result.justificante_csvs == ("ABCD1234EFGH5678",)
         assert result.filing_record_ids == (filing.filing_record_id,)
@@ -608,7 +610,7 @@ def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_
             ),
         )
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
 
         assert result.filing_record_ids == (filing.filing_record_id,)
         assert result.conflicting_filing_record_ids == ()
@@ -650,7 +652,7 @@ def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same
             ),
         )
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
 
         assert result.filing_record_ids == (filing.filing_record_id,)
         assert result.conflicting_filing_record_ids == ()
@@ -690,7 +692,7 @@ def test_filed_observation_capture_reports_existing_evidence_conflict_without_ov
             ),
         )
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
 
         assert result.filing_record_ids == ()
         assert result.conflicting_filing_record_ids == (filing.filing_record_id,)
@@ -722,7 +724,7 @@ def test_filed_observation_capture_does_not_stamp_current_filing_for_wrong_profi
         observation = _stored_130_justificante_observation(store)
         _seed_current_130_filing(bucket_id=bucket_id)
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
 
         assert result.justificante_csvs == ("ABCD1234EFGH5678",)
         assert result.filing_record_ids == ()
@@ -948,6 +950,8 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
                 expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
                 headers=(_M303_DECLARATION_TYPE_C,),
             ),
+        ,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
         )
 
         history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
@@ -991,6 +995,8 @@ def test_filed_303_capture_accepts_canonical_compensation_casilla_ids(tmp_path: 
                 generated=generated,
                 headers=(_M303_DECLARATION_TYPE_C,),
             ),
+        ,
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
         )
 
         history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
@@ -1179,7 +1185,9 @@ def test_persisted_source_metadata_carries_the_register_request_type_signal(tmp_
     )
 
     with _secure_backend(tmp_path):
-        persist_filed_calculation_observation(observation, repository=CalculationObservationRepository())
+        persist_filed_calculation_observation(observation, repository=CalculationObservationRepository(),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
+        )
         loaded = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
 
     assert loaded is not None
@@ -1205,10 +1213,14 @@ def test_persisted_source_metadata_omits_an_absent_request_type_rather_than_writ
     missing = _filed_130_observation().model_copy(update={"metadata": {"observaciones": ""}})
 
     with _secure_backend(tmp_path / "blank"):
-        persist_filed_calculation_observation(blank, repository=CalculationObservationRepository())
+        persist_filed_calculation_observation(blank, repository=CalculationObservationRepository(),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
+        )
         blank_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
     with _secure_backend(tmp_path / "missing"):
-        persist_filed_calculation_observation(missing, repository=CalculationObservationRepository())
+        persist_filed_calculation_observation(missing, repository=CalculationObservationRepository(),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
+        )
         missing_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
 
     assert blank_row is not None
@@ -1235,7 +1247,7 @@ def test_the_request_type_signal_survives_a_strict_persistence_roundtrip(tmp_pat
     with _secure_backend(tmp_path):
         persist_filed_calculation_observation(
             observation,
-            repository=CalculationObservationRepository(),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path),
             justificante_csvs=("CSV13020261T",),
         )
         first = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
@@ -1292,7 +1304,7 @@ def test_a_receipt_stamps_its_filing_even_though_its_identifier_is_not_the_regis
         observation = _stored_130_justificante_observation(store, expediente_id=register_expediente_id)
         filing = _seed_current_130_filing(bucket_id=bucket_id)
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
         current = (
             ModeloRecordCatalogueRepository()
             .load()
@@ -1334,7 +1346,7 @@ def test_a_receipt_is_refused_when_its_csv_is_not_the_csv_its_bytes_were_fetched
         observation = _stored_130_justificante_observation(store, captured_csv="QQQQ7777WWWW3333")
         _seed_current_130_filing(bucket_id=bucket_id)
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
         current = (
             ModeloRecordCatalogueRepository()
             .load()
@@ -1379,7 +1391,7 @@ def test_a_receipt_is_refused_when_no_csv_can_be_recovered_from_the_artefact_url
         )
         _seed_current_130_filing(bucket_id=bucket_id)
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
 
     assert result.justificante_csvs == ()
     assert result.filing_record_ids == ()
@@ -1426,7 +1438,7 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
             expediente_id="202630300000412B",
             captured_csv=other_filing_csv,
         )
-        refused = enroll_filed_justificante_evidence(wrong_filing, store=store, bucket_id=bucket_id)
+        refused = enroll_filed_justificante_evidence(wrong_filing, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
         after_refusal = (
             ModeloRecordCatalogueRepository()
             .load()
@@ -1439,7 +1451,7 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
         )
 
         right_filing = _stored_303_justificante_observation(store)
-        accepted = enroll_filed_justificante_evidence(right_filing, store=store, bucket_id=bucket_id)
+        accepted = enroll_filed_justificante_evidence(right_filing, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
         after_acceptance = (
             ModeloRecordCatalogueRepository()
             .load()
@@ -1538,7 +1550,7 @@ def test_each_unreached_justificante_outcome_reports_its_own_reason(tmp_path: Pa
             observation = mutate(store)
             _seed_current_130_filing(bucket_id=bucket_id)
 
-            result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+            result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
 
             assert result.justificante_csvs == (), case_id
             assert len(result.notices) == 1, case_id
@@ -1577,7 +1589,7 @@ def test_an_enrollment_that_saves_evidence_raises_no_unreached_notice(tmp_path: 
         observation = _stored_130_justificante_observation(store)
         _seed_current_130_filing(bucket_id=bucket_id)
 
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        result = enroll_filed_justificante_evidence(observation, ports=_filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id)
 
     assert result.justificante_csvs == (_MODELO_130_FIXTURE_CSV,)
     assert result.notices == ()

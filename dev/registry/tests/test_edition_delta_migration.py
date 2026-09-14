@@ -184,7 +184,7 @@ def pilot(pilot_input: Path, tmp_path_factory: pytest.TempPathFactory) -> Migrat
         registry_root=pilot_input,
         modelo_id=_PILOT,
         work_dir=tmp_path_factory.mktemp("pilot-work") / "run",
-        apply=True,
+        apply=False,
     )
 
 
@@ -303,11 +303,14 @@ def test_a_row_stating_only_a_lineage_claim_moves_to_the_canonical_carrier(
     assert found is not None, "no row differs from its inherited row by a lineage claim alone"
     edition, row_id = found
     assert row_id not in edition.stated_ids
-    assert len(edition.lineage_attestations) == 1
-    claim = edition.lineage_attestations[0]
+    original_row = next(casilla for casilla in successor.casillas if str(casilla.id) == row_id)
+    matching_claims = tuple(
+        claim for claim in edition.lineage_attestations if claim.continuidad_id == original_row.continuidad_id
+    )
+    assert len(matching_claims) == 1
+    (claim,) = matching_claims
     assert claim.to_revision == edition.revision_id
     assert claim.from_revision == edition.predecessor
-    original_row = next(casilla for casilla in successor.casillas if str(casilla.id) == row_id)
     assert claim.continuidad_id == original_row.continuidad_id
 
     edition_dir = _edition_dir(pilot.staged_registry, _PILOT, edition.revision_id)
@@ -492,6 +495,41 @@ def test_a_withdrawn_lineage_blocks_until_a_retirement_declares_it(
     # predecessor it is inherited from still carries the row.
     assert row_id not in {casilla.id for casilla in staged.revisions[revision_id].casillas}
     assert row_id in {casilla.id for casilla in staged.revisions[str(edition.predecessor)].casillas}
+
+
+def test_a_blocked_full_copy_remains_a_baseline_for_independent_later_work(
+    pilot: MigrationOutcome, pilot_before: ModeloDefinition, pilot_input: Path, tmp_path: Path
+) -> None:
+    """A failed transformation does not make the authored source unreadable."""
+    blocked_candidate, later = pilot.plan.editions[-2:]
+    assert blocked_candidate.is_delta and later.is_delta
+    planted = shutil.copytree(pilot_input, tmp_path / "registry" / "aeat")
+    blocked_dir = _edition_dir(planted, _PILOT, blocked_candidate.revision_id)
+    row_id = _withdrawable_row(pilot_before, blocked_dir, blocked_candidate.inherited_ids)
+    _drop_row(blocked_dir, row_id)
+    before = {
+        path.relative_to(blocked_dir).as_posix(): path.read_bytes() for path in blocked_dir.rglob("*") if path.is_file()
+    }
+
+    outcome = migrate_modelo(registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "work")
+
+    assert outcome.staged_registry is not None
+    assert not outcome.complete
+    assert blocked_candidate.revision_id in outcome.blocked
+    assert any("unretired_withdrawal" in detail for detail in outcome.blocked[blocked_candidate.revision_id])
+    assert later.revision_id in outcome.completed
+    staged_blocked = _edition_dir(outcome.staged_registry, _PILOT, blocked_candidate.revision_id)
+    assert before == {
+        path.relative_to(staged_blocked).as_posix(): path.read_bytes()
+        for path in staged_blocked.rglob("*")
+        if path.is_file()
+    }
+    assert (
+        tomllib.loads((staged_blocked / "revision.toml").read_text(encoding="utf-8"))["revisions"][
+            blocked_candidate.revision_id
+        ].get("predecessor")
+        is None
+    )
 
 
 def _rewrite_row_sources(edition_dir: Path, sources: list[list[str]]) -> None:

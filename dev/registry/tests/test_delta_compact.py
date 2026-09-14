@@ -97,6 +97,13 @@ def test_ordinary_migration_and_family_drop_relocate_the_same_claim(tmp_path: Pa
     assert ordinary_revision.casillas == family_revision.casillas
     assert ordinary_revision.lineage_attestations == family_revision.lineage_attestations
     assert len(ordinary_revision.lineage_attestations) == 1
+    again = migrate_modelo(
+        registry_root=outcome.staged_registry,
+        modelo_id="999",
+        work_dir=tmp_path / "ordinary-again",
+    )
+    assert not again.changed
+    assert again.staged_registry is None
 
 
 def test_duplicate_evidence_ownership_is_refused(tmp_path: Path) -> None:

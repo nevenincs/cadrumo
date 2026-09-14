@@ -6,8 +6,8 @@
 # than this floor, that is the modelo's own declaration to make, not this one's.
 #
 # `horizon` is the last year the corpus carries authored coverage for. It is not
-# a gate: a year above it stays answerable by carrying the newest declared
-# revision forward, and a list of years had no way to say that.
+# a gate: a year above it stays answerable by carrying the newest eligible
+# authored revision forward.
 #
 # `hard_ceiling` is optional and absent here, which leaves the span open above
 # the horizon. Declare it only when the product must stop at a known year.

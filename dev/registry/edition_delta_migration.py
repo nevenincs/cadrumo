@@ -42,8 +42,8 @@ What the migration does, edition by edition in validity order:
   rows after them in stated order.
 - **Writes** the delta: the dropped rows' blocks are removed from their
   fragments, each fragment is renamed to the span it still declares, and the
-  manifest gains ``predecessor``, ``casilla_source_refs`` and, on a reviewed
-  edition, ``reviewed_against``.
+  manifest gains ``predecessor`` and ``casilla_source_refs``. Existing review
+  metadata is preserved byte-for-byte because storage shape is not review scope.
 
 An edition the materialiser cannot reproduce exactly is **blocked** and stays a
 full copy with its restatement lifted. The causes are closed: an overlapping
@@ -62,8 +62,8 @@ registry and compared with the unmigrated modelo through the round-trip gate:
 typed equality of every edition, casilla row order against the merge order,
 locale identity, and export bytes for each edition an export scenario is given
 for. The staged tree must
-carry ``reviewed_against`` on a reviewed delta edition or it does not load, so
-the carry-forward is decided at publication: ``--apply`` replaces the modelo in
+  preserve the edition's existing review metadata, so the carry-forward is
+  decided at publication: ``--apply`` replaces the modelo in
 the target registry only when the gate reports nothing at all, including no
 edition whose export bytes went unchecked. Without ``--apply`` nothing outside
 the work directory is written by the migration; the command-line report is
@@ -261,6 +261,7 @@ class BlockedCause(StrEnum):
     PREDECESSOR_ROW_WITHOUT_LINEAGE = "predecessor_row_without_lineage"
     AMBIGUOUS_LINEAGE = "ambiguous_lineage"
     UNDECLARED_REPURPOSE = "undeclared_repurpose"
+    TRANSFORMATION_FAILED = "transformation_failed"
 
 
 class KeptReason(StrEnum):
@@ -905,8 +906,7 @@ def _plan(
 ) -> tuple[MigrationPlan, tuple[_EditionWork, ...]]:
     ordered = ordered_revisions(definition)
     sources = {str(revision.id): _read_edition(modelo_dir, str(revision.id)) for revision in ordered}
-    if any(_delta_authored(source.manifest) for source in sources.values()):
-        return _plan_lift_in_place(definition, ordered, sources)
+    already_delta_authored = any(_delta_authored(source.manifest) for source in sources.values())
     materialised: dict[str, list[_Placed]] = {}
     work: list[_EditionWork] = []
     for position, revision in enumerate(ordered):
@@ -914,6 +914,38 @@ def _plan(
         source = sources[revision_id]
         lift = _edition_lift(source)
         full_rows = list(lift.rows)
+        if _delta_authored(source.manifest):
+            stated_ids = tuple(_row_id(row) for row in source.stated_rows())
+            unheld = sorted(row_id for row_id in stated_ids if row_id not in lift.lifts)
+            if unheld:
+                raise MigrationRefusedError(
+                    f"edition {revision_id!r} states casillas {unheld!r} its materialisation does not hold"
+                )
+            stated = frozenset(stated_ids)
+            predecessor = str(source.manifest["predecessor"])
+            plan = EditionPlan(
+                revision_id=revision_id,
+                basis=PredecessorBasis.LIFT_ONLY,
+                predecessor=predecessor,
+                blocked=(),
+                source_default=lift.source_default,
+                source_default_withheld=lift.withheld,
+                rows_before=len(lift.rows),
+                stated_ids=stated_ids,
+                inherited_ids=tuple(_row_id(row) for row in lift.rows if _row_id(row) not in stated),
+                lifted=_lift_counts(source, lift.lifts, stated),
+                kept={},
+                not_exact=(),
+                comments_dropped=0,
+                reviewed_against=None,
+                dependencies=(predecessor,),
+            )
+            materialised[revision_id] = [
+                _Placed(lift.lifts[_row_id(row)].row, origin or revision_id)
+                for row, origin in zip(full_rows, source.origins, strict=True)
+            ]
+            work.append(_EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None))
+            continue
         source_default, withheld, lifts = lift.source_default, lift.withheld, lift.lifts
         new_defaults = lift.defaults
 
@@ -925,17 +957,22 @@ def _plan(
         removals: tuple[_Row, ...] = ()
         positions: tuple[_Row, ...] = ()
         lineage_attestations: tuple[LineageAttestation, ...] = ()
+        failure_details: tuple[str, ...] = ()
         if predecessor is not None and not causes:
-            causes, drops, kept, not_exact, overrides, removals, positions, lineage_attestations = _choose_drops(
-                definition=definition,
-                revision_id=revision_id,
-                predecessor=predecessor,
-                inherited=materialised[predecessor],
-                full_rows=full_rows,
-                lifts=lifts,
-                source=source,
-                defaults=new_defaults,
-            )
+            try:
+                causes, drops, kept, not_exact, overrides, removals, positions, lineage_attestations = _choose_drops(
+                    definition=definition,
+                    revision_id=revision_id,
+                    predecessor=predecessor,
+                    inherited=materialised[predecessor],
+                    full_rows=full_rows,
+                    lifts=lifts,
+                    source=source,
+                    defaults=new_defaults,
+                )
+            except MigrationRefusedError as exc:
+                causes = [BlockedCause.TRANSFORMATION_FAILED]
+                failure_details = (f"requires readable authored source {predecessor!r}; transformation failed: {exc}",)
         stated_ids = frozenset(_row_id(row) for row in full_rows) - drops
         if causes:
             basis, drops, stated_ids = (
@@ -979,11 +1016,15 @@ def _plan(
                 for block in fragment.blocks
                 if _row_id(block.row) not in stated_ids and block.text.lstrip().startswith("#")
             ),
-            reviewed_against=predecessor if is_delta and review != _PENDING_REVIEW else None,
+            reviewed_against=(
+                str(value) if isinstance((value := source.manifest.get("reviewed_against")), str) else None
+            ),
             dependencies=(predecessor,) if predecessor is not None else (),
             blocked_detail=tuple(
                 f"requires readable authored source {predecessor!r}: {cause.value}" for cause in causes
-            ),
+            )
+            if not failure_details
+            else failure_details,
             casilla_overrides=overrides,
             casilla_removals=removals,
             casilla_positions=positions,
@@ -994,7 +1035,7 @@ def _plan(
         MigrationPlan(
             modelo_id=str(definition.id),
             editions=tuple(item.plan for item in work),
-            already_delta_authored=False,
+            already_delta_authored=already_delta_authored,
         ),
         tuple(work),
     )
@@ -1164,11 +1205,14 @@ def _choose_drops(
         if storage_only and _lineage(candidate.row) is not None:
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
-        if not storage_only and restatement_differences(
-            typed[row_id], revision, typed_predecessor[lineage], predecessor_revision
-        ):
-            kept[KeptReason.DIFFERS] += 1
-            continue
+        if not storage_only:
+            assert lineage is not None
+            typed_differences = restatement_differences(
+                typed[row_id], revision, typed_predecessor[lineage], predecessor_revision
+            )
+            if set(typed_differences) - _LINEAGE_CLAIMS:
+                kept[KeptReason.DIFFERS] += 1
+                continue
         matched_storage_ids.add(_row_id(candidate.row))
         materialised = _effective(
             _without_lineage_claims(candidate.row),
@@ -1177,7 +1221,8 @@ def _choose_drops(
             defaults=defaults,
             declarations=source.declarations,
         )
-        if materialised != row and storage_only:
+        payload_row = _without_lineage_claims(row)
+        if materialised != payload_row and storage_only:
             target = lifts[row_id].row
             baseline = _without_lineage_claims(candidate.row)
             fields = {key: value for key, value in target.items() if baseline.get(key) != value}
@@ -1191,12 +1236,12 @@ def _choose_drops(
             )
             drops.add(row_id)
             continue
-        if materialised != row:
+        if materialised != payload_row:
             kept[KeptReason.NOT_EXACT] += 1
             differing = sorted(
                 key
-                for key in set(row) | set(materialised or {})
-                if materialised is None or row.get(key) != materialised.get(key)
+                for key in set(payload_row) | set(materialised or {})
+                if materialised is None or payload_row.get(key) != materialised.get(key)
             )
             not_exact.append(f"{row_id}: {', '.join(differing) or 'unresolved reference'}")
             continue
@@ -1455,8 +1500,6 @@ def _write_manifest(path: Path, work: _EditionWork) -> None:
     for key, default in sorted(work.source.family_defaults.items()):
         if key not in work.source.manifest:
             additions[key] = list(default)
-    if plan.reviewed_against is not None and "reviewed_against" not in work.source.manifest:
-        additions["reviewed_against"] = plan.reviewed_against
     if not additions and not plan.lineage_attestations:
         return
     text = work.source.manifest_text
@@ -2543,6 +2586,7 @@ def migrate_modelo_100_field_deltas(
             removed = tuple(sorted(removed_keys))
             if fields or removed or unresolved:
                 overrides.append((row_id, fields, removed, unresolved))
+                counts["override_members"] += 1
                 counts["overrides"] += len(fields)
                 counts["field_removals"] += len(removed)
             counts["inherited_values"] += len(set(target) & set(baseline)) - len(fields)
@@ -2561,6 +2605,10 @@ def migrate_modelo_100_field_deltas(
         counts["member_removals"] += len(removals)
         counts["new_members"] += len(new_ids)
         counts["inherited_members"] += len(shared)
+        counts["before_authored_payload_fields"] += sum(len(set(row) - {"id", "continuidad_id"}) for row in source.rows)
+        counts["after_authored_new_member_payload_fields"] += sum(
+            len(set(target_rows[row_id]) - {"id", "continuidad_id"}) for row_id in new_ids
+        )
         # Keep only genuinely new complete members.  Their original blocks and
         # comments remain byte-for-byte within the newly consolidated fragment.
         target_dir = staged_modelo / "revisions" / revision_id
@@ -2653,8 +2701,12 @@ def migrate_modelo_100_field_deltas(
         "hydration_differences": differences,
         "editions": edition_rows,
         **dict(counts),
-        "selector_fields": 2 * (sum(1 for row in edition_rows) + counts["member_removals"]),
-        "storage_metadata_fields": counts["field_removals"] + counts["member_removals"],
+        "after_authored_payload_fields": counts["after_authored_new_member_payload_fields"] + counts["overrides"],
+        "selector_fields": 2 * (counts["override_members"] + counts["member_removals"]),
+        "ordering_metadata_fields": 2 * sum(int(row["ordering_metadata"]) for row in edition_rows),
+        "storage_metadata_fields": counts["field_removals"]
+        + counts["member_removals"]
+        + sum(int(row["provenance_restatements"]) for row in edition_rows),
         "applied": False,
     }
     if apply:

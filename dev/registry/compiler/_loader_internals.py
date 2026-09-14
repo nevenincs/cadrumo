@@ -874,8 +874,9 @@ def _materialise_revision(
     result = _MaterialisedRevision(table=table, label_origins=None)
     if baseline_id is not None:
         predecessor = _materialise_revision(source_path, raw_revisions, named, storage_named, baseline_id, resolved)
+        relation = "inheriting from" if predecessor_id is not None else "hydrating casillas from"
         rows, label_origins = _inherit_casillas(
-            f"{source_path}: revision {revision_id!r} hydrating casillas from {baseline_id!r}",
+            f"{source_path}: revision {revision_id!r} {relation} {baseline_id!r}",
             revision_id=revision_id,
             predecessor_id=baseline_id,
             inherited=_raw_casilla_rows(source_path, baseline_id, predecessor.table),
