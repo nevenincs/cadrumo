@@ -30,9 +30,9 @@ from typing import Any
 
 import pytest
 
+from cadrumo.adapters.inbound.justificante.tests.parse_cache import parse_committed_justificante_fixture
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo.adapters.inbound.justificante.tests.parse_cache import parse_committed_justificante_fixture
 
 from ..residual_identity import is_self_replacement
 

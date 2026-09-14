@@ -109,10 +109,10 @@ def test_workflow_state_reset_persists_version_one(tmp_path: Path) -> None:
 
 def test_inventory_events_persist_version_one(tmp_path: Path) -> None:
     """An inventory ledger create writes the inventory payload contract."""
-    from ....application.inventory.service import InventoryService
-    from ....application.inventory.ports import InventoryServicePorts
     from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ....application.inventory.ports import InventoryServicePorts
+    from ....application.inventory.service import InventoryService
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         InventoryService(

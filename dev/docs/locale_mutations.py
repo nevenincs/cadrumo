@@ -46,9 +46,7 @@ _SHA256: Final[re.Pattern[str]] = re.compile(r"[0-9a-f]{64}\Z")
 _INLINE_LITERAL: Final[re.Pattern[str]] = re.compile(r"`([^`\r\n]+)`")
 _RST_ROLE: Final[re.Pattern[str]] = re.compile(r":[A-Za-z][A-Za-z0-9_-]*:")
 _MYST_ROLE_PREFIX: Final[re.Pattern[str]] = re.compile(r"\{(?P<role>[A-Za-z][A-Za-z0-9_-]*)\}\Z")
-_MYST_ROLE_TARGET: Final[re.Pattern[str]] = re.compile(
-    r"\s*[^<>\r\n]*?\s*<(?P<target>[^<>\r\n]+)>\s*\Z"
-)
+_MYST_ROLE_TARGET: Final[re.Pattern[str]] = re.compile(r"\s*[^<>\r\n]*?\s*<(?P<target>[^<>\r\n]+)>\s*\Z")
 _PYTHON_PERCENT: Final[re.Pattern[str]] = re.compile(
     r"%(?:\([A-Za-z_][A-Za-z0-9_]*\))?[#0\- +]?(?:\d+|\*)?(?:\.\d+|\.\*)?(?:[hlL])?[diouxXeEfFgGcrsa%]"
 )
@@ -176,9 +174,7 @@ def apply_manifest(
                 allowed_obsolete=allowed_obsolete,
             )
             _validate_unlisted_fuzzy(catalogue, update, catalogue_path)
-            changed_messages, cleared_fuzzy_messages = _apply_messages(
-                catalogue, update.messages, catalogue_path
-            )
+            changed_messages, cleared_fuzzy_messages = _apply_messages(catalogue, update.messages, catalogue_path)
             removed_stale_messages = _remove_stale(catalogue, update.remove_stale, catalogue_path)
             removed_obsolete_messages = _remove_obsolete(catalogue, update.remove_obsolete, catalogue_path)
             rendered = _render_catalogue(catalogue)
@@ -314,10 +310,7 @@ def _parse_updates(payload: dict[str, object]) -> tuple[_ManifestUpdate, ...]:
             catalogue=catalogue,
         )
         message_keys = {(message.context or "", message.msgid, None) for message in messages}
-        stale_keys = {
-            (stale.context or "", stale.msgid, stale.msgid_plural)
-            for stale in remove_stale
-        }
+        stale_keys = {(stale.context or "", stale.msgid, stale.msgid_plural) for stale in remove_stale}
         if message_keys & stale_keys:
             overlap = sorted(message_keys & stale_keys)
             raise DocumentationLocaleMutationError(
@@ -365,9 +358,7 @@ def _parse_stale_targets(
             raise DocumentationLocaleMutationError(f"{prefix}.msgid_plural must not be blank")
         target_key = (context or "", msgid, msgid_plural)
         if target_key in seen:
-            raise DocumentationLocaleMutationError(
-                f"duplicate {field} target in {locale}/{catalogue}: {target_key!r}"
-            )
+            raise DocumentationLocaleMutationError(f"duplicate {field} target in {locale}/{catalogue}: {target_key!r}")
         seen.add(target_key)
         targets.append(_ManifestStale(context=context, msgid=msgid, msgid_plural=msgid_plural))
     return tuple(targets)
@@ -496,11 +487,7 @@ def _validate_stale_targets(
 ) -> set[tuple[str, str]]:
     """Validate explicitly authorized active identities absent from the POT."""
     active_keys = set(_catalogue_messages(catalogue))
-    obsolete_keys = {
-        _message_key(message)
-        for message in catalogue.obsolete.values()
-        if message.id
-    }
+    obsolete_keys = {_message_key(message) for message in catalogue.obsolete.values() if message.id}
     source_keys = set(_catalogue_messages(pot))
     allowed: set[tuple[str, str]] = set()
     for target in targets:
@@ -508,12 +495,9 @@ def _validate_stale_targets(
         if identity not in active_keys:
             if identity in obsolete_keys:
                 raise DocumentationLocaleMutationError(
-                    f"remove_stale gettext msgid is obsolete in {path}: {identity!r}; "
-                    "use remove_obsolete"
+                    f"remove_stale gettext msgid is obsolete in {path}: {identity!r}; use remove_obsolete"
                 )
-            raise DocumentationLocaleMutationError(
-                f"remove_stale gettext msgid is not active in {path}: {identity!r}"
-            )
+            raise DocumentationLocaleMutationError(f"remove_stale gettext msgid is not active in {path}: {identity!r}")
         if identity in source_keys:
             raise DocumentationLocaleMutationError(
                 f"remove_stale gettext msgid is still present in the POT for {path}: {identity!r}"
@@ -528,11 +512,7 @@ def _validate_obsolete_targets(
     path: Path,
 ) -> set[tuple[str, str]]:
     """Validate exact identities in Babel's obsolete mapping."""
-    obsolete_keys = {
-        _message_key(message)
-        for message in catalogue.obsolete.values()
-        if message.id
-    }
+    obsolete_keys = {_message_key(message) for message in catalogue.obsolete.values() if message.id}
     allowed: set[tuple[str, str]] = set()
     for target in targets:
         identity = _manifest_stale_key(target.context, target.msgid, target.msgid_plural)
@@ -566,11 +546,7 @@ def _validate_msgids(
             f"stale gettext msgids for {path}: missing={missing!r} "
             f"stale={unlisted_stale!r} unexpected_remove_stale={unexpected_allowed!r}"
         )
-    obsolete_keys = {
-        _message_key(message)
-        for message in catalogue.obsolete.values()
-        if message.id
-    }
+    obsolete_keys = {_message_key(message) for message in catalogue.obsolete.values() if message.id}
     unlisted_obsolete = sorted(obsolete_keys - allowed_obsolete)
     unexpected_obsolete = sorted(allowed_obsolete - obsolete_keys)
     if unlisted_obsolete or unexpected_obsolete:
@@ -583,13 +559,9 @@ def _validate_msgids(
 def _validate_unlisted_fuzzy(catalogue: Catalog, update: _ManifestUpdate, path: Path) -> None:
     """Refuse fuzzy entries unless the manifest explicitly names each one."""
     fuzzy_keys = {_message_key(message) for message in catalogue if message.id and message.fuzzy}
-    listed_keys = {
-        (message.context or "", message.msgid)
-        for message in update.messages
-    }
+    listed_keys = {(message.context or "", message.msgid) for message in update.messages}
     listed_keys.update(
-        _manifest_stale_key(stale.context, stale.msgid, stale.msgid_plural)
-        for stale in update.remove_stale
+        _manifest_stale_key(stale.context, stale.msgid, stale.msgid_plural) for stale in update.remove_stale
     )
     unlisted = sorted(fuzzy_keys - listed_keys)
     if unlisted:

@@ -27,6 +27,7 @@ import pytest
 from click.testing import CliRunner
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
+from cadrumo.application.filing.tests.filing_support import build_registry_filing_draft
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.json_contract import ResolvedNoticeAction
@@ -43,7 +44,6 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.entrypoints.cli.common import resolve_notice_action
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.application.filing.tests.filing_support import build_registry_filing_draft
 
 from ..perf_measurement import CPU_CONTENTION_MARGIN
 
