@@ -50,6 +50,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -74,7 +75,6 @@ from cadrumo.application.modelo.result_disposition_resolution import resolve_mod
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -330,7 +330,7 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
             source_kind="app_filing",
             captured_at=_FILE_AT,
             stamped_revision_id=str(
-                bundled_authority().snapshot("100", filing_year=_PRIOR_YEAR, period="0A").revision.id
+                compiled_bundled_authority().snapshot("100", filing_year=_PRIOR_YEAR, period="0A").revision.id
             ),
         )
     )
@@ -342,7 +342,9 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
         taxpayer_nif=_TAX_ID,
         target_year=_YEAR,
         target_period=Period.from_year_and_code(_YEAR, period),
-        target_registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=_YEAR, period=period).snapshot_ref,
+        target_registry_snapshot_ref=compiled_bundled_authority()
+        .snapshot("303", filing_year=_YEAR, period=period)
+        .snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("0.00"),
@@ -363,7 +365,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
@@ -417,7 +419,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="390",
@@ -443,7 +445,7 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = bundled_authority().snapshot("130", filing_year=_YEAR, period=period)
+    snapshot = compiled_bundled_authority().snapshot("130", filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
@@ -475,7 +477,7 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
 def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding that is neither profile- nor relation-sourced."""
     del secure_objects
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
     values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -500,7 +502,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",

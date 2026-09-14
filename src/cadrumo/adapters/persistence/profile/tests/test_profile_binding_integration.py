@@ -15,6 +15,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -24,7 +25,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -67,7 +67,7 @@ def _store_profile(record: UserProfileRecord) -> None:
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:

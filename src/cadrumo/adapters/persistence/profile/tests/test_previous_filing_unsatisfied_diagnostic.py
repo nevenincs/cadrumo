@@ -31,6 +31,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -43,7 +44,6 @@ from cadrumo.application.calculations.observations_repository import Observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -73,7 +73,7 @@ _M100_NET_INCOME_CASILLAS: tuple[CasillaId, ...] = tuple(
 
 
 def _m130_snapshot():
-    return bundled_authority().snapshot(
+    return compiled_bundled_authority().snapshot(
         Modelo("130").value,
         filing_year=_YEAR,
         period=_TARGET_PERIOD,

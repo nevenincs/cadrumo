@@ -12,10 +12,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 
@@ -56,7 +56,7 @@ def _service() -> ProrrataRegisterService:
 
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
-    return bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
 
 
 def test_record_aeat_autorizada_preserves_sector_and_regime() -> None:

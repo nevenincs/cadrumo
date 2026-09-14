@@ -13,10 +13,10 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import (
@@ -39,7 +39,7 @@ _M100_CODE = ModeloCode(Modelo("100").value)
 
 @pytest.fixture(scope="module")
 def snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
 
 
 def _work_unit(modelo: ModeloCode = _M100_CODE, *, filing_year: int = _FILING_YEAR) -> WorkUnit:

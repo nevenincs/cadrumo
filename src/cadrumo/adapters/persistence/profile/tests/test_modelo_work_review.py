@@ -6,6 +6,7 @@ import importlib
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
@@ -33,7 +34,6 @@ from cadrumo.application.modelo.work_review import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -101,7 +101,7 @@ def _persist_work_unit(
 ) -> WorkUnit:
     work_repo, _, _, _, _ = repos
     period = Period.from_year_and_code(filing_year, period_code)
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     selected_revision = select_revision(
         authority.validate_modelo(modelo),
         filing_year=filing_year,
@@ -138,7 +138,7 @@ def _persist_work_unit(
 def test_review_projects_resolvable_work_without_a_calculation_from_real_storage(repos: Repos) -> None:
     work_repo, calculation_repo, _, verification_repo, _ = repos
     work_unit = _persist_work_unit(repos)
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     review = build_modelo_work_review(
         work_unit.bucket_id,
@@ -232,7 +232,7 @@ def test_review_progress_is_undefined_without_a_revision_manifest(repos: Repos) 
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
@@ -247,7 +247,7 @@ def test_review_progress_is_undefined_without_a_revision_manifest(repos: Repos) 
 def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> None:
     work_repo, calculation_repo, _, verification_repo, _ = repos
     work_unit = _persist_work_unit(repos)
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -329,7 +329,7 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
@@ -415,7 +415,7 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
@@ -450,7 +450,7 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
@@ -477,7 +477,7 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
@@ -530,7 +530,7 @@ def test_real_review_projects_only_fingerprint_for_persisted_row_identity(repos:
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
@@ -556,7 +556,7 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
         filing_year=2025,
         period_code="0A",
     )
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -600,7 +600,7 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         work_unit_repository=work_repo,
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,

@@ -37,11 +37,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.iva.schema import IvaCategory
@@ -116,7 +116,7 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota() -> None
     leg drops the intracom casilla.
     """
     intracom_cuota = Decimal("42.00")
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
     binding_values = {
         _INTRACOM_BINDING: intracom_cuota,
         _AUTOCONSUMO_BINDING: Decimal("0"),
@@ -148,7 +148,7 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible() -> None:
     show deducible-total == 0 while devengada-total == 42 (output IVA with no offset)
     — a net positive result that over-states the IVA payable on a neutral acquisition.
     """
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
     binding_values = {
         _INTRACOM_BINDING: Decimal("42.00"),
         _AUTOCONSUMO_BINDING: Decimal("0"),

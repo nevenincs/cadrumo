@@ -18,8 +18,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .._translator import is_translatable
 from ..engine import build_export_plan
@@ -72,7 +72,7 @@ _COVERED = [
 
 
 def _snapshot(modelo: str, year: int, period: str, on: date):
-    return bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
+    return compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
 
 
 _FORMAT_BY_REGISTRY_TYPE = {

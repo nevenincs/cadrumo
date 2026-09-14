@@ -27,9 +27,9 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -45,7 +45,7 @@ _ADVISORY_REASON = "unresolved_derived_binding"
 
 @lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:

@@ -12,6 +12,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -22,7 +23,6 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.calculation_revision import (
@@ -87,7 +87,7 @@ def _txn() -> Transaction:
 
 def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
     period = Period.from_year_and_code(2025, "1T")
-    registry_snapshot_ref = bundled_authority().snapshot("303", filing_year=2025, period="1T").snapshot_ref
+    registry_snapshot_ref = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

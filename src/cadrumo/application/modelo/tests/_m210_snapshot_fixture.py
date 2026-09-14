@@ -1,8 +1,8 @@
 """Canonical Modelo 210 Convenio registry snapshot fixture."""
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 
 
@@ -14,7 +14,7 @@ def m210_snapshot() -> RegistrySnapshot:
     snapshot need not retain the superseded treaty projection.
     """
 
-    return bundled_authority().snapshot("210", filing_year=2025, period="EVENT-1")
+    return compiled_bundled_authority().snapshot("210", filing_year=2025, period="EVENT-1")
 
 
 __all__ = ["m210_snapshot"]

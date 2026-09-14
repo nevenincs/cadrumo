@@ -13,6 +13,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -30,7 +31,6 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -230,7 +230,7 @@ def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
 
 
 def _m100_caller_zero_bindings() -> dict[BindingId, Decimal]:
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -265,7 +265,7 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
         clock=_T0,
     )
 
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     binding_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
     assert str(binding_by_id[_M100_SS_BINDING].source) == "ledger_renta_gastos_estimacion_directa_aggregation"
     assert (

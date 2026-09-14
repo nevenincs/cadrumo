@@ -33,6 +33,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -51,7 +52,6 @@ from cadrumo.core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
@@ -71,7 +71,7 @@ _REVISION = "2022"
 
 
 def _prior_m303_snapshot_ref():
-    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _raw(provider_id: str) -> RawTransaction:
@@ -136,7 +136,7 @@ def _save_txns(
 
 
 def _deducible_cuota(tx_repo: TransactionCatalogueRepository) -> Decimal:
-    revision = bundled_authority().modelo("303").revisions[_REVISION]
+    revision = compiled_bundled_authority().modelo("303").revisions[_REVISION]
     aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=_BUCKET_ID,
         period=_PERIOD,

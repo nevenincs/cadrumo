@@ -123,12 +123,14 @@ from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import IndexedRegistryAuthority
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloScalar
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
+    from .verification_repository_ports import VerificationRepositoryBundleFactory
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
@@ -306,7 +308,7 @@ class ModeloWorkDiscardPublicResultV1(BaseModel):
     discarded: bool
 
 
-class ModeloWorkDiscardApprovalStaleError(CadrumoError, RuntimeError):
+class ModeloWorkDiscardApprovalStaleError(CadrumoError):
     """Raised when the approved unit is no longer the unit on disk."""
 
 
@@ -510,12 +512,18 @@ class ModeloWorkVerifyExecutor:
     def __init__(
         self,
         *,
+        authority_factory: Callable[[], IndexedRegistryAuthority],
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
         profile_resolver: ModeloWorkVerifyProfileResolver,
         operator_scope_ports: OperatorScopePorts,
+        verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
     ) -> None:
         """Bind the live profile the gates are evaluated against."""
+        self._authority_factory = authority_factory
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
         self._profile_resolver = profile_resolver
         self._operator_scope_ports = operator_scope_ports
+        self._verification_repository_bundle_factory = verification_repository_bundle_factory
 
     async def execute(
         self,
@@ -531,30 +539,45 @@ class ModeloWorkVerifyExecutor:
         """
         await context.events.phase(_MODELO_WORK_VERIFY_GATES_PHASE)
         await context.events.effect(OperationEffect.UNKNOWN)
-        report = await asyncio.to_thread(
-            functools.partial(
-                verify_modelo_revision,
-                request.payload.calculation_revision_id,
-                actor=request.payload.actor,
-                workflow_profile=self._profile_resolver(),
-                operator_scope_ports=self._operator_scope_ports,
-            )
-        )
+        from ...core.bucket_pointer import require_active_bucket_id
+
+        repositories = self._verification_repository_bundle_factory(require_active_bucket_id())
+        workflow_profile = self._profile_resolver()
+
+        def verify_under_pinned_operation():
+            with self._authority_factory().operation() as operation:
+                return verify_modelo_revision(
+                    request.payload.calculation_revision_id,
+                    actor=request.payload.actor,
+                    certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                    workflow_profile=workflow_profile,
+                    operator_scope_ports=self._operator_scope_ports,
+                    verification_repositories=repositories,
+                    operation=operation,
+                )
+
+        report = await asyncio.to_thread(verify_under_pinned_operation)
         await context.events.effect(OperationEffect.UPDATED)
         return str(report.verification_report_id)
 
 
 def build_modelo_work_verify_definition(
     *,
+    authority_factory: Callable[[], IndexedRegistryAuthority],
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
+    verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
 ) -> OperationDefinition:
     """Bind the verification authority to its registered operation contract."""
 
     def build() -> ModeloWorkVerifyExecutor:
         return ModeloWorkVerifyExecutor(
+            authority_factory=authority_factory,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             profile_resolver=profile_resolver,
             operator_scope_ports=operator_scope_ports,
+            verification_repository_bundle_factory=verification_repository_bundle_factory,
         )
 
     return OperationDefinition(
@@ -2099,6 +2122,7 @@ __all__ = [
 
 def build_modelo_lifecycle_operation_definitions(
     *,
+    authority_factory: Callable[[], IndexedRegistryAuthority],
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
     export_ports_factory: ModeloExportPortsFactory,
@@ -2107,6 +2131,7 @@ def build_modelo_lifecycle_operation_definitions(
     filing_action_ports_factory: FilingActionPortsFactory,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
     receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
+    verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
 ) -> tuple[OperationDefinition, ...]:
     """Return the one canonical modelo lifecycle operation population.
 
@@ -2128,7 +2153,12 @@ def build_modelo_lifecycle_operation_definitions(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
         ),
         build_modelo_work_rename_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
-        build_modelo_work_verify_definition(operator_scope_ports=operator_scope_ports),
+        build_modelo_work_verify_definition(
+            authority_factory=authority_factory,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
+            verification_repository_bundle_factory=verification_repository_bundle_factory,
+        ),
     )
 
 

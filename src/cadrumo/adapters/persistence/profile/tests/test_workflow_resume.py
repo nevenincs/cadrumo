@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TypedDict
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
@@ -43,7 +44,6 @@ from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
 from .....core.modelo import Modelo
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.deadlines.models import ObligationStatus
 from .....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -313,7 +313,7 @@ def _done_result(run_id: str) -> WorkflowResult:
 
 def _seed_current_revision(work_unit_id: str) -> str:
     repository = CalculationRevisionCatalogueRepository()
-    registry_snapshot_ref = bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
+    registry_snapshot_ref = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_RESUME_CASILLA: "10"},

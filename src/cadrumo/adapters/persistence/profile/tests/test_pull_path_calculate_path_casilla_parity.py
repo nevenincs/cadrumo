@@ -64,6 +64,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -112,7 +113,6 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -226,7 +226,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[CasillaId, Decimal]:
     """Compute and persist the four M115 quarters; return the expected M180 sums."""
-    auth = bundled_authority()
+    auth = compiled_bundled_authority()
     totals: dict[CasillaId, Decimal] = {
         _M115_PERCEPTORES_CASILLA: Decimal("0"),
         _M115_BASE_CASILLA: Decimal("0"),
@@ -383,7 +383,7 @@ def _seed_m303_prorrata_work_unit(work_unit_repository: WorkUnitCatalogueReposit
         modelo="303",
         filing_year=_PRORRATA_YEAR,
         period=_PRORRATA_PERIOD,
-        revision_id=bundled_authority()
+        revision_id=compiled_bundled_authority()
         .snapshot(
             "303",
             filing_year=_PRORRATA_YEAR,
@@ -430,7 +430,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     # blank masquerading as "equal" fails here.
     assert expected_totals[_M115_BASE_CASILLA] > Decimal("0"), "seeded M115 bases sum to zero — test fixture is broken"
 
-    auth = bundled_authority()
+    auth = compiled_bundled_authority()
     snap_180 = auth.snapshot("180", filing_year=_YEAR, period="0A")
 
     # ── PATH A: live bucket-aggregation calculate path ────────────────────────
@@ -540,7 +540,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
     secure_objects: SecureObjectRepository,
 ) -> None:
     """The apportioned M303 deducible cuota casilla is identical on both transports."""
-    auth = bundled_authority()
+    auth = compiled_bundled_authority()
     snapshot = auth.snapshot("303", filing_year=_PRORRATA_YEAR, period="1T")
     work_unit_repository = WorkUnitCatalogueRepository(objects=secure_objects)
     calculation_repository = CalculationRevisionCatalogueRepository(objects=secure_objects)

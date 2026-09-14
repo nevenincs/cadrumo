@@ -33,8 +33,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from ....filing.runtime import collection_from_snapshot
 from ..engine import build_export_plan, registry_sha
@@ -54,7 +54,7 @@ _COVERED = [
 
 
 def _snapshot(modelo: str, year: int, period: str, on: date) -> RegistrySnapshot:
-    return bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
+    return compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
 
 
 def _reordered(snapshot: RegistrySnapshot) -> RegistrySnapshot:

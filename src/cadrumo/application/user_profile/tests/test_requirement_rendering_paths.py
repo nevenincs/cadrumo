@@ -11,9 +11,9 @@ These tests pin the distinction itself rather than either renderer alone.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys
 from ..preflight import format_profile_path_requirements, format_profile_selector_requirements
 
@@ -53,7 +53,7 @@ def _a_binding_key_naming_a_schema_field() -> str:
     """Return one committed binding's profile key that names a real field."""
     schema = _schema()
     schema_paths = frozenset(schema.field_paths)
-    for model in bundled_authority().modelos:
+    for model in compiled_bundled_authority().modelos:
         for revision in model.revisions.values():
             for binding in revision.bindings:
                 for key in binding_profile_keys(binding):

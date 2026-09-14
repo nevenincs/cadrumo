@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
 from .....domain.calculations.registry.schema_formula import FormulaExpression
 from .....domain.calculations.registry.schema_input_kind import InputKind
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _modelo_130_revision() -> ModeloRevision:
-    return bundled_authority().modelo("130").revisions["2019-y-siguientes"]
+    return compiled_bundled_authority().modelo("130").revisions["2019-y-siguientes"]
 
 
 def test_missing_layout_address_raises_typed_error_without_raw_identifier() -> None:

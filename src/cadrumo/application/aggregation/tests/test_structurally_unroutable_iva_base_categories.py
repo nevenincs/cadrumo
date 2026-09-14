@@ -28,9 +28,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.components import registry_category_projection
@@ -47,7 +47,7 @@ _BUCKET_ID = "38383838-3838-4838-8838-383838383838"
 
 
 def _m303_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
 
 
 def _domestic_zero_sale() -> Transaction:

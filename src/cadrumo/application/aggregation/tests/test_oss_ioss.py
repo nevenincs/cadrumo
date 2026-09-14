@@ -30,9 +30,9 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.directory_scan import scan_directory
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.classification import InvoiceKind, TransactionKind
@@ -61,7 +61,7 @@ _SUPPLY_DATE = date(2025, 7, 15)
 
 @cache
 def _modelo_369_union_revision() -> ModeloRevision:
-    modelo = bundled_authority().modelo("369")
+    modelo = compiled_bundled_authority().modelo("369")
     return modelo.revisions["esquema-union"]
 
 

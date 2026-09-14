@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
@@ -16,7 +17,6 @@ from ....core.filing_projection_ref import (
     M303RegimenSimplificadoModuleValue,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_regimen_simplificado_projection import (
@@ -50,7 +50,7 @@ def _activity_ref() -> M303RegimenSimplificadoActivityProjectionRef:
 
 
 def _resolved_annual_orden_for_2026():
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     return resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -134,7 +134,7 @@ def test_projection_identity_never_uses_json_serialisation() -> None:
 
 
 def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> None:
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )
@@ -197,7 +197,7 @@ def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> N
             rows=RegimenSimplificadoFilingRows(ejercicio=annual_activity.ejercicio, activities=(activity,)),
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            catalogues=bundled_authority().catalogues,
+            catalogues=compiled_bundled_authority().catalogues,
         ),
         censo_iae_epigraphs=frozenset({annual_activity.iae_epigrafe}),
     )
@@ -211,7 +211,7 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
     wire_value: str,
 ) -> None:
     """The two live same-IAE pairs remain distinct through typed projection refs."""
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )
@@ -280,7 +280,7 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            catalogues=bundled_authority().catalogues,
+            catalogues=compiled_bundled_authority().catalogues,
         ),
         censo_iae_epigraphs=frozenset({iae_epigrafe}),
     )

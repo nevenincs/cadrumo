@@ -8,6 +8,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -33,7 +34,6 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_temporal import FilingYearOffset
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -74,7 +74,7 @@ _M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-dis
 
 @cache
 def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
+    return compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obligation(

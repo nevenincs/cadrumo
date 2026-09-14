@@ -163,9 +163,9 @@ class TestExportExemptCasillasAreOutOfPdfScope:
         # a broad M303 revision was decomposed into four narrower revisions -- and
         # a literal key dies the moment that happens, on a test whose subject is
         # unrelated to the re-cut.
-        from ....domain.calculations.registry.authority import bundled_authority
+        from dev.registry.compiler.authority import compiled_bundled_authority
 
-        return bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+        return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
 
     def test_no_enrolled_casilla_is_both_exempt_and_extractable(self) -> None:
         """The predicate never excludes something the extractor can actually supply.

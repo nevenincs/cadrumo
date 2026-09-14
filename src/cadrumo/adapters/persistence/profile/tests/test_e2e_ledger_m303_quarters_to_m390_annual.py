@@ -45,6 +45,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -85,7 +86,6 @@ from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.models import InvoiceCatalogue
@@ -401,7 +401,7 @@ def _wallet_decision(
         taxpayer_nif=taxpayer_nif,
         target_year=filing_year,
         target_period=Period.from_year_and_code(filing_year, period),
-        target_registry_snapshot_ref=bundled_authority()
+        target_registry_snapshot_ref=compiled_bundled_authority()
         .snapshot("303", filing_year=filing_year, period=period)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
@@ -529,7 +529,7 @@ def _calculate_m303_quarter_revision(
         modelo="303",
         filing_year=filing_year,
         period=typed_period,
-        revision_id=bundled_authority()
+        revision_id=compiled_bundled_authority()
         .snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
         .revision.id,
         repository=wu_repo,
@@ -651,7 +651,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot("390", filing_year=filing_year, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=filing_year, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="390",

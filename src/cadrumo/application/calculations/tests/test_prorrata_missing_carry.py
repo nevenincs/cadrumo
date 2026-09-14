@@ -20,11 +20,11 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataRegisterRegime
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
@@ -57,7 +57,7 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
 
     assert diagnostic is not None
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=2026, period="4T")
+    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2026, period="4T")
     canonical_target = next(
         casilla_id
         for binding in snapshot.revision.bindings

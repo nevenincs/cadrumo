@@ -67,9 +67,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....tests.inventory import FIXTURES_DIR
@@ -120,7 +120,7 @@ _COMPUTED_CASILLAS_M100: frozenset[CasillaId] = frozenset(
 
 def _registry_snapshot_m100(year: int):
     """Resolve the M100 validated registry snapshot for the given filing year."""
-    return bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _borrador_extraction_profile(snapshot):

@@ -11,6 +11,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.bienes_inversion.register import (
@@ -19,7 +20,6 @@ from ....domain.bienes_inversion.register import (
     BienInversionIvaRecord,
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
@@ -43,7 +43,7 @@ class _InMemoryRegisterRepository:
 
 
 def _revision(modelo: str, *, filing_year: int, period_token: str) -> ModeloRevision:
-    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period_token).revision
+    return compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period_token).revision
 
 
 def _record(identifier: str = "bi-2022-maquina") -> BienInversionIvaRecord:

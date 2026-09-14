@@ -27,6 +27,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
@@ -52,7 +53,6 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -103,7 +103,7 @@ _PROFILE_LABEL = "M130 verification test"
 
 def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
     """Read required manual casillas from the real registry — no duplication."""
-    snap = bundled_authority().snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
+    snap = compiled_bundled_authority().snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
     return tuple(c.id for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
@@ -191,7 +191,7 @@ def _seed_clean_cross_period_sources_for_m130(
     filing_repository: ModeloRecordCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
 ) -> CalculationObservationRepository:
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -199,7 +199,7 @@ def _seed_clean_cross_period_sources_for_m130(
     observation_repository = CalculationObservationRepository()
     for requirement in cross_period_dependency_requirements(snapshot):
         values = {casilla_id: Decimal("0") for casilla_id in requirement.source_casilla_ids}
-        source_snapshot = bundled_authority().snapshot(
+        source_snapshot = compiled_bundled_authority().snapshot(
             requirement.source_modelo,
             filing_year=requirement.filing_year,
             period=requirement.period.registry_token,

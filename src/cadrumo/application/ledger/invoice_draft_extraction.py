@@ -268,6 +268,7 @@ def extract_invoice_draft_from_evidence(
                 evidence_input,
                 ports=ports,
                 legends=legends,
+                operation=operation,
             )
         except StructuredInvoiceReadError:
             # A malformed structured record refuses rather than yielding a
@@ -532,6 +533,7 @@ def _read_transcription_semantically(
         draft=grounded_input,
         transcription=transcription,
         legends=legends,
+        operation=operation,
         taxpayer_tax_id=taxpayer_tax_id,
     )
 
@@ -579,6 +581,7 @@ def _extract_invoice_fields_from_structured_record(
     evidence: EvidenceInput,
     *,
     legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
     ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
     """Read a structured e-invoice exactly into the line-carrying draft.
@@ -587,6 +590,9 @@ def _extract_invoice_fields_from_structured_record(
     set come from the document's own record, which is the whole reason the
     draft grew them: a flat base/rate/cuota triple structurally cannot hold a
     two-rate invoice.
+
+    ``operation`` keeps the country projection and deterministic checks on the
+    same authority generation as the enclosing extraction call.
     """
     # Function-local for the same cycle-break reason the grounding import in the
     # semantic path is: the findings module reaches back into this one for the
@@ -605,7 +611,10 @@ def _extract_invoice_fields_from_structured_record(
     # provenance envelopes describe them, so grounding the parser's verbatim
     # string instead would attach an envelope to a value the draft does not hold.
     country_codes: dict[str, tuple[str, str] | None] = {
-        f"{side}_country_code": resolved_country_code(getattr(parsed, f"{side}_country_code"))
+        f"{side}_country_code": resolved_country_code(
+            getattr(parsed, f"{side}_country_code"),
+            operation=operation,
+        )
         for side in ("supplier", "customer")
     }
     draft = InvoiceDraft(
@@ -682,7 +691,12 @@ def _extract_invoice_fields_from_structured_record(
             for rate, base, cuota in parsed.iva_breakdown
         ),
         raw_text_length=len(evidence.data),
-        provenance=structured_provenance(parsed=parsed, evidence=evidence, derived=country_codes),
+        provenance=structured_provenance(
+            parsed=parsed,
+            evidence=evidence,
+            derived=country_codes,
+            operation=operation,
+        ),
     )
     draft.set_facturae_invoice_class(parsed.invoice_classification)
 
@@ -695,7 +709,7 @@ def _extract_invoice_fields_from_structured_record(
     return draft.model_copy(
         update={
             "discrepancies": (
-                *deterministic_findings(draft, legends=legends),
+                *deterministic_findings(draft, legends=legends, operation=operation),
                 *facturae_invoice_class_findings(
                     declared=parsed.invoice_classification,
                     rectifies_invoice_number=parsed.rectifies_invoice_number,

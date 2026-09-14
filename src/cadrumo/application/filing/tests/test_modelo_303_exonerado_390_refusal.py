@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
@@ -23,7 +24,6 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
@@ -163,7 +163,7 @@ def _regimen_evidence(period: Period) -> M303RegimenSimplificadoFilingEvidence:
         scope_decision=scope,
         rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
         regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
-            registry_snapshot=bundled_authority().snapshot(
+            registry_snapshot=compiled_bundled_authority().snapshot(
                 "303",
                 filing_year=period.filing_year,
                 period=period.code,

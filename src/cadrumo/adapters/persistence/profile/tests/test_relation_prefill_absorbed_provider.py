@@ -15,6 +15,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
@@ -27,7 +28,6 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
@@ -63,7 +63,7 @@ _EXPECTED_ANNUAL_RETENCIONES = Decimal("285.00")
 
 @cache
 def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
+    return compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def _observations() -> tuple[RegistryModeloObservation, ...]:

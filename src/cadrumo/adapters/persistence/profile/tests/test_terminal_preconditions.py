@@ -11,6 +11,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -30,7 +31,6 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -443,7 +443,7 @@ def test_m303_derived_carry_contradiction_has_an_exact_safety_verdict(tmp_path: 
 
 
 def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> None:
-    modelo = bundled_authority().modelo(Modelo("303").value)
+    modelo = compiled_bundled_authority().modelo(Modelo("303").value)
     revision = select_revision(
         modelo,
         filing_year=_PERIOD.filing_year,

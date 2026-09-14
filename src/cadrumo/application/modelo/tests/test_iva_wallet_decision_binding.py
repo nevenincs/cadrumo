@@ -6,11 +6,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -53,9 +53,11 @@ def _decision(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
+        target_registry_snapshot_ref=compiled_bundled_authority()
+        .snapshot("303", filing_year=2026, period="2T")
+        .snapshot_ref,
         source_registry_snapshot_refs=(
-            bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
+            compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
         ),
         selected_authority="aeat_wallet" if not blocked else "missing",
         selected_amount=amount,
@@ -70,7 +72,7 @@ def _decision(
                 source_filing_year=2026,
                 source_periods=(Period.from_year_and_code(2026, "2T"),),
                 registry_snapshot_refs=(
-                    bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
+                    compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
                 ),
             ),
         ),
@@ -85,7 +87,7 @@ def _decision(
 
 
 def _revision():
-    return bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
 
 
 def _apply(

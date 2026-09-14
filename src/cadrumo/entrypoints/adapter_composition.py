@@ -78,6 +78,7 @@ if TYPE_CHECKING:
         ReviewPackageSigningKeypairCapabilityFactory,
     )
     from ..application.modelo.verification_repository_ports import (
+        VerificationRepositoryBundle,
         VerificationRepositoryBundleFactory,
     )
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts, WorkLifecyclePortsFactory
@@ -1012,6 +1013,44 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
     )
 
 
+def build_verification_repository_bundle(bucket_id: str) -> VerificationRepositoryBundle:
+    """Compose every verification repository against one bucket store."""
+    from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.calculation_observations import (
+        CalculationObservationRepository,
+        IvaWalletDecisionRepository,
+    )
+    from ..adapters.persistence.profile.justificante import JustificanteRepository
+    from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ..adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.modelo.verification_repository_ports import VerificationRepositoryBundle
+    from ..application.workflow.persistence import WorkflowRunRepository
+
+    normalized_bucket_id = bucket_id.strip()
+    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    return VerificationRepositoryBundle(
+        calculation=CalculationRevisionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
+        work_unit=WorkUnitCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
+        filing=ModeloRecordCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
+        transaction=TransactionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
+        verification=VerificationReportCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
+        bucket_event=BucketEventHistoryRepository(objects=objects),
+        observation=CalculationObservationRepository(objects=objects),
+        iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
+        participation_index=TransactionParticipationIndexRepository(bucket_id=normalized_bucket_id, objects=objects),
+        workflow_run=WorkflowRunRepository(objects=objects),
+        justificante=JustificanteRepository(objects=objects),
+        draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
+        workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
+    )
+
+
 __all__ = [
     "ProfileAdapterComposition",
     "build_active_work_lifecycle_ports",
@@ -1035,6 +1074,7 @@ __all__ = [
     "build_percepcion_observation_ports",
     "build_prorrata_register_repository",
     "build_retencion_observation_ports",
+    "build_verification_repository_bundle",
     "build_work_lifecycle_ports",
     "profile_adapter_composition",
 ]
@@ -1056,12 +1096,7 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..adapters.outbound.llm.column_role_mapping import resolve_column_roles as resolve_outbound_column_roles
     from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
     from ..adapters.persistence.profile.buckets import (
-        BucketEventHistoryRepository,
         build_bucket_event_history_repository,
-    )
-    from ..adapters.persistence.profile.calculation_observations import (
-        CalculationObservationRepository,
-        IvaWalletDecisionRepository,
     )
     from ..adapters.persistence.profile.catalogue_creation import (
         build_catalogue_creation_ports,
@@ -1082,7 +1117,6 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..adapters.persistence.profile.modelo_reconciliation import build_modelo_reconciliation_persistence
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ..adapters.persistence.profile.review_package_recipient_encryption import (
@@ -1106,7 +1140,6 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
     from ..adapters.persistence.storage.profile_custody import build_profile_custody_port
     from ..adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..adapters.persistence.workflow import build_workflow_persistence_port
     from ..application.auth.operator_probe_ports import OperatorProbePorts
     from ..application.auth.protocols import bind_session_store
@@ -1127,13 +1160,12 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..application.modelo.justificante_repository import bind_justificante_repository_factory
     from ..application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
     from ..application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
-    from ..application.modelo.verification_repository_ports import VerificationRepositoryBundle
     from ..application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from ..application.state_projection_ports import StateProjectionReadPorts
     from ..application.user_profile.custody_ports import bind_profile_custody_port
     from ..application.user_profile.language_resolver import register_language_resolver
     from ..application.user_profile.login_session_port import bind_profile_login_session_port
-    from ..application.workflow.persistence import WorkflowRunRepository, bind_workflow_persistence_port
+    from ..application.workflow.persistence import bind_workflow_persistence_port
 
     diagnostics_ports = build_diagnostics_ports()
     projection_adapter = StateProjectionPersistenceAdapter(diagnostics_ports=diagnostics_ports)
@@ -1142,46 +1174,6 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
         profile=projection_adapter,
         usage_ratio_profile_loader=load_usage_ratios,
     )
-
-    def build_verification_repository_bundle(bucket_id: str) -> VerificationRepositoryBundle:
-        """Compose every verification repository against one bucket store."""
-        from ..adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
-
-        normalized_bucket_id = bucket_id.strip()
-        objects = secure_object_repository_for_bucket(normalized_bucket_id)
-        return VerificationRepositoryBundle(
-            calculation=CalculationRevisionCatalogueRepository(
-                bucket_id=normalized_bucket_id,
-                objects=objects,
-            ),
-            work_unit=WorkUnitCatalogueRepository(
-                bucket_id=normalized_bucket_id,
-                objects=objects,
-            ),
-            filing=ModeloRecordCatalogueRepository(
-                bucket_id=normalized_bucket_id,
-                objects=objects,
-            ),
-            transaction=TransactionCatalogueRepository(
-                bucket_id=normalized_bucket_id,
-                objects=objects,
-            ),
-            verification=VerificationReportCatalogueRepository(
-                bucket_id=normalized_bucket_id,
-                objects=objects,
-            ),
-            bucket_event=BucketEventHistoryRepository(objects=objects),
-            observation=CalculationObservationRepository(objects=objects),
-            iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
-            participation_index=TransactionParticipationIndexRepository(
-                bucket_id=normalized_bucket_id,
-                objects=objects,
-            ),
-            workflow_run=WorkflowRunRepository(objects=objects),
-            justificante=JustificanteRepository(objects=objects),
-            draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
-            workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
-        )
 
     with ExitStack() as composition:
         profile_custody = build_profile_custody_port()

@@ -8,6 +8,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
 
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
@@ -40,7 +41,6 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
@@ -194,7 +194,7 @@ def _save_source_observation(
 
 @cache
 def _snapshot_353() -> RegistrySnapshot:
-    return bundled_authority().snapshot("353", filing_year=_M353_YEAR, period=_M353_PERIOD)
+    return compiled_bundled_authority().snapshot("353", filing_year=_M353_YEAR, period=_M353_PERIOD)
 
 
 @cache
@@ -256,7 +256,7 @@ def _seed_member_322_filing(
             "aeat_justificante_csv": f"JUST322{member_nif}",
         }
     values = _member_source_values(member_nif, source_casilla_ids)
-    registry_snapshot = bundled_authority().snapshot(
+    registry_snapshot = compiled_bundled_authority().snapshot(
         "322",
         filing_year=_M353_YEAR,
         period=_M353_PERIOD,
@@ -458,7 +458,7 @@ def _source_casilla_ids_by_period() -> dict[str, set[CasillaId]]:
 
 
 def _create_source_303_work_unit(period: str) -> WorkUnit:
-    registry_snapshot = bundled_authority().snapshot(
+    registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
         filing_year=_M390_YEAR,
         period=period,
@@ -656,7 +656,7 @@ def _seed_source_filing_record_without_import_flow(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=bundled_authority()
+        registry_snapshot_ref=compiled_bundled_authority()
         .snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,

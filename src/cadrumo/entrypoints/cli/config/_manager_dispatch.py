@@ -34,11 +34,19 @@ from ..common import activate_subcommand_output_language
 from ..errors import command_error_boundary as _command_error_boundary
 
 if TYPE_CHECKING:
+    from ....application.wizard.models import WizardFlow
     from ....application.wizard.persistence import WizardPersistMode
     from ....core.external_constants import OutputLanguage
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
-def with_profile_cli_projection(wizard_command: Callable[..., None], *, mode: WizardPersistMode) -> Callable[..., None]:
+def with_profile_cli_projection(
+    wizard_command: Callable[..., None],
+    *,
+    mode: WizardPersistMode,
+    operation: PinnedAuthorityOperation,
+    flow: WizardFlow,
+) -> Callable[..., None]:
     """Route profile verbs through their canonical CLI projections.
 
     Creation has a dedicated CLI credential door because the setup wizard does
@@ -61,25 +69,39 @@ def with_profile_cli_projection(wizard_command: Callable[..., None], *, mode: Wi
                 cast(typer.Context, context),
                 cast("OutputLanguage | None", kwargs.get("output_language")),
             )
-            return register_profile_from_scripted_invocation(context, kwargs)
+            return register_profile_from_scripted_invocation(
+                context,
+                kwargs,
+                flow=flow,
+                operation=operation,
+            )
         return wizard_command(*args, **kwargs)
 
     return _dispatch
 
 
 def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
-    """Build one wizard behavior from a leased indexed authority operation."""
+    """Run one wizard behavior while its indexed authority operation is leased."""
     from ....application.wizard.catalogue import build_setup_flow
     from ....application.wizard.commands import build_wizard_command
     from ....domain.calculations.registry.authority import bundled_indexed_authority
 
-    # The flow is a frozen projection of this generation.  Build it while the
-    # operation is leased, then retain only the descriptor in the command
-    # closure; no process-global catalogue or operation outlives its pin.
-    with bundled_indexed_authority().operation() as operation:
-        flow = build_setup_flow(operation)
-        wizard_command = build_wizard_command(flow, mode=mode)
-    return _command_error_boundary(with_profile_cli_projection(wizard_command, mode=mode))
+    def _run(*args: object, **kwargs: object) -> None:
+        # Keep the flow, command, and every profile context-dependent action
+        # inside one operation lease.  A descriptor projected from a pinned
+        # generation must not escape the lease that made its choices valid.
+        with bundled_indexed_authority().operation() as operation:
+            flow = build_setup_flow(operation)
+            wizard_command = build_wizard_command(flow, mode=mode, operation=operation)
+            projected = with_profile_cli_projection(
+                wizard_command,
+                mode=mode,
+                operation=operation,
+                flow=flow,
+            )
+            return _command_error_boundary(projected)(*args, **kwargs)
+
+    return _run
 
 
 def profile_create(ctx: typer.Context, **parameters: object) -> None:

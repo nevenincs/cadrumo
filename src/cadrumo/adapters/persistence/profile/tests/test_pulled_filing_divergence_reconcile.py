@@ -55,6 +55,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -67,7 +68,6 @@ from cadrumo.application.modelo.reconcile_casilla import (
 from cadrumo.core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -154,7 +154,7 @@ def _law_resolved_revision() -> ModeloRevision:
     from a stored revision id, so the revision under test is the law-determined
     one and the work unit below can only assert it rather than select it.
     """
-    return bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE).revision
+    return compiled_bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE).revision
 
 
 def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, BindingDefinition]:

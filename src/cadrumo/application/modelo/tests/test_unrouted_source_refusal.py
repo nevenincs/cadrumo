@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_actions import assert_no_novel_source_kinds
 from ..calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _unrouted_revisions():
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision in modelo.revisions.values():
             gaps = tuple(
                 sorted(

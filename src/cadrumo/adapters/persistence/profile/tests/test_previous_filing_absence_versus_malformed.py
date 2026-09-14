@@ -22,13 +22,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -46,7 +46,7 @@ _SOURCE_CASILLAS = ("0224", "1479", "1553", "1577")
 
 
 def _m130_snapshot():
-    return bundled_authority().snapshot("130", filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
+    return compiled_bundled_authority().snapshot("130", filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
 
 
 def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_of_activity_start(

@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.config import override_settings
 from .....core.resources.bundled_data import bundled_path
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_requirement_index,
@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_workbook_operator_labels_resolve_through_output_language() -> None:
-    snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
     with override_settings(cadrumo_output_language="en"):
         plan = build_export_plan(snapshot)
@@ -42,7 +42,7 @@ def test_workbook_operator_labels_resolve_through_output_language() -> None:
 
 
 def test_guide_paragraphs_resolve_through_output_language() -> None:
-    snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
     with override_settings(cadrumo_output_language="en"):
         plan = build_export_plan(snapshot)
@@ -109,7 +109,7 @@ def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:
 
 
 def _m130_snapshot_with_scalar_tariff_values(*, values: tuple[object, ...]) -> RegistrySnapshot:
-    snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T")
     parameter_id = "irpf.direct_estimation_fractional_payment_rate"
     revision = snapshot.revision.model_copy(
         update={
@@ -138,7 +138,7 @@ def test_missing_scalar_value_error_uses_translated_message_and_structured_conte
 
 
 def test_overlapping_scalar_parameter_windows_refuse_export_through_engine_boundary() -> None:
-    source = bundled_authority().snapshot("130", filing_year=2025, period="1T")
+    source = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T")
     parameter = next(
         item for item in source.revision.parameters if item.id == "irpf.direct_estimation_fractional_payment_rate"
     )

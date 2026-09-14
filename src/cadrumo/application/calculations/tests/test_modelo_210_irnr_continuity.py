@@ -53,9 +53,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
@@ -153,7 +153,7 @@ def _calculate_210_result(
     Returns the real registry calculation result so tests can inspect value and
     provenance behavior without rebuilding formula logic.
     """
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="EVENT-1")
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="EVENT-1")
     # Text casillas (tipo_renta) and enum bindings (country_of_fiscal_residence)
     # are supplied through text_inputs and enum_binding_values respectively.
     # Numeric manual casillas go through casilla_inputs.

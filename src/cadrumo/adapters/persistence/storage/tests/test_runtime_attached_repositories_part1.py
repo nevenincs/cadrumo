@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -39,7 +40,6 @@ from .....core.config_support import LLMProvider
 from .....core.period import Period
 from .....domain.attachments.errors import AttachmentNotFoundError
 from .....domain.buckets.event import BucketEventHistoryCatalogue
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
@@ -489,7 +489,9 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             CalculationObservationRepository(bucket_id=_BUCKET_A_ID).prepare_observation_envelope(
                 observation_a,
                 source_kind="operator_manual",
-                stamped_revision_id=str(bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id),
+                stamped_revision_id=str(
+                    compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id
+                ),
             )
         )
         IvaWalletDecisionRepository().save_decision(decision_a)
@@ -520,7 +522,9 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             CalculationObservationRepository(bucket_id=_BUCKET_B_ID).prepare_observation_envelope(
                 observation_b,
                 source_kind="operator_manual",
-                stamped_revision_id=str(bundled_authority().snapshot("303", filing_year=2026, period="2T").revision.id),
+                stamped_revision_id=str(
+                    compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").revision.id
+                ),
             )
         )
         IvaWalletDecisionRepository().save_decision(decision_b)

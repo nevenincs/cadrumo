@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
@@ -36,7 +36,7 @@ def _general_scope() -> M303RegimenSimplificadoScopeDecision:
 
 
 def _work_unit(period: Period) -> WorkUnit:
-    registry_snapshot = bundled_authority().snapshot(
+    registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
         filing_year=period.filing_year,
         period=period.code,
@@ -62,7 +62,7 @@ def _work_unit(period: Period) -> WorkUnit:
 
 def _non_m303_work_unit() -> WorkUnit:
     period = Period.from_year_and_code(2026, "1T")
-    registry_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    registry_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
@@ -84,7 +84,7 @@ def _non_m303_work_unit() -> WorkUnit:
 
 def _evidence(period: Period) -> FilingInstanceEvidence:
     scope = _general_scope()
-    registry_snapshot = bundled_authority().snapshot(
+    registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
         filing_year=period.filing_year,
         period=period.code,
@@ -119,7 +119,7 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
 
 def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None:
     work_unit = _non_m303_work_unit()
-    registry_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    registry_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
 
     assert (
         validate_m303_filing_instance_evidence_for_revision(
@@ -153,7 +153,7 @@ def test_m303_evidence_is_required_before_profile_lookup() -> None:
     with pytest.raises(M303FilingEvidenceError) as raised_missing:
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=_work_unit(period),
-            registry_snapshot=bundled_authority().snapshot("303", filing_year=2026, period="1T"),
+            registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T"),
             evidence=None,
             casilla_values={},
             observations=(),
@@ -172,7 +172,7 @@ def test_evidence_for_another_work_period_refuses_before_persistence() -> None:
     with pytest.raises(M303FilingEvidenceError) as raised_period_mismatch:
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=_work_unit(work_period),
-            registry_snapshot=bundled_authority().snapshot("303", filing_year=2026, period="1T"),
+            registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T"),
             evidence=_evidence(evidence_period),
             casilla_values={},
             observations=(),

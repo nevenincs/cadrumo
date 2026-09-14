@@ -44,6 +44,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl
 
 from cadrumo.adapters.outbound.aeat.sede.schema import (
@@ -70,7 +71,6 @@ from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.config import Settings
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -252,7 +252,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     makes the comparison a statement about the observation store rather than about
     the caller channel.
     """
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         Modelo("100").value,
         filing_year=_YEAR,
         period=_M100_ANNUAL_PERIOD,
@@ -288,7 +288,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository, *, bucket_id:
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=bucket_id, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=bucket_id, objects=secure_objects)
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         Modelo("100").value,
         filing_year=_YEAR,
         period=_M100_ANNUAL_PERIOD,

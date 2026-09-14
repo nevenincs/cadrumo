@@ -126,6 +126,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -145,7 +146,6 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -337,7 +337,7 @@ def _calculate_m200(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _M200,
         filing_year=_FILING_YEAR,
         period="0A",
@@ -459,7 +459,7 @@ def test_m200_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     and validated data, never hand-computed or asserted from a synthetic
     fixture.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot(
         _M200,
         filing_year=_FILING_YEAR,

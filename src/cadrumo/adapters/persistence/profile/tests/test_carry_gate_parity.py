@@ -17,6 +17,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -45,7 +46,6 @@ from cadrumo.application.calculations.revision_carry_gate import revision_carry_
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 
@@ -81,12 +81,12 @@ def _m303_compensation_header() -> tuple[ObservedHeaderFact, ...]:
 
 
 def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _SOURCE_PERIOD) -> str:
-    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period)
     return str(snapshot.revision.id)
 
 
 def _m390_first_quarter_requirements():
-    snapshot = bundled_authority().snapshot("390", filing_year=_YEAR, period=_M390_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period=_M390_PERIOD)
     return snapshot, tuple(
         requirement
         for requirement in cross_period_dependency_requirements(snapshot)
@@ -185,7 +185,7 @@ def _public_carry_outcomes(
                 mutate=mutate,
             )
 
-        binding_snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
+        binding_snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
         binding_report = resolve_bindings_from_local_store(
             binding_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
         )

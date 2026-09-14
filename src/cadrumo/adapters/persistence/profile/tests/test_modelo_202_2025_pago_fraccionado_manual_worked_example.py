@@ -77,6 +77,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -94,7 +95,6 @@ from cadrumo.application.modelo.revision_replay_inputs import revision_filing_re
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.period import calculation_filing_date
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -178,7 +178,7 @@ def _calculate_m202(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period=period_code)
+    snapshot = compiled_bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period=period_code)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M202,
@@ -345,7 +345,7 @@ def test_m202_2025_manual_grounding_is_enrolled_and_raises_independently_grounde
     validated data, never hand-computed or asserted from a synthetic
     fixture.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot(_M202, filing_year=_FILING_YEAR, period="1P")
     policy = snapshot.verification_policy()
 

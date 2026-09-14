@@ -29,8 +29,8 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.family_fact_context import FamilyFactResolutionContext
@@ -64,14 +64,14 @@ def _record_declaring_months(filing_year: int) -> UserProfileRecord:
 
 
 def _resolution(filing_year: int):
-    snapshot = bundled_authority().snapshot("100", filing_year=filing_year, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=filing_year, period="0A")
     return resolve_maternidad_meses(_record_declaring_months(filing_year), snapshot)
 
 
 def _retired_ceiling_year() -> int:
     coordinate = date(_FIRST_UNCEILINGED_YEAR, 12, 31)
     return FamilyFactResolutionContext(
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         filing_period=coordinate,
         devengo_date=coordinate,
     ).integer("lirpf-art-81-contribution-ceiling-retired-effective-year")

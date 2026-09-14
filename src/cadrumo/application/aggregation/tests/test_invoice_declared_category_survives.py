@@ -32,9 +32,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
@@ -160,7 +160,7 @@ def test_the_preserved_category_does_not_by_itself_declare_the_cuota() -> None:
     """
     observation = _observation_for(_received_reverse_charge())
     assert observation is not None
-    revision = bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
+    revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
 
     resolved = {str(k): v for k, v in resolve_iva_ledger_binding_values(revision, (observation,)).items()}
 

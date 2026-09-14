@@ -13,8 +13,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-
-from ....domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 from pydantic import ValidationError
@@ -364,7 +363,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     is the sum of the deductible bases, derived from the inputs — never copied
     from engine output.
     """
-    modelo_def = bundled_authority().modelo("130")
+    modelo_def = compiled_bundled_authority().modelo("130")
     revision = modelo_def.revisions["2019-y-siguientes"]
 
     casilla_02 = next(c for c in revision.casillas if c.id == _M130_GASTOS_CASILLA)

@@ -25,9 +25,9 @@ from __future__ import annotations
 import inspect
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ..draft_construction import _refuse_unsupported_filing_year
 from ..errors import ModeloApplicationError
 
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _declared_years() -> tuple[int, ...]:
-    declaration = bundled_authority().catalogues.supported_filing_years
+    declaration = compiled_bundled_authority().catalogues.supported_filing_years
     assert declaration is not None, "the bundled registry declares no supported filing years"
     return tuple(declaration.years)
 
@@ -78,7 +78,7 @@ def test_a_year_above_the_horizon_is_admitted_while_no_hard_ceiling_is_declared(
     asked with the modelo and period in hand; refusing it here would only name
     the earlier of two reasons.
     """
-    declaration = bundled_authority().catalogues.supported_filing_years
+    declaration = compiled_bundled_authority().catalogues.supported_filing_years
     assert declaration is not None
     assert declaration.hard_ceiling is None, "this proof assumes the bundled span is open above its horizon"
 
@@ -87,7 +87,7 @@ def test_a_year_above_the_horizon_is_admitted_while_no_hard_ceiling_is_declared(
 
 def test_a_declared_hard_ceiling_closes_the_span_above_the_horizon() -> None:
     """The open end is a consequence of an absent ceiling, not of the guard ignoring the top."""
-    declaration = bundled_authority().catalogues.supported_filing_years
+    declaration = compiled_bundled_authority().catalogues.supported_filing_years
     assert declaration is not None
     closed = declaration.model_copy(update={"hard_ceiling": declaration.horizon + 1})
 
@@ -118,7 +118,7 @@ def test_registry_inspection_of_an_undeclared_year_is_untouched() -> None:
     2021 revisions that structural tests read. Loading and inspecting them must
     stay possible, because the guard governs FILING, not reading.
     """
-    modelo_100 = bundled_authority().modelo("100")
+    modelo_100 = compiled_bundled_authority().modelo("100")
     declared = set(_declared_years())
 
     historical = [revision for revision in modelo_100.revisions.values() if revision.valid_from.year not in declared]

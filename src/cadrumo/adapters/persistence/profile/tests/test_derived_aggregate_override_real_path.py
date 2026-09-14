@@ -44,6 +44,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -61,7 +62,6 @@ from cadrumo.application.user_profile.validation import reject_invalid_profile_f
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -131,7 +131,7 @@ _UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = (
 
 def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding the live bucket mesh does not own."""
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
     values: dict[BindingId, Decimal] = {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _MESH_OWNED_SOURCES
     }
@@ -178,7 +178,7 @@ def _calculate_estatal_minimo() -> Decimal:
     Every repository is left to default, so the action resolves the active
     bucket through the same path production takes.
     """
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
     work_unit = create_work_unit(
         bucket_id=_BUCKET,
         modelo="100",

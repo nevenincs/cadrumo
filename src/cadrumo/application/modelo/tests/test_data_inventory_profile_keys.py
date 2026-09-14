@@ -9,9 +9,9 @@ the entrypoint that renders it.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys
 from ...aggregation.atribucion_member import AtribucionMemberSourceResolver
 from ..data_inventory import _LIVE_OBSERVATION_SOURCE_KINDS, _profile_keys_for_bindings
@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _a_committed_profile_binding():
     """Return one real committed ``(binding, revision, keys)`` triple."""
-    for model in bundled_authority().modelos:
+    for model in compiled_bundled_authority().modelos:
         for revision in model.revisions.values():
             for binding in revision.bindings:
                 keys = binding_profile_keys(binding)

@@ -81,10 +81,9 @@ class SourceMeshError(CoreValidationError):
 
     Replaces bare :exc:`ValueError` at the ``owned_sources`` uniqueness / blank
     guards and the ``source_transaction_ids`` uniqueness / blank guards so
-    callers receive a typed, registry-bound, localized error.  Inherits from
-    :class:`~core.errors.CoreValidationError` (which inherits from
-    :exc:`ValueError`) so pydantic field validators surface it through
-    ``ValidationError`` without special handling.
+    callers receive a typed, registry-bound, localized error. Its canonical
+    registered ancestry is :class:`~core.errors.CoreValidationError`; pydantic
+    field validators translate it to ``ValueError`` at their narrow boundary.
     """
 
     def __init__(self, message_key: str) -> None:

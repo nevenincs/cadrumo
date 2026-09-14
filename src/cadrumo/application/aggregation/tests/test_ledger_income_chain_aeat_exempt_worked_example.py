@@ -78,12 +78,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
@@ -227,7 +227,7 @@ def _modelo_100_revision() -> ModeloRevision:
     matches is the one a production calculate would load. A hand-assembled
     revision could agree with this module and disagree with the filing.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("100"), authority.catalogues
     return build_snapshot(
         modelo,

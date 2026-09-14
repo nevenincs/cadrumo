@@ -30,8 +30,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ....domain.calculations.registry.relations import (
     RegistryFoldRequirement,
@@ -51,7 +51,7 @@ _EVIDENCE = "factual_evidence"
 
 
 def _m100_2024() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=2024, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A")
 
 
 def _requirements_by_binding(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
@@ -151,7 +151,7 @@ def test_direct_previous_filing_treatment_reaches_the_prefilled_provenance() -> 
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    snapshot = bundled_authority().snapshot("303", filing_year=2025, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T")
     requirement = next(
         item
         for item in previous_filing_observation_requirements(

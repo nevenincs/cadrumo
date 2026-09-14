@@ -5,11 +5,11 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import _CASILLA_06, _CASILLA_09, workflow_profile
 
 from ....core.casilla_id import CasillaId
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
@@ -24,7 +24,7 @@ _M123_ADVISORY_PREDICATE_ID = "modelo-123-2024-y-siguientes-base-total-implica-r
 
 def _m123_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M123 silent-under-declaration advisory from the authority."""
-    revision = bundled_authority().validate_modelo("123").revisions["2024-y-siguientes"]
+    revision = compiled_bundled_authority().validate_modelo("123").revisions["2024-y-siguientes"]
     predicate = next(
         (p for p in revision.verification_predicates if p.predicate_id == _M123_ADVISORY_PREDICATE_ID),
         None,

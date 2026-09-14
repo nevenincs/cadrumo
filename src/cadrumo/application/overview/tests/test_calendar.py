@@ -7,11 +7,11 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.models import IVARegime, ObligationStatus, TaxpayerProfile
@@ -826,7 +826,7 @@ def test_build_preserves_each_modelo_303_2025_obligation_once_in_canonical_order
 def test_calendar_preserves_every_applicable_engine_row_for_all_supported_years() -> None:
     """Fleet parity derives its year horizon and expected rows from canonical owners."""
     profile = _profile()
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     supported_years = authority.catalogues.supported_filing_years
     assert supported_years is not None
 

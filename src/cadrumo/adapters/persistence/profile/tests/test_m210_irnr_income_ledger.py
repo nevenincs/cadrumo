@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -43,7 +44,6 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.irnr import M210GrossIncomeSourceMode
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.row_models import Modelo210AgrupacionRentaRow
@@ -135,7 +135,7 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
 
 
 def _seed_m210_profile() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     seed_test_profile_record(
         create_user_profile_record(
             context=authority.profile_create_context(),
@@ -188,7 +188,7 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
             work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
             calculation_repository = CalculationRevisionCatalogueRepository(objects=runtime.repository)
             ambient_event_repository = BucketEventHistoryRepository(objects=runtime.repository)
-            snapshot = bundled_authority().snapshot("210", filing_year=2025, period="0A")
+            snapshot = compiled_bundled_authority().snapshot("210", filing_year=2025, period="0A")
             work_unit = create_work_unit(
                 bucket_id=_BUCKET_ID,
                 modelo="210",
@@ -228,7 +228,7 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
     the admitted source evidence; code ``03`` remains excluded from a code
     ``01`` calculation despite sharing the same conceptual general-rate path.
     """
-    revision = bundled_authority().modelo("210").revisions["2025"]
+    revision = compiled_bundled_authority().modelo("210").revisions["2025"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
@@ -335,7 +335,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             transaction_repository=transaction_repository,
             event_repository=event_repository,
         )
-        snapshot = bundled_authority().snapshot("210", filing_year=2025, period="0A")
+        snapshot = compiled_bundled_authority().snapshot("210", filing_year=2025, period="0A")
         work_repository = WorkUnitCatalogueRepository()
         calculation_repository = CalculationRevisionCatalogueRepository()
         work_unit = create_work_unit(
@@ -592,7 +592,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
             transaction_repository=transaction_repository,
             event_repository=event_repository,
         )
-        snapshot = bundled_authority().snapshot("210", filing_year=2025, period="0A")
+        snapshot = compiled_bundled_authority().snapshot("210", filing_year=2025, period="0A")
         work_repository = WorkUnitCatalogueRepository()
         calculation_repository = CalculationRevisionCatalogueRepository()
         work_unit = create_work_unit(

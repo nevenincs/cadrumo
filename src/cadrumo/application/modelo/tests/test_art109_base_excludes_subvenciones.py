@@ -25,11 +25,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -112,7 +112,7 @@ def _coverage(*rows: Transaction):
 
 
 def _declared_concepts(fact_id: str) -> frozenset[ConceptoIngreso]:
-    fact = bundled_authority().catalogues.facts.facts[fact_id]
+    fact = compiled_bundled_authority().catalogues.facts.facts[fact_id]
     return frozenset(ConceptoIngreso(token) for token in fact.variants[0].payload.entities)
 
 

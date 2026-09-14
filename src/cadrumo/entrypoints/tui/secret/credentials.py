@@ -35,6 +35,7 @@ from textual.widgets import Static
 from textual.worker import Worker, WorkerState
 
 from ....core.credentials import PassphraseStrength, ProfilePasswordAssessment
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
@@ -172,13 +173,13 @@ class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
             return
         self._attempt = None
         if event.state is WorkerState.ERROR:
-            self.error = worker.error or RuntimeError(f"{self.ATTEMPT_NAME} worker failed")
+            self.error = worker.error or InternalInvariantError(f"{self.ATTEMPT_NAME} worker failed")
             self.set_busy(busy=False)
             self.refuse(self._resolved_worker_failure(self.error))
             return
         attempt = worker.result
         if attempt is None:
-            self.error = RuntimeError(f"{self.ATTEMPT_NAME} worker returned no result")
+            self.error = InternalInvariantError(f"{self.ATTEMPT_NAME} worker returned no result")
             self.set_busy(busy=False)
             self.refuse(self._resolved_worker_failure(self.error))
             return

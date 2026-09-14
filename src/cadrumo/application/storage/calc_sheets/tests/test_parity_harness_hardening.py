@@ -6,10 +6,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.config import override_settings
-from .....domain.calculations.registry.authority import bundled_authority
 from ..engine import build_export_plan
 from ..errors import CalcSheetsParityError
 from ..parity_harness import (
@@ -31,7 +31,7 @@ _UNKNOWN_EXPECTED_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _m130_snapshot():
-    return bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    return compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def test_recalc_delay_uses_central_settings_override() -> None:

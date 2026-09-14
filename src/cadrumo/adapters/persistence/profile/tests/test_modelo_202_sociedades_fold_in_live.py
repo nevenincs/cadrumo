@@ -84,9 +84,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 
 __all__ = ["register_wizard_catalogue"]
@@ -302,7 +302,7 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID_M200, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _M200,
         filing_year=_FILING_YEAR,
         period="0A",
@@ -456,7 +456,7 @@ def _calculate_m202(secure_objects: SecureObjectRepository, *, period: str) -> B
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period=period)
+    snapshot = compiled_bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M202,
@@ -565,7 +565,7 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
+    snapshot = compiled_bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M202,

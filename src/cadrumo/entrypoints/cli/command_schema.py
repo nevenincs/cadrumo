@@ -20,6 +20,7 @@ from ...application.operator_surface.command_ports import (
     MachineSecretVariantConditionMetadata,
     ProfileAuthenticationContractMetadata,
 )
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import output_language, tr
 from ...core.type_guards import is_object_list_or_tuple
 from ._command_target import resolve_deferred_target
@@ -110,7 +111,7 @@ def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
     target = parameter.value.click_type or parameter.value.annotation
     try:
         value = resolve_deferred_target(target)
-    except (ImportError, AttributeError, RuntimeError):
+    except (ImportError, AttributeError, InternalInvariantError):
         return ()
     if isinstance(value, type) and issubclass(value, Enum):
         return tuple(str(member.value) for member in value)
@@ -239,7 +240,7 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
 
     root_profile_secret = COMMAND_GRAPH.by_key()["root"].profile_secret
     if root_profile_secret is None:
-        raise RuntimeError("root command spec must declare profile-secret metadata authority")
+        raise InternalInvariantError("root command spec must declare profile-secret metadata authority")
 
     commands: list[CommandRegistrationMetadata] = []
     nodes: list[LiveNodeRegistrationMetadata] = []

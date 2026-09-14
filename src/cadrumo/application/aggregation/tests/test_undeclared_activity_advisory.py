@@ -26,11 +26,11 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -55,7 +55,7 @@ _CASILLA_05 = "05"
 @cache
 def _m131_revision() -> ModeloRevision:
     """The real Modelo 131 revision, so the grounding assertions read real refs."""
-    return bundled_authority().modelo(Modelo("131").value).revisions["2026"]
+    return compiled_bundled_authority().modelo(Modelo("131").value).revisions["2026"]
 
 
 def _income_row(

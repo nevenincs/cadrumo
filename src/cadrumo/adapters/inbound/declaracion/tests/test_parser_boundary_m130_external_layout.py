@@ -18,8 +18,8 @@ import re
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
 from .....tests.fixtures.external_layout_candidates.models import (
     external_layout_source_class_is_non_authoritative,
@@ -84,7 +84,7 @@ def test_m130_external_blank_layout_discovers_every_box_without_fabricating_valu
     pdf_path = sidecar_path.with_suffix(".pdf")
     assert pdf_path.is_file(), f"{pdf_path} is missing, so the external-layout regression proves nothing"
 
-    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
     profile = _select_extraction_profile(snapshot, extraction_profile_id=None)
     assert tuple(str(target.casilla_id) for target in profile.target_casillas) == _EXPECTED_BOX_IDS
 

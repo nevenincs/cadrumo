@@ -51,8 +51,8 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.inventory import FIXTURES_DIR
 from .._parsers.pdfplumber_backend import extract_pages_text
 from ..parser import (
@@ -102,7 +102,7 @@ def _classify_every_target(
     pages_words: tuple[list[_PdfWord], ...],
 ) -> dict[str, tuple[str, str | None, int | None]]:
     """Every target's full outcome, so a substitution cannot hide behind a count."""
-    snapshot = bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
     revision = snapshot.revision
     profile = _select_extraction_profile(snapshot, extraction_profile_id=None)
     pages = extract_pages_text(pdf)

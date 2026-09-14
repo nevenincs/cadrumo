@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, cast
 import typer
 from pydantic import SecretStr
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -48,6 +49,8 @@ if TYPE_CHECKING:
 
     from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
     from ....application.user_profile.registration import ProfileRegistrationOutcome
+    from ....application.wizard.models import WizardFlow
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
     from ....domain.user_profile.values import UserProfileFact
 
 
@@ -282,6 +285,9 @@ def _close_recovery_descriptors(descriptors: tuple[int, int] | None) -> None:
 def register_profile_from_scripted_invocation(
     ctx: _TyperClickContext,
     kwargs: Mapping[str, object],
+    *,
+    flow: WizardFlow,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Create a profile from a scripted ``config profile create`` invocation.
 
@@ -293,8 +299,6 @@ def register_profile_from_scripted_invocation(
     from ....application.user_profile.registration import register_profile_with_credentials
     from ....application.wizard.commands import scripted_profile_facts
     from ....application.wizard.results import ConfigProfileCreateResult, ProfileWizardStatus
-    from ....core.wizard_catalogue import get_setup_flow
-    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     supplied = kwargs.get("profile_name")
     label = supplied.strip() if isinstance(supplied, str) else ""
@@ -308,7 +312,7 @@ def register_profile_from_scripted_invocation(
     # prompt, no profile, nothing to undo. The facts then ride INTO the create
     # transaction, which already holds the record session, rather than being
     # written through a second unlock once registration has closed it.
-    facts = scripted_profile_facts(get_setup_flow(), kwargs)
+    facts = scripted_profile_facts(flow, kwargs, operation=operation)
     raw_secrets_fd = kwargs.get("secrets_fd")
     secrets_fd = raw_secrets_fd if isinstance(raw_secrets_fd, int) else None
     raw_handoff_fd = kwargs.get("recovery_handoff_fd")
@@ -319,39 +323,38 @@ def register_profile_from_scripted_invocation(
         verification_fd=raw_verification_fd if isinstance(raw_verification_fd, int) else None,
     )
     try:
-        with bundled_indexed_authority().operation() as operation:
-            profile_create_context = operation.profile_create_context()
-            profile_decode_context = operation.profile_decode_context()
+        profile_create_context = operation.profile_create_context()
+        profile_decode_context = operation.profile_decode_context()
 
-            def register_profile_with_pinned_context(
-                *,
-                label: str,
-                passphrase: str,
-                facts: tuple[UserProfileFact, ...],
-                recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
-            ) -> ProfileRegistrationOutcome:
-                return register_profile_with_credentials(
-                    label=label,
-                    passphrase=passphrase,
-                    facts=facts,
-                    recovery_handover=recovery_handover,
-                    profile_create_context=profile_create_context,
-                    profile_decode_context=profile_decode_context,
-                )
-
-            outcome = _run_scripted_profile_creation(
-                register_profile=register_profile_with_pinned_context,
+        def register_profile_with_pinned_context(
+            *,
+            label: str,
+            passphrase: str,
+            facts: tuple[UserProfileFact, ...],
+            recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+        ) -> ProfileRegistrationOutcome:
+            return register_profile_with_credentials(
                 label=label,
+                passphrase=passphrase,
                 facts=facts,
-                secrets_stdin=bool(kwargs.get("secrets_stdin")),
-                secrets_fd=secrets_fd,
-                recovery_descriptors=recovery_descriptors,
+                recovery_handover=recovery_handover,
+                profile_create_context=profile_create_context,
+                profile_decode_context=profile_decode_context,
             )
+
+        outcome = _run_scripted_profile_creation(
+            register_profile=register_profile_with_pinned_context,
+            label=label,
+            facts=facts,
+            secrets_stdin=bool(kwargs.get("secrets_stdin")),
+            secrets_fd=secrets_fd,
+            recovery_descriptors=recovery_descriptors,
+        )
     finally:
         _close_recovery_descriptors(recovery_descriptors)
 
     if not outcome.recovery_enrolled:
-        raise RuntimeError("profile creation returned without mandatory recovery enrollment")
+        raise InternalInvariantError("profile creation returned without mandatory recovery enrollment")
     notices = (
         Notice(
             code="PROFILE_RECOVERY_ENROLLED",

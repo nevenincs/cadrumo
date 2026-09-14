@@ -39,6 +39,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -54,7 +55,6 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -238,7 +238,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     live path. Mirrors the non-profile zero-default in
     ``test_modelo_100_cross_year_carry_continuity._calculate_100``.
     """
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -275,7 +275,7 @@ def _calculate_m100_annual(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",

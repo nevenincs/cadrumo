@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import contextvars
 import threading
+from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -32,6 +33,8 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.ledger.ratios import set_usage_ratio
 from cadrumo.core.config import override_settings
 from cadrumo.core.locks_errors import LockAcquisitionError
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES
 from cadrumo.domain.usage_ratios.service import usage_ratio_bucket_lock
@@ -41,6 +44,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 _BUCKET_ID = "19191919-1919-4919-8919-191919191919"
 _RATIO = Decimal("0.37")
 _JOIN_TIMEOUT_S = 60.0
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin one indexed authority generation for profile construction and decode."""
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        yield operation
 
 
 def _eligible_subset(count: int) -> tuple[SpendingCategory, ...]:
@@ -56,7 +66,10 @@ def _eligible_subset(count: int) -> tuple[SpendingCategory, ...]:
     return tuple(ordered[:count])
 
 
-def test_concurrent_distinct_category_sets_do_not_lose_updates(tmp_path: Path) -> None:
+def test_concurrent_distinct_category_sets_do_not_lose_updates(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """N threads each set a DIFFERENT category on one bucket; every override survives."""
     categories = _eligible_subset(8)
     errors: list[str] = []
@@ -89,7 +102,7 @@ def test_concurrent_distinct_category_sets_do_not_lose_updates(tmp_path: Path) -
         assert not [t for t in threads if t.is_alive()], "a writer deadlocked under contention"
         assert errors == [], f"concurrent writers raised: {errors}"
 
-        final = load_usage_ratios(bucket_id=bucket_id)
+        final = load_usage_ratios(bucket_id=bucket_id, operation=authority_operation)
         survived = set(final.ratios)
         expected = set(categories)
         lost = sorted(c.value for c in (expected - survived))

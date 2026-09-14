@@ -6,8 +6,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
@@ -229,7 +229,7 @@ def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
     wiring under test are exactly what ships. Expected value derived from the
     input, never copied from engine output.
     """
-    modelo_def = bundled_authority().modelo("100")
+    modelo_def = compiled_bundled_authority().modelo("100")
     revision = modelo_def.revisions["2025"]
     casilla_0171 = next(c for c in revision.casillas if c.id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA)
     assert str(casilla_0171.input_kind) == "bound"

@@ -5,12 +5,12 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...aggregation.iva_ledger import IvaLedgerAggregation
 from ..export import _resolve_m303_export_arrivals
@@ -43,7 +43,7 @@ def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register() -> None:
                 definitive_volume_con_derecho=Decimal("600.00"),
                 definitive_volume_sin_derecho=Decimal("400.00"),
                 source_registry_snapshot_refs=(
-                    bundled_authority().snapshot("303", filing_year=2026, period="4T").snapshot_ref,
+                    compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T").snapshot_ref,
                 ),
             ),
         ),

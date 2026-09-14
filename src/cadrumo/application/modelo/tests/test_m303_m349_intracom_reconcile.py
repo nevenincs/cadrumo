@@ -19,11 +19,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -94,7 +94,9 @@ def _seed_work_unit(
     assert bucket_id is not None
     typed_period = Period.from_year_and_code(filing_year, period)
     revision_id = (
-        bundled_authority().snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token).revision.id
+        compiled_bundled_authority()
+        .snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token)
+        .revision.id
     )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

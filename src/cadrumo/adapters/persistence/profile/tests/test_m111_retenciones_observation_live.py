@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -27,7 +28,6 @@ from cadrumo.core.aggregation import (
     RetencionScheme,
 )
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -124,7 +124,7 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(tmp_p
             observations=[_professional_observation()],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        snapshot = bundled_authority().snapshot("111", filing_year=2026, period="1T")
+        snapshot = compiled_bundled_authority().snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -172,7 +172,7 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_p
             observations=[_administrador_observation()],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        snapshot = bundled_authority().snapshot("111", filing_year=2026, period="1T")
+        snapshot = compiled_bundled_authority().snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -222,7 +222,7 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(tmp_path: Pat
             observations=[_administrador_wrong_rate_observation()],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        snapshot = bundled_authority().snapshot("111", filing_year=2026, period="1T")
+        snapshot = compiled_bundled_authority().snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

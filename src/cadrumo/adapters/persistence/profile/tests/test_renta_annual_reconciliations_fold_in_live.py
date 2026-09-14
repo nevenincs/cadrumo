@@ -58,6 +58,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -100,7 +101,6 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -256,7 +256,7 @@ def _calculate_annual(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot(modelo, filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=_YEAR, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
@@ -287,7 +287,7 @@ def _calculate_periodic(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot(modelo, filing_year=_YEAR, period=period)
+    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,

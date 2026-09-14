@@ -28,12 +28,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl
 
 from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.config import Settings
 from ......core.period import Period
-from ......domain.calculations.registry.authority import bundled_authority
 from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -77,7 +77,7 @@ def _observation(expediente_id: str, artefact: FiledDeclaracionArtefact) -> File
         presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(artefact,),
-        registry_snapshot_ref=bundled_authority().snapshot("100", filing_year=2023, period="0A").snapshot_ref,
+        registry_snapshot_ref=compiled_bundled_authority().snapshot("100", filing_year=2023, period="0A").snapshot_ref,
     )
 
 

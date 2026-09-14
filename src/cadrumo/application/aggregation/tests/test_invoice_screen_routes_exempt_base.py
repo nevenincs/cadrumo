@@ -27,9 +27,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
@@ -47,7 +47,7 @@ _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
 
 
 def _revision():
-    return bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
 
 
 def _invoice(

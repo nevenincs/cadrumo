@@ -15,9 +15,9 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
@@ -51,7 +51,7 @@ def _sourced_binding_ids(result: CalculationSourceResolution) -> set[BindingId]:
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:

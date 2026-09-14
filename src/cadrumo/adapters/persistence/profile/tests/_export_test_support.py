@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -19,7 +20,6 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
@@ -161,7 +161,7 @@ def _seed_revision(
     binding_overrides = dict(binding_overrides or dict[BindingId, str]())
     casilla_values = dict(casilla_values or {})
     typed_period = Period.from_year_and_code(filing_year, period)
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         modelo,
         filing_year=filing_year,
         period=typed_period.registry_token,

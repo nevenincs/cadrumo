@@ -7,12 +7,12 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing.errors import ModeloBuilderError, ModeloDraftError
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
@@ -202,7 +202,7 @@ def test_build_draft_blocks_negative_modelo_130_retenciones() -> None:
 def test_binding_provenance_rejects_empty_registry_refs() -> None:
     """A bound filing value cannot be projected from an ungrounded binding definition."""
 
-    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
     binding = next(item for item in snapshot.revision.bindings if item.legal_refs and item.source_refs)
     source, legal_refs, source_refs = binding_provenance(binding)
     assert source == binding.source
@@ -300,7 +300,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
-    snapshot = bundled_authority().snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    snapshot = compiled_bundled_authority().snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
     draft = build_draft(
         modelo="123",
         period=_PERIOD,
@@ -620,7 +620,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
 
 
 def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
-    snapshot = bundled_authority().snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    snapshot = compiled_bundled_authority().snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
     schema_provider = _unscoped_schema_provider()
     draft = build_draft(
         modelo="123",

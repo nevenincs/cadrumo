@@ -37,9 +37,9 @@ while the bucket's invoices describe real operations.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import invoice_ledger_screen_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -58,7 +58,7 @@ _STRUCTURAL_EJERCICIO = 2025
 
 
 def _revision(modelo_id: str, period: str):
-    return bundled_authority().snapshot(modelo_id, filing_year=_STRUCTURAL_EJERCICIO, period=period).revision
+    return compiled_bundled_authority().snapshot(modelo_id, filing_year=_STRUCTURAL_EJERCICIO, period=period).revision
 
 
 def test_the_invoice_versus_ledger_screen_now_covers_m390() -> None:

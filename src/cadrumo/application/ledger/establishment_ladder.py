@@ -122,6 +122,7 @@ from .counterparty_establishment_ports import CounterpartyEstablishmentRepositor
 if TYPE_CHECKING:
     from datetime import date
 
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.iva.classification import InvoiceKind
     from .invoice_draft_records import InvoiceDraft
 
@@ -289,6 +290,7 @@ def _party_country_code(
     *,
     stated_country_name: str | None,
     resolved_country_code: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Return the country code the document states about this party, if any.
 
@@ -308,7 +310,7 @@ def _party_country_code(
     country: an unrecognised name establishes nothing, and the code is consulted
     only where no name was recognised at all.
     """
-    from_name = country_code_for_printed_country_name(stated_country_name)
+    from_name = country_code_for_printed_country_name(stated_country_name, operation=operation)
     if from_name is not None:
         return from_name
     return resolved_country_code
@@ -321,6 +323,7 @@ def _spanish_iva_was_charged(
     charged_iva_rates: tuple[Decimal, ...],
     *,
     on_date: date | None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Whether the document charges IVA at a rate the SPANISH registry carries.
 
@@ -348,7 +351,12 @@ def _spanish_iva_was_charged(
     if on_date is None:
         return False
     return any(
-        rate_kinds_for_declared_rate(spanish_eu_member_state(effective_date=on_date), rate / HUNDRED, on_date)
+        rate_kinds_for_declared_rate(
+            spanish_eu_member_state(effective_date=on_date, authority=operation),
+            rate / HUNDRED,
+            on_date,
+            operation=operation,
+        )
         for rate in charged_iva_rates
         # Zero is excluded before the lookup and not by it. The registry answers
         # that 0 % is always a legitimate Spanish ZERO-tier rate, which is true
@@ -363,6 +371,7 @@ def _spain_indicating(
     country_code: str | None,
     postal_code: str | None,
     spanish_iva_charged: bool,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     """Return every signal placing this party in Spain, in operator-facing words.
 
@@ -373,7 +382,7 @@ def _spain_indicating(
     signals: list[str] = []
     if names_spain(country_code):
         signals.append("the printed address country names Spain")
-        if territorial_scope_for_spanish_postal_code(postal_code) is not None:
+        if territorial_scope_for_spanish_postal_code(postal_code, operation=operation) is not None:
             signals.append("the printed postal code resolves to a Spanish IVA territory")
     if spanish_iva_charged:
         signals.append("the document charges IVA at a Spanish registry rate")
@@ -406,6 +415,7 @@ def _taxed_under_the_registration_state(
     *,
     identification: EUMemberState,
     on_date: date | None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Whether the document charges tax at the registration State own rate.
 
@@ -446,7 +456,7 @@ def _taxed_under_the_registration_state(
     if on_date is None:
         return False
     return any(
-        rate_kinds_for_declared_rate(identification, rate / HUNDRED, on_date)
+        rate_kinds_for_declared_rate(identification, rate / HUNDRED, on_date, operation=operation)
         for rate in charged_iva_rates
         # Zero is excluded for the reason it is excluded on the Spanish side: a
         # zero-rated line charges no tax under anybody law, so it places the
@@ -464,6 +474,7 @@ def _treatment_concurs_with_non_establishment(
     identification: EUMemberState,
     on_date: date | None,
     legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Whether the printed treatment independently agrees the party is not here.
 
@@ -496,6 +507,7 @@ def _treatment_concurs_with_non_establishment(
         charged_iva_rates,
         identification=identification,
         on_date=on_date,
+        operation=operation,
     )
 
 
@@ -505,6 +517,7 @@ def _printed_evidence(
     country_code: str | None,
     postal_code: str | None,
     legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
     regime_legend: str | None = None,
     charged_iva_rates: tuple[Decimal, ...] = (),
     on_date: date | None = None,
@@ -521,8 +534,12 @@ def _printed_evidence(
     The printed IVA number appears here only as the thing that must be
     CORROBORATED. It settles no territory by itself at any point in this walk.
     """
-    identification = identification_state_for_printed_tax_identifier(tax_identifier)
-    spanish_iva_charged = _spanish_iva_was_charged(charged_iva_rates, on_date=on_date)
+    identification = identification_state_for_printed_tax_identifier(tax_identifier, operation=operation)
+    spanish_iva_charged = _spanish_iva_was_charged(
+        charged_iva_rates,
+        on_date=on_date,
+        operation=operation,
+    )
 
     # FOREIGN registration, not merely a registration. The conflict this raises
     # is the characteristic face of a foreign-registered entity operating
@@ -533,11 +550,12 @@ def _printed_evidence(
     # absent from the identification vocabulary, so no Spanish number ever
     # reached it. Admitting ES made the accident visible, and the condition now
     # says what it always meant.
-    if identification is not None and identification != spanish_eu_member_state():
+    if identification is not None and identification != spanish_eu_member_state(authority=operation):
         indicating = _spain_indicating(
             country_code=country_code,
             postal_code=postal_code,
             spanish_iva_charged=spanish_iva_charged,
+            operation=operation,
         )
         if indicating:
             return (
@@ -556,7 +574,7 @@ def _printed_evidence(
                 ),
             )
 
-    from_country = territorial_scope_for_country(country_code)
+    from_country = territorial_scope_for_country(country_code, operation=operation)
     if from_country is not None:
         return from_country, EstablishmentRung.ADDRESS_COUNTRY, None
 
@@ -565,7 +583,7 @@ def _printed_evidence(
     # stays undetermined. That refusal is the postal rung's trigger, so the CODE
     # is tested rather than the scope the code produced.
     if names_spain(country_code):
-        from_postal = territorial_scope_for_spanish_postal_code(postal_code)
+        from_postal = territorial_scope_for_spanish_postal_code(postal_code, operation=operation)
         if from_postal is not None:
             return from_postal, EstablishmentRung.SPANISH_POSTAL_CODE, None
 
@@ -576,13 +594,14 @@ def _printed_evidence(
         identification=identification,
         on_date=on_date,
         legends=legends,
+        operation=operation,
     ):
         # The registration's OWN State, and only because something else agreed.
         # `None` here is not a failure to look up a country: Northern Ireland
         # carries an IVA prefix without being an ISO jurisdiction the catalogue
         # resolves, and a registration whose territory cannot be named is one
         # this walk cannot corroborate into a scope.
-        concordant = territorial_scope_for_country(identification.value.upper())
+        concordant = territorial_scope_for_country(identification.value.upper(), operation=operation)
         if concordant is not None:
             return concordant, EstablishmentRung.CONCORDANT_REGISTRATION, None
 
@@ -592,6 +611,7 @@ def _printed_evidence(
 def scope_printed_evidence_would_establish(
     *,
     legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
     tax_identifier: str | None = None,
     stated_country_name: str | None = None,
     resolved_country_code: str | None = None,
@@ -635,6 +655,8 @@ def scope_printed_evidence_would_establish(
         postal_code: The party's printed postal code.
         legends: The dated registry declarations selected by the enclosing
             pinned authority operation.
+        operation: The caller-owned pinned authority operation used for every
+            country, territory, identification, and rate lookup.
 
     Returns:
         The territory the printed rungs settle, or ``None`` where they exhaust.
@@ -644,9 +666,11 @@ def scope_printed_evidence_would_establish(
         country_code=_party_country_code(
             stated_country_name=stated_country_name,
             resolved_country_code=resolved_country_code,
+            operation=operation,
         ),
         postal_code=postal_code,
         legends=legends,
+        operation=operation,
     )
     return scope
 
@@ -655,6 +679,7 @@ def resolve_counterparty_establishment_scope(
     *,
     bucket_id: str,
     legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
     tax_identifier: str | None = None,
     stated_country_name: str | None = None,
     resolved_country_code: str | None = None,
@@ -679,6 +704,8 @@ def resolve_counterparty_establishment_scope(
         bucket_id: Active profile bucket, for the confirmed-fact rung.
         legends: The dated registry declarations selected by the enclosing
             pinned authority operation.
+        operation: The caller-owned pinned authority operation used for every
+            country, territory, identification, and rate lookup.
         tax_identifier: The counterparty's identifier as printed, if any.
         stated_country_name: The country the document states for this party, in
             whatever language the issuer set it. Printed in an address block on
@@ -726,13 +753,15 @@ def resolve_counterparty_establishment_scope(
     country_code = _party_country_code(
         stated_country_name=stated_country_name,
         resolved_country_code=resolved_country_code,
+        operation=operation,
     )
-    identification = identification_state_for_printed_tax_identifier(tax_identifier)
+    identification = identification_state_for_printed_tax_identifier(tax_identifier, operation=operation)
     evidenced, rung, conflict = _printed_evidence(
         tax_identifier=tax_identifier,
         country_code=country_code,
         postal_code=postal_code,
         legends=legends,
+        operation=operation,
         regime_legend=regime_legend,
         charged_iva_rates=charged_iva_rates,
         on_date=on_date,
@@ -843,6 +872,7 @@ def resolve_draft_counterparty_establishment(
     *,
     bucket_id: str,
     legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
     draft: InvoiceDraft,
     kind: InvoiceKind,
     repository: CounterpartyEstablishmentRepositoryProtocol,
@@ -884,6 +914,8 @@ def resolve_draft_counterparty_establishment(
         bucket_id: Active profile bucket, for the confirmed-fact rung.
         legends: The dated registry declarations selected by the enclosing
             pinned authority operation.
+        operation: The caller-owned pinned authority operation used for the
+            establishment ladder's registry lookups.
         draft: The pre-direction reading of the document.
         kind: Which side of the invoice the filer is on, as the operator settled
             it at confirm. Never the reader's suggestion.
@@ -904,6 +936,7 @@ def resolve_draft_counterparty_establishment(
     return resolve_counterparty_establishment_scope(
         bucket_id=bucket_id,
         legends=legends,
+        operation=operation,
         tax_identifier=side.tax_id,
         resolved_country_code=side.country_code,
         stated_country_name=side.country,

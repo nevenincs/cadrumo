@@ -44,12 +44,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 
 __all__ = ["register_wizard_catalogue"]
@@ -195,7 +195,7 @@ def _calculate_and_verify(
             )
         )
 
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             Modelo("720").value,
             filing_year=_YEAR_N_PLUS_1,
             period=_PERIOD,
@@ -271,12 +271,12 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             _INMUEBLES_VALORACION: _INMUEBLES_N,
         },
     )
-    snapshot_n1 = bundled_authority().snapshot(
+    snapshot_n1 = compiled_bundled_authority().snapshot(
         Modelo("720").value,
         filing_year=_YEAR_N_PLUS_1,
         period=_PERIOD,
     )
-    snapshot_n2 = bundled_authority().snapshot(
+    snapshot_n2 = compiled_bundled_authority().snapshot(
         Modelo("720").value,
         filing_year=_YEAR_N_PLUS_1 + 1,
         period=_PERIOD,
@@ -450,7 +450,7 @@ def test_modelo_721_declares_no_independent_evidence_source(tmp_path: Path) -> N
     row-evidence binding the omission is revisited rather than forgotten.
     """
     with _secure_backend(tmp_path):
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             Modelo("721").value,
             filing_year=2024,
             period=_PERIOD,

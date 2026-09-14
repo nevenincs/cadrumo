@@ -22,10 +22,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ..sector_lifecycle import seed_sector_carried_definitive_from_register, settle_sector_definitive
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
-    return bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
 
 
 def _provisional_entry(*, ejercicio: int, sector_id: str, percentage: Decimal) -> ProrrataRegisterEntry:

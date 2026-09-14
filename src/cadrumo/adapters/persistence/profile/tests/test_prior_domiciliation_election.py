@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -18,7 +19,6 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
@@ -77,7 +77,7 @@ def _source_header_disposition(
 def _work_unit(*, modelo: str = "303") -> WorkUnit:
     period = Period.from_year_and_code(2025, "1T")
     revision_id = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             modelo,
             filing_year=period.filing_year,

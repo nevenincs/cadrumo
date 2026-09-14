@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.facts.resolution import ResolvedMappingFact
 from ..prior_payment_advisory import _selected_registry_declaration
 
@@ -17,7 +17,7 @@ _FIRST_QUARTER = "1T"
 
 def test_non_m130_work_does_not_apply_the_m130_declaration() -> None:
     revision = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "200",
             filing_year=2024,
@@ -40,7 +40,7 @@ def test_non_m130_work_does_not_apply_the_m130_declaration() -> None:
 
 def test_m130_work_uses_its_filing_year_scoped_period_query() -> None:
     revision = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "130",
             filing_year=2024,

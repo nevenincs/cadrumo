@@ -244,10 +244,11 @@ def test_workspace_epoch_currentness_requires_an_exact_same_domain_coordinate() 
 
 def test_registry_port_captures_the_admission_specific_projection() -> None:
     """REGISTRY's port must expose exactly the admitted shape, never both at once."""
-    from ....domain.calculations.registry.authority import bundled_authority
+    from dev.registry.compiler.authority import compiled_bundled_authority
+
     from ..workspace_producers import ModeloWorkspaceRegistryPortV1, ModeloWorkspaceRegistryProjectionV1
 
-    registry_authority = bundled_authority()
+    registry_authority = compiled_bundled_authority()
     port = ModeloWorkspaceRegistryPortV1(
         authority=registry_authority,
         modelo_id="130",
@@ -266,11 +267,12 @@ def test_registry_port_captures_the_admission_specific_projection() -> None:
 
 
 def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() -> None:
+    from dev.registry.compiler.authority import compiled_bundled_authority
+
     from ....core.authority_grade import RegistryAuthorityGrade
-    from ....domain.calculations.registry.authority import bundled_authority
     from ..workspace_producers import ModeloWorkspaceRegistryPortV1, ModeloWorkspaceRegistryProjectionV1
 
-    registry_authority = bundled_authority()
+    registry_authority = compiled_bundled_authority()
     inspection_only = ModeloWorkspaceRegistryPortV1(
         authority=registry_authority,
         modelo_id="130",

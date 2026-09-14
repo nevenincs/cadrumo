@@ -27,6 +27,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -37,7 +38,6 @@ from cadrumo.application.modelo.filed_revision_observation import persist_filed_
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import RelationId
@@ -145,7 +145,7 @@ def _calculate_303(
     cuota_binding_overrides: Mapping[str, Decimal],
     relation_values: Mapping[RelationId, Decimal],
 ) -> RegistryCalculationResult:
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = relation_prefill_values_as_binding_values(
         snapshot.revision,
         dict(relation_values),
@@ -237,7 +237,7 @@ def _year_n_4t_work_unit() -> WorkUnit:
 
 def _carry_in_for_year_n_plus_1(obs_repo: CalculationObservationRepository) -> Decimal | None:
     """Resolve year N+1 1T casilla 110 from whatever year-N 4T carry is persisted."""
-    snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
+    snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
     relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in relation_values.values if item.value is not None

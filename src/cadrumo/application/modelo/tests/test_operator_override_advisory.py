@@ -16,9 +16,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from .._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ..action_errors import ModeloAggregationBindingError
@@ -35,12 +35,12 @@ _GUARDED_SOURCES = frozenset(CALCULATION_ROUTE_ENROLLED_SOURCES) - frozenset(CAL
 
 @pytest.fixture(scope="module")
 def m303_revision() -> ModeloRevision:
-    return bundled_authority().snapshot(Modelo("303"), filing_year=2024, period="1T").revision
+    return compiled_bundled_authority().snapshot(Modelo("303"), filing_year=2024, period="1T").revision
 
 
 @pytest.fixture(scope="module")
 def m390_revision() -> ModeloRevision:
-    return bundled_authority().snapshot(Modelo("390"), filing_year=2024, period="0A").revision
+    return compiled_bundled_authority().snapshot(Modelo("390"), filing_year=2024, period="0A").revision
 
 
 def test_divergent_operator_value_raises_one_advisory_naming_both_figures(

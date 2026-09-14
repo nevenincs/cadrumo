@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
@@ -21,7 +22,6 @@ from cadrumo.application.aggregation.inventory import InventorySourceResolver
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.tests.test_inventory_source import inventory_ledger
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
 
@@ -33,7 +33,7 @@ runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=Fals
 
 
 def _revision() -> ModeloRevision:
-    return bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+    return compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
 
 
 def _context(revision: ModeloRevision) -> CalculationSourceContext:

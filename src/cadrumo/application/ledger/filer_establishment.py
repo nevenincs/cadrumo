@@ -50,6 +50,7 @@ from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
 
 __all__ = [
@@ -91,6 +92,7 @@ a censal read rather than a hand-entered value.
 def resolve_filer_territorial_scope(
     *,
     profile_record: UserProfileRecord | None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope:
     """Return the IVA territory the taxpayer's own establishment sits in.
 
@@ -99,6 +101,8 @@ def resolve_filer_territorial_scope(
             when none was resolvable. ``None`` refuses rather than defaulting:
             no profile is not an empty profile, and neither of them is a
             territory.
+        operation: The caller-owned pinned authority operation used to resolve
+            the Spanish postal territory.
 
     Returns:
         :class:`~domain.iva.IvaTerritorialScope`: The filer's own territory.
@@ -125,7 +129,7 @@ def resolve_filer_territorial_scope(
             ),
         )
 
-    scope = territorial_scope_for_spanish_postal_code(declared)
+    scope = territorial_scope_for_spanish_postal_code(declared, operation=operation)
     if scope is None:
         raise PurchaseInvoiceEvidenceInputError(
             f"the fiscal-address postcode this profile declares ({declared!r}) is "

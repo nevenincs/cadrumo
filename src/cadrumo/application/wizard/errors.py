@@ -57,9 +57,9 @@ class WizardError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoEr
 class WizardValidationError(WizardError, CoreValidationError):
     """Raised when a widget-level validator rejects an answer.
 
-    Inherits from CoreValidationError (which itself inherits from CoreError
-    and ValueError) to participate in the shared CoreValidationError catch
-    surface and remain compatible with pydantic field validators.
+    Its registered ancestry includes :class:`CoreValidationError` under the
+    wizard error family. Pydantic field validators translate this registered
+    failure to ``ValueError`` at their narrow boundary.
     """
 
 
@@ -96,10 +96,10 @@ class WizardAnswerTypeError(ProfileAnswerTypeError):
     type); this subclass is retained so application-layer code and tests that
     catch :class:`WizardAnswerTypeError` by name continue to work.
 
-    Inherits from :class:`~cadrumo.core.errors.ProfileAnswerTypeError` (which inherits
-    from :class:`CoreValidationError` and :class:`ValueError`) to remain compatible
-    with pydantic's field-validator contract while exposing a typed exception in
-    the error registry.
+    Inherits from the registered :class:`~cadrumo.core.errors.ProfileAnswerTypeError`
+    family, whose validation failures are translated to ``ValueError`` at the
+    Pydantic field-validator boundary while this typed exception remains in the
+    error registry.
     """
 
 

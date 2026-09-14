@@ -11,10 +11,10 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -70,7 +70,7 @@ def _profile_record(*facts: UserProfileFact) -> UserProfileRecord:
 
 
 def test_advisory_reads_attribution_facts_from_profile_record() -> None:
-    snapshot = bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
     findings = _attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,
@@ -83,7 +83,7 @@ def test_advisory_reads_attribution_facts_from_profile_record() -> None:
 
 
 def test_advisory_with_no_received_profile_facts_returns_no_finding() -> None:
-    snapshot = bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
     findings = _attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,

@@ -37,6 +37,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -57,7 +58,6 @@ from .....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.ids import BindingId
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.prorrata import InputClassification
@@ -76,7 +76,7 @@ _DEVENGADO_CUOTA_BINDING: BindingId = "modelo-303-iva-repercutido-general-cuota"
 
 
 def _m303_snapshot_ref(filing_year: int):
-    return bundled_authority().snapshot("303", filing_year=filing_year, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=filing_year, period="4T").snapshot_ref
 
 
 def _raw(provider_id: str, *, amount: Decimal, counterparty: str) -> RawTransaction:
@@ -175,7 +175,7 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(tmp_path:
     15.75 — a per-sector result, provably NOT any single whole-entity percentage
     applied across the 31.50 soportado.
     """
-    revision = bundled_authority().modelo("303").revisions["2022"]
+    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
 
     # 1. Settle 2025 per-sector + common definitives from their own volumes.
     comercio_2025 = _settled_2025_entry("comercio", con="90000.00", sin="10000.00")  # 90%

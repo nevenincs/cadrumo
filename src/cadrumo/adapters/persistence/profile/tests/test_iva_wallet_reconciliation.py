@@ -8,6 +8,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, ValidationError
 
 from cadrumo.adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
@@ -31,7 +32,6 @@ from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.iva_compensation.errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
@@ -60,7 +60,7 @@ _OTHER_TAXPAYER_REF = "87654321X"
 
 @cache
 def _m303_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
-    return bundled_authority().snapshot("303", filing_year=filing_year, period=period).snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period).snapshot_ref
 
 
 def _local_recurrence_source(
@@ -179,7 +179,7 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
         local_recurrence_source=_local_recurrence_source(Decimal("1200")),
         decided_at=_NOW,
     )
-    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
     resolution = IvaWalletDecisionSourceResolver(decision).resolve(
         CalculationSourceContext(
@@ -365,7 +365,7 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
                 source_observation_key="303:2026:2T:positive-local-filing",
             ),
         )
-        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="3T")
+        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
         local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
             snapshot,
@@ -432,7 +432,7 @@ def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returne
                 source_observation_key="303:2026:2T:positive-local-filing",
             ),
         )
-        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="3T")
+        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
 
         report = reconcile_modelo_303_iva_compensation(
@@ -458,7 +458,7 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
 ) -> None:
     """A wallet decision cannot leave the observation repository's encrypted bucket."""
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
+        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
         observation_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
 
@@ -500,7 +500,7 @@ def test_modelo_303_reconciliation_persists_explicit_same_bucket_decision_reposi
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         observation_repository = CalculationObservationRepository(objects=profile.repository)
         decision_repository = IvaWalletDecisionRepository(objects=profile.repository)
-        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
+        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
         report = reconcile_modelo_303_iva_compensation(
             snapshot,

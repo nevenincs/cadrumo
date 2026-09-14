@@ -27,6 +27,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.inbound.declaracion.schema import InboundDeclaracionObservation, TemplateRevision
 from cadrumo.adapters.inbound.pdf.extracted_casilla import ExtractedCasilla
@@ -49,7 +50,6 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -96,7 +96,7 @@ def _seed_work_unit(
     # test_reconcile_value_comparison.py) so the snapshot resolver's D1 identity
     # assertion holds and the casilla compare actually runs.
     revision_id = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             modelo,
             filing_year=filing_year,
@@ -191,7 +191,7 @@ def _synthetic_declaracion(
     the parser would return, with an explicit registry snapshot ref matching
     the seeded work unit's law-determined revision.
     """
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -263,7 +263,7 @@ def test_provisional_extraction_profile_surfaces_non_blocking_advisory() -> None
     bbox-anchored values as verified (no-silent-under-declaration)."""
     work_unit = _seed_work_unit()
     _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00"), "19": Decimal("900.00")})
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,

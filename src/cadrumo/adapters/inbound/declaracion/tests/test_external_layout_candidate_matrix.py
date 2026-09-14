@@ -13,10 +13,10 @@ from enum import StrEnum
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.modelo import Modelo
-from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.fixtures.external_layout_candidates.models import (
     ExternalLayoutCandidate,
     ExternalLayoutCandidateKind,
@@ -216,7 +216,7 @@ def _measure(case: _CandidateCase) -> _MeasuredOutcome:
     _candidate, candidate_path = _load_candidate(case)
 
     if isinstance(case, _RegistryAlignedCandidateCase):
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             case.modelo.value,
             filing_year=case.filing_year,
             period=case.period,
@@ -228,7 +228,7 @@ def _measure(case: _CandidateCase) -> _MeasuredOutcome:
         # This deliberately uses current parser anchors only as an adversarial
         # safety exercise.  The candidate sidecar declares no applicable authored
         # revision, and the separate applicability test below refuses alignment.
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             case.modelo.value,
             filing_year=case.parser_exercise_filing_year,
             period=case.parser_exercise_period,
@@ -269,7 +269,7 @@ def test_external_layout_candidate_registry_applicability_is_exact(case: _Candid
     if isinstance(case, _RegistryAlignedCandidateCase):
         assert applicability.verdict == case.applicability_verdict
         assert applicability.revision_id == case.revision_id
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             case.modelo.value,
             filing_year=case.filing_year,
             period=case.period,

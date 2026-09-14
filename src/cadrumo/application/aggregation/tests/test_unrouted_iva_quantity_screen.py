@@ -23,10 +23,10 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     unrouted_ledger_iva_quantities,
@@ -62,7 +62,7 @@ def _revision(modelo_id: str) -> ModeloRevision:
     """
     period = "1T" if modelo_id == "303" else "0A"
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             modelo_id,
             filing_year=_Q1_2025.filing_year,

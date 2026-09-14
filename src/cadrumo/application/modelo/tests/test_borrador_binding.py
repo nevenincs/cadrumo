@@ -8,13 +8,13 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -118,7 +118,7 @@ def snapshot_repository() -> Generator[Borrador100SnapshotRepository]:
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def test_validate_casilla_input_ids_rejects_non_string_keys_without_coercion() -> None:
@@ -163,7 +163,7 @@ def test_validate_casilla_input_ids_keeps_malformed_key_precedence_over_other_fa
 
 
 def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> None:
-    snapshot = bundled_authority().snapshot("303", filing_year=2025, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T")
     result_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_RESULT_CASILLA)
     assert result_casilla.number == "69"
     assert result_casilla.id != result_casilla.number
@@ -181,7 +181,7 @@ def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> 
 
 
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
-    snapshot = bundled_authority().snapshot("200", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("200", filing_year=2025, period="0A")
 
     with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})
@@ -348,7 +348,7 @@ def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() ->
 def test_borrador_resolution_rejects_registry_without_borrador_capability(
     snapshot_repository: Borrador100SnapshotRepository,
 ) -> None:
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(

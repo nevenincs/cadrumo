@@ -24,11 +24,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -50,7 +50,7 @@ from ..relation_binding_join import bundled_relation_binding_join
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "9a1c77e0-4b22-4c3e-9a0e-5f0b7c1d2e34"
-_REGISTRY_SNAPSHOT_REF = bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
+_REGISTRY_SNAPSHOT_REF = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
 _WORK_UNIT_PERIOD = Period.from_year_and_code(_REGISTRY_SNAPSHOT_REF.modelo_year, _REGISTRY_SNAPSHOT_REF.period)
 _WORK_UNIT_ID = derive_work_unit_id(
     bucket_id=_BUCKET_ID,

@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, Annotated
 if TYPE_CHECKING:
     from ...core.errors.hierarchy import CadrumoError
     from ...core.json_contract import Notice, ResolvedNoticeAction
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileFact
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult
 
@@ -53,6 +54,7 @@ import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n.render import tr
@@ -585,6 +587,7 @@ def setup_flow_definition(
     flow: WizardFlow,
     *,
     attach_descendants: bool = True,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> FlowDefinition:
     """Bridge and decorate the wizard flow into the shared substrate definition.
 
@@ -618,7 +621,7 @@ def setup_flow_definition(
         ),
     )
     if attach_descendants:
-        definition = attach_descendant_group(definition)
+        definition = attach_descendant_group(definition, operation=operation)
     return definition
 
 
@@ -714,6 +717,7 @@ def _run_scripted_walk(
     *,
     mode: WizardPersistMode,
     explicit_question_ids: frozenset[str],
+    operation: PinnedAuthorityOperation | None,
 ) -> BaseModel:
     """Drive a non-interactive walk through the shared flow substrate.
 
@@ -735,7 +739,7 @@ def _run_scripted_walk(
     """
     flow_mode = _FLOW_MODE_BY_WIZARD_MODE[mode]
     definition = _force_pages_visible(
-        setup_flow_definition(flow, attach_descendants=mode == "create"),
+        setup_flow_definition(flow, attach_descendants=mode == "create", operation=operation),
         explicit_question_ids,
     )
     tokens, intended = _project_scripted_answers(definition, canonical, mode=flow_mode)
@@ -963,6 +967,8 @@ def _collect_flag_values(
 def scripted_profile_facts(
     flow: WizardFlow,
     kwargs: Mapping[str, object],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[UserProfileFact, ...]:
     """Project a scripted ``create``'s field flags into initial profile facts.
 
@@ -1001,7 +1007,7 @@ def scripted_profile_facts(
     from .persistence import profile_values_from_patch
 
     canonical = _collect_flag_values(flow, dict(kwargs))
-    _refuse_foral_ccaa(canonical, canonical)
+    _refuse_foral_ccaa(canonical, canonical, operation=operation)
     if not canonical:
         return ()
     return tuple(
@@ -1009,7 +1015,13 @@ def scripted_profile_facts(
     )
 
 
-def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile_id: str) -> dict[str, str]:
+def _run_patch_edit(
+    flow: WizardFlow,
+    explicit_flags: dict[str, str],
+    *,
+    profile_id: str,
+    operation: PinnedAuthorityOperation | None,
+) -> dict[str, str]:
     """Persist a non-interactive ``edit`` as a true patch.
 
     Only the flags the operator named on the command line are written;
@@ -1026,7 +1038,11 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     )
 
     patched_values = profile_values_from_patch(flow, explicit_flags)
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    profile_decode_context = operation.profile_decode_context() if operation is not None else None
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
     merged_values = record_to_path_values(record)
     merged_values.update(patched_values)
     _require_filing_baseline(flow, project_answers(flow, merged_values))
@@ -1055,6 +1071,7 @@ def _persist_full_flow_answers(
     answers: BaseModel,
     *,
     profile_id: str,
+    operation: PinnedAuthorityOperation | None,
 ) -> dict[str, str]:
     """Validate and persist one completed full-flow answer model."""
     from ...domain.user_profile.values import UserProfileFact
@@ -1064,7 +1081,11 @@ def _persist_full_flow_answers(
     from .persistence import project_answers, serialise_answers
 
     profile_values = serialise_answers(flow, answers)
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    profile_decode_context = operation.profile_decode_context() if operation is not None else None
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
     values = record_to_path_values(record)
     values.update({path: value for path, value in profile_values.items() if value})
     _require_filing_baseline(flow, project_answers(flow, values))
@@ -1088,6 +1109,7 @@ def _run_full_flow(
     profile_name: str,
     profile_id: str,
     mode: WizardPersistMode,
+    operation: PinnedAuthorityOperation | None,
     explicit_question_ids: frozenset[str] = frozenset(),
 ) -> dict[str, str]:
     """Walk the full wizard flow and persist the resulting answer set.
@@ -1138,6 +1160,7 @@ def _run_full_flow(
             canonical,
             mode=mode,
             explicit_question_ids=explicit_question_ids,
+            operation=operation,
         )
     elif accept_defaults:
         answers = _run_scripted_walk(
@@ -1145,6 +1168,7 @@ def _run_full_flow(
             canonical,
             mode=mode,
             explicit_question_ids=explicit_question_ids,
+            operation=operation,
         )
     else:
         # There is no interactive walk here any more. An operator at a
@@ -1177,7 +1201,7 @@ def _run_full_flow(
     # patch scoped to the pages the operator actually answered
     # (``supplied_question_ids``); the full serialisation here feeds the
     # filing-baseline survival check and the success payload.
-    return _persist_full_flow_answers(flow, answers, profile_id=profile_id)
+    return _persist_full_flow_answers(flow, answers, profile_id=profile_id, operation=operation)
 
 
 def _enter_requested_output_language(kwargs: dict[str, object], language_stack: contextlib.ExitStack) -> None:
@@ -1320,22 +1344,33 @@ def _seed_output_language_from_environment(canonical: dict[str, str]) -> None:
         canonical["output-language"] = env_lang
 
 
-def _refuse_foral_ccaa(canonical: dict[str, str], explicit_flags: dict[str, str]) -> None:
+def _refuse_foral_ccaa(
+    canonical: dict[str, str],
+    explicit_flags: dict[str, str],
+    *,
+    operation: PinnedAuthorityOperation | None,
+) -> None:
     """Reject foral CCAA tokens before any persistence or prompt."""
     ccaa_token = canonical.get("tax-residence-ccaa") or explicit_flags.get("tax-residence-ccaa")
     if ccaa_token is None:
         return
 
-    from ...domain.contribuyente.errors import ForalRegimeError
-    from ...domain.contribuyente.tax_residence import parse_tax_region
+    if operation is None:
+        # Metadata-only callers do not have an authority operation.  The
+        # operation-backed command path supplies one before any profile facts
+        # are projected, so this branch cannot admit a production value.
+        return
 
-    try:
-        parse_tax_region(ccaa_token)
-    except ForalRegimeError as foral_exc:
+    from ...core.text_fold import fold_diacritics
+    from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+    from ...domain.contribuyente.errors import ForalRegimeError
+
+    normalized = fold_diacritics(ccaa_token.strip().casefold().replace(" ", "_").replace("-", "_"))
+    if resolve_ccaa_catalogue(authority=operation).is_foral_alias(normalized):
         # Re-raise the domain refusal so the whole line renders through the
         # localized CadrumoError boundary (translated_message), instead of
         # English Click ``Usage`` chrome around a localized body.
-        raise foral_exc
+        raise ForalRegimeError(ccaa_token)
 
 
 # ``SetupAnswers`` field names whose free-text value fails an ISO-8601 date or
@@ -1476,11 +1511,12 @@ def _run_wizard_persistence_path(
     accept_defaults: bool,
     profile_name: str,
     profile_id: str,
+    operation: PinnedAuthorityOperation | None,
 ) -> dict[str, str]:
     """Dispatch to patch-edit or full-flow persistence."""
     non_interactive = quiet or accept_defaults
     if mode == "edit" and non_interactive:
-        return _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
+        return _run_patch_edit(flow, explicit_flags, profile_id=profile_id, operation=operation)
 
     return _run_full_flow(
         flow,
@@ -1490,6 +1526,7 @@ def _run_wizard_persistence_path(
         profile_name=profile_name,
         profile_id=profile_id,
         mode=mode,
+        operation=operation,
         explicit_question_ids=frozenset(explicit_flags),
     )
 
@@ -1503,7 +1540,11 @@ def _run_wizard_persistence_path(
 DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
 
 
-def profile_next_step_modelo(profile_values: dict[str, str]) -> str | None:
+def profile_next_step_modelo(
+    profile_values: dict[str, str],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
     """The modelo id the routing projection singles out, or ``None`` for the default.
 
     The one canonical classification a taxpayer's declared facts route
@@ -1527,12 +1568,16 @@ def profile_next_step_modelo(profile_values: dict[str, str]) -> str | None:
     fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
     from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
 
-    if fiscal_residency_requires_country(fiscal_residency):
+    if fiscal_residency_requires_country(fiscal_residency, authority=operation):
         return Modelo("210").value
     return None
 
 
-def next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:
+def next_step_command_for_profile_values(
+    profile_values: dict[str, str],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str:
     """Resolve the CLI command a profile's declared facts point at next.
 
     Derived from :func:`profile_next_step_modelo`, the canonical
@@ -1540,7 +1585,7 @@ def next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:
     it singles out no modelo. Consumed by the scripted wizard's own success
     line, which renders the command as text.
     """
-    modelo = profile_next_step_modelo(profile_values)
+    modelo = profile_next_step_modelo(profile_values, operation=operation)
     if modelo is None:
         return DEFAULT_PROFILE_NEXT_COMMAND
     return f"aeat app modelo describe {modelo}"
@@ -1552,6 +1597,7 @@ def _ccaa_was_defaulted(
     profile_values: dict[str, str],
     *,
     non_interactive: bool,
+    default_ccaa_value: str | None,
 ) -> bool:
     """Return True when the comunidad autónoma was assumed, not chosen.
 
@@ -1567,13 +1613,12 @@ def _ccaa_was_defaulted(
     path prompts for the value and is likewise excluded, as is ``edit``
     (whose CCAA already exists on the profile).
     """
-    from ...domain.calculations.registry.ccaa_catalogue import default_ccaa
-
     return (
         mode == "create"
         and non_interactive
         and "tax-residence-ccaa" not in explicit_flags
-        and profile_values.get("tax_residence.ccaa") == default_ccaa().value
+        and default_ccaa_value is not None
+        and profile_values.get("tax_residence.ccaa") == default_ccaa_value
     )
 
 
@@ -1591,6 +1636,7 @@ def _emit_wizard_success(
     modify_no_resume_message: str | None = None,
     modify_descendants_via_door: bool = False,
     modify_descendants_message: str | None = None,
+    default_ccaa_value: str | None = None,
 ) -> None:
     """Emit the success payload in JSON or tabular CLI form.
 
@@ -1622,7 +1668,6 @@ def _emit_wizard_success(
     callers).
     """
     from ...core.click_context import json_output_requested
-    from ...domain.calculations.registry.ccaa_catalogue import default_ccaa
     from ..operator_output.emit import emit_operator_json_success
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
@@ -1643,7 +1688,11 @@ def _emit_wizard_success(
         if modify_descendants_message is not None
         else tr("application.wizard.notices.modify_descendants_via_door")
     )
-    ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=default_ccaa().value)
+    ccaa_message = (
+        tr("application.wizard.notices.ccaa_defaulted", ccaa=default_ccaa_value)
+        if ccaa_defaulted and default_ccaa_value is not None
+        else ""
+    )
     notices = _wizard_success_notices(
         mode,
         next_command=next_command,
@@ -1654,6 +1703,7 @@ def _emit_wizard_success(
         modify_descendants_action=_resolved_descendientes_action(),
         ccaa_defaulted=ccaa_defaulted,
         ccaa_message=ccaa_message,
+        ccaa_value=default_ccaa_value,
     )
     # Populate the envelope-spine active_profile identity anchor. The wizard
     # sits below the CLI transport's emit_envelope funnel (it cannot import
@@ -1766,6 +1816,7 @@ def _wizard_success_notices(
     modify_descendants_action: ResolvedNoticeAction | None = None,
     ccaa_defaulted: bool,
     ccaa_message: str,
+    ccaa_value: str | None,
 ) -> list[Notice]:
     """Build the success envelope's notices: the next step plus each disclosure.
 
@@ -1774,7 +1825,6 @@ def _wizard_success_notices(
     entered with, not one a mid-walk output-language switch left behind.
     """
     from ...core.json_contract import Notice, NoticeSeverity
-    from ...domain.calculations.registry.ccaa_catalogue import default_ccaa
 
     verb_key = "create" if mode == "create" else "edit"
     # The next-step hint is text-surface only. ``Notice`` reserves executable
@@ -1805,12 +1855,14 @@ def _wizard_success_notices(
             ),
         )
     if ccaa_defaulted:
+        if ccaa_value is None:
+            raise InternalInvariantError("CCAA default disclosure requires the operation-scoped default token")
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code=f"config.profile.{verb_key}.ccaa_defaulted",
                 message=ccaa_message,
-                context={"assumed_ccaa": default_ccaa().value},
+                context={"assumed_ccaa": ccaa_value},
             ),
         )
     return notices
@@ -1821,6 +1873,7 @@ def _execute_wizard_command(
     mode: WizardPersistMode,
     *,
     kwargs: dict[str, object],
+    operation: PinnedAuthorityOperation | None,
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
     profile_name, profile_id = _resolve_profile_target_for_mode(
@@ -1842,7 +1895,7 @@ def _execute_wizard_command(
     # discipline the error path uses for a translated refusal.
     modify_no_resume_message = tr("application.wizard.notices.modify_no_resume")
     modify_descendants_message = tr("application.wizard.notices.modify_descendants_via_door")
-    _refuse_foral_ccaa(canonical, explicit_flags)
+    _refuse_foral_ccaa(canonical, explicit_flags, operation=operation)
     try:
         profile_values = _run_wizard_persistence_path(
             flow,
@@ -1853,6 +1906,7 @@ def _execute_wizard_command(
             accept_defaults=accept_defaults,
             profile_name=profile_name,
             profile_id=profile_id,
+            operation=operation,
         )
     except ValidationError as exc:
         raise _wizard_validation_bad(flow, exc) from exc
@@ -1862,20 +1916,36 @@ def _execute_wizard_command(
     # edits (`--quiet` / `--accept-defaults`) stage nothing, so the notice is
     # scoped to the interactive walk.
     interactive_modify = mode == "edit" and not (quiet or accept_defaults)
+    default_ccaa_value = next(
+        (
+            question.default
+            for section in flow.sections
+            for question in section.questions
+            if question.id == "tax-residence-ccaa"
+        ),
+        None,
+    )
+    next_command = (
+        next_step_command_for_profile_values(profile_values, operation=operation)
+        if operation is not None
+        else DEFAULT_PROFILE_NEXT_COMMAND
+    )
     _emit_wizard_success(
         mode,
         profile_name,
-        next_command=next_step_command_for_profile_values(profile_values),
+        next_command=next_command,
         ccaa_defaulted=_ccaa_was_defaulted(
             mode,
             explicit_flags,
             profile_values,
             non_interactive=quiet or accept_defaults,
+            default_ccaa_value=default_ccaa_value,
         ),
         modify_no_resume=interactive_modify,
         modify_no_resume_message=modify_no_resume_message,
         modify_descendants_via_door=interactive_modify,
         modify_descendants_message=modify_descendants_message,
+        default_ccaa_value=default_ccaa_value,
     )
 
 
@@ -1883,6 +1953,7 @@ def build_wizard_command(
     flow: WizardFlow,
     *,
     mode: WizardPersistMode,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
@@ -1922,7 +1993,7 @@ def build_wizard_command(
             # default. The override unwinds when the command returns.
             _enter_requested_output_language(kwargs, _language_stack)
             try:
-                _execute_wizard_command(flow, mode, kwargs=kwargs)
+                _execute_wizard_command(flow, mode, kwargs=kwargs, operation=operation)
             except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack

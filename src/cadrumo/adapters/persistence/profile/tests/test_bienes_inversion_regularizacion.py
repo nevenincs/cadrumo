@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, cast, override
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -33,7 +34,6 @@ from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bienes_inversion_regularizacion_bindings import (
     BienesInversionRegularizacionOutput,
     BienesInversionRegularizacionProvider,
@@ -115,7 +115,7 @@ def _context(
     *,
     bucket_id: str = _BUCKET_ID,
 ) -> CalculationSourceContext:
-    snapshot = bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period)
+    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period)
     return CalculationSourceContext(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -126,11 +126,11 @@ def _context(
 
 
 def _m303_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
 
 
 def _canonical_bienes_target(*, modelo: str, period: str, output: BienesInversionRegularizacionOutput) -> str:
-    revision = bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period).revision
+    revision = compiled_bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period).revision
     binding = next(
         binding
         for binding in revision.bindings
@@ -162,7 +162,7 @@ def _save_current_year_m303_prorrata_observation(
     *,
     percentage: Decimal,
 ) -> None:
-    snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
     repository.save(
         repository.prepare_observation_envelope(
             RegistryModeloObservation(

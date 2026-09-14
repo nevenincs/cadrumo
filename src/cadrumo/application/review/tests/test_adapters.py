@@ -12,13 +12,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import (
     ModeloDraft,
@@ -74,7 +74,7 @@ def _snapshot_ref(modelo: str, period: Period) -> RegistrySnapshotRef:
     """Return the law-selected coordinate used by the live draft gate."""
 
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             modelo,
             filing_year=period.filing_year,

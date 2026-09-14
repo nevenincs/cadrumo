@@ -95,6 +95,7 @@ from .invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance
 from .structured_invoice_ports import StructuredInvoiceRecord
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from .evidence_input import EvidenceInput
 
 
@@ -717,8 +718,13 @@ def structured_provenance(
     parsed: StructuredInvoiceRecord,
     evidence: EvidenceInput,
     derived: Mapping[str, tuple[str, str] | None],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[FieldProvenance, ...]:
-    """Return one provenance envelope per value the structured record stated."""
+    """Return one provenance envelope per value the structured record stated.
+
+    ``operation`` is retained for the derived country projection so its
+    catalogue lookup shares the structured reader's authority generation.
+    """
     del evidence
     source_text = parsed.record_text
     envelopes: list[FieldProvenance] = []
@@ -755,7 +761,7 @@ def structured_provenance(
                 field=field,
                 value=value,
                 anchor=stated,
-                derive=country_code_for_stated_country_code,
+                derive=lambda value: country_code_for_stated_country_code(value, operation=operation),
                 element_path=_structured_element_path(field, shape=parsed.shape),
                 source_text=source_text,
             ),
@@ -763,9 +769,17 @@ def structured_provenance(
     return tuple(envelopes)
 
 
-def resolved_country_code(stated: str | None) -> tuple[str, str] | None:
-    """Return a record country as ``(resolved alpha-2, stated form)``."""
-    resolved = country_code_for_stated_country_code(stated)
+def resolved_country_code(
+    stated: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, str] | None:
+    """Return a record country as ``(resolved alpha-2, stated form)``.
+
+    ``operation`` owns the country-vocabulary generation used for the
+    structured record's alpha-2/alpha-3 projection.
+    """
+    resolved = country_code_for_stated_country_code(stated, operation=operation)
     if resolved is None or stated is None:
         return None
     return resolved, stated

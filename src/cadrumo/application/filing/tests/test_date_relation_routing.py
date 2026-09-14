@@ -28,9 +28,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.submission.models import ModeloDraftStatus
@@ -57,7 +57,7 @@ _M100_RELATIONS = (
 
 
 def _m100_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=2024, period="0A", on=None)
+    return compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A", on=None)
 
 
 def _profile() -> ModeloOperatorProfile:

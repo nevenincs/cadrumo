@@ -71,7 +71,6 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES
 from ...domain.calculations.registry.schema_formula import ParameterDefinition
-from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
@@ -616,7 +615,11 @@ _MINIMO_DESCENDIENTES_AUTONOMICO_CCAA_INFIXES: dict[str, str] = {
     # figures for 2025 (Andalucía, Asturias, Baleares, Canarias, Galicia,
     # Comunitat Valenciana per the bundled 2025 manual) are a named follow-up,
     # not silently assumed to mirror estatal forever.
-    CCAA.MADRID.value: "madrid",
+    # The left-hand token is the schema parameter-id segment, not a catalogue
+    # lookup.  Keep it as syntax so importing this binding module cannot open
+    # an ambient governed-fact scope; the declared profile value is matched
+    # against it only after the enclosing snapshot has projected that value.
+    "madrid": "madrid",
 }
 
 

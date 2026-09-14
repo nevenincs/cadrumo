@@ -31,11 +31,11 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.user_profile.profile_read_ports import ProfilePathValuesReadPort
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import UserProfileFact
 from ..relation_prefill import (
     _economic_activity_conditional_source_modelos,
@@ -54,7 +54,7 @@ _PROFILE_ID = "30030030-0300-4300-8300-300300300300"
 
 
 def _m100_snapshot(filing_year: int) -> RegistrySnapshot:
-    return bundled_authority().snapshot(Modelo("100").value, filing_year=filing_year, period="0A")
+    return compiled_bundled_authority().snapshot(Modelo("100").value, filing_year=filing_year, period="0A")
 
 
 class _ProfilePathValuesFake:
@@ -276,7 +276,7 @@ class TestFailClosed:
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
             ),
         )
-        snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=2024, period="1T")
+        snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2024, period="1T")
         assert _economic_activity_conditional_source_modelos(snapshot) == frozenset(), (
             "test precondition: Modelo 303 must declare no economic-activity-conditional dependency"
         )

@@ -9,6 +9,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
@@ -33,7 +34,6 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -356,7 +356,7 @@ def _m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=bundled_authority().snapshot(
+        registry_snapshot=compiled_bundled_authority().snapshot(
             "303",
             filing_year=period.filing_year,
             period="1T",

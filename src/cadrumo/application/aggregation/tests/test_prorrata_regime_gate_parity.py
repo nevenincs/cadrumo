@@ -20,12 +20,12 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
 from ....domain.prorrata_register.register import (
     ProrrataRegister,
@@ -41,7 +41,7 @@ _PERCENTAGE = Decimal("64")
 
 
 def _prior_m303_snapshot_ref():
-    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _register(regime: ProrrataRegisterRegime) -> ProrrataRegister:

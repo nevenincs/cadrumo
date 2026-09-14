@@ -59,12 +59,17 @@ from ...domain.iva.establishment import (
 from .party_attribution import party_addresses
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from .invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 
 __all__ = ["postal_shape_findings"]
 
 
-def _territory_already_settled(printed_country: str | None) -> bool:
+def _territory_already_settled(
+    printed_country: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> bool:
     """Return whether the printed country settles this party's territory alone.
 
     Spain answers ``False`` deliberately: it names the Member State while the
@@ -73,11 +78,15 @@ def _territory_already_settled(printed_country: str | None) -> bool:
     ``False`` -- nothing was settled -- rather than being treated as settled by
     default, which would suppress the report for the party we know least about.
     """
-    code = country_code_for_printed_country_name(printed_country)
-    return territorial_scope_for_country(code) is not None
+    code = country_code_for_printed_country_name(printed_country, operation=operation)
+    return territorial_scope_for_country(code, operation=operation) is not None
 
 
-def postal_shape_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
+def postal_shape_findings(
+    draft: InvoiceDraft,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[DraftDiscrepancyFinding, ...]:
     """Return a finding per party whose postal code was populated but unreadable.
 
     Only where the country did not already settle that party's territory, so
@@ -86,6 +95,8 @@ def postal_shape_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding,
     Args:
         draft: The draft to check, carrying each party's printed postal code and
             printed country as the reader recovered them.
+        operation: The caller-owned pinned authority operation used for country
+            and Spanish-territory lookups.
 
     Returns:
         The findings, in party declaration order. Empty when every populated
@@ -105,9 +116,12 @@ def postal_shape_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding,
         printed: str | None = raw_printed if isinstance(raw_printed, str) else None
         if printed is None or not printed.strip():
             continue
-        if territorial_scope_for_spanish_postal_code(printed) is not None:
+        if territorial_scope_for_spanish_postal_code(printed, operation=operation) is not None:
             continue
-        if _territory_already_settled(getattr(draft, party.country_field, None)):
+        if _territory_already_settled(
+            getattr(draft, party.country_field, None),
+            operation=operation,
+        ):
             continue
         findings.append(
             DraftDiscrepancyFinding(

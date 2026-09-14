@@ -23,6 +23,7 @@ from datetime import date
 from unittest.mock import Mock
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
     advisory_profile_bucket,  # noqa: F401
@@ -30,7 +31,6 @@ from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.values import UserProfileFact
@@ -50,7 +50,7 @@ def bucket_id() -> str:
 
 
 def _revision():
-    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
+    return compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
 
 
 def _write(*facts: UserProfileFact) -> None:

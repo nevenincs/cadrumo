@@ -34,9 +34,9 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -64,7 +64,7 @@ _M100_2025_XSD = (
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _profile_bindings() -> list[Any]:

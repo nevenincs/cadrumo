@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.errors.severity import BaseSeverity
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import ProfileKeyGrounding
 from ....domain.user_profile.labels import profile_field_label
 from ....domain.user_profile.schema import ProfileSchemaDefinition
@@ -299,7 +299,7 @@ def test_preflight_does_not_require_the_m111_declaration_for_another_modelo(
 
 def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: ProfileSchemaDefinition) -> None:
     period = Period.from_year_and_code(2026, "1P")
-    snapshot = bundled_authority().snapshot("202", filing_year=2026, period=period.registry_token)
+    snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period=period.registry_token)
     record = UserProfileRecord(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
@@ -327,7 +327,7 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
     schema: ProfileSchemaDefinition,
 ) -> None:
     period = Period.from_year_and_code(2026, "1P")
-    snapshot = bundled_authority().snapshot("202", filing_year=2026, period=period.registry_token)
+    snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period=period.registry_token)
     failures: list[str] = []
     for case_id, identity_fact in (
         ("surnames-only", UserProfileFact(path="identity.surnames", value="Ferrer")),

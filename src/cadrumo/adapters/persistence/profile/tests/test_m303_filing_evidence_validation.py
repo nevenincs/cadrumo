@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -15,7 +16,6 @@ from cadrumo.application.modelo.action_errors import M303FilingEvidenceError
 from cadrumo.application.modelo.m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.deadlines.models import M303RegimeComposition
@@ -52,7 +52,7 @@ def _general_scope() -> M303RegimenSimplificadoScopeDecision:
 
 
 def _work_unit(period: Period) -> WorkUnit:
-    registry_snapshot = bundled_authority().snapshot(
+    registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
         filing_year=period.filing_year,
         period=period.code,
@@ -78,7 +78,7 @@ def _work_unit(period: Period) -> WorkUnit:
 
 def _evidence(period: Period) -> FilingInstanceEvidence:
     scope = _general_scope()
-    registry_snapshot = bundled_authority().snapshot(
+    registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
         filing_year=period.filing_year,
         period=period.code,
@@ -128,7 +128,7 @@ def _simplified_evidence(period: Period) -> FilingInstanceEvidence:
     scope = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )
-    registry_snapshot = bundled_authority().snapshot(
+    registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
         filing_year=period.filing_year,
         period=period.code,
@@ -253,7 +253,7 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path:
     period = Period.from_year_and_code(2026, "1T")
     work_unit = _work_unit(period)
     evidence = _evidence(period)
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile()
@@ -283,7 +283,7 @@ def test_evidence_scope_disagreeing_with_active_censo_refuses(
         with pytest.raises(M303FilingEvidenceError) as raised_regimen_scope_profile_divergence:
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),
-                registry_snapshot=bundled_authority().snapshot("303", filing_year=2026, period="1T"),
+                registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T"),
                 evidence=_evidence(period),
                 casilla_values={},
                 observations=(),
@@ -331,7 +331,7 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
         with pytest.raises(M303FilingEvidenceError) as raised_divergent_result:
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),
-                registry_snapshot=bundled_authority().snapshot("303", filing_year=2026, period="1T"),
+                registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T"),
                 evidence=evidence,
                 casilla_values={},
                 observations=(),
@@ -346,7 +346,7 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
 def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observation(tmp_path: Path) -> None:
     period = Period.from_year_and_code(2026, "4T")
     work_unit = _work_unit(period)
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T")
     endpoint_ids = tuple(
         casilla.id
         for casilla in registry_snapshot.revision.casillas
@@ -398,7 +398,7 @@ def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observati
 
 def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path: Path) -> None:
     period = Period.from_year_and_code(2026, "4T")
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T")
     endpoint = next(
         casilla
         for casilla in registry_snapshot.revision.casillas

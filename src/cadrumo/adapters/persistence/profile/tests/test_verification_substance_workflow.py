@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -49,7 +50,6 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     parse_verification_predicate_expression,
@@ -91,7 +91,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     """
     wu_repo, cr_repo, vr_repo, bv_repo = repos
 
-    snap = bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snap = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next((c for c in snap.revision.casillas if c.id == _CASILLA_02), None)
     assert casilla_02 is not None, "M130 must have casilla 02 in registry"
     assert str(casilla_02.input_kind) == "bound", "M130 casilla 02 must be ledger-bound (H1 fix)"
@@ -541,7 +541,7 @@ def test_required_manual_checklist_carries_registry_provenance() -> None:
         bucket_id=None,
     )
     required = next(entry for entry in checklist.required_manual if entry.casilla_id == _CASILLA_00501)
-    snapshot = bundled_authority().snapshot("180", filing_year=2024, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("180", filing_year=2024, period="0A")
     casilla = next(c for c in snapshot.revision.casillas if c.id == _CASILLA_00501)
     expected_legal_refs = frozenset(str(r) for r in casilla.legal_refs)
     expected_source_refs = frozenset(str(r) for r in casilla.source_refs)

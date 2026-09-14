@@ -51,6 +51,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -82,7 +83,6 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -379,7 +379,7 @@ def _import_official_m130_result_observation(
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     bucket_events = BucketEventHistoryRepository(objects=secure_objects)
     observation_repo = CalculationObservationRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot("130", filing_year=_YEAR, period=period)
+    snapshot = compiled_bundled_authority().snapshot("130", filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
@@ -559,7 +559,7 @@ def _autonomaworkflow_profile() -> TaxpayerProfile:
 
 def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100/2024 binding that is neither profile- nor relation-sourced."""
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -582,7 +582,7 @@ def _calculate_m100_annual(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",

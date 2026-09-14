@@ -8,6 +8,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -34,7 +35,6 @@ from cadrumo.core.aggregation import (
 from cadrumo.core.errors.error_codes import get_registered_error_code, resolve_error_message
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.m347_threshold import (
     m347_threshold_decimal,
@@ -80,7 +80,7 @@ _M347_THRESHOLD = m347_threshold_decimal(
 
 
 def _modelo_revision(modelo_id: str, revision_id: str):
-    return bundled_authority().modelo(modelo_id).revisions[revision_id]
+    return compiled_bundled_authority().modelo(modelo_id).revisions[revision_id]
 
 
 secure_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="secure_profile")

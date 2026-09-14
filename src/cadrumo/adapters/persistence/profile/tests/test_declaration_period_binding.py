@@ -19,6 +19,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -32,7 +33,6 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -119,7 +119,7 @@ def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaComp
         taxpayer_nif=_TAXPAYER_NIF,
         target_year=filing_year,
         target_period=Period.from_year_and_code(filing_year, period),
-        target_registry_snapshot_ref=bundled_authority()
+        target_registry_snapshot_ref=compiled_bundled_authority()
         .snapshot("303", filing_year=filing_year, period=period)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
@@ -136,7 +136,7 @@ def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaComp
 
 def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path: Path):
     with _secure_backend(tmp_path):
-        snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+        snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
         typed_period = Period.from_year_and_code(filing_year, period)
         work_repo, calc_repo, event_repo = _repositories()
         work_unit = create_work_unit(

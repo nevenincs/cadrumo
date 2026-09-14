@@ -22,6 +22,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -42,7 +43,6 @@ from cadrumo.core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -102,7 +102,9 @@ def _seed_verified_m303_revision(
 ) -> tuple[CalculationRevision, WorkUnit]:
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
     period = Period.from_year_and_code(2026, period_code)
-    revision_id = bundled_authority().snapshot("303", filing_year=2026, period=period.registry_token).revision.id
+    revision_id = (
+        compiled_bundled_authority().snapshot("303", filing_year=2026, period=period.registry_token).revision.id
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
@@ -229,7 +231,7 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="303:2025:4T",
         source_registry_snapshot_refs=(
-            bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref,
+            compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref,
         ),
     )
     sector_entry = ProrrataRegisterEntry(

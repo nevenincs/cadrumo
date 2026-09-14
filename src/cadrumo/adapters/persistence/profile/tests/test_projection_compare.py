@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -21,7 +22,6 @@ from cadrumo.application.modelo.projection import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -46,7 +46,7 @@ _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="projecti
 def _m130_ingresos_registry_provenance() -> tuple[tuple[str, ...], tuple[str, ...]]:
     registry_casilla = next(
         item
-        for item in bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.casillas
+        for item in compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.casillas
         if item.id == _M130_INGRESOS_CASILLA
     )
     return tuple(registry_casilla.legal_refs), tuple(registry_casilla.source_refs)
@@ -179,7 +179,7 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
     row = next(item for item in result.delta_rows if item.casilla_id == _M130_INGRESOS_CASILLA)
     registry_casilla = next(
         item
-        for item in bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.casillas
+        for item in compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.casillas
         if item.id == _M130_INGRESOS_CASILLA
     )
     assert row.delta == Decimal("500.00")
@@ -202,7 +202,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(t
     merely never having been fed a value small enough to matter.
     """
     published_tolerance = (
-        bundled_authority().snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
+        compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
     )
     assert published_tolerance == Decimal("0.01"), (
         "test precondition: modelo 130 2026 1T must publish a real, non-zero tolerance "

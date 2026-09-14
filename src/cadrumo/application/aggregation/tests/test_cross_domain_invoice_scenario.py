@@ -35,11 +35,11 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
@@ -443,7 +443,7 @@ def _modelo_130_revision() -> ModeloRevision:
     hand-built snapshot could agree with the test and disagree with the filing.
     """
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             Modelo("130").value,
             filing_year=2024,
@@ -506,7 +506,7 @@ def _modelo_303_revision() -> ModeloRevision:
     are the ones a real calculate would load.
     """
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             Modelo("303").value,
             filing_year=2024,

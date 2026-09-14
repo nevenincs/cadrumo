@@ -6,12 +6,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -148,7 +148,7 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
 
 def _registry_work_unit(*, modelo: str, filing_year: int, period_code: str) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, period_code)
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         modelo,
         filing_year=filing_year,
         period=period.registry_token,
