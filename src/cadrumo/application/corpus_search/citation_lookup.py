@@ -31,7 +31,7 @@ from collections.abc import Collection, Mapping
 from typing import TYPE_CHECKING
 
 from ...domain.calculations.registry.authority_artifact import (
-    AuthorityArtifactError,
+    AuthorityComponentCodecError,
     AuthorityComponentKind,
     AuthorityGenerationPin,
     EvidenceComponentQuery,
@@ -179,7 +179,7 @@ class _ComponentCitationLookup(CitationLookup):
                 ),
                 pin=self._pin,
             )
-        except (AuthorityArtifactError, LookupError) as exc:
+        except (AuthorityComponentCodecError, LookupError) as exc:
             raise CorpusSearchInputError(
                 reason="citation_extracted_text_absent",
                 context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},

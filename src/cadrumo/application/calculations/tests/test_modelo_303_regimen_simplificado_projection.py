@@ -18,6 +18,9 @@ from ....core.filing_projection_ref import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.iva_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_regimen_simplificado_projection import (
     m303_iae_epigraph_wire_value,
@@ -31,7 +34,6 @@ from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -54,7 +56,7 @@ def _resolved_annual_orden_for_2026():
     return resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+            scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
         ),
     ).orden
 
@@ -136,7 +138,7 @@ def test_projection_identity_never_uses_json_serialisation() -> None:
 def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> None:
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
@@ -213,7 +215,7 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
     """The two live same-IAE pairs remain distinct through typed projection refs."""
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,

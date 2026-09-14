@@ -16,6 +16,7 @@ from ._ledger_support import ledger_cli_no_recovery
 from .common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .common import active_bucket_id_or_refuse as _ratios_bucket_id
 from .common import bad, emit_envelope
+from .state_projection_support import authority_operation
 
 
 def _ratios_bucket_and_profile() -> tuple[str, str | None]:
@@ -63,6 +64,7 @@ def ratios_list(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion,
             year=_resolved_ratio_year(year),
+            operation=authority_operation(ctx),
         )
     except CensoRatioMismatchError as exc:
         from ...application.cli_exception_preconditions import CliExceptionPrecondition
@@ -116,6 +118,7 @@ def ratios_set(
         year=_resolved_ratio_year(year),
         profile_id=profile_id,
         raw_afectacion_ratio=raw_afectacion,
+        operation=authority_operation(ctx),
     )
     emit_envelope(
         ctx,
@@ -139,7 +142,7 @@ def ratios_unset(
     category = require_spending_category(category)
     bucket_id = _ratios_bucket_id()
     try:
-        clear_usage_ratio_override(bucket_id=bucket_id, category=category)
+        clear_usage_ratio_override(bucket_id=bucket_id, category=category, operation=authority_operation(ctx))
     except UsageRatioValidationError as exc:
         raise bad(
             tr(
@@ -167,7 +170,11 @@ def ratios_eligible(
     from ._ledger_ratios_payloads import RatiosEligibleResult, RatiosEligibleRowPayload
 
     bucket_id = _ratios_bucket_id()
-    rows = list_eligible_ratios_for_bucket(bucket_id=bucket_id, year=_resolved_ratio_year(year))
+    rows = list_eligible_ratios_for_bucket(
+        bucket_id=bucket_id,
+        year=_resolved_ratio_year(year),
+        operation=authority_operation(ctx),
+    )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for row in rows:
         default = "" if row.default_ratio is None else str(row.default_ratio)
@@ -206,7 +213,7 @@ def ratios_validate(
     from ._ledger_ratios_payloads import RatiosValidateFindingPayload, RatiosValidateResult
 
     bucket_id = _ratios_bucket_id()
-    report = validate_ratios_for_bucket(bucket_id=bucket_id)
+    report = validate_ratios_for_bucket(bucket_id=bucket_id, operation=authority_operation(ctx))
     lines = [
         f"bucket\t{bucket_id}",
         f"profile_present\t{report.profile_present}",

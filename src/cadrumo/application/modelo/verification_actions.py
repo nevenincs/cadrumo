@@ -1255,7 +1255,6 @@ def _append_revision_advisory_findings(
             target.casilla_values,
             work_unit=work_unit,
             operation=operation,
-            profile_decode_context=operation.profile_decode_context(),
         ),
         _m210_convenio_lob_advisory_finding(
             snapshot,

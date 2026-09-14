@@ -60,6 +60,7 @@ from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_opt
 from ._modelo_support_matrix_payloads import ModeloSupportMatrixResult
 from .common import emit_envelope
 from .modelo_aux_payloads import ModeloDescribeResult, ModeloListResult
+from .state_projection_support import authority_operation
 
 
 @dataclass(frozen=True, slots=True)
@@ -516,6 +517,7 @@ def bindings_list(
         per_modelo_reports,
         missing=missing,
         as_of=resolved_as_of,
+        operation=authority_operation(ctx),
     )
     result = ModeloBindingsListResult(
         modelo_filter=modelo,

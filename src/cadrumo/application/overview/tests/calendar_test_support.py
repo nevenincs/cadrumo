@@ -110,14 +110,16 @@ def calendar_with_evidence(
     filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
     calendar_range: OverviewCalendarRange | None = None,
 ) -> OverviewCalendar:
-    return build_overview_calendar(
-        profile(),
-        calendar_range or april_2025_range(),
-        today=date(2025, 4, 10),
-        events=events,
-        filing_evidence=filing_evidence,
-        engine=calendar_engine(),
-    )
+    with compiled_bundled_authority().operation() as operation:
+        return build_overview_calendar(
+            profile(),
+            calendar_range or april_2025_range(),
+            operation=operation,
+            today=date(2025, 4, 10),
+            events=events,
+            filing_evidence=filing_evidence,
+            engine=DeadlineEngine(authority=operation),
+        )
 
 
 def modelo_record(

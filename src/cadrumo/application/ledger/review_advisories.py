@@ -41,6 +41,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final
 
 from ...core.confirmation_gate import ReviewAdvisoryKind
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from .country_vocabulary_advisory import country_vocabulary_advisory
 from .party_attribution import party_attribution_advisory
@@ -63,11 +64,17 @@ no entry here is a kind the queue would silently stop counting.
 """
 
 
-def review_advisory_kinds(draft: InvoiceDraft) -> tuple[ReviewAdvisoryKind, ...]:
+def review_advisory_kinds(
+    draft: InvoiceDraft,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ReviewAdvisoryKind, ...]:
     """Return every non-blocking advisory kind one pending draft carries.
 
     Args:
         draft: The pending draft, exactly as the review surfaces hold it.
+        operation: Caller-owned pinned authority operation retained by both
+            advisory projections.
 
     Returns:
         The kinds present, each at most once and in a stable order: the
@@ -83,7 +90,7 @@ def review_advisory_kinds(draft: InvoiceDraft) -> tuple[ReviewAdvisoryKind, ...]
     kinds: list[ReviewAdvisoryKind] = []
     if party_attribution_advisory(draft) is not None:
         kinds.append(ReviewAdvisoryKind.PARTY_ATTRIBUTION)
-    country = country_vocabulary_advisory(draft)
+    country = country_vocabulary_advisory(draft, operation=operation)
     if country is not None:
         # Ordered by the status table rather than by the parties' document order:
         # a queue row whose kinds reorder because two parties swapped places is a

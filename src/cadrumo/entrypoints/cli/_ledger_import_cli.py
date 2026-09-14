@@ -30,11 +30,14 @@ from ..ledger_action_composition import compose_ledger_action_ports, compose_led
 from ._ledger_support import ledger_transaction_validation_no_recovery
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from .period_parsing import _optional_canonical_period
+from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
-    from ...application.ledger.protocols import BucketEventHistoryCoCommitWriterProtocol
+    from ...application.ledger.protocols import (
+        BucketEventHistoryCoCommitWriterProtocol,
+        TransactionCatalogueCoCommitWriterProtocol,
+    )
     from ...domain.currency.service import CurrencyNormalizationService
-    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
 def _known_import_providers() -> tuple[str, ...]:
@@ -75,7 +78,7 @@ class _ImportBucketContext:
 
     bucket_id: str | None
     actor: str
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,7 +134,7 @@ def _imported_files(
     *,
     command: Callable[[Path], LedgerSourceImportCommand],
     import_ports: LedgerImportPorts,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None,
     currency_normalizer: CurrencyNormalizationService,
 ) -> _ImportedFolder:
@@ -265,7 +268,10 @@ def ledger_import(
     canonical_period = _optional_canonical_period(period, year=year)
     import_ports = compose_ledger_import_ports()
     action_ports = (
-        compose_ledger_action_ports(bucket_id=context.transaction_repository.bucket_id)
+        compose_ledger_action_ports(
+            bucket_id=context.transaction_repository.bucket_id,
+            operation=authority_operation(ctx),
+        )
         if context.transaction_repository is not None
         else None
     )

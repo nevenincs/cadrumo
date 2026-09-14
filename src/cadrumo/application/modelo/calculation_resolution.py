@@ -52,6 +52,7 @@ from .binding_resolution import (
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..live.borrador_100 import Borrador100SnapshotRepository
 
 
@@ -118,6 +119,7 @@ def resolve_calculation_binding_channels(
     backend_binding_values: Mapping[BindingId, Decimal],
     borrador_snapshot_id: str | None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
+    operation: PinnedAuthorityOperation,
 ) -> ResolvedCalculationChannels:
     """Resolve all binding channels for ``work_unit`` and ``snapshot``.
 
@@ -153,6 +155,7 @@ def resolve_calculation_binding_channels(
         caller_enum_binding_values=caller_enum_binding_values,
         borrador_resolution=borrador_resolution,
         backend_binding_values=backend_binding_values,
+        operation=operation,
     )
     backend_tier = CalculationSourceResolution(
         resolver_id="calculate_backend_bindings",

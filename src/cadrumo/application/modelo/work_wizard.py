@@ -40,6 +40,7 @@ from .registry_discovery import registry_bindings_for_scope, registry_casillas_f
 
 if TYPE_CHECKING:
     from ...application.flows.engine import FlowState
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.work_unit import WorkUnit
 
 
@@ -103,7 +104,11 @@ def _copy_ref_id(run_token: str, step: ModeloWorkWizardStep, facet: str) -> str:
     return f"{_COPY_NAMESPACE}:{run_token}:{_page_key(step)}:{facet}"
 
 
-def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
+def _profile_resolved_binding_ids(
+    unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[str]:
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         return frozenset[str]()
@@ -113,13 +118,18 @@ def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
             bucket_id=bucket_id,
             filing_year=unit.filing_year,
             period=unit.period,
+            operation=operation,
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset[str]()
     return values
 
 
-def discover_modelo_work_wizard_steps(unit: WorkUnit) -> tuple[ModeloWorkWizardStep, ...]:
+def discover_modelo_work_wizard_steps(
+    unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ModeloWorkWizardStep, ...]:
     """Discover each remaining manual, binding, or relation question.
 
     Registry-computed and ledger-fed values are deliberately absent: their
@@ -146,7 +156,7 @@ def discover_modelo_work_wizard_steps(unit: WorkUnit) -> tuple[ModeloWorkWizardS
         for row in casillas_report.rows
     )
     bindings_report = registry_bindings_for_scope(str(unit.modelo), period=unit.period)
-    profile_resolved = _profile_resolved_binding_ids(unit)
+    profile_resolved = _profile_resolved_binding_ids(unit, operation=operation)
     binding_steps: list[ModeloWorkWizardStep] = []
     for row in bindings_report.rows:
         if not getattr(row, "operator_input_required", True):
@@ -303,12 +313,20 @@ class ModeloWorkWizardRun:
 
 
 @contextmanager
-def open_modelo_work_wizard(unit: WorkUnit) -> Generator[ModeloWorkWizardRun]:
+def open_modelo_work_wizard(
+    unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Generator[ModeloWorkWizardRun]:
     """Open one copy-scoped wizard run and remove its entries on exit."""
     run_token = uuid4().hex
     _ACTIVE_COPY_RUNS[run_token] = {}
     try:
-        yield ModeloWorkWizardRun(unit=unit, steps=discover_modelo_work_wizard_steps(unit), _run_token=run_token)
+        yield ModeloWorkWizardRun(
+            unit=unit,
+            steps=discover_modelo_work_wizard_steps(unit, operation=operation),
+            _run_token=run_token,
+        )
     finally:
         _ACTIVE_COPY_RUNS.pop(run_token, None)
 

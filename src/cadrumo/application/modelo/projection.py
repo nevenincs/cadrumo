@@ -418,6 +418,7 @@ def _profile_projection_bindings(
     m100_inputs: Mapping[CasillaId, Decimal],
     extra_bindings: Mapping[BindingId, Decimal],
     extra_enum_bindings: Mapping[BindingId, str],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, date], dict[BindingId, str]]:
     """Resolve the active bucket's profile-sourced projection bindings (empty when no bucket)."""
     from ...core.bucket_pointer import resolve_active_bucket_id
@@ -435,6 +436,7 @@ def _profile_projection_bindings(
         m100_snapshot,
         bucket_id=bucket_id,
         caller_binding_ids=frozenset(caller_owned),
+        operation=operation,
     )
     return (
         dict(profile_result.binding_values),

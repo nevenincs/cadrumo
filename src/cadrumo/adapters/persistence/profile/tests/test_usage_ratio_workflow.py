@@ -22,6 +22,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.ratios import (
@@ -30,6 +31,7 @@ from cadrumo.application.ledger.ratios import (
     eligible_ratio_categories,
 )
 from cadrumo.application.ledger.usage_ratio_repository import load_usage_ratio_profile
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.errors import UsageRatioValidationError
 
@@ -45,29 +47,37 @@ def _eligible_category() -> SpendingCategory:
     Chosen from the live eligibility rule rather than hardcoded: a category the
     domain rejects would make every assertion below a validation failure.
     """
-    with _profile():
-        rows = eligible_ratio_categories(load_usage_ratio_profile(bucket_id=_BUCKET), year=_YEAR)
+    with _profile() as operation:
+        rows = eligible_ratio_categories(
+            load_usage_ratio_profile(bucket_id=_BUCKET, operation=operation),
+            year=_YEAR,
+        )
     return rows[0].category
 
 
 @contextmanager
-def _profile() -> Iterator[None]:
+def _profile() -> Iterator[PinnedAuthorityOperation]:
     """Real encrypted storage: the write, the lock and the event all need it."""
-    with TemporaryDirectory() as tmp, isolated_runtime_profile(tmp_path=Path(tmp), bucket_id=_BUCKET):
-        yield
+    with (
+        TemporaryDirectory() as tmp,
+        isolated_runtime_profile(tmp_path=Path(tmp), bucket_id=_BUCKET),
+        compiled_bundled_authority().operation() as operation,
+    ):
+        yield operation
 
 
 def test_setting_an_override_persists_it_and_reports_no_prior() -> None:
     """A first override has nothing before it, which the outcome must say."""
     category = _eligible_category()
-    with _profile():
+    with _profile() as operation:
         outcome = apply_usage_ratio_override(
             bucket_id=_BUCKET,
             category=category,
             ratio=Decimal("0.40"),
             year=_YEAR,
+            operation=operation,
         )
-        stored = load_usage_ratio_profile(bucket_id=_BUCKET).ratios.get(category)
+        stored = load_usage_ratio_profile(bucket_id=_BUCKET, operation=operation).ratios.get(category)
 
     assert outcome.prior_ratio is None
     assert outcome.new_ratio == Decimal("0.40")
@@ -77,13 +87,20 @@ def test_setting_an_override_persists_it_and_reports_no_prior() -> None:
 def test_replacing_an_override_reports_the_value_it_displaced() -> None:
     """The before/after pair is what the audit record is built from."""
     category = _eligible_category()
-    with _profile():
-        apply_usage_ratio_override(bucket_id=_BUCKET, category=category, ratio=Decimal("0.40"), year=_YEAR)
+    with _profile() as operation:
+        apply_usage_ratio_override(
+            bucket_id=_BUCKET,
+            category=category,
+            ratio=Decimal("0.40"),
+            year=_YEAR,
+            operation=operation,
+        )
         outcome = apply_usage_ratio_override(
             bucket_id=_BUCKET,
             category=category,
             ratio=Decimal("0.75"),
             year=_YEAR,
+            operation=operation,
         )
 
     assert outcome.prior_ratio == Decimal("0.40")
@@ -97,7 +114,7 @@ def test_no_censo_ratio_means_no_override_warning() -> None:
     disagrees with a number nobody supplied.
     """
     category = _eligible_category()
-    with _profile():
+    with _profile() as operation:
         outcome = apply_usage_ratio_override(
             bucket_id=_BUCKET,
             category=category,
@@ -105,6 +122,7 @@ def test_no_censo_ratio_means_no_override_warning() -> None:
             year=_YEAR,
             profile_id="profile-1",
             raw_afectacion_ratio=None,
+            operation=operation,
         )
 
     assert outcome.censo_override_warning is None
@@ -113,7 +131,7 @@ def test_no_censo_ratio_means_no_override_warning() -> None:
 def test_a_censo_ratio_without_a_bound_profile_raises_no_warning() -> None:
     """Both halves are required: an unbound profile has no declaration to compare."""
     category = _eligible_category()
-    with _profile():
+    with _profile() as operation:
         outcome = apply_usage_ratio_override(
             bucket_id=_BUCKET,
             category=category,
@@ -121,6 +139,7 @@ def test_a_censo_ratio_without_a_bound_profile_raises_no_warning() -> None:
             year=_YEAR,
             profile_id=None,
             raw_afectacion_ratio=Decimal("0.90"),
+            operation=operation,
         )
 
     assert outcome.censo_override_warning is None
@@ -129,10 +148,16 @@ def test_a_censo_ratio_without_a_bound_profile_raises_no_warning() -> None:
 def test_clearing_an_override_returns_the_value_it_removed() -> None:
     """The cleared value is the audit record's 'prior'; new is absent."""
     category = _eligible_category()
-    with _profile():
-        apply_usage_ratio_override(bucket_id=_BUCKET, category=category, ratio=Decimal("0.40"), year=_YEAR)
-        outcome = clear_usage_ratio_override(bucket_id=_BUCKET, category=category)
-        remaining = load_usage_ratio_profile(bucket_id=_BUCKET).ratios.get(category)
+    with _profile() as operation:
+        apply_usage_ratio_override(
+            bucket_id=_BUCKET,
+            category=category,
+            ratio=Decimal("0.40"),
+            year=_YEAR,
+            operation=operation,
+        )
+        outcome = clear_usage_ratio_override(bucket_id=_BUCKET, category=category, operation=operation)
+        remaining = load_usage_ratio_profile(bucket_id=_BUCKET, operation=operation).ratios.get(category)
 
     assert outcome.prior_ratio == Decimal("0.40")
     assert outcome.new_ratio is None
@@ -146,5 +171,5 @@ def test_clearing_an_absent_override_refuses() -> None:
     history for a change that never happened.
     """
     category = _eligible_category()
-    with _profile(), pytest.raises(UsageRatioValidationError):
-        clear_usage_ratio_override(bucket_id=_BUCKET, category=category)
+    with _profile() as operation, pytest.raises(UsageRatioValidationError):
+        clear_usage_ratio_override(bucket_id=_BUCKET, category=category, operation=operation)

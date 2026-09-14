@@ -19,16 +19,13 @@ from datetime import datetime
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.models import InvoiceCatalogue
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .action_ports import LedgerActionPorts
 from .actions_common import (
     blocking_modelo_references,
@@ -195,8 +192,8 @@ def mark_transaction_reviewed_excluded(
     actor: str,
     reason: str = "",
     source_command: str = "aeat app ledger exclude",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -300,9 +297,9 @@ def remove_manual_transaction(
     reason: str = "",
     dry_run: bool = False,
     source_command: str = "aeat app ledger remove",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -419,7 +416,7 @@ def _reset_invoice_context(
     bucket_id: str,
     catalogue: TransactionCatalogue,
     removed_ids: tuple[str, ...],
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None,
 ) -> tuple[
     InvoiceCatalogueCoCommitWriterProtocol | None,
     InvoiceCatalogue,
@@ -573,9 +570,9 @@ def reset_ledger_catalogue(
     reason: str = "",
     dry_run: bool = False,
     source_command: str = "aeat app ledger reset",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -688,17 +685,14 @@ def _transition_manual_transaction_lifecycle(
     actor: str,
     reason: str,
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None,
 ) -> ManualLedgerTransactionResult:
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger lifecycle")
     trimmed_source_command = require_source_command(source_command, operation="ledger lifecycle")
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is state:
@@ -724,8 +718,8 @@ def _transition_manual_transaction_lifecycle(
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=transaction_modelo_source_ids(current),
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
     if blockers:
         raise_finalized_modelo_blocked(

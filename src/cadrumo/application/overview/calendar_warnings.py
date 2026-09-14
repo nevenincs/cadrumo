@@ -32,7 +32,6 @@ from ...domain.calculations.registry.applicability import (
     modelo_requires_iva_regime as _modelo_requires_iva_regime,
 )
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_simplificado_token
 from ...domain.deadlines.models import IVARegime as _IVARegime
@@ -86,12 +85,16 @@ _PROFILE_FIELD_WARNING_META: MappingProxyType[str, tuple[str, str]] = MappingPro
     },
 )
 
-_ESTIMATION_REGIME_PROFILE_KEY: dict[str, tuple[str, str]] = {
-    irpf_estimation_regime_objetiva_token(): (
-        "irpf.estimation_regime",
-        "cli.overview.warning.estimacion_objetiva_unset",
-    ),
-}
+
+def _estimation_regime_profile_key(operation: PinnedAuthorityOperation) -> Mapping[str, tuple[str, str]]:
+    """Return the objective-estimation profile mapping from the pinned authority."""
+    return {
+        irpf_estimation_regime_objetiva_token(authority=operation): (
+            "irpf.estimation_regime",
+            "cli.overview.warning.estimacion_objetiva_unset",
+        ),
+    }
+
 
 _CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS: MappingProxyType[str, frozenset[str]] = MappingProxyType(
     {
@@ -139,37 +142,25 @@ def _collect_deadline_window_profile_keys(
 
 def _deadline_window_profile_keys_by_modelo(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
     modelo: str | None = None,
 ) -> MappingProxyType[str, tuple[str, ...]]:
     """Return deadline condition keys from explicit metadata or point loads.
 
-    A pinned operation can answer one modelo by walking its compact directory
-    and loading each revision component. Whole-registry callers must provide an
-    explicit revision inventory; the compatibility path opens the indexed
-    bundled operation at this boundary.
+    A pinned operation answers one modelo by walking its compact directory and
+    loading each revision component. Whole-registry callers may provide an
+    explicit revision inventory, but still supply the operation owned by the
+    surrounding workflow.
     """
     if revision_inventory is not None:
         return _collect_deadline_window_profile_keys(revision_inventory)
-    if operation is not None:
-        if modelo is None:
-            raise ValueError("calendar deadline metadata requires modelo or an explicit revision inventory")
-        directory = operation.modelo_directory(modelo)
-        return _collect_deadline_window_profile_keys(
-            (modelo, operation.revision(modelo, str(metadata.id))) for metadata in directory.revisions
-        )
     if modelo is None:
-        raise ValueError("calendar deadline metadata requires a pinned operation or explicit revision inventory")
-    with bundled_indexed_authority().operation() as indexed_operation:
-        return _deadline_window_profile_keys_by_modelo(modelo=modelo, operation=indexed_operation)
-
-
-def _default_calendar_metadata_modelos() -> tuple[str, ...]:
-    """Return the explicit model inventory needed by calendar warning projection."""
-    modelos = {str(rule.modelo) for rule in _iter_modelo_applicability_rules()}
-    modelos.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS)
-    return tuple(sorted(modelos))
+        raise ValueError("calendar deadline metadata requires modelo or an explicit revision inventory")
+    directory = operation.modelo_directory(modelo)
+    return _collect_deadline_window_profile_keys(
+        (modelo, operation.revision(modelo, str(metadata.id))) for metadata in directory.revisions
+    )
 
 
 def _operation_revision_inventory(
@@ -185,19 +176,13 @@ def _operation_revision_inventory(
 
 def _gating_fields(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
     modelos: Iterable[str] | None = None,
 ) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
-    if operation is None and revision_inventory is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _gating_fields(
-                operation=indexed_operation,
-                modelos=_default_calendar_metadata_modelos(),
-            )
     if revision_inventory is None:
-        if operation is None or modelos is None:
-            raise ValueError("calendar gating fields require an operation and explicit modelo metadata")
+        if modelos is None:
+            modelos = operation.modelo_ids()
         revision_inventory = _operation_revision_inventory(operation, modelos)
     key_to_modelos: dict[str, set[str]] = {}
     key_to_meta: dict[str, tuple[str, str]] = {}
@@ -214,8 +199,9 @@ def _gating_fields(
 
         if len(rule.required_estimation_regimes) == 1:
             (regime,) = rule.required_estimation_regimes
-            if regime in _ESTIMATION_REGIME_PROFILE_KEY:
-                profile_key, _locale_key = _ESTIMATION_REGIME_PROFILE_KEY[regime]
+            estimation_profile_keys = _estimation_regime_profile_key(operation)
+            if regime in estimation_profile_keys:
+                profile_key, _locale_key = estimation_profile_keys[regime]
                 _record_gating_field(
                     profile_key=profile_key,
                     modelo=rule.modelo,
@@ -283,7 +269,7 @@ _M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
 def calendar_applicability_profile_keys_for_modelo(
     modelo: str,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
 ) -> tuple[str, ...]:
     """Return profile keys that can influence calendar applicability for ``modelo``.
@@ -293,6 +279,7 @@ def calendar_applicability_profile_keys_for_modelo(
     facts that determine legal obligation rows.
     """
     keys: set[str] = set()
+    estimation_profile_keys = _estimation_regime_profile_key(operation)
     for rule in _iter_modelo_applicability_rules():
         if rule.modelo != modelo:
             continue
@@ -301,8 +288,8 @@ def calendar_applicability_profile_keys_for_modelo(
             keys.add("taxpayer_type.irpf_income_categories")
         if len(rule.required_estimation_regimes) == 1:
             (regime,) = rule.required_estimation_regimes
-            if regime in _ESTIMATION_REGIME_PROFILE_KEY:
-                keys.add(_ESTIMATION_REGIME_PROFILE_KEY[regime][0])
+            if regime in estimation_profile_keys:
+                keys.add(estimation_profile_keys[regime][0])
         if rule.required_payer_fact is not None:
             keys.update(payer_fact_profile_keys(rule.required_payer_fact))
         break
@@ -347,7 +334,7 @@ def _calendar_censo_enrolment_state(
     *,
     modelo: str,
     live_censo_verified_profile_keys: tuple[str, ...] | None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
 ) -> OverviewCensoEnrolmentState:
     """Classify whether censo-stamped profile paths witness ``modelo`` enrolment."""
@@ -459,9 +446,10 @@ def _calendar_regime_incompatibility_warnings(
     *,
     iva_regime: _IVARegime | None,
     entries: tuple[OverviewCalendarEntry, ...],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalendarWarning, ...]:
     """Return warnings where a surfaced modelo row lacks regime-specific calculation support."""
-    if iva_regime != iva_regime_simplificado_token():
+    if iva_regime != iva_regime_simplificado_token(authority=operation):
         return ()
     if not any(entry.modelo == _Modelo("303").value for entry in entries):
         return ()
@@ -516,7 +504,7 @@ def _build_completeness_and_warnings(
     raw_values: Mapping[str, object] | None,
     entries: tuple[OverviewCalendarEntry, ...],
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
 ) -> tuple[CalendarCompleteness, tuple[CalendarWarning, ...]]:
     """Build explicit/defaulted profile completeness and related warnings.

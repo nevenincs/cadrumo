@@ -21,7 +21,7 @@ from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionEr
 from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError
+from ...domain.calculations.registry.authority_artifact import AuthorityComponentCodecError
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -143,7 +143,7 @@ def _selected_registry_mapping(
             raise ValueError("M303 carry mapping does not match the selected modelo revision")
         _validate_disposition_code_mapping(entries)
         return entries
-    except (AuthorityArtifactError, AttributeError, TypeError, ValueError) as exc:
+    except (AuthorityComponentCodecError, AttributeError, TypeError, ValueError) as exc:
         raise M303CarryIngressError(
             translated_message=_translated_error(None, "registry_resolution_unavailable"),
             context={

@@ -34,6 +34,7 @@ from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolution
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from .common import bad, current_workflow_state, emit_envelope, resolve_notice_action, transaction_catalogue_repo
 from .ledger_business_payloads import (
@@ -43,6 +44,7 @@ from .ledger_business_payloads import (
     EvidenceReviewRowPayload,
     EvidenceReviewViewResult,
 )
+from .state_projection_support import authority_operation
 
 
 def _printed(value: object | None) -> str | None:
@@ -271,6 +273,7 @@ def _review_queue_rows(
     finding: DraftDiscrepancyKind | None,
     advisory: ReviewAdvisoryKind | None,
     blocking_only: bool,
+    operation: PinnedAuthorityOperation,
 ) -> list[EvidenceReviewRowPayload]:
     """Project the pending drafts the operator's filters keep, in reference order.
 
@@ -285,6 +288,7 @@ def _review_queue_rows(
             finding=finding,
             advisory=advisory,
             blocking_only=blocking_only,
+            operation=operation,
         )
         if row is not None:
             rows.append(row)
@@ -298,13 +302,14 @@ def _review_queue_row(
     finding: DraftDiscrepancyKind | None,
     advisory: ReviewAdvisoryKind | None,
     blocking_only: bool,
+    operation: PinnedAuthorityOperation,
 ) -> EvidenceReviewRowPayload | None:
     """Project one draft when it satisfies every supplied queue filter."""
     blockers = confirmation_blockers(stored.draft)
     reasons = sorted({blocker.reason.value for blocker in blockers})
     # Read through the one projection the show surface's notices use; the queue
     # must not independently classify a document it sends the operator to review.
-    advisories = review_advisory_kinds(stored.draft)
+    advisories = review_advisory_kinds(stored.draft, operation=operation)
     if not _review_queue_matches(
         stored,
         reason=reason,
@@ -419,6 +424,7 @@ def review_list(
     """List the review queue, optionally narrowed to one blocking reason, check or advisory."""
     bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     document = load_extraction_drafts(bucket_id, load_settings())
+    operation = authority_operation(ctx)
     filters: list[str] = []
     if reason is not None:
         filters.append(f"reason={reason.value}")
@@ -428,7 +434,14 @@ def review_list(
         filters.append(f"advisory={advisory.value}")
     if blocking_only:
         filters.append("blocking=true")
-    rows = _review_queue_rows(document, reason=reason, finding=finding, advisory=advisory, blocking_only=blocking_only)
+    rows = _review_queue_rows(
+        document,
+        reason=reason,
+        finding=finding,
+        advisory=advisory,
+        blocking_only=blocking_only,
+        operation=operation,
+    )
     lines = [f"bucket_id\t{bucket_id}", f"pending\t{len(rows)}"]
     lines.extend(
         f"{row.evidence_reference}\t{row.blocking_count}\t"
@@ -459,7 +472,11 @@ def _stored_draft_for_reference(document: ExtractionDraftDocument, reference: st
     )
 
 
-def _review_view_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str]]:
+def _review_view_advisories(
+    draft: InvoiceDraft,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[list[Notice], list[str]]:
     """Return the non-blocking advisories for one draft, as notices and their text lines.
 
     Both channels are built from the same notice so the JSON envelope and the
@@ -472,7 +489,7 @@ def _review_view_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str
         attribution_notice = _party_attribution_notice(advisory)
         notices.append(attribution_notice)
         lines.extend(_party_attribution_lines(attribution_notice))
-    country_advisory = country_vocabulary_advisory(draft)
+    country_advisory = country_vocabulary_advisory(draft, operation=operation)
     if country_advisory is not None:
         for country_notice in _country_vocabulary_notices(country_advisory):
             notices.append(country_notice)
@@ -531,9 +548,11 @@ def _review_view_lines(
 def _review_view_notices(
     draft: InvoiceDraft,
     blockers: tuple[ConfirmationBlocker, ...],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[Notice], list[str]]:
     """Return advisory notices/lines followed by the blocking notice, if any."""
-    notices, lines = _review_view_advisories(draft)
+    notices, lines = _review_view_advisories(draft, operation=operation)
     if blockers:
         notices.append(
             Notice(
@@ -550,13 +569,14 @@ def review_view(ctx: typer.Context, reference: str) -> None:
     """Show every reviewable field of one pending draft, with its blocking findings."""
     bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     document = load_extraction_drafts(bucket_id, load_settings())
+    operation = authority_operation(ctx)
     stored = _stored_draft_for_reference(document, reference)
     draft = stored.draft
     blockers = confirmation_blockers(draft)
     fields = _field_payloads(draft)
     payload = _review_view_payload(bucket_id, stored, draft, fields, blockers)
     lines = _review_view_lines(bucket_id, stored, draft, fields, blockers)
-    notices, advisory_lines = _review_view_notices(draft, blockers)
+    notices, advisory_lines = _review_view_notices(draft, blockers, operation=operation)
     lines.extend(advisory_lines)
     emit_envelope(
         ctx,

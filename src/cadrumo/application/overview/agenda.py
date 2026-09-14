@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -35,6 +36,9 @@ from .calendar_models import (
 )
 from .coverage import ObligationCoverageReport
 from .errors import OverviewAgendaError
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _DEFAULT_HORIZON_DAYS = 14
 """Default forward window for `due_soon` partitioning."""
@@ -98,6 +102,7 @@ def build_overview_agenda(
     profile: TaxpayerProfile,
     *,
     as_of: date,
+    operation: PinnedAuthorityOperation,
     horizon_days: int = _DEFAULT_HORIZON_DAYS,
     engine: DeadlineEngine | None = None,
     raw_values: Mapping[str, object] | None = None,
@@ -108,6 +113,8 @@ def build_overview_agenda(
         profile: The :class:`~domain.deadlines.TaxpayerProfile` whose
             obligations are ranked.
         as_of: Anchor date for the lookback / lookahead window.
+        operation: Caller-owned generation-pinned authority operation shared
+            with the composed calendar.
         horizon_days: Number of days after ``as_of`` to include in the
             lookahead window.
         engine: Optional :class:`~domain.deadlines.DeadlineEngine`
@@ -140,6 +147,7 @@ def build_overview_agenda(
     calendar = build_overview_calendar(
         profile,
         window,
+        operation=operation,
         today=as_of,
         engine=engine,
         raw_values=raw_values,

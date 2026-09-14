@@ -14,15 +14,18 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.ledger.actions_classification import bulk_classify_from_csv
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -70,12 +73,20 @@ def _unclassified(idx: int) -> Transaction:
 profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="profile")
 
 
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin the compiled authority for the composed ledger workflow."""
+    with compiled_bundled_authority().operation() as operation:
+        yield operation
+
+
 def test_bulk_classify_270_rows_persists_catalogue_once(
     profile: TestRuntimeProfile,
     caplog: pytest.LogCaptureFixture,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     bucket_id = profile.bucket_id
-    ports = compose_ledger_action_ports(bucket_id=bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation)
 
     seed_repo = ports.transaction_repository
     transactions = tuple(_unclassified(i) for i in range(_ROW_COUNT))

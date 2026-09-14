@@ -27,6 +27,9 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ....domain.calculations.export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry.iva_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_base import CasillaDataType, ThresholdComparison
@@ -53,7 +56,6 @@ from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -332,9 +334,9 @@ def _m303_filing_facts(
     reference = FilingEvidenceReference(reference="test:did-wire:m303-facts")
     scope = M303RegimenSimplificadoScopeDecision(
         scope=(
-            M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED
+            m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority())
             if non_agricultural_activity_count
-            else M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED
+            else m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority())
         ),
     )
     bienes_register = BienesInversionIvaRegister()

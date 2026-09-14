@@ -3,8 +3,7 @@
 A dedicated, descendant-only :class:`~cadrumo.application.flows.definition.FlowDefinition`
 that hosts the exact count page and
 :class:`~cadrumo.application.flows.definition.FlowRepeatingGroup` the full setup flow uses
-(:data:`~cadrumo.application.wizard.descendant_group.DESCENDANTS_COUNT_PAGE`,
-:data:`~cadrumo.application.wizard.descendant_group.DESCENDANT_GROUP`, and the
+(:func:`~cadrumo.application.wizard.descendant_group.build_descendant_group` and the
 entry-event cross-field validator id) — the pages and validators are *adopted*, not
 re-authored, so the door and the setup flow can never diverge on the descendant
 surface.
@@ -55,8 +54,8 @@ from ._checkpoint_store import descendant_clearing_facts
 from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 from .descendant_group import (
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
-    DESCENDANT_GROUP,
-    DESCENDANTS_COUNT_PAGE,
+    build_descendant_count_page,
+    build_descendant_group,
 )
 from .persistence import descendant_answers_from_record, descendant_facts_from_answers
 
@@ -94,11 +93,11 @@ class DescendantDoorAnswers(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
-def build_descendant_door_definition() -> FlowDefinition:
+def build_descendant_door_definition(*, operation: PinnedAuthorityOperation) -> FlowDefinition:
     """Return the descendant-only door :class:`FlowDefinition`.
 
-    Adopts :data:`~cadrumo.application.wizard.descendant_group.DESCENDANTS_COUNT_PAGE`
-    and :data:`~cadrumo.application.wizard.descendant_group.DESCENDANT_GROUP`
+    Adopts the operation-scoped count page and
+    :func:`~cadrumo.application.wizard.descendant_group.build_descendant_group`
     verbatim into a single familia section, and names the entry-event
     cross-field validator on the definition so a bad entry date — or one the
     declared relación cannot carry — blocks submit — the same
@@ -108,11 +107,12 @@ def build_descendant_door_definition() -> FlowDefinition:
     gate naming a page absent from the definition would fail the definition's
     earlier-page-reference validator at construction.
     """
-    count_page = DESCENDANTS_COUNT_PAGE.model_copy(update={"visible_when": None})
+    count_page = build_descendant_count_page(operation).model_copy(update={"visible_when": None})
+    descendant_group = build_descendant_group(operation)
     section = FlowSection(
         id=_FAMILIA_SECTION_ID,
         title=_locale_ref(_FLOW_TITLE_LOCALE_KEY),
-        items=(count_page, DESCENDANT_GROUP),
+        items=(count_page, descendant_group),
     )
     return FlowDefinition(
         id=DESCENDANT_DOOR_FLOW_ID,
@@ -148,8 +148,10 @@ def build_descendant_door(
     Args:
         record: The :class:`UserProfileRecord` whose descendant facts seed the
             resumed flow state, or ``None`` for a childless record.
+        operation: Caller-owned pinned authority operation used to compose and
+            seed the descendant surface.
     """
-    definition = build_descendant_door_definition()
+    definition = build_descendant_door_definition(operation=operation)
     seed = descendant_answers_from_record(record, operation=operation)
     resume_state = resume_flow(definition, seed, mode=FlowMode.MODIFY)
     return definition, resume_state

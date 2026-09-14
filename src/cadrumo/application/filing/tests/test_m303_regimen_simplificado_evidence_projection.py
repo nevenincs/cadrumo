@@ -22,6 +22,7 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_regimen_simplificado_projection import project_m303_regimen_simplificado_rows
 from ....domain.calculations.registry.schema_base import CasillaDataType
@@ -35,7 +36,6 @@ from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -51,7 +51,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
     period = Period.from_year_and_code(2026, "1T")
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
@@ -197,7 +197,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
         period=period_code,
     )
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,

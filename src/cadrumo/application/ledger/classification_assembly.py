@@ -79,7 +79,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from datetime import date
 from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import BaseModel, Field
@@ -87,6 +88,8 @@ from pydantic import BaseModel, Field
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.iva_category_catalogue import (
     registry_category_projection,
     require_iva_category,
@@ -94,15 +97,16 @@ from ...domain.calculations.registry.iva_category_catalogue import (
 from ...domain.iva.classification import (
     CustomerTaxStatus,
     InvoiceKind,
+    IvaClassificationRule,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
     PartyFact,
     TransactionKind,
     classify_iva,
     customer_tax_status_alias,
-    domestic_categories_by_rate_kind,
     rate_kind_for_domestic_category,
     resolve_iva_classification_catalogue,
+    resolve_iva_classification_inputs,
 )
 from ...domain.iva.establishment import (
     SPAIN_COUNTRY_CODE,
@@ -117,8 +121,6 @@ from ...domain.iva.supply_nature import SupplyNature
 from . import classification_assembly_rules as _rules
 
 if TYPE_CHECKING:
-    from datetime import date
-
     from ...domain.iva.classification import IvaClassificationResult
     from .classifier_inputs import ClassifierInputs
 
@@ -189,9 +191,9 @@ class _InitialClassificationState(NamedTuple):
 #: the point of the probe is to decide indifference without judging the customer
 #: at all. Deriving it from the registry projection also means a new status joins
 #: the sweep when the selected fact revision declares it.
-def _status_candidates() -> tuple[CustomerTaxStatus, ...]:
+def _status_candidates(*, operation: PinnedAuthorityOperation) -> tuple[CustomerTaxStatus, ...]:
     """Return every status projected by the selected 0083 classification fact."""
-    return resolve_iva_classification_catalogue().customer_tax_statuses
+    return resolve_iva_classification_catalogue(operation=operation).customer_tax_statuses
 
 
 #: The status supplied on a branch whose treatment cannot turn on it.
@@ -204,9 +206,9 @@ def _status_candidates() -> tuple[CustomerTaxStatus, ...]:
 #: placeholder would rest entirely on the probe having been right. It is also
 #: simply true: the registry documents this projection as counterparty status
 #: unresolved, which is exactly what happened.
-def _undetermined_status() -> CustomerTaxStatus:
+def _undetermined_status(*, operation: PinnedAuthorityOperation) -> CustomerTaxStatus:
     """Return the registry-declared unresolved-status projection."""
-    return customer_tax_status_alias("unknown")
+    return customer_tax_status_alias("unknown", operation=operation)
 
 
 def _customer_tax_status_gap(inputs: ClassifierInputs) -> MissingClassifierInput:
@@ -254,7 +256,11 @@ def names_spain(country_code: str | None) -> bool:
     return (country_code or "").strip().upper() == SPAIN_COUNTRY_CODE
 
 
-def _unresolved_country_reason(country_code: str | None) -> str:
+def _unresolved_country_reason(
+    country_code: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str:
     """Say why a stated country code established nothing, in the operator's terms.
 
     Three outcomes, and they need different things done to them. A code in an
@@ -269,7 +275,7 @@ def _unresolved_country_reason(country_code: str | None) -> str:
     the boundary that narrowed the rung and the sentence explaining the refusal
     cannot drift apart.
     """
-    status = stated_country_code_status(country_code)
+    status = stated_country_code_status(country_code, operation=operation)
     if status is StatedCountryCodeStatus.UNASSIGNED:
         return (
             f"the printed country code {country_code!r} is reserved by ISO 3166-1 to name no country, "
@@ -292,6 +298,7 @@ def _scope(
     *,
     field: str,
     asserted: IvaTerritorialScope | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[IvaTerritorialScope | None, MissingClassifierInput | None]:
     """Resolve one party's territorial scope from its printed establishment evidence.
 
@@ -316,12 +323,12 @@ def _scope(
     """
     if asserted is not None:
         return asserted, None
-    resolved = territorial_scope_for_country(country_code)
+    resolved = territorial_scope_for_country(country_code, operation=operation)
     if resolved is not None:
         return resolved, None
 
     if names_spain(country_code):
-        territory = territorial_scope_for_spanish_postal_code(postal_code)
+        territory = territorial_scope_for_spanish_postal_code(postal_code, operation=operation)
         if territory is not None:
             return territory, None
         reason = (
@@ -335,7 +342,7 @@ def _scope(
         # vocabulary does not carry IS well-formed -- saying it is malformed
         # would send the operator to re-read a field that reads perfectly. The
         # status axis owns the distinction; nothing about it is re-derived here.
-        reason = _unresolved_country_reason(country_code)
+        reason = _unresolved_country_reason(country_code, operation=operation)
         settled_by = "a printed two-letter country code for this party, or an explicit operator assertion"
     else:
         reason = "no country code was established for this party"
@@ -348,6 +355,7 @@ def _identification_state(
     printed_identifier: str | None,
     *,
     asserted: EUMemberState | None,
+    operation: PinnedAuthorityOperation,
 ) -> EUMemberState | None:
     """Resolve which Member State IVA-identifies a party, from registration evidence.
 
@@ -375,7 +383,7 @@ def _identification_state(
     """
     if asserted is not None:
         return asserted
-    return identification_state_for_printed_tax_identifier(printed_identifier)
+    return identification_state_for_printed_tax_identifier(printed_identifier, operation=operation)
 
 
 def _counterparty_residency_field(direction: InvoiceKind) -> str:
@@ -492,13 +500,14 @@ def _scope_or_recorded_gap(
     *,
     field: str,
     asserted: IvaTerritorialScope | None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope | None:
     """Resolve one party's scope, recording rather than raising what stopped it.
 
     Asked of each party independently and accumulated into one list, so an
     operator missing both parties' evidence learns both at once.
     """
-    scope, gap = _scope(country_code, postal_code, field=field, asserted=asserted)
+    scope, gap = _scope(country_code, postal_code, field=field, asserted=asserted, operation=operation)
     if gap is not None:
         missing.append(gap)
     return scope
@@ -543,11 +552,16 @@ def _status_axis_gap(
     status: CustomerTaxStatus | None,
     kind_candidates: tuple[TransactionKind, ...],
     inputs: ClassifierInputs,
+    operation: PinnedAuthorityOperation,
 ) -> MissingClassifierInput | None:
     """Demand the customer's IVA status only where the table's verdict turns on it."""
     if status is not None:
         return None
-    if not _rules.axis_forks_the_law(probe, slices=[(_status_candidates(), (kind,)) for kind in kind_candidates]):
+    if not _rules.axis_forks_the_law(
+        probe,
+        slices=[(_status_candidates(operation=operation), (kind,)) for kind in kind_candidates],
+        operation=operation,
+    ):
         return None
     return _customer_tax_status_gap(inputs)
 
@@ -558,6 +572,7 @@ def _supply_nature_axis_gap(
     supply_nature: SupplyNature | None,
     status_candidates: tuple[CustomerTaxStatus, ...],
     kind_candidates: tuple[TransactionKind, ...],
+    operation: PinnedAuthorityOperation,
 ) -> MissingClassifierInput | None:
     """Demand the supply nature only where the table's verdict turns on it."""
     if supply_nature is not None:
@@ -565,6 +580,7 @@ def _supply_nature_axis_gap(
     if not _rules.axis_forks_the_law(
         probe,
         slices=[((candidate,), kind_candidates) for candidate in status_candidates],
+        operation=operation,
     ):
         return None
     return MissingClassifierInput(
@@ -606,6 +622,10 @@ def _unresolved_axis_gaps(
     counterparty_field: str,
     counterparty_state: EUMemberState | None,
     inputs: ClassifierInputs,
+    operation: PinnedAuthorityOperation,
+    rules: tuple[IvaClassificationRule, ...],
+    rate_categories: Mapping[IvaRateKind, IvaCategory],
+    rate_territories: frozenset[IvaTerritorialScope],
 ) -> list[MissingClassifierInput]:
     """Ask the rule table which still-undetermined axes could change THIS verdict.
 
@@ -616,29 +636,48 @@ def _unresolved_axis_gaps(
     """
 
     def _probe(status_candidate: CustomerTaxStatus, kind: TransactionKind) -> IvaCategory:
-        return classify_iva(criteria_for(status_candidate, kind)).category
+        return classify_iva(
+            criteria_for(status_candidate, kind),
+            operation=operation,
+            rules=rules,
+            rate_categories=rate_categories,
+            rate_territories=rate_territories,
+        ).category
 
     def _consumption_probe(
         status_candidate: CustomerTaxStatus,
         kind: TransactionKind,
     ) -> frozenset[PartyFact]:
-        return classify_iva(criteria_for(status_candidate, kind)).consumes_party_facts
+        return classify_iva(
+            criteria_for(status_candidate, kind),
+            operation=operation,
+            rules=rules,
+            rate_categories=rate_categories,
+            rate_territories=rate_territories,
+        ).consumes_party_facts
 
     # What each axis could still be. An established axis contributes its one
     # value, so it holds genuinely fixed while the other is judged.
-    status_candidates = (status,) if status is not None else _status_candidates()
+    status_candidates = (status,) if status is not None else _status_candidates(operation=operation)
     kind_candidates = (
-        (_rules.transaction_kind_for_nature(supply_nature, effective_date=transaction_date),)
+        (_rules.transaction_kind_for_nature(supply_nature, effective_date=transaction_date, operation=operation),)
         if supply_nature is not None
-        else _rules.transaction_kind_candidates(effective_date=transaction_date)
+        else _rules.transaction_kind_candidates(effective_date=transaction_date, operation=operation)
     )
     gaps = (
-        _status_axis_gap(_probe, status=status, kind_candidates=kind_candidates, inputs=inputs),
+        _status_axis_gap(
+            _probe,
+            status=status,
+            kind_candidates=kind_candidates,
+            inputs=inputs,
+            operation=operation,
+        ),
         _supply_nature_axis_gap(
             _probe,
             supply_nature=supply_nature,
             status_candidates=status_candidates,
             kind_candidates=kind_candidates,
+            operation=operation,
         ),
         _identification_axis_gap(
             _consumption_probe,
@@ -662,6 +701,7 @@ def _initial_classification_state(
     issuer_identifier: str | None,
     customer_identifier: str | None,
     rate_tier: IvaRateKind | None,
+    operation: PinnedAuthorityOperation,
 ) -> _InitialClassificationState:
     missing: list[MissingClassifierInput] = []
     supply_nature = _value_of(declared.supply_nature)
@@ -672,6 +712,7 @@ def _initial_classification_state(
         issuer_postal_code,
         field="issuer_residency",
         asserted=_value_of(declared.issuer_scope),
+        operation=operation,
     )
     customer_scope = _scope_or_recorded_gap(
         missing,
@@ -679,15 +720,18 @@ def _initial_classification_state(
         customer_postal_code,
         field="customer_residency",
         asserted=_value_of(declared.customer_scope),
+        operation=operation,
     )
 
     issuer_state = _identification_state(
         issuer_identifier,
         asserted=_value_of(declared.issuer_identification_state),
+        operation=operation,
     )
     customer_state = _identification_state(
         customer_identifier,
         asserted=_value_of(declared.customer_identification_state),
+        operation=operation,
     )
 
     if transaction_date is None:
@@ -701,13 +745,14 @@ def _initial_classification_state(
 
     # An undetermined status is passed as an OPEN axis rather than as a value,
     # so the tier is demanded alongside it instead of one round-trip later.
-    settled_status = None if status == _undetermined_status() else status
+    settled_status = None if status == _undetermined_status(operation=operation) else status
     if rate_tier is None and _rules.domestic_rate_tier_is_reachable(
         issuer_scope,
         customer_scope,
         supply_nature,
         settled_status,
         effective_date=transaction_date,
+        operation=operation,
     ):
         missing.append(
             MissingClassifierInput(
@@ -733,6 +778,7 @@ def _initial_classification_state(
 
 def assemble_classification_criteria(
     *,
+    operation: PinnedAuthorityOperation,
     transaction_date: date | None,
     direction: InvoiceKind,
     inputs: ClassifierInputs,
@@ -751,6 +797,8 @@ def assemble_classification_criteria(
     missing inputs should learn all four at once rather than one per attempt.
 
     Args:
+        operation: Caller-owned pinned authority operation used for every
+            dated classification and vocabulary projection.
         transaction_date: When the supply took place.
         direction: Issued or received, as the operator settled it at confirm.
         inputs: The evidence-and-profile facts collected for this document.
@@ -786,6 +834,11 @@ def assemble_classification_criteria(
         issuer_identifier=issuer_identifier,
         customer_identifier=customer_identifier,
         rate_tier=rate_tier,
+        operation=operation,
+    )
+    projected = resolve_iva_classification_inputs(
+        effective_date=transaction_date or date.today(),
+        operation=operation,
     )
     missing = list(initial.missing)
     supply_nature = initial.supply_nature
@@ -851,6 +904,10 @@ def assemble_classification_criteria(
                 customer=customer_state,
             ),
             inputs=inputs,
+            operation=operation,
+            rules=projected.rules,
+            rate_categories=projected.rate_categories,
+            rate_territories=projected.rate_territories,
         ),
     )
 
@@ -859,11 +916,15 @@ def assemble_classification_criteria(
 
     return ClassificationAssembly(
         criteria=_criteria_for(
-            status if status is not None else _undetermined_status(),
+            status if status is not None else _undetermined_status(operation=operation),
             (
-                _rules.transaction_kind_for_nature(supply_nature, effective_date=transaction_date)
+                _rules.transaction_kind_for_nature(
+                    supply_nature,
+                    effective_date=transaction_date,
+                    operation=operation,
+                )
                 if supply_nature is not None
-                else _rules.transaction_kind_indifferent(effective_date=transaction_date)
+                else _rules.transaction_kind_indifferent(effective_date=transaction_date, operation=operation)
             ),
         ),
     )
@@ -871,6 +932,8 @@ def assemble_classification_criteria(
 
 def classify_from_assembled_criteria(
     assembly: ClassificationAssembly,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> IvaClassificationResult | None:
     """Run the single rule table over assembled criteria, or return ``None``.
 
@@ -882,11 +945,23 @@ def classify_from_assembled_criteria(
 
     if assembly.criteria is None:
         return None
-    return classify_iva(assembly.criteria)
+    projected = resolve_iva_classification_inputs(
+        effective_date=assembly.criteria.transaction_date,
+        operation=operation,
+    )
+    return classify_iva(
+        assembly.criteria,
+        operation=operation,
+        rules=projected.rules,
+        rate_categories=projected.rate_categories,
+        rate_territories=projected.rate_territories,
+    )
 
 
 def declared_category_from_document_record(
     printed_code: IvaCategory | str | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> DeclaredFact[IvaCategory] | None:
     """Read the IVA treatment a document's own machine-readable record declares.
 
@@ -917,6 +992,8 @@ def declared_category_from_document_record(
 
     Args:
         printed_code: The tax-category token the document's record carried.
+        operation: Caller-owned pinned authority operation used to validate and
+            project the category token.
 
     Returns:
         The declaration beside its attribution, or ``None`` when the document
@@ -926,8 +1003,8 @@ def declared_category_from_document_record(
     if not stated:
         return None
     try:
-        category = require_iva_category(stated)
-    except ValueError:
+        category = require_iva_category(stated, operation=operation)
+    except RegistryValidationError:
         return None
     return DeclaredFact(value=category, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
 
@@ -959,7 +1036,7 @@ class IvaCategoryResolution(BaseModel):
     note: str = ""
 
 
-def _table_verdict(assembly: ClassificationAssembly) -> IvaCategory | None:
+def _table_verdict(assembly: ClassificationAssembly, *, operation: PinnedAuthorityOperation) -> IvaCategory | None:
     """Return the category the rule table placed this operation in, if any.
 
     The registry-declared ``unknown`` category is read as "not established" rather
@@ -968,13 +1045,19 @@ def _table_verdict(assembly: ClassificationAssembly) -> IvaCategory | None:
     verdict would make an unplaced operation indistinguishable from a placed
     one at every later reader.
     """
-    result = classify_from_assembled_criteria(assembly)
-    if result is None or result.category != require_iva_category("unknown"):
+    result = classify_from_assembled_criteria(assembly, operation=operation)
+    if result is None or result.category == require_iva_category("unknown", operation=operation):
         return None
     return result.category
 
 
-def _rate_tier_contradiction(declared: IvaCategory, rate_tier: IvaRateKind | None) -> str:
+def _rate_tier_contradiction(
+    declared: IvaCategory,
+    rate_tier: IvaRateKind | None,
+    *,
+    operation: PinnedAuthorityOperation,
+    effective_date: date,
+) -> str:
     """Say how a declared domestic category disagrees with the tier charged, if it does.
 
     The corroboration the rate evidence now performs. It derives nothing: the
@@ -991,7 +1074,8 @@ def _rate_tier_contradiction(declared: IvaCategory, rate_tier: IvaRateKind | Non
     those categories carry no rate tier derivable from the category alone, so a
     tier beside one of them corroborates nothing either way.
     """
-    expected_tier = rate_kind_for_domestic_category(declared)
+    projected = resolve_iva_classification_inputs(effective_date=effective_date, operation=operation)
+    expected_tier = rate_kind_for_domestic_category(declared, mapping=projected.rate_categories)
     if expected_tier is None or rate_tier is None or expected_tier is rate_tier:
         return ""
     return (
@@ -1026,6 +1110,7 @@ def _unsupported_relief_claim(
     *,
     counterparty_country_status: StatedCountryCodeStatus | None,
     direction: InvoiceKind | None,
+    operation: PinnedAuthorityOperation,
 ) -> str:
     """Say why a declared relief cannot be honoured on this evidence, if it cannot.
 
@@ -1074,11 +1159,13 @@ def _unsupported_relief_claim(
             counterparty cannot claim our vocabulary is what failed, and the
             safe answer for a relief claim is to withhold rather than to
             honour it.
+        operation: Caller-owned pinned authority operation used for the relief
+            category projection.
 
     Returns:
         The operator-facing reason, or ``""`` when the claim stands.
     """
-    if declared not in registry_category_projection("relief_on_establishment_premise"):
+    if declared not in registry_category_projection("relief_on_establishment_premise", operation=operation):
         return ""
     outstanding = {gap.field for gap in assembly.missing} & _RESIDENCY_FIELDS
     if not outstanding:
@@ -1106,6 +1193,7 @@ def _unsupported_relief_claim(
 def resolve_ingestion_iva_category(
     assembly: ClassificationAssembly,
     *,
+    operation: PinnedAuthorityOperation,
     declared: DeclaredFacts,
     rate_tier: IvaRateKind | None = None,
     counterparty_country_status: StatedCountryCodeStatus | None = None,
@@ -1168,12 +1256,14 @@ def resolve_ingestion_iva_category(
             code turned out to be, or ``None`` when none was printed. Consulted
             only to spare a relief claim whose establishment failed on OUR
             vocabulary rather than on the document.
+        operation: Caller-owned pinned authority operation retained through the
+            table and category resolution.
 
     Returns:
         :class:`IvaCategoryResolution`: the resolved treatment and what
         established it, or the conflict that stopped it.
     """
-    classified = _table_verdict(assembly)
+    classified = _table_verdict(assembly, operation=operation)
     stated_fact = declared.stated_category
     if stated_fact is None:
         if classified is not None:
@@ -1182,7 +1272,11 @@ def resolve_ingestion_iva_category(
                 category=classified,
                 classified=classified,
             )
-        inferred = domestic_categories_by_rate_kind().get(rate_tier) if rate_tier is not None else None
+        projected = resolve_iva_classification_inputs(
+            effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else date.today()),
+            operation=operation,
+        )
+        inferred = projected.rate_categories.get(rate_tier) if rate_tier is not None else None
         if inferred is None:
             return IvaCategoryResolution(outcome=IvaCategoryOutcome.UNRESOLVED)
         return IvaCategoryResolution(outcome=IvaCategoryOutcome.RATE_INFERRED, category=inferred)
@@ -1198,6 +1292,7 @@ def resolve_ingestion_iva_category(
         assembly,
         counterparty_country_status=counterparty_country_status,
         direction=direction,
+        operation=operation,
     )
     if unsupported:
         return IvaCategoryResolution(
@@ -1209,7 +1304,12 @@ def resolve_ingestion_iva_category(
                 "because absent establishment does not disprove the claim"
             ),
         )
-    tier_conflict = _rate_tier_contradiction(stated, rate_tier)
+    tier_conflict = _rate_tier_contradiction(
+        stated,
+        rate_tier,
+        operation=operation,
+        effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else date.today()),
+    )
     if tier_conflict:
         return IvaCategoryResolution(
             outcome=IvaCategoryOutcome.CONTRADICTED,

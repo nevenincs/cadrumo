@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -35,6 +36,9 @@ from .calendar_models import (
     OverviewPeriodState,
 )
 from .coverage import ObligationCoverageReport
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _DEFAULT_LOOKBACK_DAYS = 365
 """Default lookback window when neither --from nor --to is supplied."""
@@ -88,6 +92,7 @@ class OverviewBacklog(BaseModel):
 def build_overview_backlog(
     profile: TaxpayerProfile,
     *,
+    operation: PinnedAuthorityOperation,
     from_date: date | None = None,
     to_date: date | None = None,
     as_of: date | None = None,
@@ -100,6 +105,8 @@ def build_overview_backlog(
     Args:
         profile: The :class:`~domain.deadlines.TaxpayerProfile` whose
             filing obligations are evaluated.
+        operation: Caller-owned generation-pinned authority operation shared
+            with the composed calendar.
         from_date: Start of the calendar window; defaults to 365 days before ``as_of``.
         to_date: End of the calendar window; defaults to ``as_of``.
         as_of: Reference date for past-due classification; defaults to today.
@@ -136,6 +143,7 @@ def build_overview_backlog(
     calendar = build_overview_calendar(
         profile,
         window,
+        operation=operation,
         today=resolved_as_of,
         engine=engine,
         raw_values=raw_values,

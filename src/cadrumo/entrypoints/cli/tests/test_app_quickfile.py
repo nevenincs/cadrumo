@@ -42,11 +42,11 @@ from ....application.calculations.tests.filing_evidence import regimen_simplific
 from ....application.state_projection import ProjectionModeloReadiness
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.regimen_simplificado_rows import (
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -159,7 +159,7 @@ def _active_bucket_id() -> str:
 def _write_m303_filing_evidence(path: Path) -> None:
     period = Period.from_year_and_code(2026, "1T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=compiled_bundled_authority().snapshot(

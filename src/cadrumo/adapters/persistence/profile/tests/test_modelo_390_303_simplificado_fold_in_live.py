@@ -51,6 +51,7 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
@@ -64,7 +65,6 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -161,7 +161,7 @@ def _non_agricultural_source_evidence(*, declared_quantity: Decimal = Decimal("1
     period = Period.from_year_and_code(_YEAR, "4T")
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
@@ -821,7 +821,7 @@ def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort
 
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=snapshot,

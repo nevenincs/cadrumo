@@ -167,6 +167,8 @@ def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
 
 def _filer_scope(
     profile_record: UserProfileRecord | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[IvaTerritorialScope | None, ConfirmationBlocker | None]:
     """Resolve the filer's own territory, or surface why it could not be.
 
@@ -184,7 +186,7 @@ def _filer_scope(
                 "off an invoice"
             ),
         )
-    return resolve_filer_territorial_scope(profile_record=profile_record), None
+    return resolve_filer_territorial_scope(profile_record=profile_record, operation=operation), None
 
 
 def _counterparty_review_items(
@@ -405,7 +407,7 @@ def resolve_confirmed_establishment(
     )
 
     state = workflow_state_repository().load()
-    filer_scope, filer_item = _filer_scope(state.active_profile_record())
+    filer_scope, filer_item = _filer_scope(state.active_profile_record(), operation=operation)
     try:
         profile = load_active_taxpayer_profile(state)
     except WizardStatusError:
@@ -419,7 +421,7 @@ def resolve_confirmed_establishment(
         # document reader: what a tax-category token means about the operation
         # is a classification question, and a reader answering it was a second
         # authority working from weaker evidence than the rule table.
-        stated_category=declared_category_from_document_record(draft.iva_category),
+        stated_category=declared_category_from_document_record(draft.iva_category, operation=operation),
         supply_nature=supply_nature,
         # The mention the reader already recovers, handed to the citation axis.
         # Both readers carry it -- the structured path reads it exactly from the
@@ -428,6 +430,7 @@ def resolve_confirmed_establishment(
         printed_citation=draft.regime_legend,
     )
     assembly = assemble_classification_criteria(
+        operation=operation,
         # The operator's override layers over the printed date, parsed through
         # the shipped date authority and never re-read here. An unparseable date
         # with no override is an ordinary outcome of reading a page, so it
@@ -446,6 +449,7 @@ def resolve_confirmed_establishment(
     side = counterparty_draft_side(draft, kind=kind)
     category = resolve_ingestion_iva_category(
         assembly,
+        operation=operation,
         declared=declared,
         rate_tier=rate_tier,
         # The counterparty's own STATED code, classified by the shipped status

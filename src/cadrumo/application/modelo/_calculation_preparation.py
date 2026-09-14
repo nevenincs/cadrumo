@@ -155,6 +155,7 @@ def prepare_calculation(
     snapshot = _resolve_registry_snapshot_for_work_unit(
         work_unit,
         grade=RegistryAuthorityGrade.CALCULATION,
+        operation=operation,
     )
     casilla_inputs = _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
     if backend_casilla_inputs is not None:
@@ -209,6 +210,7 @@ def prepare_calculation(
         backend_binding_values=lower_precedence_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
         borrador_snapshot_repository=borrador_snapshot_repository,
+        operation=operation,
     )
     required_profile_bindings = _resolved_required_profile_binding_values(
         work_unit=work_unit,

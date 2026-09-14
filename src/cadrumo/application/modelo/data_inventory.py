@@ -253,6 +253,7 @@ def data_inventory_checklist(
             bucket_id=bucket_id,
             filing_year=filing_year,
             period=period,
+            operation=operation,
         )
         profile_checked = True
         unresolved_profile_bindings = tuple(

@@ -24,6 +24,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ...domain.buckets.event import BucketEventType
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.proportionality import ProportionalityKind, ProportionalityRule, effective_usage_ratio
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for
@@ -177,7 +178,9 @@ def validate_ratios_profile(
     )
 
 
-def list_eligible_ratios_for_bucket(*, bucket_id: str, year: int) -> tuple[EligibleCategoryRow, ...]:
+def list_eligible_ratios_for_bucket(
+    *, bucket_id: str, year: int, operation: PinnedAuthorityOperation
+) -> tuple[EligibleCategoryRow, ...]:
     """Convenience: load the bucket's profile and project the eligibility report.
 
     Each element is an :class:`EligibleCategoryRow` describing one
@@ -187,18 +190,21 @@ def list_eligible_ratios_for_bucket(*, bucket_id: str, year: int) -> tuple[Eligi
         bucket_id: The bucket whose persisted profile is projected.
         year: Filing year whose category profiles supply the statutory
             default ratio.
+        operation: The caller-owned authority generation used to decode the
+            stored profile.
     """
-    profile = load_usage_ratio_profile(bucket_id=bucket_id)
+    profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
     return eligible_ratio_categories(profile, year=year)
 
 
 def validate_ratios_for_bucket(
     *,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
     require_overrides_for: tuple[SpendingCategory, ...] = (),
 ) -> RatiosValidationReport:
     """Load the bucket's profile, run validation, and return a :class:`RatiosValidationReport`."""
-    profile = load_usage_ratio_profile(bucket_id=bucket_id)
+    profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
     return validate_ratios_profile(
         bucket_id=bucket_id,
         profile=profile,
@@ -206,7 +212,9 @@ def validate_ratios_for_bucket(
     )
 
 
-def set_usage_ratio(*, bucket_id: str, category: SpendingCategory, ratio: Decimal) -> Decimal | None:
+def set_usage_ratio(
+    *, bucket_id: str, category: SpendingCategory, ratio: Decimal, operation: PinnedAuthorityOperation
+) -> Decimal | None:
     """Set or replace one per-category usage-ratio override on the bucket.
 
     Loads the bucket's :class:`UsageRatioProfile`, applies the override through
@@ -221,13 +229,15 @@ def set_usage_ratio(*, bucket_id: str, category: SpendingCategory, ratio: Decima
     writers cannot read the same snapshot and lose one another's override.
     """
     with usage_ratio_bucket_lock(bucket_id):
-        profile = load_usage_ratio_profile(bucket_id=bucket_id)
+        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
         prior = profile.ratios.get(category)
         save_usage_ratio_profile(profile.with_ratio(category, ratio), bucket_id=bucket_id)
         return prior
 
 
-def unset_usage_ratio(*, bucket_id: str, category: SpendingCategory) -> Decimal | None:
+def unset_usage_ratio(
+    *, bucket_id: str, category: SpendingCategory, operation: PinnedAuthorityOperation
+) -> Decimal | None:
     """Clear one per-category usage-ratio override on the bucket.
 
     Returns the cleared value. Raises :class:`UsageRatioValidationError` when
@@ -240,7 +250,7 @@ def unset_usage_ratio(*, bucket_id: str, category: SpendingCategory) -> Decimal 
     ``set`` on a sibling category cannot be lost by this clear.
     """
     with usage_ratio_bucket_lock(bucket_id):
-        profile = load_usage_ratio_profile(bucket_id=bucket_id)
+        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
         prior = profile.ratios.get(category)
         if prior is None:
             raise UsageRatioValidationError(
@@ -520,6 +530,7 @@ def apply_usage_ratio_override(
     year: int,
     profile_id: str | None = None,
     raw_afectacion_ratio: Decimal | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> UsageRatioMutationOutcomeV1:
     """Persist one override, record it, and check it against the Censo.
 
@@ -541,11 +552,13 @@ def apply_usage_ratio_override(
         year: The filing year the Censo comparison is made for.
         profile_id: The active profile, when one is bound.
         raw_afectacion_ratio: The Censo-declared afectación ratio, when known.
+        operation: The caller-owned authority generation used to decode the
+            stored profile.
 
     Returns:
         The prior and new values, plus any Censo override warning raised.
     """
-    prior = set_usage_ratio(bucket_id=bucket_id, category=category, ratio=ratio)
+    prior = set_usage_ratio(bucket_id=bucket_id, category=category, ratio=ratio, operation=operation)
     _emit_ratio_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_SET,
@@ -582,7 +595,9 @@ def apply_usage_ratio_override(
     )
 
 
-def clear_usage_ratio_override(*, bucket_id: str, category: SpendingCategory) -> UsageRatioMutationOutcomeV1:
+def clear_usage_ratio_override(
+    *, bucket_id: str, category: SpendingCategory, operation: PinnedAuthorityOperation
+) -> UsageRatioMutationOutcomeV1:
     """Clear one override and record the clearance.
 
     Carries the same non-atomicity as :func:`apply_usage_ratio_override`.
@@ -590,6 +605,8 @@ def clear_usage_ratio_override(*, bucket_id: str, category: SpendingCategory) ->
     Args:
         bucket_id: The owning profile bucket.
         category: The category whose override is cleared.
+        operation: The caller-owned authority generation used to decode the
+            stored profile.
 
     Returns:
         The cleared value as ``prior_ratio``, with ``new_ratio`` absent.
@@ -597,7 +614,7 @@ def clear_usage_ratio_override(*, bucket_id: str, category: SpendingCategory) ->
     Raises:
         UsageRatioValidationError: When the category carries no override.
     """
-    prior = unset_usage_ratio(bucket_id=bucket_id, category=category)
+    prior = unset_usage_ratio(bucket_id=bucket_id, category=category, operation=operation)
     _emit_ratio_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_UNSET,

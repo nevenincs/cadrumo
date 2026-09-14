@@ -7,19 +7,13 @@ import pytest
 from ..application.modelo.m036_lifecycle import M036DeclarationNotFoundError
 from ..core.errors.error_codes import build_error_envelope
 from ..core.errors.hierarchy import InternalInvariantError
-from ..domain.calculations.registry.authority_artifact import AuthorityArtifactUnavailableError
 
-pytestmark = [pytest.mark.unit]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 @pytest.mark.parametrize(
     ("error", "secret", "expected_code"),
     [
-        (
-            AuthorityArtifactUnavailableError(r"C:\Users\alice\private-authority.db"),
-            "alice",
-            "FAIL_AUTHORITY_ARTIFACT_UNAVAILABLE",
-        ),
         (
             M036DeclarationNotFoundError("private-declaration-123"),
             "private-declaration-123",

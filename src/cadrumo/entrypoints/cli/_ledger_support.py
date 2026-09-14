@@ -111,7 +111,7 @@ def emit_update_result(
 
 def _bucket_transaction_ids(transaction_repository: TransactionRepo) -> tuple[str, ...]:
     """Return the full transaction ids known to the active bucket."""
-    return tuple(sorted(transaction_repository.load()))
+    return tuple(sorted(transaction_repository.load().transactions))
 
 
 def ledger_cli_no_recovery[ErrorT: CadrumoError](

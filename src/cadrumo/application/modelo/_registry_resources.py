@@ -91,8 +91,6 @@ def reject_unknown_period_for_revision(
                 )
     except (RegistrySnapshotError, ValueError) as exc:
         raise ModeloError(str(exc)) from exc
-    if revision is None:
-        return
     declared: set[str] = set()
     for schedule in revision.filing_schedules:
         declared.update(schedule.periods)

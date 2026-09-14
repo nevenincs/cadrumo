@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from ...core.profile_discovery import ProfileSummaryOutcome
 from .login_interaction import (
@@ -15,6 +15,9 @@ from .login_interaction import (
 )
 from .login_session import ProfileLoginOutcome, bind_resumed_profile_session
 from .profile_summary import ProfileSummaryInventory, summary_inventory
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 
 class WorkbenchBootstrapInventoryState(StrEnum):
@@ -90,13 +93,14 @@ type ProfilePreselectionReaderV1 = Callable[[str | None], str | None]
 class ProfileSessionResumeDoorV1(Protocol):
     """Keyword-only boundary for attempting a persisted-session resume."""
 
-    def __call__(self, *, bucket_id: str) -> object | None:
+    def __call__(self, *, bucket_id: str, profile_decode_context: ProfileDecodeContext) -> object | None:
         """Return ``None`` only when the persisted session resumes."""
         ...
 
 
 def prepare_workbench_bootstrap(
     *,
+    profile_decode_context: ProfileDecodeContext,
     inventory_reader: ProfileInventoryReaderV1 = summary_inventory,
     choice_reader: ProfileChoiceReaderV1 = profile_login_choices,
     preselection_reader: ProfilePreselectionReaderV1 = preselected_profile_login_id,
@@ -115,7 +119,10 @@ def prepare_workbench_bootstrap(
             reason_code="workbench.bootstrap.profile_inventory_changed",
         )
     preselected = _valid_preselection(preselection_reader(None), choices)
-    if preselected is not None and resume_session(bucket_id=preselected) is None:
+    if (
+        preselected is not None
+        and resume_session(bucket_id=preselected, profile_decode_context=profile_decode_context) is None
+    ):
         return _resumed_bootstrap(choices, preselected)
     return _login_required_bootstrap(choices, preselected)
 

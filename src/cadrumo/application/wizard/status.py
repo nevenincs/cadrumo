@@ -10,6 +10,7 @@ to obtain an ``TaxpayerProfile`` from the active profile bucket.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -26,6 +27,9 @@ from ..user_profile.profile_keys import profile_keys
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
 from ..workflow.state_models import WorkflowState
 from .errors import WizardError, WizardPreconditionCondition, wizard_no_action_verdict
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _ENROLMENT_KEY = "iva.regime"
 """Profile key whose presence flips an IVA-liable operator profile into
@@ -66,7 +70,11 @@ class WizardStatusError(WizardError):
     """Raised when the wizard status projection cannot resolve the active profile."""
 
 
-def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
+def build_wizard_status(
+    state: WorkflowState,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> WizardStatusReport:
     """Return the :class:`WizardStatusReport` readiness for the current workflow state.
 
     ``profile_ready`` is true only when the registry-required keys
@@ -79,12 +87,12 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
     identity_ready = False
     missing_required: tuple[str, ...] = ()
     profile_present_keys = 0
-    profile_total_keys = len(profile_keys())
+    profile_total_keys = len(profile_keys(operation))
     enrolment_ready = False
     missing_enrolment: tuple[str, ...] = ()
     if record is not None:
         values = record_to_path_values(record)
-        validation = validate_profile_values(values)
+        validation = validate_profile_values(values, operation=operation)
         identity_ready = validation.valid
         missing_required = validation.missing_required
         profile_present_keys = validation.present_keys
@@ -110,7 +118,6 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
         provider_kind=None,
         provider_kind_is_authoritative=False,
         requested_provider=None,
-        probe_live_backend=False,
         credential_bucket_id=None,
         certificate_credentials=None,
     )
