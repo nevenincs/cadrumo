@@ -31,6 +31,7 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
     ExportEncoding,
     ExportJustification,
     ExportPadding,
+    ExportSignPosition,
 )
 from cadrumo.domain.calculations.registry.ids import (
     ExportLayoutId,
@@ -60,6 +61,7 @@ from .render_profile import (
     RenderProfile,
     RenderProfileAnchor,
     RenderProfileSourceEvidence,
+    SignedMonetaryCompositeRule,
     SingletonNumericRule,
     Width17MembershipRule,
     validate_render_profile,
@@ -833,6 +835,20 @@ def _normalise_cell(
             f"map does not declare it a filler",
         )
     if type_code in _ALPHABETIC_TYPES or type_code in _ALPHANUMERIC_TYPES:
+        composite = next(
+            (
+                rule
+                for rule in render_profile.signed_composite_rules
+                if rule.anchor == _render_profile_anchor(joined_field)
+            ),
+            None,
+        )
+        if composite is not None:
+            return _profile_signed_composite_derivation(
+                joined_field,
+                composite,
+                export_record_id=export_record_id,
+            )
         derivation_code: ExportFieldDerivationCode = "text-a-v1" if type_code in _ALPHABETIC_TYPES else "text-an-v1"
         return _schema_field(
             joined_field,
@@ -1484,6 +1500,25 @@ def _profile_singleton_derivation(
     )
 
 
+def _profile_signed_composite_derivation(
+    joined_field: JoinedRecordDesignField,
+    rule: SignedMonetaryCompositeRule,
+    *,
+    export_record_id: str,
+) -> ExportFieldDerivation:
+    return _schema_field(
+        joined_field,
+        data_type="money",
+        required=_is_required(joined_field.parser_field.validation),
+        padding=ExportPadding.LEFT_ZERO,
+        justification=ExportJustification.RIGHT,
+        signed=True,
+        sign_position=ExportSignPosition.BLANK_OR_N,
+        export_record_id=export_record_id,
+        derivation_code="render-profile-signed-monetary-composite-v1",
+    )
+
+
 def _render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfileAnchor:
     field = joined_field.parser_field
     # DERIVED, not authored: this anchor is built from the parser field, so a
@@ -1516,6 +1551,7 @@ def _schema_field(
     padding: ExportPadding,
     justification: ExportJustification,
     signed: bool,
+    sign_position: ExportSignPosition | None = None,
     export_record_id: str,
     derivation_code: ExportFieldDerivationCode,
     date_format: str | None = None,
@@ -1549,6 +1585,7 @@ def _schema_field(
                 "date_format": date_format,
                 "decimals": decimals,
                 "signed": signed,
+                "sign_position": sign_position,
                 "required_for": _qualified_requirement(parser_field.validation),
                 "design_type": _design_type(parser_field.aeat_type, data_type),
                 "value_policy": value_policy,

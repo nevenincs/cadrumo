@@ -10,11 +10,11 @@ from types import SimpleNamespace
 import pytest
 from typer.testing import CliRunner
 
-from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifactError
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityComponentCodecError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.analysis import generated_tree_state, registry_status
 from dev.registry.pipeline import cli as pipeline_cli
-from dev.registry.pipeline.authority_publication import AuthorityArtifactCurrencyStatus
+from dev.registry.pipeline.authority_publication import AuthorityDatabaseCurrencyStatus
 
 from .. import cli
 
@@ -74,7 +74,7 @@ def test_runtime_load_reports_the_artifact_backed_authority_as_loadable(monkeypa
 
 def test_runtime_load_fails_closed_on_an_unreadable_authority(monkeypatch) -> None:
     def refuse() -> None:
-        raise AuthorityArtifactError("corrupt authority")
+        raise AuthorityComponentCodecError("corrupt authority")
 
     monkeypatch.setattr(cli, "load_bundled_runtime_authority", refuse)
 
@@ -156,7 +156,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
         registry_status,
         "authority_database_currency",
         lambda *_args, **_kwargs: SimpleNamespace(
-            status=AuthorityArtifactCurrencyStatus.CURRENT,
+            status=AuthorityDatabaseCurrencyStatus.CURRENT,
             detail="",
             recorded_identity_digest=None,
             candidate_identity_digest=None,
@@ -171,7 +171,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
     status = registry_status.collect_registry_status(
         registry_root=Path("registry"),
         source_root=Path("source"),
-        authority_artifact=Path("authority.current.json"),
+        authority_descriptor=Path("authority.current.json"),
     )
 
     assert status.valid is True

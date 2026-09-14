@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.toml import freeze_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.record_design_coverage import calculation_closure_casilla_ids
 from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
@@ -36,6 +37,7 @@ from ._referential_integrity_support import (
     single_segment_casilla,
     snapshot_for_revision,
 )
+from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
@@ -285,13 +287,63 @@ def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None
         update={"revisions": {**modelo.revisions, malformed_revision.id: malformed_revision}},
     )
 
-    with pytest.raises(RegistryValidationError) as caught:
-        RegistryValidator(catalogues).validate_modelo(malformed_modelo)
+    with (
+        validating_governed_facts(CandidateFactAuthority(catalogues.facts)),
+        pytest.raises(RegistryValidationError) as caught,
+    ):
+        RegistryValidator(catalogues, user_profile_schema=load_user_profile_schema()).validate_modelo(
+            malformed_modelo,
+        )
 
     assert (
         f"calculation-completeness manifest omits non-internal calculation-closure casilla ids: {omitted.id!r}"
         in str(caught.value)
     )
+
+
+def test_modelo_100_temporary_reductions_are_in_each_edition_closure_and_remain_required() -> None:
+    """The resolved E5AF formulas and reviewed manifests agree for 2022-2024."""
+    modelos, catalogues = _committed_registry_tree()
+    modelo = next(item for item in modelos if item.id == "100")
+    expected_by_revision = {
+        "2022": frozenset({"0160"}),
+        "2023": frozenset({"0160"}),
+        "2024": frozenset({"0160", "0162"}),
+    }
+    malformed_revisions = dict(modelo.revisions)
+
+    for revision_id, expected in expected_by_revision.items():
+        revision = modelo.revisions[revision_id]
+        closure = {str(casilla_id) for casilla_id in calculation_closure_casilla_ids(revision, modelo.id)}
+        manifest = revision.completeness_manifest
+        assert manifest is not None
+        manifest_ids = {str(item.casilla_id) for item in manifest.casillas}
+        assert expected <= closure
+        assert expected <= manifest_ids
+        assert expected <= {str(casilla.id) for casilla in revision.casillas}
+
+        malformed_manifest = manifest.model_copy(
+            update={
+                "casillas": tuple(item for item in manifest.casillas if str(item.casilla_id) not in expected),
+            },
+        )
+        malformed_revisions[revision_id] = revision.model_copy(
+            update={"completeness_manifest": malformed_manifest},
+        )
+
+    malformed_modelo = modelo.model_copy(update={"revisions": malformed_revisions})
+    with (
+        validating_governed_facts(CandidateFactAuthority(catalogues.facts)),
+        pytest.raises(RegistryValidationError) as caught,
+    ):
+        RegistryValidator(catalogues, user_profile_schema=load_user_profile_schema()).validate_modelo(
+            malformed_modelo,
+        )
+
+    failure = str(caught.value)
+    assert "revision 2022" in failure and "'0160'" in failure
+    assert "revision 2023" in failure and "'0160'" in failure
+    assert "revision 2024" in failure and "'0160', '0162'" in failure
 
 
 def test_bundled_manifest_refuses_internal_only_closure_casillas() -> None:

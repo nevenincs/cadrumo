@@ -40,7 +40,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from ..compiler.build_identity import authority_compiler_identity
 from ..conformance.cli import app as conformance_app
 from ..pipeline.authority_publication import (
-    AuthorityArtifactCurrencyStatus,
+    AuthorityDatabaseCurrencyStatus,
     authority_candidate_identity,
     authority_database_currency,
     install_validated_authority_database,
@@ -189,7 +189,7 @@ def _fresh_publication(tmp_path: Path) -> tuple[Path, Path, Path]:
     return registry_root, source_root, artifact_path
 
 
-def _status(artifact_path: Path, registry_root: Path, source_root: Path) -> AuthorityArtifactCurrencyStatus:
+def _status(artifact_path: Path, registry_root: Path, source_root: Path) -> AuthorityDatabaseCurrencyStatus:
     return authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root).status
 
 
@@ -238,7 +238,7 @@ def test_a_registry_edit_after_publication_makes_the_artifact_stale(tmp_path: Pa
 
     currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
 
-    assert currency.status is AuthorityArtifactCurrencyStatus.STALE
+    assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
     assert currency.recorded_identity_digest != currency.candidate_identity_digest
 
 
@@ -251,7 +251,7 @@ def test_a_same_size_registry_edit_with_its_timestamp_restored_is_still_stale(tm
     os.utime(revision, ns=(before.st_atime_ns, before.st_mtime_ns))
 
     assert revision.stat().st_size == before.st_size
-    assert _status(artifact_path, registry_root, source_root) is AuthorityArtifactCurrencyStatus.STALE
+    assert _status(artifact_path, registry_root, source_root) is AuthorityDatabaseCurrencyStatus.STALE
 
 
 def test_a_source_evidence_edit_after_publication_makes_the_artifact_stale(tmp_path: Path) -> None:
@@ -263,7 +263,7 @@ def test_a_source_evidence_edit_after_publication_makes_the_artifact_stale(tmp_p
         registry_root=registry_root,
         source_root=source_root,
     )
-    assert currency.status is AuthorityArtifactCurrencyStatus.STALE
+    assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
     assert "logical identity differs" in currency.detail
 
 
@@ -285,7 +285,7 @@ def test_a_compiler_only_change_is_reported_separately_from_sources(tmp_path: Pa
         registry_root=registry_root,
         source_root=source_root,
     )
-    assert currency.status is AuthorityArtifactCurrencyStatus.STALE
+    assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
     assert "logical identity differs" in currency.detail
 
 
@@ -293,7 +293,7 @@ def test_a_planted_artifact_recording_another_candidate_is_stale(tmp_path: Path)
     registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
     _publish(artifact_path, _STALE_BUILD_IDENTITY)
 
-    assert _status(artifact_path, registry_root, source_root) is AuthorityArtifactCurrencyStatus.STALE
+    assert _status(artifact_path, registry_root, source_root) is AuthorityDatabaseCurrencyStatus.STALE
 
 
 def test_an_identical_checkout_elsewhere_derives_the_recorded_identity(tmp_path: Path) -> None:
@@ -302,7 +302,7 @@ def test_an_identical_checkout_elsewhere_derives_the_recorded_identity(tmp_path:
     clone = tmp_path / "elsewhere" / "clone"
     shutil.copytree(source_root, clone)
 
-    assert _status(artifact_path, clone / "registry" / "aeat", clone) is AuthorityArtifactCurrencyStatus.CURRENT
+    assert _status(artifact_path, clone / "registry" / "aeat", clone) is AuthorityDatabaseCurrencyStatus.CURRENT
 
 
 def test_registry_line_endings_and_working_tree_byproducts_do_not_change_the_identity(tmp_path: Path) -> None:
@@ -315,7 +315,7 @@ def test_registry_line_endings_and_working_tree_byproducts_do_not_change_the_ide
     (registry_root / "modelos" / "999" / "__pycache__" / "x.cpython-313.pyc").write_bytes(b"\x00")
     (source_root / "corpus" / "test" / "ley.html.lock").write_bytes(b"")
 
-    assert _status(artifact_path, registry_root, source_root) is AuthorityArtifactCurrencyStatus.CURRENT
+    assert _status(artifact_path, registry_root, source_root) is AuthorityDatabaseCurrencyStatus.CURRENT
 
 
 def test_source_evidence_line_endings_are_byte_exact(tmp_path: Path) -> None:
@@ -324,7 +324,7 @@ def test_source_evidence_line_endings_are_byte_exact(tmp_path: Path) -> None:
     evidence = source_root / "corpus" / "test" / "ley.html"
     evidence.write_bytes(evidence.read_bytes().replace(b"\r\n", b"\n"))
 
-    assert _status(artifact_path, registry_root, source_root) is AuthorityArtifactCurrencyStatus.STALE
+    assert _status(artifact_path, registry_root, source_root) is AuthorityDatabaseCurrencyStatus.STALE
 
 
 def test_a_missing_or_malformed_artifact_is_unreadable_rather_than_current(tmp_path: Path) -> None:
@@ -335,14 +335,14 @@ def test_a_missing_or_malformed_artifact_is_unreadable_rather_than_current(tmp_p
     artifact_path.write_bytes(b'{"payload":')
     malformed = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
 
-    assert missing.status is AuthorityArtifactCurrencyStatus.UNREADABLE
+    assert missing.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
     assert "AuthorityStoreError" in missing.detail
-    assert malformed.status is AuthorityArtifactCurrencyStatus.UNREADABLE
+    assert malformed.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
     assert "AuthorityStoreError" in malformed.detail
     assert missing.recorded_identity_digest is None
 
 
-def test_the_integrity_gate_refuses_a_stale_artifact_on_stderr_before_compiling(tmp_path: Path) -> None:
+def test_the_integrity_gate_refuses_a_stale_database_on_stderr_before_compiling(tmp_path: Path) -> None:
     """The planted stale copy fails the owning gate with exit 1; the registry is never compiled."""
     registry_root, source_root, _artifact_path = _fresh_publication(tmp_path)
     stale = tmp_path / "stale" / "authority.current.json"
@@ -358,7 +358,7 @@ def test_the_integrity_gate_refuses_a_stale_artifact_on_stderr_before_compiling(
             str(registry_root),
             "--source-root",
             str(source_root),
-            "--authority-artifact",
+            "--authority-descriptor",
             str(stale),
         ],
     )

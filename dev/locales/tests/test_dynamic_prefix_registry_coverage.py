@@ -40,11 +40,12 @@ import pytest
 
 from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
 from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
-from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
+from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS
 from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from dev.docs.terminology_handbook.topics import load_topic_catalogue
 
@@ -192,13 +193,14 @@ def test_allowlist_entries_are_live_and_reasoned() -> None:
 
 def test_dynamic_family_registrations_match_their_producer_sources() -> None:
     """Every formerly-unbounded family expands from its real producer set."""
-    profile_keys = {
-        question.profile_key
-        for flow in WIZARD_FLOWS
-        for section in flow.sections
-        for question in section.questions
-        if question.profile_key is not None
-    }
+    with bundled_indexed_authority().operation() as operation:
+        flow = build_setup_flow(operation)
+        profile_keys = {
+            question.profile_key
+            for section in flow.sections
+            for question in section.questions
+            if question.profile_key is not None
+        }
     scope_codes = {scope.code.lower() for scope in load_default_catalogue().scopes}
     topic_slugs = {topic.slug for topic in load_topic_catalogue().topics}
     expected = {

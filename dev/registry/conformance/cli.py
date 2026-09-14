@@ -87,7 +87,7 @@ from cadrumo.domain.calculations.registry.authority import (
 from ..compiler.authority import compile_validated_authority
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
 from ..compiler.loader import load_registry_tree
-from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_database_currency
+from ..pipeline.authority_publication import AuthorityDatabaseCurrency, authority_database_currency
 from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
 from .errors import RegistryApplicationInputError
 from .manager import (
@@ -258,7 +258,7 @@ def runtime_load(as_json: _AsJson = False) -> None:
                     "loadable": True,
                     "modelo_count": modelo_count,
                     "revision_count": revision_count,
-                    "artifact": str(bundled_authority_descriptor_path()),
+                    "descriptor": str(bundled_authority_descriptor_path()),
                 },
                 indent=2,
             )
@@ -270,7 +270,7 @@ def runtime_load(as_json: _AsJson = False) -> None:
         "\tloadable=true"
         f"\tmodelos={modelo_count}"
         f"\trevisions={revision_count}"
-        f"\tartifact={bundled_authority_descriptor_path()}",
+        f"\tdescriptor={bundled_authority_descriptor_path()}",
     )
 
 
@@ -329,22 +329,22 @@ def integrity(
         Path | None,
         typer.Option("--source-root", help="Source tree holding the legal corpus; defaults to bundled data."),
     ] = None,
-    authority_artifact: Annotated[
+    authority_descriptor: Annotated[
         Path | None,
         typer.Option(
-            "--authority-artifact",
+            "--authority-descriptor",
             help=(
-                "Published runtime authority artifact that must be current for the verified registry and "
-                "source trees; defaults to the bundled artifact."
+                "Indexed authority descriptor that must be current for the verified registry and "
+                "source trees; defaults to the bundled descriptor."
             ),
         ),
     ] = None,
 ) -> None:
-    """Fail closed on a stale authority artifact, registry validity, or a missing legal-corpus quotation.
+    """Fail closed on a stale indexed authority, registry validity, or missing legal-corpus quotation.
 
     This is a development and release gate. It first requires the published
-    runtime authority artifact to record the identity of the registry and
-    source evidence as they stand -- a stale or unreadable artifact exits 1
+    runtime authority descriptor to record the identity of the registry and
+    source evidence as they stand -- a stale or unreadable descriptor exits 1
     with a refusal on stderr -- then validates the complete registry authority
     and every legal catalogue reference's declared corpus text. It does not
     claim calculation or filing correctness.
@@ -352,12 +352,12 @@ def integrity(
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
     currency = authority_database_currency(
-        authority_artifact or bundled_authority_descriptor_path(),
+        authority_descriptor or bundled_authority_descriptor_path(),
         registry_root=resolved_registry_root,
         source_root=resolved_source_root,
     )
     if not currency.is_current:
-        _refuse_authority_artifact(currency, as_json=as_json)
+        _refuse_authority_database(currency, as_json=as_json)
     authority = validate_registry(registry_root=resolved_registry_root, source_root=resolved_source_root)
     revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
     if as_json:
@@ -370,7 +370,7 @@ def integrity(
                     "modelo_count": len(authority.modelos),
                     "revision_count": revision_count,
                     "legal_reference_count": len(authority.catalogues.legal),
-                    "authority_artifact": str(currency.artifact_path),
+                    "authority_descriptor": str(currency.descriptor_path),
                     "authority_identity_digest": currency.candidate_identity_digest,
                 },
                 indent=2,
@@ -385,7 +385,7 @@ def integrity(
         f"\tmodelos={len(authority.modelos)}"
         f"\trevisions={revision_count}"
         f"\tlegal_references={len(authority.catalogues.legal)}"
-        f"\tauthority_artifact={currency.artifact_path}"
+        f"\tauthority_descriptor={currency.descriptor_path}"
         f"\tauthority_identity_digest={currency.candidate_identity_digest}",
     )
 
@@ -393,11 +393,11 @@ def integrity(
 _AUTHORITY_REPUBLISH_COMMAND = "python -m dev.registry.pipeline publish-authority"
 
 
-def _refuse_authority_artifact(currency: AuthorityArtifactCurrency, *, as_json: bool) -> NoReturn:
-    """Report a stale or unreadable authority artifact on stderr and exit 1."""
+def _refuse_authority_database(currency: AuthorityDatabaseCurrency, *, as_json: bool) -> NoReturn:
+    """Report a stale or unreadable indexed authority on stderr and exit 1."""
     refusal = {
         "status": "refused",
-        "authority_artifact": str(currency.artifact_path),
+        "authority_descriptor": str(currency.descriptor_path),
         "currency": currency.status.value,
         "recorded_identity_digest": currency.recorded_identity_digest,
         "candidate_identity_digest": currency.candidate_identity_digest,
