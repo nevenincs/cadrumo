@@ -13,10 +13,14 @@ event payload.
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 
 class ProfileFactWriteDoor(StrEnum):
@@ -146,12 +150,20 @@ def apply_manager_profile_field_mutation(
     profile_id: str,
     path: str,
     value: str,
+    profile_decode_context: ProfileDecodeContext,
 ) -> UserProfileRecord:
     """Apply the manager's one-field trim-or-clear policy through the sole write door."""
+    from .profile_record_repository import ProfileRecordRepository
+
+    current = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
     return apply_profile_fact_changes(
         profile_id=profile_id,
         changes=(UserProfileFact(path=path, value=value.strip() or None),),
         door=ProfileFactWriteDoor.MANAGER_FIELD,
+        expected_record=current,
     )
 
 

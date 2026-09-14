@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from pathlib import Path
@@ -44,6 +45,7 @@ from .render_profile_eligibility import (
     RenderProfileEligibility,
     _has_absent_naturaleza,
     _is_numeric_aeat_type,
+    normalise_aeat_type,
     resolve_render_profile_eligibility,
 )
 
@@ -58,7 +60,9 @@ __all__ = [
     "RenderProfileSourceEvidenceEntry",
     "ReviewedEvidence",
     "ReviewedPolicyDecision",
+    "SignedMonetaryCompositeRule",
     "SingletonNumericRule",
+    "SourceStatedCompositeEvidence",
     "Width17MembershipRule",
     "load_and_validate_render_profile",
     "load_render_profile",
@@ -184,6 +188,21 @@ ReviewedEvidence = Annotated[
     OfficialSourceEvidence | ReviewedPolicyDecision,
     Field(discriminator="authority_kind"),
 ]
+
+
+class SourceStatedCompositeEvidence(_StrictModel):
+    """A reviewed composite whose complete wire grammar is stated at one PDF anchor."""
+
+    authority_kind: Literal["official_parser_anchor"]
+    governed_anchor: RenderProfileAnchor
+    decision_statement: str = Field(min_length=1)
+    justification: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _reject_whitespace_only_review_text(self) -> SourceStatedCompositeEvidence:
+        if not self.decision_statement.strip() or not self.justification.strip():
+            raise ValueError("source-stated composite evidence must contain non-whitespace text")
+        return self
 
 
 class RenderProfileSourceEvidenceEntry(_StrictModel):
@@ -362,6 +381,23 @@ class SingletonNumericRule(_StrictModel):
         return self
 
 
+class SignedMonetaryCompositeRule(_StrictModel):
+    """One reviewed unsplit PDF amount with a reserved blank-or-N leading sign."""
+
+    rule_kind: Literal["signed_monetary_composite"]
+    integer_digits: int = Field(gt=0)
+    decimal_digits: Literal[2]
+    sign_policy: Literal["blank-or-n-leading"]
+    anchor: RenderProfileAnchor
+    evidence: SourceStatedCompositeEvidence
+
+    @model_validator(mode="after")
+    def _require_exact_governed_anchor(self) -> SignedMonetaryCompositeRule:
+        if self.evidence.governed_anchor != self.anchor:
+            raise ValueError("source-stated composite evidence must name the exact governed anchor")
+        return self
+
+
 class RenderProfileFragment(_StrictModel):
     """One deterministic, independently reviewable profile fragment."""
 
@@ -370,10 +406,11 @@ class RenderProfileFragment(_StrictModel):
     design_identity: RenderProfileDesignIdentity
     width_17_rules: tuple[Width17MembershipRule, ...]
     singleton_rules: tuple[SingletonNumericRule, ...]
+    signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
 
     @model_validator(mode="after")
     def _require_authored_rules(self) -> RenderProfileFragment:
-        if not self.width_17_rules and not self.singleton_rules:
+        if not self.width_17_rules and not self.singleton_rules and not self.signed_composite_rules:
             raise ValueError("render profile fragments must contain at least one authored rule")
         return self
 
@@ -386,6 +423,7 @@ class RenderProfile(_StrictModel):
     fragment_ids: tuple[str, ...]
     width_17_rules: tuple[Width17MembershipRule, ...]
     singleton_rules: tuple[SingletonNumericRule, ...]
+    signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
 
     @model_validator(mode="after")
     def _require_unique_fragment_ids(self) -> RenderProfile:
@@ -576,9 +614,11 @@ def validate_render_profile(
         source_ref=joined.source.source_ref,
         source_sha256=joined.source.source_sha256,
     )
+    composite_keys = frozenset(_anchor_key_tuple(rule.anchor) for rule in profile.signed_composite_rules)
     eligibility = resolve_render_profile_eligibility(
         (design_view(joined_field) for joined_field in joined.fields),
         joined.source,
+        signed_composite_anchor_keys=composite_keys,
     )
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
 
@@ -602,8 +642,10 @@ def validate_render_profile_authority(
     _validate_reviewed_evidence(profile, source_evidence)
 
     eligible = {_field_anchor(field): field for field in eligibility.all_fields}
-    governed = tuple(anchor for rule in profile.width_17_rules for anchor in rule.anchors) + tuple(
-        rule.anchor for rule in profile.singleton_rules
+    governed = (
+        tuple(anchor for rule in profile.width_17_rules for anchor in rule.anchors)
+        + tuple(rule.anchor for rule in profile.singleton_rules)
+        + tuple(rule.anchor for rule in profile.signed_composite_rules)
     )
     duplicates = _duplicates(governed)
     if duplicates:
@@ -672,6 +714,9 @@ def validate_render_profile_authority(
             raise RegistryValidationError(
                 f"enumeration value width conflicts with official length at {rule.anchor!r}",
             )
+    for rule in profile.signed_composite_rules:
+        field = eligible[rule.anchor]
+        _validate_signed_composite_source_agreement(rule, field)
 
 
 def render_profile_digest(
@@ -702,23 +747,31 @@ def render_profile_digest(
         }
         for rule in sorted(profile.singleton_rules, key=lambda item: _anchor_key(item.anchor))
     ]
+    signed_composite_rules = [
+        rule.model_dump(mode="json")
+        for rule in sorted(profile.signed_composite_rules, key=lambda item: _anchor_key(item.anchor))
+    ]
     evidence_entries = [
         entry.model_dump(mode="json")
         for entry in sorted(source_evidence.entries, key=lambda item: (item.sheet, item.cell))
     ]
-    return content_hash_hex(
-        {
-            "schema_version": profile.schema_version,
-            "design_identity": profile.design_identity.model_dump(mode="json"),
-            "fragment_ids": sorted(profile.fragment_ids),
-            "width_17_rules": width_rules,
-            "singleton_rules": singleton_rules,
-            "source_evidence": {
-                "design_identity": source_evidence.design_identity.model_dump(mode="json"),
-                "entries": evidence_entries,
-            },
+    digest_payload: dict[str, object] = {
+        "schema_version": profile.schema_version,
+        "design_identity": profile.design_identity.model_dump(mode="json"),
+        "fragment_ids": sorted(profile.fragment_ids),
+        "width_17_rules": width_rules,
+        "singleton_rules": singleton_rules,
+        "source_evidence": {
+            "design_identity": source_evidence.design_identity.model_dump(mode="json"),
+            "entries": evidence_entries,
         },
-    )
+    }
+    # Preserve the canonical digest representation of every pre-extension
+    # profile. The new axis exists only when authored; an empty additive field
+    # must not force unrelated source authorities through regeneration.
+    if signed_composite_rules:
+        digest_payload["signed_composite_rules"] = signed_composite_rules
+    return content_hash_hex(digest_payload)
 
 
 def _validate_reviewed_evidence(
@@ -761,6 +814,7 @@ def _compile_fragments(fragments: Iterable[RenderProfileFragment]) -> RenderProf
         fragment_ids=ids,
         width_17_rules=width_rules,
         singleton_rules=tuple(rule for fragment in ordered for rule in fragment.singleton_rules),
+        signed_composite_rules=tuple(rule for fragment in ordered for rule in fragment.signed_composite_rules),
     )
 
 
@@ -848,6 +902,97 @@ def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, str, str, str]:
         anchor.source_cell or "",
         anchor.record_identity,
     )
+
+
+def _anchor_key_tuple(anchor: RenderProfileAnchor) -> tuple[str, int, str | None, str | None, str]:
+    return (anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity)
+
+
+_COMPOSITE_DEFINITION_RE: Final[re.Pattern[str]] = re.compile(
+    r'(?P<framing>[a-z][a-z "]{0,399}\.?)\s+este campo se subdivide en\s*:\s*'
+    r"(?P<sign_position>\d+)\s+signo\s*:\s*(?P<sign_nature>[a-z]+)\.\s*"
+    r"se cumplimentara cuando el resultado anteriormente mencionado sea menor de 0 \(cero\)\.\s*"
+    r'en este caso se consignara una "(?P<sign_token>[a-z])", en cualquier otro caso el contenido de este '
+    r"campo sera un espacio\.\s*"
+    r"(?P<magnitude_start>\d+)\s*-\s*(?P<magnitude_end>\d+)\s+importe\s*:\s*"
+    r"campo numerico de (?P<magnitude_digits>\d+) posiciones\.\s*"
+    r"se consignara sin signo y sin coma decimal, el importe mencionado anteriormente\.\s*"
+    r"este campo se subdivide en dos\s*:\s*"
+    r"(?P<integer_start>\d+)\s*-\s*(?P<integer_end>\d+)\s+parte entera del importe"
+    r"(?P<integer_qualifier> de [a-z ]{1,200})?,\s*"
+    r"si no tiene contenido se consignara a ceros\.\s*"
+    r"(?P<decimal_start>\d+)\s*-\s*(?P<decimal_end>\d+)\s+parte decimal del importe"
+    r"(?P<decimal_qualifier> de [a-z ]{1,200})?,\s*"
+    r"si no tiene contenido se consignara a ceros\.",
+    re.IGNORECASE,
+)
+_COMPOSITE_NON_POLICY_WIRE_TERMS: Final[re.Pattern[str]] = re.compile(
+    r"\b(?:alfabetico|ceros|coma|decimal|digitos?|entera|espacio|importe|menor|numerico|parte|posiciones?|signo)\b",
+    re.IGNORECASE,
+)
+
+
+def _validate_signed_composite_source_agreement(
+    rule: SignedMonetaryCompositeRule,
+    field: RecordDesignIntermediateField,
+) -> None:
+    """Verify a reviewed rule against source prose without deriving policy from it."""
+    if field.source_cell is not None or normalise_aeat_type(field.aeat_type) != "alfanumerico":
+        raise RegistryValidationError("signed monetary composite requires an unsplit alphanumeric PDF anchor")
+    source_text = (field.content or "").replace("“", '"').replace("”", '"')
+    normalised_source = " ".join(
+        unicodedata.normalize("NFKD", source_text).encode("ascii", "ignore").decode("ascii").split()
+    )
+    definition = _COMPOSITE_DEFINITION_RE.fullmatch(normalised_source)
+    if definition is None:
+        raise RegistryValidationError(
+            "signed monetary composite source must exactly match the reviewed complete wire definition"
+        )
+    non_policy_segments = (
+        definition.group("framing"),
+        definition.group("integer_qualifier") or "",
+        definition.group("decimal_qualifier") or "",
+    )
+    if any(_COMPOSITE_NON_POLICY_WIRE_TERMS.search(segment) is not None for segment in non_policy_segments):
+        raise RegistryValidationError("signed monetary composite source non-policy framing contains a wire instruction")
+    if definition.group("integer_qualifier") != definition.group("decimal_qualifier"):
+        raise RegistryValidationError("signed monetary composite source partition descriptions do not agree")
+    if normalise_aeat_type(definition.group("sign_nature")) != "alfabetico":
+        raise RegistryValidationError("signed monetary composite source sign slot must be alphabetic")
+    # Prose spelling and case are normalized by the grammar, but the wire token
+    # is not: the existing codec emits uppercase N.
+    if definition.group("sign_token") != "N":
+        raise RegistryValidationError("signed monetary composite source must declare uppercase N as its wire token")
+    quoted_sign_tokens = tuple(
+        token for token in re.findall(r'"([^"]+)"', normalised_source) if token.casefold() == "n"
+    )
+    if quoted_sign_tokens != ("N",):
+        raise RegistryValidationError(
+            "signed monetary composite source must declare exactly one uppercase N wire token"
+        )
+    sign_position = int(definition.group("sign_position"))
+    magnitude_start = int(definition.group("magnitude_start"))
+    magnitude_end = int(definition.group("magnitude_end"))
+    integer_start = int(definition.group("integer_start"))
+    integer_end = int(definition.group("integer_end"))
+    decimal_start = int(definition.group("decimal_start"))
+    decimal_end = int(definition.group("decimal_end"))
+    magnitude_digits = int(definition.group("magnitude_digits"))
+    expected_end = field.offset + field.length - 1
+    geometry = (
+        sign_position == field.offset
+        and magnitude_start == field.offset + 1
+        and magnitude_end == expected_end
+        and magnitude_digits == field.length - 1
+        and integer_start == magnitude_start
+        and integer_end + 1 == decimal_start
+        and decimal_end == magnitude_end
+        and integer_end - integer_start + 1 == rule.integer_digits
+        and decimal_end - decimal_start + 1 == rule.decimal_digits
+        and rule.integer_digits + rule.decimal_digits == magnitude_digits
+    )
+    if not geometry:
+        raise RegistryValidationError("signed monetary composite source ranges do not exactly partition its anchor")
 
 
 def _normalize_source_statement(value: object) -> str:

@@ -24,6 +24,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import override
 
 SCHEMA_VERSION = "binding-signal.v2"
 BINDING_REF_KEYS = frozenset(
@@ -289,11 +290,13 @@ class _BindingLiteralVisitor(ast.NodeVisitor):
         self.scope: list[str] = []
         self.rows: list[dict[str, object]] = []
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self.scope.append(node.name)
         self.generic_visit(node)
         self.scope.pop()
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self.scope.append(node.name)
         self.generic_visit(node)
@@ -301,6 +304,7 @@ class _BindingLiteralVisitor(ast.NodeVisitor):
 
     visit_AsyncFunctionDef = visit_FunctionDef
 
+    @override
     def visit_Constant(self, node: ast.Constant) -> None:
         if isinstance(node.value, str) and node.value in self.binding_ids:
             self.rows.append(

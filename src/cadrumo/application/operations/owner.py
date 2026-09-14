@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from contextlib import AbstractAsyncContextManager
 from datetime import datetime
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
@@ -28,6 +28,9 @@ from .models import (
     OperationRevision,
 )
 from .secret_submission import OperationEphemeralSecretAccess
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 @runtime_checkable
@@ -185,6 +188,11 @@ class OperationExecutorContext(Protocol):
     @property
     def revision(self) -> OperationRevision:
         """Current authoritative revision for an exact successor transition."""
+        ...
+
+    @property
+    def authority_operation(self) -> PinnedAuthorityOperation:
+        """Generation-pinned registry authority owned by the enclosing workflow."""
         ...
 
     @property

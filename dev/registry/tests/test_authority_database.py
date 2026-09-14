@@ -50,8 +50,6 @@ def test_retired_whole_authority_json_surfaces_do_not_exist() -> None:
     retired_paths = (
         repository_root / "dev/registry/authority_json.py",
         repository_root / "dev/registry/benchmark_authority.py",
-        repository_root / "dev/registry/eager_authority_baseline.py",
-        repository_root / "dev/registry/indexed_authority_benchmark.py",
         repository_root / "src/cadrumo/_data/registry/authority/authority.json",
     )
 

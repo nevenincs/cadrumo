@@ -6,11 +6,8 @@ from collections.abc import Callable
 
 import typer
 
-from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.auth.operator import build_live_auth_preflight_report
-from ...application.auth.operator_probe_ports import OperatorProbePorts
 from ...application.auth.operator_results import LiveAuthPreflightReport
-from ...application.auth.operator_scope_ports import OperatorScopePorts
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.redaction.rules import redact_for_cli_output
 
@@ -32,16 +29,25 @@ def resolve_active_bucket(active_bucket_id: Callable[[], str] | None, *, family:
 
 
 def emit_live_auth_preflight(
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    operator_probe_ports: OperatorProbePorts,
-    operator_scope_ports: OperatorScopePorts,
+    ctx: typer.Context,
     provider: str | None = None,
 ) -> None:
+    """Render auth preflight from one caller-owned CLI operation scope."""
+    from .state_projection_support import (
+        authority_operation,
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+        state_projection_read_ports,
+    )
+
     report = build_live_auth_preflight_report(
         provider,
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=operator_probe_ports,
-        operator_scope_ports=operator_scope_ports,
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_probe_ports=operator_probe_ports(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
+        read_ports=state_projection_read_ports(ctx),
+        operation=authority_operation(ctx),
     )
     for line in _live_auth_preflight_lines(report):
         typer.echo(redact_for_cli_output(line), err=True)

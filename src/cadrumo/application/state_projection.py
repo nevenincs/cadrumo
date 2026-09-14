@@ -85,7 +85,6 @@ from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.operator_action_enums import OperatorActionAxis
 from ..core.period import Period
 from ..core.time.clock import today_madrid
-from ..domain.calculations.registry.authority import bundled_indexed_authority
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ..domain.deadlines.models import ObligationStatus, Schedule, TaxpayerProfile
@@ -779,6 +778,7 @@ def _build_modelo_ledger_stage(
     bucket_id: str,
     period: Period,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
 ) -> _ModeloReadinessLedgerStage:
     """Evaluate ledger preflight only when the registry declares it."""
     if snapshot is None or not _snapshot_requires_ledger_preflight(snapshot):
@@ -787,6 +787,7 @@ def _build_modelo_ledger_stage(
         bucket_id=bucket_id,
         period=period,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        operation=operation,
     )
     return _ModeloReadinessLedgerStage(
         required=True,
@@ -819,6 +820,7 @@ def _evaluate_modelo_readiness(
         bucket_id=context.bucket_id,
         period=period,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        operation=operation,
     )
     missing_bindings = (
         _missing_calculation_bindings_for_readiness(
@@ -881,6 +883,7 @@ def _build_modelo_readiness(
     *,
     active_profile_id: str | None,
     read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ProjectionModeloReadiness, ...]:
     """Compute one preflight report per readiness request.
 
@@ -894,18 +897,17 @@ def _build_modelo_readiness(
     context = _load_modelo_readiness_context(active_profile_id, read_ports=read_ports)
     if context is None:
         return ()
-    with bundled_indexed_authority().operation() as operation:
-        return tuple(
-            _project_modelo_readiness(
-                _evaluate_modelo_readiness(
-                    request,
-                    context=context,
-                    usage_ratio_profile_loader=read_ports.usage_ratio_profile_loader,
-                    operation=operation,
-                )
+    return tuple(
+        _project_modelo_readiness(
+            _evaluate_modelo_readiness(
+                request,
+                context=context,
+                usage_ratio_profile_loader=read_ports.usage_ratio_profile_loader,
+                operation=operation,
             )
-            for request in requests
         )
+        for request in requests
+    )
 
 
 # The ledger-preflight binding source set is single-sourced in
@@ -1117,6 +1119,7 @@ def build_operator_state_projection(
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
     state: WorkflowState | None = None,
     auth_snapshot: ActiveAuthProjectionSnapshot | None = None,
     requested_provider: str | None = None,
@@ -1139,6 +1142,8 @@ def build_operator_state_projection(
         operator_scope_ports: Operator-scoped auth and profile capabilities.
         read_ports: Required application-owned profile and workspace reads
             composed by the outer entrypoint for this profile scope.
+        operation: Caller-owned generation-pinned authority operation used by
+            profile health and any requested modelo readiness projection.
         state: Pre-loaded workflow state. When ``None`` and a profile
             is active, the state is loaded through
             :func:`~cadrumo.application.workflow.persistence.workflow_state_repository`;
@@ -1197,6 +1202,7 @@ def build_operator_state_projection(
             include_workspace_summary=include_workspace_summary,
             include_pending_obligations=include_pending_obligations,
             modelo_readiness_requests=modelo_readiness_requests,
+            operation=operation,
             reference_today=reference_today,
         )
     if state is not None:
@@ -1216,6 +1222,7 @@ def build_operator_state_projection(
             include_workspace_summary=include_workspace_summary,
             include_pending_obligations=include_pending_obligations,
             modelo_readiness_requests=modelo_readiness_requests,
+            operation=operation,
             reference_today=reference_today,
         )
     with active_auth_projection_span(
@@ -1239,6 +1246,7 @@ def build_operator_state_projection(
             include_workspace_summary=include_workspace_summary,
             include_pending_obligations=include_pending_obligations,
             modelo_readiness_requests=modelo_readiness_requests,
+            operation=operation,
             reference_today=reference_today,
         )
 
@@ -1260,11 +1268,12 @@ def _assemble_operator_state_projection(
     include_workspace_summary: bool,
     include_pending_obligations: bool,
     modelo_readiness_requests: tuple[ModeloReadinessRequest, ...],
+    operation: PinnedAuthorityOperation,
     reference_today: date,
 ) -> OperatorStateProjection:
     has_active_profile = active_bucket_id is not None
 
-    profile_health = assess_active_profile_health(resolved_state)
+    profile_health = assess_active_profile_health(resolved_state, operation=operation)
 
     workspace = (
         _build_workspace_summary(
@@ -1296,11 +1305,15 @@ def _assemble_operator_state_projection(
     else:
         pending_obligations = ()
 
-    modelo_readiness = _build_modelo_readiness(
-        modelo_readiness_requests,
-        active_profile_id=profile_health.active_profile,
-        read_ports=read_ports,
-    )
+    if modelo_readiness_requests:
+        modelo_readiness = _build_modelo_readiness(
+            modelo_readiness_requests,
+            active_profile_id=profile_health.active_profile,
+            read_ports=read_ports,
+            operation=operation,
+        )
+    else:
+        modelo_readiness = ()
 
     return OperatorStateProjection(
         active_profile=active_profile,

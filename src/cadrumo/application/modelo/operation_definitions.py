@@ -123,7 +123,6 @@ from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import IndexedRegistryAuthority
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloScalar
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -512,14 +511,12 @@ class ModeloWorkVerifyExecutor:
     def __init__(
         self,
         *,
-        authority_factory: Callable[[], IndexedRegistryAuthority],
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
         profile_resolver: ModeloWorkVerifyProfileResolver,
         operator_scope_ports: OperatorScopePorts,
         verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
     ) -> None:
         """Bind the live profile the gates are evaluated against."""
-        self._authority_factory = authority_factory
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
         self._profile_resolver = profile_resolver
         self._operator_scope_ports = operator_scope_ports
@@ -544,17 +541,18 @@ class ModeloWorkVerifyExecutor:
         repositories = self._verification_repository_bundle_factory(require_active_bucket_id())
         workflow_profile = self._profile_resolver()
 
+        operation = context.authority_operation
+
         def verify_under_pinned_operation():
-            with self._authority_factory().operation() as operation:
-                return verify_modelo_revision(
-                    request.payload.calculation_revision_id,
-                    actor=request.payload.actor,
-                    certificate_secret_backend_factory=self._certificate_secret_backend_factory,
-                    workflow_profile=workflow_profile,
-                    operator_scope_ports=self._operator_scope_ports,
-                    verification_repositories=repositories,
-                    operation=operation,
-                )
+            return verify_modelo_revision(
+                request.payload.calculation_revision_id,
+                actor=request.payload.actor,
+                certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                workflow_profile=workflow_profile,
+                operator_scope_ports=self._operator_scope_ports,
+                verification_repositories=repositories,
+                operation=operation,
+            )
 
         report = await asyncio.to_thread(verify_under_pinned_operation)
         await context.events.effect(OperationEffect.UPDATED)
@@ -563,7 +561,6 @@ class ModeloWorkVerifyExecutor:
 
 def build_modelo_work_verify_definition(
     *,
-    authority_factory: Callable[[], IndexedRegistryAuthority],
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
@@ -573,7 +570,6 @@ def build_modelo_work_verify_definition(
 
     def build() -> ModeloWorkVerifyExecutor:
         return ModeloWorkVerifyExecutor(
-            authority_factory=authority_factory,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             profile_resolver=profile_resolver,
             operator_scope_ports=operator_scope_ports,
@@ -1894,12 +1890,10 @@ class ModeloEditApplyExecutor:
     def __init__(
         self,
         *,
-        authority_factory: Callable[[], IndexedRegistryAuthority],
         calculation_action_ports_factory: CalculationActionPortsFactory,
         receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
     ) -> None:
         """Bind the calculation authorities supplied by the composition root."""
-        self._authority_factory = authority_factory
         self._calculation_action_ports_factory = calculation_action_ports_factory
         self._receipt_repository_factory = receipt_repository_factory
 
@@ -1929,17 +1923,17 @@ class ModeloEditApplyExecutor:
             operation_id=context.identity.operation_id,
             submission=submission,
         )
-        with self._authority_factory().operation() as operation:
-            outcome = apply_modelo_edit(
-                apply_request,
-                ports=self._calculation_action_ports_factory(
-                    bucket_id=baseline.bucket_id,
-                    operation=operation,
-                ),
-                receipt_repository=self._receipt_repository_factory(bucket_id=baseline.bucket_id),
-                now=datetime.now(UTC),
-                result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
-            )
+        operation = context.authority_operation
+        outcome = apply_modelo_edit(
+            apply_request,
+            ports=self._calculation_action_ports_factory(
+                bucket_id=baseline.bucket_id,
+                operation=operation,
+            ),
+            receipt_repository=self._receipt_repository_factory(bucket_id=baseline.bucket_id),
+            now=datetime.now(UTC),
+            result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
+        )
         if isinstance(outcome, ModeloEditExecutionNoEffectV1):
             # A failed compare-and-swap changed nothing, and NONE is the
             # truthful report of that -- distinct from the UNKNOWN carried
@@ -1952,7 +1946,6 @@ class ModeloEditApplyExecutor:
 
 def build_modelo_edit_apply_definition(
     *,
-    authority_factory: Callable[[], IndexedRegistryAuthority],
     calculation_action_ports_factory: CalculationActionPortsFactory,
     receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
 ) -> OperationDefinition:
@@ -1960,7 +1953,6 @@ def build_modelo_edit_apply_definition(
 
     def build() -> ModeloEditApplyExecutor:
         return ModeloEditApplyExecutor(
-            authority_factory=authority_factory,
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
         )
@@ -2130,7 +2122,6 @@ __all__ = [
 
 def build_modelo_lifecycle_operation_definitions(
     *,
-    authority_factory: Callable[[], IndexedRegistryAuthority],
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
     export_ports_factory: ModeloExportPortsFactory,
@@ -2149,7 +2140,6 @@ def build_modelo_lifecycle_operation_definitions(
     """
     return (
         build_modelo_edit_apply_definition(
-            authority_factory=authority_factory,
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
         ),
@@ -2163,7 +2153,6 @@ def build_modelo_lifecycle_operation_definitions(
         ),
         build_modelo_work_rename_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
         build_modelo_work_verify_definition(
-            authority_factory=authority_factory,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_scope_ports=operator_scope_ports,
             verification_repository_bundle_factory=verification_repository_bundle_factory,

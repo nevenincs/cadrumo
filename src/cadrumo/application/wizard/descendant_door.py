@@ -209,6 +209,7 @@ def persist_descendant_door_answers(
 
 def run_descendant_door(
     *,
+    operation: PinnedAuthorityOperation,
     input: Input | None = None,
     output: Output | None = None,
 ) -> tuple[FlowState, ReviewProjection, UserProfileRecord]:
@@ -220,25 +221,23 @@ def run_descendant_door(
     which exercises the same production frontend and the same atomic profile
     writer without replacing either boundary with a test callback.
     """
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..flows.line_frontend import LineFlowFrontend
 
-    # The operation spans loading, seeding, the interactive walk, and the
-    # compare-and-swap write.  No relationship or disability catalogue value
-    # can outlive the generation that admitted it.
-    with bundled_indexed_authority().operation() as operation:
-        baseline = load_active_descendant_record(operation=operation)
-        definition, resume_state = build_descendant_door(baseline, operation=operation)
-        state, projection = LineFlowFrontend(
-            definition,
-            input=input,
-            output=output,
-        ).run(
-            mode=FlowMode.MODIFY,
-            resume_state=resume_state,
-        )
-        persisted = persist_descendant_door_answers(state.answers, baseline=baseline, operation=operation)
-        return state, projection, persisted
+    # The caller owns the operation span across loading, seeding, the
+    # interactive walk, and the compare-and-swap write. No relationship or
+    # disability catalogue value can outlive the generation that admitted it.
+    baseline = load_active_descendant_record(operation=operation)
+    definition, resume_state = build_descendant_door(baseline, operation=operation)
+    state, projection = LineFlowFrontend(
+        definition,
+        input=input,
+        output=output,
+    ).run(
+        mode=FlowMode.MODIFY,
+        resume_state=resume_state,
+    )
+    persisted = persist_descendant_door_answers(state.answers, baseline=baseline, operation=operation)
+    return state, projection, persisted
 
 
 __all__ = [

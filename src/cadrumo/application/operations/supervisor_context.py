@@ -5,6 +5,7 @@ from __future__ import annotations
 import secrets
 from collections.abc import Awaitable, Callable
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -16,6 +17,9 @@ from .models import OperationIdentity
 from .persistence.journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from .projection_services import OperationResponseAuthorityIssuer
 from .secret_submission import BoundEphemeralSecretAccess
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def new_response_token() -> str:
@@ -94,6 +98,7 @@ class SupervisorExecutorContext:
         self,
         *,
         context: DefinitionBoundContext,
+        authority_operation: PinnedAuthorityOperation,
         operands: OperationSecureReferenceStore | None,
         ephemeral_secret: BoundEphemeralSecretAccess,
         financial_operand: BoundTransientFinancialOperandAccess,
@@ -103,6 +108,7 @@ class SupervisorExecutorContext:
     ) -> None:
         """Initialize the context, wrapping the delegate context's interactions with supervisor publication."""
         self.identity = context.identity
+        self.authority_operation = authority_operation
         self.cancellation = context.cancellation
         self.deadlines = context.deadlines
         self.events = context.events

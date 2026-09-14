@@ -510,18 +510,20 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
 
 def _stage_authority_candidate(clean_repo: Path) -> None:
     """Copy release-selected authority bytes into only the private cohort tree."""
+    from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+
     raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
     assert raw_candidate, f"{_AUTHORITY_CANDIDATE_ENV} must name the validated candidate directory"
     candidate = Path(raw_candidate).resolve(strict=True)
     descriptor = candidate / "authority.current.json"
-    selected = json.loads(descriptor.read_text(encoding="utf-8"))
-    database_name = selected["database"]
+    selected = AuthorityDescriptor.read(descriptor.resolve(strict=True))
+    database_name = selected.database
     database = candidate / database_name
-    database_digest = sha256_path(database)
     assert database.is_file()
+    database_digest = sha256_path(database)
     assert database_name == f"authority-{database_digest}.sqlite3"
-    assert selected["database_sha256"] == database_digest
-    assert selected["database_size"] == database.stat().st_size
+    assert selected.database_sha256 == database_digest
+    assert selected.database_size == database.stat().st_size
     destination = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "authority"
     destination.mkdir(parents=True, exist_ok=True)
     for stale_database in destination.glob("authority-*.sqlite3"):

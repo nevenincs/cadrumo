@@ -1003,7 +1003,7 @@ def declared_category_from_document_record(
     if not stated:
         return None
     try:
-        category = require_iva_category(stated, operation=operation)
+        category = require_iva_category(stated, authority=operation)
     except RegistryValidationError:
         return None
     return DeclaredFact(value=category, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
@@ -1046,7 +1046,7 @@ def _table_verdict(assembly: ClassificationAssembly, *, operation: PinnedAuthori
     one at every later reader.
     """
     result = classify_from_assembled_criteria(assembly, operation=operation)
-    if result is None or result.category == require_iva_category("unknown", operation=operation):
+    if result is None or result.category == require_iva_category("unknown", authority=operation):
         return None
     return result.category
 
@@ -1165,7 +1165,7 @@ def _unsupported_relief_claim(
     Returns:
         The operator-facing reason, or ``""`` when the claim stands.
     """
-    if declared not in registry_category_projection("relief_on_establishment_premise", operation=operation):
+    if declared not in registry_category_projection("relief_on_establishment_premise", authority=operation):
         return ""
     outstanding = {gap.field for gap in assembly.missing} & _RESIDENCY_FIELDS
     if not outstanding:

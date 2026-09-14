@@ -314,6 +314,7 @@ def run_modelo_quickfile(
         operator_scope_ports=operator_scope_ports,
         registry_revision_id=registry_revision_id,
         read_ports=read_ports,
+        operation=operation,
     )
     stages.append(_readiness_outcome(readiness))
 
@@ -522,6 +523,7 @@ def _resolve_readiness(
     operator_scope_ports: OperatorScopePorts,
     registry_revision_id: RevisionId,
     read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
 ) -> ProjectionModeloReadiness | None:
     """Run the readiness projection for the target, tolerating advisory failure.
 
@@ -546,6 +548,7 @@ def _resolve_readiness(
                     period=command.period,
                 ),
             ),
+            operation=operation,
         )
     except (CadrumoError, StateProjectionReadError):
         _log.debug("quickfile readiness projection failed; continuing", exc_info=True)

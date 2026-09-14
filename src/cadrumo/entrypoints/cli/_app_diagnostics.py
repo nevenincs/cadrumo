@@ -125,6 +125,7 @@ def _compose_diagnostics_auth_probe_port(ctx: typer.Context):
     """Compose the diagnostics auth probe from the root-owned state ports."""
     from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_auth_probe_port
     from .state_projection_support import (
+        authority_operation,
         certificate_secret_backend_factory,
         operator_probe_ports,
         operator_scope_ports,
@@ -136,6 +137,7 @@ def _compose_diagnostics_auth_probe_port(ctx: typer.Context):
         operator_probe_ports=operator_probe_ports(ctx),
         operator_scope_ports=operator_scope_ports(ctx),
         read_ports=state_projection_read_ports(ctx),
+        operation=authority_operation(ctx),
     )
 
 

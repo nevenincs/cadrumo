@@ -117,6 +117,7 @@ from .sessions import (
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEvent, BucketEventType
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..state_projection_ports import StateProjectionReadPorts
     from ..workflow.state_models import WorkflowState
 
@@ -131,6 +132,7 @@ def configure_operator_auth(
     *,
     certificate_path: Path | None = None,
     operator_scope_ports: OperatorScopePorts,
+    operation: PinnedAuthorityOperation,
 ) -> AuthConfigureResult:
     """Configure the active auth provider in workflow state.
 
@@ -153,6 +155,8 @@ def configure_operator_auth(
             ``"certificate"``).
         certificate_path: Optional filesystem path to the operator's
             certificate file. Recorded in the event payload when supplied.
+        operator_scope_ports: Caller-composed profile and auth storage scope.
+        operation: Caller-owned authority pin used for profile health.
 
     Returns:
         An :class:`AuthConfigureResult` carrying the updated workflow state.
@@ -197,7 +201,7 @@ def configure_operator_auth(
 
             def mutate(current_state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
                 _assert_auth_recovery_not_in_progress(current_state)
-                profile_health = assess_active_profile_health(current_state)
+                profile_health = assess_active_profile_health(current_state, operation=operation)
                 active_bucket_id = profile_health.active_profile
                 if active_bucket_id is None:
                     raise AuthConfigureNoActiveBucketError(
@@ -256,6 +260,7 @@ def inspect_operator_auth(
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
 ) -> AuthStatusResult:
     """Return current local auth state as :class:`AuthStatusResult`, optionally scoped to a known provider slot.
 
@@ -283,6 +288,7 @@ def inspect_operator_auth(
         probe_live_backend=True,
         include_workspace_summary=False,
         include_pending_obligations=False,
+        operation=operation,
     )
     return _auth_status_from_projection(projection)
 
@@ -294,6 +300,7 @@ def test_operator_auth(
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
 ) -> AuthTestResult:
     """Return auth readiness as :class:`AuthTestResult`, plus a deeper local session-token probe.
@@ -329,6 +336,7 @@ def test_operator_auth(
                 operator_probe_ports=operator_probe_ports,
                 operator_scope_ports=operator_scope_ports,
                 read_ports=read_ports,
+                operation=operation,
                 settings=None,
             )
 
@@ -348,6 +356,7 @@ def test_operator_auth(
                 operator_probe_ports=operator_probe_ports,
                 operator_scope_ports=operator_scope_ports,
                 read_ports=read_ports,
+                operation=operation,
                 requested_provider=requested_provider,
                 resolved_settings=resolved_settings,
             )
@@ -360,6 +369,7 @@ def _test_operator_auth_from_snapshot(
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
     requested_provider: str | None,
     resolved_settings: Settings,
 ) -> AuthTestResult:
@@ -383,6 +393,7 @@ def _test_operator_auth_from_snapshot(
         probe_live_backend=True,
         include_workspace_summary=False,
         include_pending_obligations=False,
+        operation=operation,
     )
     status = _auth_status_from_projection(projection)
     session_probe = _probe_local_session(
@@ -455,6 +466,8 @@ def build_live_auth_preflight_report(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
+    read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
 ) -> LiveAuthPreflightReport:
     """Return a redacted preflight report before a live read may trigger auth.
@@ -489,6 +502,8 @@ def build_live_auth_preflight_report(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_probe_ports=operator_probe_ports,
             operator_scope_ports=operator_scope_ports,
+            read_ports=read_ports,
+            operation=operation,
             settings=settings,
         )
     except AuthOperationRequiresCustodySessionError:
@@ -509,6 +524,8 @@ def _build_live_auth_preflight_report(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
+    read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
 ) -> LiveAuthPreflightReport:
     """Build the report against an open route, refusing when it cannot be reached."""
@@ -519,6 +536,8 @@ def _build_live_auth_preflight_report(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 operator_probe_ports=operator_probe_ports,
                 operator_scope_ports=operator_scope_ports,
+                read_ports=read_ports,
+                operation=operation,
                 settings=None,
             )
 
@@ -539,6 +558,8 @@ def _build_live_auth_preflight_report(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_probe_ports=operator_probe_ports,
             operator_scope_ports=operator_scope_ports,
+            read_ports=read_ports,
+            operation=operation,
             requested_provider=(provider_kind.value if provider_kind is not None else None),
             resolved_settings=resolved_settings,
         )

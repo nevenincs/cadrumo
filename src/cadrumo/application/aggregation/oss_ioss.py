@@ -27,12 +27,11 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, ClassVar, Self
+from typing import Annotated, ClassVar
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
@@ -122,22 +121,6 @@ class OssIossLedgerCandidate(BaseModel):
     base_amount: Decimal = Field(ge=Decimal("0"))
     iva_amount: Decimal = Field(ge=Decimal("0"))
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _validate_registry_regime(self) -> Self:
-        """Refuse a candidate whose regime is absent from facts authority."""
-        regime = require_oss_ioss_regime(self.regime, effective_date=self.transaction_date)
-        transaction_kind = require_transaction_kind(
-            self.transaction_kind,
-            effective_date=self.transaction_date,
-        )
-        catalogue = resolve_oss_ioss_regime_catalogue(effective_date=self.transaction_date)
-        if transaction_kind.value not in catalogue.transaction_kinds_for(regime):
-            raise AggregationValidationError(
-                "transaction_kind is not admitted by the supplied OSS/IOSS regime",
-            )
-        return self
-
 
 def _expected_iva_amount(
     candidate: OssIossLedgerCandidate,
@@ -200,6 +183,24 @@ def validate_oss_ioss_observation(
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return validate_oss_ioss_observation(candidate, operation=indexed_operation)
+    regime = require_oss_ioss_regime(
+        candidate.regime,
+        effective_date=candidate.transaction_date,
+        authority=operation,
+    )
+    transaction_kind = require_transaction_kind(
+        candidate.transaction_kind,
+        effective_date=candidate.transaction_date,
+        operation=operation,
+    )
+    catalogue = resolve_oss_ioss_regime_catalogue(
+        effective_date=candidate.transaction_date,
+        authority=operation,
+    )
+    if transaction_kind.value not in catalogue.transaction_kinds_for(regime):
+        raise AggregationValidationError(
+            "transaction_kind is not admitted by the supplied OSS/IOSS regime",
+        )
     expected = _expected_iva_amount(candidate, operation=operation)
     persisted = round_to_cents(candidate.iva_amount)
     # Ledger amounts are rounded to two decimal places at persistence time, so a
@@ -356,7 +357,7 @@ def _group_exterior_service_observations(
     """Group Exterior service observations by destination and supported rate."""
     grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
     effective_date = observations[0].transaction_date if observations else date.today()
-    transaction_catalogue = resolve_transaction_kind_catalogue(effective_date, authority=operation)
+    transaction_catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
     external_kinds = transaction_catalogue.kinds_for_oss_regime("external_scheme")
     external_regime = resolve_oss_ioss_regime_catalogue(
         effective_date=effective_date,
@@ -649,6 +650,8 @@ def aggregate_oss_ioss_from_repositories(
         period: Filing period whose date span filters issued invoices.
         ports: Required application-owned catalogue read capabilities for the
             composed profile bucket.
+        operation: Existing generation-pinned authority operation. When omitted,
+            one indexed operation is opened at this composition boundary.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:

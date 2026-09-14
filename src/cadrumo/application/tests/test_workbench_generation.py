@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -13,6 +14,7 @@ from pydantic import ValidationError
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
@@ -63,6 +65,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin one compiled generation for the production workbench door."""
+    with compiled_bundled_authority().operation() as operation:
+        yield operation
 
 
 def _test_censal_operation_definition():
@@ -182,7 +191,9 @@ def test_generation_inputs_reject_admission_source_contradictions() -> None:
         WorkbenchGenerationInputsV1.model_validate(payload)
 
 
-def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing_loaders() -> None:
+def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing_loaders(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The production door verifies real local authorities without fake fixtures."""
 
     profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
@@ -192,6 +203,7 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
 
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
+        operation=authority_operation,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units),
         calculation_repository=cast(Any, revisions),
@@ -223,7 +235,9 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
     assert generation.search.availability is WorkbenchGenerationAvailability.UNAVAILABLE
 
 
-def test_secure_profile_provider_contains_rejected_declarations_projection() -> None:
+def test_secure_profile_provider_contains_rejected_declarations_projection(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A contradictory declaration catalogue refuses only its workspace source."""
     period = Period.from_year_and_code(2026, "1T")
     revision_id = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id
@@ -255,6 +269,7 @@ def test_secure_profile_provider_contains_rejected_declarations_projection() -> 
     filings = _Repository(ModeloRecordCatalogue())
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
+        operation=authority_operation,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units),
         calculation_repository=cast(Any, revisions),
@@ -276,7 +291,9 @@ def test_secure_profile_provider_contains_rejected_declarations_projection() -> 
     assert generation.declarations_admission.state is WorkbenchDestinationAdmissionState.UNAVAILABLE
 
 
-def test_secure_profile_aeat_sync_reader_contains_a_validation_error() -> None:
+def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A malformed AEAT Sync row refuses its source with the projector reason."""
     from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
@@ -309,6 +326,7 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error() -> None:
         )
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
+        operation=authority_operation,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units),
         calculation_repository=cast(Any, revisions),
@@ -339,7 +357,9 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error() -> None:
     assert generation.search.refusal == generation.aeat_sync.refusal
 
 
-def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error() -> None:
+def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A malformed subject reaches the real projector and is contained at the door."""
     from ..aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
@@ -361,6 +381,7 @@ def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error() -> 
         )
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
+        operation=authority_operation,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units),
         calculation_repository=cast(Any, revisions),
@@ -388,6 +409,7 @@ def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error() -> 
 
 def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
     monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A cross-repository capture is never published after a revision changes."""
     profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
@@ -401,6 +423,7 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
     monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
+        operation=authority_operation,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units),
         calculation_repository=cast(Any, revisions),
@@ -489,6 +512,7 @@ class _StableStore:
 
 def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A ledger write between the two reads refuses the whole generation.
 
@@ -512,6 +536,7 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     written = TransactionCatalogue.model_validate([_synthetic_transaction()])
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
+        operation=authority_operation,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units),
         calculation_repository=cast(Any, revisions),
@@ -530,7 +555,10 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
         door.read_workbench_generation_inputs()
 
 
-def test_a_quiet_ledger_publishes_its_generation(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_quiet_ledger_publishes_its_generation(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The guard must not refuse a capture nothing wrote during."""
     from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
@@ -546,6 +574,7 @@ def test_a_quiet_ledger_publishes_its_generation(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
+        operation=authority_operation,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units),
         calculation_repository=cast(Any, revisions),

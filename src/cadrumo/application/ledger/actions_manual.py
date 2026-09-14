@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Literal
 from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..invoices.transaction_linking import InvoiceTransactionLinkResult
 
 from ...core.aggregation import BindingSourceKind
@@ -47,7 +48,6 @@ from ...domain.transactions.models import (
     TransactionCatalogue,
     derive_import_fingerprint,
 )
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ..review.filter import LedgerReviewStatus
@@ -99,6 +99,7 @@ from .models import (
     ManualLedgerTransactionResult,
 )
 from .preflight import preflight_ledger_tax_readiness
+from .protocols import TransactionCatalogueCoCommitWriterProtocol
 from .review_projection import ledger_transaction_review_status, project_ledger_review_query
 from .usage_ratio_repository import UsageRatioProfileLoader
 
@@ -567,7 +568,7 @@ def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTrans
 def _manual_transaction_snapshot(
     *,
     bucket_id: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
     catalogue: TransactionCatalogue | None,
 ) -> tuple[Transaction, ...]:
     """Load one stable transaction snapshot, reusing a caller-owned catalogue."""
@@ -593,8 +594,9 @@ def _readiness_summary(
     *,
     bucket_id: str,
     period: Period | None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[int, int, bool | None]:
     """Return readiness counts while preserving the period-gated repository read."""
     if period is None:
@@ -607,6 +609,7 @@ def _readiness_summary(
             repository=transaction_repository,
         ),
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        operation=operation,
     )
     return preflight.checked_transaction_count, len(preflight.issues), preflight.ready
 
@@ -696,6 +699,7 @@ def summarize_manual_transactions(
         period=period,
         transaction_repository=ports.transaction_repository,
         usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+        operation=ports.operation,
     )
     # Money roll-up over active business/mixed rows (period-filtered when given):
     # the year-end / readiness money picture the personas asked for. Gross EUR

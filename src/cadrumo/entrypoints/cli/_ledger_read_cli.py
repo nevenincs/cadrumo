@@ -67,6 +67,7 @@ from .common import (
     transaction_catalogue_repo,
 )
 from .period_parsing import _canonical_period, _optional_canonical_period
+from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
     from ...application.ledger.llm_diagnostics import (
@@ -254,8 +255,8 @@ def _irpf_category_projection() -> tuple[list[dict[str, object]], list[str]]:
             "id": category.id,
             "purpose": category.purpose,
             "directions": [direction.value for direction in category.directions],
-            "net_paid_invoice": category.net_paid_invoice,
-            "related_category_ids": list(category.related_category_ids),
+            "net_paid_invoice": category.net_paid,
+            "related_category_ids": list(category.related_ids),
         }
         for category in ledger_irpf_category_catalogue()
     ]
@@ -428,13 +429,14 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
 
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     canonical = _canonical_period(period, year=year)
     report = preflight_ledger_tax_readiness(
         bucket_id=transaction_repository.bucket_id,
         period=canonical,
         transaction_repository=transaction_repository,
         usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+        operation=ports.operation,
     )
     payload = report.model_dump(mode="json")
     lines = [
@@ -474,7 +476,7 @@ def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblin
     from ...application.ledger.history_query import LedgerHistoryQuery, read_ledger_history
 
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
     history = read_ledger_history(
         LedgerHistoryQuery(transaction_id=resolved_id, include_split_siblings=include_split_siblings),
@@ -518,7 +520,7 @@ def ledger_export(
 ) -> None:
     """Export canonical bucket-scoped ledger rows through the backend."""
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     result = export_ledger_transactions(
         LedgerExportCommand(
             bucket_id=transaction_repository.bucket_id,
@@ -615,7 +617,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
     Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerViewResult`.
     """
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
     result = get_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
@@ -680,9 +682,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
 def ledger_status(ctx: typer.Context, period: str | None = None, year: int | None = None) -> None:
     """Summarize active-bucket ledger state through the backend status service."""
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     report = summarize_manual_transactions(
         bucket_id=transaction_repository.bucket_id,
         period=_optional_canonical_period(period, year=year),
@@ -721,6 +721,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
             period=report.period,
             transaction_repository=ports.transaction_repository,
             usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+            operation=ports.operation,
         )
         lines.extend(_ledger_status_readiness_issue_line(issue) for issue in readiness_issues)
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -774,7 +775,7 @@ def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
     Emits a :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
     """
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_id = resolve_ledger_transaction_id(transaction_repository, transaction_id)
     result = get_manual_transaction(
         bucket_id=transaction_repository.bucket_id,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -62,6 +63,9 @@ from .secret_submission import (
     EphemeralSecretBroker,
 )
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 
 def _financial_operand_broker(
     custody: OperationFinancialOperandCustodyRepository | None,
@@ -108,6 +112,7 @@ class OperationSupervisor(
         self,
         *,
         registry: OperationRegistry,
+        authority_operation: PinnedAuthorityOperation,
         journal: OperationJournal,
         event_stream: OperationEventStream,
         leases: OperationLeaseRepository,
@@ -124,6 +129,7 @@ class OperationSupervisor(
     ) -> None:
         """Bind the registry and durable ports for one process owner."""
         self.registry = registry
+        self._authority_operation = authority_operation
         self._journal = journal
         self._event_stream = event_stream
         self._leases = leases

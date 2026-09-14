@@ -20,8 +20,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import (
     LedgerDatePartition,
@@ -39,6 +41,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "77777777-7777-4777-8777-777777777777"
 _PERIOD = Period.from_year_and_code(2026, "0A")
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin the compiled authority used by the readiness workflow."""
+    with compiled_bundled_authority().operation() as operation:
+        yield operation
 
 
 class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
@@ -147,7 +156,9 @@ def _empty_usage_ratio_profile(*, bucket_id: str) -> UsageRatioProfile:
     return UsageRatioProfile()
 
 
-def test_a_deductible_row_missing_its_tax_facts_reports_them_as_absent() -> None:
+def test_a_deductible_row_missing_its_tax_facts_reports_them_as_absent(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The explaining facts arrive with the issue, absent values included.
 
     A business expense with no category and no IVA facts is the ordinary
@@ -160,6 +171,7 @@ def test_a_deductible_row_missing_its_tax_facts_reports_them_as_absent() -> None
             period=_PERIOD,
             transaction_repository=repository,
             usage_ratio_profile_loader=_empty_usage_ratio_profile,
+            operation=authority_operation,
         )
 
     assert issues, "a deductible row with no tax facts must raise readiness issues"
@@ -174,7 +186,7 @@ def test_a_deductible_row_missing_its_tax_facts_reports_them_as_absent() -> None
     assert first.detail
 
 
-def test_every_issue_names_a_reason_and_a_detail() -> None:
+def test_every_issue_names_a_reason_and_a_detail(authority_operation: PinnedAuthorityOperation) -> None:
     """A reason without a detail cannot be acted on."""
     with _stored(_transaction(provider_id="a")) as repository:
         issues = read_ledger_readiness(
@@ -182,12 +194,13 @@ def test_every_issue_names_a_reason_and_a_detail() -> None:
             period=_PERIOD,
             transaction_repository=repository,
             usage_ratio_profile_loader=_empty_usage_ratio_profile,
+            operation=authority_operation,
         )
 
     assert all(issue.reason and issue.detail for issue in issues)
 
 
-def test_a_ready_ledger_reports_no_issues() -> None:
+def test_a_ready_ledger_reports_no_issues(authority_operation: PinnedAuthorityOperation) -> None:
     """A personal row is not deductible, so it raises nothing to fix."""
     with _stored(_transaction(provider_id="a", classification=BusinessClassification.PERSONAL)) as repository:
         issues = read_ledger_readiness(
@@ -195,6 +208,7 @@ def test_a_ready_ledger_reports_no_issues() -> None:
             period=_PERIOD,
             transaction_repository=repository,
             usage_ratio_profile_loader=_empty_usage_ratio_profile,
+            operation=authority_operation,
         )
 
     assert issues == ()

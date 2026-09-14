@@ -39,6 +39,7 @@ from ...application.user_profile.workbench_bootstrap import (
     WorkbenchBootstrapSessionState,
     WorkbenchBootstrapV1,
     WorkbenchRegistrationRequiredV1,
+    prepare_workbench_bootstrap,
 )
 from .bootstrap import run_workbench_bootstrap
 from .launcher import (
@@ -60,6 +61,7 @@ if TYPE_CHECKING:
     from ...application.user_profile.login_interaction import ProfileLoginChoice
     from ...application.user_profile.login_session import ProfileLoginOutcome
     from ...application.user_profile.overview import ProfileOverview
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from .secret.login import LoginScreen
 
 SESSION_COMPLETED = 0
@@ -96,6 +98,7 @@ def compose_authenticated_account_inputs(
     profile_id: str,
     profile_label: str,
     login_choices: Sequence[ProfileLoginChoice],
+    operation: PinnedAuthorityOperation,
 ) -> InstalledWorkbenchAccountInputsV1:
     """Bind the account doors of one already-authenticated profile.
 
@@ -111,12 +114,29 @@ def compose_authenticated_account_inputs(
     from ...core.credentials import assess_profile_password
     from .secret.passphrase import build_profile_passphrase_change_door
 
-    repository = ProfileRecordRepository.for_current_session(profile_id)
-    profile_schema = repository.session.profile_decode_context.schema
+    profile_decode_context = operation.profile_decode_context()
+    repository = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    )
+    profile_schema = profile_decode_context.schema
 
     def persist_profile_field(path: str, value: str) -> ProfileOverview:
-        applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
+        applied = apply_manager_profile_field_mutation(
+            profile_id=profile_id,
+            path=path,
+            value=value,
+            profile_decode_context=profile_decode_context,
+        )
         return build_profile_overview(applied, label=profile_label, schema=profile_schema)
+
+    def authenticate(candidate_profile_id: str, passphrase: str):
+        """Authenticate through the same generation-pinned decode context."""
+        return attempt_profile_login(
+            candidate_profile_id,
+            passphrase,
+            profile_decode_context=profile_decode_context,
+        )
 
     return InstalledWorkbenchAccountInputsV1(
         profile_id=profile_id,
@@ -127,9 +147,12 @@ def compose_authenticated_account_inputs(
         ),
         persist_profile_field=persist_profile_field,
         login_choices=tuple(login_choices),
-        authenticate=attempt_profile_login,
+        authenticate=authenticate,
         assess_password=assess_profile_password,
-        rotate_password=build_profile_passphrase_change_door(profile_id),
+        rotate_password=build_profile_passphrase_change_door(
+            profile_id,
+            profile_decode_context=profile_decode_context,
+        ),
     )
 
 
@@ -146,25 +169,6 @@ def compose_authenticated_root_inputs_provider(
     def action(action_id: str) -> ActionReference:
         return ActionReference(action_id=lookup_action(action_id).action_id)
 
-    dependencies = InstalledWorkbenchFactoryDependenciesV1(
-        account=compose_authenticated_account_inputs(
-            profile_id=profile_id,
-            profile_label=profile_label,
-            login_choices=login_choices,
-        ),
-        profile_admission=WorkbenchDestinationAdmission(
-            destination="workbench.profile",
-            state=WorkbenchDestinationAdmissionState.AVAILABLE,
-        ),
-        ledger_review_action=action(_LEDGER_REVIEW_ACTION),
-        ledger_evidence_action=action(_LEDGER_EVIDENCE_ACTION),
-        ledger_classify_action=action(_LEDGER_CLASSIFY_ACTION),
-        ledger_link_action=action(_LEDGER_LINK_ACTION),
-        declarations_work_action=action(_DECLARATIONS_WORK_ACTION),
-        declarations_revisions_action=action(_DECLARATIONS_REVISIONS_ACTION),
-        declarations_filing_action=action(_DECLARATIONS_FILING_ACTION),
-    )
-
     def provide(operation_runtime: TuiOperationCompositionV1) -> InstalledWorkbenchRootInputsV1:
         """Bind the generation to the exact contracts this session composed.
 
@@ -173,10 +177,31 @@ def compose_authenticated_root_inputs_provider(
         generation provider is therefore composed here, per session, rather
         than ahead of the runtime it has to agree with.
         """
+        operation = operation_runtime.authority_operation
+        dependencies = InstalledWorkbenchFactoryDependenciesV1(
+            account=compose_authenticated_account_inputs(
+                profile_id=profile_id,
+                profile_label=profile_label,
+                login_choices=login_choices,
+                operation=operation,
+            ),
+            profile_admission=WorkbenchDestinationAdmission(
+                destination="workbench.profile",
+                state=WorkbenchDestinationAdmissionState.AVAILABLE,
+            ),
+            ledger_review_action=action(_LEDGER_REVIEW_ACTION),
+            ledger_evidence_action=action(_LEDGER_EVIDENCE_ACTION),
+            ledger_classify_action=action(_LEDGER_CLASSIFY_ACTION),
+            ledger_link_action=action(_LEDGER_LINK_ACTION),
+            declarations_work_action=action(_DECLARATIONS_WORK_ACTION),
+            declarations_revisions_action=action(_DECLARATIONS_REVISIONS_ACTION),
+            declarations_filing_action=action(_DECLARATIONS_FILING_ACTION),
+        )
         return compose_installed_workbench_generation_provider(
             compose_secure_profile_workbench_generation_provider(
                 profile_id=profile_id,
                 profile_label=profile_label,
+                operation=operation,
                 operation_contracts=operation_runtime.public_contracts,
             ),
             dependencies,
@@ -195,7 +220,9 @@ def observe_installed_bootstrap(*, allow_credential_screens: bool = True) -> Ins
     proving the artifact starts. A lowered run reports the inventory it
     observed and stops rather than pretending to authenticate.
     """
+    from ...application.user_profile.login_interaction import attempt_profile_login
     from ...core.credentials import assess_profile_password
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from .secret.credentials import run_credential_screen
     from .secret.registration import RegistrationScreen, build_profile_registration_attempt
 
@@ -220,13 +247,21 @@ def observe_installed_bootstrap(*, allow_credential_screens: bool = True) -> Ins
     def observed(_preparation: WorkbenchBootstrapV1, /) -> None:
         """Accept a closed state; the caller reads the returned observation."""
 
-    state = run_workbench_bootstrap(
-        run_login=run_login,
-        registration_door=register,
-        authenticated_door=observed,
-        cancelled_door=observed,
-        degraded_door=observed,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        profile_decode_context = operation.profile_decode_context()
+        state = run_workbench_bootstrap(
+            prepare=lambda: prepare_workbench_bootstrap(profile_decode_context=profile_decode_context),
+            run_login=run_login,
+            registration_door=register,
+            authenticated_door=observed,
+            cancelled_door=observed,
+            degraded_door=observed,
+            authenticate=lambda profile_id, passphrase: attempt_profile_login(
+                profile_id,
+                passphrase,
+                profile_decode_context=profile_decode_context,
+            ),
+        )
     return InstalledBootstrapObservationV1(state=state, profile_registered=registered[0])
 
 

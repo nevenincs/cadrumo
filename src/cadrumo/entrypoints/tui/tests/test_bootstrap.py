@@ -48,6 +48,11 @@ def _authenticated_outcome() -> ProfileLoginOutcome:
     )
 
 
+def _authenticate(_profile_id: str, _passphrase: str) -> ProfileLoginAttempt:
+    """Satisfy the coordinator's caller-owned authentication door in routing tests."""
+    return ProfileLoginAttempt(refusal="unused")
+
+
 @pytest.mark.asyncio
 async def test_login_required_builds_the_real_screen_with_injected_authentication() -> None:
     attempts: list[tuple[str, str]] = []
@@ -95,6 +100,7 @@ def test_coordinator_routes_resumed_custody_without_opening_login() -> None:
         authenticated_door=authenticated.append,
         cancelled_door=lambda _state: pytest.fail("resumed custody must not cancel"),
         degraded_door=lambda _state: pytest.fail("resumed custody must not degrade"),
+        authenticate=_authenticate,
     )
 
     assert result is resumed
@@ -112,6 +118,7 @@ def test_coordinator_routes_login_cancellation_without_authenticating() -> None:
         authenticated_door=lambda _state: pytest.fail("cancelled login must not authenticate"),
         cancelled_door=cancelled.append,
         degraded_door=lambda _state: pytest.fail("recognized inventory must not degrade"),
+        authenticate=_authenticate,
     )
 
     assert result.session_state is WorkbenchBootstrapSessionState.CANCELLED
@@ -134,6 +141,7 @@ def test_coordinator_routes_real_login_outcome_to_authenticated_host() -> None:
         authenticated_door=authenticated.append,
         cancelled_door=lambda _state: pytest.fail("authenticated login must not cancel"),
         degraded_door=lambda _state: pytest.fail("recognized inventory must not degrade"),
+        authenticate=_authenticate,
     )
 
     assert result.session_state is WorkbenchBootstrapSessionState.AUTHENTICATED
@@ -156,6 +164,7 @@ def test_coordinator_routes_degraded_inventory_without_opening_login() -> None:
         authenticated_door=lambda _state: pytest.fail("degraded inventory must not authenticate"),
         cancelled_door=lambda _state: pytest.fail("degraded inventory must not cancel"),
         degraded_door=observed.append,
+        authenticate=_authenticate,
     )
 
     assert result is degraded
@@ -176,6 +185,7 @@ def test_coordinator_routes_concurrent_inventory_without_opening_login() -> None
         authenticated_door=lambda _state: pytest.fail("concurrent inventory must not authenticate"),
         cancelled_door=lambda _state: pytest.fail("concurrent inventory must not cancel"),
         degraded_door=observed.append,
+        authenticate=_authenticate,
     )
 
     assert result is concurrent
@@ -193,6 +203,7 @@ def test_coordinator_hands_empty_inventory_to_registration_once() -> None:
         authenticated_door=lambda _state: pytest.fail("empty inventory must not authenticate"),
         cancelled_door=lambda _state: pytest.fail("empty inventory must not cancel"),
         degraded_door=lambda _state: pytest.fail("empty inventory must not degrade"),
+        authenticate=_authenticate,
     )
 
     assert result is empty

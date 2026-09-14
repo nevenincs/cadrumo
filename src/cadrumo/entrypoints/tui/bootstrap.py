@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Protocol
 
-from ...application.user_profile.login_interaction import ProfileLoginAttempt, attempt_profile_login
+from ...application.user_profile.login_interaction import ProfileLoginAttempt
 from ...application.user_profile.login_session import ProfileLoginOutcome
 from ...application.user_profile.workbench_bootstrap import (
     WorkbenchBootstrapInventoryState,
@@ -44,7 +44,7 @@ class WorkbenchLoginScreenRunnerV1(Protocol):
 def workbench_login_screen(
     preparation: WorkbenchBootstrapV1,
     *,
-    authenticate: Callable[[str, str], ProfileLoginAttempt] = attempt_profile_login,
+    authenticate: Callable[[str, str], ProfileLoginAttempt],
 ) -> LoginScreen:
     """Build the real Login screen for an application-admitted bootstrap state."""
     if preparation.session_state is not WorkbenchBootstrapSessionState.LOGIN_REQUIRED:
@@ -83,7 +83,7 @@ def run_workbench_bootstrap(
     authenticated_door: WorkbenchBootstrapStateDoorV1,
     cancelled_door: WorkbenchBootstrapStateDoorV1,
     degraded_door: WorkbenchBootstrapStateDoorV1,
-    authenticate: Callable[[str, str], ProfileLoginAttempt] = attempt_profile_login,
+    authenticate: Callable[[str, str], ProfileLoginAttempt],
 ) -> WorkbenchBootstrapV1:
     """Drive one child session from inventory through a closed safe outcome.
 

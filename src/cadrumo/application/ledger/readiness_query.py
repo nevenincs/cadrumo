@@ -28,6 +28,7 @@ from .preflight import preflight_ledger_tax_readiness
 
 if TYPE_CHECKING:
     from ...core.period import Period
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from .protocols import TransactionCatalogueCoCommitWriterProtocol
 from .usage_ratio_repository import UsageRatioProfileLoader
@@ -60,6 +61,7 @@ def read_ledger_readiness(
     period: Period,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[LedgerReadinessIssueV1, ...]:
     """Report this period's readiness issues with their explaining facts.
 
@@ -67,6 +69,8 @@ def read_ledger_readiness(
         bucket_id: The owning profile bucket.
         period: The filing period to assess.
         transaction_repository: Explicit bucket-scoped catalogue port.
+        usage_ratio_profile_loader: Profile-scoped declared ratio reader.
+        operation: Caller-owned authority pin shared with the ledger workflow.
 
     Returns:
         Every issue the preflight raised, in report order, each carrying the
@@ -77,6 +81,7 @@ def read_ledger_readiness(
         period=period,
         transaction_repository=transaction_repository,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        operation=operation,
     )
     from .actions_common import resolve_transaction_repository
 
