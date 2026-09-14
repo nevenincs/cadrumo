@@ -1164,11 +1164,13 @@ def _choose_drops(
         if storage_only and _lineage(candidate.row) is not None:
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
-        if not storage_only and restatement_differences(
-            typed[row_id], revision, typed_predecessor[lineage], predecessor_revision
-        ):
-            kept[KeptReason.DIFFERS] += 1
-            continue
+        if not storage_only:
+            typed_differences = restatement_differences(
+                typed[row_id], revision, typed_predecessor[lineage], predecessor_revision
+            )
+            if set(typed_differences) - _LINEAGE_CLAIMS:
+                kept[KeptReason.DIFFERS] += 1
+                continue
         matched_storage_ids.add(_row_id(candidate.row))
         materialised = _effective(
             _without_lineage_claims(candidate.row),
