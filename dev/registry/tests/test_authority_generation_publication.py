@@ -61,3 +61,26 @@ def test_held_reader_finishes_across_atomic_descriptor_cutover(tmp_path: Path) -
                 assert current.profile_schema().title == "Profile schema second"
     finally:
         authority.close()
+
+
+def test_retired_database_cleanup_is_deferred_until_held_reader_closes(tmp_path: Path) -> None:
+    """A held generation survives cutover and is retired by a later publication."""
+    first = install_validated_authority_database(_artifact("first"), destination=tmp_path, require_current=lambda: None)
+    authority = IndexedRegistryAuthority(tmp_path / "authority.current.json")
+    first_path = tmp_path / first.database
+    try:
+        with authority.operation() as held:
+            second = install_validated_authority_database(
+                _artifact("second"),
+                destination=tmp_path,
+                require_current=lambda: None,
+            )
+            assert held.profile_schema().title == "Profile schema first"
+            assert first_path.is_file()
+    finally:
+        authority.close()
+
+    third = install_validated_authority_database(_artifact("third"), destination=tmp_path, require_current=lambda: None)
+    assert not first_path.exists()
+    assert not (tmp_path / second.database).exists()
+    assert (tmp_path / third.database).is_file()

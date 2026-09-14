@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry.runtime_graph import (
     expression_parameter_refs,
     formula_evaluation_order,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
@@ -36,7 +36,6 @@ _CASILLA_0001: CasillaId = validated_casilla_id("0001", surface="_CASILLA_0001")
 _CASILLA_0002: CasillaId = validated_casilla_id("0002", surface="_CASILLA_0002")
 _CASILLA_0003: CasillaId = validated_casilla_id("0003", surface="_CASILLA_0003")
 _CASILLA_0505: CasillaId = validated_casilla_id("0505", surface="_CASILLA_0505")
-_M210_RATE_FORMULA_ID = "m210-tipo-gravamen-2025-resolve"
 _M210_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 
 
@@ -57,6 +56,14 @@ def _m210_2025_revision() -> ModeloRevision:
     # shape assertions are independent of unrelated peer modelo churn.
     modelos, _catalogues = bundled_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == "210").revisions["2025"]
+
+
+def _m210_rate_formula(revision: ModeloRevision) -> FormulaDefinition:
+    return next(
+        formula
+        for formula in revision.formulas
+        if formula.target_casilla_id == "tipo_gravamen" and formula.expression.op == "irnr_resolve_tipo_gravamen"
+    )
 
 
 def _m130_2025_revision() -> ModeloRevision:
@@ -192,7 +199,7 @@ def test_enum_consumed_binding_ids_reads_current_irnr_resolve_tipo_gravamen_coun
     """The committed M210 2025 five-arg rate formula routes country as an enum binding."""
 
     revision = _m210_2025_revision()
-    formula = next(formula for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
+    formula = _m210_rate_formula(revision)
     expression = formula.expression
     assert expression.op == "irnr_resolve_tipo_gravamen"
     assert len(expression.args) == 5
@@ -209,7 +216,7 @@ def test_enum_consumed_binding_ids_ignores_retired_irnr_six_arg_country_arg() ->
     """The retired six-arg (convenio-parameter) rate formula is not a current enum-dispatch shape."""
 
     revision = _m210_2025_revision()
-    formula = next(formula for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
+    formula = _m210_rate_formula(revision)
     # FormulaExpression.model_validate() now enforces op arity centrally
     # (require_formula_operator_arity, at construction), so this retired
     # 6-arg shape can no longer be built via normal validation.

@@ -13,8 +13,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
-from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.registry_contract import validate_user_profile_registry_contract
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.validator import RegistryValidator
 

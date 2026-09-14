@@ -79,15 +79,15 @@ import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
+    IndexedRegistryAuthority,
     ValidatedRegistryAuthority,
-    bundled_authority,
-    bundled_authority_artifact_path,
+    bundled_authority_descriptor_path,
 )
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
 from ..compiler.loader import load_registry_tree
-from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_artifact_currency
+from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_database_currency
 from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
 from .errors import RegistryApplicationInputError
 from .manager import (
@@ -123,9 +123,9 @@ def validate_registry(
     return authority
 
 
-def load_bundled_runtime_authority() -> ValidatedRegistryAuthority:
+def load_bundled_runtime_authority() -> IndexedRegistryAuthority:
     """Load the exact artifact-backed authority used by the product runtime."""
-    return bundled_authority()
+    return IndexedRegistryAuthority(bundled_authority_descriptor_path())
 
 
 _NoValidate = Annotated[
@@ -244,16 +244,21 @@ def runtime_load(as_json: _AsJson = False) -> None:
             typer.echo(f"registry-runtime-load\tstatus=failed\tloadable=false\tdetail={detail}", err=True)
         raise typer.Exit(code=1) from error
 
-    revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
+    try:
+        with authority.operation() as operation:
+            modelo_count = len(operation.modelo_ids())
+            revision_count = len(operation.revision_ids())
+    finally:
+        authority.close()
     if as_json:
         typer.echo(
             json.dumps(
                 {
                     "status": "passed",
                     "loadable": True,
-                    "modelo_count": len(authority.modelos),
+                    "modelo_count": modelo_count,
                     "revision_count": revision_count,
-                    "artifact": str(bundled_authority_artifact_path()),
+                    "artifact": str(bundled_authority_descriptor_path()),
                 },
                 indent=2,
             )
@@ -263,9 +268,9 @@ def runtime_load(as_json: _AsJson = False) -> None:
         "registry-runtime-load"
         "\tstatus=passed"
         "\tloadable=true"
-        f"\tmodelos={len(authority.modelos)}"
+        f"\tmodelos={modelo_count}"
         f"\trevisions={revision_count}"
-        f"\tartifact={bundled_authority_artifact_path()}",
+        f"\tartifact={bundled_authority_descriptor_path()}",
     )
 
 
@@ -346,8 +351,8 @@ def integrity(
     """
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
-    currency = authority_artifact_currency(
-        authority_artifact or bundled_authority_artifact_path(),
+    currency = authority_database_currency(
+        authority_artifact or bundled_authority_descriptor_path(),
         registry_root=resolved_registry_root,
         source_root=resolved_source_root,
     )

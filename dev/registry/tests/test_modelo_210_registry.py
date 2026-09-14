@@ -202,7 +202,7 @@ def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_o
             "modelo-210-2025-0a-renta-imputada": (
                 None,
                 ("02",),
-                date(2026, 1, 1),
+                date(2026, 4, 1),
                 date(2026, 12, 31),
             ),
         },

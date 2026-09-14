@@ -14,7 +14,7 @@ from typing import Final
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
-    bundled_authority_artifact_path,
+    bundled_authority_descriptor_path,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
@@ -28,7 +28,7 @@ from ..compiler.validate_export_field_placement import (
 from ..conformance.cli import load_bundled_runtime_authority, validate_registry
 from ..maintenance_support import OracleEnvironment
 from ..parity.maintenance import audit_registry_oracles
-from ..pipeline.authority_publication import AuthorityArtifactCurrencyStatus, authority_artifact_currency
+from ..pipeline.authority_publication import AuthorityArtifactCurrencyStatus, authority_database_currency
 
 _TARGET_STATE_NAMES: Final[tuple[str, ...]] = ("current", "stale", "drifted", "never-committed", "unreadable")
 
@@ -122,7 +122,7 @@ def collect_registry_status(
     """Delegate each status axis to its owning validator or currency primitive."""
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
-    resolved_artifact = authority_artifact or bundled_authority_artifact_path()
+    resolved_artifact = authority_artifact or bundled_authority_descriptor_path()
     details: list[str] = []
 
     authority = None
@@ -194,7 +194,7 @@ def collect_registry_status(
     recorded_digest: str | None = None
     candidate_digest: str | None = None
     try:
-        currency = authority_artifact_currency(
+        currency = authority_database_currency(
             resolved_artifact,
             registry_root=resolved_registry_root,
             source_root=resolved_source_root,
@@ -209,7 +209,8 @@ def collect_registry_status(
         details.append(f"AUTHORITY: {type(error).__name__}: {error}")
 
     try:
-        load_bundled_runtime_authority()
+        runtime_authority = load_bundled_runtime_authority()
+        runtime_authority.close()
         loadable = True
     except Exception as error:
         loadable = False
