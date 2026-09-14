@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:495a64d27d776ce59c2f03e7cc7c7f87ea130e778b2afd0da7abc1b51e1add1e'
+body_hash: 'sha256:e3303d7c84a4ce252ddc22a42c4b3aed0997d8953640acdabdf1a19d5413904c'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-W01-P01-S01]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W01-P02-S02]]'
@@ -16,6 +16,8 @@ related:
   - '[[2026-09-10-registry-authority-artifact-boundary-W03-P04-S06]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W03-P04-S09]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W03-P04-S10]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W03-P05-S07]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W03-P05-S08]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W04-P06-S11]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W04-P06-S12]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W04-P07-S13]]'
@@ -24,6 +26,17 @@ related:
   - '[[2026-09-10-registry-authority-artifact-boundary-W04-P07-summary]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W04-P08-S16]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W04-P08-S17]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W04-P08-S18]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P09-S19]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P09-S20]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P09-S21]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P10-S22]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P10-S23]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P11-S24]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P11-S25]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P12-S26]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P12-S27]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-W05-P13-S28]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-artifact-contract-audit]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-artifact-runtime-audit]]'
@@ -56,7 +69,10 @@ related:
   - '[[2026-09-12-registry-authority-artifact-boundary-typed-runtime-catalogues-audit]]'
   - '[[2026-09-13-registry-authority-artifact-boundary-installed-v4-boundary-proof-audit]]'
   - '[[2026-09-13-registry-authority-artifact-boundary-v4-artifact-regeneration-audit]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-remediation-result-reference]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-storage-loaders-and-facts-scratch-research]]'
 ---
 
 # `registry-authority-artifact-boundary` feature index
@@ -98,6 +114,7 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-12-registry-authority-artifact-boundary-typed-runtime-catalogues-audit` - `registry-authority-artifact-boundary` audit: `typed runtime catalogues`
 - `2026-09-13-registry-authority-artifact-boundary-installed-v4-boundary-proof-audit` - `registry-authority-artifact-boundary` audit: `Installed v4 boundary proof`
 - `2026-09-13-registry-authority-artifact-boundary-v4-artifact-regeneration-audit` - `registry-authority-artifact-boundary` audit: `v4 artifact regeneration and compactness`
+- `2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit` - `registry-authority-artifact-boundary` audit: `authority backend final review`
 
 ### exec
 
@@ -117,6 +134,19 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-10-registry-authority-artifact-boundary-W04-P07-summary` - `registry-authority-artifact-boundary` `W04.P07` summary
 - `2026-09-10-registry-authority-artifact-boundary-W04-P08-S16` - Regenerate and measure the tracked v4 artifact, proving semantic equality and the compactness budget
 - `2026-09-10-registry-authority-artifact-boundary-W04-P08-S17` - Prove installed artifact-only execution, corruption refusal, zero raw AEAT readers, typed operative-value consumption and centralized temporal admission
+- `2026-09-10-registry-authority-artifact-boundary-W03-P05-S07` - Prove artifact publication and installed runtime behavior
+- `2026-09-10-registry-authority-artifact-boundary-W03-P05-S08` - Document the artifact publication and recovery workflow
+- `2026-09-10-registry-authority-artifact-boundary-W04-P08-S18` - Document publication, recovery, schema migration and runtime ownership, then complete final architecture review
+- `2026-09-10-registry-authority-artifact-boundary-W05-P09-S19` - Require full registry and evidence validation of the captured candidate before atomic publication
+- `2026-09-10-registry-authority-artifact-boundary-W05-P09-S20` - Separate source-manifest, compiler-schema build, component-dependency, and payload identities and enforce full canonical publication
+- `2026-09-10-registry-authority-artifact-boundary-W05-P09-S21` - Reject incomplete, duplicate, mismatched, or unknown-reference artifact evidence before replacement and runtime admission
+- `2026-09-10-registry-authority-artifact-boundary-W05-P10-S22` - Make the authority holder, temporal mappings, snapshots, and every reachable semantic value deeply immutable
+- `2026-09-10-registry-authority-artifact-boundary-W05-P10-S23` - Prove installed Modelo 303 query, copy, empty-ledger calculation, and published 2026 export-field codec paths without authoring context or weakened membership validation
+- `2026-09-10-registry-authority-artifact-boundary-W05-P11-S24` - Share deeply immutable typed definitions, index evidence, and bound generation, context-projection, and snapshot caches without requiring eager revision or layout precomputation
+- `2026-09-10-registry-authority-artifact-boundary-W05-P11-S25` - Measure fresh-process post-import load, peak memory, first snapshots, warm queries, and full enumeration; record results without asserting unapproved product budgets
+- `2026-09-10-registry-authority-artifact-boundary-W05-P12-S26` - Capture compiler-schema identity and exact uncached or staged transitive input manifests for publication
+- `2026-09-10-registry-authority-artifact-boundary-W05-P12-S27` - Prove concurrent-input refusal while retaining full-only canonical publication; defer selective component output and equivalence claims until exact dependency closure is implemented
+- `2026-09-10-registry-authority-artifact-boundary-W05-P13-S28` - Retain the optimized current format and defer indexed storage until concrete product startup or memory SLOs require a separate architecture decision
 
 ### plan
 
@@ -127,7 +157,9 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-12-registry-authority-artifact-boundary-installed-behavioral-proof-reference` - `registry-authority-artifact-boundary` reference: `installed behavioral proof`
 - `2026-09-12-registry-authority-artifact-boundary-tax-id-bootstrap-boundary-reference` - `registry-authority-artifact-boundary` reference: `tax id bootstrap boundary`
 - `2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference` - `registry-authority-artifact-boundary` reference: `Post-delta authority backend architecture review`
+- `2026-09-14-registry-authority-artifact-boundary-remediation-result-reference` - Authority backend implementation and performance review
 
 ### research
 
 - `2026-09-10-registry-authority-artifact-boundary-research` - `registry-authority-artifact-boundary` research: immutable runtime publication
+- `2026-09-14-registry-authority-artifact-boundary-storage-loaders-and-facts-scratch-research` - `registry-authority-artifact-boundary` research: `Authority storage and layered loaders: scratch findings and facts enrollment gap`
