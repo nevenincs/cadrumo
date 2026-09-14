@@ -15,14 +15,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
 
 __all__ = [
     "m347_clave_c_declarable_party_ids",
@@ -40,13 +38,12 @@ _M347_CLAVE_C_THRESHOLD_FACT_ID = "m347-clave-c-beneficiary-declaration-threshol
 def resolve_m347_counterparty_annual_threshold(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the canonical annual counterparty threshold with provenance."""
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError("M347 threshold requires an explicit authority operation or scope")
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
             fact_id=_M347_COUNTERPARTY_THRESHOLD_FACT_ID,
@@ -60,13 +57,12 @@ def resolve_m347_counterparty_annual_threshold(
 def resolve_m347_clave_c_declaration_threshold(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the distinct clave-C threshold with its statutory provenance."""
+    authority = authority or governed_facts_in_scope()
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError("M347 threshold requires an explicit authority operation or scope")
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
             fact_id=_M347_CLAVE_C_THRESHOLD_FACT_ID,
@@ -109,7 +105,7 @@ def m347_declarable_party_ids(
     totals: Mapping[str, Decimal],
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> frozenset[str]:
     """Return the party ids whose summed Modelo 347 total passes the GENERAL declaration floor.
 
@@ -134,7 +130,7 @@ def m347_clave_c_declarable_party_ids(
     totals: Mapping[str, Decimal],
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> frozenset[str]:
     """Return the beneficiary ids whose summed clave-C total passes ITS OWN, lower floor.
 

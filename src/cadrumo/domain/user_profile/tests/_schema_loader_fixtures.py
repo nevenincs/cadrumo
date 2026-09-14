@@ -8,9 +8,9 @@ test modules import exactly one provider so their visibility never competes.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from ..loader import load_user_profile_schema
 from ..schema import ProfileSchemaDefinition
 
 

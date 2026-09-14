@@ -102,9 +102,7 @@ def resolve_art104_tres_exclusion_catalogue(
     """Resolve the complete art. 104.Tres catalogue through facts authority."""
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        from .authority import bundled_authority
-
-        authority = bundled_authority()
+        raise RegistryValidationError("prorrata exclusion catalogue requires an explicit authority operation or scope")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_FACT_ID,

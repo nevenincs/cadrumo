@@ -28,6 +28,7 @@ from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .ids import BindingId
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 
@@ -119,6 +120,8 @@ def validate_retenciones_aggregation_binding(binding: BindingDefinition) -> list
 def resolve_retenciones_aggregation_binding_values(
     revision: ModeloRevision,
     aggregation: _RetencionesAggregationProtocol,
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> dict[BindingId, Decimal]:
     """Materialise every ``retenciones_aggregation`` binding on a :class:`ModeloRevision`.
 
@@ -131,22 +134,23 @@ def resolve_retenciones_aggregation_binding_values(
         if binding.source != BindingSourceKind.RETENCIONES_AGGREGATION:
             continue
         selector = provider_member(binding, RetencionesAggregationProvider)
-        resolved[binding.id] = _retenciones_selector_value(selector, aggregation)
+        resolved[binding.id] = _retenciones_selector_value(selector, aggregation, authority=authority)
     return resolved
 
 
 def _registry_schemes_for_modelo(
     aggregation: _RetencionesAggregationProtocol,
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> frozenset[RetencionScheme]:
     """Resolve the selected modelo's allowed scheme tokens from fact authority."""
-    from .authority import bundled_authority
     from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-    from .queries import RegistryQueryService
     from .schema_base import DateAxis
 
-    authority = bundled_authority()
-    RegistryQueryService(authority).describe_modelo(aggregation.modelo, as_of=aggregation.period.end_date)
-    resolved = authority.resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError("retenciones scheme lookup requires an explicit authority operation or scope")
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m111-m115-m123-withholding-scheme-catalogue",
             date_axis=DateAxis.FILING_PERIOD,
@@ -176,6 +180,8 @@ def _registry_schemes_for_modelo(
 def _retenciones_selector_value(
     selector: RetencionesAggregationProvider,
     aggregation: _RetencionesAggregationProtocol,
+    *,
+    authority: GovernedFactSource | None = None,
 ) -> Decimal:
     if not selector.schemes:
         values = {
@@ -185,7 +191,7 @@ def _retenciones_selector_value(
         }
         return values[selector.fact]
 
-    declared_schemes = _registry_schemes_for_modelo(aggregation)
+    declared_schemes = _registry_schemes_for_modelo(aggregation, authority=authority)
     unknown_schemes = frozenset(selector.schemes).difference(declared_schemes)
     if unknown_schemes:
         rendered = ", ".join(sorted(scheme.value for scheme in unknown_schemes))

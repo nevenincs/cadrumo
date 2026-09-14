@@ -35,6 +35,7 @@ from pydantic import BeforeValidator, Field, model_validator
 
 from ....core.filing_year import FilingYear
 from .errors import RegistryValidationError
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .ids import LegalRefId
 from .schema_base import MANIFEST_ONLY, RegistryModel, coerce_enum_member
 
@@ -97,13 +98,15 @@ class PendingEjercicioOrden(RegistryModel):
 _PENDING_ORDEN_VOCABULARY_FACT_ID = "modelo-pending-" + "orden-vocabulary"
 
 
-def pending_orden_vocabulary() -> Mapping[str, str]:
+def pending_orden_vocabulary(*, authority: GovernedFactSource | None = None) -> Mapping[str, str]:
     """Resolve pending-filing vocabulary through the governed mapping seam."""
-    from .authority import bundled_authority
     from .facts.resolution import MappingFactQuery, ResolvedMappingFact
     from .schema_base import DateAxis
 
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise RegistryValidationError("pending Orden vocabulary requires an explicit authority operation or scope")
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_PENDING_ORDEN_VOCABULARY_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,

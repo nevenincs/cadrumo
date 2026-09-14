@@ -260,9 +260,7 @@ def resolve_prorrata_register_catalogue(
     coordinate = effective_date or date.today()
     selected = authority or governed_facts_in_scope()
     if selected is None:
-        from .authority import bundled_authority
-
-        selected = bundled_authority()
+        raise RegistryValidationError("prorrata register catalogue requires an explicit authority operation or scope")
     entries = _resolve_entries(effective_date=coordinate, authority=selected)
 
     regime_tokens = (*_csv(entries, _REGIME_ORDER_KEY), *_csv(entries, _REGISTER_REGIME_ADDITIONS_KEY))

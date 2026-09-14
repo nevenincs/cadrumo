@@ -9,8 +9,8 @@ present a parsed document back to a reader: its output parses to a value
 equal to the one it was given.
 
 :func:`read_toml` and :func:`freeze_toml` are used by the registry
-loader in :mod:`domain.calculations.registry._loader` and the
-user-profile schema loader in :mod:`domain.user_profile.loader`.
+loader in :mod:`domain.calculations.registry._loader`; development profile
+schema capture is owned by :mod:`dev.registry.compiler.profile_schema`.
 :func:`to_str_keyed_dict` is the narrow bridge from loosely typed
 parsed TOML mappings into strict schema models that require string keys.
 

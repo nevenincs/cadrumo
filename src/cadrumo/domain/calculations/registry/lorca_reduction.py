@@ -122,9 +122,7 @@ def resolve_lorca_reduction(
     """Resolve the Lorca reduction through the selected facts authority."""
     selected = authority or governed_facts_in_scope()
     if selected is None:
-        from .authority import bundled_authority
-
-        selected = bundled_authority()
+        raise RegistryValidationError("Lorca reduction requires an explicit authority operation or scope")
     entries, legal_ref, source_ref, required_text = _resolve_entries(
         effective_date=effective_date,
         authority=selected,

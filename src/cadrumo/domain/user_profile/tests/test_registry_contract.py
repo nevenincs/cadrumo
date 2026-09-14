@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import BaseModel, ValidationError
 
 from ....core.aggregation import BindingSourceKind
@@ -12,7 +13,6 @@ from ....core.errors.severity import BaseSeverity
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.profile_bindings import ProfileProvider
 from ...calculations.registry.schema import BindingDefinition
-from ..loader import load_user_profile_schema
 from ..registry_contract import (
     UserProfileRegistryContractIssue,
     build_user_profile_selector_index,

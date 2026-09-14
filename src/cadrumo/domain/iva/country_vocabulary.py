@@ -5,7 +5,13 @@ Private implementation for the canonical establishment resolvers.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
+
 from ...core.text_fold import fold_printed_phrase
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 _ALPHA2_LENGTH = 2
 _ALPHA3_LENGTH = 3
@@ -27,7 +33,10 @@ def normalise_printed_country_name(printed: str) -> str:
     return fold_printed_phrase(printed)
 
 
-def country_codes_by_printed_name() -> dict[str, str]:
+def country_codes_by_printed_name(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> dict[str, str]:
     """Return every vocabulary name, normalised, mapped to its alpha-2 code.
 
     Read from the published runtime authority rather than written here, so this
@@ -41,10 +50,18 @@ def country_codes_by_printed_name() -> dict[str, str]:
             and this refuses the table rather than resolving the collision to
             whichever record happened to be read last.
     """
-    from ..calculations.registry.authority import bundled_authority
+    if operation is None:
+        raise IvaCatalogueError("country vocabulary requires an explicit pinned authority operation")
+    from ..calculations.registry.runtime_catalogues import CountryVocabularyRecord
 
+    loaded = operation.runtime_catalogue("countries")
+    if not isinstance(loaded, Mapping) or not all(
+        isinstance(value, CountryVocabularyRecord) for value in loaded.values()
+    ):
+        raise IvaCatalogueError("indexed authority country component has an invalid shape")
+    records = loaded.values()
     resolved: dict[str, str] = {}
-    for record in bundled_authority().catalogues.runtime.countries.values():
+    for record in records:
         for name in record.names:
             _claim_printed_country_name(resolved, name, code=record.code, target="published authority")
     return resolved
@@ -77,7 +94,10 @@ def _claim_printed_country_name(
     resolved[normalised] = code
 
 
-def country_codes_by_alpha3() -> dict[str, str]:
+def country_codes_by_alpha3(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> dict[str, str]:
     """Return every vocabulary record's alpha-3 code mapped to its alpha-2 code.
 
     Read from the same published country projection as the printed names, and
@@ -89,11 +109,19 @@ def country_codes_by_alpha3() -> dict[str, str]:
         IvaCatalogueError: When the bundled vocabulary cannot be read or a record
             breaks the one-code-one-country invariant.
     """
-    from ..calculations.registry.authority import bundled_authority
+    if operation is None:
+        raise IvaCatalogueError("country vocabulary requires an explicit pinned authority operation")
+    from ..calculations.registry.runtime_catalogues import CountryVocabularyRecord
 
+    loaded = operation.runtime_catalogue("countries")
+    if not isinstance(loaded, Mapping) or not all(
+        isinstance(value, CountryVocabularyRecord) for value in loaded.values()
+    ):
+        raise IvaCatalogueError("indexed authority country component has an invalid shape")
+    records = loaded.values()
     resolved: dict[str, str] = {}
     alpha3_by_code: dict[str, str] = {}
-    for record in bundled_authority().catalogues.runtime.countries.values():
+    for record in records:
         _claim_country_alpha3(
             resolved,
             alpha3_by_code,

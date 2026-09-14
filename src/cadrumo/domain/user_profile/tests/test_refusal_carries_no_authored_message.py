@@ -1,13 +1,15 @@
-"""Pins the user-profile domain refusals to a registered key plus machine facts.
+"""Pins user-profile refusals and development profile-source validation.
 
-Two halves that fail for different reasons on purpose.
+The runtime half drives the persisted-profile refusal through real behaviour
+and requires the rendered exception text to equal its registered key exactly.
+Malformed custom schema sources are exercised through the development parser's
+typed ``RegistryValidationError`` contract.
 
-The RUNTIME half drives each reachable refusal through real behaviour and
-requires the rendered exception text to equal its registered key exactly. That
-is an ABSENCE assertion, and the distinction matters: a key-and-context
-assertion stays green when an English sentence is passed positionally beside
-the key, because resolution prefers the key while ``str(exc)`` prefers the
-positional. Only equality against the key is false for that construction.
+The registered-key assertion is an ABSENCE assertion, and the distinction
+matters: a key-and-context assertion stays green when an English sentence is
+passed positionally beside the key, because resolution prefers the key while
+``str(exc)`` prefers the positional. Only equality against the key is false
+for that construction.
 
 The STRUCTURAL half parses the two modules that declare and build these
 refusals and refuses the three shapes that survive a raise-site sweep: a
@@ -26,22 +28,17 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from dev.registry.compiler.profile_schema import capture_profile_schema
 from pydantic import BaseModel, ValidationError
 
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.json_contract import Notice, NoticeSeverity
+from ...calculations.registry.errors import RegistryValidationError
 from ..errors import (
     SCHEMA_LOAD_MESSAGE_KEY,
     STORED_PROFILE_DRIFT_MESSAGE_KEY,
     StoredProfileDriftError,
     UserProfileSchemaLoadError,
-)
-from ..loader import (
-    CONDITION_DERIVED_SELECTORS_ARRAY,
-    CONDITION_SCHEMA_MODEL_VALID,
-    CONDITION_SCHEMA_TOML_PARSE,
-    CONDITION_SECTIONS_TABLE_PRESENT,
-    load_user_profile_schema,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -75,7 +72,7 @@ _RESERVED_ACTION_KEYS: Final[frozenset[str]] = frozenset(
 )
 
 _PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
-_SCANNED_MODULES: Final[tuple[str, ...]] = ("errors.py", "loader.py")
+_SCANNED_MODULES: Final[tuple[str, ...]] = ("errors.py",)
 
 #: Structurally well-formed TOML whose values do not satisfy the strict schema
 #: model: the ``[schema]`` table declares only an id, so title, version and both
@@ -201,21 +198,21 @@ def test_stored_profile_drift_facts_name_the_contract_not_the_values() -> None:
 
 
 @pytest.mark.parametrize(
-    ("filename", "payload", "condition"),
+    ("filename", "payload", "message"),
     [
-        ("unparseable.toml", _UNPARSEABLE_SCHEMA, CONDITION_SCHEMA_TOML_PARSE),
-        ("sectionless.toml", _SECTIONLESS_SCHEMA, CONDITION_SECTIONS_TABLE_PRESENT),
-        ("scalar-selectors.toml", _SCALAR_DERIVED_SELECTORS_SCHEMA, CONDITION_DERIVED_SELECTORS_ARRAY),
-        ("contract-violating.toml", _CONTRACT_VIOLATING_SCHEMA, CONDITION_SCHEMA_MODEL_VALID),
+        ("unparseable.toml", _UNPARSEABLE_SCHEMA, "not valid UTF-8 TOML"),
+        ("sectionless.toml", _SECTIONLESS_SCHEMA, "invalid envelope"),
+        ("scalar-selectors.toml", _SCALAR_DERIVED_SELECTORS_SCHEMA, "invalid derived_selectors member"),
+        ("contract-violating.toml", _CONTRACT_VIOLATING_SCHEMA, "failed typed validation"),
     ],
 )
-def test_schema_load_refusals_render_only_their_registered_key(
+def test_schema_load_refusals_use_the_development_parser_contract(
     tmp_path: Path,
     filename: str,
     payload: str,
-    condition: str,
+    message: str,
 ) -> None:
-    """Every reachable schema-load refusal renders the key and reports a condition.
+    """Every malformed custom source is refused by the development parser.
 
     Driven by real files on disk: an unterminated quote the parser refuses, a
     document declaring no sections, a scalar where an array of tables belongs,
@@ -225,15 +222,8 @@ def test_schema_load_refusals_render_only_their_registered_key(
     schema_path = tmp_path / filename
     schema_path.write_text(payload, encoding="utf-8")
 
-    with pytest.raises(UserProfileSchemaLoadError) as exc_info:
-        load_user_profile_schema(schema_path)
-
-    assert str(exc_info.value) == SCHEMA_LOAD_MESSAGE_KEY
-    assert exc_info.value.translated_message == SCHEMA_LOAD_MESSAGE_KEY
-    assert exc_info.value.context is not None
-    assert exc_info.value.context["condition"] == condition
-    assert exc_info.value.context["path"] == str(schema_path)
-    assert exc_info.value.context["schema"] == "user_profile"
+    with pytest.raises(RegistryValidationError, match=message):
+        capture_profile_schema(schema_path)
 
 
 def test_schema_model_validation_refusal_counts_violations_without_restating_them(tmp_path: Path) -> None:
@@ -246,16 +236,11 @@ def test_schema_model_validation_refusal_counts_violations_without_restating_the
     schema_path = tmp_path / "contract-violating.toml"
     schema_path.write_text(_CONTRACT_VIOLATING_SCHEMA, encoding="utf-8")
 
-    with pytest.raises(UserProfileSchemaLoadError) as exc_info:
-        load_user_profile_schema(schema_path)
+    with pytest.raises(RegistryValidationError, match="failed typed validation") as exc_info:
+        capture_profile_schema(schema_path)
 
-    context = exc_info.value.context
-    assert context is not None
-    violation_count = context["violation_count"]
-    assert isinstance(violation_count, int)
-    assert violation_count >= 1
     assert isinstance(exc_info.value.__cause__, ValidationError)
-    assert len(exc_info.value.__cause__.errors()) == violation_count
+    assert len(exc_info.value.__cause__.errors()) >= 1
 
 
 def test_no_refusal_construction_passes_a_positional_argument() -> None:
@@ -390,10 +375,9 @@ def test_the_scanned_modules_are_the_ones_that_declare_and_build_the_refusals() 
     """Refuse a vacuous sweep: the pinned classes must actually live where scanned.
 
     A rename or a move would otherwise leave every structural assertion above
-    matching nothing and passing. Only the schema-load refusal is BUILT inside
-    this package; the drift refusal is declared here and constructed by the
-    application repository that loads stored records, so the construction
-    anchor names the one class this package builds.
+    matching nothing and passing. Both pinned user-profile refusal classes are
+    declared here, but neither is constructed directly after loader retirement:
+    development parser refusals now use ``RegistryValidationError``.
     """
     declared = {class_def.name for module in _SCANNED_MODULES for class_def in _pinned_class_defs(_module_tree(module))}
     built = {
@@ -405,7 +389,7 @@ def test_the_scanned_modules_are_the_ones_that_declare_and_build_the_refusals() 
     delegating = sum(len(_base_initialisations(_module_tree(module))) for module in _SCANNED_MODULES)
 
     assert declared == _PINNED_ERROR_NAMES
-    assert built == {"UserProfileSchemaLoadError"}
+    assert built == set()
     assert delegating == len(_PINNED_ERROR_NAMES)
     assert inspect.getsourcefile(UserProfileSchemaLoadError) == str(_PACKAGE_ROOT / "errors.py")
     assert inspect.getsourcefile(StoredProfileDriftError) == str(_PACKAGE_ROOT / "errors.py")

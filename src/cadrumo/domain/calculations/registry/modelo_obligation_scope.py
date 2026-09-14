@@ -15,8 +15,8 @@ from datetime import date
 
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.modelo import Modelo
-from .authority import bundled_authority
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 __all__ = [
@@ -37,6 +37,7 @@ def _csv(value: str) -> tuple[str, ...]:
 def resolve_modelo_obligation_scope(
     *,
     effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[Mapping[Modelo, str], frozenset[Modelo]]:
     """Resolve the current Modelo obligation-scope partitions.
 
@@ -45,7 +46,10 @@ def resolve_modelo_obligation_scope(
     current published artifact instead of introducing a second process-lifetime
     cache in a value-type module.
     """
-    resolved = bundled_authority().resolve_governed_fact(
+    selected_authority = authority or governed_facts_in_scope()
+    if selected_authority is None:
+        raise CoreValidationError("Modelo obligation scope requires an explicit authority operation or scope")
+    resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-obligation-scope-mapping",
             date_axis=DateAxis.FILING_PERIOD,

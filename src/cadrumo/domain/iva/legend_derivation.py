@@ -24,21 +24,21 @@ nothing to derive from. No score, no ranking, no numeric confidence anywhere:
 those exist to let a caller pick a threshold, and there is no honest threshold
 between "the issuer declared this" and "the issuer did not".
 
-**The absent outcome is the common one, and it must stay that way.**
-:data:`~domain.iva.REGIME_LEGENDS` has seven rows and exactly one declares a
-category, because that is the measured state of the regulation rather than an
-unfinished table. Most invoices legitimately derive nothing here. The pressure to
-close that gap with a default -- treating an unstated counterparty country as
-domestic, or a legend-less invoice as ordinary domestic supply -- is the
-restrictive-provision-as-default trap: it silently captures the whole population
-the provision does not govern. **A wrong category is worse than an absent one**,
+**The absent outcome is the common one, and it must stay that way.** The selected
+registry vocabulary has seven rows and exactly one declares a category, because
+that is the measured state of the regulation rather than an unfinished table.
+Most invoices legitimately derive nothing here. The pressure to close that gap
+with a default -- treating an unstated counterparty country as domestic, or a
+legend-less invoice as ordinary domestic supply -- is the restrictive-
+provision-as-default trap: it silently captures the whole population the
+provision does not govern. **A wrong category is worse than an absent one**,
 because an absent category asks the operator and a wrong one does not.
 
 **The exempt case cannot be derived here at all.** Art. 6.1.j fixes no phrase for
 an exempt operation; it requires a reference to the provision granting the
 exemption, so an exempt invoice prints whichever article applies and no canonical
 string exists to match. That absence is load-bearing and is documented on
-:data:`~domain.iva.REGIME_LEGENDS`.
+:func:`~domain.iva.resolve_regime_legends`.
 
 See Also:
     :class:`~domain.iva.RegimeLegend`
@@ -53,14 +53,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from enum import StrEnum
-from functools import lru_cache
 from typing import Final, Self
 
 from pydantic import BaseModel, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_fold import fold_printed_phrase
-from .regime_legend import REGIME_LEGENDS, RegimeLegend
+from .regime_legend import RegimeLegend
 from .schema import IvaCategory
 
 __all__ = [
@@ -212,13 +211,18 @@ def index_regime_legends(legends: Iterable[RegimeLegend]) -> dict[str, RegimeLeg
     return indexed
 
 
-@lru_cache(maxsize=1)
-def _regime_legends_by_normalised_phrase() -> dict[str, RegimeLegend]:
-    """Return the shipped vocabulary indexed, refusing it if it collides."""
-    return index_regime_legends(REGIME_LEGENDS)
+def _regime_legends_by_normalised_phrase(
+    legends: tuple[RegimeLegend, ...],
+) -> dict[str, RegimeLegend]:
+    """Index the caller-selected vocabulary, refusing it if it collides."""
+    return index_regime_legends(legends)
 
 
-def match_regime_legend(printed: str | None) -> RegimeLegend | None:
+def match_regime_legend(
+    printed: str | None,
+    *,
+    legends: tuple[RegimeLegend, ...],
+) -> RegimeLegend | None:
     """Return the mandated mention *printed* contains, or ``None``.
 
     Matched under :func:`core.text_fold.fold_printed_phrase`, which folds case,
@@ -235,6 +239,8 @@ def match_regime_legend(printed: str | None) -> RegimeLegend | None:
 
     Args:
         printed: The phrase transcribed from the document, or ``None``.
+        legends: The dated registry declarations selected by the enclosing
+            operation.
 
     Returns:
         The matching :class:`~domain.iva.RegimeLegend`, or ``None`` when the text
@@ -245,7 +251,7 @@ def match_regime_legend(printed: str | None) -> RegimeLegend | None:
     folded = fold_printed_phrase(printed)
     if not folded:
         return None
-    for phrase, legend in _regime_legends_by_normalised_phrase().items():
+    for phrase, legend in _regime_legends_by_normalised_phrase(legends).items():
         if phrase in folded:
             return legend
     return None
@@ -255,6 +261,7 @@ def derive_category_from_regime_legend(
     *,
     printed_legend: str | None,
     has_repercutido_line: bool,
+    legends: tuple[RegimeLegend, ...],
 ) -> LegendDerivation:
     """Derive the IVA category the issuer declared in writing, if any.
 
@@ -275,12 +282,14 @@ def derive_category_from_regime_legend(
             cuota. Passed in as an already-established fact rather than recomputed
             here: what counts as a printed tax line is the reading stage's
             business, and re-deciding it here would be a second authority on it.
+        legends: The dated registry declarations selected by the enclosing
+            operation.
 
     Returns:
         :class:`LegendDerivation`: One of the three outcomes, carrying exactly
         what that outcome establishes.
     """
-    legend = match_regime_legend(printed_legend)
+    legend = match_regime_legend(printed_legend, legends=legends)
     if legend is None or legend.declares is None:
         # Six of the seven mandated mentions declare no category, so this is the
         # ordinary path rather than a failure. It stays ABSENT rather than

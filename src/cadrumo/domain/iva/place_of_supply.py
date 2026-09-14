@@ -48,6 +48,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -55,6 +56,9 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.validity_window import ValidityWindow, years_covered_by_every_group
 from .errors import IvaCatalogueError
 from .supply_nature import SupplyNature
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "IvaPlaceOfSupplyRule",
@@ -178,14 +182,26 @@ def _validate_grounded_row(rule: IvaPlaceOfSupplyRule) -> None:
         )
 
 
-def load_place_of_supply_table() -> Mapping[str, IvaPlaceOfSupplyRule]:
+def load_place_of_supply_table(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> Mapping[str, IvaPlaceOfSupplyRule]:
     """Adapt the published place-of-supply grounding table.
 
     Returns:
         Rules keyed by rule id, each carrying the span it is asserted over.
 
     """
-    from ..calculations.registry.authority import bundled_authority
+    if operation is None:
+        raise IvaCatalogueError("place-of-supply table requires an explicit pinned authority operation")
+    from ..calculations.registry.runtime_catalogues import PublishedIvaPlaceOfSupplyRule
+
+    loaded = operation.runtime_catalogue("iva_place_of_supply")
+    if not isinstance(loaded, Mapping) or not all(
+        isinstance(value, PublishedIvaPlaceOfSupplyRule) for value in loaded.values()
+    ):
+        raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
+    published_values = loaded.items()
 
     return MappingProxyType(
         {
@@ -203,12 +219,12 @@ def load_place_of_supply_table() -> Mapping[str, IvaPlaceOfSupplyRule]:
                     "valid_to": published.valid_to,
                 }
             )
-            for rule_id, published in bundled_authority().catalogues.runtime.iva_place_of_supply.items()
+            for rule_id, published in published_values
         }
     )
 
 
-def place_of_supply_years() -> frozenset[int]:
+def place_of_supply_years(*, operation: PinnedAuthorityOperation | None = None) -> frozenset[int]:
     """Return every filing year the table can be resolved for.
 
     A year counts only when EVERY grounded rule is asserted over it. A rule whose
@@ -220,11 +236,19 @@ def place_of_supply_years() -> frozenset[int]:
     Returns:
         The derived set of resolvable filing years.
     """
-    windows = [rule.window for rule in load_place_of_supply_table().values() if rule.window is not None]
+    windows = [
+        rule.window for rule in load_place_of_supply_table(operation=operation).values() if rule.window is not None
+    ]
     return years_covered_by_every_group([window] for window in windows)
 
 
-def place_of_supply_rule(rule_id: str, *, on: date) -> IvaPlaceOfSupplyRule:
+def place_of_supply_rule(  # noqa: D417
+    rule_id: str,
+    *,
+    on: date,
+    operation: PinnedAuthorityOperation | None = None,
+    projected_year: int | None = None,
+) -> IvaPlaceOfSupplyRule:
     """Return the grounding for ``rule_id`` in the filing year of ``on``.
 
     Args:
@@ -241,11 +265,10 @@ def place_of_supply_rule(rule_id: str, *, on: date) -> IvaPlaceOfSupplyRule:
             placement has no provision behind it, and answering anyway would
             manufacture one.
     """
-    from ..calculations.registry.authority import bundled_authority
-
-    projected_year = bundled_authority().project_filing_year(on.year)
-    rules = load_place_of_supply_table()
-    grounded_years = place_of_supply_years()
+    if projected_year is None:
+        raise IvaCatalogueError("place-of-supply resolution requires the caller's projected filing year")
+    rules = load_place_of_supply_table(operation=operation)
+    grounded_years = place_of_supply_years(operation=operation)
     if projected_year not in grounded_years:
         raise IvaCatalogueError(
             f"no place-of-supply grounding for year={on.year}; the table grounds "

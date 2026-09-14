@@ -15,13 +15,13 @@ breach was found by hand, and a hand is not a gate.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.external_constants import (
     PROVENANCE_SOURCE_CENSO_ARTEFACT,
     PROVENANCE_SOURCE_MANUAL_CLI,
 )
-from ..loader import load_user_profile_schema
 from ..values import UserProfileFact, declared_provenance_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -10,7 +10,9 @@ refusing a year the catalogue cannot ground.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
+from typing import TYPE_CHECKING, cast
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.validity_window import years_covered_by_every_group
@@ -18,14 +20,31 @@ from ..calculations.registry.iva_category_catalogue import require_iva_category
 from .errors import IvaCatalogueError
 from .schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
 
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
-def bundled_iva_catalogue() -> IvaCatalogue:
-    """Adapt the published runtime projection into the operational catalogue."""
-    from ..calculations.registry.authority import bundled_authority
+
+def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation | None = None) -> IvaCatalogue:
+    """Adapt one selected IVA runtime component into the operational catalogue.
+
+    ``operation`` addresses only the IVA regulation component already pinned by
+    the caller; an unpinned call is refused.
+    """
+    if operation is None:
+        raise IvaCatalogueError("IVA catalogue requires an explicit pinned authority operation")
+    from ..calculations.registry.runtime_catalogues import PublishedIvaRegulation
+
+    loaded = operation.runtime_catalogue("iva_regulations")
+    if not isinstance(loaded, Mapping):
+        raise IvaCatalogueError("indexed authority IVA regulation component has an invalid shape")
+    loaded_values = tuple(cast(Mapping[object, object], loaded).values())
+    if not all(isinstance(value, PublishedIvaRegulation) for value in loaded_values):
+        raise IvaCatalogueError("indexed authority IVA regulation component has an invalid shape")
+    published_values = tuple(value for value in loaded_values if isinstance(value, PublishedIvaRegulation))
 
     regulations: dict[IvaCategory, IvaRegulation] = {}
-    for published in bundled_authority().catalogues.runtime.iva_regulations.values():
-        category = require_iva_category(published.category)
+    for published in published_values:
+        category = require_iva_category(published.category, authority=operation)
         regulations[category] = IvaRegulation.model_validate(
             {
                 "category": category,
@@ -52,7 +71,7 @@ def bundled_iva_catalogue() -> IvaCatalogue:
     return IvaCatalogue(regulations=regulations)
 
 
-def iva_catalogue_years() -> frozenset[int]:
+def iva_catalogue_years(*, operation: PinnedAuthorityOperation | None = None) -> frozenset[int]:
     """Return every filing year the catalogue can be resolved for.
 
     A year counts only when EVERY grounded regulation has at least one citation
@@ -65,12 +84,17 @@ def iva_catalogue_years() -> frozenset[int]:
     """
     return years_covered_by_every_group(
         [citation.window for citation in regulation.citations]
-        for regulation in bundled_iva_catalogue()
+        for regulation in bundled_iva_catalogue(operation=operation)
         if not regulation.legal_basis_exempt
     )
 
 
-def resolve_catalogue(*, on: date) -> IvaCatalogue:
+def resolve_catalogue(
+    *,
+    on: date,
+    operation: PinnedAuthorityOperation | None = None,
+    projected_year: int | None = None,
+) -> IvaCatalogue:
     """Return the IVA catalogue as grounded for the filing year of ``on``.
 
     Every regulation is projected onto the year: citations asserted over another
@@ -84,13 +108,21 @@ def resolve_catalogue(*, on: date) -> IvaCatalogue:
         IvaCatalogueError: When the catalogue grounds no such year. There is no
             fallback to an adjacent year.
     """
-    from ..calculations.registry.authority import bundled_authority
+    if projected_year is None:
+        raise IvaCatalogueError("IVA catalogue resolution requires the caller's projected filing year")
+    return _resolve_catalogue(
+        projected_year,
+        tuple(sorted(iva_catalogue_years(operation=operation))),
+        operation=operation,
+    )
 
-    projected_year = bundled_authority().project_filing_year(on.year)
-    return _resolve_catalogue(projected_year, tuple(sorted(iva_catalogue_years())))
 
-
-def _resolve_catalogue(year: int, grounded: tuple[int, ...]) -> IvaCatalogue:
+def _resolve_catalogue(
+    year: int,
+    grounded: tuple[int, ...],
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> IvaCatalogue:
     if year not in grounded:
         raise IvaCatalogueError(
             f"no IVA catalogue grounded for year={year}; the catalogue grounds {list(grounded)}. "
@@ -103,7 +135,7 @@ def _resolve_catalogue(year: int, grounded: tuple[int, ...]) -> IvaCatalogue:
                 "citations": tuple(citation for citation in regulation.citations if citation.window.covers_year(year)),
             },
         )
-        for category, regulation in bundled_iva_catalogue().regulations.items()
+        for category, regulation in bundled_iva_catalogue(operation=operation).regulations.items()
     }
     return IvaCatalogue(regulations=projected)
 

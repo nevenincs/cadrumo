@@ -20,8 +20,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ..loader import load_user_profile_schema
 from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType
 from ..values import UserProfileFact
 from .schema_value_support import schema_valid_placeholder

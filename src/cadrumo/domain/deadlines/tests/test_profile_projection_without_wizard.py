@@ -22,9 +22,9 @@ import sys
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS
-from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
