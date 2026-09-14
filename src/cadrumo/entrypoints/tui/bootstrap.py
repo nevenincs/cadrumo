@@ -13,7 +13,6 @@ from ...application.user_profile.workbench_bootstrap import (
     WorkbenchBootstrapV1,
     WorkbenchRegistrationRequiredV1,
     complete_workbench_login,
-    prepare_workbench_bootstrap,
 )
 from .secret.login import LoginScreen
 
@@ -78,7 +77,7 @@ def handoff_registration_required(
 
 def run_workbench_bootstrap(
     *,
-    prepare: Callable[[], WorkbenchBootstrapV1] = prepare_workbench_bootstrap,
+    prepare: Callable[[], WorkbenchBootstrapV1],
     run_login: WorkbenchLoginScreenRunnerV1,
     registration_door: WorkbenchRegistrationRequiredDoorV1,
     authenticated_door: WorkbenchBootstrapStateDoorV1,

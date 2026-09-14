@@ -93,8 +93,9 @@ _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
 _M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = validated_casilla_id("0171")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
+_MODELO_OPERATION = compiled_bundled_authority()
 _MODELO_FACT_CONTEXT = ModeloFactResolutionContext(
-    authority=compiled_bundled_authority(),
+    authority=_MODELO_OPERATION,
     filing_period=date(2025, 12, 31),
     devengo_date=date(2025, 12, 31),
 )
@@ -477,7 +478,7 @@ def test_dt12_reduccion_advisory_message_is_localised() -> None:
     revision = _dt12_revision()
     casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
 
-    finding = dt12_reduccion_advisory_finding(revision, casilla_values)
+    finding = dt12_reduccion_advisory_finding(revision, casilla_values, operation=_MODELO_OPERATION)
 
     assert finding is not None
     assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_possible"
@@ -573,7 +574,12 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() ->
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
-    finding = art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT)
+    finding = art52_reduccion_advisory_finding(
+        revision,
+        casilla_values,
+        operation=_MODELO_OPERATION,
+        modelo="100",
+    )
 
     assert finding is not None
     assert finding.kind == "advisory"
@@ -604,7 +610,15 @@ def test_art52_reduccion_advisory_silent_when_employer_backed() -> None:
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
-    assert art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert (
+        art52_reduccion_advisory_finding(
+            revision,
+            casilla_values,
+            operation=_MODELO_OPERATION,
+            modelo="100",
+        )
+        is None
+    )
 
 
 def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed() -> None:
@@ -617,7 +631,15 @@ def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed() -> None:
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
-    assert art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert (
+        art52_reduccion_advisory_finding(
+            revision,
+            casilla_values,
+            operation=_MODELO_OPERATION,
+            modelo="100",
+        )
+        is None
+    )
 
 
 def test_art52_reduccion_advisory_silent_when_autonomo_backed() -> None:
@@ -637,7 +659,15 @@ def test_art52_reduccion_advisory_silent_when_autonomo_backed() -> None:
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("2500"),
     }
 
-    assert art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert (
+        art52_reduccion_advisory_finding(
+            revision,
+            casilla_values,
+            operation=_MODELO_OPERATION,
+            modelo="100",
+        )
+        is None
+    )
 
 
 def test_art52_reduccion_advisory_silent_when_under_sublimit() -> None:
@@ -650,11 +680,27 @@ def test_art52_reduccion_advisory_silent_when_under_sublimit() -> None:
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
-    assert art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert (
+        art52_reduccion_advisory_finding(
+            revision,
+            casilla_values,
+            operation=_MODELO_OPERATION,
+            modelo="100",
+        )
+        is None
+    )
 
 
 def test_art52_reduccion_advisory_silent_when_roles_absent() -> None:
-    assert art52_reduccion_advisory_finding(_test_revision(), {}, context=_MODELO_FACT_CONTEXT) is None
+    assert (
+        art52_reduccion_advisory_finding(
+            _test_revision(),
+            {},
+            operation=_MODELO_OPERATION,
+            modelo="100",
+        )
+        is None
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -672,7 +718,12 @@ def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
     revision = _dt12_antiquity_revision()
     casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("4000")}
 
-    finding = dt12_antiquity_advisory_finding(revision, casilla_values)
+    finding = dt12_antiquity_advisory_finding(
+        revision,
+        casilla_values,
+        operation=_MODELO_OPERATION,
+        modelo="100",
+    )
 
     assert finding is not None
     assert finding.kind == "advisory"
@@ -692,11 +743,27 @@ def test_dt12_antiquity_advisory_silent_when_reduccion_zero() -> None:
     revision = _dt12_antiquity_revision()
     casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("0")}
 
-    assert dt12_antiquity_advisory_finding(revision, casilla_values) is None
+    assert (
+        dt12_antiquity_advisory_finding(
+            revision,
+            casilla_values,
+            operation=_MODELO_OPERATION,
+            modelo="100",
+        )
+        is None
+    )
 
 
 def test_dt12_antiquity_advisory_silent_when_roles_absent() -> None:
-    assert dt12_antiquity_advisory_finding(_test_revision(), {}) is None
+    assert (
+        dt12_antiquity_advisory_finding(
+            _test_revision(),
+            {},
+            operation=_MODELO_OPERATION,
+            modelo="100",
+        )
+        is None
+    )
 
 
 def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:

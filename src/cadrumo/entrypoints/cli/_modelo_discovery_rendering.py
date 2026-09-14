@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import TYPE_CHECKING
 
 from ...application.modelo.binding_readiness import profile_resolvable_binding_ids
 from ...application.modelo.data_inventory import DataInventoryCasilla, DataInventoryChecklist
@@ -38,6 +39,9 @@ from ._modelo_support_matrix_payloads import (
 )
 from .common import profile_grounding_index_for_operation, resolve_notice_action
 from .modelo_aux_payloads import ModeloRowPayload
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def data_inventory_casilla_payload(entry: DataInventoryCasilla) -> DataInventoryCasillaPayload:
@@ -188,7 +192,12 @@ def _relation_input_guidance_lines(rows: tuple[ModeloBindingQueryRow, ...]) -> t
     return tuple(lines)
 
 
-def _profile_resolved_binding_ids(report: ModeloBindingsReport, *, as_of: date | None) -> frozenset[str]:
+def _profile_resolved_binding_ids(
+    report: ModeloBindingsReport,
+    *,
+    as_of: date | None,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[str]:
     filing_year = report.filing_year
     if filing_year is None:
         return frozenset[str]()
@@ -204,6 +213,7 @@ def _profile_resolved_binding_ids(report: ModeloBindingsReport, *, as_of: date |
                 period=report.filing_period,
                 as_of=as_of,
                 revision_id=str(report.revision),
+                operation=operation,
             )
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
@@ -223,11 +233,15 @@ def _text_frozenset(value: object) -> frozenset[str]:
 
 
 def _binding_list_rows_for_report(
-    report: ModeloBindingsReport, *, missing: bool, as_of: date | None
+    report: ModeloBindingsReport,
+    *,
+    missing: bool,
+    as_of: date | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[BindingListRowPayload], list[str]]:
     rows = report.rows
     if missing:
-        profile_resolved = _profile_resolved_binding_ids(report, as_of=as_of)
+        profile_resolved = _profile_resolved_binding_ids(report, as_of=as_of, operation=operation)
         rows = tuple(row for row in rows if row.binding_id not in profile_resolved and row.operator_input_required)
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
@@ -443,12 +457,21 @@ def casillas_lines(report: ModeloCasillasReport, *, explain: bool) -> list[str]:
 
 
 def binding_rows_for_reports(
-    reports: list[ModeloBindingsReport], *, missing: bool, as_of: date | None
+    reports: list[ModeloBindingsReport],
+    *,
+    missing: bool,
+    as_of: date | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[BindingListRowPayload], list[str]]:
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
     for report in reports:
-        report_rows, report_text_rows = _binding_list_rows_for_report(report, missing=missing, as_of=as_of)
+        report_rows, report_text_rows = _binding_list_rows_for_report(
+            report,
+            missing=missing,
+            as_of=as_of,
+            operation=operation,
+        )
         merged_rows.extend(report_rows)
         text_rows.extend(report_text_rows)
     return merged_rows, text_rows

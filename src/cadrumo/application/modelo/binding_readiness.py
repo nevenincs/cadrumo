@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ...core.period import Period
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -55,7 +55,7 @@ def profile_resolvable_binding_ids(
     period: Period | None,
     as_of: date | None = None,
     revision_id: RevisionId | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> frozenset[str]:
     """Return binding ids resolvable from the active profile's stored facts.
 
@@ -70,17 +70,6 @@ def profile_resolvable_binding_ids(
     bucket has no profile — the caller then treats every binding as missing,
     which is the correct conservative answer.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return profile_resolvable_binding_ids(
-                modelo=modelo,
-                bucket_id=bucket_id,
-                filing_year=filing_year,
-                period=period,
-                as_of=as_of,
-                revision_id=revision_id,
-                operation=indexed_operation,
-            )
     if period is not None and period.filing_year != filing_year:
         raise RegistryValidationError(
             translated_message="errors.error.error_calculations_registry_validation",
@@ -128,7 +117,7 @@ def profile_resolvable_binding_ids(
         )
         return frozenset[str]()
     try:
-        result = resolve_profile_sourced_bindings(snapshot, bucket_id=bucket_id)
+        result = resolve_profile_sourced_bindings(snapshot, bucket_id=bucket_id, operation=operation)
     except ProfileNotFoundError as exc:
         _log.debug(
             "binding-readiness: active profile unavailable while resolving modelo=%s filing_year=%s period=%s; "

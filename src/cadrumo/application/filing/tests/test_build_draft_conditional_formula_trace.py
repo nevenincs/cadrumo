@@ -26,13 +26,15 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import TypeAdapter, ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.filing.protocols import ModeloInputs
-from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
@@ -43,7 +45,7 @@ _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
     )
 
 

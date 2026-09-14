@@ -86,6 +86,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.establishment import (
     StatedCountryCodeStatus,
     country_code_for_printed_country_name,
@@ -199,7 +200,12 @@ class CountryVocabularyAdvisory(BaseModel):
         return tuple(party for party in self.parties if party.status is status)
 
 
-def _territory_already_settled(draft: InvoiceDraft, party: PartyAddress) -> bool:
+def _territory_already_settled(
+    draft: InvoiceDraft,
+    party: PartyAddress,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> bool:
     """Return whether this party's country evidence settled its territory anyway.
 
     Both spellings are consulted in the ladder's own order: the printed NAME
@@ -211,13 +217,26 @@ def _territory_already_settled(draft: InvoiceDraft, party: PartyAddress) -> bool
     Spain answers ``False``, as it does everywhere on this axis: it names the
     Member State while the IVA territory inside it stays undetermined.
     """
-    from_name = country_code_for_printed_country_name(getattr(draft, party.country_field, None))
-    if territorial_scope_for_country(from_name) is not None:
+    from_name = country_code_for_printed_country_name(
+        getattr(draft, party.country_field, None),
+        operation=operation,
+    )
+    if territorial_scope_for_country(from_name, operation=operation) is not None:
         return True
-    return territorial_scope_for_country(getattr(draft, party.country_code_field, None)) is not None
+    return (
+        territorial_scope_for_country(
+            getattr(draft, party.country_code_field, None),
+            operation=operation,
+        )
+        is not None
+    )
 
 
-def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisory | None:
+def country_vocabulary_advisory(
+    draft: InvoiceDraft,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> CountryVocabularyAdvisory | None:
     """Return what an operator must be told about this draft's country codes, or ``None``.
 
     Reports a party only where the country evidence did not settle that party's
@@ -232,6 +251,8 @@ def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisor
     Args:
         draft: The draft to check, carrying each party's stated country code and
             printed country name as the reader recovered them.
+        operation: Caller-owned pinned authority operation used for country
+            vocabulary and territory resolution.
 
     Returns:
         The advisory, or ``None`` when every stated code is catalogued, when the
@@ -247,10 +268,10 @@ def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisor
     for party in party_addresses():
         raw_stated = getattr(draft, party.stated_country_code_field, None)
         stated: str | None = raw_stated if isinstance(raw_stated, str) else None
-        status = record_country_code_status(stated)
+        status = record_country_code_status(stated, operation=operation)
         if status is None or status not in COUNTRY_VOCABULARY_ADVISED_STATUSES:
             continue
-        if _territory_already_settled(draft, party):
+        if _territory_already_settled(draft, party, operation=operation):
             continue
         # The status is non-``None``, so the field holds a token the record
         # stated as a country code and the normalisation is total.

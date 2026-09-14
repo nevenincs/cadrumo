@@ -162,7 +162,9 @@ def run_modelo_work_wizard(
         output_language_opt=output_language_opt,
     )
     try:
-        with open_modelo_work_wizard(unit) as wizard:
+        from .state_projection_support import authority_operation
+
+        with open_modelo_work_wizard(unit, operation=authority_operation(ctx)) as wizard:
             _drive_wizard_calculation(deps=deps, ctx=ctx, wizard=wizard, actor=actor)
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc

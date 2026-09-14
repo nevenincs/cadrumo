@@ -53,7 +53,7 @@ from ...domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
-from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError, AuthorityEvidenceProjection
+from ...domain.calculations.registry.authority_artifact import AuthorityComponentCodecError, AuthorityEvidenceProjection
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistrySnapshotError,
@@ -356,7 +356,7 @@ class RegistrySchemaAccessor:
         """Return published authority bytes for one runtime source reference."""
         try:
             return self.evidence.source_bytes(str(source_ref_id))
-        except AuthorityArtifactError as exc:
+        except AuthorityComponentCodecError as exc:
             raise ModeloBuilderError(
                 translated_message="application.filing.runtime.errors.registry_empty",
                 context={"reason": f"missing-published-source:{source_ref_id}"},

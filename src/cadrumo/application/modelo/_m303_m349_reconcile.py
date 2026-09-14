@@ -87,16 +87,6 @@ def _selected_registry_reconciliation_context(
     return snapshot, expectations
 
 
-def _selected_registry_reconciliation_expectations(
-    work_unit: WorkUnit,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> tuple[VerificationExpectationDefinition, ...]:
-    """Read reconciliation declarations from the work unit's selected registry snapshot."""
-    _snapshot, expectations = _selected_registry_reconciliation_context(work_unit, operation=operation)
-    return expectations
-
-
 def _expectations_are_counterparts(
     left: VerificationExpectationDefinition,
     right: VerificationExpectationDefinition,

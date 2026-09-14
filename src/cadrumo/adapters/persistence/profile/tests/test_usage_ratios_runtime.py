@@ -6,6 +6,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -25,35 +26,47 @@ _OTHER_BUCKET_ID = "20202020-2020-4020-8020-202020202020"
 
 class TestRuntimeFacade:
     def test_bucket_wrappers_round_trip_through_active_runtime_bucket(self, tmp_path: Path) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        with (
+            isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+            compiled_bundled_authority().operation() as operation,
+        ):
             prior = set_usage_ratio(
                 bucket_id=profile.bucket_id,
                 category=SpendingCategory.TELEFONIA_MOVIL,
                 ratio=Decimal("0.42"),
+                operation=operation,
             )
 
             assert prior is None
 
-            report = validate_ratios_for_bucket(bucket_id=profile.bucket_id)
+            report = validate_ratios_for_bucket(bucket_id=profile.bucket_id, operation=operation)
             assert report.profile_present is True
             assert report.overrides_count == 1
 
-            rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id, year=2025)
+            rows = list_eligible_ratios_for_bucket(bucket_id=profile.bucket_id, year=2025, operation=operation)
             targeted = next(row for row in rows if row.category is SpendingCategory.TELEFONIA_MOVIL)
             assert targeted.override_present is True
 
-            cleared = unset_usage_ratio(bucket_id=profile.bucket_id, category=SpendingCategory.TELEFONIA_MOVIL)
+            cleared = unset_usage_ratio(
+                bucket_id=profile.bucket_id,
+                category=SpendingCategory.TELEFONIA_MOVIL,
+                operation=operation,
+            )
             assert cleared == Decimal("0.42")
-            assert validate_ratios_for_bucket(bucket_id=profile.bucket_id).profile_present is False
+            assert validate_ratios_for_bucket(bucket_id=profile.bucket_id, operation=operation).profile_present is False
 
     def test_bucket_wrappers_fail_closed_for_inactive_runtime_bucket(self, tmp_path: Path) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        with (
+            isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
+            compiled_bundled_authority().operation() as operation,
+        ):
             with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
                 set_usage_ratio(
                     bucket_id=_OTHER_BUCKET_ID,
                     category=SpendingCategory.TELEFONIA_MOVIL,
                     ratio=Decimal("0.42"),
+                    operation=operation,
                 )
 
             with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
-                validate_ratios_for_bucket(bucket_id=_OTHER_BUCKET_ID)
+                validate_ratios_for_bucket(bucket_id=_OTHER_BUCKET_ID, operation=operation)

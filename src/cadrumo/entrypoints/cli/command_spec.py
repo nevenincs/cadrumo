@@ -9,24 +9,28 @@ records and resolve deferred targets only at their owning boundary.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum, StrEnum
+from enum import Enum
 from importlib.util import resolve_name
 from types import MappingProxyType
 from typing import Final, Literal, cast
 
+from ...application.operator_surface.command_ports import (
+    CommandNodeKind,
+    CommandWriteRouteValue,
+    JsonType,
+    MachineSecretPresence,
+    MachineSecretPresenceValue,
+    ParameterKind,
+    ProfileAuthenticationPosture,
+    ProfileAuthenticationPostureValue,
+)
+from ...application.operator_surface.command_ports import (
+    CommandWriteRoute as CommandWriteRoute,
+)
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from . import _command_parameter_validation as _parameter_validation
 from . import _command_policy_validation as _policy_validation
 from . import _command_structure_validation as _structure_validation
-
-
-class CommandNodeKind(StrEnum):
-    """Where a command sits in the CLI tree."""
-
-    ROOT = "root"
-    GROUP = "group"
-    LEAF = "leaf"
-
 
 NON_LEAF_COMMAND_KINDS: Final[frozenset[CommandNodeKind]] = frozenset(
     {CommandNodeKind.ROOT, CommandNodeKind.GROUP},
@@ -36,27 +40,6 @@ NON_LEAF_COMMAND_KINDS: Final[frozenset[CommandNodeKind]] = frozenset(
 Derived from the members rather than relisted. A node kind added to the tree cannot be
 silently omitted here, which a hand-written pair invited -- and this pair was written
 twice, in two comprehensions of one reconciliation module."""
-
-
-class ParameterKind(StrEnum):
-    """Whether a CLI parameter is positional or a flag."""
-
-    ARGUMENT = "argument"
-    OPTION = "option"
-
-
-class JsonType(StrEnum):
-    """The JSON scalar a CLI parameter serialises as.
-
-    Lives here rather than beside its first consumer because both the command schema
-    and the verb input schema need it, and the verb schema imports the command schema,
-    so only the kernel can hold it without a cycle.
-    """
-
-    STRING = "string"
-    INTEGER = "integer"
-    NUMBER = "number"
-    BOOLEAN = "boolean"
 
 
 type LiteralValue = str | int | float | bool | bytes | None
@@ -76,40 +59,6 @@ type Capability = Literal[
 ]
 type SideEffect = Literal["none", "local-state", "network", "browser", "google"]
 type PerformanceClass = Literal["metadata", "local-io", "compute", "external-io", "interactive"]
-
-
-class CommandWriteRoute(StrEnum):
-    """Which storage a command is permitted to write through.
-
-    One vocabulary that carried three names: ``WriteRoute`` here,
-    ``CommandWriteRouteScope`` in the policy module, and an inline spelling in the
-    command schema, with a fourth copy in a validation frozenset. A route added to one
-    of those left the other three validating the old set.
-    """
-
-    NONE = "none"
-    """Writes nothing into profile-bound storage.
-
-    The claim is about WRITES only. A command declaring this route may still
-    read bucket-scoped encrypted storage and may still refuse without an
-    active profile; most of the read surface does exactly that. Reading it as
-    a promise of uninitialised-installation safety would mis-describe the
-    majority of the commands that carry it.
-    """
-
-    PROFILE_BOUND = "profile-bound"
-    """Writes only inside the active profile's own storage."""
-
-    BOOTSTRAP_ROOT = "bootstrap-root"
-    """Writes to the installation root, before any profile exists to bind to."""
-
-
-CommandWriteRouteValue = Literal[
-    CommandWriteRoute.NONE,
-    CommandWriteRoute.PROFILE_BOUND,
-    CommandWriteRoute.BOOTSTRAP_ROOT,
-]
-"""The same vocabulary for a strict spec or payload field."""
 
 
 _require_coherent_transport = _parameter_validation.require_coherent_transport
@@ -311,42 +260,6 @@ class ProfileSecretChannelKind(Enum):
 
     STDIN = "stdin"
     FILE_DESCRIPTOR = "file-descriptor"
-
-
-class ProfileAuthenticationPosture(StrEnum):
-    """How the root profile-session gate applies to one parsed command."""
-
-    NOT_APPLICABLE = "not-applicable"
-    RESUME_FALLBACK = "resume-fallback"
-    SELF_AUTHENTICATING = "self-authenticating"
-
-
-ProfileAuthenticationPostureValue = Literal[
-    ProfileAuthenticationPosture.NOT_APPLICABLE,
-    ProfileAuthenticationPosture.RESUME_FALLBACK,
-    ProfileAuthenticationPosture.SELF_AUTHENTICATING,
-]
-"""The posture where a strict payload field must accept the plain token.
-
-The enum above was a bare ``Enum``, whose members are not strings, so no payload
-surface could root a literal on it and two of them wrote the three tokens out instead.
-It is a ``StrEnum`` now; every existing comparison uses ``is`` against a member, so
-widening member-to-token equality changes nothing that was relied on.
-"""
-
-
-class MachineSecretPresence(StrEnum):
-    """Whether an option must be present or absent to select a payload variant."""
-
-    ABSENT = "absent"
-    PRESENT = "present"
-
-
-MachineSecretPresenceValue = Literal[
-    MachineSecretPresence.ABSENT,
-    MachineSecretPresence.PRESENT,
-]
-"""The same condition for a strict metadata payload field."""
 
 
 @dataclass(frozen=True, slots=True)

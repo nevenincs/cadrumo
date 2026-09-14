@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.iva.classification import (
     CustomerTaxStatus,
@@ -30,20 +31,29 @@ __all__ = [
 ]
 
 
-def transaction_kind_for_nature(nature: SupplyNature, *, effective_date: date) -> TransactionKind:
+def transaction_kind_for_nature(
+    nature: SupplyNature,
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> TransactionKind:
     """Project a printed supply nature through the registry kind catalogue."""
-    return resolve_transaction_kind_catalogue(effective_date).for_supply_nature(nature.value)
+    return resolve_transaction_kind_catalogue(effective_date, operation=operation).for_supply_nature(nature.value)
 
 
-def transaction_kind_candidates(*, effective_date: date) -> tuple[TransactionKind, ...]:
+def transaction_kind_candidates(
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[TransactionKind, ...]:
     """Return the registry-projected kinds reachable from printed nature evidence."""
-    catalogue = resolve_transaction_kind_catalogue(effective_date)
+    catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
     return tuple(catalogue.for_supply_nature(nature.value) for nature in SupplyNature)
 
 
-def transaction_kind_indifferent(*, effective_date: date) -> TransactionKind:
+def transaction_kind_indifferent(*, effective_date: date, operation: PinnedAuthorityOperation) -> TransactionKind:
     """Return the registry-projected neutral kind used on an unbranched path."""
-    return transaction_kind_for_nature(SupplyNature.GOODS, effective_date=effective_date)
+    return transaction_kind_for_nature(SupplyNature.GOODS, effective_date=effective_date, operation=operation)
 
 
 def counterparty_identification_field(direction: InvoiceKind) -> str:
@@ -77,6 +87,7 @@ def axis_forks_the_law(
     probe: Callable[[CustomerTaxStatus, TransactionKind], IvaCategory],
     *,
     slices: list[tuple[tuple[CustomerTaxStatus, ...], tuple[TransactionKind, ...]]],
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Whether ONE undetermined axis can change THIS operation's treatment.
 
@@ -121,7 +132,7 @@ def axis_forks_the_law(
             verdicts = {probe(status, kind) for status in statuses for kind in kinds}
         except Exception:  # reason: an unclassifiable probe is not evidence of indifference.
             return True
-        if len(verdicts) > 1 or require_iva_category("unknown") in verdicts:
+        if len(verdicts) > 1 or require_iva_category("unknown", operation=operation) in verdicts:
             return True
     return False
 
@@ -189,6 +200,7 @@ def domestic_rate_tier_is_reachable(
     customer_tax_status: CustomerTaxStatus | None = None,
     *,
     effective_date: date | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Whether any branch this operation can still reach demands a rate tier.
 
@@ -211,9 +223,9 @@ def domestic_rate_tier_is_reachable(
         return False
     coordinate = effective_date or date.today()
     kinds = (
-        (transaction_kind_for_nature(supply_nature, effective_date=coordinate),)
+        (transaction_kind_for_nature(supply_nature, effective_date=coordinate, operation=operation),)
         if supply_nature is not None
-        else transaction_kind_candidates(effective_date=coordinate)
+        else transaction_kind_candidates(effective_date=coordinate, operation=operation)
     )
     return any(
         domestic_rate_tier_is_required(
@@ -222,6 +234,7 @@ def domestic_rate_tier_is_reachable(
             kind=kind,
             transaction_date=coordinate,
             customer_tax_status=customer_tax_status,
+            operation=operation,
         )
         for kind in kinds
     )

@@ -46,6 +46,7 @@ from ._ledger_support import (
     resolve_id,
 )
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
     from ...application.ledger.action_ports import LedgerActionPorts
@@ -65,7 +66,7 @@ def ledger_detach(
 
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = detach_manual_transaction_attachments(
         bucket_id=transaction_repository.bucket_id,
@@ -100,7 +101,7 @@ def ledger_attach(
 
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = attach_manual_transaction_evidence(
         bucket_id=transaction_repository.bucket_id,
@@ -225,7 +226,7 @@ def ledger_evidence_pull(
     attachment_source = source.to_attachment_source()
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_id = resolve_id(transaction_repository, transaction_id)
 
     profile = resolve_active_profile()
@@ -474,6 +475,10 @@ def ledger_archive(
         raise bad(tr("cli.ledger.errors.confirm_required"))
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(
+        bucket_id=transaction_repository.bucket_id,
+        operation=authority_operation(ctx),
+    )
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = archive_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
@@ -481,7 +486,7 @@ def ledger_archive(
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         source_command="aeat app ledger archive",
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     from ._ledger_payloads import LedgerArchiveResult
 
@@ -507,6 +512,10 @@ def ledger_stash(
         raise bad(tr("cli.ledger.errors.confirm_required"))
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(
+        bucket_id=transaction_repository.bucket_id,
+        operation=authority_operation(ctx),
+    )
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = stash_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
@@ -514,7 +523,7 @@ def ledger_stash(
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         source_command="aeat app ledger stash",
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     from ._ledger_payloads import LedgerStashResult
 
@@ -573,6 +582,10 @@ def ledger_restore(
         raise bad(tr("cli.ledger.errors.confirm_required"))
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(
+        bucket_id=transaction_repository.bucket_id,
+        operation=authority_operation(ctx),
+    )
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = restore_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
@@ -580,7 +593,7 @@ def ledger_restore(
         actor=actor or resolve_active_bucket_id() or "operator",
         reason=reason,
         source_command="aeat app ledger restore",
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     from ._ledger_payloads import LedgerRestoreResult
 
@@ -783,7 +796,7 @@ def ledger_split(
     )
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = _run_manual_split(
         bucket_id=transaction_repository.bucket_id,
@@ -1060,7 +1073,7 @@ def ledger_merge(
         raise bad(tr("cli.ledger.merge.errors.min_two_children"))
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_ids = tuple(resolve_id(transaction_repository, raw) for raw in child_id)
     result = merge_transactions(
         bucket_id=transaction_repository.bucket_id,

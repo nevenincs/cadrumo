@@ -18,10 +18,10 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.period import Period
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -48,7 +48,7 @@ def build_m303_filing_evidence(
     ordenes open.
     """
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=compiled_bundled_authority().snapshot(

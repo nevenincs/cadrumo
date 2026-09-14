@@ -16,6 +16,7 @@ from cadrumo.application.modelo.action_errors import M303FilingEvidenceError
 from cadrumo.application.modelo.m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.deadlines.models import M303RegimeComposition
@@ -24,7 +25,6 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -47,7 +47,7 @@ _CLOCK = datetime(2026, 4, 1, tzinfo=UTC)
 
 def _general_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
     )
 
 
@@ -126,7 +126,7 @@ def _exonerado_activity_rows(
 
 def _simplified_evidence(period: Period) -> FilingInstanceEvidence:
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
     )
     registry_snapshot = compiled_bundled_authority().snapshot(
         "303",

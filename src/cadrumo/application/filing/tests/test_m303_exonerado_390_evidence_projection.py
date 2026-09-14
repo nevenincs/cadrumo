@@ -14,12 +14,13 @@ from ....core.filing_projection_ref import (
     M303Exonerado390OperacionesTercerosProjectionRef,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import SourceReference
 from ....domain.filing.errors import FilingExportError
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.modelos.calculation_revision_m303_evidence import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
@@ -97,7 +98,7 @@ def _record_design(registry_snapshot: RegistrySnapshot) -> SourceReference:
     return resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
         ),
     ).record_design
 

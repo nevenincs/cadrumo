@@ -432,6 +432,7 @@ def compare_taxation_for_work_unit(
     resolution = ProfileSourceResolver(
         caller_binding_ids=({decl_binding} if decl_binding else set()),
         registry_snapshot=snapshot,
+        operation=operation,
     ).resolve(
         CalculationSourceContext(
             bucket_id=work_unit.bucket_id,

@@ -19,6 +19,7 @@ canonical projection.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -32,6 +33,9 @@ from .completeness import (
 )
 from .profile_key import ProfileKey
 from .profile_keys import optional_profile_keys, profile_keys
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class ProfileValidationResult(BaseModel):
@@ -59,7 +63,11 @@ def _conditional_requirement_applies(values: Mapping[str, str], entry: ProfileKe
     return raw is not None and raw.strip() == entry.required_when_value
 
 
-def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResult:
+def validate_profile_values(
+    values: Mapping[str, str],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ProfileValidationResult:
     """Validate ``values`` against the application profile-key catalogue.
 
     ``values`` is keyed by canonical schema path (``identity.tax_id``,
@@ -68,9 +76,9 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
     Returns:
         A typed validation result carrying missing, present, and unknown paths.
     """
-    entries = profile_keys()
+    entries = profile_keys(operation)
     required_keys = _required_profile_keys(values, entries)
-    optional_keys = tuple(entry.key for entry in optional_profile_keys())
+    optional_keys = tuple(entry.key for entry in optional_profile_keys(operation))
     known_keys = set(required_keys) | set(optional_keys)
 
     missing_required = tuple(key for key in required_keys if not _has_value(values, key))

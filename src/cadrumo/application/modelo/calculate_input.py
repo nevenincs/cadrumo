@@ -859,7 +859,11 @@ def _revision_for_work_unit(work_unit: WorkUnit) -> ModeloRevision:
     ).revision
 
 
-def _resolved_maternidad_meses(work_unit: WorkUnit) -> MaternidadMesesResolution | None:
+def _resolved_maternidad_meses(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> MaternidadMesesResolution | None:
     """Resolve the Art. 81.1 maternidad months the active profile contributes.
 
     Returns ``None`` when the bucket has no profile yet, mirroring the
@@ -873,12 +877,17 @@ def _resolved_maternidad_meses(work_unit: WorkUnit) -> MaternidadMesesResolution
     snapshot = resolve_registry_snapshot_for_work_unit(
         work_unit,
         grade=RegistryAuthorityGrade.CALCULATION,
+        operation=operation,
     )
     try:
-        record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
+        repository = ProfileRecordRepository.for_current_session(
+            work_unit.bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        record = repository.load(work_unit.bucket_id)
     except ProfileNotFoundError:
         return None
-    return resolve_maternidad_meses(record, snapshot)
+    return resolve_maternidad_meses(record, snapshot, operation=operation)
 
 
 def _maternidad_casilla_id(
@@ -1230,13 +1239,13 @@ def _supplied_option_group(
 def _maternidad_advisories(
     work_unit: WorkUnit,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> list[CalculationSourceDiagnostic]:
     """Raise the non-blocking advisories for the maternidad-deduction casilla."""
     maternidad_casilla_id = _maternidad_casilla_id(work_unit, operation=operation)
     if maternidad_casilla_id is None:
         return []
-    maternidad = _resolved_maternidad_meses(work_unit)
+    maternidad = _resolved_maternidad_meses(work_unit, operation=operation)
     if maternidad is None:
         return []
     # The active profile's descendiente records are the SOLE authority for

@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -15,6 +16,7 @@ from cadrumo.application.modelo.m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_profile,
 )
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from cadrumo.domain.deadlines.models import M303RegimeComposition
 from cadrumo.domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -81,15 +83,15 @@ def _store_profile(*, composition: M303RegimeComposition) -> None:
     (
         (
             M303RegimeComposition.GENERAL,
-            M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
         ),
         (
             M303RegimeComposition.SIMPLIFIED,
-            M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+            m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
         ),
         (
             M303RegimeComposition.MIXED,
-            M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+            m303_regime_composition_simplified_scope("mixed", authority=compiled_bundled_authority()),
         ),
     ),
 )
@@ -98,11 +100,11 @@ def test_secure_profile_composition_derives_the_closed_m303_scope(
     composition: M303RegimeComposition,
     expected_scope: M303RegimenSimplificadoScope,
 ) -> None:
-    assert m303_regimen_simplificado_scope_for_composition(composition).scope is expected_scope
+    assert m303_regimen_simplificado_scope_for_composition(composition).scope == expected_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile(composition=composition)
 
         decision = m303_regimen_simplificado_scope_for_profile(active_taxpayer_profile(_work_unit()))
 
-    assert decision.scope is expected_scope
+    assert decision.scope == expected_scope

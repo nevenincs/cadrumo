@@ -38,12 +38,13 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -99,7 +100,7 @@ def _filing_evidence():
         registry_revision_id=snapshot.revision.id,
     )
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
     )
     regimen_snapshot = M303RegimenSimplificadoSnapshot(
         filing_year=2025,

@@ -544,6 +544,7 @@ def _prepare_invoice_confirmation(
     establishment = resolve_confirmed_establishment(
         bucket_id=bucket_id,
         legends=legends,
+        operation=operation,
         draft=draft,
         kind=kind,
         invoice_date=classification_date,

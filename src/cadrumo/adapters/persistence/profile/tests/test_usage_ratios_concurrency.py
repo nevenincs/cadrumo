@@ -83,7 +83,12 @@ def test_concurrent_distinct_category_sets_do_not_lose_updates(
         def writer(category: SpendingCategory) -> None:
             try:
                 gate.wait()
-                set_usage_ratio(bucket_id=bucket_id, category=category, ratio=_RATIO)
+                set_usage_ratio(
+                    bucket_id=bucket_id,
+                    category=category,
+                    ratio=_RATIO,
+                    operation=authority_operation,
+                )
             except Exception as exc:  # surface any worker failure to the assertion
                 errors.append(f"{category.value}: {type(exc).__name__}: {exc}")
 

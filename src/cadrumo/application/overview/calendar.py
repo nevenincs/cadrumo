@@ -140,6 +140,7 @@ from .coverage import build_obligation_coverage
 from .next_actions import declare_next_action as _declare_next_action
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
@@ -325,6 +326,7 @@ def _calendar_entry_from_work_unit(
     due_soon_days: int,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
+    operation: PinnedAuthorityOperation,
 ) -> _OverviewCalendarEntry:
     opens_on, closes_on, payment_cutoff_on = _work_unit_window_dates(unit)
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, filing_evidence)
@@ -343,6 +345,7 @@ def _calendar_entry_from_work_unit(
         obligation,
         filing_evidence=effective_filing_evidence,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+        operation=operation,
     ).model_copy(
         update={
             "source": _OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
@@ -362,6 +365,7 @@ def _merge_work_units_into_entries(
     due_soon_days: int,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[_OverviewCalendarEntry, ...]:
     merged = list(entries)
     registry_index = {_calendar_entry_key(entry): index for index, entry in enumerate(entries)}
@@ -385,6 +389,7 @@ def _merge_work_units_into_entries(
                 due_soon_days=due_soon_days,
                 filing_evidence=filing_evidence,
                 live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+                operation=operation,
             ),
         )
     return tuple(
@@ -798,26 +803,24 @@ def _calendar_entry_from_obligation(
     *,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
+    operation: PinnedAuthorityOperation,
 ) -> _OverviewCalendarEntry:
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
-
     try:
-        with bundled_indexed_authority().operation() as operation:
-            holiday_calendar = (
-                None
-                if obligation.modelo in _MODELOS_WITHOUT_SHIFT
-                else _load_holiday_calendar(obligation.closes_on.year, operation=operation)
-            )
-            shift = _shift_deadline(
-                obligation.closes_on,
-                modelo=obligation.modelo,
-                ccaa_code=None,
-                calendar=holiday_calendar,
-            )
-            adjusted = shift.adjusted_close_date
-            reason = shift.shift_reason
-            holiday_refs = shift.holiday_refs
-            jurisdictions = shift.jurisdictions
+        holiday_calendar = (
+            None
+            if obligation.modelo in _MODELOS_WITHOUT_SHIFT
+            else _load_holiday_calendar(obligation.closes_on.year, operation=operation)
+        )
+        shift = _shift_deadline(
+            obligation.closes_on,
+            modelo=obligation.modelo,
+            ccaa_code=None,
+            calendar=holiday_calendar,
+        )
+        adjusted = shift.adjusted_close_date
+        reason = shift.shift_reason
+        holiday_refs = shift.holiday_refs
+        jurisdictions = shift.jurisdictions
     except _DeadlineValidationError as exc:
         _log.debug(
             "overview calendar ignored deadline shift validation error",
@@ -859,6 +862,7 @@ def _calendar_entry_from_obligation(
         censo_enrolment_state=_calendar_censo_enrolment_state(
             modelo=obligation.modelo,
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            operation=operation,
         ),
         filing_evidence=_calendar_entry_filing_evidence(
             modelo=obligation.modelo,
@@ -875,6 +879,7 @@ def _schedules_for_calendar_range(
     *,
     today: date,
     engine: _ScheduleProducer | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[_ScheduleProducer, list[_Schedule]]:
     """Return the deadline engine and per-year schedules covering ``calendar_range``.
 
@@ -887,7 +892,7 @@ def _schedules_for_calendar_range(
     ``ScheduleComputationError`` and must propagate, mirroring the graceful
     degradation ``overview explain`` applies via the same narrow catch.
     """
-    deadline_engine = engine if engine is not None else _DeadlineEngine()
+    deadline_engine = engine if engine is not None else _DeadlineEngine(authority=operation)
     schedules: list[_Schedule] = []
     for year in calendar_range.covered_years():
         try:
@@ -909,6 +914,7 @@ def _entries_and_suppressed_from_schedules(
     show_suppressed: bool,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[_OverviewCalendarEntry], list[_SuppressedCalendarEntry], set[str]]:
     """Project every schedule's obligations into applicable calendar entries.
 
@@ -950,6 +956,7 @@ def _entries_and_suppressed_from_schedules(
                     obligation,
                     filing_evidence=filing_evidence,
                     live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+                    operation=operation,
                 ),
             )
     return entries, suppressed, coverage_surface_modelos
@@ -959,6 +966,7 @@ def build_overview_calendar(
     profile: _TaxpayerProfile,
     calendar_range: _OverviewCalendarRange,
     *,
+    operation: PinnedAuthorityOperation,
     today: date,
     engine: _ScheduleProducer | None = None,
     raw_values: Mapping[str, object] | None = None,
@@ -981,6 +989,8 @@ def build_overview_calendar(
     Args:
         profile: The operator's :class:`~cadrumo.domain.deadlines.TaxpayerProfile`.
         calendar_range: Inclusive date window to enumerate.
+        operation: Caller-owned generation-pinned authority operation used by
+            the deadline engine, holiday projection, and warning metadata.
         today: Reference date for engine status classification.
         engine: Optional :class:`~cadrumo.domain.deadlines.ScheduleProducer` the caller wants to
             share across queries — a concrete
@@ -1043,7 +1053,13 @@ def build_overview_calendar(
             coverage=build_obligation_coverage(profile, frozenset(), today=today),
         )
 
-    deadline_engine, schedules = _schedules_for_calendar_range(profile, calendar_range, today=today, engine=engine)
+    deadline_engine, schedules = _schedules_for_calendar_range(
+        profile,
+        calendar_range,
+        today=today,
+        engine=engine,
+        operation=operation,
+    )
     entries, suppressed, coverage_surface_modelos = _entries_and_suppressed_from_schedules(
         schedules,
         profile=profile,
@@ -1051,6 +1067,7 @@ def build_overview_calendar(
         show_suppressed=show_suppressed,
         filing_evidence=filing_evidence,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+        operation=operation,
     )
     entries.sort(
         key=lambda entry: (
@@ -1070,8 +1087,9 @@ def build_overview_calendar(
         due_soon_days=due_soon_days,
         filing_evidence=filing_evidence,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+        operation=operation,
     )
-    completeness, warnings = _build_completeness_and_warnings(raw_values, entries_tuple)
+    completeness, warnings = _build_completeness_and_warnings(raw_values, entries_tuple, operation=operation)
     censo_warnings = _calendar_censo_reconciliation_warnings(
         entries=entries_tuple,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
@@ -1085,6 +1103,7 @@ def build_overview_calendar(
     regime_incompatibility_warnings = _calendar_regime_incompatibility_warnings(
         iva_regime=profile.iva_regime,
         entries=entries_tuple,
+        operation=operation,
     )
     coverage = build_obligation_coverage(
         profile,

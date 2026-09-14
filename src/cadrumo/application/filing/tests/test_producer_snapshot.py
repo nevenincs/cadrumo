@@ -34,6 +34,7 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -49,7 +50,6 @@ from ....domain.deadlines.models import (
 from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
-    M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -353,7 +353,7 @@ def m303_exonerado_390_evidence(*, applicable: bool) -> M303Exonerado390FilingEv
 
 def _m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=compiled_bundled_authority().snapshot(

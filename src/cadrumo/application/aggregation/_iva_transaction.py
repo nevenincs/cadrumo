@@ -13,8 +13,9 @@ from decimal import Decimal
 
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -130,6 +131,7 @@ def _substrate_admission_issue(
     resolved_period: Period,
     operation_date: date,
     cash_treatment: IvaCashAccountingTreatment,
+    operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregationIssue | None:
     """Return why the row cannot be an IVA observation at all, or ``None``.
 
@@ -141,7 +143,9 @@ def _substrate_admission_issue(
     refusal itself.
     """
     transaction_id = transaction.transaction_id
-    if is_iva_cash_accounting_none(cash_treatment) and not resolved_period.contains(operation_date):
+    if is_iva_cash_accounting_none(cash_treatment, operation=operation) and not resolved_period.contains(
+        operation_date
+    ):
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
@@ -170,6 +174,7 @@ def _resolve_iva_transaction_context(
     transaction: Transaction,
     *,
     resolved_period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> _IvaTransactionContext | _IvaTransactionOutcome:
     transaction_id = transaction.transaction_id
     ledger_date = transaction.raw.value_date or transaction.raw.booked_date
@@ -180,6 +185,7 @@ def _resolve_iva_transaction_context(
         resolved_period=resolved_period,
         operation_date=operation_date,
         cash_treatment=cash_treatment,
+        operation=operation,
     )
     if substrate_issue is not None:
         return _IvaTransactionOutcome(gate_issue=substrate_issue)
@@ -315,11 +321,14 @@ def _resolve_iva_transaction_classification(
 ) -> _IvaTransactionClassification | _IvaTransactionOutcome:
     explicit_category = transaction.iva_category
     if explicit_category is not None:
-        effective_category = explicit_category
+        effective_category = resolve_iva_category_catalogue(
+            effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
+            operation=operation,
+        ).require(explicit_category)
     else:
         catalogue = resolve_iva_rate_kind_catalogue(
             effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
-            authority=operation,
+            operation=operation,
         )
         definition = next((item for item in catalogue.definitions if item.token == rate_kind), None)
         if definition is None:
@@ -336,7 +345,7 @@ def classify_iva_transaction(
     transaction: Transaction,
     *,
     resolved_period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> _IvaTransactionOutcome:
     """Filter + classify one ledger transaction against the IVA aggregation pipeline.
 
@@ -348,15 +357,8 @@ def classify_iva_transaction(
     reference; an invalid prorrata reference is reported as a
     ``prorrata_issue`` alongside the observation.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return classify_iva_transaction(
-                transaction,
-                resolved_period=resolved_period,
-                operation=indexed_operation,
-            )
     _resolve_iva_registry_declarations(effective_date=resolved_period.end_date, operation=operation)
-    context = _resolve_iva_transaction_context(transaction, resolved_period=resolved_period)
+    context = _resolve_iva_transaction_context(transaction, resolved_period=resolved_period, operation=operation)
     if isinstance(context, _IvaTransactionOutcome):
         return context
     amounts = _resolve_iva_transaction_amounts(
@@ -382,6 +384,7 @@ def classify_iva_transaction(
         context=context,
         amounts=amounts,
         classification=classification,
+        operation=operation,
     )
 
 
@@ -392,6 +395,7 @@ def _project_iva_transaction(
     context: _IvaTransactionContext,
     amounts: _IvaTransactionAmounts,
     classification: _IvaTransactionClassification,
+    operation: PinnedAuthorityOperation,
 ) -> _IvaTransactionOutcome:
     prorrata_reference, prorrata_issue, linked_prorrata_id = _resolve_iva_prorrata_attachment(
         transaction,
@@ -400,7 +404,7 @@ def _project_iva_transaction(
         base_amount=amounts.base_amount,
         iva_amount=amounts.iva_amount,
     )
-    if not is_iva_cash_accounting_none(context.cash_treatment):
+    if not is_iva_cash_accounting_none(context.cash_treatment, operation=operation):
         observations = _cash_accounting_observations(
             transaction,
             resolved_period=resolved_period,
@@ -414,6 +418,7 @@ def _project_iva_transaction(
             linked_prorrata_id=linked_prorrata_id,
             deduction_fact_kind=transaction.deduction_fact_kind,
             deduction_provenance=transaction.deduction_provenance,
+            operation=operation,
         )
         if not observations:
             return _IvaTransactionOutcome(
@@ -455,6 +460,7 @@ def _project_iva_transaction(
         deduction_provenance=transaction.deduction_provenance,
         investment_asset_id=transaction.investment_asset_id,
         rectifies_ledger_id=transaction.rectifies_ledger_id,
+        operation=operation,
     )
     return _IvaTransactionOutcome(
         observations=(observation,),
@@ -484,9 +490,10 @@ def _iva_observation(
     deduction_provenance: IvaDeductionClassificationProvenance | None,
     investment_asset_id: str | None = None,
     rectifies_ledger_id: str | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaLedgerObservation:
     if cash_accounting_treatment is None:
-        cash_accounting_treatment = default_iva_cash_accounting_treatment()
+        cash_accounting_treatment = default_iva_cash_accounting_treatment(operation=operation)
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=transaction_date,
@@ -524,6 +531,7 @@ def _cash_accounting_observations(
     linked_prorrata_id: str | None,
     deduction_fact_kind: IvaDeductionFactKind | None,
     deduction_provenance: IvaDeductionClassificationProvenance | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[IvaLedgerObservation, ...]:
     # Carried onto every observation this producer emits, exactly as the
     # ordinary path carries it. ``applied_rate is None`` is a claim that the
@@ -558,6 +566,7 @@ def _cash_accounting_observations(
                 deduction_provenance=deduction_provenance,
                 investment_asset_id=transaction.investment_asset_id,
                 rectifies_ledger_id=transaction.rectifies_ledger_id,
+                operation=operation,
             ),
         )
     if resolved_period.contains(operation_date):
@@ -580,6 +589,7 @@ def _cash_accounting_observations(
                 deduction_provenance=deduction_provenance,
                 investment_asset_id=transaction.investment_asset_id,
                 rectifies_ledger_id=transaction.rectifies_ledger_id,
+                operation=operation,
             ),
         )
     return tuple(observations)

@@ -6,10 +6,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
@@ -58,6 +59,10 @@ from ....application.workbench_generation import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
 )
+from ...adapter_composition import build_censal_fetch_port
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
@@ -279,13 +284,19 @@ def _operation_runtime() -> TuiOperationCompositionV1:
             build_censal_operation_registration(
                 build_censal_operation_definition(
                     certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                    browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    censal_fetch_port=build_censal_fetch_port(),
                 )
             ).contract,
         )
     )
     services = cast("OperationComposedServices", SimpleNamespace(public_contracts=contracts))
-    return TuiOperationCompositionV1(services=services, public_contracts=contracts)
+    return TuiOperationCompositionV1(
+        services=services,
+        public_contracts=contracts,
+        authority_operation=cast("PinnedAuthorityOperation", object()),
+    )
 
 
 def test_generation_provider_binds_real_declarations_factory_and_calendar_projection() -> None:
