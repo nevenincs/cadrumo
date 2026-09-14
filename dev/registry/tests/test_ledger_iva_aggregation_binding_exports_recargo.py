@@ -101,8 +101,8 @@ def test_box_60_carries_substantive_export_grounding() -> None:
 def test_box_60_binding_selects_export_and_assimilated_export_categories() -> None:
     """The casilla 60 source binding must implement both legal legs in its selector."""
     expected = {
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+        IvaCategory("export_third_country_zero_rated"),
+        IvaCategory("export_assimilated_zero_rated"),
     }
     for revision_id in (
         "2022",
@@ -139,22 +139,22 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
     repercutido = _observation(
         applied_rate=Decimal("0.21"),
         txn_date=date(2024, 5, 15),
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("6500"),
         iva=Decimal("1365"),
     )
     soportado = _observation(
         applied_rate=Decimal("0.21"),
         txn_date=date(2024, 5, 15),
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
-        flow=IvaFlowDirection.SOPORTADO,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
+        flow=IvaFlowDirection._from_registry("soportado"),
         base=Decimal("300"),
         iva=Decimal("63"),
-        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
-        deduction_authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+        deduction_authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
     )
     result = _calculate_303_from_observations(
         filing_year=2024,
@@ -193,21 +193,21 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
     observations = (
         _observation(
             applied_rate=Decimal("0.21"),
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow=IvaFlowDirection._from_registry("repercutido"),
             base=Decimal("6500"),
             iva=Decimal("1365"),
         ),
         _observation(
             applied_rate=Decimal("0.21"),
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow=IvaFlowDirection.SOPORTADO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow=IvaFlowDirection._from_registry("soportado"),
             base=Decimal("300"),
             iva=Decimal("63"),
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
-            deduction_authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+            deduction_authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
         ),
     )
     values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
@@ -252,9 +252,9 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     general = _observation(
         applied_rate=Decimal("0.21"),
         ledger_id="rec-general",
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("1000"),
         iva=Decimal("210"),
         recargo=Decimal("52.00"),
@@ -262,9 +262,9 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     reduced = _observation(
         applied_rate=Decimal("0.10"),
         ledger_id="rec-reduced",
-        category=IvaCategory.DOMESTIC_REDUCED,
-        rate_kind=IvaRateKind.REDUCED,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("domestic_reduced"),
+        rate_kind=IvaRateKind("reduced"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("1000"),
         iva=Decimal("100"),
         recargo=Decimal("14.00"),
@@ -273,9 +273,9 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     plain = _observation(
         applied_rate=Decimal("0.21"),
         ledger_id="plain-general",
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("2000"),
         iva=Decimal("420"),
         recargo=Decimal("0"),
@@ -304,42 +304,42 @@ def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_led
     assert revision.id == "2022"
     rec_general = _observation(
         applied_rate=Decimal("0.21"),
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("1000"),
         iva=Decimal("210"),
         recargo=Decimal("52.00"),
     )
     rec_reduced = _observation(
         applied_rate=Decimal("0.10"),
-        category=IvaCategory.DOMESTIC_REDUCED,
-        rate_kind=IvaRateKind.REDUCED,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("domestic_reduced"),
+        rate_kind=IvaRateKind("reduced"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("1000"),
         iva=Decimal("100"),
         recargo=Decimal("14.00"),
     )
     rec_super = _observation(
         applied_rate=Decimal("0.04"),
-        category=IvaCategory.DOMESTIC_SUPER_REDUCED,
-        rate_kind=IvaRateKind.SUPER_REDUCED,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("domestic_super_reduced"),
+        rate_kind=IvaRateKind("super_reduced"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("1000"),
         iva=Decimal("40"),
         recargo=Decimal("5.00"),
     )
     intracom = _observation(
-        category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        rate_kind=IvaRateKind.ZERO,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("intra_community_supply"),
+        rate_kind=IvaRateKind("zero"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("2000"),
         iva=Decimal("0"),
     )
     export = _observation(
-        category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        rate_kind=IvaRateKind.ZERO,
-        flow=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("export_third_country_zero_rated"),
+        rate_kind=IvaRateKind("zero"),
+        flow=IvaFlowDirection._from_registry("repercutido"),
         base=Decimal("3000"),
         iva=Decimal("0"),
     )
@@ -428,9 +428,9 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
                 applied_rate=Decimal("0.21"),
                 ledger_id="op-ventas-recargo-equivalencia",
                 txn_date=date(2022, 5, 15),
-                category=IvaCategory.DOMESTIC_GENERAL,
-                rate_kind=IvaRateKind.GENERAL,
-                flow=IvaFlowDirection.REPERCUTIDO,
+                category=IvaCategory("domestic_general"),
+                rate_kind=IvaRateKind("general"),
+                flow=IvaFlowDirection._from_registry("repercutido"),
                 base=Decimal("24000.00"),
                 iva=Decimal("5040.00"),
                 recargo=(Decimal("1248.00") if include_recargo else Decimal("0")),

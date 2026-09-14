@@ -94,7 +94,11 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
                 fact_id=CATEGORY_PROFILE_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
                 effective_date=date(2099, 12, 31),
-                selectors=(FactSelector(name="category", value=SpendingCategory.MUTUALIDAD_ALTERNATIVA.value),),
+                selectors=(
+                    FactSelector(
+                        name="category", value=SpendingCategory._from_registry("mutualidad_alternativa").value
+                    ),
+                ),
             ),
             authority_digest="a" * 64,
         )
@@ -131,7 +135,9 @@ def test_authored_category_profile_fact_preserves_citation_identity_window_and_g
             fact_id=CATEGORY_PROFILE_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=date(2025, 12, 31),
-            selectors=(FactSelector(name="category", value=SpendingCategory.MUTUALIDAD_ALTERNATIVA.value),),
+            selectors=(
+                FactSelector(name="category", value=SpendingCategory._from_registry("mutualidad_alternativa").value),
+            ),
         ),
         authority_digest="a" * 64,
     )
@@ -152,7 +158,9 @@ def test_authored_category_cap_fact_preserves_the_dated_mutualidad_amount() -> N
             fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=date(2025, 12, 31),
-            selectors=(FactSelector(name="category", value=SpendingCategory.MUTUALIDAD_ALTERNATIVA.value),),
+            selectors=(
+                FactSelector(name="category", value=SpendingCategory._from_registry("mutualidad_alternativa").value),
+            ),
         ),
         authority_digest="b" * 64,
     )

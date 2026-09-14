@@ -104,23 +104,23 @@ def _observation(
 def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
     return (
         _observation(
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow=IvaFlowDirection._from_registry("repercutido"),
             base=_GENERAL_BASE,
             iva=_GENERAL_CUOTA,
         ),
         _observation(
-            category=IvaCategory.DOMESTIC_REDUCED,
-            rate_kind=IvaRateKind.REDUCED,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_reduced"),
+            rate_kind=IvaRateKind("reduced"),
+            flow=IvaFlowDirection._from_registry("repercutido"),
             base=_REDUCIDO_BASE,
             iva=_REDUCIDO_CUOTA,
         ),
         _observation(
-            category=IvaCategory.DOMESTIC_SUPER_REDUCED,
-            rate_kind=IvaRateKind.SUPER_REDUCED,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_super_reduced"),
+            rate_kind=IvaRateKind("super_reduced"),
+            flow=IvaFlowDirection._from_registry("repercutido"),
             base=_SUPER_REDUCIDO_BASE,
             iva=_SUPER_REDUCIDO_CUOTA,
         ),
@@ -128,35 +128,35 @@ def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
         # supply is. Its rate-blind total exists so a row whose rate the ledger
         # never captured still reaches the tier.
         _observation(
-            category=IvaCategory.DOMESTIC_ZERO,
-            rate_kind=IvaRateKind.ZERO,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_zero"),
+            rate_kind=IvaRateKind("zero"),
+            flow=IvaFlowDirection._from_registry("repercutido"),
             base=_ZERO_BASE,
             iva=Decimal("0.00"),
         ),
         _observation(
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow=IvaFlowDirection.SOPORTADO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow=IvaFlowDirection._from_registry("soportado"),
             base=_SOPORTADO_BASE,
             iva=_SOPORTADO_CUOTA,
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
         ),
         # Exempt supplies carrying base with no cuota. They reach the volume
         # boxes rather than the régimen-ordinario tiers, and without a row of
         # each those two bindings resolve zero for want of input -- which reads
         # exactly like the dormant capacity the next test refuses to accept.
         _observation(
-            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            rate_kind=IvaRateKind.ZERO,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("intra_community_supply"),
+            rate_kind=IvaRateKind("zero"),
+            flow=IvaFlowDirection._from_registry("repercutido"),
             base=_INTRACOM_BASE,
             iva=Decimal("0.00"),
         ),
         _observation(
-            category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-            rate_kind=IvaRateKind.ZERO,
-            flow=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("export_third_country_zero_rated"),
+            rate_kind=IvaRateKind("zero"),
+            flow=IvaFlowDirection._from_registry("repercutido"),
             base=_EXPORT_BASE,
             iva=Decimal("0.00"),
         ),

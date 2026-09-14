@@ -97,15 +97,15 @@ def test_aic_row_feeds_box_10_base_and_box_11_cuota_from_the_same_row() -> None:
     aic_row = IvaLedgerObservation(
         ledger_id="aic-goods-1",
         transaction_date=date(2025, 5, 10),
-        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        rate_kind=IvaRateKind.GENERAL,
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        rate_kind=IvaRateKind("general"),
         applied_rate=Decimal("0.21"),
-        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
         base_amount=Decimal("2500.00"),
         iva_amount=Decimal("525.00"),
-        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
         deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT,
+            authority=IvaDeductionEvidenceAuthority._from_registry("intra_eu_self_assessment"),
             source_locator="test-ledger:aic-goods-1",
             evidence_digest="a" * 64,
         ),
@@ -129,15 +129,15 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
     aic_row = IvaLedgerObservation(
         ledger_id="aic-goods-zero",
         transaction_date=date(2025, 5, 10),
-        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        rate_kind=IvaRateKind.ZERO,
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        rate_kind=IvaRateKind("zero"),
         applied_rate=Decimal("0.00"),
-        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
-        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
         deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT,
+            authority=IvaDeductionEvidenceAuthority._from_registry("intra_eu_self_assessment"),
             source_locator="test-ledger:aic-goods-zero",
             evidence_digest="a" * 64,
         ),
@@ -149,7 +149,7 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
     assert resolved[_BINDING_BASE] == Decimal("1739.25")
     bindings = {binding.id: binding for binding in revision.bindings}
     for binding_id in _AIC_BINDING_IDS:
-        assert IvaRateKind.ZERO in iva_ledger_selector(bindings[binding_id]).rate_kinds
+        assert IvaRateKind("zero") in iva_ledger_selector(bindings[binding_id]).rate_kinds
 
 
 def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(tmp_path: Path) -> None:
@@ -201,15 +201,15 @@ def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(t
     aic_row = IvaLedgerObservation(
         ledger_id="aic-goods-zero-mutant",
         transaction_date=date(2025, 5, 10),
-        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        rate_kind=IvaRateKind.ZERO,
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        rate_kind=IvaRateKind("zero"),
         applied_rate=Decimal("0.00"),
-        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
-        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
         deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT,
+            authority=IvaDeductionEvidenceAuthority._from_registry("intra_eu_self_assessment"),
             source_locator="test-ledger:aic-goods-zero-mutant",
             evidence_digest="a" * 64,
         ),

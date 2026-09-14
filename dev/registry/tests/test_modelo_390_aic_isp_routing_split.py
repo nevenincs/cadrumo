@@ -129,15 +129,15 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
     aic_row = IvaLedgerObservation(
         ledger_id="aic-bienes-21",
         transaction_date=date(2025, 6, 15),
-        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        rate_kind=IvaRateKind.GENERAL,
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        rate_kind=IvaRateKind("general"),
         applied_rate=Decimal("0.21"),
-        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
-        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
         deduction_provenance=_deduction_provenance(
-            IvaDeductionFactKind.INTRA_EU_CURRENT,
+            IvaDeductionFactKind._from_registry("intra_eu_current"),
             source_locator="self-assessment:aic-bienes-21",
         ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
@@ -145,14 +145,14 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
     domestic_isp_row = IvaLedgerObservation(
         ledger_id="domestic-isp",
         transaction_date=date(2025, 6, 15),
-        category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        rate_kind=IvaRateKind.GENERAL,
-        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        category=IvaCategory("domestic_reverse_charge"),
+        rate_kind=IvaRateKind("general"),
+        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
         base_amount=Decimal("500.00"),
         iva_amount=Decimal("105.00"),
-        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
         deduction_provenance=_deduction_provenance(
-            IvaDeductionFactKind.DOMESTIC_CURRENT,
+            IvaDeductionFactKind._from_registry("domestic_current"),
             source_locator="invoice:domestic-isp",
         ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
@@ -178,15 +178,15 @@ def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
     aic_row = IvaLedgerObservation(
         ledger_id="aic-bienes-zero",
         transaction_date=date(2025, 6, 15),
-        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        rate_kind=IvaRateKind.ZERO,
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        rate_kind=IvaRateKind("zero"),
         applied_rate=Decimal("0.00"),
-        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
-        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
         deduction_provenance=_deduction_provenance(
-            IvaDeductionFactKind.INTRA_EU_CURRENT,
+            IvaDeductionFactKind._from_registry("intra_eu_current"),
             source_locator="self-assessment:aic-bienes-zero",
         ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
@@ -196,8 +196,8 @@ def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
 
     assert resolved[_AIC_ZERO_BASE_BINDING] == Decimal("1739.25")
     bindings = {binding.id: binding for binding in revision.bindings}
-    assert IvaRateKind.ZERO in iva_ledger_selector(bindings[_AIC_ZERO_BASE_BINDING]).rate_kinds
-    assert IvaRateKind.ZERO in iva_ledger_selector(bindings[_AIC_ZERO_CUOTA_BINDING]).rate_kinds
+    assert IvaRateKind("zero") in iva_ledger_selector(bindings[_AIC_ZERO_BASE_BINDING]).rate_kinds
+    assert IvaRateKind("zero") in iva_ledger_selector(bindings[_AIC_ZERO_CUOTA_BINDING]).rate_kinds
 
 
 def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_path: Path) -> None:
@@ -235,15 +235,15 @@ def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_pa
     aic_row = IvaLedgerObservation(
         ledger_id="aic-bienes-zero-mutant",
         transaction_date=date(2025, 6, 15),
-        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        rate_kind=IvaRateKind.ZERO,
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        rate_kind=IvaRateKind("zero"),
         applied_rate=Decimal("0.00"),
-        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
-        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
         deduction_provenance=_deduction_provenance(
-            IvaDeductionFactKind.INTRA_EU_CURRENT,
+            IvaDeductionFactKind._from_registry("intra_eu_current"),
             source_locator="self-assessment:aic-bienes-zero-mutant",
         ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,

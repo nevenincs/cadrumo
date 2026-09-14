@@ -46,6 +46,6 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
     mutated_revision = next(modelo for modelo in modelos if modelo.id == "303").revisions[revision_id]
 
     unroutable = structurally_unroutable_iva_base_categories(mutated_revision)
-    assert IvaCategory.INTRA_COMMUNITY_SUPPLY in unroutable, (
+    assert IvaCategory("intra_community_supply") in unroutable, (
         "stripping the only binding drawing intra_community_supply's base must red the negative control"
     )

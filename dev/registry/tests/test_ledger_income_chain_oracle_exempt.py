@@ -125,7 +125,7 @@ def _invoice_row(*, declares_substrate: bool) -> Transaction:
             "taxable_base": _BASE if declares_substrate else None,
             "iva_amount": None,
             "iva_rate": None,
-            "iva_category": IvaCategory.DOMESTIC_EXEMPT if declares_substrate else None,
+            "iva_category": IvaCategory("domestic_exempt") if declares_substrate else None,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(_FILING_YEAR, 4, 6, 10, 30, tzinfo=UTC),
@@ -165,8 +165,8 @@ def test_the_declared_category_is_what_makes_the_cuota_zero() -> None:
     table rather than testing for nullness is what separates them, so the
     premise is asserted rather than assumed.
     """
-    assert category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_EXEMPT, InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL, InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED)
+    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
 
 
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:

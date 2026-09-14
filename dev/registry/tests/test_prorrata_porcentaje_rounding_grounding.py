@@ -108,7 +108,7 @@ def _domain_percentage(con_derecho: Decimal, total: Decimal) -> Decimal:
             operaciones_sin_derecho_deduccion=total - con_derecho,
         ),
         year=2024,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=ProrrataKind._from_registry("definitiva"),
     ).percentage
 
 
