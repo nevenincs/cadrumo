@@ -12,7 +12,6 @@ import argparse
 import hashlib
 import json
 import os
-import re
 import shutil
 import tempfile
 from collections.abc import Mapping
@@ -84,20 +83,6 @@ def toml_comments(text: str) -> list[str]:
             index = end
         index += 1
     return comments
-
-
-def retire_source_default_tables(text: str) -> str:
-    """Remove only the retired manifest tables, retaining other text in place."""
-    kept: list[str] = []
-    dropping = False
-    for line in text.splitlines(keepends=True):
-        if line.lstrip().startswith("["):
-            dropping = bool(
-                re.match(r'^\s*\[\[?revisions\.(?:"[^"]+"|[\w-]+)\.source_default_dispositions(?:[.\]])', line)
-            )
-        if not dropping:
-            kept.append(line)
-    return "".join(kept)
 
 
 def field_count(value: object) -> int:
@@ -223,21 +208,9 @@ def pack_modelo(directory: Path, work: Path, *, apply: bool = False) -> dict[str
     if fingerprint(originals) != before_files or fingerprint(directory) != before_files:
         raise ValueError("source changed while copying; nothing published")
     changed_sections: list[str] = []
-    removed_fields: list[str] = []
     revisions = cast(Mapping[str, Mapping[str, object]], before["revisions"])
-    expected_revisions = cast(dict[str, dict[str, object]], expected["revisions"])
     for revision_id, revision in revisions.items():
         edition = staged / "revisions" / revision_id
-        manifest_path = edition / "revision.toml"
-        if "source_default_dispositions" in revision:
-            manifest = rtoml.load(manifest_path)
-            del manifest["revisions"][revision_id]["source_default_dispositions"]
-            del expected_revisions[revision_id]["source_default_dispositions"]
-            text = retire_source_default_tables(manifest_path.read_text(encoding="utf-8-sig"))
-            if canonical(rtoml.loads(text)) != canonical(manifest):
-                raise ValueError("source-default table retirement changed another declaration")
-            manifest_path.write_text(text, encoding="utf-8", newline="\n")
-            removed_fields.append(f"{revision_id}.source_default_dispositions")
         for section in sorted(edition.iterdir()):
             if not section.is_dir() or section.name in {"locales", "export"}:
                 continue
@@ -297,7 +270,6 @@ def pack_modelo(directory: Path, work: Path, *, apply: bool = False) -> dict[str
         "equivalent": True,
         "applied": False,
         "changed_sections": changed_sections,
-        "removed_obsolete_fields": removed_fields,
         "backup": str(originals),
         "before_fingerprint": before_files,
         "after_fingerprint": after_files,

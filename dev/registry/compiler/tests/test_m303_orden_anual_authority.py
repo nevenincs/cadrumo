@@ -25,9 +25,16 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
 from ...maintenance_support import check_m303_annual_orden_manifest
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..authority import compiled_bundled_authority
+from ..loader import load_registry_tree
 from ..m303_orden_manifest import load_m303_annual_orden_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module")
+def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    """Load the committed AEAT registry once for this authority contract module."""
+    return load_registry_tree(bundled_path("registry", "aeat"))
 
 
 @pytest.mark.parametrize(

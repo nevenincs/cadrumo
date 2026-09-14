@@ -59,21 +59,6 @@ def test_apply_preserves_values_order_locales_comments_and_is_idempotent(tmp_pat
     assert again["deletes"] == []
 
 
-def test_only_retired_source_defaults_are_removed(tmp_path: Path) -> None:
-    directory = fixture_tree(tmp_path)
-    manifest = directory / "revisions" / "2025" / "revision.toml"
-    manifest.write_text(
-        manifest.read_text(encoding="utf-8")
-        + '\n[revisions."2025".source_default_dispositions.casillas]\nreason = "derived"\n',
-        encoding="utf-8",
-    )
-    receipt = pack_modelo(directory, tmp_path / "work", apply=True)
-    assert receipt["removed_obsolete_fields"] == ["2025.source_default_dispositions"]
-    revision = load_modelo_declarations(directory)["revisions"]["2025"]
-    assert "source_default_dispositions" not in revision
-    assert revision["casillas"][0]["required"] is False
-
-
 def test_work_inside_source_is_refused_without_changes(tmp_path: Path) -> None:
     directory = fixture_tree(tmp_path)
     before = fingerprint(directory)

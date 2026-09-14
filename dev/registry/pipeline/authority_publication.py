@@ -619,6 +619,12 @@ def _cleanup_retired_authority_databases(destination: Path, *, current_database:
     content-addressed file in place and let a later successful publication try
     again.  Unrelated files and the newly selected database are never targets.
     """
+    if os.name != "nt":
+        # POSIX unlink can remove a file that another process still has open;
+        # without a cross-process reader lease that is not a safe cleanup
+        # signal.  Retaining a content-addressed generated file is preferable
+        # to making a still-leased pathname disappear.
+        return
     for candidate in destination.glob("authority-*.sqlite3"):
         if candidate.name == current_database:
             continue
@@ -637,7 +643,10 @@ def promote_accepted_authority_database(
 ) -> AuthorityDescriptor:
     """Promote exact already-accepted bytes without recompiling the generation."""
     candidate_descriptor = candidate_descriptor_path.resolve(strict=True)
+    accepted_descriptor_bytes = candidate_descriptor.read_bytes()
     descriptor = AuthorityDescriptor.read(candidate_descriptor)
+    if candidate_descriptor.read_bytes() != accepted_descriptor_bytes:
+        raise RegistryValidationError("accepted authority descriptor changed during admission")
     candidate_database = (candidate_descriptor.parent / descriptor.database).resolve(strict=True)
     if candidate_descriptor.parent != candidate_database.parent:
         raise RegistryValidationError("accepted authority database escapes its candidate directory")
@@ -653,8 +662,10 @@ def promote_accepted_authority_database(
         timeout=_PUBLICATION_LOCK_TIMEOUT,
         retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
     ):
+        if candidate_descriptor.read_bytes() != accepted_descriptor_bytes:
+            raise RegistryValidationError("accepted authority descriptor changed before locked promotion")
         return _promote_accepted_authority_bytes(
-            candidate_descriptor,
+            accepted_descriptor_bytes,
             candidate_database,
             descriptor,
             destination=resolved_destination,
@@ -662,7 +673,7 @@ def promote_accepted_authority_database(
 
 
 def _promote_accepted_authority_bytes(
-    candidate_descriptor: Path,
+    accepted_descriptor_bytes: bytes,
     candidate_database: Path,
     descriptor: AuthorityDescriptor,
     *,
@@ -689,7 +700,7 @@ def _promote_accepted_authority_bytes(
 
     descriptor_path = resolved_destination / "authority.current.json"
     with hardened_staged_publication(descriptor_path) as publication:
-        publication.path.write_bytes(candidate_descriptor.read_bytes())
+        publication.path.write_bytes(accepted_descriptor_bytes)
         reader = SQLiteAuthorityReader(publication.path)
         try:
             if reader.pin().logical_generation != descriptor.logical_generation:
@@ -697,8 +708,12 @@ def _promote_accepted_authority_bytes(
         finally:
             reader.close()
         publication.publish()
-    if installed_database.read_bytes() != payload or descriptor_path.read_bytes() != candidate_descriptor.read_bytes():
+    if installed_database.read_bytes() != payload or descriptor_path.read_bytes() != accepted_descriptor_bytes:
         raise RegistryValidationError("promoted authority bytes differ from the accepted candidate")
+    _cleanup_retired_authority_databases(
+        resolved_destination,
+        current_database=descriptor.database,
+    )
     return descriptor
 
 
