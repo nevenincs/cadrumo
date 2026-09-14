@@ -19,7 +19,6 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.errors.error_codes import resolve_error_message
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -30,15 +29,15 @@ from cadrumo.domain.calculations.registry.revision_contracts import NoPredecesso
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.calculations.registry.temporal import (
     ModeloRevisionDirectory,
+    revision_temporal_resolution,
     select_revision,
     select_revision_for_year,
     select_revision_metadata,
 )
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.loader import load_modelo_directory, load_shared_catalogues
+from dev.registry.compiler.loader import load_modelo_directory
 
 from ..compiler.validate_revision_rules import validate_revision_windows
 from ..conformance.registry_schema_support import (
@@ -58,10 +57,6 @@ def _committed_modelo_100() -> ModeloDefinition:
     return load_modelo_directory(
         Path(__file__).parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "100"
     )
-
-
-def _modelo_100_source_root() -> Path:
-    return Path(__file__).parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat"
 
 
 def test_select_revision_returns_the_matching_year_revision() -> None:
@@ -133,20 +128,19 @@ def test_source_and_indexed_directory_select_the_same_authored_anchor() -> None:
     assert indexed.id == source.id == "2025"
 
 
-def test_snapshot_exposes_requested_identity_and_authored_provenance() -> None:
-    snapshot = build_snapshot(
-        _committed_modelo_100(),
-        load_shared_catalogues(_modelo_100_source_root()),
-        source_root=bundled_path(),
+def test_resolution_exposes_requested_identity_and_authored_provenance() -> None:
+    revision = select_revision(_committed_modelo_100(), filing_year=2026, period="0A", support=_support())
+    resolution = revision_temporal_resolution(
+        revision,
         filing_year=2026,
         period="0A",
-        grade=RegistryAuthorityGrade.CALCULATION,
+        support=_support(),
     )
 
-    assert snapshot.filing_year == 2026
-    assert snapshot.revision.id == "2025"
-    assert snapshot.authored_filing_year == 2025
-    assert snapshot.revision_projection_direction is TemporalProjectionDirection.FORWARD
+    assert resolution.requested_filing_year == 2026
+    assert resolution.revision.id == "2025"
+    assert resolution.authored_filing_year == 2025
+    assert resolution.projection_direction is TemporalProjectionDirection.FORWARD
 
 
 def test_snapshot_normalises_a_case_variant_period_to_the_declared_token() -> None:
