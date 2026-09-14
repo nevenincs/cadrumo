@@ -14,6 +14,7 @@ from typing import Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from .casilla_structural_succession import endpoint_source_context_failures
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
@@ -26,7 +27,7 @@ from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, Regist
 from .schema_base import DateAxis, filing_period_from_scope
 from .schema_references import LegalReference, SourceReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
-from .temporal import select_revision
+from .temporal import ModeloRevisionDirectory, RevisionSelectionMetadata, select_revision
 from .validate_revision_identity import revision_reference_identity_failures
 
 
@@ -176,6 +177,7 @@ def build_validated_snapshot(
     on: date | None = None,
     revision_id: RevisionId | None = None,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    revision_directory: ModeloRevisionDirectory | None = None,
 ) -> RegistrySnapshot:
     """Return a selected snapshot after the caller has validated ``modelo``.
 
@@ -197,6 +199,10 @@ def build_validated_snapshot(
         period=period,
         on=on,
         revision_id=revision_id,
+        support=catalogues.supported_filing_years,
+    )
+    endpoint_directory = revision_directory or ModeloRevisionDirectory.from_modelo(
+        modelo,
         support=catalogues.supported_filing_years,
     )
     _check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
@@ -247,7 +253,7 @@ def build_validated_snapshot(
             filing_date=on or date(filing_year, 12, 31),
         )
     _check_revision_scoped_legal_windows(modelo, revision, catalogues)
-    _check_revision_scoped_source_windows(modelo, revision, catalogues)
+    _check_revision_scoped_source_windows(modelo, revision, catalogues, endpoint_directory)
     snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -715,6 +721,7 @@ def _check_revision_scoped_source_windows(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,
+    revision_directory: ModeloRevisionDirectory | None = None,
 ) -> None:
     """Refuse a snapshot whose revision cites a source stale for that revision.
 
@@ -736,12 +743,14 @@ def _check_revision_scoped_source_windows(
         modelo: The modelo owning the revision, named in the failure message.
         revision: The selected revision whose scoped source refs are checked.
         catalogues: Catalogues supplying the referenced source records.
+        revision_directory: Complete endpoint metadata from the pinned directory,
+            or ``None`` when the caller holds the complete in-memory modelo.
 
     Raises:
         RegistryValidationError: If any revision-scoped source window fails to
             overlap the revision's own validity window.
     """
-    failures = _revision_scoped_source_window_failures(modelo, revision, catalogues)
+    failures = _revision_scoped_source_window_failures(modelo, revision, catalogues, revision_directory)
     if failures:
         raise RegistryValidationError(
             f"modelo {modelo.id} revision {revision.id} cites sources outside their applicability window:\n"
@@ -753,18 +762,28 @@ def _revision_scoped_source_window_failures(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,
+    revision_directory: ModeloRevisionDirectory | None = None,
 ) -> list[str]:
-    _revision_legal_ids, revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
-    _elsewhere_legal_ids, elsewhere_source_ids = collect_snapshot_ref_ids(
+    _revision_legal_ids, revision_source_ids = _collect_snapshot_ref_ids(
+        modelo,
+        revision,
+        include_historical_continuity=False,
+    )
+    _elsewhere_legal_ids, elsewhere_source_ids = _collect_snapshot_ref_ids(
         modelo,
         revision,
         include_deadline_windows=False,
         include_constructs=False,
+        include_historical_continuity=False,
     )
     elsewhere_source_ids.update(_construct_source_ids_without_deadline_closure(revision))
     scoped_source_ids = revision_source_ids - set(modelo.source_refs)
     deadline_spans = _deadline_window_source_spans(revision)
-    failures: list[str] = []
+    endpoint_directory = revision_directory or ModeloRevisionDirectory.from_modelo(
+        modelo,
+        support=catalogues.supported_filing_years,
+    )
+    failures = _historical_continuity_source_window_failures(revision, catalogues, endpoint_directory)
     for source_id in sorted(scoped_source_ids):
         failure = _source_window_failure(
             source_id,
@@ -775,6 +794,69 @@ def _revision_scoped_source_window_failures(
         )
         if failure is not None:
             failures.append(failure)
+    return failures
+
+
+def _historical_continuity_source_window_failures(
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    revision_directory: ModeloRevisionDirectory,
+) -> list[str]:
+    """Validate continuity evidence against its explicitly named endpoints."""
+    endpoints_by_id: dict[RevisionId, RevisionSelectionMetadata] = {
+        endpoint.id: endpoint for endpoint in revision_directory.revisions
+    }
+    failures: list[str] = []
+    for evolution in revision.casilla_continuidad_evolutions:
+        prefix = f"casilla continuidad evolution {evolution.id!r}"
+        endpoints = tuple(
+            endpoint_id
+            for endpoint_id in (evolution.from_revision, evolution.to_revision)
+            if endpoint_id in endpoints_by_id
+        )
+        if len(endpoints) != 2:
+            failures.append(f"{prefix} names an endpoint revision the modelo does not declare")
+            continue
+        for source_id in evolution.source_refs:
+            if source_id not in catalogues.sources:
+                failures.append(f"{prefix} source {source_id!r} is not registered")
+                continue
+            endpoint_failures = tuple(
+                endpoint_source_context_failures(
+                    prefix,
+                    endpoint=endpoints_by_id[endpoint_id],
+                    enrolled_source_ids=revision_directory.endpoint_source_ids(endpoint_id),
+                    source_ids=(source_id,),
+                    sources=catalogues.sources,
+                )
+                for endpoint_id in endpoints
+            )
+            if all(endpoint_failures):
+                failures.append(
+                    f"{prefix} source {source_id!r} does not match either declared endpoint "
+                    f"{evolution.from_revision!r}->{evolution.to_revision!r}"
+                )
+    for relation in revision.casilla_structural_successions:
+        prefix = f"casilla structural succession {relation.id!r}"
+        for endpoint_id, source_ids in (
+            (relation.from_revision, relation.from_source_refs),
+            (relation.to_revision, relation.to_source_refs),
+        ):
+            if endpoint_id not in endpoints_by_id:
+                failures.append(f"{prefix} names unknown endpoint revision {endpoint_id!r}")
+                continue
+            for source_id in source_ids:
+                if source_id not in catalogues.sources:
+                    failures.append(f"{prefix} endpoint {endpoint_id!r} source {source_id!r} is not registered")
+            failures.extend(
+                endpoint_source_context_failures(
+                    prefix,
+                    endpoint=endpoints_by_id[endpoint_id],
+                    enrolled_source_ids=revision_directory.endpoint_source_ids(endpoint_id),
+                    source_ids=source_ids,
+                    sources=catalogues.sources,
+                ),
+            )
     return failures
 
 
@@ -807,13 +889,14 @@ def _source_window_failure(
     )
 
 
-def collect_snapshot_ref_ids(
+def _collect_snapshot_ref_ids(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     *,
     include_deadline_windows: bool = True,
     include_constructs: bool = True,
     include_parameters: bool = True,
+    include_historical_continuity: bool = True,
 ) -> tuple[set[str], set[str]]:
     """Walk every record kind and return its (legal_ids, source_ids) pair.
 
@@ -831,9 +914,14 @@ def collect_snapshot_ref_ids(
     if revision.completeness_manifest is not None:
         legal_ids.update(revision.completeness_manifest.legal_refs)
         source_ids.update(revision.completeness_manifest.source_refs)
-    for evolution in revision.casilla_continuidad_evolutions:
-        legal_ids.update(evolution.legal_refs)
-        source_ids.update(evolution.source_refs)
+    if include_historical_continuity:
+        for evolution in revision.casilla_continuidad_evolutions:
+            legal_ids.update(evolution.legal_refs)
+            source_ids.update(evolution.source_refs)
+        for relation in revision.casilla_structural_successions:
+            legal_ids.update(relation.legal_refs)
+            source_ids.update(relation.from_source_refs)
+            source_ids.update(relation.to_source_refs)
     for predicate in revision.verification_predicates:
         legal_ids.update(predicate.legal_refs)
     # Applicability rules ground WHO the modelo applies to, and they were the one
@@ -874,6 +962,24 @@ def collect_snapshot_ref_ids(
         include_deadline_windows=include_deadline_windows,
     )
     return legal_ids, source_ids
+
+
+def collect_snapshot_ref_ids(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    include_deadline_windows: bool = True,
+    include_constructs: bool = True,
+    include_parameters: bool = True,
+) -> tuple[set[str], set[str]]:
+    """Return the complete reference closure carried by a registry snapshot."""
+    return _collect_snapshot_ref_ids(
+        modelo,
+        revision,
+        include_deadline_windows=include_deadline_windows,
+        include_constructs=include_constructs,
+        include_parameters=include_parameters,
+    )
 
 
 __all__ = [

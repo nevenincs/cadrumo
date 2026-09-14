@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import override
 
 from ..user_profile.setup_answers import SetupAnswers
 
@@ -49,12 +50,15 @@ class _RegistrySetupAnswerFields(Mapping[str, SetupFieldSpec]):
             }
         return self._resolved
 
+    @override
     def __getitem__(self, key: str) -> SetupFieldSpec:
         return self._values()[key]
 
+    @override
     def __iter__(self):
         return iter(self._values())
 
+    @override
     def __len__(self) -> int:
         return len(self._values())
 

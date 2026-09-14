@@ -766,6 +766,7 @@ class PinnedAuthorityOperation:
             on=on,
             revision_id=revision_id,
             grade=grade,
+            revision_directory=directory,
         )
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:

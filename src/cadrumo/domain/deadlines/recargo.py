@@ -27,7 +27,9 @@ from __future__ import annotations
 import calendar
 from collections.abc import Mapping, Sequence
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeGuard
+
+from pydantic import TypeAdapter, ValidationError
 
 from ...core.period import Period
 from .errors import DeadlineValidationError
@@ -35,11 +37,25 @@ from .models import RecargoBand, Recovery
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.runtime_catalogues import PublishedRecargoBand
+
+
+def _is_published_recargo_mapping(value: object) -> TypeGuard[Mapping[str, PublishedRecargoBand]]:
+    """Narrow one addressed runtime component to its typed band records."""
+    from ..calculations.registry.runtime_catalogues import PublishedRecargoBand
+
+    if not isinstance(value, Mapping):
+        return False
+    try:
+        TypeAdapter(dict[str, PublishedRecargoBand]).validate_python(value)
+    except ValidationError:
+        return False
+    return True
 
 
 def load_recargo_bands(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[RecargoBand, ...]:
     """Adapt recargo brackets from the caller's pinned published authority.
 
@@ -48,12 +64,8 @@ def load_recargo_bands(
         ``min_completed_months`` ascending.
 
     """
-    if operation is None:
-        raise DeadlineValidationError("recargo-band table requires an explicit pinned authority operation")
-    from ..calculations.registry.runtime_catalogues import PublishedRecargoBand
-
     loaded = operation.runtime_catalogue("recargo_bands")
-    if not isinstance(loaded, Mapping) or not all(isinstance(value, PublishedRecargoBand) for value in loaded.values()):
+    if not _is_published_recargo_mapping(loaded):
         raise DeadlineValidationError("indexed authority recargo-band component has an invalid shape")
     published_values = loaded.values()
 
@@ -198,6 +210,7 @@ def build_recovery_for_overdue(
     reference_today: date,
     modelo: str,
     period: Period,
+    operation: PinnedAuthorityOperation,
     bands: Sequence[RecargoBand] | None = None,
 ) -> Recovery:
     """Resolve the :class:`Recovery` payload for an OVERDUE obligation.
@@ -217,13 +230,15 @@ def build_recovery_for_overdue(
         reference_today: The date the self-assessment is presented.
         modelo: Modelo identifier for the overdue obligation.
         period: Typed filing period for the overdue obligation.
+        operation: Caller-owned generation-pinned authority operation used when
+            adapting the published band table.
         bands: Optional pre-loaded band table; when ``None``, the published
             runtime authority is adapted.
 
     Returns:
         A :class:`Recovery` carrying the resolved band and legal reference.
     """
-    band_table = bands if bands is not None else load_recargo_bands()
+    band_table = bands if bands is not None else load_recargo_bands(operation=operation)
     if more_than_twelve_months_elapsed(closes_on, reference_today):
         resolved = _interest_bearing_tail_band(band_table)
     else:

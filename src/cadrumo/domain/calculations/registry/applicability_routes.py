@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from enum import StrEnum
+from typing import override
 
 from ...contribuyente.entity_type import (
     EntityType,
@@ -39,12 +40,15 @@ def tax_route_for_entity_type(entity_type: EntityType) -> TaxRoute:
 class _TaxRouteByEntityType(Mapping[EntityType, TaxRoute]):
     """Lazy compatibility mapping backed by the typed registry projection."""
 
+    @override
     def __getitem__(self, entity_type: EntityType) -> TaxRoute:
         return tax_route_for_entity_type(entity_type)
 
+    @override
     def __iter__(self) -> Iterator[EntityType]:
         return iter(entity_type_tokens())
 
+    @override
     def __len__(self) -> int:
         return len(entity_type_tokens())
 

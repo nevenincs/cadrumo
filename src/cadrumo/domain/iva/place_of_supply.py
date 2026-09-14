@@ -48,7 +48,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -59,6 +59,12 @@ from .supply_nature import SupplyNature
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
+
+
+def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Narrow one runtime component to an object-keyed mapping before validation."""
+    return isinstance(value, Mapping)
+
 
 __all__ = [
     "IvaPlaceOfSupplyRule",
@@ -195,14 +201,13 @@ def load_place_of_supply_table(
     from ..calculations.registry.runtime_catalogues import PublishedIvaPlaceOfSupplyRule
 
     loaded = operation.runtime_catalogue("iva_place_of_supply")
-    if not isinstance(loaded, Mapping):
+    if not _is_object_mapping(loaded):
         raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
-    published_values = cast(Mapping[str, PublishedIvaPlaceOfSupplyRule], loaded)
-    if not all(
-        isinstance(rule_id, str) and isinstance(published, PublishedIvaPlaceOfSupplyRule)
-        for rule_id, published in published_values.items()
-    ):
-        raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
+    published_values: list[tuple[str, PublishedIvaPlaceOfSupplyRule]] = []
+    for rule_id, published in loaded.items():
+        if not isinstance(rule_id, str) or not isinstance(published, PublishedIvaPlaceOfSupplyRule):
+            raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
+        published_values.append((rule_id, published))
 
     return MappingProxyType(
         {
@@ -220,7 +225,7 @@ def load_place_of_supply_table(
                     "valid_to": published.valid_to,
                 }
             )
-            for rule_id, published in published_values.items()
+            for rule_id, published in published_values
         }
     )
 
@@ -248,7 +253,7 @@ def place_of_supply_rule(  # noqa: D417
     *,
     on: date,
     operation: PinnedAuthorityOperation,
-    projected_year: int | None = None,
+    projected_year: int,
 ) -> IvaPlaceOfSupplyRule:
     """Return the grounding for ``rule_id`` in the filing year of ``on``.
 
@@ -266,8 +271,6 @@ def place_of_supply_rule(  # noqa: D417
             placement has no provision behind it, and answering anyway would
             manufacture one.
     """
-    if projected_year is None:
-        raise IvaCatalogueError("place-of-supply resolution requires the caller's projected filing year")
     rules = load_place_of_supply_table(operation=operation)
     grounded_years = place_of_supply_years(operation=operation)
     if projected_year not in grounded_years:

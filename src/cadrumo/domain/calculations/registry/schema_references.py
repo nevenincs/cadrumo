@@ -7,6 +7,7 @@ from datetime import date, timedelta
 from enum import StrEnum, auto
 from types import MappingProxyType
 from typing import Annotated, Final, Literal, Self
+from typing import override as typing_override
 
 from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
 
@@ -461,10 +462,12 @@ class TemporalSupportEnvelope(RegistryModel, OrderedSupportEnvelope[int]):
         """Enumerate the explicitly authored span, both bounds inclusive."""
         return tuple(range(self.floor, self.horizon + 1))
 
+    @typing_override
     def admits_coordinate(self, coordinate: int) -> bool:
         """Return whether ``coordinate`` is inside the envelope's hard gates."""
         return super().admits_coordinate(coordinate)
 
+    @typing_override
     def projection_coordinate(self, coordinate: int) -> int | None:
         """Map an admitted coordinate to its authored coordinate, carrying the horizon forward."""
         projected = super().projection_coordinate(coordinate)

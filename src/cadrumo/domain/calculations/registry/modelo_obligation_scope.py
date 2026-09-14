@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Set
 from datetime import date
+from typing import override
 
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.modelo import Modelo
@@ -86,23 +87,29 @@ def resolve_modelo_obligation_scope(
 
 
 class _ScopeMapping(Mapping[Modelo, str]):
+    @override
     def __iter__(self) -> Iterator[Modelo]:
         return iter(resolve_modelo_obligation_scope()[0])
 
+    @override
     def __len__(self) -> int:
         return len(resolve_modelo_obligation_scope()[0])
 
+    @override
     def __getitem__(self, key: Modelo) -> str:
         return resolve_modelo_obligation_scope()[0][key]
 
 
 class _NonRegistryModelos(Set[Modelo]):
+    @override
     def __contains__(self, value: object) -> bool:
         return value in resolve_modelo_obligation_scope()[1]
 
+    @override
     def __iter__(self) -> Iterator[Modelo]:
         return iter(resolve_modelo_obligation_scope()[1])
 
+    @override
     def __len__(self) -> int:
         return len(resolve_modelo_obligation_scope()[1])
 

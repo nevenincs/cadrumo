@@ -6,7 +6,7 @@ Private implementation for the canonical establishment resolvers.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, TypeGuard
 
 from ...core.text_fold import fold_printed_phrase
 from .errors import IvaCatalogueError
@@ -16,6 +16,11 @@ if TYPE_CHECKING:
 
 _ALPHA2_LENGTH = 2
 _ALPHA3_LENGTH = 3
+
+
+def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Narrow one runtime component to an object-keyed mapping before validation."""
+    return isinstance(value, Mapping)
 
 
 def normalise_printed_country_name(printed: str) -> str:
@@ -54,13 +59,13 @@ def country_codes_by_printed_name(
     from ..calculations.registry.runtime_catalogues import CountryVocabularyRecord
 
     loaded = operation.runtime_catalogue("countries")
-    if not isinstance(loaded, Mapping):
+    if not _is_object_mapping(loaded):
         raise IvaCatalogueError("indexed authority country component has an invalid shape")
-    records = cast(Mapping[object, CountryVocabularyRecord], loaded)
-    if not all(isinstance(value, CountryVocabularyRecord) for value in records.values()):
+    records = tuple(value for value in loaded.values() if isinstance(value, CountryVocabularyRecord))
+    if len(records) != len(loaded):
         raise IvaCatalogueError("indexed authority country component has an invalid shape")
     resolved: dict[str, str] = {}
-    for record in records.values():
+    for record in records:
         for name in record.names:
             _claim_printed_country_name(resolved, name, code=record.code, target="published authority")
     return resolved
@@ -111,14 +116,14 @@ def country_codes_by_alpha3(
     from ..calculations.registry.runtime_catalogues import CountryVocabularyRecord
 
     loaded = operation.runtime_catalogue("countries")
-    if not isinstance(loaded, Mapping):
+    if not _is_object_mapping(loaded):
         raise IvaCatalogueError("indexed authority country component has an invalid shape")
-    records = cast(Mapping[object, CountryVocabularyRecord], loaded)
-    if not all(isinstance(value, CountryVocabularyRecord) for value in records.values()):
+    records = tuple(value for value in loaded.values() if isinstance(value, CountryVocabularyRecord))
+    if len(records) != len(loaded):
         raise IvaCatalogueError("indexed authority country component has an invalid shape")
     resolved: dict[str, str] = {}
     alpha3_by_code: dict[str, str] = {}
-    for record in records.values():
+    for record in records:
         _claim_country_alpha3(
             resolved,
             alpha3_by_code,

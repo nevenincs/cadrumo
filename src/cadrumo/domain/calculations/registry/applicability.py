@@ -91,7 +91,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -741,14 +741,17 @@ class _SeedApplicabilityRules(Mapping[str, ModeloApplicabilityRule]):
 
     _MODELOS = ("303", "390")
 
+    @override
     def __getitem__(self, modelo: str) -> ModeloApplicabilityRule:
         if modelo not in self._MODELOS:
             raise KeyError(modelo)
         return _iva_seed_applicability_rule(modelo)
 
+    @override
     def __iter__(self) -> Iterator[str]:
         return iter(self._MODELOS)
 
+    @override
     def __len__(self) -> int:
         return len(self._MODELOS)
 

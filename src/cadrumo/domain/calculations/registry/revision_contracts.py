@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Annotated, Final, override
 
 from pydantic import (
     BeforeValidator,
@@ -187,6 +187,7 @@ class RegistryRevisionDeclaration(RegistryRevisionNode, PeriodScopedValidityWind
     id: RevisionId
     valid_to: Annotated[date | None, MANIFEST_ONLY] = None
 
+    @override
     def revision_identity(self) -> str:
         """Return the stable Modelo revision identity."""
         return self.id

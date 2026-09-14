@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from itertools import pairwise
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final, Literal, override
 
 from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, model_validator
 
@@ -445,6 +445,7 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
             raise RegistryValidationError("authored governed fact variant cannot claim generated source revisions")
         return self
 
+    @override
     def revision_identity(self) -> str:
         """Return the stable fact revision identity used by shared predecessor mechanics."""
         return self.variant_id

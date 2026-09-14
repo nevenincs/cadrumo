@@ -56,61 +56,32 @@ HOLIDAY_EVENT_FACT_ID = "deadlines.public-holiday"
 HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID = "deadlines.holiday-calendar-publication"
 
 if TYPE_CHECKING:
-    from ..calculations.registry.authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
-    from ..calculations.registry.governed_fact_scope import GovernedFactSource
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 # ---------------------------------------------------------------------------
 # CCAA enumeration (ISO 3166-2:ES codes).
 # ---------------------------------------------------------------------------
 
 
-class _CalendarCCAAType(type):
-    """Expose registry-declared calendar choices through the old type surface."""
-
-    def __iter__(cls):  # type: ignore[no-untyped-def]
-        from ..calculations.registry.calendar_ccaa_catalogue import calendar_ccaa_choices
-
-        return iter(calendar_ccaa_choices())
-
-    def __getattr__(cls, name: str) -> CalendarCCAA:
-        # Pydantic and Python introspection probe private/dunder attributes
-        # while building schemas. They are never registry member names; avoid
-        # importing the resolver for those probes, which would recurse while
-        # the resolver itself imports CalendarCCAA.
-        if name.startswith("_"):
-            raise AttributeError(name)
-        from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-
-        try:
-            return resolve_calendar_ccaa_catalogue().require_member_name(name)
-        except (KeyError, ValueError) as exc:
-            raise AttributeError(name) from exc
-
-
-class CalendarCCAA(str, metaclass=_CalendarCCAAType):
+class CalendarCCAA(str):
     """Registry-projected ISO 3166-2:ES deadline-calendar territory token.
 
     Fact 0143 owns the nineteen territory codes used by the deadline calendar,
     including the foral communities and autonomous cities that are intentionally
-    outside fact 0129's fifteen-member tax-residence vocabulary.  Direct token
-    construction resolves through that dated fact and refuses undeclared codes.
+    outside fact 0129's fifteen-member tax-residence vocabulary. Direct token
+    construction is reserved for the typed catalogue projection; callers
+    resolve membership through the same operation before constructing one.
     """
 
     __slots__ = ()
 
     def __new__(cls, value: object, *, _registry_validated: bool = False) -> Self:
-        """Construct a token only from a registry projection or selected fact authority."""
+        """Construct a token only from a registry projection."""
         if _registry_validated:
             if not isinstance(value, str) or not value:
                 raise ValueError("calendar CCAA code must be a non-empty string")
             return str.__new__(cls, value)
-        from ..calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
-        from ..calculations.registry.errors import RegistryValidationError
-
-        try:
-            return require_calendar_ccaa(value)
-        except RegistryValidationError as exc:
-            raise ValueError(str(exc)) from exc
+        raise TypeError("CalendarCCAA tokens must be projected from the registry")
 
     @classmethod
     def _from_registry(cls, value: str) -> Self:
@@ -143,10 +114,8 @@ class CalendarCCAA(str, metaclass=_CalendarCCAAType):
 
     @property
     def name(self) -> str:
-        """Return the registry-declared diagnostic member name."""
-        from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-
-        return resolve_calendar_ccaa_catalogue().definition(self).member_name
+        """Return the canonical ISO code for diagnostics."""
+        return str(self)
 
 
 class HolidayJurisdiction(StrEnum):
@@ -253,19 +222,16 @@ MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo("369"),)
 def load_holiday_calendar(
     year: int,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> HolidayCalendar:
     """Load a calendar through the caller's pinned operation."""
-    if operation is None:
-        raise DeadlineValidationError("holiday calendar requires an explicit pinned authority operation")
-    return holiday_calendar_from_authority(year, authority=operation, operation=operation)
+    return holiday_calendar_from_authority(year, operation=operation)
 
 
 def holiday_calendar_from_authority(
     year: int,
     *,
-    authority: GovernedFactSource,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> HolidayCalendar:
     """Resolve one complete published calendar from the governed-fact authority.
 
@@ -274,8 +240,6 @@ def holiday_calendar_from_authority(
     unpublished calendar year.  All individual holiday values are then read
     through exact event queries, retaining the authority's provenance.
     """
-    if operation is None:
-        raise DeadlineValidationError("holiday calendar resolution requires an explicit pinned authority operation")
     coordinate = date(year, 7, 1)
     selected = operation
     try:
@@ -299,11 +263,11 @@ def holiday_calendar_from_authority(
         raise DeadlineValidationError(f"holiday calendar publication for {year} has no BOE URL")
 
     fact = operation.governed_fact(HOLIDAY_EVENT_FACT_ID)
-    if fact is None:
-        raise DeadlineValidationError(f"published holiday calendar for {year} has no holiday event fact")
     national: list[Holiday] = []
     ccaa: list[Holiday] = []
     for variant in fact.variants:
+        if variant.valid_from is None:
+            raise DeadlineValidationError(f"holiday event variant {variant.variant_id!r} has no validity start")
         if variant.valid_from.year != year:
             continue
         resolved = selected.resolve_governed_fact(
@@ -463,7 +427,7 @@ def shift_deadline(
     modelo: str,
     ccaa_code: CalendarCCAA | None,
     calendar: HolidayCalendar | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> DeadlineShift:
     """Apply the AEAT deadline-shift rule and return a :class:`DeadlineShift` result.
 
@@ -475,11 +439,11 @@ def shift_deadline(
     the shift and return an unshifted :class:`DeadlineShift` with reason
     ``modelo_exception``.
 
-    When ``calendar`` is omitted, ``authority`` is required and resolves a
+    When ``calendar`` is omitted, the caller's pinned ``operation`` resolves a
     BOE-published calendar through the governed publication and holiday event
-    facts.  A missing publication fact fails closed; it is never treated as a
-    holiday-free calendar.  Callers that already hold a calendar may pass it
-    directly.
+    facts. A missing publication fact fails closed; it is never treated as a
+    holiday-free calendar. Callers that already hold a calendar may pass it
+    directly while retaining the operation that owns the workflow.
     """
     if not modelo:
         raise DeadlineValidationError("modelo must be a non-empty string")
@@ -497,10 +461,8 @@ def shift_deadline(
 
     if calendar is not None:
         target_calendar = calendar
-    elif authority is not None:
-        target_calendar = holiday_calendar_from_authority(original_close_date.year, authority=authority)
     else:
-        raise DeadlineValidationError("holiday authority is required when no calendar is supplied")
+        target_calendar = load_holiday_calendar(original_close_date.year, operation=operation)
 
     # Determine whether the original date is a business day.
     holidays_on_close = _holidays_on(
