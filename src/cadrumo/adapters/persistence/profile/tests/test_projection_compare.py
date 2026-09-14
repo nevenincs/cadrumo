@@ -25,6 +25,7 @@ from cadrumo.application.modelo.projection import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -36,6 +37,7 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,7 +71,7 @@ def _seed_work_unit(
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, "1T"),
         revision_id=_M130_REVISION_ID,
-        repository=repository,
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         clock=clock,
     )
 
@@ -179,7 +181,13 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
 
         assert revision_2025.observations
         assert revision_2026.observations
-        result = compare_modelo_years(modelo="130", years=(2025, 2026))
+        with bundled_indexed_authority().operation() as operation:
+            result = compare_modelo_years(
+                modelo="130",
+                years=(2025, 2026),
+                ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=operation),
+                operation=operation,
+            )
 
     row = next(item for item in result.delta_rows if item.casilla_id == _M130_INGRESOS_CASILLA)
     registry_casilla = next(
@@ -269,7 +277,13 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(t
             clock=_T0 + timedelta(minutes=3),
         )
 
-        result = compare_modelo_years(modelo="130", years=(2025, 2026))
+        with bundled_indexed_authority().operation() as operation:
+            result = compare_modelo_years(
+                modelo="130",
+                years=(2025, 2026),
+                ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=operation),
+                operation=operation,
+            )
 
     row = next(item for item in result.delta_rows if item.casilla_id == _M130_INGRESOS_CASILLA)
     assert row.delta == published_tolerance, (
