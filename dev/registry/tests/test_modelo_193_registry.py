@@ -10,7 +10,6 @@ import pytest
 from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
@@ -22,12 +21,13 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import reg
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import shift_deadline
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("193"), authority.catalogues
     note = catalogues.sources["aeat-modelo-193-296-note-2025"]
 
@@ -56,7 +56,7 @@ def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
 
 
 def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("193"), authority.catalogues
 
     snapshot = build_snapshot(
@@ -87,7 +87,7 @@ def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> 
 @pytest.mark.parametrize("revision_id", ["2024", "2025-y-siguientes"])
 def test_modelo_193_gastos_total_is_explicit_while_rows_keep_their_own_source(revision_id: str) -> None:
     """No scalar source claim exists without a secure contributor observation owner."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("193")
     revision = modelo.revisions[revision_id]
     total = next(casilla for casilla in revision.casillas if casilla.id == "decl.gastos-total")
@@ -105,7 +105,7 @@ def test_modelo_193_gastos_total_is_explicit_while_rows_keep_their_own_source(re
 
 
 def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("193"), authority.catalogues
 
     snapshot = build_snapshot(
@@ -174,7 +174,7 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # which approves the modelo.
         assert window.legal_refs == ("orden-eha-3377-2011:art-5",)
         with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
-            shift_deadline(window.closes_on, modelo="193", ccaa_code=None, authority=bundled_authority())
+            shift_deadline(window.closes_on, modelo="193", ccaa_code=None, authority=compiled_bundled_authority())
 
 
 @pytest.mark.parametrize(
@@ -190,7 +190,7 @@ def test_modelo_193_deadline_identity_is_the_tax_year(
     opens_on: date,
     closes_on: date,
 ) -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("193")
     (window,) = modelo.revisions[revision_id].deadline_windows
 
@@ -208,7 +208,7 @@ def test_modelo_193_deadline_identity_is_the_tax_year(
 
 
 def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("193", filing_year=2025, period="0A")
     snapshot_123 = authority.snapshot("123", filing_year=2025, period="1T")
 
@@ -226,7 +226,7 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
 
 
 def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("193", filing_year=2025, period="0A")
     snapshot_123 = authority.snapshot("123", filing_year=2025, period="1T")
     source_casilla_ids = {casilla.id: casilla for casilla in snapshot_123.revision.casillas}

@@ -16,6 +16,7 @@ from pydantic import ValidationError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, filing_period_from_scope
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
@@ -323,13 +324,19 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
     registry_root = tmp_path / "registry" / "aeat"
     bundled_registry_root = bundled_path("registry", "aeat")
     shutil.copytree(bundled_registry_root.parents[1] / "corpus", tmp_path / "corpus")
+    profile_schema = tmp_path / "registry" / "cadrumo" / "user_profile" / "schema.toml"
+    profile_schema.parent.mkdir(parents=True)
+    shutil.copy2(
+        bundled_path("registry", "cadrumo", "user_profile", "schema.toml"),
+        profile_schema,
+    )
     legal_dir = registry_root / "legal"
     shutil.copytree(bundled_registry_root / "legal", legal_dir)
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025-2026"
     legal_dir.joinpath("supported-filing-years.toml").unlink()
     legal_dir.joinpath("sociedades-annual-manual-coverage.toml").unlink()
     revision_dir.mkdir(parents=True)
-    for directory in ("facts", "categories", "iva", "holidays"):
+    for directory in ("apoderamientos", "facts", "categories", "iva", "holidays"):
         source_directory = bundled_registry_root / directory
         if source_directory.exists():
             shutil.copytree(source_directory, registry_root / directory)
@@ -348,7 +355,8 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
         "\n".join(
             (
                 "[supported_filing_years]",
-                "years = [2025, 2026]",
+                "floor = 2025",
+                "horizon = 2026",
                 "",
                 "[sociedades_annual_manual_coverage]",
                 'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }, { year = 2026, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]',
@@ -494,13 +502,21 @@ def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check(tmp_path
     revision = modelo.revisions["2025-2026"]
     inspection = authority.inspect_revision(modelo.id, filing_year=2025, period="0A")
 
-    snapshot_tier = check_snapshot_filing_review_tier(
+    with validating_governed_facts(authority):
+        snapshot_tier = check_snapshot_filing_review_tier(
+            modelo,
+            revision,
+            authority.catalogues,
+            set(inspection.legal_ref_ids),
+            filing_date=date(2025, 12, 31),
+        )
+    proof = _snapshot_filing_review_proof(
         modelo,
         revision,
-        authority.catalogues,
-        set(inspection.legal_ref_ids),
+        authority,
+        inspection,
+        filing_date=date(2025, 12, 31),
     )
-    proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
 
     assert "check_snapshot_filing_review_tier(" in inspect.getsource(_snapshot_filing_review_proof)
     assert proof is not None

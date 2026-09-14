@@ -108,12 +108,14 @@ from cadrumo.application.filing.export import export_draft
 from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
 from cadrumo.application.filing.producer_snapshot import FilingProducerSnapshot
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, schema_provider_from_authority
+from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
@@ -127,7 +129,7 @@ from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from .compiler.authority import compile_validated_authority
-from .compiler.loader import load_modelo_directory, load_registry_tree
+from .compiler.loader import load_modelo_directory, load_registry_tree, modelo_fact_scope
 
 __all__ = [
     "COMMIT_ID",
@@ -370,6 +372,23 @@ def edition_round_trip_report(
     export_scenarios: Mapping[str, EditionExportScenario],
 ) -> RoundTripReport:
     """Compare one modelo's live editions against its reference editions."""
+    with modelo_fact_scope(live_registry_root / "modelos" / modelo_id):
+        return _scoped_edition_round_trip_report(
+            live_registry_root=live_registry_root,
+            reference_registry_root=reference_registry_root,
+            modelo_id=modelo_id,
+            export_scenarios=export_scenarios,
+        )
+
+
+def _scoped_edition_round_trip_report(
+    *,
+    live_registry_root: Path,
+    reference_registry_root: Path,
+    modelo_id: str,
+    export_scenarios: Mapping[str, EditionExportScenario],
+) -> RoundTripReport:
+    """Keep candidate facts scoped through typed serialization and locale comparison."""
     try:
         reference = _load_modelo(reference_registry_root, modelo_id)
     except RegistryError as exc:
@@ -704,37 +723,39 @@ def _export_bytes_finding(
     rendered: dict[str, bytes] = {}
     draft = None
     for side, root in (("live", live_registry_root), ("pre-migration", reference_registry_root)):
-        provider = schema_provider_from_authority(
-            compile_validated_authority(root, bundled_path()),
-            modelos=(modelo_id,),
-            filing_year=scenario.period.filing_year,
-            period=scenario.period,
-        )
         try:
-            if draft is None:
-                draft = build_draft(
-                    modelo=modelo_id,
+            authority = compile_validated_authority(root, bundled_path())
+            with validating_governed_facts(authority):
+                provider = schema_provider_from_authority(
+                    authority,
+                    modelos=(modelo_id,),
+                    filing_year=scenario.period.filing_year,
                     period=scenario.period,
-                    profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Round-trip export"),
-                    inputs=scenario.inputs,
+                )
+                if draft is None:
+                    draft = build_draft(
+                        modelo=modelo_id,
+                        period=scenario.period,
+                        profile=ModeloOperatorProfile(tax_id=SYNTHETIC_TAX_ID, display_name="Round-trip export"),
+                        inputs=scenario.inputs,
+                        schema_provider=provider,
+                    ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+                    if draft.snapshot_ref.revision_id != revision_id:
+                        return RoundTripFinding(
+                            RoundTripFindingKind.EXPORT_UNCHECKED,
+                            revision_id,
+                            f"the scenario period selects edition {draft.snapshot_ref.revision_id!r}",
+                        )
+                sink = _PayloadSink()
+                export_draft(
+                    draft,
+                    payload_consumer=sink,
+                    producer_snapshot=scenario.producer_snapshot(),
+                    prior_domiciliation_election=scenario.prior_domiciliation_election,
+                    product_software_identity=scenario.product_software_identity,
                     schema_provider=provider,
-                ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-                if draft.snapshot_ref.revision_id != revision_id:
-                    return RoundTripFinding(
-                        RoundTripFindingKind.EXPORT_UNCHECKED,
-                        revision_id,
-                        f"the scenario period selects edition {draft.snapshot_ref.revision_id!r}",
-                    )
-            sink = _PayloadSink()
-            export_draft(
-                draft,
-                payload_consumer=sink,
-                producer_snapshot=scenario.producer_snapshot(),
-                prior_domiciliation_election=scenario.prior_domiciliation_election,
-                product_software_identity=scenario.product_software_identity,
-                schema_provider=provider,
-            )
-        except ValueError as exc:
+                )
+        except (CadrumoError, ValueError) as exc:
             return RoundTripFinding(
                 RoundTripFindingKind.EXPORT_REFUSED,
                 revision_id,

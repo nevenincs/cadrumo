@@ -11,7 +11,7 @@ See Also:
         Test loader for the committed registry definition and legal catalogue.
     :class:`~dev.registry.compiler.validator.RegistryValidator`
         Registry validator that checks the authored legal/source references.
-    :func:`~domain.calculations.registry.authority.bundled_authority`
+    :func:`~domain.calculations.registry.authority.compiled_bundled_authority`
         Authority facade used to resolve the trimestral deadline windows.
     :func:`~domain.calculations.registry._snapshot.build_snapshot`
         Snapshot builder feeding the Modelo 216 formula runtime proof.
@@ -35,10 +35,10 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,7 +68,7 @@ _EXPECTED_DEADLINES = {
 
 
 def _load_modelo_216():
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority.modelo("216"), authority.catalogues
 
 

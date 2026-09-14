@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue
@@ -31,7 +31,7 @@ _M189_SOURCE_REFS = {
 
 
 def test_modelo_189_current_registry_uses_2025_sources_without_fake_calculation() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("189")
     revision = modelo.revisions["2025"]
 

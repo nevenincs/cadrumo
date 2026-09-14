@@ -44,7 +44,6 @@ from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType, ThresholdComparison
@@ -81,6 +80,7 @@ from cadrumo.domain.modelos.calculation_revision_m303_evidence import M303Exoner
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from cadrumo.domain.prorrata_register.register import ProrrataRegister
 from cadrumo.domain.submission.models import ModeloDraftStatus
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.compiler.record_design import extract_record_design
 
@@ -174,7 +174,7 @@ def _test_snapshot(*, modelo, revision) -> RegistrySnapshot:
     bundled revision has no such conflict and goes through ``build_snapshot``
     directly (see ``_m303_2026_snapshot``).
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     catalogues = authority.catalogues
     return RegistrySnapshot(
         modelo=modelo,
@@ -259,7 +259,7 @@ required = true
 
 
 def _load_isolated_did_layout(tmp_path: Path) -> tuple[RegistrySnapshot, ExportLayoutDefinition]:
-    source = bundled_authority().catalogues.sources[_SOURCE_REF]
+    source = compiled_bundled_authority().catalogues.sources[_SOURCE_REF]
     assert source.sha256 == _SOURCE_SHA256
     parsed = extract_record_design(bundled_path() / source.corpus_path).accept_partial()
     did = next(sheet for sheet in parsed if sheet.name == "DP303DID")
@@ -322,7 +322,7 @@ def _m303_2026_snapshot() -> RegistrySnapshot:
     unrelated filing-grade legal-review gate ``build_validated_snapshot``
     hardcodes never engages here.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("303")
     return build_snapshot(
         modelo,
@@ -562,7 +562,7 @@ def _m303_filing_facts(
             rows=regimen_rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            authority=bundled_authority(),
+            authority=compiled_bundled_authority(),
         ),
     )
     return M303FilingFacts(

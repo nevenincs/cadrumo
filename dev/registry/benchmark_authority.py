@@ -68,12 +68,11 @@ def measure_json_authority(artifact_path: Path | None = None, *, workload: str) 
     process = psutil.Process()
     started = perf_counter()
     from cadrumo.core.authority_grade import RegistryAuthorityGrade
-    from cadrumo.domain.calculations.registry.authority import bundled_authority_artifact_path, published_authority
-    from cadrumo.domain.calculations.registry.authority_artifact import read_shared_authority_artifact
+    from dev.registry.authority_json import bundled_authority_json_path, published_authority, read_authority_artifact
 
     imported = perf_counter()
     rss_before = process.memory_info().rss
-    selected_artifact = artifact_path or bundled_authority_artifact_path()
+    selected_artifact = artifact_path or bundled_authority_json_path()
     authority, admission = _timed(lambda: published_authority(selected_artifact))
     first_started = perf_counter()
     warm_context = 0.0
@@ -112,7 +111,7 @@ def measure_json_authority(artifact_path: Path | None = None, *, workload: str) 
         "post_import_admission_and_first_seconds": admission + first,
         "incremental_authority_rss_bytes": process.memory_info().rss - rss_before,
         "warm_context_median_seconds": warm_context,
-        "identity_digest": read_shared_authority_artifact(selected_artifact).identity_digest,
+        "identity_digest": read_authority_artifact(selected_artifact).identity_digest,
         "detail": detail,
     }
 

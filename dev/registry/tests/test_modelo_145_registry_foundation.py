@@ -27,12 +27,12 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -59,7 +59,7 @@ _DR145_ROW_RE = re.compile(
 def _modelo_145():
     # Structural declaration checks only -- no snapshot, no filing claim -- so
     # this reads the compile-only tree directly rather than through
-    # ``bundled_authority()``, whose ``.load()`` validates every modelo in the
+    # ``compiled_bundled_authority()``, whose ``.load()`` validates every modelo in the
     # bundled tree before returning anything and would fail this M145-only
     # check on an unrelated modelo's missing filing capability.
     modelos, catalogues = bundled_registry_tree()
@@ -161,7 +161,7 @@ def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
     """Parses M145's fixed-width export layout, a filing-adjacent claim.
 
     Built directly from the compile-only tree, scoped to M145 alone, rather
-    than through ``bundled_authority()`` -- see ``_modelo_145``'s docstring.
+    than through ``compiled_bundled_authority()`` -- see ``_modelo_145``'s docstring.
     Kept at the default FILING grade: this asserts the export layout's field
     offsets against the official DR145 record design, the same class of claim
     as parsing a fixed-width record for filing.
@@ -252,8 +252,8 @@ def test_modelo_145_export_link_remains_local_communication_export() -> None:
     # other tests in this module, ``build_support_matrix`` iterates
     # ``authority.modelos`` across the WHOLE tree, so this cannot be scoped to
     # M145 alone without changing that function's signature. Stays on
-    # ``bundled_authority()`` and stays red until the tree-wide gate clears.
-    authority = bundled_authority()
+    # ``compiled_bundled_authority()`` and stays red until the tree-wide gate clears.
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("145")
     revision = modelo.revisions[_REVISION_ID]
     export_link = next(link for link in revision.application_links if link.id == "modelo-145-export")

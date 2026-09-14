@@ -10,7 +10,6 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
@@ -20,6 +19,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.validator import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -109,12 +109,12 @@ _M130_SUPPORTED_DEADLINES = {
 
 @pytest.fixture(scope="module")
 def modelo_130_registry():
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority.modelo("130"), authority.catalogues
 
 
 def _snapshot_130(_modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = 2026):
-    return bundled_authority().snapshot("130", filing_year=filing_year, period=period)
+    return compiled_bundled_authority().snapshot("130", filing_year=filing_year, period=period)
 
 
 def _decimal_value(observation: CasillaObservation) -> Decimal:
@@ -146,7 +146,7 @@ def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
     for filing_year, expected_deadlines in _M130_SUPPORTED_DEADLINES.items():
         expected_periods = {"1T", "2T", "3T", "4T"}
         assert {period for year, period in windows if year == filing_year} == expected_periods
-        projected = bundled_authority().deadline_windows(filing_year, modelos=("130",))
+        projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("130",))
         assert len(projected) == 4
         assert {window.period.registry_token for _, _, window in projected} == expected_periods
 

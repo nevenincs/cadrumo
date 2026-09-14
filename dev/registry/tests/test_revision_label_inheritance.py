@@ -26,7 +26,6 @@ from typing import NamedTuple
 import pytest
 
 from cadrumo.core.i18n.render import MissingTranslationError, lookup_translation
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
@@ -35,6 +34,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.loader import load_modelo_directory
 
@@ -63,7 +63,7 @@ class _Witness(NamedTuple):
 
 @cache
 def _witness() -> _Witness:
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision in modelo.revisions.values():
             if not _YEAR_EDITION.fullmatch(revision.id) or int(revision.id) >= int(_SUCCESSOR):
                 continue

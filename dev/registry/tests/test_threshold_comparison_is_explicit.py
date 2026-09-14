@@ -29,7 +29,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -54,7 +55,7 @@ _M303_REVISIONS_ROOT = Path(__file__).resolve().parents[3] / "src/cadrumo/_data/
 @pytest.fixture(scope="session")
 def registry_authority() -> ValidatedRegistryAuthority:
     """The bundled validated authority."""
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def _declared_values_in_source(revision_id: str, parameter_id: str) -> list[dict[str, object]]:

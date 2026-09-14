@@ -44,7 +44,12 @@ from .fact_providers import (
 from .identity import RegistryIdentity, resolve_registry_identity
 from .loader import load_registry_tree
 from .loader_fingerprints import collect_registry_tree_fingerprints
-from .profile_schema import capture_profile_schema
+from .profile_schema import (
+    CapturedProfileSchema,
+    capture_profile_schema,
+    capture_profile_schema_source,
+    validate_captured_profile_schema,
+)
 from .runtime_catalogues import compile_runtime_catalogues
 from .source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
@@ -84,14 +89,18 @@ def compile_structural_authority(
     *,
     identity: RegistryIdentity | None = None,
     profile_schema_path: Path | None = None,
+    captured_profile_schema: CapturedProfileSchema | None = None,
 ) -> StructuralRegistryComponents:
     """Compile typed authority components without registry-wide conformance."""
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     if identity is None:
         identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
     modelos, catalogues = compile_registry_tree(root, sources_root, identity=identity)
-    _profile_bytes, profile_schema = capture_profile_schema(
-        profile_schema_path or sources_root / "registry" / "cadrumo" / "user_profile" / "schema.toml",
+    captured = captured_profile_schema or capture_profile_schema_source(
+        profile_schema_path or sources_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
+    )
+    profile_schema = validate_captured_profile_schema(
+        captured,
         legal_reference_ids=frozenset(catalogues.legal),
     )
     verify_source_catalogue(sources_root, catalogues.sources)
@@ -114,6 +123,7 @@ def _compile_validated_authority_uncached(
     *,
     identity: RegistryIdentity | None = None,
     profile_schema_path: Path | None = None,
+    captured_profile_schema: CapturedProfileSchema | None = None,
 ) -> ValidatedRegistryAuthority:
     """Compile and validate a source candidate; never used by product runtime.
 
@@ -129,6 +139,7 @@ def _compile_validated_authority_uncached(
         sources_root,
         identity=identity,
         profile_schema_path=profile_schema_path,
+        captured_profile_schema=captured_profile_schema,
     )
     modelos, catalogues = authority.modelos, authority.catalogues
     source_evidence_fingerprint = collect_source_evidence_fingerprints(sources_root, use_cache=False)
@@ -164,6 +175,7 @@ def compile_validated_authority(
     *,
     identity: RegistryIdentity | None = None,
     profile_schema_path: Path | None = None,
+    captured_profile_schema: CapturedProfileSchema | None = None,
 ) -> ValidatedRegistryAuthority:
     """Compile one mutable source candidate through the development cache.
 
@@ -178,14 +190,16 @@ def compile_validated_authority(
             collect_fingerprints=collect_registry_tree_fingerprints,
         )
     profile_path = profile_schema_path or pair.source_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
-    profile_payload, _profile_schema = capture_profile_schema(profile_path)
+    captured = captured_profile_schema or capture_profile_schema_source(profile_path)
+    if captured.source_path != profile_path.resolve(strict=True):
+        raise RegistryValidationError("captured profile schema path differs from the declared compiler input")
     source_receipt = content_hash_hex(
         {
             "evidence": source_evidence_receipt(
                 collect_source_evidence_fingerprints(pair.source_root, use_cache=False)
             ),
             "profile_path": profile_path.resolve().as_posix(),
-            "profile_sha256": sha256_hex(profile_payload),
+            "profile_sha256": sha256_hex(captured.payload),
         }
     )
     authority = cached_compilation(
@@ -198,6 +212,7 @@ def compile_validated_authority(
             pair.source_root,
             identity=identity,
             profile_schema_path=profile_path,
+            captured_profile_schema=captured,
         ),
     )
     register_authoring_authority(authority, source_root=pair.source_root)

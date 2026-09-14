@@ -18,7 +18,6 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.errors.error_codes import resolve_error_message
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -28,6 +27,7 @@ from cadrumo.domain.calculations.registry.relations import relation_source_requi
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision, select_revision_for_year
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validate_revision_rules import validate_revision_windows
 from ..conformance.registry_schema_support import (
@@ -190,7 +190,7 @@ def test_modelo_390_2026_refusal_lists_the_enrolled_revision_set() -> None:
     and machine-readable context synchronized with the enrolled registry.
     """
     with pytest.raises(NoRevisionForPeriodError) as excinfo:
-        bundled_authority().snapshot("390", filing_year=2026, period="0A")
+        compiled_bundled_authority().snapshot("390", filing_year=2026, period="0A")
 
     err = excinfo.value
     assert err.available_revision_ids == ("2021", "2022", "2023", "2024", "2025")
@@ -211,7 +211,7 @@ def test_modelo_390_2026_refusal_lists_the_enrolled_revision_set() -> None:
 def test_modelo_390_2026_localized_refusal_lists_the_enrolled_revision_set(locale: str) -> None:
     """The canonical renderer preserves the accepted set in every shipped locale."""
     with pytest.raises(NoRevisionForPeriodError) as excinfo:
-        bundled_authority().snapshot("390", filing_year=2026, period="0A")
+        compiled_bundled_authority().snapshot("390", filing_year=2026, period="0A")
 
     assert "2021,2022,2023,2024,2025" in resolve_error_message(excinfo.value, locale=locale)
 

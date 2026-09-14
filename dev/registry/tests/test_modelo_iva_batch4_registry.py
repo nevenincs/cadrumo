@@ -16,7 +16,7 @@ See Also:
         Test loader for committed modelo registry definitions and catalogues.
     :class:`~dev.registry.compiler.validator.RegistryValidator`
         Registry validator that cross-checks legal/source catalogue references.
-    :func:`~domain.calculations.registry.authority.bundled_authority`
+    :func:`~domain.calculations.registry.authority.compiled_bundled_authority`
         Authority facade used to inspect generated deadline windows.
     :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
         Legacy unmodeled set these IVA foundations must leave.
@@ -31,7 +31,7 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -87,7 +87,7 @@ def test_approval_and_plazo_resolve_as_legal_authority(
 
 def test_modelo_341_reagp_quarterly_windows_20_days_with_january_30_day_q4() -> None:
     """Orden de 15/12/2000 art 2: 20 natural days after each quarter; 30 in enero for Q4."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     windows = {str(w.period): w for _, _, w in authority.deadline_windows(2025, modelos=("341",))}
     assert windows["2025 1T"].opens_on == date(2025, 4, 1)
     assert windows["2025 1T"].closes_on == date(2025, 4, 20)
@@ -100,4 +100,4 @@ def test_modelo_341_reagp_quarterly_windows_20_days_with_january_30_day_q4() -> 
 
 def test_341_is_registry_backed() -> None:
     """380 relocated out of the registry (web-form-only, no AEAT machine format)."""
-    assert bundled_authority().modelo("341").id == "341"
+    assert compiled_bundled_authority().modelo("341").id == "341"

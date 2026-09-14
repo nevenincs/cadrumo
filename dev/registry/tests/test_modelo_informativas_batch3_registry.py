@@ -13,7 +13,7 @@ See Also:
         Test loader for the committed registry definitions and legal catalogues.
     :class:`~dev.registry.compiler.validator.RegistryValidator`
         Registry validator that checks the authored legal/source references.
-    :func:`~domain.calculations.registry.authority.bundled_authority`
+    :func:`~domain.calculations.registry.authority.compiled_bundled_authority`
         Authority facade used to resolve the annual windows and windowless cases.
     :class:`~core.modelo.Modelo`
         Canonical fleet membership these five informativas extend.
@@ -30,7 +30,7 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -78,7 +78,7 @@ def test_committed_definition_legal_authority_and_deadline_shape(
 
 
 def test_annual_january_windows_resolve() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for mid in ("181", "270"):
         windows = {w.id: w for _, _, w in authority.deadline_windows(2024, modelos=(mid,))}
         wid = f"modelo-{mid}-2024-0a"
@@ -98,7 +98,7 @@ def test_event_driven_and_delegated_modelos_have_no_calendar_windows() -> None:
     through the authority either. The population is asserted non-empty so the
     case cannot go quiet if that set ever empties.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     windowless = tuple(
         str(modelo.id)
         for modelo in authority.modelos
@@ -111,6 +111,6 @@ def test_event_driven_and_delegated_modelos_have_no_calendar_windows() -> None:
 
 
 def test_all_five_are_registry_backed() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for mid in ("181", "270"):
         assert authority.modelo(mid).id == mid

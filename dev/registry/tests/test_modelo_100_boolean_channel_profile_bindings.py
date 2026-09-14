@@ -30,12 +30,12 @@ from cadrumo.application.modelo.profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     resolve_profile_binding_value,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingDataType,
     BindingValueChannel,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -45,7 +45,7 @@ _MODELO_100_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 
 
 def _snapshot(year: int) -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _binding(year: int, binding_id: str) -> Any:

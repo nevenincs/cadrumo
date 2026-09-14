@@ -74,7 +74,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
@@ -83,6 +83,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .ledger_iva_aggregation_support import _deduction_provenance
 
@@ -107,7 +108,7 @@ _PERIOD = "03"
 
 
 def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculationResult:
-    snapshot = bundled_authority().snapshot("322", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("322", filing_year=_FILING_YEAR, period=_PERIOD)
     observations = (
         IvaLedgerObservation(
             ledger_id="devengado-general",

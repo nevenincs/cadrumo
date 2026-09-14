@@ -10,7 +10,6 @@ import pytest
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
@@ -27,6 +26,7 @@ from cadrumo.domain.calculations.registry.withholding_bindings import (
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import shift_deadline
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -70,7 +70,7 @@ def _withholding_observation(source_id: str, nif: str, clave: str) -> Withholdin
 
 
 def test_modelo_190_guidance_and_layout_sources_are_separated() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("190"), authority.catalogues
     instructions = catalogues.sources["aeat-modelo-190-instructions-2025"]
 
@@ -100,7 +100,7 @@ def test_modelo_190_guidance_and_layout_sources_are_separated() -> None:
 
 
 def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("190"), authority.catalogues
 
     snapshot = build_snapshot(
@@ -188,7 +188,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     it belongs. A future split moves a window between revisions without making
     this test wrong.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("190"), authority.catalogues
 
     snapshot = build_snapshot(
@@ -231,9 +231,9 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert {"aeat-modelo-190-procedure", "boe-modelo-190-2025-form"} <= set(window.source_refs)
     if window.closes_on.year == 2026:
         with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
-            shift_deadline(window.closes_on, modelo="190", ccaa_code=None, authority=bundled_authority())
+            shift_deadline(window.closes_on, modelo="190", ccaa_code=None, authority=compiled_bundled_authority())
     else:
-        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, authority=bundled_authority())
+        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, authority=compiled_bundled_authority())
         assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
     # A close date that is NOT the statutory month-end has been moved off a
     # non-working day, and the only sanctioned reason to move it is AEAT's own
@@ -249,7 +249,7 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
 
 
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("190")
     declared = [
         ref
@@ -269,7 +269,7 @@ def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:
 
 
 def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("190", filing_year=2025, period="0A")
     snapshot_111 = authority.snapshot("111", filing_year=2025, period="1T")
 
@@ -290,7 +290,7 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
 
 
 def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -> None:
-    snapshot = bundled_authority().snapshot("190", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("190", filing_year=2025, period="0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     source_values: dict[CasillaId, tuple[Decimal, ...]] = {
         _M111_IMPORTE_SOURCE_CASILLAS[0]: (Decimal("1000"), Decimal("2000"), Decimal("1500"), Decimal("2500")),

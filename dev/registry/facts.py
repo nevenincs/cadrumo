@@ -31,15 +31,13 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo.domain.calculations.registry.authority_artifact import (
-    AuthorityArtifactError,
-    read_authority_artifact,
-)
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifactError
 from dev._paths import REPO_ROOT
 from dev.registry.analysis.governed_literal_discovery import (
     GovernedLiteralCandidate,
     discover_governed_literal_candidates,
 )
+from dev.registry.authority_json import read_authority_artifact
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 SOURCE_ROOT = (REPO_ROOT / "src" / "cadrumo").resolve()

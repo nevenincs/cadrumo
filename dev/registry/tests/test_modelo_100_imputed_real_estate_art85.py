@@ -9,10 +9,11 @@ from functools import cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ._modelo_100_registry_support import (
     _m100_2024_deduccion_maternidad_bindings,
@@ -23,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @cache
 def _authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def _snapshot(year: int) -> RegistrySnapshot:
