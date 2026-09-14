@@ -5,17 +5,11 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:d38b94b480144e64b69b66c27d224fed985c6899401669f6e3b66fd6d896c5ea'
+body_hash: 'sha256:3b8ccb2ee3f71f513a134267f0f0d65e51fad09b9d18507cc2f980bd66d51147'
 step_id: 'S74'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
-
 # Migrate the enumerated model operation and persisted-revision consumers without taking profile-lane files
 
 ## Scope
@@ -24,19 +18,8 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+- `M` `src/cadrumo/application/modelo/_registry_resources.py`
+- `M` `src/cadrumo/application/modelo/projection.py`
+- `M` `src/cadrumo/application/modelo/registry_discovery.py`
+- `M` `src/cadrumo/application/modelo/verification_cross_period.py`
+- `verify:` `checkpoint B integrated model selection` -> `pass`

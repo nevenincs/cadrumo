@@ -5,16 +5,12 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:3f0fd26cb4b310164e9b01724fcbe8953ab0e0e130a649c04f734154181d2e4e'
+body_hash: 'sha256:a78cd22cbe97772244d90fbf7e78fcdf03c828576bcb6bd94effb924f8e10d1d'
 step_id: 'S117'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
+<!-- Machine-owned: title and Scope derive from the originating Step row. -->
 
 # Run checkpoint B once on the integrated authority/profile/filing contract selection plus focused import, lint and type checks; repair only observed failures
 
@@ -24,19 +20,10 @@ related:
 
 ## Changes
 
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
+- `M` `src/cadrumo/domain/calculations/registry/conftest.py`
+- `M` `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py`
+- `M` `src/cadrumo/domain/iva/classification.py`
+- `M` `dev/registry/tests/test_authority_artifact_round_trip.py`
+- `M` `dev/registry/tests/test_authority_publication.py`
+- `verify:` `checkpoint B focused authority/profile/filing selection (69 passed)` -> `pass`
+- `verify:` `compileall plus focused Ruff and ty checks` -> `pass`
