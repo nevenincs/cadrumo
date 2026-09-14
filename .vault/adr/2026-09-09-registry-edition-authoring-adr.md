@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0a2184e58aa0cb1e43032bafa2f0f1f0b3897428226ce3477aa2255993c5519'
+body_hash: 'sha256:8fb0d56368c4cdb6e73f5c50500f37aafb0b0556586cb9789503b186cebd8aa7'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -470,11 +470,20 @@ alone does not establish delta minimality or authorize a filing-grade snapshot.
 
 An omission on an already-declared predecessor graph is an authoring-source transformation,
 not a filing operation. It may be applied after every semantic typed field, member order and
-resolved label in every supported language remains equal. Compare all model fields, including
+resolved label and help text in every supported language remain equal. Compare all model fields, including
 those excluded from ordinary serialization. Only the compiler-derived `inherited_from` location
 and same-casilla ancestor occurrence fallback keys are representation-local; primary locale keys,
 other fallbacks, aliases and resolved text remain checked. Preserve source commentary with its
-member identity. A candidate needing lineage-evidence relocation is not a pure omission.
+member identity.
+
+Evidence standardization is part of delta reduction. An unchanged casilla may be omitted while
+its existing continuation claim moves to the target revision's typed lineage attestation. Validate
+the exact predecessor edge and both members first; refuse simultaneous row and sidecar ownership.
+After inheritance and validation, project the target claim onto its typed casilla for all existing
+consumers. This derived view is never fed back into inheritance, so a grandchild receives no claim
+without its own evidence. The source proof may normalize the separate carrier only when origin,
+evidence and ordered legal/source references exactly match the target row; all other data remain
+compared. This relocates existing evidence and does not adjudicate or upgrade continuity.
 
 Keep actual rendered-export comparison and full authority conformance separate from this source
 proof, report them explicitly as unchecked or refused when they cannot run, and never promote

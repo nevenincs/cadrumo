@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:65883c222ad12316c18d494f72dc4f646300e4dd629882029710a967d8efec3e'
+body_hash: 'sha256:f326a4441ff46bf87678e478ffa2d674da5b1fcad14dae6d45266b1f379a2207'
 related:
   - "[[2026-09-09-registry-edition-authoring-adr]]"
   - "[[2026-09-09-registry-edition-authoring-plan]]"
@@ -74,6 +74,14 @@ Resolved on final bounded re-review. `replace_if_unchanged` now stages replaceme
 ### delta-help-localization | high | Fallback-key movement can change help text while the proof reports equality
 
 `semantic_value` removes sibling occurrence keys from `localization_keys` and compensates only by resolving labels in every supported language (`delta_compact.py:32-50`). A casilla's public `get_help` behavior derives a parallel `.help` key chain from those same localization keys (`schema_surfaces.py:434-437`). Two occurrence keys can therefore resolve the same label but different help text; dropping the successor row moves the fallback source, the normalized localization-key comparison ignores that movement, and `resolved_labels` remains equal, so `differences` accepts a user-visible help change. The three focused delta tests contain bindings only and never exercise casilla fallback movement. Compare resolved help as well as labels for every supported language, and add a real-loader casilla fixture whose predecessor and successor labels match while their help strings differ; the drop must be refused.
+
+### delta-help-localization-resolution | low | Source-omission proof now compares both localized casilla surfaces
+
+Resolved on focused implementation review. `semantic_value` records resolved label and resolved help values for every supported language before allowing sibling occurrence fallback keys to move (`delta_compact.py:55-73`). The help chain is derived exactly as the production casilla accessor derives it. The parameterized detector at `test_delta_compact.py:153-192` proves an unchanged fallback is accepted while a label or help difference is rejected.
+
+### lineage-sidecar-projection | low | Target-only evidence projection preserves ownership and does not feed inheritance
+
+No open finding in the bounded implementation. Whole-modelo sidecar membership, uniqueness and edge validation completes before `_with_lineage_claims` projects casilla claims (`_loader_internals.py:479-531`); a row already carrying either claim is refused as duplicate ownership. Projection rebuilds only the current typed revision after raw inheritance is complete, retains `lineage_attestations` as the authored authority, and therefore cannot propagate the target edge's claim into grandchildren. The delta proof removes a casilla sidecar carrier only when its projected origin, evidence, and ordered legal/source references exactly match the resolved target row (`delta_compact.py:36-54`); all row fields remain compared. Focused real-loader tests cover relocation, typed equality, grandchild isolation, duplicate ownership, changed evidence/citations, and both localized text surfaces.
 
 ## Recommendations
 
