@@ -67,6 +67,7 @@ from .observation_store import FiledDeclaracionObservationStore
 
 if TYPE_CHECKING:
     from .....core.secure_object_write import SecureObjectWrite
+    from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 _T = TypeVar("_T")
@@ -109,12 +110,16 @@ class FiledObservationParserAdapter(FiledObservationParserPort):
 class FiledDeclarationTransformationAdapter(FiledDeclarationTransformationPort):
     """Adapt Sede observation projections to registry-grounded application ports."""
 
+    def __init__(self, *, operation: PinnedAuthorityOperation) -> None:
+        """Bind the generation-pinned operation used by every transformation."""
+        self._operation = operation
+
     @override
     def registry_observation(self, observation: FiledObservationProtocol) -> RegistryModeloObservation:
         """Build the registry-grounded numeric projection."""
         return _call_adapter(
             "registry_observation",
-            lambda: registry_observation_from_filed_declaration(observation),
+            lambda: registry_observation_from_filed_declaration(observation, operation=self._operation),
         )
 
     @override
@@ -125,7 +130,7 @@ class FiledDeclarationTransformationAdapter(FiledDeclarationTransformationPort):
         """Return non-numeric observed casillas for the operator projection."""
         return _call_adapter(
             "non_numeric_casillas",
-            lambda: non_numeric_observed_casillas(observation),
+            lambda: non_numeric_observed_casillas(observation, operation=self._operation),
         )
 
 

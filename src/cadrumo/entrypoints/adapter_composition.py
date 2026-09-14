@@ -811,7 +811,11 @@ def build_active_work_lifecycle_ports() -> WorkLifecyclePorts:
     return build_work_lifecycle_ports(bucket_id=require_active_bucket_id())
 
 
-def build_amendment_action_ports(*, bucket_id: str) -> AmendmentActionPorts:
+def build_amendment_action_ports(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+) -> AmendmentActionPorts:
     """Compose every persisted authority required by one Modelo amendment."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
@@ -825,7 +829,10 @@ def build_amendment_action_ports(*, bucket_id: str) -> AmendmentActionPorts:
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
-    export_identity = resolve_export_identity(bucket_id=normalized_bucket_id)
+    export_identity = resolve_export_identity(
+        bucket_id=normalized_bucket_id,
+        operation=operation,
+    )
     taxpayer_tax_id = export_identity[0].tax_id if export_identity is not None else None
     return AmendmentActionPorts(
         work_unit_repository=WorkUnitCatalogueRepository(

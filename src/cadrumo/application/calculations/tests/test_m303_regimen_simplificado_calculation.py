@@ -6,12 +6,17 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 
 from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.period import Period
+from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -27,6 +32,14 @@ from ..m303_regimen_simplificado import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> PinnedAuthorityOperation:
+    facts = compile_registered_fact_providers(bundled_path("registry", "aeat"))
+    fact_id = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
+    reader = FakeAuthorityComponentReader({GovernedFactComponentQuery(fact_id): facts.facts[fact_id]})
+    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 def _annual_snapshot_and_rows(
@@ -83,7 +96,7 @@ def _annual_snapshot_and_rows(
     return scope, rows, snapshot
 
 
-def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_authority() -> None:
+def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_authority(authority_operation) -> None:
     period = Period.from_year_and_code(2024, "4T")
     scope, rows, snapshot = _annual_snapshot_and_rows(period)
     eligibility = M303DANA2024EligibilityEvidence(
@@ -97,7 +110,7 @@ def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_autho
         rows=rows,
         regimen_snapshot=snapshot,
         dana_2024_eligibility=eligibility,
-        authority=compiled_bundled_authority(),
+        operation=authority_operation,
     )
 
     activity = result.activities[0]
@@ -125,11 +138,11 @@ def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_autho
         rows=rows,
         regimen_snapshot=snapshot,
         dana_2024_eligibility=eligibility,
-        authority=compiled_bundled_authority(),
+        operation=authority_operation,
     )
 
 
-def test_dana_eligibility_is_refused_outside_the_2024_annual_result() -> None:
+def test_dana_eligibility_is_refused_outside_the_2024_annual_result(authority_operation) -> None:
     period = Period.from_year_and_code(2024, "3T")
     scope, rows, snapshot = _annual_snapshot_and_rows(period)
     eligibility = M303DANA2024EligibilityEvidence(
@@ -147,5 +160,5 @@ def test_dana_eligibility_is_refused_outside_the_2024_annual_result() -> None:
             rows=rows,
             regimen_snapshot=snapshot,
             dana_2024_eligibility=eligibility,
-            authority=compiled_bundled_authority(),
+            operation=authority_operation,
         )

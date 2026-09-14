@@ -44,6 +44,7 @@ from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth_credentials import (
     ActiveCertificateCredentials,
 )
@@ -93,7 +94,7 @@ if TYPE_CHECKING:
     from ..workflow.state_models import WorkflowState
 
 
-def _gate_active_bucket() -> str:
+def _gate_active_bucket(*, operation: PinnedAuthorityOperation) -> str:
     """Resolve the active bucket id or raise the shared refusal errors.
 
     Mirrors the gating :func:`~application.auth.configure_operator_auth`
@@ -113,7 +114,7 @@ def _gate_active_bucket() -> str:
         )
     state_repo = workflow_state_repository()
     current_state = state_repo.load()
-    profile_health = assess_active_profile_health(current_state)
+    profile_health = assess_active_profile_health(current_state, operation=operation)
     active_bucket_id = profile_health.active_profile
     if active_bucket_id is None:
         raise AuthConfigureNoActiveBucketError(
@@ -140,6 +141,7 @@ def _gate_active_bucket() -> str:
 @contextmanager
 def _certificate_mutation_span(
     *,
+    operation: PinnedAuthorityOperation,
     operator_scope_ports: OperatorScopePorts,
     resume_certificate_secret: bool = False,
 ) -> Generator[str]:
@@ -155,7 +157,7 @@ def _certificate_mutation_span(
             bucket_id=bucket_id,
             operator_scope_ports=operator_scope_ports,
         ):
-            active_bucket_id = _gate_active_bucket()
+            active_bucket_id = _gate_active_bucket(operation=operation)
             from ..workflow.persistence import workflow_state_repository
 
             current = workflow_state_repository().load()
@@ -207,6 +209,7 @@ def register_operator_certificate_source(
     name: str,
     certificate_path: Path,
     friendly_name: str | None = None,
+    operation: PinnedAuthorityOperation,
     operator_scope_ports: OperatorScopePorts,
 ) -> CertificateSourceMutationResult:
     """Register (or re-point) a named certificate source for the active profile.
@@ -222,7 +225,7 @@ def register_operator_certificate_source(
     """
     from ...domain.buckets.event import BucketEventType
 
-    with _certificate_mutation_span(operator_scope_ports=operator_scope_ports) as active_bucket_id:
+    with _certificate_mutation_span(operation=operation, operator_scope_ports=operator_scope_ports) as active_bucket_id:
         _persist_with_event(
             active_bucket_id=active_bucket_id,
             transform=lambda state: register_certificate_source(
@@ -268,6 +271,7 @@ def list_operator_certificate_sources() -> CertificateSourceListResult:
 def select_operator_certificate_source(
     *,
     name: str,
+    operation: PinnedAuthorityOperation,
     operator_scope_ports: OperatorScopePorts,
 ) -> CertificateSourceMutationResult:
     """Mark ``name`` the active certificate source for the active profile.
@@ -288,7 +292,7 @@ def select_operator_certificate_source(
     from ...domain.buckets.event import BucketEventType
 
     normalized_name = name.strip()
-    with _certificate_mutation_span(operator_scope_ports=operator_scope_ports) as active_bucket_id:
+    with _certificate_mutation_span(operation=operation, operator_scope_ports=operator_scope_ports) as active_bucket_id:
         from ..workflow.persistence import workflow_state_repository
 
         current = workflow_state_repository().load()
@@ -316,6 +320,7 @@ def select_operator_certificate_source(
 def remove_operator_certificate_source(
     *,
     name: str,
+    operation: PinnedAuthorityOperation,
     operator_scope_ports: OperatorScopePorts,
 ) -> CertificateSourceMutationResult:
     """Remove the named certificate source from the active profile's registry.
@@ -337,7 +342,7 @@ def remove_operator_certificate_source(
     from ..workflow.persistence import workflow_state_repository
 
     normalized_name = name.strip()
-    with _certificate_mutation_span(operator_scope_ports=operator_scope_ports) as active_bucket_id:
+    with _certificate_mutation_span(operation=operation, operator_scope_ports=operator_scope_ports) as active_bucket_id:
         current_state = workflow_state_repository().load()
         removed = normalized_name in current_state.auth.certificate_sources
         if removed:
@@ -448,6 +453,7 @@ def set_operator_certificate_source_secret(
     name: str,
     secret: SecretStr,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operation: PinnedAuthorityOperation,
     operator_scope_ports: OperatorScopePorts,
 ) -> CertificateSourceSecretMutationResult:
     """Set (or rotate) the passphrase for a registered certificate source.
@@ -474,6 +480,7 @@ def set_operator_certificate_source_secret(
 
     normalized_name = name.strip()
     with _certificate_mutation_span(
+        operation=operation,
         operator_scope_ports=operator_scope_ports,
         resume_certificate_secret=True,
     ) as active_bucket_id:
@@ -507,6 +514,7 @@ def remove_operator_certificate_source_secret(
     *,
     name: str,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operation: PinnedAuthorityOperation,
     operator_scope_ports: OperatorScopePorts,
 ) -> CertificateSourceSecretMutationResult:
     """Remove the persisted passphrase for a registered certificate source.
@@ -528,6 +536,7 @@ def remove_operator_certificate_source_secret(
     """
     normalized_name = name.strip()
     with _certificate_mutation_span(
+        operation=operation,
         operator_scope_ports=operator_scope_ports,
         resume_certificate_secret=True,
     ) as active_bucket_id:

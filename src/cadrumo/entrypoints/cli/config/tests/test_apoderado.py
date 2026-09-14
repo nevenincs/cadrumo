@@ -63,12 +63,15 @@ def test_apoderado_service_importable_and_has_cli_callers() -> None:
     from .....application.auth.apoderado_service import ApoderadoService
     from .....application.auth.tests.apoderado_fakes import InMemoryApoderadoConfigurationRepositoryFactory
     from .....core.config import load_settings
+    from .....domain.calculations.registry.authority import bundled_indexed_authority
     from .._apoderado import apoderado_scopes_list
 
-    service = ApoderadoService(
-        repository_factory=InMemoryApoderadoConfigurationRepositoryFactory(),
-        settings=load_settings(),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        service = ApoderadoService(
+            repository_factory=InMemoryApoderadoConfigurationRepositoryFactory(),
+            operation=operation,
+            settings=load_settings(),
+        )
     scope_codes = service.catalogue.code_set()
 
     assert callable(apoderado_scopes_list)

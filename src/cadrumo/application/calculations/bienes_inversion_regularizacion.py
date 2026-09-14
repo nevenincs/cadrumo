@@ -28,7 +28,7 @@ from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
 from ...core.modelo import Modelo
@@ -46,10 +46,10 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
     resolve_bienes_inversion_regularizacion_parameters,
 )
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
+from ...domain.calculations.registry.queries import PinnedRegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation.source_mesh import (
@@ -71,13 +71,14 @@ _TRANSMISSION_SOURCE = f"{_REGISTER_SOURCE.value}_transmision"
 
 
 def bienes_inversion_registry_declarations(
-    query_service: RegistryQueryService,
     *,
+    operation: PinnedAuthorityOperation,
     modelo: str,
     filing_year: int,
     period: str,
 ) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
     """Read the selected capital-goods declarations through the registry boundary."""
+    query_service = PinnedRegistryQueryService(operation)
     return (
         query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
         query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
@@ -89,18 +90,9 @@ def _selected_registry_reports(
     modelo: str,
     filing_year: int,
     period: str,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Confirm one registry point without reopening an eager authority graph."""
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            _selected_registry_reports(
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                operation=indexed_operation,
-            )
-        return
     operation.revision_for_context(modelo, filing_year=filing_year, period=period)
 
 
@@ -112,19 +104,19 @@ class _RegularizacionProjections:
     disposal: RegistroTransmisionesResult
 
 
-def _binding_source_refs(revision: ModeloRevision) -> tuple[str, ...]:
-    refs: list[str] = []
+def _binding_source_refs(revision: ModeloRevision) -> tuple[SourceRefId, ...]:
+    refs: list[SourceRefId] = []
     for binding in revision.bindings:
         if binding.source == _REGISTER_SOURCE:
-            refs.extend(str(ref) for ref in getattr(binding, "source_refs", ()))
+            refs.extend(getattr(binding, "source_refs", ()))
     return tuple(dict.fromkeys(refs))
 
 
-def _binding_legal_refs(revision: ModeloRevision) -> tuple[str, ...]:
-    refs: list[str] = []
+def _binding_legal_refs(revision: ModeloRevision) -> tuple[LegalRefId, ...]:
+    refs: list[LegalRefId] = []
     for binding in revision.bindings:
         if binding.source == _REGISTER_SOURCE:
-            refs.extend(str(ref) for ref in getattr(binding, "legal_refs", ()))
+            refs.extend(getattr(binding, "legal_refs", ()))
     return tuple(dict.fromkeys(refs))
 
 
@@ -222,7 +214,7 @@ def _target_inputs(
     if target is None:
         return {}
     binding_id, casilla_id = target
-    if binding_id is None or binding_id not in binding_values:
+    if binding_id not in binding_values:
         return {}
     return {casilla_id: binding_values[binding_id]}
 
@@ -240,6 +232,7 @@ def _current_year_prorrata_from_m303_observation(
     *,
     filing_year: int,
     revision: ModeloRevision,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
     prorrata_id = _prorrata_casilla_id(revision)
     if prorrata_id is None:
@@ -252,7 +245,7 @@ def _current_year_prorrata_from_m303_observation(
         if payload is None:
             continue
         observation = payload.observation
-        refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
+        refused = revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused
         if refused:
             continue
         percentage = observation.casilla_values.get(prorrata_id)
@@ -322,6 +315,7 @@ def _current_year_values_for_context(
     filing_year: int,
     modelo: str,
     revision: ModeloRevision,
+    operation: PinnedAuthorityOperation,
 ) -> dict[CasillaId, Decimal]:
     """Combine injected current-year values with the M390 stamped M303 fallback."""
     values = dict(current_year_values)
@@ -331,6 +325,7 @@ def _current_year_values_for_context(
             observation_repository,
             filing_year=filing_year,
             revision=revision,
+            operation=operation,
         )
         if observed_pct is not None:
             values[prorrata_id] = observed_pct
@@ -401,7 +396,7 @@ def _project_regularizaciones(
         parameters=parameters,
         regularizacion_year=filing_year,
         prorrata_definitiva_by_identifier={}
-        if missing_pct
+        if missing_pct or prorrata_id is None
         else {
             record.identifier: current_year_values[prorrata_id]
             for record in register.in_window_records(filing_year, parameters=parameters)
@@ -439,9 +434,9 @@ def _resolved_regularizacion_resolution(
             CalculationSourceProvenance(
                 resolver_id=resolver_id,
                 resolved_binding_source=_REGISTER_SOURCE,
-                **{"contributor_" + "source" + "_kind": _REGISTER_SOURCE.value},
+                contributor_source_kind=_REGISTER_SOURCE.value,
                 contributor_binding_source=_REGISTER_SOURCE,
-                lineage_role="primary",
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref=f"bienes-inversion-register:{context.filing_year}",
                 parent_source_ref=None,
                 terminal_origin=TerminalOriginClass.DERIVED_CALCULATION,
@@ -620,6 +615,7 @@ class BienesInversionRegularizacionSourceResolver:
     def __init__(
         self,
         *,
+        operation: PinnedAuthorityOperation,
         current_year_values: Mapping[CasillaId, Decimal] | None = None,
         missing_current_year_casilla_ids: tuple[CasillaId, ...] = (),
         unresolved_current_year_casilla_ids: tuple[CasillaId, ...] = (),
@@ -628,6 +624,7 @@ class BienesInversionRegularizacionSourceResolver:
     ) -> None:
         """Initialize the resolver with the current-year values and repositories it draws on."""
         self._current_year_values = dict(current_year_values or {})
+        self._operation = operation
         self._missing_current_year_casilla_ids = missing_current_year_casilla_ids
         self._unresolved_current_year_casilla_ids = unresolved_current_year_casilla_ids
         self._register_repository = register_repository
@@ -665,6 +662,7 @@ class BienesInversionRegularizacionSourceResolver:
             modelo=context.modelo,
             filing_year=context.filing_year,
             period=context.period.registry_token,
+            operation=self._operation,
         )
         parameters = _resolve_regularizacion_parameters(
             context,
@@ -703,6 +701,7 @@ class BienesInversionRegularizacionSourceResolver:
             filing_year=context.filing_year,
             modelo=context.modelo,
             revision=context.revision,
+            operation=self._operation,
         )
         prorrata_id = _prorrata_casilla_id(context.revision)
         projections = _project_regularizaciones(

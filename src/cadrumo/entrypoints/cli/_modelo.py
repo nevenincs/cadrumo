@@ -82,7 +82,7 @@ from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
 from .common import activate_subcommand_output_language
-from .state_projection_support import amendment_action_ports_factory, modelo_history_ports_factory
+from .state_projection_support import amendment_action_ports_factory, authority_operation, modelo_history_ports_factory
 
 
 def work_compare_taxation(
@@ -438,7 +438,10 @@ def work_amend(
             detail_rows=detail_rows,
             reason=reason,
             actor=actor or _resolve_default_actor(),
-            ports=amendment_action_ports_factory(ctx)(bucket_id=require_active_bucket_id()),
+            ports=amendment_action_ports_factory(ctx)(
+                bucket_id=require_active_bucket_id(),
+                operation=authority_operation(ctx),
+            ),
         )
     except (
         ModeloRecordNotFoundError,

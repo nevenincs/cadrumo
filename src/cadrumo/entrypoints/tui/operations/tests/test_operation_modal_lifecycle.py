@@ -78,6 +78,7 @@ from .....core.operations import (
     OperationTerminalCondition,
 )
 from .....core.time.clock import now
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url
 from ..controller import OperationController
@@ -123,7 +124,7 @@ def _runtime(
     tmp_path: Path,
     *,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
-) -> Generator[tuple[OperationComposedServices, OperationRegistry, UUID]]:
+) -> Generator[tuple[OperationComposedServices, OperationRegistry, UUID, PinnedAuthorityOperation]]:
     """One production-shaped registry, journal, lease, and custody set.
 
     The registry is composed from the production definition factories only:
@@ -136,15 +137,24 @@ def _runtime(
     async def acquire_censo() -> CensalOperationAcquisition:
         return CensalOperationAcquisition(observation=_observation())
 
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as root,
+        bundled_indexed_authority().operation() as authority_operation,
+    ):
         enrolled = register_profile_with_credentials(
             label="Operation modal lifecycle subject",
             passphrase=_PASSPHRASE,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            profile_create_context=authority_operation.profile_create_context(),
+            profile_decode_context=authority_operation.profile_decode_context(),
         )
         profile_id = UUID(enrolled.profile_id)
-        initial_login = login_profile(name=enrolled.profile_id, passphrase_callback=lambda: _PASSPHRASE)
+        initial_login = login_profile(
+            name=enrolled.profile_id,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=authority_operation.profile_decode_context(),
+        )
         auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)
         auth_registrations = build_auth_operation_registrations(auth_definitions)
         censal_definition = build_censal_operation_definition(
@@ -169,6 +179,7 @@ def _runtime(
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
             services = compose_operation_services(
+                authority_operation=authority_operation,
                 registry=registry,
                 journal=journal,
                 reader=journal,
@@ -183,13 +194,20 @@ def _runtime(
                 cleanup_timeout=timedelta(minutes=2),
             )
             try:
-                yield services, registry, profile_id
+                yield services, registry, profile_id, authority_operation
             finally:
                 asyncio.run(services.shutdown())
 
 
-async def _submit_censal_review(services: OperationComposedServices, profile_id: UUID) -> OperationSubmission:
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+async def _submit_censal_review(
+    services: OperationComposedServices,
+    profile_id: UUID,
+    authority_operation: PinnedAuthorityOperation,
+) -> OperationSubmission:
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=authority_operation.profile_decode_context(),
+    ).load(profile_id)
     return await services.submission.submit(
         OperationRequest(
             definition_id="user-profile.censo-review",
@@ -320,10 +338,11 @@ def test_detach_closes_the_modal_while_the_operation_keeps_running(tmp_path: Pat
         services,
         _registry,
         profile_id,
+        authority_operation,
     ):
 
         async def run() -> None:
-            submitted = await _submit_censal_review(services, profile_id)
+            submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
             pending = await _advance_to_pending_review(controller)
             control = await controller.response_control(
@@ -365,7 +384,7 @@ def test_detach_closes_the_modal_while_the_operation_keeps_running(tmp_path: Pat
 
 def test_close_is_refused_while_a_request_cancel_operation_is_live(tmp_path: Path) -> None:
     """A live non-detachable operation refuses close and is left untouched."""
-    with _runtime(tmp_path) as (services, registry, profile_id):
+    with _runtime(tmp_path) as (services, registry, profile_id, _authority_operation):
 
         async def run() -> None:
             submitted = await _submit_modelo_verify(services, registry, profile_id)
@@ -409,10 +428,11 @@ def test_cancel_requests_cooperative_stopping_without_terminating_the_operation(
         services,
         _registry,
         profile_id,
+        authority_operation,
     ):
 
         async def run() -> None:
-            submitted = await _submit_censal_review(services, profile_id)
+            submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
             pending = await _advance_to_pending_review(controller)
             control = await controller.response_control(
@@ -454,10 +474,10 @@ def test_cancel_requests_cooperative_stopping_without_terminating_the_operation(
 
 def test_apply_through_the_modal_settles_the_operation_as_applied(tmp_path: Path) -> None:
     """The apply control routes through the bound response authority alone."""
-    with _runtime(tmp_path) as (services, _registry, profile_id):
+    with _runtime(tmp_path) as (services, _registry, profile_id, authority_operation):
 
         async def run() -> None:
-            submitted = await _submit_censal_review(services, profile_id)
+            submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
             await _advance_to_pending_review(controller)
 
@@ -480,10 +500,10 @@ def test_apply_through_the_modal_settles_the_operation_as_applied(tmp_path: Path
 
 def test_reject_through_the_modal_settles_the_operation_without_an_effect(tmp_path: Path) -> None:
     """Reject settles the same operation with no effect on the profile record."""
-    with _runtime(tmp_path) as (services, _registry, profile_id):
+    with _runtime(tmp_path) as (services, _registry, profile_id, authority_operation):
 
         async def run() -> None:
-            submitted = await _submit_censal_review(services, profile_id)
+            submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
             await _advance_to_pending_review(controller)
 
@@ -513,10 +533,10 @@ def test_the_response_controls_stay_live_across_many_polls_while_a_review_waits(
     once would have passed against that behaviour, so this one samples across
     many consecutive polls and requires every sample to be live.
     """
-    with _runtime(tmp_path) as (services, _registry, profile_id):
+    with _runtime(tmp_path) as (services, _registry, profile_id, authority_operation):
 
         async def run() -> None:
-            submitted = await _submit_censal_review(services, profile_id)
+            submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
             await controller.start()
 

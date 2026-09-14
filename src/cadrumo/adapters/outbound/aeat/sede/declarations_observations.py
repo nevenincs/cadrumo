@@ -154,10 +154,8 @@ def _store_artefact(
 def _registry_snapshot_for_declaration(
     declaration: Declaracion,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot:
-    if operation is None:
-        raise SedeParseError("declaration snapshot requires an explicit pinned authority operation")
     try:
         return operation.snapshot(
             declaration.modelo,
@@ -171,11 +169,9 @@ def _registry_snapshot_for_declaration(
 def _published_source_payloads(
     *,
     snapshot: RegistrySnapshot,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[str, bytes]:
     """Return source bytes from the published authority projection for submitted-file parsing."""
-    if operation is None:
-        raise SedeParseError("submitted-file source evidence requires an explicit pinned authority operation")
     layout = resolve_export_layout(snapshot).layout
     source_ids = {str(source_id) for source_id in layout.source_refs}
     return {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
@@ -185,19 +181,29 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     listing_host = urlsplit(_LISTING_URL).hostname
     if listing_host is None:
         raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
-    matching_decisions = tuple(
-        decision
-        for decision in snapshot.live_cross_references.values()
-        if decision.surface == "authenticated_read_surface"
-        and listing_host.lower() in {host.lower() for host in decision.allowed_hosts}
+    filed_read_ids = tuple(
+        reference_id
+        for reference_id in snapshot.revision.live_cross_references
+        if reference_id.endswith("-filed-declarations-read")
     )
-    if len(matching_decisions) != 1:
-        decision_ids = ", ".join(sorted(decision.id for decision in matching_decisions)) or "none"
+    if len(filed_read_ids) != 1:
+        decision_ids = ", ".join(sorted(str(reference_id) for reference_id in filed_read_ids)) or "none"
         raise RegistryValidationError(
             f"expected exactly one authenticated declarations read surface for modelo "
             f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}",
         )
-    return remote_state_policy_from_cross_reference(matching_decisions[0]).model_copy(
+    decision = snapshot.live_cross_references.get(filed_read_ids[0])
+    if decision is None:
+        raise RegistryValidationError(
+            f"declarations read surface {filed_read_ids[0]!r} is not present in the selected registry snapshot",
+        )
+    if decision.surface != "authenticated_read_surface" or listing_host.lower() not in {
+        host.lower() for host in decision.allowed_hosts
+    }:
+        raise RegistryValidationError(
+            f"declarations read surface {decision.id!r} does not authorize host {listing_host!r}",
+        )
+    return remote_state_policy_from_cross_reference(decision).model_copy(
         update={"allowed_browser_action_patterns": EXTERNAL.aeat.live_safety.declarations_browser_action_patterns},
     )
 
@@ -257,7 +263,7 @@ def observed_header_facts_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
     body: bytes,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ObservedHeaderFact, ...]:
     """Return the header facts AEAT states in the submitted fichero, with provenance.
 
@@ -326,7 +332,7 @@ def observed_casillas_from_submitted_file(
     declaration: Declaracion,
     body: bytes,
     artefact: FiledDeclaracionArtefact,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ObservedCasillaValue, ...]:
     """Read the casilla values a submitted fichero actually carries."""
     try:
@@ -423,7 +429,7 @@ def _submitted_file_coverage_for_casillas(
     snapshot: RegistrySnapshot,
     body: bytes,
     casillas: tuple[ObservedCasillaValue, ...],
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> float:
     """Compute the submitted-file extraction coverage for observed ``casillas``.
 
@@ -563,7 +569,7 @@ def _verify_submitted_file_context(
 def non_numeric_observed_casillas(
     observation: FiledDeclaracionObservation,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ObservedCasillaSkip, ...]:
     """Return every casilla the Decimal-only registry channel cannot carry.
 
@@ -582,8 +588,6 @@ def non_numeric_observed_casillas(
     :class:`~adapters.outbound.aeat.sede.ObservedCasillaSkip`.
     """
     period_token = observation.period.registry_token
-    if operation is None:
-        raise SedeParseError("non-numeric casilla inspection requires an explicit pinned authority operation")
     snapshot = operation.snapshot(
         observation.modelo,
         filing_year=observation.ejercicio,
@@ -708,7 +712,7 @@ def _build_registry_observation(
 def registry_observation_from_filed_declaration(
     observation: FiledDeclaracionObservation,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RegistryModeloObservation:
     """Convert a filed-declaration observation into registry observation rows.
 
@@ -721,8 +725,6 @@ def registry_observation_from_filed_declaration(
     :class:`~domain.calculations.registry.RegistryModeloObservation`.
     """
     period_token = observation.period.registry_token
-    if operation is None:
-        raise SedeParseError("filed declaration observation requires an explicit pinned authority operation")
     snapshot = operation.snapshot(
         observation.modelo,
         filing_year=observation.ejercicio,
@@ -776,11 +778,9 @@ def _m303_compensation_source_metadata(
     *,
     observation: FiledDeclaracionObservation,
     derivation: M303CompensationAvailableDerivation,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Literal["derived_registry_formula", "derived_carry_policy"], str]:
     if derivation.basis == "generated":
-        if operation is None:
-            raise SedeParseError("derived Modelo 303 evidence requires an explicit pinned authority operation")
         snapshot = operation.snapshot(
             Modelo("303"),
             filing_year=observation.ejercicio,
@@ -808,7 +808,7 @@ def _m303_compensation_source_metadata(
 def _with_derived_303_compensation_available_observation(
     observation: FiledDeclaracionObservation,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> FiledDeclaracionObservation:
     """Add Modelo 303 carry-forward availability derived from canonical filed casillas."""
     target_id = M303_COMPENSATION_AVAILABLE_CASILLA

@@ -210,6 +210,7 @@ def _elect(
         raise bad(str(exc)) from exc
     service = ProrrataRegisterService(
         repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+        operation=authority_operation(ctx),
     )
     try:
         register = (
@@ -350,6 +351,7 @@ def prorrata_declare_sector(
         raise bad(str(exc)) from exc
     register = ProrrataRegisterService(
         repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+        operation=authority_operation(ctx),
     ).declare_sector(definition)
     payload = ProrrataDeclareSectorResult(
         bucket_id=bucket_id,
@@ -517,6 +519,7 @@ def prorrata_seed(
 
     service = ProrrataRegisterService(
         repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+        operation=authority_operation(ctx),
     )
     findings = _seed_findings_with_existing_entry(
         service,
@@ -576,6 +579,7 @@ def prorrata_seed_sector(
     bucket_id = _register_bucket_id()
     service = ProrrataRegisterService(
         repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+        operation=authority_operation(ctx),
     )
     register = service.list_all()
     entry = seed_sector_carried_definitive_from_register(register, ejercicio=ejercicio, sector_id=sector_id)
@@ -635,6 +639,7 @@ def prorrata_settle_sector(
     sin_derecho = parse_decimal_amount(sin_derecho_volume, label="sin-derecho-volume", signed=False)
     service = ProrrataRegisterService(
         repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+        operation=authority_operation(ctx),
     )
     entry = service.get(ejercicio, sector_id=sector_id)
     if entry is None:
@@ -680,6 +685,7 @@ def prorrata_list(ctx: typer.Context) -> None:
     bucket_id = _register_bucket_id()
     register: ProrrataRegister = ProrrataRegisterService(
         repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
+        operation=authority_operation(ctx),
     ).list_all()
     entries = [_entry_payload(entry) for entry in register.entries]
     sectors = [_sector_payload(definition) for definition in register.sector_definitions]

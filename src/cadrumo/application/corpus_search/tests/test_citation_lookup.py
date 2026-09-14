@@ -6,13 +6,11 @@ from collections.abc import Iterator
 from typing import cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.hashing import sha256_hex
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.authority_artifact import (
     AuthorityComponentKind,
-    AuthorityComponentQuery,
     EvidenceComponentQuery,
     PublishedLegalEvidence,
     ReferenceComponentQuery,
@@ -32,33 +30,19 @@ def compose_runtime_ports() -> Iterator[None]:
 
 
 @pytest.fixture(scope="module")
-def lookup() -> CitationLookup:
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Hold one real published generation for every lookup in this module."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+@pytest.fixture(scope="module")
+def lookup(authority_operation: PinnedAuthorityOperation) -> CitationLookup:
     """Build a point-addressed lookup over the selected citation ids."""
-    authority = compiled_bundled_authority()
-    references = tuple(authority.catalogues.legal.values())
-    components: dict[AuthorityComponentQuery, object] = {}
-    for reference in references:
-        reference_id = str(reference.id)
-        components[
-            ReferenceComponentQuery(
-                reference_id=reference_id,
-                kind=AuthorityComponentKind.LEGAL_REFERENCE,
-            )
-        ] = reference
-        anchored_text = authority.legal_evidence_text(reference.id)
-        components[
-            EvidenceComponentQuery(
-                reference_id=reference_id,
-                kind=AuthorityComponentKind.LEGAL_EVIDENCE,
-            )
-        ] = PublishedLegalEvidence(
-            legal_reference_id=reference_id,
-            anchored_text=anchored_text,
-            text_sha256=sha256_hex(anchored_text.encode("utf-8")),
-        )
-    reader = FakeAuthorityComponentReader(components)
-    operation = PinnedAuthorityOperation(cast(SQLiteAuthorityReader, reader), reader.pin())
-    return bundled_citation_lookup(tuple(str(reference.id) for reference in references), operation=operation)
+    return bundled_citation_lookup(
+        ("ley-58-2003:art-27.2", "ley-35-2006:art-11"),
+        operation=authority_operation,
+    )
 
 
 def test_resolve_returns_verbatim_text_and_metadata(lookup: CitationLookup) -> None:
@@ -85,10 +69,8 @@ def test_unknown_citation_is_refused(lookup: CitationLookup) -> None:
         lookup.resolve("no-such-law:art-999")
 
 
-def test_citation_authority_is_the_registry_catalogue(lookup: CitationLookup) -> None:
-    # The lookup must key on the registry legal catalogue, not a parallel
-    # citation parser: its id set equals the catalogue's.
-    assert lookup.citation_ids == tuple(sorted(compiled_bundled_authority().catalogues.legal))
+def test_citation_authority_is_the_caller_selected_registry_set(lookup: CitationLookup) -> None:
+    assert lookup.citation_ids == ("ley-35-2006:art-11", "ley-58-2003:art-27.2")
 
 
 def test_every_catalogue_citation_resolves_to_text(lookup: CitationLookup) -> None:
@@ -115,9 +97,11 @@ def test_resolve_corpus_text_refuses_unknown_reference(lookup: CitationLookup) -
         lookup.resolve_corpus_text("corpus/normatives/html/does-not-exist.html#a1")
 
 
-def test_component_reader_loads_only_the_requested_legal_evidence() -> None:
-    reference = compiled_bundled_authority().catalogues.legal["ley-58-2003:art-27.2"]
-    anchored_text = reference.required_text[0]
+def test_component_reader_loads_only_the_requested_legal_evidence(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    reference = authority_operation.legal_reference("ley-58-2003:art-27.2")
+    anchored_text = authority_operation.legal_evidence("ley-58-2003:art-27.2").anchored_text
     evidence = PublishedLegalEvidence(
         legal_reference_id=str(reference.id),
         anchored_text=anchored_text,
@@ -138,9 +122,11 @@ def test_component_reader_loads_only_the_requested_legal_evidence() -> None:
     assert reader.loads == [query]
 
 
-def test_operation_loads_selected_reference_then_its_evidence_pointwise() -> None:
-    reference = compiled_bundled_authority().catalogues.legal["ley-58-2003:art-27.2"]
-    anchored_text = reference.required_text[0]
+def test_operation_loads_selected_reference_then_its_evidence_pointwise(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    reference = authority_operation.legal_reference("ley-58-2003:art-27.2")
+    anchored_text = authority_operation.legal_evidence("ley-58-2003:art-27.2").anchored_text
     reference_query = ReferenceComponentQuery(
         reference_id=str(reference.id),
         kind=AuthorityComponentKind.LEGAL_REFERENCE,

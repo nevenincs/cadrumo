@@ -24,11 +24,13 @@ from cadrumo.adapters.persistence.profile.tests.verification_repository_support 
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
@@ -248,6 +250,10 @@ def _seed_modelo_303_1t_clean_state(
     # writes below need concrete ones, so resolve the same bucket-local defaults.
     work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
     calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
+    if bucket_event_repository is None:
+        bucket_event_repository = BucketEventHistoryRepository(
+            objects=secure_object_repository_for_bucket(bucket_id),
+        )
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
     source_casilla_ids = sorted(
         {
@@ -276,8 +282,9 @@ def _seed_modelo_303_1t_clean_state(
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id=source_snapshot.revision.id,
-        repository=work_unit_repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
+        ),
         clock=datetime(2026, 5, 21, 11, 0, tzinfo=UTC),
     )
     # Prior-1T filed history is a PRECONDITION of these wallet-gate tests, not
@@ -438,8 +445,7 @@ def _build_verified_modelo_303_revision(
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
         revision_id=snapshot.revision.id,
-        repository=work_repo,
-        bucket_event_repository=event_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
         clock=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
     )
     binding_values = _modelo_303_engine_inputs()

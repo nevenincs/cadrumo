@@ -4,19 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.schema import ModeloRevision
 
 
-# fact-relocation: M111 schedule and applicability are consumed through RegistryQueryService
+# fact-relocation: M111 schedule and applicability are consumed through the pinned operation
 def _registry_no_retenciones_periods(
     revision: ModeloRevision | None = None,
     *,
     modelo: str | None = None,
     filing_year: int | None = None,
     period_token: str | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> frozenset[tuple[int, str]]:
     """Resolve a declared filing period through selected registry declarations.
 
@@ -27,15 +27,6 @@ def _registry_no_retenciones_periods(
     """
     if modelo is None or filing_year is None or period_token is None:
         return frozenset[tuple[int, str]]()
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _registry_no_retenciones_periods(
-                revision,
-                modelo=modelo,
-                filing_year=filing_year,
-                period_token=period_token,
-                operation=indexed_operation,
-            )
     try:
         selected_revision = operation.revision_for_context(
             modelo,
@@ -69,7 +60,7 @@ def parse_m111_no_retenciones_periods(
     filing_year: int | None = None,
     period_token: str | None = None,
     revision: ModeloRevision | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> frozenset[tuple[int, str]]:
     """Resolve schedule-attestation periods through registry authority."""
     del raw
@@ -89,7 +80,7 @@ def m111_no_retenciones_periods_from_profile_values(
     filing_year: int | None = None,
     period_token: str | None = None,
     revision: ModeloRevision | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> frozenset[tuple[int, str]]:
     """Resolve schedule-attestation periods through registry authority."""
     del values
@@ -109,7 +100,7 @@ def m111_no_retenciones_periods_for_bucket(
     filing_year: int | None = None,
     period_token: str | None = None,
     revision: ModeloRevision | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> frozenset[tuple[int, str]]:
     """Resolve a bucket's periods only when its modelo scope is explicit.
 
@@ -133,7 +124,7 @@ def is_m111_no_retenciones_period(
     filing_year: int,
     period_token: str,
     attested_periods: frozenset[tuple[int, str]],
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Resolve whether a source period is covered by registry schedule data."""
     if (filing_year, period_token) not in attested_periods:

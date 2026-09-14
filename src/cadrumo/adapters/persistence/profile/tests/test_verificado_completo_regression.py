@@ -51,6 +51,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -210,8 +211,9 @@ def _seed_clean_cross_period_sources_for_m130(
             filing_year=requirement.filing_year,
             period=requirement.period,
             revision_id=source_snapshot.revision.id,
-            repository=work_unit_repository,
-            bucket_event_repository=bucket_event_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
+            ),
             clock=_T0,
         )
         # The reference id IS the justificante CSV, and a codigo seguro de

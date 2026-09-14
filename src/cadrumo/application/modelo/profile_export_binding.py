@@ -18,10 +18,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
-from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileValidationError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
@@ -124,6 +125,7 @@ def resolve_profile_export_values(
     bindings: Sequence[BindingDefinition],
     *,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
     profile_record: object | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, UserProfileFactValue]:
@@ -181,6 +183,7 @@ def resolve_profile_export_values(
     return _resolve_profile_export_values(
         bindings,
         bucket_id=bucket_id,
+        operation=operation,
         profile_record=profile_record,
         schema=schema,
     )
@@ -189,6 +192,7 @@ def resolve_profile_export_values(
 def resolve_export_identity(
     *,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
     profile_record: object | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> tuple[PresenterIdentity, TaxpayerIdentityFacts] | None:
@@ -218,23 +222,33 @@ def resolve_export_identity(
         the export path's own refusal states that far better than a half-built
         identity would.
     """
-    record = _load_profile_record(bucket_id=bucket_id, profile_record=profile_record)
+    record = _load_profile_record(
+        bucket_id=bucket_id,
+        operation=operation,
+        profile_record=profile_record,
+    )
     if record is None:
         return None
-    if schema is None:
-        raise UserProfileValidationError("profile export resolution requires a pinned profile schema")
-    resolved_schema = schema
+    resolved_schema = operation.profile_schema() if schema is None else schema
     return _identity_from_profile_facts(profile_fact_index(record, resolved_schema))
 
 
-def _load_profile_record(*, bucket_id: str, profile_record: object | None) -> object | None:
+def _load_profile_record(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile_record: object | None,
+) -> object | None:
     """Load the active profile only when the caller did not provide it."""
     if profile_record is not None:
         return profile_record
     from ..user_profile.profile_record_repository import ProfileRecordRepository
 
     try:
-        return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        return ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ).load(bucket_id)
     except ProfileNotFoundError:
         return None
 
@@ -242,6 +256,7 @@ def _load_profile_record(*, bucket_id: str, profile_record: object | None) -> ob
 def resolve_declaration_contact(
     *,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
     profile_record: object | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> DeclarationContactFacts:
@@ -263,12 +278,14 @@ def resolve_declaration_contact(
         unfilled alphanumeric header field to blancos, so a profile that
         declares no contact still produces a legal filing.
     """
-    record = _load_profile_record(bucket_id=bucket_id, profile_record=profile_record)
+    record = _load_profile_record(
+        bucket_id=bucket_id,
+        operation=operation,
+        profile_record=profile_record,
+    )
     if record is None:
         return DeclarationContactFacts()
-    if schema is None:
-        raise UserProfileValidationError("profile export resolution requires a pinned profile schema")
-    resolved_schema = schema
+    resolved_schema = operation.profile_schema() if schema is None else schema
     facts = profile_fact_index(record, resolved_schema)
     phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
     full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
@@ -320,6 +337,7 @@ def _resolve_profile_export_values(
     bindings: Sequence[BindingDefinition],
     *,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
     profile_record: object | None,
     schema: ProfileSchemaDefinition | None,
 ) -> dict[str, UserProfileFactValue]:
@@ -334,12 +352,13 @@ def _resolve_profile_export_values(
         from ..user_profile.profile_record_repository import ProfileRecordRepository
 
         try:
-            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+            record = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=operation.profile_decode_context(),
+            ).load(bucket_id)
         except ProfileNotFoundError:
             return {}
-    if schema is None:
-        raise UserProfileValidationError("profile export resolution requires a pinned profile schema")
-    resolved_schema = schema
+    resolved_schema = operation.profile_schema() if schema is None else schema
     fact_index = profile_fact_index(record, resolved_schema)
 
     values: dict[str, UserProfileFactValue] = {}

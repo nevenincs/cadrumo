@@ -26,6 +26,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -223,8 +224,7 @@ def calculate_irene_revision(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
-        bucket_event_repository=event_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
     )
     decision = _wallet_decision()

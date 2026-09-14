@@ -76,7 +76,7 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
@@ -522,11 +522,12 @@ def _compose_export_dictionary_values(
     draft: ModeloDraft,
     taxpayer_identity: TaxpayerIdentityFacts,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
     profile_export_bindings: Sequence[BindingDefinition] = (),
 ) -> dict[str, object]:
     """Resolve typed XML dictionary values from canonical profile bindings."""
     values: dict[str, object] = dict(
-        resolve_profile_export_values(profile_export_bindings, bucket_id=bucket_id),
+        resolve_profile_export_values(profile_export_bindings, bucket_id=bucket_id, operation=operation),
     )
     if taxpayer_identity.full_name is None:
         raise ModeloExportError(
@@ -731,9 +732,14 @@ def _build_export_producer_snapshot(
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
     amendment_evidence: AmendmentEvidence | None,
     export_ports: ModeloExportPorts,
+    operation: PinnedAuthorityOperation,
 ) -> FilingProducerSnapshot:
     """Build the sole typed producer boundary or refuse before any write."""
-    presenter, taxpayer_identity = _require_export_identity(command, work_unit=work_unit)
+    presenter, taxpayer_identity = _require_export_identity(
+        command,
+        work_unit=work_unit,
+        operation=operation,
+    )
     try:
         modelo = Modelo(str(work_unit.modelo))
         iva_profile = workflow_profile.iva
@@ -764,7 +770,10 @@ def _build_export_producer_snapshot(
             # Read separately from the identity pair: AEAT's "persona con quien
             # relacionarse" is a third party, and under a gestor it is routinely
             # neither the taxpayer nor the presenter.
-            declaration_contact=resolve_declaration_contact(bucket_id=str(work_unit.bucket_id)),
+            declaration_contact=resolve_declaration_contact(
+                bucket_id=str(work_unit.bucket_id),
+                operation=operation,
+            ),
         )
     except (FilingProducerSnapshotError, ValueError) as exc:
         raise ModeloExportError(
@@ -780,6 +789,7 @@ def _require_export_identity(
     command: ModeloExportCommand,
     *,
     work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[PresenterIdentity, TaxpayerIdentityFacts]:
     """Resolve the producer identity, deriving it from the profile when unset.
 
@@ -797,7 +807,10 @@ def _require_export_identity(
     """
     if command.presenter is not None and command.taxpayer_identity is not None:
         return command.presenter, command.taxpayer_identity
-    derived = resolve_export_identity(bucket_id=str(work_unit.bucket_id))
+    derived = resolve_export_identity(
+        bucket_id=str(work_unit.bucket_id),
+        operation=operation,
+    )
     presenter = command.presenter or (derived[0] if derived else None)
     taxpayer_identity = command.taxpayer_identity or (derived[1] if derived else None)
     if presenter is None or taxpayer_identity is None:
@@ -910,6 +923,7 @@ def _persist_exported_draft(
     amendment_evidence: AmendmentEvidence | None,
     export_ports: ModeloExportPorts,
     schema_provider: RegistrySchemaAccessor,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloExportResult:
     resolved_result_disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
@@ -928,6 +942,7 @@ def _persist_exported_draft(
         prior_domiciliation_election=prior_domiciliation_election,
         amendment_evidence=amendment_evidence,
         export_ports=export_ports,
+        operation=operation,
     )
     export_subview = schema_provider.get_subview(str(work_unit.modelo))
     export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
@@ -936,6 +951,7 @@ def _persist_exported_draft(
             draft=approved,
             taxpayer_identity=producer_snapshot.taxpayer_identity,
             bucket_id=work_unit.bucket_id,
+            operation=operation,
             profile_export_bindings=export_subview.profile_export_bindings,
         )
         if export_layout is not None and export_layout.format is ExportLayoutFormat.XML_DICTIONARY
@@ -1241,6 +1257,7 @@ def _prepare_modelo_export_schema(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Period, RegistrySchemaAccessor]:
     period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
@@ -1251,8 +1268,17 @@ def _prepare_modelo_export_schema(
     _raise_if_export_layout_unsupported(work_unit=work_unit, schema_provider=schema_provider)
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
-    require_profile_ready_for_work_unit(work_unit)
-    _require_persisted_required_bindings_resolved(work_unit=work_unit, revision=revision, action="export")
+    require_profile_ready_for_work_unit(
+        work_unit,
+        profile_decode_context=operation.profile_decode_context(),
+        operation=operation,
+    )
+    _require_persisted_required_bindings_resolved(
+        work_unit=work_unit,
+        revision=revision,
+        action="export",
+        operation=operation,
+    )
     return period, schema_provider
 
 
@@ -1338,6 +1364,7 @@ def _prepare_modelo_export(
     workflow_profile: TaxpayerProfile,
     export_ports: ModeloExportPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
 ) -> _PreparedModeloExport:
     """Load and validate every persisted authority required before export bytes."""
     revision, work_unit = _load_modelo_export_authorities(
@@ -1369,6 +1396,7 @@ def _prepare_modelo_export(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
+        operation=operation,
     )
     iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
@@ -1406,6 +1434,7 @@ def export_modelo_revision(
     *,
     workflow_profile: TaxpayerProfile,
     export_ports: ModeloExportPorts,
+    operation: PinnedAuthorityOperation,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     clock: datetime | None = None,
 ) -> ModeloExportResult:
@@ -1466,6 +1495,7 @@ def export_modelo_revision(
         workflow_profile=workflow_profile,
         export_ports=export_ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
+        operation=operation,
     )
     work_unit = prepared.work_unit
     revision = prepared.revision
@@ -1499,6 +1529,7 @@ def export_modelo_revision(
         amendment_evidence=amendment_evidence,
         export_ports=export_ports,
         schema_provider=schema_provider,
+        operation=operation,
     )
 
 

@@ -39,6 +39,7 @@ from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, Obser
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession
+    from .....domain.calculations.registry.authority import PinnedAuthorityOperation
     from .....domain.calculations.registry.schema import ModeloRevision
 
 
@@ -87,6 +88,7 @@ async def _capture_submitted_file_if_available(
     declaration: Declaracion,
     read_policy: RemoteStateGuardPolicy,
     snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
     observation_key: tuple[str, int, Period, str],
     artefact_sink: FiledDeclaracionArtefactSink | None,
     metadata: dict[str, str],
@@ -127,13 +129,19 @@ async def _capture_submitted_file_if_available(
                     declaration=declaration,
                     body=submitted_body,
                     artefact=submitted_artefact,
+                    operation=operation,
                 )
                 extraction_coverage["submitted_file"] = _submitted_file_coverage_for_casillas(
                     snapshot=snapshot,
                     body=submitted_body,
                     casillas=casillas,
+                    operation=operation,
                 )
-                headers = observed_header_facts_from_submitted_file(snapshot=snapshot, body=submitted_body)
+                headers = observed_header_facts_from_submitted_file(
+                    snapshot=snapshot,
+                    body=submitted_body,
+                    operation=operation,
+                )
             except (RegistryValidationError, SedeParseError) as exc:
                 _record_submitted_file_extraction_error(metadata, exc)
     return artefacts, casillas, headers, extraction_coverage
@@ -173,10 +181,11 @@ async def capture_filed_declaration_observation_from_row(
     page: Page,
     context: BrowserContext,
     registry_snapshot: RegistrySnapshot | None,
+    operation: PinnedAuthorityOperation,
     artefact_sink: FiledDeclaracionArtefactSink | None,
 ) -> FiledDeclaracionObservation:
     authenticated_identity = (session.identity_nif or "").strip()
-    snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
+    snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration, operation=operation)
     read_policy = _read_guard_policy_from_snapshot(snapshot)
     filing_period = declaration.period
     observation_key = (declaration.modelo, declaration.ejercicio, filing_period, declaration.expediente_id)
@@ -226,6 +235,7 @@ async def capture_filed_declaration_observation_from_row(
         declaration=declaration,
         read_policy=read_policy,
         snapshot=snapshot,
+        operation=operation,
         observation_key=observation_key,
         artefact_sink=artefact_sink,
         metadata=metadata,
@@ -263,6 +273,7 @@ async def capture_previous_filing_observations(
     *,
     filing_year: int,
     period: Period,
+    operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
@@ -276,7 +287,12 @@ async def capture_previous_filing_observations(
     from .declarations import open_declarations_register
 
     observations: list[FiledDeclaracionObservation] = []
-    async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
+    async with open_declarations_register(
+        session,
+        operation=operation,
+        settings=settings,
+        playwright=playwright,
+    ) as register:
         for requirement in previous_filing_observation_requirements(
             revision,
             filing_year=filing_year,
@@ -293,6 +309,7 @@ async def capture_previous_filing_observations(
             )
             observation = _with_derived_303_compensation_available_observation(
                 await register.capture_observation(declaration, artefact_sink=artefact_sink),
+                operation=operation,
             )
             observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
             missing, missing_presence_groups = source_presence_gaps(
@@ -320,6 +337,7 @@ async def capture_relation_source_observations(
     *,
     filing_year: int,
     period: Period,
+    operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
@@ -338,7 +356,12 @@ async def capture_relation_source_observations(
             required_source_casilla_ids.setdefault(key, set()).update(requirement.source_casilla_ids)
 
     observations: list[FiledDeclaracionObservation] = []
-    async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
+    async with open_declarations_register(
+        session,
+        operation=operation,
+        settings=settings,
+        playwright=playwright,
+    ) as register:
         for (modelo, source_year, source_period), source_casilla_ids in sorted(required_source_casilla_ids.items()):
             rows = await register.walk(modelo=modelo, ejercicio=source_year)
             declaration = _select_authoritative_declaration(
@@ -350,6 +373,7 @@ async def capture_relation_source_observations(
             )
             observation = _with_derived_303_compensation_available_observation(
                 await register.capture_observation(declaration, artefact_sink=artefact_sink),
+                operation=operation,
             )
             observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
             missing = sorted(source_casilla_ids.difference(observed_casillas))
