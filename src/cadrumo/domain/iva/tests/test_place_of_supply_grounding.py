@@ -24,9 +24,9 @@ from collections.abc import Mapping
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.resources.bundled_data import bundled_path
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.schema_base import DateAxis
 from ..errors import IvaCatalogueError
@@ -87,7 +87,7 @@ def _declared_rule_ids() -> frozenset[str]:
     Taking only the table would leave the one id a reader is most likely to meet
     on an unclassifiable document outside the grounding contract entirely.
     """
-    resolved = bundled_authority().resolve_governed_fact(
+    resolved = compiled_bundled_authority().resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-invoice-classification-catalogue",
             date_axis=DateAxis.FILING_PERIOD,

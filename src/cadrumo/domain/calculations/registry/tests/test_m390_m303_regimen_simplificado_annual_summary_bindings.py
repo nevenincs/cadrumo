@@ -5,11 +5,11 @@ from __future__ import annotations
 from typing import get_args
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.filing_projection_ref import FilingProjectionRef
-from ..authority import bundled_authority
 from ..m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
     validate_m303_regimen_simplificado_annual_summary_revision,
@@ -23,7 +23,7 @@ _RETIRED_BINDING_ID = "modelo-390-prev-303-cuota-devengada-simplificado"
 
 def _revision():
     """Return the live 2022-grounded annual Modelo 390 revision."""
-    return bundled_authority().snapshot("390", filing_year=2025, period="0A").revision
+    return compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A").revision
 
 
 def test_live_m390_revision_declares_one_exact_ten_endpoint_handoff() -> None:

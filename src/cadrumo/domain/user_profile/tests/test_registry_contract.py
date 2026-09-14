@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import BaseModel, ValidationError
 
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.severity import BaseSeverity
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.profile_bindings import ProfileProvider
 from ...calculations.registry.schema import BindingDefinition
 from ..registry_contract import (
@@ -80,7 +80,7 @@ def test_anualidades_selector_still_resolves_through_its_derived_pattern() -> No
     up, so this is a second route rather than a hole.
     """
     schema = load_user_profile_schema()
-    model = bundled_authority().modelo("100")
+    model = compiled_bundled_authority().modelo("100")
     failures: list[str] = []
 
     for year in _MODELO_100_ANUALIDADES_YEARS:
@@ -99,7 +99,7 @@ def test_missing_modelo_100_anualidades_selector_is_rejected_for_each_year() -> 
     contract: nothing silently excuses an undeclared profile binding selector.
     """
     schema = load_user_profile_schema()
-    model = bundled_authority().modelo("100")
+    model = compiled_bundled_authority().modelo("100")
     failures: list[str] = []
 
     for year in _MODELO_100_ANUALIDADES_YEARS:
@@ -347,7 +347,7 @@ def test_a_dropped_profile_selector_field_is_refused_not_silently_missing() -> N
 
 def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema() -> None:
     schema = load_user_profile_schema()
-    modelos = bundled_authority().modelos
+    modelos = compiled_bundled_authority().modelos
 
     report = validate_user_profile_registry_contract(modelos, schema)
 
@@ -364,7 +364,7 @@ def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema(
 def _live_profile_binding_selectors() -> frozenset[str]:
     """Every profile-sourced binding selector the committed registry declares."""
     selectors: set[str] = set()
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
                 if binding.source != BindingSourceKind.PROFILE:

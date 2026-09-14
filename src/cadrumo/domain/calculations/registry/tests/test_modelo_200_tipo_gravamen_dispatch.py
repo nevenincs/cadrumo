@@ -34,10 +34,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
@@ -182,7 +182,7 @@ def test_ley_49_2002_art_10_nonprofit_rate_links_to_bundled_corpus() -> None:
         "explotaciones económicas no exentas",
         "tipo del 10 por 100",
     )
-    assert bundled_authority().legal_evidence_text(reference.id)
+    assert compiled_bundled_authority().legal_evidence_text(reference.id)
 
 
 def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:

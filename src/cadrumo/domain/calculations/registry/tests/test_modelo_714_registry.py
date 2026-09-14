@@ -6,10 +6,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from ..authority import bundled_authority
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloDefinition, RegistryCatalogues
@@ -188,7 +188,8 @@ def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_714()
     legal = {legal_ref: catalogues.legal[legal_ref] for legal_ref in _PATRIMONIO_LEGAL_REFS}
 
-    assert all(bundled_authority().legal_evidence_text(reference_id) for reference_id in legal)
+    authority = compiled_bundled_authority()
+    assert all(authority.legal_evidence_text(reference_id) for reference_id in legal)
 
     assert set(_PATRIMONIO_LEGAL_REFS) <= set(modelo.legal_refs)
     assert {entry.document_id for entry in legal.values()} == {"BOE-A-1991-14392"}
@@ -212,7 +213,7 @@ def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
     revision = modelo.revisions["2021"]
     legal = {_PATRIMONIO_FORM_ORDER_REF: catalogues.legal[_PATRIMONIO_FORM_ORDER_REF]}
 
-    assert bundled_authority().legal_evidence_text(_PATRIMONIO_FORM_ORDER_REF)
+    assert compiled_bundled_authority().legal_evidence_text(_PATRIMONIO_FORM_ORDER_REF)
 
     assert _PATRIMONIO_FORM_ORDER_REF in modelo.legal_refs
     assert _PATRIMONIO_FORM_ORDER_REF in revision.legal_refs

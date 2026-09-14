@@ -36,13 +36,13 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....invoices.enums import IvaRate
 from ....iva.classification import InvoiceKind
 from ....iva.errors import IvaRateNotFoundError
 from ....iva.invoice_classification import invoice_line_to_iva_observation
 from ....iva.schema import IvaCategory, IvaRateKind
-from ..authority import bundled_authority
 from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
@@ -107,7 +107,7 @@ _OUT_OF_WINDOW = (
 
 
 def _m390_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _issued_lines() -> tuple[IvaLedgerObservation, ...]:

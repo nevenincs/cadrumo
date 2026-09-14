@@ -23064,6 +23064,12 @@ modelo:
             label: Modelo 200 adóévs 2024 és következő (DR200e25.xls)
         2025-y-siguientes:
           casilla:
+            x-8h834c1g60ojgghq60o3ae1o:
+              help: Adja meg vagy ellenőrizze a(z) „Egyes tevékenységeket ösztönző
+                levonások - összesen - ebben az elszámolásban felhasználva [00588]”
+                értékét ehhez az önadózáshoz.
+              label: Egyes tevékenységeket ösztönző levonások - összesen - ebben az
+                elszámolásban felhasználva [00588]
             '00001':
               help: Jelző, amely azt mutatja, hogy a szervezet nonprofit-e és a 49/2002.
                 törvény II. címe szerinti adórendszer alá tartozik-e [00001].

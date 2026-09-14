@@ -52,12 +52,12 @@ def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProc
 
         internals._CROSS_DOMAIN_CHECK_MODULES = {declared}
 
-        from cadrumo.domain.calculations.registry.authority import bundled_authority
+        from dev.registry.compiler.authority import compiled_bundled_authority
         from cadrumo.domain.calculations.registry.errors import RegistryValidationError
         import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         try:
-            bundled_authority().snapshot("100", filing_year=2025, period="0A")
+            compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
         except RegistryValidationError as error:
             registered = sorted(
                 check.__module__ for check in vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]

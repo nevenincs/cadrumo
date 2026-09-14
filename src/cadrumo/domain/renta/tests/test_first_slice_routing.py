@@ -16,10 +16,10 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     renta_first_slice_binding_target_casillas,
 )
@@ -96,7 +96,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     :func:`_check_all_id_references`.
     """
 
-    modelo_100 = bundled_authority().modelo("100")
+    modelo_100 = compiled_bundled_authority().modelo("100")
 
     all_casilla_ids: set[CasillaId] = set()
     for revision in modelo_100.revisions.values():
@@ -169,7 +169,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped() -> None:
     per-revision referential-integrity requirement.
     """
 
-    modelo_100 = bundled_authority().modelo("100")
+    modelo_100 = compiled_bundled_authority().modelo("100")
 
     for year in ("2020", "2021", "2022"):
         revision = modelo_100.revisions[year]
@@ -194,7 +194,7 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision() -> None:
     casilla set reproduces the exact defect this test guards against.
     """
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for year in (2020, 2021, 2022, 2023, 2024, 2025):
         snapshot = authority.snapshot(Modelo("100"), filing_year=year, period="0A")
         assert snapshot.revision.id == str(year)

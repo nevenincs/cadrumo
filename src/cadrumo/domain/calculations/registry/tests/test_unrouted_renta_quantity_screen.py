@@ -14,9 +14,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.aggregation import LedgerIncomeGrounding
-from ..authority import bundled_authority
 from ..ledger_renta_income_bindings import (
     unrouted_ledger_renta_income_quantities,
     unsupported_ledger_renta_income_observations,
@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def modelo_130_revision() -> ModeloRevision:
     """Resolve the shipped Modelo 130 revision used by this runtime screen."""
-    return bundled_authority().snapshot("130", filing_year=2026, period="1T").revision
+    return compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision
 
 
 class _Row:

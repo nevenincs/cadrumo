@@ -26,8 +26,9 @@ import re
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import ValidatedRegistryAuthority, bundled_authority
+from ..authority import ValidatedRegistryAuthority
 from ..temporal import select_revision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -41,7 +42,7 @@ _ANNUAL_PERIOD = "0A"
 @pytest.fixture(scope="session")
 def registry_authority() -> ValidatedRegistryAuthority:
     """The bundled validated authority."""
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def _modelo_100_years(authority: ValidatedRegistryAuthority) -> tuple[int, ...]:

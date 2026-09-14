@@ -5,11 +5,12 @@ that captures the operator's persisted business / personal split coefficients
 — plus :func:`resolve_user_ratio`, the pure helper consumed by
 ``cadrumo.domain.deductibility`` to look up an override before falling back to
 the statutory :attr:`domain.categories.ProportionalityRule.default_ratio`.
-The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived once at
-import time from every year the category-profile corpus ships, never from one
-pinned year: eligibility gates what a persisted profile may STORE, so a
-year-scoped set would invalidate an operator's stored overrides the moment the
-filing year rolled over. The year-versioned half -- the statutory multiplier
+The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived lazily
+from the current pinned generation's complete category-profile corpus, never
+from one filing year. Each decoded profile retains only that immutable set so
+later pure edits perform no hidden authority read. Eligibility gates what a
+persisted profile may STORE, so a year-scoped set would invalidate an operator's
+stored overrides the moment the filing year rolled over. The year-versioned half -- the statutory multiplier
 and default ratio the law fixes per year -- is read at use time from
 :func:`domain.categories.resolve_category_profiles`, which takes the year
 explicitly.
@@ -22,7 +23,7 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import override
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, field_serializer, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -141,6 +142,7 @@ class UsageRatioProfile(BaseModel):
     ratios: Mapping[SpendingCategory, Decimal] = Field(
         default_factory=lambda: dict[SpendingCategory, Decimal](),
     )
+    _eligibility: frozenset[SpendingCategory] = PrivateAttr(default=frozenset())
 
     @field_validator("ratios", mode="after")
     @classmethod
@@ -163,7 +165,14 @@ class UsageRatioProfile(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_eligibility(self) -> UsageRatioProfile:
-        invalid = tuple(category for category in self.ratios if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES)
+        authority = governed_facts_in_scope()
+        if authority is not None:
+            object.__setattr__(self, "_eligibility", eligible_usage_ratio_categories())
+        elif self.ratios:
+            raise UsageRatioValidationError(
+                "non-empty usage-ratio profiles require a generation-pinned eligibility context",
+            )
+        invalid = tuple(category for category in self.ratios if category not in self._eligibility)
         if invalid:
             names = ", ".join(sorted(c.value for c in invalid))
             raise UsageRatioValidationError(f"usage ratios may only target USAGE_RATIO_* categories; rejected: {names}")
@@ -180,8 +189,17 @@ class UsageRatioProfile(BaseModel):
             A fresh frozen profile; the receiver is left unchanged.
         """
         new_ratios = dict(self.ratios)
+        if category not in self._eligibility:
+            raise UsageRatioValidationError(f"category {category.value!r} is not eligible for usage ratios")
+        validate_usage_ratio_bound(ratio, label=category.value)
         new_ratios[category] = ratio
-        return UsageRatioProfile(ratios=new_ratios)
+        return self.model_copy(
+            update={
+                "ratios": MappingProxyType(
+                    {item: new_ratios[item] for item in sorted(new_ratios, key=lambda c: c.value)}
+                )
+            }
+        )
 
     def without_ratio(self, category: SpendingCategory) -> UsageRatioProfile:
         """Return a new :class:`UsageRatioProfile` with one ratio removed.
@@ -196,7 +214,7 @@ class UsageRatioProfile(BaseModel):
         """
         new_ratios = dict(self.ratios)
         new_ratios.pop(category, None)
-        return UsageRatioProfile(ratios=new_ratios)
+        return self.model_copy(update={"ratios": MappingProxyType(new_ratios)})
 
 
 def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -> Decimal | None:

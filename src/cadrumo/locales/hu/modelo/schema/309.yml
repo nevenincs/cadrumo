@@ -337,7 +337,7 @@ modelo:
               help: A 309-es modell 951-1300. mezője, 2004-2015. adóév.
               label: Megjegyzések
           construct:
-            modelo-309-historical-no-periodica:
+            modelo-309-iva-no-periodica:
               field:
                 title: 'Történeti 309-es modell: nem időszakos önadóbevallás (2004-2015)'
           field:

@@ -37,8 +37,8 @@ from __future__ import annotations
 from collections.abc import Callable, Collection
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ..catalogue import iva_catalogue_years
 from ..place_of_supply import place_of_supply_years
 
@@ -59,7 +59,7 @@ def _supported_filing_years() -> tuple[int, ...]:
     and is already validated before publication, so this shipped test must not
     reopen mutable TOML or invoke the development compiler.
     """
-    declaration = bundled_authority().catalogues.supported_filing_years
+    declaration = compiled_bundled_authority().catalogues.supported_filing_years
     assert declaration is not None, "the published authority declares no supported filing years"
     return tuple(declaration.years)
 

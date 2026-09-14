@@ -3,23 +3,21 @@
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 
 import pytest
 
 from ....core.hashing import sha256_hex
-from ...calculations.registry import authority as authority_module
-from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.authority_artifact import (
-    AuthorityArtifact,
-    AuthorityEvidenceProjection,
+    AuthorityComponentKind,
+    EvidenceComponentQuery,
     PublishedLegalEvidence,
-    write_authority_artifact,
+    ReferenceComponentQuery,
 )
-from ...calculations.registry.schema import RegistryCatalogues
 from ...calculations.registry.schema_base import EvidenceTier
 from ...calculations.registry.schema_references import LegalReference
-from .._grounding import registry_catalogues, verify_table_legal_refs
+from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
+from .._grounding import verify_table_legal_refs
 from ..errors import IvaCatalogueError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -51,69 +49,39 @@ def _article_90_reference() -> LegalReference:
     )
 
 
-def _stage_catalogue_artifact(root: Path, anchored_text: str) -> None:
-    artifact_path = root / "registry" / "authority" / "authority.json"
-    artifact_path.parent.mkdir(parents=True)
-    published_catalogues = bundled_authority().catalogues
-    write_authority_artifact(
-        artifact_path,
-        AuthorityArtifact(
-            modelos=(),
-            catalogues=RegistryCatalogues(
-                legal={_ARTICLE_90: _article_90_reference()},
-                sources={},
-                facts=published_catalogues.facts,
-                runtime=published_catalogues.runtime,
+def _operation(anchored_text: str) -> PinnedAuthorityOperation:
+    """Build a pinned evidence fixture without an eager catalogue or JSON seam."""
+    reference = _article_90_reference()
+    query = ReferenceComponentQuery(_ARTICLE_90, AuthorityComponentKind.LEGAL_REFERENCE)
+    evidence_query = EvidenceComponentQuery(_ARTICLE_90, AuthorityComponentKind.LEGAL_EVIDENCE)
+    reader = FakeAuthorityComponentReader(
+        {
+            query: reference,
+            evidence_query: PublishedLegalEvidence(
+                legal_reference_id=_ARTICLE_90,
+                anchored_text=anchored_text,
+                text_sha256=sha256_hex(anchored_text.encode("utf-8")),
             ),
-            identity_digest="a4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f",
-            evidence=AuthorityEvidenceProjection(
-                legal=(
-                    PublishedLegalEvidence(
-                        legal_reference_id=_ARTICLE_90,
-                        anchored_text=anchored_text,
-                        text_sha256=sha256_hex(anchored_text.encode("utf-8")),
-                    ),
-                )
-            ),
-        ),
+        }
     )
+    return PinnedAuthorityOperation(reader, reader.pin())
 
 
-def _use_staged_package(monkeypatch: pytest.MonkeyPatch, root: Path) -> Path:
-    """Point the runtime's package-resource seam at ``root`` for the authority artifact only."""
-    package_data_root = authority_module._bundled_path()
-
-    def staged_path(*parts: str) -> Path:
-        if parts[:2] == ("registry", "authority"):
-            return root.joinpath(*parts)
-        return package_data_root.joinpath(*parts)
-
-    monkeypatch.setattr(authority_module, "_bundled_path", staged_path)
-    return package_data_root
+def test_iva_grounding_reads_its_legal_basis_from_a_pinned_published_operation() -> None:
+    """A rate citation validates against addressed authority evidence, not corpus files."""
+    operation = _operation(_ARTICLE_90_TEXT)
+    verify_table_legal_refs("iva rates", [("ES general 21", (_ARTICLE_90,))], operation=operation)
 
 
-def test_iva_grounding_reads_its_legal_basis_from_a_staged_published_artifact(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A rate citation validates against artifact catalogues and evidence, not corpus files."""
-    _stage_catalogue_artifact(tmp_path, _ARTICLE_90_TEXT)
-    _use_staged_package(monkeypatch, tmp_path)
-
-    legal, _sources, source_root = registry_catalogues()
-    verify_table_legal_refs("iva rates", [("ES general 21", (_ARTICLE_90,))])
-
-    assert set(legal) == {_ARTICLE_90}
-    assert source_root == tmp_path / "registry" / "authority" / "authority.json"
-
-
-def test_iva_grounding_refuses_a_citation_the_published_evidence_does_not_support(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_iva_grounding_refuses_a_citation_the_published_evidence_does_not_support() -> None:
     """Anchor text lacking a declared clause, or an uncatalogued citation, is refused."""
-    _stage_catalogue_artifact(tmp_path, "el impuesto se exigira al tipo impositivo general del 10 por ciento.")
-    _use_staged_package(monkeypatch, tmp_path)
+    operation = _operation("el impuesto se exigira al tipo impositivo general del 10 por ciento.")
 
     with pytest.raises(IvaCatalogueError, match="missing required text '21 por ciento'"):
-        verify_table_legal_refs("iva rates", [("ES general 21", (_ARTICLE_90,))])
+        verify_table_legal_refs("iva rates", [("ES general 21", (_ARTICLE_90,))], operation=operation)
     with pytest.raises(IvaCatalogueError, match="unknown legal_ref 'ley-37-1992:art-91'"):
-        verify_table_legal_refs("iva rates", [("ES reducido", ("ley-37-1992:art-91",))])
+        verify_table_legal_refs(
+            "iva rates",
+            [("ES reducido", ("ley-37-1992:art-91",))],
+            operation=operation,
+        )

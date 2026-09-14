@@ -23,10 +23,10 @@ from datetime import date
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.descendant_relacion import DescendantRelacion
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
@@ -506,7 +506,7 @@ class TestGuardaYCustodiaJudicial:
         is a non-member, so a later reader does not admit it on the assumption
         that its omission was an oversight.
         """
-        context = FamilyFactResolutionContext(bundled_authority(), date(_YEAR, 12, 31), date(_YEAR, 12, 31))
+        context = FamilyFactResolutionContext(compiled_bundled_authority(), date(_YEAR, 12, 31), date(_YEAR, 12, 31))
         assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in art_81_1_maternity_relations(context=context)
 
     def test_the_entry_surface_ships_with_the_member(self) -> None:

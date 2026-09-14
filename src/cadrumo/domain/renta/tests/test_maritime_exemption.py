@@ -16,8 +16,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.queries import RegistryQueryService
@@ -43,7 +43,7 @@ _DA41_LEGAL_REFS = ("ley-35-2006:da-41",)
 _RETMAR_LEGAL_REFS = ("ley-35-2006:art-96",)
 _ART_7P_SOURCE_REFS = ("boe-lirpf-statutory-facts",)
 _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
-_AUTHORITY = bundled_authority()
+_AUTHORITY = compiled_bundled_authority()
 _FILING_PERIOD = date(2025, 12, 31)
 _DEVENGO_DATE = date(2025, 12, 31)
 
@@ -622,7 +622,7 @@ def test_art7p_resolution_fails_closed_outside_fact_temporal_coverage() -> None:
 
 def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
     """Runtime maritime provenance must resolve through typed registry catalogues."""
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
 
     art7p_obs = calculate_art_7p_exemption(
         annual_salary=Decimal("36500"),

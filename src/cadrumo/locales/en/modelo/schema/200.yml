@@ -22251,6 +22251,11 @@ modelo:
             label: Modelo 200 tax years 2024 and following (DR200e25.xls)
         2025-y-siguientes:
           casilla:
+            x-8h834c1g60ojgghq60o3ae1o:
+              help: Enter or review “Deductions to incentivise certain activities
+                - total - applied in this settlement [00588]” for this self-assessment.
+              label: Deductions to incentivise certain activities - total - applied
+                in this settlement [00588]
             '00001':
               help: Flag indicating if the entity is non-profit and subject to the
                 Title II regime of Law 49/2002 [00001].

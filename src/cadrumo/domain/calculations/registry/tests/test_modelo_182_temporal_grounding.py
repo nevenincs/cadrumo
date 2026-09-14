@@ -5,15 +5,15 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import bundled_authority
 from ..errors import NoRevisionForPeriodError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_182_deadline_is_owned_only_by_the_evidenced_2025_revision() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("182")
     revision = modelo.revisions["2025"]
     assert (revision.valid_from, revision.valid_to) == (date(2025, 1, 1), date(2025, 12, 31))
@@ -27,7 +27,7 @@ def test_modelo_182_deadline_is_owned_only_by_the_evidenced_2025_revision() -> N
 
 
 def test_modelo_182_refuses_unsupported_design_eras_and_projects_no_deadline() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for filing_year in (*range(2018, 2025), 2026):
         with pytest.raises(NoRevisionForPeriodError):
             authority.snapshot("182", filing_year=filing_year, period="0A")

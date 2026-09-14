@@ -18,8 +18,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ...calculations.registry.schema_base import DateAxis
 from ..descendant import DescendantInfo
@@ -92,7 +92,7 @@ def test_the_art_72_threshold_partitions_the_limbs(grado: int | None, expected: 
 
 
 def test_the_threshold_is_the_one_art_72_states() -> None:
-    resolved = bundled_authority().resolve_governed_fact(
+    resolved = compiled_bundled_authority().resolve_governed_fact(
         ScalarFactQuery(
             fact_id="rirpf-art-72-disability-minimum-grade",
             date_axis=DateAxis.FILING_PERIOD,

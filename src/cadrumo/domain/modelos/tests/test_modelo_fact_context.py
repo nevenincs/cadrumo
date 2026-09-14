@@ -6,8 +6,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ..modelo_fact_context import ModeloFactResolutionContext
 
@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _context() -> ModeloFactResolutionContext:
     return ModeloFactResolutionContext(
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         filing_period=date(2025, 12, 31),
         devengo_date=date(2025, 12, 31),
     )

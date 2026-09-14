@@ -18,9 +18,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.descendant_relacion import DescendantRelacion
-from ...calculations.registry.authority import bundled_authority
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
@@ -28,7 +28,7 @@ from ..family_types import within_multi_year_applicability_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CONTEXT = FamilyFactResolutionContext(bundled_authority(), date(2025, 12, 31), date(2025, 12, 31))
+_CONTEXT = FamilyFactResolutionContext(compiled_bundled_authority(), date(2025, 12, 31), date(2025, 12, 31))
 
 
 def test_applicability_window_three_period_span_for_filing_year_2025() -> None:

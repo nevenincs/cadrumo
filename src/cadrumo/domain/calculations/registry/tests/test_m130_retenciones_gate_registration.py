@@ -62,7 +62,7 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
         f"""
         import sys
 
-        from cadrumo.domain.calculations.registry.authority import bundled_authority
+        from dev.registry.compiler.authority import compiled_bundled_authority
         import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         assert not [name for name in sys.modules if name.startswith("cadrumo.application.aggregation")], (
@@ -75,7 +75,7 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
             "no cross-domain check may be registered before the build"
         )
 
-        snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T")
+        snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T")
         assert snapshot.modelo.id == "130"
         assert not [name for name in sys.modules if name.startswith("cadrumo.application.aggregation")], (
             "building the snapshot must not pull in aggregation either"
@@ -137,11 +137,11 @@ def test_m130_refuses_when_only_the_m100_gate_is_registered() -> None:
 
         internals._CROSS_DOMAIN_CHECK_MODULES = ({_FIRST_SLICE_MODULE!r},)
 
-        from cadrumo.domain.calculations.registry.authority import bundled_authority
+        from dev.registry.compiler.authority import compiled_bundled_authority
         from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
         try:
-            bundled_authority().snapshot("130", filing_year=2025, period="1T")
+            compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T")
         except RegistryValidationError as error:
             print("REFUSED")
             print(error)

@@ -27,12 +27,12 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.facts.resolution import ScalarFactQuery
 from ....domain.calculations.registry.schema_base import DateAxis
-from ...calculations.registry.authority import bundled_authority
 from ..errors import TransactionValidationError
 from ..retencion_facts import (
     RirpfArt95RetencionRates,
@@ -51,7 +51,7 @@ _CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
 def _resolved_fact(fact_id: str):
     """Resolve one published retención fact through the runtime authority."""
-    return bundled_authority().resolve_governed_fact(
+    return compiled_bundled_authority().resolve_governed_fact(
         ScalarFactQuery(
             fact_id=fact_id,
             date_axis=DateAxis.FILING_PERIOD,

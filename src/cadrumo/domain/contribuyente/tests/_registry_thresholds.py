@@ -27,7 +27,8 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 
-from ...calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from ...calculations.registry.formula_runtime_ops import resolve_parameter
 from ...calculations.registry.static_inspection import RegistryRevisionInspection
 from ..family_types import MinimoDescendientesThresholds
@@ -54,7 +55,7 @@ def _inspection(filing_year: int) -> RegistryRevisionInspection:
     a non-filing inspection, so use the authority's inspection projection rather
     than reopening mutable registry sources or invoking the compiler.
     """
-    return bundled_authority().inspect_revision("100", filing_year=filing_year, period="0A")
+    return compiled_bundled_authority().inspect_revision("100", filing_year=filing_year, period="0A")
 
 
 def _parameter(filing_year: int, suffix: str) -> Decimal:

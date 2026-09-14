@@ -26,9 +26,9 @@ corpus. Each test states whether it is DISCRIMINATING or SUPPORTING.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.citation_grounding import CitationGrounding
-from ...calculations.registry.authority import bundled_authority
 from ..proportionality import CategoryCitation
 from ..registry import load_category_profiles
 from ..spending_category import SpendingCategory
@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _legal_catalogue():
     """Return the real IRPF legal catalogue the citations resolve against."""
-    return bundled_authority().catalogues.legal
+    return compiled_bundled_authority().catalogues.legal
 
 
 def _shipped_citations() -> list[CategoryCitation]:
@@ -71,7 +71,7 @@ def test_every_verified_quotation_is_contained_in_its_own_provision() -> None:
     the moment someone adjusted the number, and says nothing about which
     citation is grounded.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     catalogue = authority.catalogues.legal
     uncontained: list[tuple[str, str]] = []
     for citation in _shipped_citations():

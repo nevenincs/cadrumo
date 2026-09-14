@@ -24,8 +24,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.schema_base import DateAxis
 from ..classification import (
@@ -47,7 +47,7 @@ _DATE = date(2026, 3, 10)
 
 def _classification_fact_entries(*, on: date) -> dict[str, str]:
     """Resolve the published classification declaration at its filing coordinate."""
-    resolved = bundled_authority().resolve_governed_fact(
+    resolved = compiled_bundled_authority().resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-invoice-classification-catalogue",
             date_axis=DateAxis.FILING_PERIOD,

@@ -16,9 +16,10 @@ from datetime import date
 from typing import cast
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.tipos_actividad import TipoActividad
-from ...calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...calculations.registry.authority import ValidatedRegistryAuthority
 from ...calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedEntitySetFact,
@@ -73,7 +74,7 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
     no codes keeps the gap where a reader looks for the mapping; dropping the
     entry would make the file read as a complete partition of art. 95.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     selectors = load_tipo_actividad_selectors(selector_ids, effective_date=date(2026, 4, 1), authority=authority)
     empty_selector_ids = tuple(fact_id for fact_id, codes in selectors.items() if not codes)
@@ -86,7 +87,7 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
 
 def test_no_code_selects_two_partitions() -> None:
     """A code selects at most one partition, so a rate lookup cannot be ambiguous."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     selected = [
         code
@@ -101,7 +102,7 @@ def test_no_code_selects_two_partitions() -> None:
 
 def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     """Selectors draw from the closed code set, never a free-form token."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     for codes in load_tipo_actividad_selectors(
         selector_ids,

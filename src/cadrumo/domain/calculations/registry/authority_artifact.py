@@ -1,36 +1,16 @@
-"""Versioned, digest-checked publication format for a validated registry authority.
+"""Typed authority values and the indexed component codec.
 
-Development writes the validated authority as canonical JSON; runtime reads it
-back into deeply immutable typed models, which it may share between callers
-while the file is unchanged. The artifact is generated output, not
-a signed document: it carries no signature, key, or certificate. Its digest
-detects a truncated, corrupted, or hand-edited file, and its recorded
-``identity_digest`` names the compiler build, registry, and source-evidence inputs it was
-compiled from, so development can tell when it is out of date. This module
-neither knows a registry root nor compiles, repairs, or validates authoring
-inputs on a failed read.
-
-The current format is a canonical JSON frame holding exactly ``format``,
-``payload``, and ``payload_sha256``, the SHA-256 of the canonical JSON payload.
-The explicit format value is ``cadrumo-authority-artifact-v5``. The payload
-projects every required schema field and every non-default value. A field is
-omitted only when its schema declares a default and its typed value equals that
-default; the strict schema restores it while decoding. A model that declares
-its own serialiser is written in that authored shape. Decimals and dates are JSON
-strings wherever the schema types the field as a decimal or a date.
-Governed-fact atoms are typed ``str | int | Decimal | bool | date``, which JSON
-cannot tell apart, so every non-string atom in an atom position is written as a
-single-key tagged object -- ``{"$decimal": "0.40"}``, ``{"$date":
-"2025-01-01"}``, ``{"$int": 5}``, ``{"$bool": true}`` -- and a string atom stays
-a bare string. The reader decodes under the same typed schema and refuses an
-unknown tag, a malformed or non-canonical payload, an untagged non-string atom,
-and any frame member beyond the three above.
+Product runtime admits only the descriptor-selected SQLite generation and
+decodes addressed immutable components from it. ``AuthorityArtifact`` is the
+development compiler's complete typed handoff into that database builder; the
+repository-only paired JSON benchmark is owned by :mod:`dev.registry.authority_json`.
+This module knows no registry root and provides no eager runtime loader. Its
+private whole-authority frame primitives support only the development baseline.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import re
 from base64 import b64decode, b64encode
 from collections.abc import Callable, Mapping, Sequence
@@ -38,15 +18,12 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, StrEnum
-from pathlib import Path, PurePath
-from threading import Lock, local
+from pathlib import PurePath
 from typing import TYPE_CHECKING, Final, Protocol, cast, get_args
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from ....core.atomic_write import hardened_staged_publication
 from ....core.errors.hierarchy import CadrumoError
-from ....core.file_change_time import file_change_time_ns
 from ....core.frozen_mapping import FrozenMapping
 from ....core.hashing import (
     canonical_json_bytes,
@@ -56,7 +33,7 @@ from ....core.hashing import (
     sha256_hex,
 )
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
-from .errors import RegistryValidationError
+from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from .facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
     FactAtomField,
@@ -107,9 +84,6 @@ __all__ = [
     "authority_query_from_identity",
     "decode_authority_component",
     "encode_authority_component",
-    "read_authority_artifact",
-    "read_shared_authority_artifact",
-    "write_authority_artifact",
 ]
 
 _ARTIFACT_FORMAT: Final = "cadrumo-authority-artifact-v5"
@@ -261,6 +235,9 @@ class AuthorityComponentReader(Protocol):
     def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
         """Load one component from exactly ``pin`` or refuse a stale/cross-reader pin."""
 
+    def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
+        """Return deterministic addresses without hydrating component payloads."""
+
 
 @dataclass(frozen=True, slots=True)
 class ProfileCreateContext:
@@ -313,6 +290,7 @@ def decode_authority_component(
     payload: bytes,
     *,
     dependencies: tuple[object, ...] = (),
+    fact_query_observer: Callable[[GovernedFactQuery], None] | None = None,
 ) -> object:
     """Strictly decode one addressed component using only declared dependencies."""
     try:
@@ -334,7 +312,9 @@ def decode_authority_component(
             fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
             tax_id_format = tax_id_format_from_catalogue(fact_catalogue)
             context = {**_TAGGED_DECODE_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format}
-            with validating_governed_facts(CandidateFactAuthority(fact_catalogue)):
+            candidate = CandidateFactAuthority(fact_catalogue)
+            source = _ObservedFactAuthority(candidate, fact_query_observer) if fact_query_observer else candidate
+            with validating_governed_facts(source):
                 return ModeloRevision.model_validate(document, strict=False, context=context)
         if isinstance(query, ModeloDirectoryComponentQuery):
             return ModeloRevisionDirectory.model_validate(document, strict=False)
@@ -344,7 +324,12 @@ def decode_authority_component(
                 raise AuthorityComponentCodecError(f"unknown runtime catalogue family {query.family!r}")
             return TypeAdapter(field.annotation).validate_python(document, strict=False)
         if isinstance(query, SnapshotGlobalsComponentQuery):
-            return SnapshotGlobalCatalogues.model_validate(document, strict=False)
+            facts = tuple(item for item in dependencies if isinstance(item, GovernedFact))
+            fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
+            candidate = CandidateFactAuthority(fact_catalogue)
+            source = _ObservedFactAuthority(candidate, fact_query_observer) if fact_query_observer else candidate
+            with validating_governed_facts(source):
+                return SnapshotGlobalCatalogues.model_validate(document, strict=False)
         if isinstance(query, ReferenceComponentQuery):
             from .schema_references import LegalReference, SourceReference
 
@@ -371,6 +356,18 @@ def decode_authority_component(
         raise
     except (ValidationError, TypeError, ValueError) as exc:
         raise AuthorityComponentCodecError(f"authority component {query!r} failed typed decoding") from exc
+
+
+@dataclass(frozen=True, slots=True, weakref_slot=True)
+class _ObservedFactAuthority:
+    """Report the exact governed queries exercised by one component decode."""
+
+    authority: CandidateFactAuthority
+    observer: Callable[[GovernedFactQuery], None]
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        self.observer(query)
+        return self.authority.resolve_governed_fact(query)
 
 
 def authority_component_identity(query: AuthorityComponentQuery) -> tuple[AuthorityComponentKind, str]:
@@ -630,8 +627,8 @@ class AuthorityArtifact:
     catalogues: RegistryCatalogues
     identity_digest: str
     build_identity: AuthorityBuildIdentity
+    profile_schema: ProfileSchemaDefinition
     evidence: AuthorityEvidenceProjection = AuthorityEvidenceProjection()
-    profile_schema: ProfileSchemaDefinition | None = None
 
     def __post_init__(self) -> None:
         """Reject partial or untyped content before publication."""
@@ -649,11 +646,10 @@ class AuthorityArtifact:
             raise ValueError("authority generation identity does not match its build receipts")
         if not isinstance(self.evidence, AuthorityEvidenceProjection):
             raise TypeError("authority artifact evidence must be an AuthorityEvidenceProjection")
-        if self.profile_schema is not None:
-            from ...user_profile.schema import ProfileSchemaDefinition
+        from ...user_profile.schema import ProfileSchemaDefinition
 
-            if not isinstance(self.profile_schema, ProfileSchemaDefinition):
-                raise TypeError("authority artifact profile_schema must be a ProfileSchemaDefinition")
+        if not isinstance(self.profile_schema, ProfileSchemaDefinition):
+            raise TypeError("authority artifact profile_schema must be a ProfileSchemaDefinition")
         modelo_ids = tuple(modelo.id for modelo in self.modelos)
         if len(modelo_ids) != len(set(modelo_ids)):
             raise ValueError("authority artifact modelo identities must be unique")
@@ -673,119 +669,6 @@ class AuthorityArtifact:
             source = self.catalogues.sources[item.source_reference_id]
             if item.payload_sha256 != source.sha256 or len(item.payload) != source.bytes:
                 raise ValueError(f"authority artifact source evidence disagrees with catalogue {source.id!r}")
-
-
-def write_authority_artifact(
-    path: Path,
-    artifact: AuthorityArtifact,
-    *,
-    before_replace: Callable[[], None] | None = None,
-) -> None:
-    """Atomically publish ``artifact`` as a digest-checked canonical JSON frame."""
-    if not isinstance(artifact, AuthorityArtifact):
-        raise TypeError("authority artifact writer requires an AuthorityArtifact")
-    encoded = _encode_artifact(artifact)
-    _decode_artifact(encoded)
-    with hardened_staged_publication(path) as publication:
-        with publication.path.open("wb") as handle:
-            handle.write(encoded)
-            handle.flush()
-            os.fsync(handle.fileno())
-        if before_replace is not None:
-            before_replace()
-        publication.publish()
-
-
-def read_authority_artifact(path: Path) -> AuthorityArtifact:
-    """Read, verify and decode a published authority from disk, failing closed without fallback."""
-    try:
-        raw = path.read_bytes()
-    except OSError as exc:
-        raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
-    return _decode_artifact(raw)
-
-
-@dataclass(frozen=True, slots=True)
-class _ArtifactFileIdentity:
-    """What a republication or in-place rewrite of the artifact file changes."""
-
-    device: int
-    inode: int
-    size: int
-    modified_ns: int
-    changed_ns: int
-
-
-_shared_artifact_lock = Lock()
-_shared_artifacts: dict[str, tuple[_ArtifactFileIdentity, AuthorityArtifact]] = {}
-_decoding_artifact = local()
-
-
-def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
-    """Return the published authority at ``path``, decoding it only when the file changed.
-
-    The verified graph is deeply immutable -- every model is frozen and every
-    mapping a :class:`~cadrumo.core.frozen_mapping.FrozenMapping` -- so one
-    instance can be handed to every caller without any of them being able to
-    change what another observes. The file's identity (device, inode, size and
-    modification and change times) is read on every call, so an atomic
-    republication or an in-place rewrite is decoded and verified afresh rather
-    than served stale. A refused read is never cached: a missing or corrupt
-    artifact is refused on every call.
-
-    Decoding validates the document it has just read, and it does so while
-    holding the lock. Anything that validation reaches must therefore not ask
-    for a published artifact: the request would wait on a lock this thread
-    already holds, and the process would stop with no error and no output. That
-    re-entry is refused rather than left to block, because a validator reaching
-    the bundle is a layering defect to fix at its call site, not a lock to make
-    reentrant.
-    """
-    key = str(path.resolve())
-    if getattr(_decoding_artifact, "in_progress", False):
-        raise RegistryValidationError(
-            f"published authority artifact {key} was requested while it was being decoded; "
-            "decoding validates the document under a non-reentrant lock, so this read would "
-            "block forever. Registry validation must resolve its vocabulary from the governed "
-            "facts being validated, never from the published authority artifact",
-        )
-    with _shared_artifact_lock:
-        identity = _artifact_file_identity(path)
-        cached = _shared_artifacts.get(key)
-        if cached is not None and cached[0] == identity:
-            return cached[1]
-        _shared_artifacts.pop(key, None)
-        _decoding_artifact.in_progress = True
-        try:
-            for _ in range(3):
-                artifact = read_authority_artifact(path)
-                observed = _artifact_file_identity(path)
-                if observed == identity:
-                    break
-                identity = observed
-            else:
-                raise AuthorityArtifactUnavailableError("published authority changed repeatedly during admission")
-        finally:
-            _decoding_artifact.in_progress = False
-        if len(_shared_artifacts) >= 32:
-            _shared_artifacts.pop(next(iter(_shared_artifacts)))
-        _shared_artifacts[key] = (identity, artifact)
-        return artifact
-
-
-def _artifact_file_identity(path: Path) -> _ArtifactFileIdentity:
-    try:
-        status = path.stat()
-        changed_ns = file_change_time_ns(path, status)
-    except OSError as exc:
-        raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
-    return _ArtifactFileIdentity(
-        device=status.st_dev,
-        inode=status.st_ino,
-        size=status.st_size,
-        modified_ns=status.st_mtime_ns,
-        changed_ns=changed_ns,
-    )
 
 
 def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
@@ -832,7 +715,7 @@ def _require_current_artifact_format(frame: Mapping[str, object]) -> None:
 
 def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
     """Project all schema fields, including non-rendered identities, into JSON."""
-    document = {
+    return {
         "modelos": [_json_value(modelo) for modelo in artifact.modelos],
         "catalogues": _json_value(artifact.catalogues),
         "identity_digest": artifact.identity_digest,
@@ -860,17 +743,15 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
                 for item in artifact.evidence.sources
             ],
         },
+        "profile_schema": _json_value(artifact.profile_schema),
     }
-    if artifact.profile_schema is not None:
-        document["profile_schema"] = _json_value(artifact.profile_schema)
-    return document
 
 
 def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
     """Rebuild a fresh typed authority graph from digest-checked JSON data."""
     try:
-        required_members = {"modelos", "catalogues", "identity_digest", "build_identity", "evidence"}
-        if set(payload) not in (required_members, required_members | {"profile_schema"}):
+        required_members = {"modelos", "catalogues", "identity_digest", "build_identity", "evidence", "profile_schema"}
+        if set(payload) != required_members:
             raise AuthorityArtifactFormatError("published authority artifact payload has unexpected or missing members")
         modelos_document = _required_sequence(payload, "modelos")
         catalogues_document = _required_mapping(payload, "catalogues")
@@ -878,11 +759,7 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         build_document = _required_mapping(payload, "build_identity")
         _require_members(
             build_document,
-            {
-                "source_identity_digest",
-                "compiler_identity_digest",
-                "component_dependency_digest",
-            },
+            {"source_identity_digest", "compiler_identity_digest", "component_dependency_digest"},
             "build_identity",
         )
         build_identity = AuthorityBuildIdentity(
@@ -911,9 +788,6 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         facts = GovernedFactCatalogue.model_validate(facts_document, strict=False, context=_TAGGED_DECODE_CONTEXT)
         tax_id_format = tax_id_format_from_catalogue(facts)
         decode_context = {**_TAGGED_DECODE_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format}
-        # Registry-owned validators must resolve against the facts in this
-        # document while its typed graph is being rebuilt. Calling the
-        # bundled authority here would re-enter the shared artifact lock.
         with validating_governed_facts(CandidateFactAuthority(facts, authority_digest=identity_digest)):
             modelos = tuple(
                 ModeloDefinition.model_validate(
@@ -947,23 +821,20 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
             )
             for item in _required_sequence(evidence_document, "sources")
         )
-        profile_schema = None
-        if "profile_schema" in payload:
-            from ...user_profile.schema import ProfileSchemaDefinition
+        from ...user_profile.schema import ProfileSchemaDefinition
 
-            profile_schema = ProfileSchemaDefinition.model_validate(payload["profile_schema"], strict=False)
         artifact = AuthorityArtifact(
             modelos=modelos,
             catalogues=catalogues,
             identity_digest=identity_digest,
             build_identity=build_identity,
             evidence=AuthorityEvidenceProjection(legal=legal_evidence, sources=source_evidence),
-            profile_schema=profile_schema,
+            profile_schema=ProfileSchemaDefinition.model_validate(payload["profile_schema"], strict=False),
         )
         artifact.catalogues.runtime.require_complete()
         artifact.require_evidence_closure()
         return artifact
-    except (ValidationError, TypeError, ValueError) as exc:
+    except (CadrumoError, ValidationError, TypeError, ValueError) as exc:
         raise AuthorityArtifactFormatError("published authority artifact has an invalid authority payload") from exc
 
 

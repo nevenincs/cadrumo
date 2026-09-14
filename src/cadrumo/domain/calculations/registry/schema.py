@@ -139,6 +139,7 @@ __all__ = [
 ]
 
 from ....core.filing_year import FilingYear
+from .casilla_structural_succession import CasillaStructuralSuccession, structural_succession_failures
 from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .identifier_evolutions import IdentifierEvolution
@@ -778,6 +779,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
     verification_predicates: Annotated[tuple[VerificationPredicateDefinition, ...], SCHEMA_FAMILY] = ()
     continuidad_validation: ContinuidadValidationModeField = ContinuidadValidationMode.ADVISORY
     casilla_continuidad_evolutions: Annotated[tuple[CasillaContinuidadEvolutionDefinition, ...], CHAIN_FAMILY] = ()
+    casilla_structural_successions: Annotated[tuple[CasillaStructuralSuccession, ...], CHAIN_FAMILY] = ()
     identifier_evolutions: Annotated[tuple[IdentifierEvolution, ...], CHAIN_FAMILY] = ()
     lineage_attestations: Annotated[tuple[LineageAttestation, ...], MANIFEST_ONLY] = Field(
         default=(),
@@ -1148,6 +1150,9 @@ class ModeloDefinition(RegistryModel):
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
         validate_revision_predecessors(self.id, self.revisions)
+        failures = structural_succession_failures(self)
+        if failures:
+            raise RegistryValidationError("; ".join(failures))
         return self
 
 

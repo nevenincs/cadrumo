@@ -22,10 +22,10 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
-from ...calculations.registry.authority import bundled_authority
 from ..errors import DeadlineValidationError
 from ..festivos import (
     MODELOS_WITHOUT_SHIFT,
@@ -44,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _authority():
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 _NATIONAL_HOLIDAY_DATES_2025 = (

@@ -24,9 +24,9 @@ from __future__ import annotations
 import tomllib
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.resources.bundled_data import bundled_path
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.binding_selector_utils import selector_as_dict
 from ..classification import InvoiceKind
 from ..flow import (
@@ -328,7 +328,7 @@ def test_iva_flow_corpus_excerpts_present_with_boe_quotes() -> None:
 def test_iva_flow_load_registry_recognises_three_articles() -> None:
     """The registry tree loader must surface the three LIVA articles in
     the catalogue."""
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     assert "ley-37-1992:art-84" in catalogues.legal
     assert "ley-37-1992:art-88" in catalogues.legal
     assert "ley-37-1992:art-92" in catalogues.legal
@@ -438,7 +438,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     changes, this test fires unless 303's formula updates in lockstep."""
     from ..flow import IvaFlowDirection, is_devengada_flow
 
-    m303 = bundled_authority().modelo("303")
+    m303 = compiled_bundled_authority().modelo("303")
     revision = m303.revisions["2022"]
 
     # Each ledger_iva_aggregation binding declares its flow direction in

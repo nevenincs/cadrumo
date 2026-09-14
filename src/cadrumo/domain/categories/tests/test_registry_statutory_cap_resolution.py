@@ -12,8 +12,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.facts.schema import FactSelector, MappingFactEntry, MappingFactPayload
 from ...calculations.registry.schema_base import DateAxis
@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _resolved_profile_fact(category: SpendingCategory, year: int) -> ResolvedMappingFact:
-    fact = bundled_authority().resolve_governed_fact(
+    fact = compiled_bundled_authority().resolve_governed_fact(
         MappingFactQuery(
             fact_id=CATEGORY_PROFILE_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -58,7 +58,7 @@ def test_year_referenced_cap_outside_its_schedule_is_refused() -> None:
     fact = _resolved_profile_fact(SpendingCategory.MUTUALIDAD_ALTERNATIVA, 2026)
 
     with pytest.raises(CategoryValidationError, match="no dated statutory cap for mutualidad_alternativa/2099"):
-        _profile_from_authority_fact(fact, authority=bundled_authority(), year=2099)
+        _profile_from_authority_fact(fact, authority=compiled_bundled_authority(), year=2099)
 
 
 def test_unknown_cap_variant_field_is_refused_not_dropped() -> None:
@@ -69,7 +69,7 @@ def test_unknown_cap_variant_field_is_refused_not_dropped() -> None:
     )
 
     with pytest.raises(CategoryValidationError, match="unknown cap variant entry"):
-        _profile_from_authority_fact(tampered, authority=bundled_authority(), year=2026)
+        _profile_from_authority_fact(tampered, authority=compiled_bundled_authority(), year=2026)
 
 
 def test_cap_variant_without_an_amount_is_refused() -> None:
@@ -80,4 +80,4 @@ def test_cap_variant_without_an_amount_is_refused() -> None:
     )
 
     with pytest.raises(CategoryValidationError, match="declares no amount"):
-        _profile_from_authority_fact(stripped, authority=bundled_authority(), year=2026)
+        _profile_from_authority_fact(stripped, authority=compiled_bundled_authority(), year=2026)

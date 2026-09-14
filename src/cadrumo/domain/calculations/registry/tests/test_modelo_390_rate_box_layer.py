@@ -34,11 +34,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel
 
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -80,7 +80,7 @@ _UNRATED_BASE = Decimal("330.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _observation(

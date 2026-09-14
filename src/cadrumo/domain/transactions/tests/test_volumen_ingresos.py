@@ -9,10 +9,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.tipos_actividad import TipoActividad
-from ...calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...calculations.registry.authority import ValidatedRegistryAuthority
 from ..tipo_actividad_partitions import tipo_actividad_code_set
 from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
@@ -24,7 +25,7 @@ _ACTIVITY_FACT_ID = "modelo-131:selector-m036-volumen-ingresos-agrario"
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.mark.parametrize(
@@ -86,7 +87,7 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     The governed fact is the sole legal authority for membership.  The enum only
     supplies the product vocabulary used to interpret its declared tokens.
     """
-    fact = bundled_authority().catalogues.facts.facts[_EXCLUDED_FACT]
+    fact = compiled_bundled_authority().catalogues.facts.facts[_EXCLUDED_FACT]
     declared = frozenset(ConceptoIngreso(token) for token in fact.variants[0].payload.entities)
 
     assert declared == {ConceptoIngreso.SUBVENCION_CAPITAL, ConceptoIngreso.INDEMNIZACION}
