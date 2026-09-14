@@ -2705,6 +2705,8 @@ binding = "modelo-390-iva-soportado-interiores-base"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.general"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "Acumulador interno por familia de tipo, sin numero oficial; el diseno aeat-dr-390-2022 declara las cuotas ordinarias por tipo por separado. La observacion 2021 antes enlazada aqui representa una cuota impresa especifica y se enlaza con su sucesora por tipo, no con este acumulador de calculo."
 number = "iva.anual.repercutido.general"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_general"
@@ -2715,6 +2717,8 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.reducido"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "Acumulador interno por familia de tipo, sin numero oficial; el diseno aeat-dr-390-2022 declara las cuotas ordinarias por tipo por separado. La observacion 2021 antes enlazada aqui representa una cuota impresa especifica y se enlaza con su sucesora por tipo, no con este acumulador de calculo."
 number = "iva.anual.repercutido.reducido"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_reducido"
@@ -2725,6 +2729,8 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.super-reducido"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "Acumulador interno por familia de tipo, sin numero oficial; el diseno aeat-dr-390-2022 declara las cuotas ordinarias por tipo por separado. La observacion 2021 antes enlazada aqui representa una cuota impresa especifica y se enlaza con su sucesora por tipo, no con este acumulador de calculo."
 number = "iva.anual.repercutido.super-reducido"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_super_reducido"
@@ -3726,6 +3732,8 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 # Box [06] - "Tipo 21 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.tipo-21.cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-390-2021, T39002000 campo 11, cuota ordinaria [06], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 21 %, misma cuota [06]: misma cuota repercutida al tipo 21 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
 number = "06"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_tipo_21"
@@ -3754,6 +3762,8 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 # Box [04] - "Tipo 10 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.tipo-10.cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-390-2021, T39002000 campo 9, cuota ordinaria [04], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 10 %, misma cuota [04]: misma cuota repercutida al tipo 10 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
 number = "04"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_tipo_10"
@@ -3812,6 +3822,8 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 # Box [02] - "Tipo 4 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.tipo-4.cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-390-2021, T39002000 campo 7, cuota ordinaria [02], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 4 %, misma cuota [02]: misma cuota repercutida al tipo 4 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
 number = "02"
 section = ["iva", "anual", "devengado"]
 semantic_role = "iva_cuota_repercutida_tipo_4"

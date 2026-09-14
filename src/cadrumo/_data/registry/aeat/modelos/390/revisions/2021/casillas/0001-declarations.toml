@@ -6,27 +6,27 @@
 [[revisions."2021".casillas]]
 id = "iva.anual.repercutido.super-reducido"
 number = "02"
-continuidad_id = "iva-cuota-repercutida-super-reducido"
+continuidad_id = "iva-cuota-repercutida-tipo-4"
 section = ["iva", "anual", "devengado"]
-semantic_role = "iva_cuota_repercutida_super_reducido"
+semantic_role = "iva_cuota_repercutida_tipo_4"
 input_kind = "informational"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71"]
 
 [[revisions."2021".casillas]]
 id = "iva.anual.repercutido.reducido"
 number = "04"
-continuidad_id = "iva-cuota-repercutida-reducido"
+continuidad_id = "iva-cuota-repercutida-tipo-10"
 section = ["iva", "anual", "devengado"]
-semantic_role = "iva_cuota_repercutida_reducido"
+semantic_role = "iva_cuota_repercutida_tipo_10"
 input_kind = "informational"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71"]
 
 [[revisions."2021".casillas]]
 id = "iva.anual.repercutido.general"
 number = "06"
-continuidad_id = "iva-cuota-repercutida-general"
+continuidad_id = "iva-cuota-repercutida-tipo-21"
 section = ["iva", "anual", "devengado"]
-semantic_role = "iva_cuota_repercutida_general"
+semantic_role = "iva_cuota_repercutida_tipo_21"
 input_kind = "informational"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71"]
 

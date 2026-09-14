@@ -1173,6 +1173,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 # junio, resto a 0)" -- a 17-byte money slot in the Informacion adicional block,
 # grounded like its siblings [71] [72] [74] [75] on the orden establishing this modelo.
 id = "73"
+continuidad_id = "m322-operaciones-no-sujetas-o-inversion-con-derecho-deduccion"
 number = "73"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_informacion_adicional_operaciones_no_sujetas_o_con_inversion_del_sujeto_pasivo_que_originan_el_derecho_a_deduccion"
