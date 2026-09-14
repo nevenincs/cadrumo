@@ -191,9 +191,7 @@ def convert(source: Path, candidate: Path) -> dict[str, object]:
         raw_current = raw[revision_id]
         if not isinstance(raw_current, Mapping):
             raise RuntimeError(f"revision {revision_id} is not a mapping")
-        predecessor_id = str(
-            raw_current.get("family_storage_baseline") or raw_current["casilla_storage_baseline"]
-        )
+        predecessor_id = str(raw_current.get("family_storage_baseline") or raw_current["casilla_storage_baseline"])
         current = materialise_edition(source, revision_id).table
         predecessor = materialise_edition(source, predecessor_id).table
         revision_dir = candidate / "revisions" / revision_id
@@ -205,12 +203,16 @@ def convert(source: Path, candidate: Path) -> dict[str, object]:
         removals = revision.get("family_removals") or tomlkit.aot()
         positions = revision.get("family_positions") or tomlkit.aot()
         scoped_families = list(revision.get("scoped_families", ()))
-        converted_families = {
-            str(operation.get("family"))
-            for operations in (overrides, removals, positions)
-            for operation in operations
-            if isinstance(operation, Mapping) and operation.get("family") is not None
-        } | set(scoped_families) | set(revision.get("cleared_families", ()))
+        converted_families = (
+            {
+                str(operation.get("family"))
+                for operations in (overrides, removals, positions)
+                for operation in operations
+                if isinstance(operation, Mapping) and operation.get("family") is not None
+            }
+            | set(scoped_families)
+            | set(revision.get("cleared_families", ()))
+        )
         for spec in KEYED_FAMILY_SPECS:
             section_dir = revision_dir / spec.section
             if spec.identity is None or spec.section in converted_families or not section_dir.is_dir():

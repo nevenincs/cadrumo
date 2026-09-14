@@ -3406,11 +3406,7 @@ def migrate_modelo_100_field_deltas(
 
         def effective_dump(value: object) -> object:
             if isinstance(value, Mapping):
-                return {
-                    key: effective_dump(child)
-                    for key, child in value.items()
-                    if key not in representation_only
-                }
+                return {key: effective_dump(child) for key, child in value.items() if key not in representation_only}
             if isinstance(value, list | tuple):
                 return [effective_dump(child) for child in value]
             return value
