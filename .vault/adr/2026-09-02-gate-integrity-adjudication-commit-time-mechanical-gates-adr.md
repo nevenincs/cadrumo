@@ -3,141 +3,150 @@ tags:
   - '#adr'
   - '#gate-integrity-adjudication'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:673eb89c6b987e2715f914628f94ee4178db0fbf9ba6778079e4306a0012fee0'
+body_hash: 'sha256:25206a0f9eba71499ecc1c381d239c8077617b6d2e43fc92ae8bb5e086aa2063'
 related:
   - "[[2026-09-02-gate-integrity-adjudication-tui-entrypoint-contracts-adr]]"
   - '[[2026-09-02-gate-integrity-adjudication-research]]'
+  - '[[2026-09-14-gate-integrity-adjudication-pre-commit-hook-reconsideration-research]]'
+  - '[[2026-09-14-gate-integrity-adjudication-pre-commit-hook-runtime-reference]]'
 ---
-
-# `gate-integrity-adjudication` adr: `mechanical gates stay verify-only and out of commit time` | (**status:** `accepted`)
+# `gate-integrity-adjudication` adr: `commit-time hooks stay uninstalled and repair stays explicit and path-scoped` | (**status:** `accepted`)
 
 ## Problem Statement
 
-Four mechanical gates - formatting, lint style, relative-import shape and
-dependency declaration - have each gone green and regressed repeatedly while
-batches land. Every regression is mechanically fixable, and the repository
-already carries a pre-commit runner configuration, so the natural proposal is to
-give those gates to a commit-time hook and have the fixes applied automatically.
+The accepted decision keeps mechanical gates out of commit time because
+staged-content hook execution can manipulate concurrent worktree state. The
+decision is reopened only to determine whether fast Ruff and ty repair can
+satisfy that safety boundary while remaining non-blocking for residual
+diagnostics.
 
-A decision is needed because the proposal's cost is not visible from the gate
-results. Several agents commit into this worktree concurrently, and a commit-time
-hook is the one gate position that manipulates the working tree of writers who did
-not invoke it.
+The renewed evidence shows that an installed `prek` hook cannot combine
+mutation, no stash/restore, and a successful hook result. This amendment
+preserves the accepted direction and concretizes the safe repair surface
+outside commit time rather than creating a second decision record.
 
 ## Considerations
 
-- The repository already made this decision and recorded it. The runner configuration
-  states that every hook is verify-only, that no autofixer runs at commit time, and
-  that the commit hook script is deliberately not installed.
-- Its recorded rationale is an incident in this repository: the runner's stash and
-  restore step lost work when an autofixing hook modified the staged tree mid-commit and
-  the rollback conflicted with concurrently-edited files in the worktree.
-- That failure mode is not historical. Uncommitted work in this repository was destroyed
-  by a stash on the same day this question was asked, which is independent corroboration
-  of the exact hazard the policy was written against.
-- The stash and restore step is a property of running hooks against staged content, not
-  of autofixing. A verify-only hook set still saves and restores unstaged changes, so
-  installing the hook at all opens the window, and the window is as long as the slowest
-  hook.
-- The formatting and lint gates are already declared in the runner configuration in
-  verify-only form. What is absent is not the gate but the installed commit-time trigger,
-  which is the part that was withheld on purpose.
-- Measured on the live tree, the two currently-red gates report drift in files that other
-  contributors are actively editing. An autofixing hook would have rewritten those files
-  on someone else's commit, which is the one-writer boundary the project's worktree
-  discipline draws.
-- Cost is not the obstacle. Three of the four gates complete in seconds over the whole
-  tree; the relative-import gate is the slow one at roughly forty seconds, and all four
-  are already reachable from the aggregate static gate.
-- The repository already has the shape a cheap pre-commit check would take: a
-  change-scoped verb exists for documentation, bounding work by the change rather than
-  the tree, and one locale gate is written to read committed blobs and write nothing
-  precisely so it stays compatible with the verify-only policy.
+- Installed `prek` execution cannot satisfy the required no-stash and
+  non-failing-mutation contract; see
+  `2026-09-14-gate-integrity-adjudication-pre-commit-hook-reconsideration-research`
+  and
+  `2026-09-14-gate-integrity-adjudication-pre-commit-hook-runtime-reference`.
+- A caller-owned-path action can provide fast mechanical repair without taking
+  ownership of unrelated files or Git state; see the related research.
+- Project-locked local tools avoid a second formatter, linter, or type-tool
+  implementation; see the related reference and `2026-09-11-justfile-design-adr`.
+- Direct ty repair is a mechanical aid, not the repository's authoritative
+  type verdict; see the related research.
+- “Fast” requires an admission threshold rather than a qualitative promise;
+  see the related research and reference.
+- Just, CI, `prek`, and setup must express one consistent ownership boundary.
 
 ## Considered options
 
-**Install the commit hook with autofixers for the four gates.** Rejected. It combines
-both hazards: the stash window, and rewriting files belonging to concurrent writers on a
-commit that did not touch them.
+**Install mutating `prek` hooks and suppress diagnostic failures.** Rejected.
+Tool-level exit flags cannot suppress `prek` failure after file mutation, and
+staged-content execution retains the prohibited save/restore mechanism.
 
-**Install the commit hook, verify-only.** Rejected. It drops the rewrite hazard but keeps
-the stash window, which is the mechanism that has actually destroyed work here, and it
-would block commits on drift a contributor did not introduce.
+**Install verify-only `prek` hooks.** Rejected. Removing mutation does not
+remove staged-content isolation or its Git-state hazard.
 
-**Add the two absent gates to the runner configuration without installing the hook.**
-Rejected as motion without effect. Both already run under the aggregate gate, and adding
-them to an uninstalled hook set changes nothing about when a regression is noticed.
+**Introduce a native index-only Git hook.** Rejected for this decision. It is a
+separate subsystem requiring concurrency, partial-staging, recovery, and
+performance proofs that the current grounding does not provide.
 
-**Reaffirm the policy and add a change-scoped verification recipe.** Chosen. It leaves
-the commit path untouched and gives the operator and agents a seconds-long check over
-only the paths a change touches, which is the moment and the scope at which these
-regressions are actually actionable.
+**Retain only whole-tree repair commands.** Rejected as the near-commit
+workflow. Their scope can include files the caller does not own, and runtime is
+not bounded by the proposed change.
+
+**Keep hooks uninstalled and expose explicit path-scoped repair.** Chosen. It
+preserves the worktree-safety boundary while providing the fast mechanical
+feedback sought by the reconsideration.
 
 ## Constraints
 
-- Any check offered as a pre-commit habit must not manipulate git state. It reads the
-  change and the working tree and writes nothing, so it cannot lose work however it is
-  interrupted.
-- It must be scoped to the paths of the change under inspection. A whole-tree check
-  reports drift owned by other writers and trains its users to ignore it, which is worse
-  than not running.
-- Automatic repair stays a separate, explicitly invoked step. The repository already
-  exposes the repair verbs, and this record does not move them.
+- Project setup, `prek`, and the repair action install no pre-commit hook.
+- The repair action requires explicit caller-owned paths. It validates that
+  every path is inside the current worktree, selects only supported Python
+  files, and never expands scope to the whole tree.
+- The action does not read or mutate the Git index, stage files, stash changes,
+  restore files, rewrite refs, or otherwise alter Git state.
+- The action performs no synchronization, installation, download, or network
+  work. It invokes project-locked tools through `uv run --no-sync`.
+- Eligibility requires a representative warm p95 no greater than two seconds.
+  Work exceeding that ceiling is removed or split, never admitted as a
+  whole-tree or long-running commit-time step.
+- Residual lint or type diagnostics are advisory for repair and do not make a
+  completed repair fail. Invalid input, path refusal, configuration, I/O,
+  process-launch, and internal tool failures remain visible and non-zero.
+- Ty repair requires isolated detector tests proving supported mutation,
+  no-op behavior, residual-diagnostic behavior, and confinement to supplied
+  fixture paths. The shared worktree is never a detector fixture.
+- The complete type gate remains the authoritative CI verdict. Path-scoped ty
+  repair does not claim type-check success.
 
 ## Implementation
 
-The verify-only policy stands, and the commit hook remains uninstalled. Its recorded
-rationale is left in place and is now corroborated rather than revised.
+One quality-tooling owner validates and normalizes the explicit paths once,
+then passes the same eligible set through this fixed sequence:
 
-A change-scoped verification recipe is added beside the existing static gates. It
-resolves the Python paths a change touches against a base reference, and runs the
-formatting, style and relative-import checks over exactly those paths, reporting nothing
-on a clean change. It manipulates no git state, rewrites no file, and its cost is bounded
-by the size of the change rather than the size of the tree, so it is usable as a habit
-immediately before committing.
+1. `ruff check --fix`
+2. `ty check --fix`
+3. `ruff format`
 
-Three of the four gates are covered because each decomposes to a single file: the
-relative-import scanner already accepts explicit paths for exactly this reason. The
-dependency gate is deliberately left out. It is a usage-versus-declaration predicate over
-the whole tree, so a per-path answer would be meaningless, and the aggregate static gate
-already owns it.
+Diagnostic-exit suppression applies only where residual findings must stay
+advisory. Operational failures retain their native meaning and fail the
+aggregate. Formatting remains last because earlier repairs can create
+formatting work.
 
-The recipe is a convenience, not a barrier. Nothing enforces it, which is the point: in a
-worktree with concurrent writers, the enforcement position that would make it binding is
-the same position that has already cost this repository work.
+The root Just surface exposes a focused repair entrypoint beneath the accepted
+`fix-code` contract and delegates sequencing and exit handling to the single
+quality owner. It requires path arguments and neither queries nor changes Git.
+
+CI never runs the mutating action as a gate. It runs the isolated repair
+contract and ty detector tests, while existing full lint, formatting, and
+multi-checker type gates retain verdict authority. Performance eligibility is
+demonstrated by a warm benchmark rather than inferred from one-file timing.
+
+`prek` remains an uninstalled manual replay configuration, not an installation
+or repair authority. Its stale no-stash claim is removed, remote Ruff ownership
+is replaced with the locked local tool, and mutating repair is not enrolled in
+a hook stage.
+
+Repository setup neither installs hooks nor changes `core.hooksPath`. Dormant
+installation code and setup claims implying automatic installation are retired
+or corrected. CI, Just, replay, setup, tests, and contributor guidance are
+reconciled together.
 
 ## Rationale
 
-The decisive fact is that the proposal has been tried here and the outcome is recorded.
-The configuration's own rationale describes work lost to the interaction between an
-autofixing hook and concurrently-edited files, and that same interaction destroyed
-uncommitted work in this repository on the day the question was reopened. A decision to
-install now would be overturning a policy on the strength of the inconvenience it causes
-while ignoring the loss it prevents.
+This is the only evaluated design satisfying every binding condition without a
+new Git subsystem. Explicit paths make ownership an affirmative caller choice;
+locked no-sync execution and one owner prevent Just, replay, and CI from
+drifting.
 
-The concurrency detail is what makes the usual argument fail. A commit-time formatter is
-ordinarily safe because one author owns the tree; here several writers do, so the hook
-would act on a tree its invoker did not author, and the currently-red files demonstrate
-that this is the live case rather than a hypothetical one.
-
-The change-scoped recipe wins because it addresses the actual complaint. The regressions
-persist not because the gates are missing but because the only way to notice one is a
-slow whole-tree run nobody performs between batches. A seconds-long check over the changed
-paths restores the feedback at the moment it is actionable, and it does so from the
-position that carries no risk.
+The two-second warm p95 ceiling prevents convenience from becoming an
+unbounded gate. Advisory residual diagnostics keep repair useful, while
+operational failures remain visible so skipped or broken work is not reported
+as success. CI retains full type authority because path-scoped ty does not
+exercise the complete checker population.
 
 ## Consequences
 
-The commit path stays free of tooling that can lose work, and the one-writer boundary
-holds: no contributor's commit rewrites another's in-flight files.
+Contributors gain a fast repair loop over files they explicitly own, with lint
+repair followed by type repair and final formatting. They must review and stage
+the intended result themselves.
 
-Regressions remain possible, because nothing blocks a commit that introduces one. That is
-accepted deliberately, and the recipe narrows the window in which one goes unnoticed
-rather than closing it.
+Commits remain unblocked by project-installed hooks. A contributor may commit
+residual diagnostics if they ignore local output and CI; that trade-off
+preserves concurrent worktree safety.
 
-The recipe adds a surface that must stay correct as the gates evolve, and it deliberately
-covers only the gates that decompose to changed paths, so it can report clean while a
-whole-tree predicate is red. It is a fast preflight and not a substitute for the aggregate
-gate, and it should not be extended into one.
+Ty repair carries no authority until its isolated safety tests pass. If they
+cannot prove a narrow mutation contract, the ty step stays unavailable while
+Ruff repair remains usable.
+
+The benchmark becomes maintained eligibility evidence. A regression above two
+seconds removes or splits work rather than relaxing the ceiling. Any future
+installed or index-only hook reverses this boundary and requires supersession.

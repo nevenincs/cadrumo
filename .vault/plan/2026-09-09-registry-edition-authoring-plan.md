@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
 modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:d89c6f013c93ddf6770734e6c7be52e49a5792104953d4b8e25495d184326e3d'
+body_hash: 'sha256:dfd9fb198c78accad6be7958e840ca427eb538366773e9dc9f08afc87c5190a9'
 ---
 
 # `registry-edition-authoring` plan
@@ -267,6 +267,7 @@ Restate the screens that inferred what is now stated, retire the two that become
 - [ ] `W04.P09.S32` - [M | opus-medium] Promote the delta-minimality screen from reporting to gating, now that every modelo is migrated and it reports clean. Proof: a planted restated row is refused.; `dev/registry/analysis`.
 - [x] `W04.P09.S53` - [S | opus-medium] Rule on what a governance review stamp covers once editions inherit. The stamp writes declared scalars into the declaring file and is therefore still literally true after migration - but a reviewer signs off on a delta while the compiled edition carries inherited rows the reviewer never saw, so the stamp's SCOPE shrinks silently while its wording does not. Either the stamp states what it covers, or review is defined over the materialised edition. Silence here converts an honest attestation into a misleading one without anyone changing it. The same shape has already been confirmed once on a neighbouring gate: the type-column gate reads derivation records out of a generation manifest, so a hand-authored revision's 1,220 shipped fields are not explained, not pinned and not failing - they are invisible, and the gate covers 32 of 94 shipped revisions while reading as clean. Delta authoring produces stated rather than generated editions, so any gate keyed on manifest presence will read a migrated edition as absent rather than as unchecked. Rule on that too, or migration silently widens the blind spot. Proof: a migrated edition is distinguishable from an unreviewed one by what the stamp says, not by what a reader infers.; `dev/registry/conformance/_stamp.py`.
 - [x] `W04.P09.S70` - Consolidate declaration storage, retire derived source-default controls, elide schema defaults and unchanged delta members, standardize existing edge evidence, and prove complete typed, locale and evidence equality before guarded source publication; `dev/registry compaction and compiler modules, registry modelo trees, targeted tests and audit receipts`.
+- [x] `W04.P09.S71` - Retire campaign-only registry reports, private ledgers and obsolete converters while preserving reusable helpers and current correctness gates; `dev/registry tooling and tests, justfile and generated import-load metadata`.
 
 ### Phase `W04.P10` - Promotion
 

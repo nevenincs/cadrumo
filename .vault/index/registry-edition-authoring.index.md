@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:64a1546223c4436995e97e3bad987de85dc1fdd19ba21f68d5c3dab86220abe1'
+body_hash: 'sha256:abbd9404fbb800c08761418ad58eef9ed7b1739d50fc65244698ec2fda702071'
 related:
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S01]]'
   - '[[2026-09-09-registry-edition-authoring-W01-P01-S02]]'
@@ -58,7 +58,9 @@ related:
   - '[[2026-09-09-registry-edition-authoring-plan]]'
   - '[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]'
   - '[[2026-09-13-registry-edition-authoring-completion-controls-audit]]'
+  - '[[2026-09-14-registry-edition-authoring-maintained-tooling-boundary-reference]]'
   - '[[2026-09-14-registry-edition-authoring-minimal-storage-implementation-audit]]'
+  - '[[2026-09-14-registry-edition-authoring-tooling-retirement-audit]]'
 ---
 
 # `registry-edition-authoring` feature index
@@ -75,6 +77,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 
 - `2026-09-13-registry-edition-authoring-completion-controls-audit` - `registry-edition-authoring` audit: `Registry completion controls and architectural unblock`
 - `2026-09-14-registry-edition-authoring-minimal-storage-implementation-audit` - `registry-edition-authoring` audit: `Minimal registry storage implementation`
+- `2026-09-14-registry-edition-authoring-tooling-retirement-audit` - `registry-edition-authoring` audit: `Registry tooling retirement`
 
 ### exec
 
@@ -130,6 +133,7 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 ### reference
 
 - `2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference` - `registry-edition-authoring` reference: `code shape and blast radius`
+- `2026-09-14-registry-edition-authoring-maintained-tooling-boundary-reference` - `registry-edition-authoring` reference: `Maintained registry tooling boundary`
 
 ### research
 

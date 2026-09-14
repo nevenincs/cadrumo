@@ -8,9 +8,12 @@ related:
   - '[[2026-09-11-justfile-design-adr]]'
   - '[[2026-09-11-justfile-design-research]]'
   - '[[2026-09-11-justfile-design-audit]]'
-modified: '2026-09-12'
+  - '[[2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr]]'
+  - '[[2026-09-14-gate-integrity-adjudication-pre-commit-hook-reconsideration-research]]'
+  - '[[2026-09-14-gate-integrity-adjudication-pre-commit-hook-runtime-reference]]'
+modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:73446f1b53963223f07ef40732f14f78ab7da3a9b8b7db47c0a3192d40425205'
+body_hash: 'sha256:97d422a0a71137402d631724743477f7c2900b1550c3062109575f85ab753732'
 ---
 
 <!-- RETIRED: P07 -->
@@ -28,6 +31,10 @@ disjoint semantic and justfile-section ownership: environment/code quality, regi
 tests/packaging/artifacts, and documentation/domain operations. W05 integrates those
 surfaces, migrates callers, removes old aliases and the connected RAG surface, then
 proves taxonomy, population, registry, and decision closure.
+
+The amended gate-integrity-adjudication decision governs `W05.P14.S37`: commit hooks
+remain uninstalled while a caller-owned-path repair action, manual-only replay,
+truthful setup behavior, and CI/Just contract proofs are reconciled as one surface.
 
 The plan preserves the existing determinism-based CI verdict constraint and immutable
 runtime-authority boundary without re-deciding them. It introduces no legacy
@@ -145,6 +152,7 @@ After all four agent lanes land, reconcile their disjoint justfile sections, mig
 
 Integrate the four lane-owned subject aggregates into explicit connected local and hosted-policy gate surfaces after their public names stabilize.
 
+- [ ] `W05.P14.S37` - Implement explicit path-scoped Ruff/ty/format repair, keep prek replay manual-only, reconcile setup claims, and prove Just/CI dispatch; `developer-tooling repair and replay surface`.
 - [ ] `W05.P14.S73` - Declare gate-local network prerequisites and keep subject check aggregates portable; `justfile`.
 - [ ] `W05.P14.S77` - Integrate the four independently edited justfile sections and resolve cross-section dependencies; `justfile`.
 - [ ] `W05.P14.S75` - Compose the four lane-owned subject aggregates into the connected local gate with explicit exclusions; `justfile`.
@@ -157,7 +165,6 @@ Move hosted workflows and hook configuration to subject aggregates and explicit 
 - [ ] `W05.P08.S34` - Replace per-push recipe calls with the approved subject aggregates and gate contract; `.github/workflows/ci.yml`.
 - [ ] `W05.P08.S35` - Replace dispatch-only recipe calls with explicit capability and artifact lanes; `.github/workflows/ci-full.yml`.
 - [ ] `W05.P08.S36` - Update release and documentation workflow callers to truthful build deploy and release verbs; `.github/workflows`.
-- [ ] `W05.P08.S37` - Keep pre-commit hooks verify-only while moving them to canonical leaf checks; `prek.toml`.
 - [ ] `W05.P08.S65` - Inventory every tracked caller of current recipe names before any alias removal; `repository`.
 
 ### Phase `W05.P09` - migrate contributor documentation
@@ -215,6 +222,9 @@ gate composition. S66 then proves caller absence before S42-S46 remove legacy su
 the justfile removals S42-S44 are serialized, while implementation removals S45-S46 may
 proceed independently. P11 follows every removal.
 
+`W05.P14.S37` runs first in W05 because later gate, workflow, and caller migration work
+must consume its settled repair/replay boundary rather than the stale hook contract.
+
 ## Verification
 
 - Every public recipe has one documented posture and subject; no `dev-*`, ambiguous
@@ -242,6 +252,14 @@ proceed independently. P11 follows every removal.
   surfaces are absent with no replacement alias.
 - Workflows, hooks, contributor documentation, and release guidance reference only the
   replacement surface.
+- Project setup installs no commit hook and changes no Git configuration; manual `prek`
+  replay uses project-locked tools and is never the mutation owner.
+- Path-scoped repair validates explicit in-worktree Python paths, runs Ruff lint repair,
+  tested ty repair, and Ruff formatting in that order, and never stages or stashes.
+- Residual diagnostics are advisory while invalid input and operational tool failures
+  remain non-zero; the authoritative full type verdict remains in CI.
+- A maintained representative benchmark keeps the complete warm repair action at or
+  below the two-second p95 eligibility ceiling.
 - The two retired justfile ADRs remain superseded by the accepted justfile-design ADR;
   the Vaultspec graph and lifecycle-document checks report no new feature-local errors.
 - Every Step is closed with a corresponding execution record before the plan is marked

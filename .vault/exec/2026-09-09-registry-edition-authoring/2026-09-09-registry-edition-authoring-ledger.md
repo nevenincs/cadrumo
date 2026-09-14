@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ad748d4823795337045176a1fd5d0f149333af13712aed1f858ee3beb6cd6c6'
+body_hash: 'sha256:ea5aaf730d41808f514b44008ce607ef9a2a724e7c9de9f11ef0e5abb314e804'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
@@ -21478,6 +21478,46 @@ related:
 - `S70` `A` `.logs/audit-runs/2026-09-14/registry-storage-proof.json`
 - `S70` `A` `.logs/audit-runs/2026-09-14/registry-storage-fields.json`
 - `S70` `A` `.logs/audit-runs/2026-09-14/registry-storage-overview.md`
+- `S71` `D` `dev/registry/analysis/edition_delta_status.py`
+- `S71` `D` `dev/registry/analysis/chain_contiguity.py`
+- `S71` `D` `dev/registry/analysis/edition_field_census.py`
+- `S71` `D` `dev/registry/analysis/predecessor_cause_census.py`
+- `S71` `D` `dev/registry/analysis/none_root_cause_ruling.py`
+- `S71` `D` `dev/registry/analysis/root_demotion_verdicts.toml`
+- `S71` `D` `dev/registry/analysis/coverage_dispositions.py`
+- `S71` `D` `dev/registry/analysis/coverage_dispositions.toml`
+- `S71` `D` `dev/registry/analysis/retire_served_dispositions.py`
+- `S71` `D` `dev/registry/analysis/tests/test_edition_delta_status.py`
+- `S71` `D` `dev/registry/analysis/tests/test_edition_delta_readiness.py`
+- `S71` `D` `dev/registry/analysis/tests/test_chain_contiguity.py`
+- `S71` `D` `dev/registry/analysis/tests/test_edition_field_census.py`
+- `S71` `D` `dev/registry/analysis/tests/test_none_root_cause_ruling.py`
+- `S71` `D` `dev/registry/convert_binding_provider_shape.py`
+- `S71` `D` `dev/registry/fix_binding_row_set_contracts.py`
+- `S71` `D` `dev/registry/rename_formula_binding_identifiers.py`
+- `S71` `D` `dev/registry/result_disposition_fragment_generator.py`
+- `S71` `D` `dev/registry/tests/test_convert_binding_provider_shape.py`
+- `S71` `D` `dev/registry/tests/test_fix_binding_row_set_contracts.py`
+- `S71` `D` `dev/registry/tests/test_result_disposition_fragment_generator.py`
+- `S71` `D` `dev/registry/tests/test_binding_span_strip.py`
+- `S71` `D` `dev/registry/tests/test_modelo_714_residual_naming.py`
+- `S71` `D` `dev/registry/tests/test_rename_edition_year_collapse.py`
+- `S71` `D` `dev/registry/tests/test_rename_family_identifier_collapse.py`
+- `S71` `D` `dev/registry/tests/test_rename_foreign_edition_token.py`
+- `S71` `D` `dev/registry/tests/test_rename_span_strip.py`
+- `S71` `D` `dev/registry/tests/fixtures/modelo-714-residual-binding-renames.json`
+- `S71` `D` `dev/registry/absorb_relations_into_bindings.py`
+- `S71` `D` `dev/registry/tests/test_absorb_relations_into_bindings.py`
+- `S71` `M` `justfile`
+- `S71` `M` `dev/quality/metadata/import_load_targets.json`
+- `S71` `M` `dev/registry/bindings.py`
+- `S71` `M` `dev/registry/tests/test_binding_registration_corpus_gate.py`
+- `S71` `M` `dev/tests/test_dev_cli_justfile_wiring.py`
+- `S71` `A` `dev/registry/identifier_edition.py`
+- `S71` `A` `dev/registry/tests/test_identifier_edition.py`
+- `S71` `A` `dev/registry/tests/test_record_design_provenance.py`
+- `S71` `A` `.logs/audit-runs/2026-09-14/registry-tooling-retirement-backup.json`
+- `S71` `A` `.logs/audit-runs/2026-09-14/registry-tooling-retirement.md`
 
 ## Notes
 

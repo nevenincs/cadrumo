@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-13'
+modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:48f0630fb5d1600084b557c0fd4feef82ec0c37224c3c325b785880ae359d5cb'
+body_hash: 'sha256:495a64d27d776ce59c2f03e7cc7c7f87ea130e778b2afd0da7abc1b51e1add1e'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-W01-P01-S01]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W01-P02-S02]]'
@@ -56,6 +56,7 @@ related:
   - '[[2026-09-12-registry-authority-artifact-boundary-typed-runtime-catalogues-audit]]'
   - '[[2026-09-13-registry-authority-artifact-boundary-installed-v4-boundary-proof-audit]]'
   - '[[2026-09-13-registry-authority-artifact-boundary-v4-artifact-regeneration-audit]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]'
 ---
 
 # `registry-authority-artifact-boundary` feature index
@@ -125,6 +126,7 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 
 - `2026-09-12-registry-authority-artifact-boundary-installed-behavioral-proof-reference` - `registry-authority-artifact-boundary` reference: `installed behavioral proof`
 - `2026-09-12-registry-authority-artifact-boundary-tax-id-bootstrap-boundary-reference` - `registry-authority-artifact-boundary` reference: `tax id bootstrap boundary`
+- `2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference` - `registry-authority-artifact-boundary` reference: `Post-delta authority backend architecture review`
 
 ### research
 
