@@ -72,10 +72,10 @@ def _criteria(**overrides: object) -> IvaInvoiceClassificationCriteria:
     """Build criteria for a cross-border B2B operation, overriding one axis at a time."""
     base: dict[str, object] = {
         "transaction_date": _DATE,
-        "issuer_residency": IvaTerritorialScope.ES_MAINLAND,
-        "customer_residency": IvaTerritorialScope.EU_MEMBER,
-        "customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
-        "kind": TransactionKind.GOODS,
+        "issuer_residency": IvaTerritorialScope._from_registry("es_mainland"),
+        "customer_residency": IvaTerritorialScope._from_registry("eu_member"),
+        "customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        "kind": TransactionKind("goods"),
         "direction": InvoiceKind.ISSUED,
     }
     base.update(overrides)
@@ -97,12 +97,12 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
         """
         result = classify_iva(
             _criteria(
-                customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-                customer_identification_state=EUMemberState.DE,
+                customer_residency=IvaTerritorialScope._from_registry("third_country"),
+                customer_identification_state=EUMemberState._from_registry("de"),
             ),
         )
 
-        assert result.category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+        assert result.category == IvaCategory("intra_community_supply")
         assert result.matched_rule_id == "R10_intra_community_supply"
 
     def test_an_acquirer_with_no_identification_is_never_exempted(self) -> None:
@@ -115,14 +115,14 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
         """
         result = classify_iva(_criteria())
 
-        assert result.category is not IvaCategory.INTRA_COMMUNITY_SUPPLY
+        assert result.category != IvaCategory("intra_community_supply")
         assert result.matched_rule_id == _R99
 
     def test_a_spanish_identification_is_not_another_member_state(self) -> None:
         """The statute names Spain as the excluded State: "distinto del Reino de España"."""
-        result = classify_iva(_criteria(customer_identification_state=EUMemberState.ES))
+        result = classify_iva(_criteria(customer_identification_state=EUMemberState._from_registry("es")))
 
-        assert result.category is not IvaCategory.INTRA_COMMUNITY_SUPPLY
+        assert result.category != IvaCategory("intra_community_supply")
         assert result.matched_rule_id == _R99
 
 
@@ -132,26 +132,26 @@ class TestTheAcquisitionFollowsTheSuppliersRegistration:
     def test_a_supplier_identified_elsewhere_reverse_charges_though_established_outside_the_union(self) -> None:
         result = classify_iva(
             _criteria(
-                issuer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-                issuer_identification_state=EUMemberState.DE,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
+                issuer_residency=IvaTerritorialScope._from_registry("third_country"),
+                issuer_identification_state=EUMemberState._from_registry("de"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
                 direction=InvoiceKind.RECEIVED,
             ),
         )
 
-        assert result.category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
+        assert result.category == IvaCategory("intra_community_acquisition_reverse_charge")
         assert result.requires_reverse_charge is True
 
     def test_a_supplier_with_no_identification_is_never_an_intra_community_acquisition(self) -> None:
         result = classify_iva(
             _criteria(
-                issuer_residency=IvaTerritorialScope.EU_MEMBER,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
+                issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
                 direction=InvoiceKind.RECEIVED,
             ),
         )
 
-        assert result.category is not IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
+        assert result.category != IvaCategory("intra_community_acquisition_reverse_charge")
         assert result.matched_rule_id == _R99
 
 
@@ -168,27 +168,27 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
     """
 
     def test_an_outbound_service_with_no_counterparty_identification_does_not_place(self) -> None:
-        result = classify_iva(_criteria(kind=TransactionKind.SERVICES_GENERAL))
+        result = classify_iva(_criteria(kind=TransactionKind("services_general")))
 
         assert result.matched_rule_id == _R99
 
     def test_an_outbound_service_places_once_the_counterparty_is_identified(self) -> None:
         result = classify_iva(
             _criteria(
-                kind=TransactionKind.SERVICES_GENERAL,
-                customer_identification_state=EUMemberState.FR,
+                kind=TransactionKind("services_general"),
+                customer_identification_state=EUMemberState._from_registry("fr"),
             ),
         )
 
         assert result.matched_rule_id == "R12_services_b2b_eu_outbound"
-        assert result.category is IvaCategory.DOMESTIC_NOT_SUBJECT
+        assert result.category == IvaCategory("domestic_not_subject")
 
     def test_an_inbound_service_with_no_supplier_identification_does_not_place(self) -> None:
         result = classify_iva(
             _criteria(
-                issuer_residency=IvaTerritorialScope.EU_MEMBER,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
-                kind=TransactionKind.SERVICES_GENERAL,
+                issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                kind=TransactionKind("services_general"),
                 direction=InvoiceKind.RECEIVED,
             ),
         )
@@ -198,16 +198,16 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
     def test_an_inbound_service_places_once_the_supplier_is_identified(self) -> None:
         result = classify_iva(
             _criteria(
-                issuer_residency=IvaTerritorialScope.EU_MEMBER,
-                issuer_identification_state=EUMemberState.FR,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
-                kind=TransactionKind.SERVICES_GENERAL,
+                issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                issuer_identification_state=EUMemberState._from_registry("fr"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                kind=TransactionKind("services_general"),
                 direction=InvoiceKind.RECEIVED,
             ),
         )
 
         assert result.matched_rule_id == "R13_services_b2b_eu_inbound"
-        assert result.category is IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
+        assert result.category == IvaCategory("intra_community_service_acquisition_reverse_charge")
 
 
 class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
@@ -225,15 +225,15 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
         [
             (
                 "R10_intra_community_supply",
-                {"customer_identification_state": EUMemberState.DE},
+                {"customer_identification_state": EUMemberState._from_registry("de")},
                 "customer_identification_state",
             ),
             (
                 "R11_intra_community_acquisition",
                 {
-                    "issuer_residency": IvaTerritorialScope.EU_MEMBER,
-                    "issuer_identification_state": EUMemberState.DE,
-                    "customer_residency": IvaTerritorialScope.ES_MAINLAND,
+                    "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
+                    "issuer_identification_state": EUMemberState._from_registry("de"),
+                    "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
                     "direction": InvoiceKind.RECEIVED,
                 },
                 "issuer_identification_state",
@@ -241,18 +241,18 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
             (
                 "R12_services_b2b_eu_outbound",
                 {
-                    "kind": TransactionKind.SERVICES_GENERAL,
-                    "customer_identification_state": EUMemberState.DE,
+                    "kind": TransactionKind("services_general"),
+                    "customer_identification_state": EUMemberState._from_registry("de"),
                 },
                 "customer_identification_state",
             ),
             (
                 "R13_services_b2b_eu_inbound",
                 {
-                    "issuer_residency": IvaTerritorialScope.EU_MEMBER,
-                    "issuer_identification_state": EUMemberState.DE,
-                    "customer_residency": IvaTerritorialScope.ES_MAINLAND,
-                    "kind": TransactionKind.SERVICES_GENERAL,
+                    "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
+                    "issuer_identification_state": EUMemberState._from_registry("de"),
+                    "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
+                    "kind": TransactionKind("services_general"),
                     "direction": InvoiceKind.RECEIVED,
                 },
                 "issuer_identification_state",
@@ -299,7 +299,7 @@ _SPANISH_IVA = "ESB12345674"
 
 def test_a_spanish_iva_number_now_states_its_identification() -> None:
     """The measured gap: the filer's own side was only ever assertable."""
-    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState._from_registry("es")
 
 
 @pytest.mark.parametrize(
@@ -309,7 +309,7 @@ def test_a_spanish_iva_number_now_states_its_identification() -> None:
 )
 def test_the_printed_spelling_does_not_change_the_identification(printed: str) -> None:
     """An issuer prints the same number several ways; it is one identification."""
-    assert identification_state_for_printed_tax_identifier(printed) is EUMemberState.ES
+    assert identification_state_for_printed_tax_identifier(printed) is EUMemberState._from_registry("es")
 
 
 def test_stating_an_identification_states_no_establishment() -> None:
@@ -320,7 +320,7 @@ def test_stating_an_identification_states_no_establishment() -> None:
     and established elsewhere. So a Spanish prefix must reach the identification
     axis without opening the postal rung behind it.
     """
-    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState._from_registry("es")
     assert country_code_for_printed_tax_identifier(_SPANISH_IVA) is None
 
 
@@ -352,7 +352,7 @@ def test_an_es_prefix_over_a_body_that_fails_the_checksum_states_nothing(printed
 
 def test_the_sibling_prefixes_are_unaffected() -> None:
     """Adding ES must not disturb the vocabulary it could not join."""
-    assert identification_state_for_printed_tax_identifier("DE811234567") is EUMemberState.DE
+    assert identification_state_for_printed_tax_identifier("DE811234567") is EUMemberState._from_registry("de")
     assert country_code_for_printed_tax_identifier("DE811234567") == "DE"
 
 
@@ -370,7 +370,7 @@ def test_the_checksum_is_what_admits_the_spanish_number() -> None:
 
     assert _prefix_alone("ESFRANCISCO")
     assert identification_state_for_printed_tax_identifier("ESFRANCISCO") is None
-    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState._from_registry("es")
 
 
 # -- the outbound non-peninsular branch -------------------------------------
@@ -388,11 +388,11 @@ def test_the_checksum_is_what_admits_the_spanish_number() -> None:
 def _outbound(customer: IvaTerritorialScope, kind: TransactionKind) -> IvaCategory:
     return classify_iva(
         IvaInvoiceClassificationCriteria(
-            issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
             customer_residency=customer,
             kind=kind,
             direction=InvoiceKind.ISSUED,
-            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+            customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
             transaction_date=date(2026, 3, 11),
         ),
     ).category
@@ -400,7 +400,7 @@ def _outbound(customer: IvaTerritorialScope, kind: TransactionKind) -> IvaCatego
 
 @pytest.mark.parametrize(
     "customer",
-    [IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA],
+    [IvaTerritorialScope._from_registry("es_canarias"), IvaTerritorialScope._from_registry("es_ceuta_melilla")],
     ids=["canarias", "ceuta-y-melilla"],
 )
 def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
@@ -412,12 +412,12 @@ def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
     and Melilla sit outside the customs union and Canarias does not -- which
     separates them for a customs question and not for this one.
     """
-    assert _outbound(customer, TransactionKind.GOODS) is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert _outbound(customer, TransactionKind("goods")) == IvaCategory("export_third_country_zero_rated")
 
 
 @pytest.mark.parametrize(
     "customer",
-    [IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA],
+    [IvaTerritorialScope._from_registry("es_canarias"), IvaTerritorialScope._from_registry("es_ceuta_melilla")],
     ids=["canarias", "ceuta-y-melilla"],
 )
 def test_services_leaving_the_tai_are_not_subject_rather_than_exempt(
@@ -431,19 +431,17 @@ def test_services_leaving_the_tai_are_not_subject_rather_than_exempt(
     different Modelo 303 consequence, which is why one predicate feeds two rows
     rather than one row covering both.
     """
-    assert _outbound(customer, TransactionKind.SERVICES_GENERAL) is IvaCategory.OPERACION_NO_SUJETA
+    assert _outbound(customer, TransactionKind("services_general")) == IvaCategory("operacion_no_sujeta")
 
 
 def test_a_third_country_customer_is_unaffected() -> None:
     """The rows these territories joined must keep answering as they did."""
-    assert (
-        _outbound(IvaTerritorialScope.THIRD_COUNTRY, TransactionKind.GOODS)
-        is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert _outbound(IvaTerritorialScope._from_registry("third_country"), TransactionKind("goods")) == IvaCategory(
+        "export_third_country_zero_rated"
     )
-    assert (
-        _outbound(IvaTerritorialScope.THIRD_COUNTRY, TransactionKind.SERVICES_GENERAL)
-        is IvaCategory.OPERACION_NO_SUJETA
-    )
+    assert _outbound(
+        IvaTerritorialScope._from_registry("third_country"), TransactionKind("services_general")
+    ) == IvaCategory("operacion_no_sujeta")
 
 
 def test_the_population_used_to_classify_as_nothing_at_all() -> None:
@@ -455,10 +453,12 @@ def test_the_population_used_to_classify_as_nothing_at_all() -> None:
     """
 
     def _third_country_only(customer: IvaTerritorialScope) -> bool:
-        return customer is IvaTerritorialScope.THIRD_COUNTRY
+        return customer is IvaTerritorialScope._from_registry("third_country")
 
-    assert not _third_country_only(IvaTerritorialScope.ES_CANARIAS)
-    assert _outbound(IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS) is not IvaCategory.UNKNOWN
+    assert not _third_country_only(IvaTerritorialScope._from_registry("es_canarias"))
+    assert _outbound(IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods")) != IvaCategory(
+        "unknown"
+    )
 
 
 # -- a peninsular rate charged to a non-peninsular customer ------------------
@@ -481,10 +481,10 @@ def test_the_population_used_to_classify_as_nothing_at_all() -> None:
 @pytest.mark.parametrize(
     ("customer", "kind"),
     [
-        (IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS),
-        (IvaTerritorialScope.ES_CANARIAS, TransactionKind.SERVICES_GENERAL),
-        (IvaTerritorialScope.ES_CEUTA_MELILLA, TransactionKind.GOODS),
-        (IvaTerritorialScope.ES_CEUTA_MELILLA, TransactionKind.SERVICES_GENERAL),
+        (IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods")),
+        (IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("services_general")),
+        (IvaTerritorialScope._from_registry("es_ceuta_melilla"), TransactionKind("goods")),
+        (IvaTerritorialScope._from_registry("es_ceuta_melilla"), TransactionKind("services_general")),
     ],
     ids=["canarias-goods", "canarias-services", "ceuta-melilla-goods", "ceuta-melilla-services"],
 )
@@ -505,7 +505,7 @@ def test_the_resolved_treatment_admits_no_cuota_at_all(
 
 def test_a_domestic_treatment_is_not_cuota_less_so_the_check_stays_narrow() -> None:
     """The precision half: the contradiction must not fire on ordinary invoices."""
-    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL, InvoiceKind.ISSUED)
+    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
 
 
 def test_the_charged_rate_never_places_the_customer() -> None:
@@ -517,9 +517,9 @@ def test_the_charged_rate_never_places_the_customer() -> None:
     silently reclassify the operation as domestic and the contradiction would
     never be raised, which is the failure this ordering exists to prevent.
     """
-    canarian = _outbound(IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS)
-    peninsular_customer_would_be_domestic = IvaTerritorialScope.ES_MAINLAND
+    canarian = _outbound(IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods"))
+    peninsular_customer_would_be_domestic = IvaTerritorialScope._from_registry("es_mainland")
 
-    assert canarian is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
-    assert canarian is not IvaCategory.DOMESTIC_GENERAL
-    assert peninsular_customer_would_be_domestic is not IvaTerritorialScope.ES_CANARIAS
+    assert canarian == IvaCategory("export_third_country_zero_rated")
+    assert canarian != IvaCategory("domestic_general")
+    assert peninsular_customer_would_be_domestic is not IvaTerritorialScope._from_registry("es_canarias")

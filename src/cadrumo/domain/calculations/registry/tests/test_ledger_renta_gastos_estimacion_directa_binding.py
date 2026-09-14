@@ -125,32 +125,32 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     observations = (
         _expense_observation(
             "tx-ss",
-            category=SpendingCategory.CUOTAS_AUTONOMOS_SS,
+            category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
             gross_amount=Decimal("300.00"),
         ),
         _expense_observation(
             "tx-fiscal",
-            category=SpendingCategory.ASESORIA_FISCAL,
+            category=SpendingCategory._from_registry("asesoria_fiscal"),
             gross_amount=Decimal("121.00"),
         ),
         _expense_observation(
             "tx-contable",
-            category=SpendingCategory.ASESORIA_CONTABLE,
+            category=SpendingCategory._from_registry("asesoria_contable"),
             gross_amount=Decimal("79.00"),
         ),
         _expense_observation(
             "tx-software",
-            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            category=SpendingCategory._from_registry("software_suscripcion"),
             gross_amount=Decimal("360.00"),
         ),
         _expense_observation(
             "tx-material",
-            category=SpendingCategory.MATERIAL_OFICINA,
+            category=SpendingCategory._from_registry("material_oficina"),
             gross_amount=Decimal("240.00"),
         ),
         _expense_observation(
             "tx-marketing",
-            category=SpendingCategory.PUBLICIDAD_MARKETING,
+            category=SpendingCategory._from_registry("publicidad_marketing"),
             gross_amount=Decimal("180.00"),
         ),
     )
@@ -380,12 +380,12 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> N
 
     routed = _expense_observation(
         "tx-ss",
-        category=SpendingCategory.CUOTAS_AUTONOMOS_SS,  # routes to 0186 (the only binding)
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),  # routes to 0186 (the only binding)
         gross_amount=Decimal("300.00"),
     )
     unrouted = _expense_observation(
         "tx-fiscal",
-        category=SpendingCategory.ASESORIA_FISCAL,  # routes to 0199 — no binding on this revision
+        category=SpendingCategory._from_registry("asesoria_fiscal"),  # routes to 0199 — no binding on this revision
         gross_amount=Decimal("121.00"),
     )
     assert routed.target_casilla_id == _M100_GASTO_SS_CASILLA
@@ -408,7 +408,7 @@ def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
 
     zero_unrouted = _expense_observation(
         "tx-zero-ratio",
-        category=SpendingCategory.ASESORIA_FISCAL,
+        category=SpendingCategory._from_registry("asesoria_fiscal"),
         gross_amount=Decimal("121.00"),
         taxable_base=Decimal("0"),
         iva_amount=Decimal("121.00"),

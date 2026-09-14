@@ -277,14 +277,14 @@ def test_art_104_tres_exclusion_roundtrips_for_judgment_exclusion() -> None:
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "art_104_tres_exclusion": Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
+            "art_104_tres_exclusion": Art104TresExclusion("non_habitual_real_estate_or_financial"),
         },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
+    assert restored.art_104_tres_exclusion is Art104TresExclusion("non_habitual_real_estate_or_financial")
 
 
 def test_concepto_ingreso_roundtrips_for_an_excluded_concept() -> None:
@@ -301,14 +301,14 @@ def test_concepto_ingreso_roundtrips_for_an_excluded_concept() -> None:
             "group_label": None,
             "source_jurisdiction": "ES",
             "tipo_actividad": TipoActividad.B01_AGRICOLA,
-            "concepto_ingreso": ConceptoIngreso.SUBVENCION_CAPITAL,
+            "concepto_ingreso": ConceptoIngreso._from_registry("subvencion_capital"),
         },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.concepto_ingreso is ConceptoIngreso.SUBVENCION_CAPITAL
+    assert restored.concepto_ingreso is ConceptoIngreso._from_registry("subvencion_capital")
 
 
 def test_concepto_ingreso_dropped_from_the_payload_surfaces_as_inequality() -> None:
@@ -326,7 +326,7 @@ def test_concepto_ingreso_dropped_from_the_payload_surfaces_as_inequality() -> N
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "concepto_ingreso": ConceptoIngreso.SUBVENCION_CAPITAL,
+            "concepto_ingreso": ConceptoIngreso._from_registry("subvencion_capital"),
         },
     )
     storage_payload = json.loads(original.model_dump_json())
@@ -348,7 +348,7 @@ def test_concepto_ingreso_rejects_a_token_outside_the_closed_set() -> None:
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "concepto_ingreso": ConceptoIngreso.SUBVENCION_CAPITAL,
+            "concepto_ingreso": ConceptoIngreso._from_registry("subvencion_capital"),
         },
     )
     storage_payload = json.loads(original.model_dump_json())
@@ -434,7 +434,7 @@ def test_art_104_tres_exclusion_rejects_auto_derived_operator_tag() -> None:
                 "direction": TransactionDirection.INCOMING,
                 "group_label": None,
                 "source_jurisdiction": "ES",
-                "art_104_tres_exclusion": Art104TresExclusion.NON_SUBJECT_ART_7,
+                "art_104_tres_exclusion": Art104TresExclusion("non_subject_art_7"),
             },
         )
 
@@ -452,11 +452,11 @@ def test_art_104_tres_exclusion_rejects_tampered_auto_derived_value_on_load() ->
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "art_104_tres_exclusion": Art104TresExclusion.FOREIGN_PERMANENT_ESTABLISHMENT,
+            "art_104_tres_exclusion": Art104TresExclusion("foreign_permanent_establishment"),
         },
     )
     storage_payload = json.loads(original.model_dump_json())
-    storage_payload["art_104_tres_exclusion"] = Art104TresExclusion.DIRECT_IVA_CUOTAS.value
+    storage_payload["art_104_tres_exclusion"] = Art104TresExclusion("direct_iva_cuotas").value
 
     with pytest.raises(ValidationError, match="art_104_tres_exclusion is operator-declared only"):
         Transaction.model_validate_json(json.dumps(storage_payload))
@@ -474,14 +474,14 @@ def test_input_classification_roundtrips_for_especial_common_use() -> None:
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "input_classification": InputClassification.COMMON,
+            "input_classification": InputClassification._from_registry("common"),
         },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.input_classification is InputClassification.COMMON
+    assert restored.input_classification is InputClassification._from_registry("common")
 
 
 def test_input_classification_rejects_unknown_member_on_load() -> None:
@@ -492,7 +492,7 @@ def test_input_classification_rejects_unknown_member_on_load() -> None:
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "input_classification": InputClassification.EXCLUSIVELY_DEDUCTIBLE,
+            "input_classification": InputClassification._from_registry("exclusively_deductible"),
         },
     )
     storage_payload = json.loads(original.model_dump_json())
@@ -554,26 +554,26 @@ def test_transaction_exemption_article_round_trips_for_domestic_exempt_category(
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "iva_category": IvaCategory.DOMESTIC_EXEMPT,
-            "exemption_article": IvaExemptionArticle.ART_20_UNO_8,
+            "iva_category": IvaCategory("domestic_exempt"),
+            "exemption_article": IvaExemptionArticle("art_20_uno_8"),
         },
     )
 
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.iva_category is IvaCategory.DOMESTIC_EXEMPT
-    assert restored.exemption_article is IvaExemptionArticle.ART_20_UNO_8
+    assert restored.iva_category == IvaCategory("domestic_exempt")
+    assert restored.exemption_article is IvaExemptionArticle("art_20_uno_8")
 
 
 def test_transaction_rejects_exemption_article_without_domestic_exempt_category() -> None:
-    for iva_category in (None, IvaCategory.DOMESTIC_GENERAL):
+    for iva_category in (None, IvaCategory("domestic_general")):
         payload: dict[str, object] = {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
-            "exemption_article": IvaExemptionArticle.ART_20_UNO_8,
+            "exemption_article": IvaExemptionArticle("art_20_uno_8"),
         }
         if iva_category is not None:
             payload["iva_category"] = iva_category

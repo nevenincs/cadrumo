@@ -28,6 +28,8 @@ from datetime import date
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_cash_accounting_treatment
+
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.schema_base import DateAxis
 from ..schema import IvaCashAccountingTreatment
@@ -66,6 +68,6 @@ def test_the_acogido_state_is_grounded_on_its_own_article() -> None:
     operation under a rule that does not govern it.
     """
     entries = _vocabulary_entries()
-    refs = entries[f"{_PREFIX}{IvaCashAccountingTreatment.TAXPAYER_REGIME.value}.legal_refs"].split(",")
+    refs = entries[f"{_PREFIX}{require_iva_cash_accounting_treatment('taxpayer_regime').value}.legal_refs"].split(",")
 
     assert "ley-37-1992:art-163-terdecies" in refs

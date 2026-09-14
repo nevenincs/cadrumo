@@ -29,9 +29,9 @@ _ON_DATE = date(2025, 6, 1)
 def test_domestic_positive_rate_resolves_to_registry_fraction() -> None:
     """Domestic general/reduced/super-reduced resolve to the grounded fraction."""
     cases: tuple[tuple[IvaCategory, Decimal, IvaRateKind], ...] = (
-        (IvaCategory.DOMESTIC_GENERAL, Decimal("0.21"), IvaRateKind.GENERAL),
-        (IvaCategory.DOMESTIC_REDUCED, Decimal("0.10"), IvaRateKind.REDUCED),
-        (IvaCategory.DOMESTIC_SUPER_REDUCED, Decimal("0.04"), IvaRateKind.SUPER_REDUCED),
+        (IvaCategory("domestic_general"), Decimal("0.21"), IvaRateKind("general")),
+        (IvaCategory("domestic_reduced"), Decimal("0.10"), IvaRateKind("reduced")),
+        (IvaCategory("domestic_super_reduced"), Decimal("0.04"), IvaRateKind("super_reduced")),
     )
 
     for category, expected_rate, expected_kind in cases:
@@ -46,8 +46,8 @@ def test_domestic_positive_rate_resolves_to_registry_fraction() -> None:
 def test_zero_and_exempt_derive_zero_rate() -> None:
     """Zero-rated and exempt categories derive a derivable zero fraction."""
     cases: tuple[tuple[IvaCategory, IvaRateKind], ...] = (
-        (IvaCategory.DOMESTIC_ZERO, IvaRateKind.ZERO),
-        (IvaCategory.DOMESTIC_EXEMPT, IvaRateKind.EXEMPT),
+        (IvaCategory("domestic_zero"), IvaRateKind("zero")),
+        (IvaCategory("domestic_exempt"), IvaRateKind("exempt")),
     )
 
     for category, expected_kind in cases:
@@ -59,20 +59,20 @@ def test_zero_and_exempt_derive_zero_rate() -> None:
 
 
 _NON_DERIVABLE_CATEGORIES = [
-    IvaCategory.DOMESTIC_NOT_SUBJECT,
-    IvaCategory.DOMESTIC_REVERSE_CHARGE,
-    IvaCategory.INTRA_COMMUNITY_SUPPLY,
-    IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-    IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
-    IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-    IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-    IvaCategory.IMPORT_THIRD_COUNTRY,
-    IvaCategory.RECARGO_EQUIVALENCIA,
-    IvaCategory.REGIMEN_SIMPLIFICADO,
-    IvaCategory.REAGP_COMPENSATION,
-    IvaCategory.OPERACION_NO_SUJETA,
-    IvaCategory.ERRONEOUS_INVOICE,
-    IvaCategory.UNKNOWN,
+    IvaCategory("domestic_not_subject"),
+    IvaCategory("domestic_reverse_charge"),
+    IvaCategory("intra_community_supply"),
+    IvaCategory("intra_community_acquisition_reverse_charge"),
+    IvaCategory("intra_community_triangulation"),
+    IvaCategory("export_third_country_zero_rated"),
+    IvaCategory("export_assimilated_zero_rated"),
+    IvaCategory("import_third_country"),
+    IvaCategory("recargo_equivalencia"),
+    IvaCategory("regimen_simplificado"),
+    IvaCategory("reagp_compensation"),
+    IvaCategory("operacion_no_sujeta"),
+    IvaCategory("erroneous_invoice"),
+    IvaCategory("unknown"),
 ]
 
 
@@ -90,19 +90,19 @@ def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty() -> Non
     """EU IVA / reverse-charge reasons must not read like legal filing certainty."""
     cases: tuple[tuple[IvaCategory, tuple[str, ...]], ...] = (
         (
-            IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            IvaCategory("domestic_reverse_charge"),
             ("potential domestic reverse charge", "verify the operation evidence", "supply the self-assessed"),
         ),
         (
-            IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            IvaCategory("intra_community_supply"),
             ("potential intra-community supply", "verify the customer IVA ID", "reporting evidence"),
         ),
         (
-            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            IvaCategory("intra_community_acquisition_reverse_charge"),
             ("potential intra-community acquisition", "verify the acquisition evidence", "self-assessed base"),
         ),
         (
-            IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+            IvaCategory("intra_community_triangulation"),
             ("potential intra-community triangulation", "verify the triangulation conditions"),
         ),
     )
@@ -119,11 +119,11 @@ def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty() -> Non
 def test_export_non_derivable_reasons_remain_advisory_and_evidence_oriented() -> None:
     cases: tuple[tuple[IvaCategory, tuple[str, ...]], ...] = (
         (
-            IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            IvaCategory("export_third_country_zero_rated"),
             ("potential export", "verify the export evidence", "before treating it as zero-rated"),
         ),
         (
-            IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+            IvaCategory("export_assimilated_zero_rated"),
             ("potential operation assimilated to an export", "verify the qualifying", "before treating it as exempt"),
         ),
     )
@@ -171,7 +171,7 @@ def test_split_gross_at_zero_rate_yields_whole_base_and_zero_iva() -> None:
 
 def test_resolve_then_split_round_trips_for_general_rate() -> None:
     """The two primitives compose: resolve a fraction, split a gross with it."""
-    resolution = resolve_category_rate(IvaCategory.DOMESTIC_GENERAL, on_date=_ON_DATE)
+    resolution = resolve_category_rate(IvaCategory("domestic_general"), on_date=_ON_DATE)
     assert resolution.rate is not None
     base, iva = split_gross_at_rate(Decimal("121.00"), resolution.rate)
     assert base == Decimal("100.00")
@@ -199,8 +199,8 @@ def test_ambiguous_tier_refuses_instead_of_returning_the_ordinary_rate() -> None
     guesses a number, so the honest answer is the non-derivable one.
     """
     for category, on_date in (
-        (IvaCategory.DOMESTIC_SUPER_REDUCED, _SUPER_REDUCED_COEXISTENCE),
-        (IvaCategory.DOMESTIC_REDUCED, _REDUCED_COEXISTENCE),
+        (IvaCategory("domestic_super_reduced"), _SUPER_REDUCED_COEXISTENCE),
+        (IvaCategory("domestic_reduced"), _REDUCED_COEXISTENCE),
     ):
         resolution = resolve_category_rate(category, on_date=on_date)
         assert resolution.derivable is False, category
@@ -221,14 +221,14 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None
     """
     # The general tier is untouched on the very dates the others are ambiguous.
     for on_date in (_SUPER_REDUCED_COEXISTENCE, _REDUCED_COEXISTENCE):
-        general = resolve_category_rate(IvaCategory.DOMESTIC_GENERAL, on_date=on_date)
+        general = resolve_category_rate(IvaCategory("domestic_general"), on_date=on_date)
         assert general.derivable is True
         assert general.rate == Decimal("0.21")
 
     # After every temporary window lapses, both tiers resolve again.
     for category, expected in (
-        (IvaCategory.DOMESTIC_SUPER_REDUCED, Decimal("0.04")),
-        (IvaCategory.DOMESTIC_REDUCED, Decimal("0.10")),
+        (IvaCategory("domestic_super_reduced"), Decimal("0.04")),
+        (IvaCategory("domestic_reduced"), Decimal("0.10")),
     ):
         resolution = resolve_category_rate(category, on_date=date(2025, 6, 1))
         assert resolution.derivable is True, category
@@ -237,7 +237,7 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None
     # The tiers moved on DIFFERENT dates, so "inside the window" is per tier.
     # Super-reducido only ever coexisted Oct-Dec 2024 (RD-ley 4/2024's 2 %), so
     # it still resolves in March 2024.
-    super_reduced = resolve_category_rate(IvaCategory.DOMESTIC_SUPER_REDUCED, on_date=date(2024, 3, 1))
+    super_reduced = resolve_category_rate(IvaCategory("domestic_super_reduced"), on_date=date(2024, 3, 1))
     assert super_reduced.derivable is True
     assert super_reduced.rate == Decimal("0.04")
 
@@ -247,7 +247,7 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None
     # March 2024 is INSIDE a coexistence window, not before one. The earlier
     # assertion only held because those rate rows were absent from the registry;
     # the tier was ambiguous in law the whole time and the table could not say so.
-    reduced = resolve_category_rate(IvaCategory.DOMESTIC_REDUCED, on_date=date(2024, 3, 1))
+    reduced = resolve_category_rate(IvaCategory("domestic_reduced"), on_date=date(2024, 3, 1))
     assert reduced.derivable is False, (
         "reducido cannot be derived in March 2024: 5 % and 10 % both applied, to "
         "different goods, and no bundled surface carries the goods axis"

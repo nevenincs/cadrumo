@@ -15,14 +15,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_eu_member_state_codes_match_substrate_enum_27_states() -> None:
-    members = tuple(member for member in EUMemberState if member is not EUMemberState.XI)
+    members = tuple(member for member in EUMemberState if member is not EUMemberState._from_registry("xi"))
     assert len(members) == 27
     assert all(is_eu_member_state_code(member.value.upper()) for member in members)
     assert not is_eu_member_state_code("XI")
 
 
 def test_is_eu_member_state_code_accepts_each_substrate_member() -> None:
-    for member in (member for member in EUMemberState if member is not EUMemberState.XI):
+    for member in (member for member in EUMemberState if member is not EUMemberState._from_registry("xi")):
         assert is_eu_member_state_code(member.value.upper()) is True
         assert is_eu_member_state_code(member.value.lower()) is True
         assert is_eu_member_state_code(f"  {member.value}  ") is True

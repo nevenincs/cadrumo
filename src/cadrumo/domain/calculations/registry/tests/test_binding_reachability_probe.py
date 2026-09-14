@@ -48,14 +48,14 @@ _RATE_KIND = next(iter(IvaRateKind))
 
 def _iva_selector(
     *,
-    cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = (IvaCashAccountingTreatment.NONE,),
+    cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = (IvaCashAccountingTreatment("none"),),
     observation_roles: tuple[IvaLedgerObservationRole, ...] = (IvaLedgerObservationRole.SETTLEMENT,),
 ) -> LedgerIvaProvider:
     """Build an otherwise-valid IVA selector with explicit role and treatment policies."""
     return LedgerIvaProvider(
         categories=(_CATEGORY,),
         rate_kinds=(_RATE_KIND,),
-        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        flow_direction=IvaFlowDirection._from_registry("repercutido"),
         cash_accounting_treatments=cash_accounting_treatments,
         observation_roles=observation_roles,
         fact="iva_amount_sum",
@@ -78,8 +78,8 @@ def test_iva_selector_refuses_an_implicit_observation_role() -> None:
             {
                 "categories": (_CATEGORY,),
                 "rate_kinds": (_RATE_KIND,),
-                "flow_direction": IvaFlowDirection.REPERCUTIDO,
-                "cash_accounting_treatments": (IvaCashAccountingTreatment.NONE,),
+                "flow_direction": IvaFlowDirection._from_registry("repercutido"),
+                "cash_accounting_treatments": (IvaCashAccountingTreatment("none"),),
                 "fact": "iva_amount_sum",
             },
         )
@@ -89,15 +89,15 @@ def test_iva_selector_role_policy_isolates_operation_information_from_settlement
     """The real matcher rejects a role mutation while keeping the affiliation unchanged."""
     matcher = _iva_build_matcher(
         _iva_selector(
-            cash_accounting_treatments=(IvaCashAccountingTreatment.SUPPLIER_REGIME,),
+            cash_accounting_treatments=(IvaCashAccountingTreatment("supplier_regime"),),
             observation_roles=(IvaLedgerObservationRole.OPERATION_INFORMATIONAL,),
         ),
     )
     operation_information = _MinimalIvaObservation(
         category=_CATEGORY,
         rate_kind=_RATE_KIND,
-        flow_direction=IvaFlowDirection.REPERCUTIDO,
-        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        flow_direction=IvaFlowDirection._from_registry("repercutido"),
+        cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
         observation_role=IvaLedgerObservationRole.OPERATION_INFORMATIONAL,
         exemption_article=None,
     )
@@ -107,8 +107,8 @@ def test_iva_selector_role_policy_isolates_operation_information_from_settlement
         _MinimalIvaObservation(
             category=_CATEGORY,
             rate_kind=_RATE_KIND,
-            flow_direction=IvaFlowDirection.REPERCUTIDO,
-            cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+            flow_direction=IvaFlowDirection._from_registry("repercutido"),
+            cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
             exemption_article=None,
         ),

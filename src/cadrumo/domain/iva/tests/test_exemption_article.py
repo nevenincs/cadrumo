@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_classification_result_accepts_no_exemption_article_by_default() -> None:
     """The discriminator is optional; absence is the canonical default."""
     result = IvaClassificationResult(
-        category=IvaCategory.DOMESTIC_EXEMPT,
+        category=IvaCategory("domestic_exempt"),
         matched_rule_id="R04_immovable_property_exempt",
     )
 
@@ -33,12 +33,12 @@ def test_classification_result_accepts_no_exemption_article_by_default() -> None
 def test_classification_result_stamps_exemption_article_when_domestic_exempt() -> None:
     """Stamping the discriminator on a DOMESTIC_EXEMPT result is accepted."""
     result = IvaClassificationResult(
-        category=IvaCategory.DOMESTIC_EXEMPT,
+        category=IvaCategory("domestic_exempt"),
         matched_rule_id="R20_uno_8_education",
-        exemption_article=IvaExemptionArticle.ART_20_UNO_8,
+        exemption_article=IvaExemptionArticle("art_20_uno_8"),
     )
 
-    assert result.exemption_article is IvaExemptionArticle.ART_20_UNO_8
+    assert result.exemption_article is IvaExemptionArticle("art_20_uno_8")
 
 
 def test_classification_result_rejects_exemption_article_on_non_exempt_category() -> None:
@@ -46,18 +46,18 @@ def test_classification_result_rejects_exemption_article_on_non_exempt_category(
     # Pydantic v2 wraps validator-raised exceptions in ValidationError;
     # the inner IvaValidationError message reaches the rendered output.
     for non_exempt_category in (
-        IvaCategory.DOMESTIC_GENERAL,
-        IvaCategory.DOMESTIC_REDUCED,
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-        IvaCategory.OPERACION_NO_SUJETA,
+        IvaCategory("domestic_general"),
+        IvaCategory("domestic_reduced"),
+        IvaCategory("intra_community_supply"),
+        IvaCategory("export_third_country_zero_rated"),
+        IvaCategory("export_assimilated_zero_rated"),
+        IvaCategory("operacion_no_sujeta"),
     ):
         with pytest.raises(ValidationError) as exc:
             IvaClassificationResult(
                 category=non_exempt_category,
                 matched_rule_id="R_test",
-                exemption_article=IvaExemptionArticle.ART_20_UNO_8,
+                exemption_article=IvaExemptionArticle("art_20_uno_8"),
             )
 
         message = str(exc.value)
@@ -73,9 +73,9 @@ def test_exemption_article_enum_membership_matches_accepted_correction() -> None
     reintroduced without an approved contract change.
     """
     expected = {
-        IvaExemptionArticle.ART_20_UNO_8.value,
-        IvaExemptionArticle.ART_20_UNO_14.value,
-        IvaExemptionArticle.ART_20_OTHER.value,
+        IvaExemptionArticle("art_20_uno_8").value,
+        IvaExemptionArticle("art_20_uno_14").value,
+        IvaExemptionArticle("art_20_other").value,
     }
     actual = {member.value for member in IvaExemptionArticle}
     assert actual == expected

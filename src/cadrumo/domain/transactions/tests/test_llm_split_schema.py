@@ -40,7 +40,7 @@ _VALID_SPLIT_JSON = (
 
 
 def _child(proportion: str) -> LLMSplitChild:
-    return LLMSplitChild(proportion=Decimal(proportion), iva_category=IvaCategory.DOMESTIC_GENERAL)
+    return LLMSplitChild(proportion=Decimal(proportion), iva_category=IvaCategory("domestic_general"))
 
 
 def _assert_validation_error(case_id: str, build: Callable[[], object], match: str) -> None:
@@ -120,7 +120,7 @@ def test_parse_split_extracts_nested_json_amid_prose() -> None:
     noisy = "Here is the split:\n" + _VALID_SPLIT_JSON + "\nHope that helps!"
     response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields(year=2025))
     assert len(response.children) == 2
-    assert response.children[0].iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert response.children[0].iva_category == IvaCategory("domestic_general")
 
 
 def test_parse_split_rejects_invalid_outputs() -> None:

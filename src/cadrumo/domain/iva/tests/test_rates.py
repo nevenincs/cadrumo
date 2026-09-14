@@ -22,9 +22,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_rate_table_covers_all_27_member_states() -> None:
     """The rate table carries entries for EU member states, not the XI prefix."""
-    expected = {member for member in EUMemberState if member is not EUMemberState.XI}
+    expected = {member for member in EUMemberState if member is not EUMemberState._from_registry("xi")}
     assert set(load_iva_rate_table().keys()) == expected
-    assert EUMemberState.XI not in load_iva_rate_table()
+    assert EUMemberState._from_registry("xi") not in load_iva_rate_table()
 
 
 def test_lookup_rate_raises_for_northern_ireland_prefix() -> None:
@@ -36,13 +36,13 @@ def test_lookup_rate_raises_for_northern_ireland_prefix() -> None:
     an English sentence is readable in one locale only.
     """
     with pytest.raises(IvaRateNotFoundError) as caught:
-        lookup_rate(EUMemberState.XI, IvaRateKind.GENERAL, date(2025, 6, 1))
+        lookup_rate(EUMemberState._from_registry("xi"), IvaRateKind("general"), date(2025, 6, 1))
 
     assert caught.value.translated_message == "errors.iva.rate_member_state_unregistered"
     assert caught.value.context == {
         "member_state": "xi",
         "member_state_registered": False,
-        "rate_kind": IvaRateKind.GENERAL.value,
+        "rate_kind": IvaRateKind("general").value,
         "on_date": "2025-06-01",
     }
 
@@ -55,18 +55,18 @@ def test_rate_table_has_at_least_50_entries() -> None:
 
 def test_es_rate_table_fully_expanded() -> None:
     """Spain must expose general / reduced / super_reduced / zero tiers."""
-    es_kinds = {rate.kind for rate in load_iva_rate_table()[EUMemberState.ES]}
+    es_kinds = {rate.kind for rate in load_iva_rate_table()[EUMemberState._from_registry("es")]}
     assert {
-        IvaRateKind.GENERAL,
-        IvaRateKind.REDUCED,
-        IvaRateKind.SUPER_REDUCED,
-        IvaRateKind.ZERO,
+        IvaRateKind("general"),
+        IvaRateKind("reduced"),
+        IvaRateKind("super_reduced"),
+        IvaRateKind("zero"),
     } <= es_kinds
 
 
 def test_lookup_rate_returns_spain_general_21() -> None:
     """`lookup_rate` resolves the Spanish general rate for mid-2025."""
-    rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2025, 6, 1))
+    rate = lookup_rate(EUMemberState._from_registry("es"), IvaRateKind("general"), date(2025, 6, 1))
     assert rate.pct == Decimal("21")
 
 
@@ -79,13 +79,13 @@ def test_lookup_rate_raises_for_unknown_kind() -> None:
     stay separable by machine fact, not only by prose.
     """
     with pytest.raises(IvaRateNotFoundError) as caught:
-        lookup_rate(EUMemberState.DK, IvaRateKind.REDUCED, date(2025, 6, 1))
+        lookup_rate(EUMemberState._from_registry("dk"), IvaRateKind("reduced"), date(2025, 6, 1))
 
     assert caught.value.translated_message == "errors.error.error_financial_iva_rate_not_found"
     assert caught.value.context == {
         "member_state": "dk",
         "member_state_registered": True,
-        "rate_kind": IvaRateKind.REDUCED.value,
+        "rate_kind": IvaRateKind("reduced").value,
         "on_date": "2025-06-01",
     }
 
@@ -101,7 +101,7 @@ def test_lookup_rate_respects_effective_from() -> None:
     day before RDL 20/2012 art. 23.Dos took effect.
     """
     with pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2012|rate"):
-        lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2012, 8, 31))
+        lookup_rate(EUMemberState._from_registry("es"), IvaRateKind("general"), date(2012, 8, 31))
 
 
 def test_every_rate_window_is_well_ordered() -> None:

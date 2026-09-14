@@ -33,7 +33,7 @@ def _line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=_CUOTA,
     )
 
@@ -61,7 +61,7 @@ def test_an_ordinary_invoice_defaults_to_the_ordinaria_class() -> None:
     """Every invoice before this guard is, and remains, an ordinaria."""
     invoice = _invoice()
 
-    assert invoice.invoice_class is InvoiceClass.ORDINARIA
+    assert invoice.invoice_class is InvoiceClass._from_registry("ORDINARIA")
     assert invoice.series is None
     assert invoice.rectifies_invoice_number is None
 
@@ -69,12 +69,12 @@ def test_an_ordinary_invoice_defaults_to_the_ordinaria_class() -> None:
 def test_a_rectificativa_names_the_invoice_it_corrects_in_its_own_series() -> None:
     """The truthful rectificativa is representable with both mandatory facts."""
     invoice = _invoice(
-        invoice_class=InvoiceClass.RECTIFICATIVA,
+        invoice_class=InvoiceClass._from_registry("RECTIFICATIVA"),
         series="R",
         rectifies_invoice_number="2026/RECT-0",
     )
 
-    assert invoice.invoice_class is InvoiceClass.RECTIFICATIVA
+    assert invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
     assert invoice.series == "R"
     assert invoice.rectifies_invoice_number == "2026/RECT-0"
 
@@ -82,13 +82,13 @@ def test_a_rectificativa_names_the_invoice_it_corrects_in_its_own_series() -> No
 def test_a_rectificativa_with_no_series_is_refused() -> None:
     """RD 1619/2012 art. 6.1.a.2.º makes a specific series obligatoria for rectificativas."""
     with pytest.raises(ValidationError, match="must be issued in a specific series"):
-        _invoice(invoice_class=InvoiceClass.RECTIFICATIVA, rectifies_invoice_number="2026/RECT-0")
+        _invoice(invoice_class=InvoiceClass._from_registry("RECTIFICATIVA"), rectifies_invoice_number="2026/RECT-0")
 
 
 def test_a_rectificativa_naming_nothing_it_corrects_is_refused() -> None:
     """LIVA art. 89 requires a rectificativa to rectify a named prior invoice."""
     with pytest.raises(ValidationError, match="must name the invoice it rectifies"):
-        _invoice(invoice_class=InvoiceClass.RECTIFICATIVA, series="R")
+        _invoice(invoice_class=InvoiceClass._from_registry("RECTIFICATIVA"), series="R")
 
 
 def test_a_stray_rectification_reference_on_an_ordinaria_is_refused() -> None:
@@ -105,5 +105,5 @@ def test_a_series_alone_is_permitted_on_any_invoice_class() -> None:
     """Series are a general RD 1619/2012 art. 6.1.a concept, not exclusive to rectificativas."""
     invoice = _invoice(series="A")
 
-    assert invoice.invoice_class is InvoiceClass.ORDINARIA
+    assert invoice.invoice_class is InvoiceClass._from_registry("ORDINARIA")
     assert invoice.series == "A"

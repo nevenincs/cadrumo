@@ -45,14 +45,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> BindingDefinition:
     selector: dict[str, object] = {
-        "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
-        "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
-        "flow_direction": IvaFlowDirection.REPERCUTIDO,
+        "categories": (IvaCategory("domestic_super_reduced"),),
+        "rate_kinds": (IvaRateKind("super_reduced"),),
+        "flow_direction": IvaFlowDirection._from_registry("repercutido"),
         "fact": "base_amount_sum",
         "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
         "cash_accounting_treatments": (
-            IvaCashAccountingTreatment.NONE,
-            IvaCashAccountingTreatment.SUPPLIER_REGIME,
+            IvaCashAccountingTreatment("none"),
+            IvaCashAccountingTreatment("supplier_regime"),
         ),
     }
     if applied_rates is not None:
@@ -88,9 +88,9 @@ def _row(ledger_id: str, *, applied_rate: Decimal | None, base: str) -> IvaLedge
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=date(2024, 11, 15),
-        category=IvaCategory.DOMESTIC_SUPER_REDUCED,
-        rate_kind=IvaRateKind.SUPER_REDUCED,
-        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        category=IvaCategory("domestic_super_reduced"),
+        rate_kind=IvaRateKind("super_reduced"),
+        flow_direction=IvaFlowDirection._from_registry("repercutido"),
         base_amount=Decimal(base),
         iva_amount=Decimal("0.00"),
         applied_rate=applied_rate,

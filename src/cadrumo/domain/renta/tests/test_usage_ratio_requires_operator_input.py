@@ -41,7 +41,6 @@ from decimal import Decimal
 
 import pytest
 
-from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory
 from ..ledger_expenses import (
@@ -56,7 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _YEAR = 2025
 _USAGE_RATIO_KINDS = frozenset(
-    {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL},
+    {require_proportionality_kind("usage_ratio_home_area"), require_proportionality_kind("usage_ratio_personal")},
 )
 
 

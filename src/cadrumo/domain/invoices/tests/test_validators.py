@@ -287,7 +287,7 @@ def test_every_eu_member_state_except_spain_has_a_nif_iva_format() -> None:
     validator, not a structural pattern.
     """
     for member in EUMemberState:
-        if member is EUMemberState.ES:
+        if member is EUMemberState._from_registry("es"):
             assert nif_iva_prefix_for_country(member.value) is None
             continue
         prefix = nif_iva_prefix_for_country(member.value.upper())

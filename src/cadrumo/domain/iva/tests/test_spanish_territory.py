@@ -33,7 +33,9 @@ from ..establishment import territorial_scope_for_country, territorial_scope_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_OUTSIDE_THE_TAI = frozenset({IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA})
+_OUTSIDE_THE_TAI = frozenset(
+    {IvaTerritorialScope._from_registry("es_canarias"), IvaTerritorialScope._from_registry("es_ceuta_melilla")}
+)
 
 
 class TestTheExcludedTerritoriesAreRecognised:
@@ -41,15 +43,19 @@ class TestTheExcludedTerritoriesAreRecognised:
 
     @pytest.mark.parametrize("printed", ["35001", "35500", "38010", "38700"])
     def test_a_canarian_code_resolves_outside_the_tai(self, printed: str) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) is IvaTerritorialScope.ES_CANARIAS
+        assert territorial_scope_for_spanish_postal_code(printed) == IvaTerritorialScope._from_registry("es_canarias")
 
     @pytest.mark.parametrize("printed", ["51001", "51002"])
     def test_a_ceuta_code_resolves_outside_the_tai(self, printed: str) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) is IvaTerritorialScope.ES_CEUTA_MELILLA
+        assert territorial_scope_for_spanish_postal_code(printed) == IvaTerritorialScope._from_registry(
+            "es_ceuta_melilla"
+        )
 
     @pytest.mark.parametrize("printed", ["52001", "52006"])
     def test_a_melilla_code_resolves_outside_the_tai(self, printed: str) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) is IvaTerritorialScope.ES_CEUTA_MELILLA
+        assert territorial_scope_for_spanish_postal_code(printed) == IvaTerritorialScope._from_registry(
+            "es_ceuta_melilla"
+        )
 
     def test_every_excluded_prefix_comes_from_the_registry(self) -> None:
         """Read from the bundled table, so a boundary change moves here with it.
@@ -95,7 +101,7 @@ class TestAWellFormedCodeOutsideTheExclusionsIsTheMainland:
 
     @pytest.mark.parametrize("printed", ["28001", "08001", "41001", "07800", "46001"])
     def test_a_peninsular_or_balearic_code_resolves_to_the_mainland(self, printed: str) -> None:
-        assert territorial_scope_for_spanish_postal_code(printed) is IvaTerritorialScope.ES_MAINLAND
+        assert territorial_scope_for_spanish_postal_code(printed) == IvaTerritorialScope._from_registry("es_mainland")
 
     def test_the_balearics_are_inside_the_tai(self) -> None:
         """Named separately because it is the island group that IS inside.
@@ -104,7 +110,7 @@ class TestAWellFormedCodeOutsideTheExclusionsIsTheMainland:
         generalisation, and Ley 37/1992 art. 3.Dos places the Balearics inside
         the territory while excluding the Canaries.
         """
-        assert territorial_scope_for_spanish_postal_code("07001") is IvaTerritorialScope.ES_MAINLAND
+        assert territorial_scope_for_spanish_postal_code("07001") == IvaTerritorialScope._from_registry("es_mainland")
 
 
 class TestTheTwoAxesComposeWithoutOverlapping:
@@ -116,4 +122,4 @@ class TestTheTwoAxesComposeWithoutOverlapping:
 
     def test_the_postal_axis_answers_what_the_country_axis_would_not(self) -> None:
         assert territorial_scope_for_country("ES") is None
-        assert territorial_scope_for_spanish_postal_code("35001") is IvaTerritorialScope.ES_CANARIAS
+        assert territorial_scope_for_spanish_postal_code("35001") == IvaTerritorialScope._from_registry("es_canarias")

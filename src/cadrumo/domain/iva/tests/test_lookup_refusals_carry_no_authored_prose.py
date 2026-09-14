@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ON = date(2025, 6, 1)
 #: A category the constructed catalogues deliberately leave out or mis-ground.
-_PROBE_CATEGORY = IvaCategory.DOMESTIC_GENERAL
+_PROBE_CATEGORY = IvaCategory("domestic_general")
 
 
 def _empty_catalogue() -> IvaCatalogue:
@@ -88,7 +88,7 @@ def _catalogue_citing_an_unregistered_reference() -> IvaCatalogue:
 def test_unregistered_member_state_refusal_carries_no_authored_sentence() -> None:
     """XI is absent from the rate table entirely."""
     with pytest.raises(IvaRateNotFoundError) as caught:
-        lookup_rate(EUMemberState.XI, IvaRateKind.GENERAL, _ON)
+        lookup_rate(EUMemberState._from_registry("xi"), IvaRateKind("general"), _ON)
 
     assert str(caught.value) == "errors.iva.rate_member_state_unregistered"
 
@@ -96,7 +96,7 @@ def test_unregistered_member_state_refusal_carries_no_authored_sentence() -> Non
 def test_unmatched_tier_refusal_carries_no_authored_sentence() -> None:
     """Denmark is in the table but carries no reducido tier."""
     with pytest.raises(IvaRateNotFoundError) as caught:
-        lookup_rate(EUMemberState.DK, IvaRateKind.REDUCED, _ON)
+        lookup_rate(EUMemberState._from_registry("dk"), IvaRateKind("reduced"), _ON)
 
     assert str(caught.value) == "errors.error.error_financial_iva_rate_not_found"
 

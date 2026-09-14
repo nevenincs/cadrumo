@@ -34,7 +34,7 @@ def _valid_line(
     description: str = "Consultoría mensual",
     quantity: str = "1",
     unit_price: str = "100.00",
-    iva_rate: IvaRate = IvaRate.RATE_21,
+    iva_rate: IvaRate = IvaRate._from_registry("RATE_21"),
     on_date: date = date(2026, 4, 1),
 ) -> InvoiceLine:
     quantity_dec = Decimal(quantity)
@@ -98,10 +98,10 @@ def test_invoice_accepts_a_transitional_food_rate_inside_its_window() -> None:
     """
     invoice = _valid_invoice(
         issued_at=date(2024, 11, 15),
-        lines=(_valid_line(iva_rate=IvaRate.RATE_2, on_date=date(2024, 11, 15)),),
+        lines=(_valid_line(iva_rate=IvaRate._from_registry("RATE_2"), on_date=date(2024, 11, 15)),),
     )
 
-    assert invoice.lines[0].iva_rate is IvaRate.RATE_2
+    assert invoice.lines[0].iva_rate is IvaRate._from_registry("RATE_2")
     assert invoice.iva_total == Decimal("2.00")
 
 
@@ -117,7 +117,7 @@ def test_invoice_refuses_a_transitional_food_rate_outside_its_window() -> None:
     with pytest.raises(ValidationError, match=r"was not in force"):
         _valid_invoice(
             issued_at=date(2025, 6, 1),
-            lines=(_valid_line(iva_rate=IvaRate.RATE_2, on_date=date(2024, 11, 15)),),
+            lines=(_valid_line(iva_rate=IvaRate._from_registry("RATE_2"), on_date=date(2024, 11, 15)),),
         )
 
 
@@ -145,7 +145,7 @@ def test_invoice_line_accepts_one_cent_rounding() -> None:
             "quantity": Decimal("3"),
             "unit_price": Decimal("0.333"),
             "subtotal": Decimal("1.00"),
-            "iva_rate": IvaRate.RATE_21,
+            "iva_rate": IvaRate._from_registry("RATE_21"),
             "iva_amount": Decimal("0.21"),
         },
     )
@@ -161,7 +161,7 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
                 "quantity": Decimal("1"),
                 "unit_price": Decimal("100.00"),
                 "subtotal": Decimal("50.00"),
-                "iva_rate": IvaRate.RATE_21,
+                "iva_rate": IvaRate._from_registry("RATE_21"),
                 "iva_amount": Decimal("10.50"),
             },
         )
@@ -170,9 +170,9 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
 def test_invoice_counterparty_eu_member_state_accessor() -> None:
     """Counterparty country is normalized and exposed as a typed EU member when applicable."""
     cases = (
-        ("DE", "DE123456789", "DE", EUMemberState.DE, True),
+        ("DE", "DE123456789", "DE", EUMemberState._from_registry("de"), True),
         ("US", "US123456789", "US", None, False),
-        ("fr", "FR12345678901", "FR", EUMemberState.FR, True),
+        ("fr", "FR12345678901", "FR", EUMemberState._from_registry("fr"), True),
     )
     for raw_country, tax_id, stored_country, expected_state, expected_is_member in cases:
         invoice = _valid_invoice(
@@ -202,7 +202,7 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
             "iva_category": "domestic_general",
         },
     )
-    assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert invoice.iva_category == IvaCategory("domestic_general")
 
     json_dump = invoice.model_dump(mode="json")
     assert json_dump["iva_category"] == "domestic_general"
@@ -229,8 +229,8 @@ def test_invoice_accepts_oss_axes_and_destination_rate_line() -> None:
         quantity=Decimal("1"),
         unit_price=Decimal("100"),
         subtotal=Decimal("100"),
-        iva_rate=IvaRate.RATE_21,
-        oss_rate_kind=IvaRateKind.GENERAL,
+        iva_rate=IvaRate._from_registry("RATE_21"),
+        oss_rate_kind=IvaRateKind("general"),
         iva_amount=Decimal("19"),
     )
     invoice = Invoice.model_validate(
@@ -247,14 +247,14 @@ def test_invoice_accepts_oss_axes_and_destination_rate_line() -> None:
             "currency": "EUR",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
-            "oss_ioss_regime": OssIossRegime.UNION_SCHEME,
-            "oss_transaction_kind": TransactionKind.OSS_UNION_SERVICES,
+            "oss_ioss_regime": OssIossRegime("union_scheme"),
+            "oss_transaction_kind": TransactionKind("oss_union_services"),
         },
     )
 
-    assert invoice.oss_ioss_regime is OssIossRegime.UNION_SCHEME
-    assert invoice.oss_transaction_kind is TransactionKind.OSS_UNION_SERVICES
-    assert invoice.lines[0].oss_rate_kind is IvaRateKind.GENERAL
+    assert invoice.oss_ioss_regime is OssIossRegime("union_scheme")
+    assert invoice.oss_transaction_kind is TransactionKind("oss_union_services")
+    assert invoice.lines[0].oss_rate_kind is IvaRateKind("general")
     assert invoice.iva_total == Decimal("19")
 
 
@@ -267,7 +267,7 @@ def test_invoice_rejects_incomplete_oss_axes() -> None:
                     counterparty_country="DE",
                     counterparty_tax_id="DE123456789",
                 ).model_dump(mode="python"),
-                "oss_ioss_regime": OssIossRegime.UNION_SCHEME,
+                "oss_ioss_regime": OssIossRegime("union_scheme"),
             },
         )
 
@@ -279,8 +279,8 @@ def test_invoice_rejects_oss_line_rate_without_invoice_oss_axes() -> None:
         quantity=Decimal("1"),
         unit_price=Decimal("100"),
         subtotal=Decimal("100"),
-        iva_rate=IvaRate.RATE_21,
-        oss_rate_kind=IvaRateKind.GENERAL,
+        iva_rate=IvaRate._from_registry("RATE_21"),
+        oss_rate_kind=IvaRateKind("general"),
         iva_amount=Decimal("19"),
     )
 
@@ -332,16 +332,16 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
 
     sample_date = date(2025, 6, 15)
 
-    assert iva_rate_percentage(IvaRate.RATE_0, on_date=sample_date) == Decimal("0")
-    assert iva_rate_percentage(IvaRate.EXEMPT, on_date=sample_date) is None
-    assert iva_rate_percentage(IvaRate.NOT_SUBJECT, on_date=sample_date) is None
+    assert iva_rate_percentage(IvaRate._from_registry("RATE_0"), on_date=sample_date) == Decimal("0")
+    assert iva_rate_percentage(IvaRate._from_registry("EXEMPT"), on_date=sample_date) is None
+    assert iva_rate_percentage(IvaRate._from_registry("NOT_SUBJECT"), on_date=sample_date) is None
 
     for slot, kind in [
-        (IvaRate.RATE_4, IvaRateKind.SUPER_REDUCED),
-        (IvaRate.RATE_10, IvaRateKind.REDUCED),
-        (IvaRate.RATE_21, IvaRateKind.GENERAL),
+        (IvaRate._from_registry("RATE_4"), IvaRateKind("super_reduced")),
+        (IvaRate._from_registry("RATE_10"), IvaRateKind("reduced")),
+        (IvaRate._from_registry("RATE_21"), IvaRateKind("general")),
     ]:
-        substrate_rate = lookup_rate(EUMemberState.ES, kind, sample_date)
+        substrate_rate = lookup_rate(EUMemberState._from_registry("es"), kind, sample_date)
         expected = substrate_rate.pct / Decimal("100")
         assert iva_rate_percentage(slot, on_date=sample_date) == expected
 
@@ -356,7 +356,7 @@ def test_invoice_exempt_lines_require_zero_iva() -> None:
                     quantity=Decimal("1"),
                     unit_price=Decimal("10"),
                     subtotal=Decimal("10"),
-                    iva_rate=IvaRate.EXEMPT,
+                    iva_rate=IvaRate._from_registry("EXEMPT"),
                     iva_amount=Decimal("0.01"),
                 ),
             ),
@@ -393,7 +393,7 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
             "quantity": Decimal("1"),
             "unit_price": Decimal("100.00"),
             "subtotal": Decimal("100.01"),
-            "iva_rate": IvaRate.RATE_21,
+            "iva_rate": IvaRate._from_registry("RATE_21"),
             "iva_amount": Decimal("21.00"),
         },
     )
@@ -403,7 +403,7 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
             "quantity": Decimal("1"),
             "unit_price": Decimal("100.00"),
             "subtotal": Decimal("100.01"),
-            "iva_rate": IvaRate.RATE_21,
+            "iva_rate": IvaRate._from_registry("RATE_21"),
             "iva_amount": Decimal("21.00"),
         },
     )
@@ -435,7 +435,7 @@ def test_invoice_exempt_invoice_enforces_zero_iva_total() -> None:
             "quantity": Decimal("1"),
             "unit_price": Decimal("50"),
             "subtotal": Decimal("50"),
-            "iva_rate": IvaRate.EXEMPT,
+            "iva_rate": IvaRate._from_registry("EXEMPT"),
             "iva_amount": Decimal("0"),
         },
     )

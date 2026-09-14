@@ -84,11 +84,11 @@ class TestRegistrationEvidenceSettlesTheIdentificationState:
     """The fact registration IS evidence of — decisively, with nothing to corroborate."""
 
     def test_a_printed_foreign_iva_number_names_its_member_state(self) -> None:
-        assert identification_state_for_printed_tax_identifier(_GERMAN_IVA_NUMBER) is EUMemberState.DE
+        assert identification_state_for_printed_tax_identifier(_GERMAN_IVA_NUMBER) is EUMemberState._from_registry("de")
 
     def test_a_greek_number_resolves_to_its_iso_code_not_its_iva_prefix(self) -> None:
         """``EL`` leads the number while ``GR`` keys every catalogue downstream."""
-        assert identification_state_for_printed_tax_identifier("EL123456789") is EUMemberState.GR
+        assert identification_state_for_printed_tax_identifier("EL123456789") is EUMemberState._from_registry("gr")
 
     def test_a_number_whose_body_contradicts_its_prefix_establishes_nothing(self) -> None:
         """The prefix alone is not evidence; ``FRANCISCO`` must not identify France."""
@@ -112,16 +112,16 @@ class TestNoRegistrationEvidencesEstablishment:
         """The dangerous population: German-identified, established in Spain."""
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=_DATE,
-            issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-            customer_residency=IvaTerritorialScope.ES_MAINLAND,
-            customer_identification_state=EUMemberState.DE,
-            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-            kind=TransactionKind.GOODS,
+            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+            customer_identification_state=EUMemberState._from_registry("de"),
+            customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            kind=TransactionKind("goods"),
             direction=InvoiceKind.ISSUED,
-            rate_tier=IvaRateKind.GENERAL,
+            rate_tier=IvaRateKind("general"),
         )
-        assert criteria.customer_identification_state is EUMemberState.DE
-        assert criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
+        assert criteria.customer_identification_state is EUMemberState._from_registry("de")
+        assert criteria.customer_residency is IvaTerritorialScope._from_registry("es_mainland")
 
     def test_a_foreign_establishment_does_not_require_an_identification_state(self) -> None:
         """The removed coupling, from the other side: EU_MEMBER with no State named.
@@ -132,10 +132,10 @@ class TestNoRegistrationEvidencesEstablishment:
         """
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=_DATE,
-            issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-            customer_residency=IvaTerritorialScope.EU_MEMBER,
-            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-            kind=TransactionKind.GOODS,
+            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+            customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            kind=TransactionKind("goods"),
             direction=InvoiceKind.ISSUED,
         )
         assert criteria.customer_identification_state is None
@@ -144,15 +144,15 @@ class TestNoRegistrationEvidencesEstablishment:
         """The Spanish side, unchanged: registration abroad displaces no territory."""
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=_DATE,
-            issuer_residency=IvaTerritorialScope.ES_CANARIAS,
-            customer_residency=IvaTerritorialScope.ES_MAINLAND,
-            issuer_identification_state=EUMemberState.DE,
-            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-            kind=TransactionKind.GOODS,
+            issuer_residency=IvaTerritorialScope._from_registry("es_canarias"),
+            customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+            issuer_identification_state=EUMemberState._from_registry("de"),
+            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            kind=TransactionKind("goods"),
             direction=InvoiceKind.ISSUED,
-            rate_tier=IvaRateKind.GENERAL,
+            rate_tier=IvaRateKind("general"),
         )
-        assert classify_iva(criteria).category is IvaCategory.DOMESTIC_NOT_SUBJECT
+        assert classify_iva(criteria).category == IvaCategory("domestic_not_subject")
 
 
 class TestTheSplitRemovesNoRefusal:
@@ -175,12 +175,12 @@ class TestTheSplitRemovesNoRefusal:
         with pytest.raises(ValueError, match="rate_tier is required"):
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
-                issuer_identification_state=EUMemberState.DE,
-                customer_identification_state=EUMemberState.DE,
-                customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-                kind=TransactionKind.GOODS,
+                issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                issuer_identification_state=EUMemberState._from_registry("de"),
+                customer_identification_state=EUMemberState._from_registry("de"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
             )
 
@@ -194,10 +194,10 @@ class TestTheSplitRemovesNoRefusal:
         with pytest.raises(ValueError, match="rate_tier is required"):
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-                kind=TransactionKind.GOODS,
+                issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
             )
 
@@ -244,12 +244,12 @@ class TestEveryBranchDeclaresWhatItConsumes:
         result = classify_iva(
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-                kind=TransactionKind.GOODS,
+                issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
-                rate_tier=IvaRateKind.GENERAL,
+                rate_tier=IvaRateKind("general"),
             ),
         )
         assert result.consumes_party_facts == frozenset({PartyFact.TERRITORIAL_ESTABLISHMENT})
@@ -258,11 +258,11 @@ class TestEveryBranchDeclaresWhatItConsumes:
         result = classify_iva(
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_residency=IvaTerritorialScope.EU_MEMBER,
-                customer_identification_state=EUMemberState.DE,
-                customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-                kind=TransactionKind.GOODS,
+                issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                customer_identification_state=EUMemberState._from_registry("de"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
             ),
         )
@@ -283,21 +283,21 @@ class TestAnUnplacedOperationDemandsEverything:
         result = classify_iva(
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope.EU_MEMBER,
-                customer_residency=IvaTerritorialScope.EU_MEMBER,
-                customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-                kind=TransactionKind.GOODS,
+                issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
             ),
         )
-        assert result.category is IvaCategory.UNKNOWN
+        assert result.category == IvaCategory("unknown")
         assert result.consumes_party_facts == frozenset(PartyFact)
 
     def test_a_result_that_declares_nothing_defaults_to_demanding_everything(self) -> None:
         """The fail-toward-asking default, so a forgotten declaration costs a question."""
         from ..classification import IvaClassificationResult
 
-        bare = IvaClassificationResult(category=IvaCategory.UNKNOWN, matched_rule_id="R99_fallthrough")
+        bare = IvaClassificationResult(category=IvaCategory("unknown"), matched_rule_id="R99_fallthrough")
         assert bare.consumes_party_facts == frozenset(PartyFact)
 
 
@@ -313,24 +313,24 @@ class TestTheRateScheduleFollowsTheEstablishmentNotTheIdentification:
         spanish_only = classify_iva(
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-                kind=TransactionKind.GOODS,
+                issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+                kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
-                rate_tier=IvaRateKind.GENERAL,
+                rate_tier=IvaRateKind("general"),
             ),
         )
         german_identified = classify_iva(
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-                customer_residency=IvaTerritorialScope.ES_MAINLAND,
-                issuer_identification_state=EUMemberState.DE,
-                customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-                kind=TransactionKind.GOODS,
+                issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+                issuer_identification_state=EUMemberState._from_registry("de"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+                kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
-                rate_tier=IvaRateKind.GENERAL,
+                rate_tier=IvaRateKind("general"),
             ),
         )
         assert spanish_only.rate is not None

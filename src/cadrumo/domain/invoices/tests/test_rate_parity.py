@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
 from ...iva.errors import IvaRateNotFoundError
 from .. import enums
 from ..enums import IvaRate, iva_rate_percentage, resolve_iva_rate_slot, resolve_iva_rate_slot_fact
@@ -57,13 +59,13 @@ def test_persisted_rate_taxonomy_exposes_no_retired_local_numeric_interpretation
 @pytest.mark.parametrize(
     ("slot", "on_date", "expected"),
     (
-        (IvaRate.RATE_0, date(2026, 6, 1), Decimal("0")),
-        (IvaRate.RATE_4, date(2026, 6, 1), Decimal("0.04")),
-        (IvaRate.RATE_10, date(2026, 6, 1), Decimal("0.10")),
-        (IvaRate.RATE_21, date(2026, 6, 1), Decimal("0.21")),
-        (IvaRate.RATE_5, date(2024, 8, 15), Decimal("0.05")),
-        (IvaRate.RATE_2, date(2024, 11, 15), Decimal("0.02")),
-        (IvaRate.RATE_7_5, date(2024, 11, 15), Decimal("0.075")),
+        (resolve_iva_rate_token("rate_0", date.today()), date(2026, 6, 1), Decimal("0")),
+        (resolve_iva_rate_token("rate_4", date.today()), date(2026, 6, 1), Decimal("0.04")),
+        (resolve_iva_rate_token("rate_10", date.today()), date(2026, 6, 1), Decimal("0.10")),
+        (resolve_iva_rate_token("rate_21", date.today()), date(2026, 6, 1), Decimal("0.21")),
+        (resolve_iva_rate_token("rate_5", date.today()), date(2024, 8, 15), Decimal("0.05")),
+        (resolve_iva_rate_token("rate_2", date.today()), date(2024, 11, 15), Decimal("0.02")),
+        (resolve_iva_rate_token("rate_7_5", date.today()), date(2024, 11, 15), Decimal("0.075")),
     ),
 )
 def test_persisted_numeric_slots_resolve_at_explicit_devengo_dates(
@@ -76,7 +78,7 @@ def test_persisted_numeric_slots_resolve_at_explicit_devengo_dates(
 
 
 def test_coexisting_slot_resolution_retains_fact_provenance() -> None:
-    resolved = resolve_iva_rate_slot_fact(IvaRate.RATE_2, date(2024, 11, 15))
+    resolved = resolve_iva_rate_slot_fact(resolve_iva_rate_token("rate_2", date.today()), date(2024, 11, 15))
 
     assert resolved is not None
     assert resolved.fact_id == "iva-rate-schedule"
@@ -88,10 +90,10 @@ def test_coexisting_slot_resolution_retains_fact_provenance() -> None:
 
 def test_transitional_slot_fails_closed_outside_its_window() -> None:
     with pytest.raises(IvaRateNotFoundError, match=r"errors\.iva\.rate_slot_not_in_force"):
-        iva_rate_percentage(IvaRate.RATE_2, date(2025, 6, 1))
+        iva_rate_percentage(resolve_iva_rate_token("rate_2", date.today()), date(2025, 6, 1))
 
 
 def test_nonnumeric_tokens_remain_nonnumeric() -> None:
     on_date = date(2026, 6, 1)
-    assert iva_rate_percentage(IvaRate.EXEMPT, on_date) is None
-    assert iva_rate_percentage(IvaRate.NOT_SUBJECT, on_date) is None
+    assert iva_rate_percentage(resolve_iva_rate_token("exempt", date.today()), on_date) is None
+    assert iva_rate_percentage(resolve_iva_rate_token("not_subject", date.today()), on_date) is None

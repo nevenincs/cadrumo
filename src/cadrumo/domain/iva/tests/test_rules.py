@@ -99,7 +99,7 @@ def test_iva_citation_rejects_an_unresolved_claim_that_carries_a_quotation() -> 
 
 
 def test_reagp_compensation_is_grounded_in_its_exact_statutory_compensation_article() -> None:
-    regulation = _CATALOGUE.regulations[IvaCategory.REAGP_COMPENSATION]
+    regulation = _CATALOGUE.regulations[IvaCategory("reagp_compensation")]
 
     assert [citation.legal_reference for citation in regulation.citations] == ["ley-37-1992:art-130"]
     assert "compensación a tanto alzado" in regulation.citations[0].quoted_text
@@ -108,7 +108,7 @@ def test_reagp_compensation_is_grounded_in_its_exact_statutory_compensation_arti
 def test_every_committed_regulation_has_citations_unless_legal_basis_exempt() -> None:
     """Every regulation is grounded, except a declared classifier sentinel.
 
-    ``IvaCategory.UNKNOWN`` codifies no tax treatment -- it is an
+    ``IvaCategory("unknown")`` codifies no tax treatment -- it is an
     application-level "could not classify" state -- so it carries no
     citations and is the sole carve-out, declared via
     ``legal_basis_exempt`` rather than merely absent.
@@ -126,4 +126,4 @@ def test_every_committed_regulation_has_citations_unless_legal_basis_exempt() ->
 
 def test_unknown_category_is_the_sole_legal_basis_exempt_regulation() -> None:
     exempt = [regulation.category for regulation in _CATALOGUE if regulation.legal_basis_exempt]
-    assert exempt == [IvaCategory.UNKNOWN]
+    assert exempt == [IvaCategory("unknown")]
