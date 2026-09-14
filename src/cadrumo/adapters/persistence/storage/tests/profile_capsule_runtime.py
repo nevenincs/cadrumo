@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from .....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
@@ -32,8 +33,14 @@ from .....core.config import override_settings
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
 from .....domain.buckets.event import BucketEventType
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.user_profile.errors import ProfileSchemaValidationError
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from ..bucket.directory_layout import BucketPaths, bucket_paths
 from ..custody.capsule import list_current_profile_custody_capsule_ids, load_committed_profile_password_material
 from ..custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
@@ -41,10 +48,19 @@ from ..custody.sentinel import create_profile_custody_sentinel
 from ..master_key.active_session import activate_session, current_active_bucket_session, session_serves_bucket
 from ..master_key.bucket_session import BucketSession
 
+if TYPE_CHECKING:
+    from .....domain.calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
+
 
 def derive_test_bucket_key(identity: str, *, purpose: str) -> bytes:
     """Derive one deterministic, purpose-separated 32-byte test key."""
     return sha256(f"cadrumo-test-bucket:{purpose}:{identity}".encode("ascii")).digest()
+
+
+def _profile_authority_contexts() -> tuple[ProfileCreateContext, ProfileDecodeContext]:
+    """Return create/decode contexts from one bundled authority generation."""
+    authority = bundled_authority()
+    return authority.profile_create_context(), authority.profile_decode_context()
 
 
 def new_test_profile_custody_envelope(profile_id: UUID) -> ProfileCustodyEnvelope:
@@ -98,8 +114,17 @@ def publish_test_profile_capsule(
     storage_root = effective_storage_root(root)
     dek = derive_test_bucket_key(str(identity), purpose="dek")
     envelope = new_test_profile_custody_envelope(identity)
-    initial = UserProfileRecord(profile_id=str(identity), setup_state=ProfileSetupState.INCOMPLETE)
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    create_context, decode_context = _profile_authority_contexts()
+    initial = create_user_profile_record(
+        context=create_context,
+        profile_id=str(identity),
+        setup_state=ProfileSetupState.INCOMPLETE,
+    )
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope,
+        dek=dek,
+        profile_decode_context=decode_context,
+    )
     try:
         with test_profile_recovery_envelope(
             identity,
@@ -190,17 +215,34 @@ def mint_test_profile_recovery_envelope(
 
 def _record_session(profile_id: UUID, *, root: Path) -> ProfileRecordSession:
     material = load_committed_profile_password_material(profile_id, root=root)
+    _, decode_context = _profile_authority_contexts()
     return ProfileRecordSession.from_envelope(
         envelope=material.envelope,
         dek=_active_bucket_dek(profile_id),
+        profile_decode_context=decode_context,
     )
 
 
-def _rebuild_record(record: UserProfileRecord, **updates: object) -> UserProfileRecord:
+def _rebuild_record(
+    record: UserProfileRecord,
+    *,
+    create_context: ProfileCreateContext,
+    **updates: object,
+) -> UserProfileRecord:
+    """Recreate a fixture record through its pinned profile authority."""
     payload = record.model_dump()
     payload.pop("content_digest", None)
     payload.update(updates)
-    return UserProfileRecord.model_validate(payload)
+    return create_user_profile_record(
+        context=create_context,
+        profile_id=str(payload["profile_id"]),
+        facts=payload["facts"],
+        setup_state=payload["setup_state"],
+        record_revision=payload["record_revision"],
+        previous_record_digest=payload["previous_record_digest"],
+        created_at=payload["created_at"],
+        updated_at=payload["updated_at"],
+    )
 
 
 @contextmanager
@@ -244,6 +286,7 @@ def replace_test_profile_record(
         current = repository.load(identity)
         replacement = _rebuild_record(
             record,
+            create_context=repository.session.create_context(),
             record_revision=current.record_revision + 1,
             previous_record_digest=current.content_digest,
             updated_at=datetime.now(UTC),
@@ -320,8 +363,10 @@ def seed_modelo_ready_profile_record(
     profile_id: str, *, clock: datetime, tax_id: str | None = None
 ) -> UserProfileRecord:
     """Seed one profile carrying the modelo readiness baseline."""
+    create_context, _ = _profile_authority_contexts()
     return seed_test_profile_record(
-        UserProfileRecord(
+        create_user_profile_record(
+            context=create_context,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=_facts_with_tax_id(tax_id) if tax_id else MODELO_READY_PROFILE_FACTS,
@@ -343,9 +388,15 @@ def seed_test_profile_record(
     dek = _active_bucket_dek(identity)
     if identity not in list_current_profile_custody_capsule_ids(root=storage_root):
         envelope = new_test_profile_custody_envelope(identity)
-        session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+        create_context, decode_context = _profile_authority_contexts()
+        session = ProfileRecordSession.from_envelope(
+            envelope=envelope,
+            dek=dek,
+            profile_decode_context=decode_context,
+        )
         initial = _rebuild_record(
             record,
+            create_context=create_context,
             profile_id=str(identity),
             record_revision=1,
             previous_record_digest=None,

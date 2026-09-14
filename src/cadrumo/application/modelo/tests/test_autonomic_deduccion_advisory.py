@@ -34,15 +34,21 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.application.user_profile.projections import profile_fact_index
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....domain.user_profile.loader import load_user_profile_schema
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileFactValue,
+    create_user_profile_record,
+)
 from .. import _autonomic_deduccion_advisory as advisory_module
 from .._autonomic_deduccion_advisory import madrid_nacimiento_adopcion_eligibility_advisory_finding
 from ..profile_binding import (
@@ -58,6 +64,11 @@ _PERIOD = "0A"
 _CLOCK = datetime(2026, 7, 4, 9, 0, 0, tzinfo=UTC)
 _CASILLA_1039: CasillaId = validated_casilla_id("1039", surface="test_autonomic_deduccion_advisory")
 _FACT_INDEXES: dict[str, dict[str, UserProfileFactValue] | None] = {}
+_PROFILE_SCHEMA = load_user_profile_schema()
+_PROFILE_CREATE_CONTEXT = ProfileCreateContext(
+    schema=_PROFILE_SCHEMA,
+    generation=AuthorityGenerationPin(logical_generation="test-profile", reader_incarnation="test-reader"),
+)
 
 
 @pytest.fixture(scope="module")
@@ -82,20 +93,23 @@ def _base_facts(**overrides: str) -> tuple[UserProfileFact, ...]:
 def seeded_bucket(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     """Yield a bucket id backed by an inward fake profile-fact reader."""
     _FACT_INDEXES.clear()
-    monkeypatch.setattr(advisory_module, "_load_fact_index", _FACT_INDEXES.get)
+    monkeypatch.setattr(
+        advisory_module,
+        "_load_fact_index",
+        lambda bucket_id, *, profile_decode_context=None: _FACT_INDEXES.get(bucket_id),
+    )
     yield _BUCKET_ID
     _FACT_INDEXES.clear()
 
 
 def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
-    record = UserProfileRecord(
-        setup_state=ProfileSetupState.COMPLETE,
+    record = create_user_profile_record(
+        context=_PROFILE_CREATE_CONTEXT,
         profile_id=bucket_id,
+        setup_state=ProfileSetupState.COMPLETE,
         facts=facts,
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
     )
-    _FACT_INDEXES[bucket_id] = profile_fact_index(record, load_user_profile_schema())
+    _FACT_INDEXES[bucket_id] = profile_fact_index(record, _PROFILE_SCHEMA)
 
 
 def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant(

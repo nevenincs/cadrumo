@@ -18,6 +18,7 @@ from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....application.user_profile.preflight import (
     build_profile_preflight_requirement,
@@ -26,7 +27,6 @@ from ....application.user_profile.preflight import (
 )
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import build_profile_grounding_index
-from ....domain.user_profile.loader import load_user_profile_schema
 from .._overview import (
     _ENTITY_TYPE_SELECTOR,
     _IRPF_INCOME_CATEGORIES_SELECTOR,

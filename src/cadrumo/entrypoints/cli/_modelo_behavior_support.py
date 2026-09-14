@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import typer
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -44,6 +46,9 @@ from ._modelo_cli_support import (
 from .common import no_active_profile_refusal
 
 _log = get_logger(__name__)
+
+if TYPE_CHECKING:
+    from ...application.modelo.calculation_action_ports import CalculationActionPorts
 
 
 def _captured_work_catalogue(bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
@@ -122,7 +127,7 @@ def resolve_revision_for_cli(
     period: str | Period | None,
     registry_revision: str | None,
     bucket_id: str | None = None,
-    calculation_ports,
+    calculation_ports: CalculationActionPorts,
     selector: str = ModeloCalculationRevisionSelector.CURRENT.value,
     default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
@@ -173,7 +178,7 @@ def resolve_exportable_revision_for_cli(
     registry_revision: str | None,
     bucket_id: str | None,
     select: str,
-    calculation_ports,
+    calculation_ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Resolve one exportable revision from raw CLI target options.
 

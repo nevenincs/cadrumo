@@ -48,7 +48,11 @@ from pydantic import BaseModel, Field
 from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    ValidatedRegistryAuthority,
+    bundled_indexed_authority,
+)
 from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError, AuthorityEvidenceProjection
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
@@ -71,7 +75,6 @@ from ...domain.calculations.registry.schema import (
     BindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
-    ModeloRevision,
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.schema_base import SettlementDirectionField
@@ -430,25 +433,26 @@ def filing_profile_from_taxpayer(
 
 def build_runtime_schema_provider(
     *,
-    filing_year: int | None = None,
-    period: object | None = None,
+    filing_year: int,
+    period: object,
     modelos: Sequence[str] | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySchemaAccessor:
-    """Build a :class:`RegistrySchemaAccessor` from bundled validated snapshots.
+    """Build a :class:`RegistrySchemaAccessor` from validated snapshots.
 
-    When ``filing_year`` and ``period`` are supplied, both are required and
-    ``period`` must be a typed :class:`~core.Period`; raw registry tokens
-    are rejected before snapshot lookup. Without an explicit period, the
-    provider selects the current open revision for each modelo.
+    ``filing_year`` and ``period`` are required and ``period`` must be a typed
+    :class:`~core.Period`; raw registry tokens are rejected before snapshot lookup.
 
     The provider has no registry or source-root override: filing flows consume
     the immutable authority bundled with the installed package.
 
     Args:
-        filing_year: Optional filing year; must be paired with ``period``.
-        period: Optional typed :class:`~core.Period`; must match
-            ``filing_year``.
+        filing_year: Filing year of the draft or request.
+        period: Typed :class:`~core.Period` matching ``filing_year``.
         modelos: Optional modelo id selection. Blank ids are rejected.
+        operation: Optional generation-pinned indexed authority operation. When
+            supplied, ``modelos`` must name the requested models explicitly and
+            snapshots are loaded through point revision/directory access.
 
     Returns:
         A :class:`RegistrySchemaAccessor` implementing the filing
@@ -460,21 +464,30 @@ def build_runtime_schema_provider(
             invalid, or no snapshot exists for the requested filing context.
     """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
-    return _schema_provider_for_authority(
-        bundled_authority(),
-        filing_year=filing_year,
-        period=validated_period,
-        selected_tuple=_selected_modelo_tuple(modelos),
-        registry_root_name="bundled",
-    )
+    selected_tuple = _selected_modelo_tuple(modelos)
+    if operation is not None:
+        return _schema_provider_for_operation(
+            operation,
+            filing_year=filing_year,
+            period=validated_period,
+            selected_tuple=selected_tuple,
+        )
+    with bundled_indexed_authority().operation() as indexed_operation:
+        return _schema_provider_for_operation(
+            indexed_operation,
+            filing_year=filing_year,
+            period=validated_period,
+            selected_tuple=selected_tuple,
+        )
 
 
 def schema_provider_from_authority(
     authority: ValidatedRegistryAuthority,
     *,
-    filing_year: int | None = None,
-    period: object | None = None,
+    filing_year: int,
+    period: object,
     modelos: Sequence[str] | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySchemaAccessor:
     """Build a :class:`RegistrySchemaAccessor` from an explicit validated authority.
 
@@ -486,10 +499,12 @@ def schema_provider_from_authority(
 
     Args:
         authority: Validated registry authority to project.
-        filing_year: Optional filing year; must be paired with ``period``.
-        period: Optional typed :class:`~core.Period`; must match
-            ``filing_year``.
+        filing_year: Filing year of the draft or request.
+        period: Typed :class:`~core.Period` matching ``filing_year``.
         modelos: Optional modelo id selection. Blank ids are rejected.
+        operation: Optional generation-pinned indexed authority operation. When
+            supplied, it takes precedence over the eager authority for the
+            selected model point loads.
 
     Returns:
         A :class:`RegistrySchemaAccessor` implementing the filing
@@ -501,11 +516,19 @@ def schema_provider_from_authority(
             invalid, or no snapshot exists for the requested filing context.
     """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
+    selected_tuple = _selected_modelo_tuple(modelos)
+    if operation is not None:
+        return _schema_provider_for_operation(
+            operation,
+            filing_year=filing_year,
+            period=validated_period,
+            selected_tuple=selected_tuple,
+        )
     return _schema_provider_for_authority(
         authority,
         filing_year=filing_year,
         period=validated_period,
-        selected_tuple=_selected_modelo_tuple(modelos),
+        selected_tuple=selected_tuple,
         registry_root_name="published authority artifact",
     )
 
@@ -537,8 +560,8 @@ def _runtime_snapshots_for_modelos(
     authority: ValidatedRegistryAuthority,
     modelos: Sequence[ModeloDefinition],
     *,
-    filing_year: int | None,
-    period: Period | None,
+    filing_year: int,
+    period: Period,
     selected_tuple: tuple[str, ...] | None,
 ) -> dict[str, RegistrySnapshot]:
     snapshots: dict[str, RegistrySnapshot] = {}
@@ -560,13 +583,6 @@ def _runtime_snapshots_for_modelos(
                 # a filing draft needs. Propagating the registry's own refusal
                 # keeps the modelo, its revision and both grades in the message.
                 raise
-            if filing_year is None or period is None:
-                raise _registry_snapshot_unavailable_error(
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    exc=exc,
-                ) from exc
             continue
     return snapshots
 
@@ -574,8 +590,8 @@ def _runtime_snapshots_for_modelos(
 def _schema_provider_for_authority(
     authority: ValidatedRegistryAuthority,
     *,
-    filing_year: int | None,
-    period: Period | None,
+    filing_year: int,
+    period: Period,
     selected_tuple: tuple[str, ...] | None,
     registry_root_name: str,
 ) -> RegistrySchemaAccessor:
@@ -607,29 +623,60 @@ def _schema_provider_for_authority(
     )
 
 
-def _registry_snapshot_unavailable_error(
+def _schema_provider_for_operation(
+    operation: PinnedAuthorityOperation,
     *,
-    modelo: ModeloDefinition,
-    filing_year: int | None,
-    period: Period | None,
-    exc: RegistrySnapshotError | RegistryValidationError,
-) -> ModeloBuilderError:
-    """Translate a rejected provider snapshot into the filing error surface.
+    filing_year: int,
+    period: Period,
+    selected_tuple: tuple[str, ...] | None,
+) -> RegistrySchemaAccessor:
+    """Project one generation-pinned operation into the filing schema surface.
 
-    ``RegistrySnapshot`` is filing-grade by definition.  A provider request
-    without an explicit filing context still needs to refuse a revision whose
-    legal slice is not filing-grade, but it must do so through the filing
-    boundary's typed error rather than leaking the registry implementation
-    exception to callers.
+    An indexed operation intentionally has no bulk model enumeration method.
+    Requiring an explicit model selection keeps this provider point-addressed;
+    each selected model resolves its directory and exactly one revision through
+    the operation before the existing snapshot projections run.
     """
-    return ModeloBuilderError(
-        translated_message="application.filing.build_draft.errors.registry_snapshot_unavailable",
-        context={
-            "modelo": modelo.id,
-            "filing_year": filing_year,
-            "period": period.registry_token if period is not None else None,
-            "registry_error_type": type(exc).__name__,
-        },
+    if selected_tuple is None:
+        raise ModeloBuilderError(
+            translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
+            context={"modelos": "explicit selection required for indexed operation"},
+        )
+    snapshots: dict[str, RegistrySnapshot] = {}
+    for modelo_id in selected_tuple:
+        try:
+            snapshots[modelo_id] = operation.snapshot(
+                modelo_id,
+                filing_year=filing_year,
+                period=period.registry_token,
+            )
+        except (RegistrySnapshotError, RegistryValidationError) as exc:
+            if _is_below_filing_authority(exc):
+                raise
+            continue
+        except ValueError as exc:
+            raise ModeloBuilderError(
+                translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
+                context={"modelos": modelo_id},
+            ) from exc
+    if not snapshots:
+        raise ModeloBuilderError(
+            translated_message="application.filing.runtime.errors.registry_empty_for_period",
+            context={"filing_year": str(filing_year), "period": period.registry_token},
+        )
+    sources = {source_id: source for snapshot in snapshots.values() for source_id, source in snapshot.sources.items()}
+    source_evidence = tuple(
+        operation.source_evidence(str(source_id))
+        for source_id, source in sorted(sources.items())
+        if str(source.kind) in {"dictionary", "xsd"}
+    )
+    evidence = AuthorityEvidenceProjection(sources=source_evidence)
+    return RegistrySchemaAccessor(
+        collections={modelo_id: collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
+        subviews={modelo_id: subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
+        snapshots=snapshots,
+        sources=sources,
+        evidence=evidence,
     )
 
 
@@ -644,13 +691,7 @@ def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | Non
     return selected
 
 
-def _validate_period_arguments(*, filing_year: int | None, period: object | None) -> Period | None:
-    if filing_year is None and period is None:
-        return None
-    if filing_year is None or period is None:
-        raise ModeloBuilderError(
-            translated_message="application.filing.runtime.errors.filing_year_period_pair",
-        )
+def _validate_period_arguments(*, filing_year: int, period: object) -> Period:
     if not isinstance(period, Period):
         raise ModeloBuilderError(
             translated_message="application.filing.runtime.errors.period_type",
@@ -685,36 +726,10 @@ def _snapshot_for_provider(
     authority: ValidatedRegistryAuthority,
     modelo: ModeloDefinition,
     *,
-    filing_year: int | None,
-    period: Period | None,
+    filing_year: int,
+    period: Period,
 ) -> RegistrySnapshot:
-    if filing_year is not None and period is not None:
-        return authority.snapshot(modelo.id, filing_year=filing_year, period=period.registry_token)
-    revision = _current_provider_revision(modelo)
-    selector = revision.period_selector
-    provider_year = selector.years[0] if selector.years else selector.year_from
-    if provider_year is None:
-        raise ModeloBuilderError(
-            translated_message="application.filing.runtime.errors.provider_year_missing",
-            context={"modelo": modelo.id, "revision": revision.id},
-        )
-    return authority.snapshot(
-        modelo.id,
-        filing_year=provider_year,
-        period=selector.periods_for_year(provider_year)[0],
-        revision_id=revision.id,
-    )
-
-
-def _current_provider_revision(modelo: ModeloDefinition) -> ModeloRevision:
-    open_revisions = tuple(revision for revision in modelo.revisions.values() if revision.valid_to is None)
-    candidates = open_revisions or tuple(modelo.revisions.values())
-    if not candidates:
-        raise ModeloBuilderError(
-            translated_message="application.filing.runtime.errors.modelo_revision_missing",
-            context={"modelo": modelo.id},
-        )
-    return max(candidates, key=lambda revision: (revision.valid_from, revision.id))
+    return authority.snapshot(modelo.id, filing_year=filing_year, period=period.registry_token)
 
 
 def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaCollection:

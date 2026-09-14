@@ -34,6 +34,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....application.calculations.maritime_exemption_service import resolve_maritime_exemption
 from ....core.errors.error_codes import get_registered_error_code
@@ -43,7 +44,6 @@ from ....domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

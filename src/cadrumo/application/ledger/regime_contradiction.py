@@ -41,6 +41,7 @@ from typing import TYPE_CHECKING
 
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
+from ...domain.iva.regime_legend import RegimeLegend
 from .invoice_draft_records import DraftDiscrepancyFinding
 
 if TYPE_CHECKING:
@@ -73,7 +74,11 @@ def draft_prints_a_repercutido_line(draft: InvoiceDraft) -> bool:
     return draft.iva_rate is not None and draft.iva_rate > 0
 
 
-def regime_contradiction_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | None:
+def regime_contradiction_finding(
+    draft: InvoiceDraft,
+    *,
+    legends: tuple[RegimeLegend, ...],
+) -> DraftDiscrepancyFinding | None:
     """Return the finding a self-contradicting document raises, or ``None``.
 
     Deterministic and total: the same draft always yields the same answer, and
@@ -84,6 +89,8 @@ def regime_contradiction_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding
     Args:
         draft: The draft to check, carrying the transcribed mention and the tax
             figures the document stated.
+        legends: The dated registry declarations selected by the enclosing
+            pinned authority operation.
 
     Returns:
         A :class:`~application.ledger.invoice_draft_records.DraftDiscrepancyFinding` when the printed
@@ -92,6 +99,7 @@ def regime_contradiction_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding
     derivation = derive_category_from_regime_legend(
         printed_legend=draft.regime_legend,
         has_repercutido_line=draft_prints_a_repercutido_line(draft),
+        legends=legends,
     )
     if derivation.outcome is not LegendDerivationOutcome.CONTRADICTED:
         return None

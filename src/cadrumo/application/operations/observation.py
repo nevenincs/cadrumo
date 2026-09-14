@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import ClassVar, cast
+from typing import cast
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationCancellation, OperationInteractionKind, OperationLifecycle
 from .frontend_contracts import (
     OperationObservationResultV1,
@@ -143,12 +144,8 @@ class OperationObservationService:
         )
 
 
-class _DefinitionContractMismatchError(RuntimeError):
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal-definition-contract-mismatch-signal: this module catches it by name"
-        " one call away and converts the mismatch into its own typed outcome, so it"
-        " never reaches an operator and needs no registry-bound ErrorCode"
-    )
+class _DefinitionContractMismatchError(CadrumoError):
+    """Internal signal converted to the typed definition-contract refusal."""
 
 
 def _refusal(

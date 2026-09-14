@@ -6,9 +6,22 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.deadlines.models import IrpfEstimationRegime, IVARegime
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....core.hashing import content_hash_hex
+from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
+from ....domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
+from ....domain.calculations.registry.iva_schema_vocabulary import (
+    default_iva_regime,
+    iva_regime_exento_token,
+    iva_regime_no_aplica_token,
+)
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from ...wizard import catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 from ..projections import (
     facts_to_values,
@@ -21,6 +34,29 @@ from ..projections import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_UUID = "66666666-6666-4666-8666-666666666666"
+_SCHEMA = load_user_profile_schema()
+_CREATE_CONTEXT = ProfileCreateContext(
+    schema=_SCHEMA,
+    generation=AuthorityGenerationPin(
+        content_hash_hex({"generation": "projection-fixture"}),
+        content_hash_hex({"reader": "projection-fixture"}),
+    ),
+)
+
+
+def _record(
+    *,
+    profile_id: str = "11111111-1111-4111-8111-111111111111",
+    facts: tuple[UserProfileFact, ...] = (),
+    setup_state: ProfileSetupState = ProfileSetupState.COMPLETE,
+) -> UserProfileRecord:
+    """Build fixture records through the context-required creation door."""
+    return create_user_profile_record(
+        context=_CREATE_CONTEXT,
+        profile_id=profile_id,
+        facts=facts,
+        setup_state=setup_state,
+    )
 
 
 def test_facts_to_values_translates_paths_through_schema_selectors() -> None:
@@ -28,21 +64,21 @@ def test_facts_to_values_translates_paths_through_schema_selectors() -> None:
         UserProfileFact(path="identity.tax_id", value="12345678Z"),
         UserProfileFact(path="contact.notes", value=None),
     )
-    values = facts_to_values(facts)
+    values = facts_to_values(facts, schema=_SCHEMA)
     assert values["tax.id"] == "12345678Z"
 
 
 def test_record_to_values_uses_schema_model_selectors() -> None:
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    assert record_to_values(record)["tax.id"] == "12345678Z"
+    assert record_to_values(record, schema=_SCHEMA)["tax.id"] == "12345678Z"
 
 
 def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> None:
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
@@ -56,13 +92,13 @@ def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> 
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         ),
     )
-    profile = projection_for_taxpayer(record)
+    profile = projection_for_taxpayer(record, schema=_SCHEMA)
     assert profile.tax_id == "12345678Z"
-    assert profile.iva_regime is IVARegime.GENERAL
+    assert profile.iva_regime == default_iva_regime()
 
 
 def test_projection_for_taxpayer_uses_no_aplica_for_natural_person_without_activity_or_iva_fact() -> None:
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
@@ -72,14 +108,14 @@ def test_projection_for_taxpayer_uses_no_aplica_for_natural_person_without_activ
         ),
     )
 
-    profile = projection_for_taxpayer(record)
+    profile = projection_for_taxpayer(record, schema=_SCHEMA)
 
     assert profile.tax_id == "12345678Z"
-    assert profile.iva_regime is IVARegime.NO_APLICA
+    assert profile.iva_regime == iva_regime_no_aplica_token()
 
 
 def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_person_without_activity() -> None:
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
@@ -96,10 +132,10 @@ def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_perso
         ),
     )
 
-    profile = projection_for_taxpayer(record)
+    profile = projection_for_taxpayer(record, schema=_SCHEMA)
 
     assert profile.tax_id == "12345678Z"
-    assert profile.iva_regime is IVARegime.EXENTO
+    assert profile.iva_regime == iva_regime_exento_token()
 
 
 def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
@@ -116,16 +152,16 @@ def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
         },
     )
     assert profile.tax_id == "X9876543K"
-    assert profile.iva_regime is IVARegime.GENERAL
+    assert profile.iva_regime == default_iva_regime()
 
 
 def test_projection_for_taxpayer_uses_defaults_when_record_is_blank() -> None:
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE, profile_id="11111111-1111-4111-8111-111111111111", facts=()
     )
-    profile = projection_for_taxpayer(record, tax_id_default="Z0000000M")
+    profile = projection_for_taxpayer(record, tax_id_default="Z0000000M", schema=_SCHEMA)
     assert profile.tax_id == "Z0000000M"
-    assert profile.iva_regime is IVARegime.GENERAL
+    assert profile.iva_regime == default_iva_regime()
 
 
 def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() -> None:
@@ -143,7 +179,7 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
     depends on.
     """
 
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
@@ -163,9 +199,9 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
             UserProfileFact(path="withholding.has_employees", value=True),
         ),
     )
-    profile = projection_for_taxpayer(record)
+    profile = projection_for_taxpayer(record, schema=_SCHEMA)
     assert profile.art109_activity_income_withholding_ge_70pct is True
-    assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+    assert profile.irpf_estimation_regime == irpf_estimation_regime_objetiva_token()
     assert profile.has_employees is True
 
 
@@ -179,7 +215,7 @@ def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
     emitted verbatim, causing the calendar to treat the field as absent and
     emit a false warning even when the operator had declared the value.
     """
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
@@ -189,7 +225,7 @@ def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
             ),
         ),
     )
-    values = record_to_values(record)
+    values = record_to_values(record, schema=_SCHEMA)
     # Must be keyed without the section prefix — that is what the calendar reads.
     assert "third_party_transactions_above_347_threshold" in values
     assert values["third_party_transactions_above_347_threshold"] == "true"
@@ -200,7 +236,7 @@ def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
 def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
     """Modelo 721's threshold is distinct from Modelo 720's foreign-assets fact."""
 
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
@@ -217,8 +253,8 @@ def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
         ),
     )
 
-    values = record_to_values(record)
-    profile = projection_for_taxpayer(record)
+    values = record_to_values(record, schema=_SCHEMA)
+    profile = projection_for_taxpayer(record, schema=_SCHEMA)
 
     assert values["monedas_virtuales_extranjero_above_threshold"] == "true"
     assert "obligations.monedas_virtuales_extranjero_above_threshold" not in values
@@ -235,7 +271,7 @@ def test_projection_for_taxpayer_populates_selector_aliased_direct_reads() -> No
     path keys. The record branch must therefore feed BOTH key spaces; a
     path-only projection silently blanks this family.
     """
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
@@ -245,7 +281,7 @@ def test_projection_for_taxpayer_populates_selector_aliased_direct_reads() -> No
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="50000.00"),
         ),
     )
-    profile = projection_for_taxpayer(record)
+    profile = projection_for_taxpayer(record, schema=_SCHEMA)
     # Selector-aliased direct reads.
     assert profile.fiscal_address_cadastral_reference == "9872023VH5797S0001WX"
     assert profile.fiscal_address_is_habitual_vivienda is True
@@ -265,7 +301,7 @@ def test_projection_for_taxpayer_is_the_single_state_projection_authority() -> N
     carry, so a future divergence between the record path and a flat-map
     caller fails here loudly.
     """
-    record = UserProfileRecord(
+    record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
@@ -281,8 +317,10 @@ def test_projection_for_taxpayer_is_the_single_state_projection_authority() -> N
             UserProfileFact(path="contact.fiscal_address_is_habitual_vivienda", value=True),
         ),
     )
-    via_record = projection_for_taxpayer(record)
-    via_merged_mapping = projection_for_taxpayer(dict(record_to_path_values(record)) | record_to_values(record))
+    via_record = projection_for_taxpayer(record, schema=_SCHEMA)
+    via_merged_mapping = projection_for_taxpayer(
+        dict(record_to_path_values(record)) | record_to_values(record, schema=_SCHEMA),
+    )
     assert via_record == via_merged_mapping
 
 
@@ -302,7 +340,7 @@ def test_a_record_with_no_windows_projects_exactly_as_declared() -> None:
         UserProfileFact(path="identity.tax_id", value="22222222J"),
         UserProfileFact(path="contact.postcode", value="08032"),
     )
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
+    record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
 
     assert record_to_path_values(record)["identity.tax_id"] == "22222222J", (
         "declaration order still decides when no window does"
@@ -323,7 +361,7 @@ def test_the_latest_effective_window_wins_at_one_path() -> None:
         UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
         UserProfileFact(path="contact.postcode", value="08032", valid_from=date(2019, 1, 1)),
     )
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
+    record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
 
     assert record_to_path_values(record)["contact.postcode"] == "28001"
     assert record_to_effective_facts(record)["contact.postcode"].value == "28001"
@@ -335,7 +373,7 @@ def test_a_windowed_fact_supersedes_an_unwindowed_one() -> None:
         UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
         UserProfileFact(path="contact.postcode", value="08032"),
     )
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
+    record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
 
     assert record_to_path_values(record)["contact.postcode"] == "28001"
 
@@ -350,7 +388,7 @@ def test_the_two_projections_agree_on_which_fact_is_effective() -> None:
         UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
         UserProfileFact(path="contact.postcode", value=None, valid_from=date(2019, 1, 1)),
     )
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
+    record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
 
     assert record_to_path_values(record)["contact.postcode"] == "28001"
     assert record_to_effective_facts(record)["contact.postcode"].value == "28001", (

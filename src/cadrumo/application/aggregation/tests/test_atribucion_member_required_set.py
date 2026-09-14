@@ -31,8 +31,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.user_profile.loader import load_user_profile_schema
 from ..atribucion_member import (
     _REQUIRED_FIELDS,
     _detail_row_from_socio,

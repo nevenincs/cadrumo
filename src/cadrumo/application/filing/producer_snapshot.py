@@ -8,12 +8,13 @@ own export keys, layout offsets, or rendered record fragments.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, ClassVar, Final, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection
@@ -81,10 +82,8 @@ _M303_OFFICIAL_FILING_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
 )
 
 
-class FilingProducerSnapshotError(ValueError):
+class FilingProducerSnapshotError(CadrumoError):
     """Raised when filing facts cannot form a complete producer snapshot."""
-
-    __bare_base_rationale__: ClassVar[str] = "internal-filing-producer-snapshot-validation-carrier"
 
 
 def assert_m303_regularisation_result_matches_bienes_register(

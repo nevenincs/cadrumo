@@ -30,11 +30,27 @@ from __future__ import annotations
 from uuid import UUID, uuid4
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ....core.hashing import content_hash_hex
+from ....domain.calculations.registry.authority_artifact import (
+    AuthorityGenerationPin,
+    ProfileCreateContext,
+    ProfileDecodeContext,
+)
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord, create_user_profile_record
 from ..capsule_record import ProfileRecordIntegrityError, ProfileRecordSession
+from ..profile_record_repository import bound_profile_record_session, require_profile_record_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_SCHEMA = load_user_profile_schema()
+_DECODE_CONTEXT = ProfileDecodeContext(
+    schema=_SCHEMA,
+    generation=AuthorityGenerationPin(
+        content_hash_hex({"generation": "capsule-lineage-fixture"}),
+        content_hash_hex({"reader": "capsule-lineage-fixture"}),
+    ),
+)
 
 
 def _session(profile_id: UUID) -> ProfileRecordSession:
@@ -45,6 +61,7 @@ def _session(profile_id: UUID) -> ProfileRecordSession:
         password_generation=1,
         dek_epoch="e" * 32,
         _dek=bytearray(b"k" * 32),
+        profile_decode_context=_DECODE_CONTEXT,
     )
 
 
@@ -56,7 +73,8 @@ def _record(
     state: ProfileSetupState = ProfileSetupState.INCOMPLETE,
 ) -> UserProfileRecord:
     """Build a record that is internally valid, whatever chain it belongs to."""
-    return UserProfileRecord(
+    return create_user_profile_record(
+        context=ProfileCreateContext(schema=_SCHEMA, generation=_DECODE_CONTEXT.generation),
         profile_id=str(profile_id),
         setup_state=state,
         record_revision=revision,
@@ -83,6 +101,25 @@ def test_a_live_session_still_hands_out_its_key() -> None:
     session = _session(uuid4())
 
     assert session.encryption_key() == b"k" * 32
+
+
+def test_an_active_session_refuses_a_different_authority_generation() -> None:
+    """A later operation cannot reuse a record session pinned by another generation."""
+    profile_id = uuid4()
+    session = _session(profile_id)
+    mismatched = ProfileDecodeContext(
+        schema=_SCHEMA,
+        generation=AuthorityGenerationPin(
+            content_hash_hex({"generation": "different-generation"}),
+            content_hash_hex({"reader": "different-reader"}),
+        ),
+    )
+
+    with (
+        bound_profile_record_session(session),
+        pytest.raises(ProfileRecordIntegrityError, match="generation boundary"),
+    ):
+        require_profile_record_session(profile_id, profile_decode_context=mismatched)
 
 
 def test_the_initial_record_of_this_profile_is_accepted() -> None:

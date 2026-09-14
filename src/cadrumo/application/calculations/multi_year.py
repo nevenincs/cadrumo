@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -67,9 +67,15 @@ class PreviousFilingSourceResolver:
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve prior-filing bindings for one calculation context."""
-        snapshot = self._registry_snapshot or bundled_authority().snapshot(
-            context.modelo, filing_year=context.filing_year, period=context.period.registry_token
-        )
+        if self._registry_snapshot is not None:
+            snapshot = self._registry_snapshot
+        else:
+            with bundled_indexed_authority().operation() as operation:
+                snapshot = operation.snapshot(
+                    context.modelo,
+                    filing_year=context.filing_year,
+                    period=context.period.registry_token,
+                )
         from .binding_prefill import UNKNOWN_SOURCE_COORDINATE, resolve_bindings_from_local_store
         from .relation_prefill import activity_start_date_for_bucket
 

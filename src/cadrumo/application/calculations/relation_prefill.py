@@ -68,7 +68,7 @@ from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -1137,10 +1137,15 @@ class _RelationPrefillContextInputs(NamedTuple):
 def _snapshot_for_context(
     registry_snapshot: RegistrySnapshot | None,
     context: CalculationSourceContext,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySnapshot:
     if registry_snapshot is not None:
         return registry_snapshot
-    return bundled_authority().snapshot(
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _snapshot_for_context(registry_snapshot, context, operation=indexed_operation)
+    return operation.snapshot(
         context.modelo,
         filing_year=context.filing_year,
         period=context.period.registry_token,

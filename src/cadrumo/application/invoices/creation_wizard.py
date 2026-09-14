@@ -42,14 +42,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import ClassVar
 
 from pydantic import BaseModel, ValidationError
 
 from ...core.aggregation import IntracomOperationType
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
@@ -104,12 +103,8 @@ class InvoiceWizardResult(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
-class _WizardFieldError(Exception):
+class _WizardFieldError(CadrumoError):
     """Internal control-flow carrier for one field-validation failure."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "private wizard field-validation carrier; converted to InvoiceValidationError before leaving the module"
-    )
 
     field: str
     reason: str

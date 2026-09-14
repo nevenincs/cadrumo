@@ -21,8 +21,8 @@ forbids, on the majority case, where it was least likely to be noticed.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import (
     CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,

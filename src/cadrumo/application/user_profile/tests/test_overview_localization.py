@@ -18,9 +18,9 @@ back, which is exactly the state the change exists to leave behind.
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.config import override_settings
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import ProfileFieldType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import MASKED_PLACEHOLDER, build_profile_overview

@@ -28,12 +28,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .cli_runner import invoke_cached_cli, semantic_cli_output
 from .modelo_cli import create_modelo_work_unit_via_cli

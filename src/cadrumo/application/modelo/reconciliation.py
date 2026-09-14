@@ -1209,12 +1209,13 @@ def _active_profile_tax_id(bucket_id: str) -> str:
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values, record_to_values
 
-    record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    repository = ProfileRecordRepository.for_current_session(bucket_id)
+    record = repository.load(bucket_id)
     path_values = record_to_path_values(record)
     profile_tax_id = _normalise_tax_id(path_values.get("identity.tax_id"))
     if profile_tax_id:
         return profile_tax_id
-    selector_values = record_to_values(record)
+    selector_values = record_to_values(record, schema=repository.session.profile_decode_context.schema)
     return _normalise_tax_id(selector_values.get("tax.id"))
 
 

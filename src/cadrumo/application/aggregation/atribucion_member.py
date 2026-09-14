@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import TypeAdapter
 
@@ -34,7 +34,6 @@ from ...domain.modelos.row_models import (
     Modelo184MemberRow,
 )
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import numeric_value_refusal
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -44,6 +43,10 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+    from ...domain.user_profile.schema import ProfileSchemaDefinition
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.ATRIBUCION_MEMBER,)
 _SOCIO_FACT_RE = re.compile(r"^attribution_entity_socios\.(?P<index>[0-9]+)\.(?P<field>[a-z][a-z0-9_]*)$")
@@ -84,17 +87,31 @@ class AtribucionMemberSourceResolver:
     resolver_id: ClassVar[str] = "atribucion_member_profile"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
-    def __init__(self, *, profile_record: UserProfileRecord | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        profile_record: UserProfileRecord | None = None,
+        profile_decode_context: ProfileDecodeContext | None = None,
+    ) -> None:
+        """Bind an optional profile override to its caller-held decode context."""
         self._profile_record = profile_record
+        self._profile_decode_context = profile_decode_context
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve complete attribution-member rows from the active profile."""
         if not _revision_uses_atribucion_member(context):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
         record = self._profile_record
+        profile_schema = self._profile_decode_context.schema if self._profile_decode_context is not None else None
         if record is None:
             try:
-                record = ProfileRecordRepository.for_current_session(context.bucket_id).load(context.bucket_id)
+                repository = ProfileRecordRepository.for_current_session(
+                    context.bucket_id,
+                    profile_decode_context=self._profile_decode_context,
+                )
+                record = repository.load(context.bucket_id)
+                profile_schema = repository.session.profile_decode_context.schema
             except ProfileNotFoundError:
                 return CalculationSourceResolution(
                     resolver_id=self.resolver_id,
@@ -104,7 +121,12 @@ class AtribucionMemberSourceResolver:
                     ),
                 )
 
-        projection = _project_attribution_socio_facts(_attribution_entity_socio_facts(record.facts))
+        if profile_schema is None:
+            raise TypeError("attribution profile resolution requires a ProfileDecodeContext")
+        projection = _project_attribution_socio_facts(
+            _attribution_entity_socio_facts(record.facts),
+            schema=profile_schema,
+        )
         observations = tuple(
             _observation_from_socio(socio, filing_year=context.filing_year) for socio in projection.complete
         )
@@ -149,14 +171,18 @@ def _attribution_entity_socio_facts(facts: tuple[UserProfileFact, ...]) -> tuple
     return tuple(_SocioFacts(index=index, values=grouped[index]) for index in sorted(grouped))
 
 
-def _project_attribution_socio_facts(socio_facts: tuple[_SocioFacts, ...]) -> _AtribucionSocioProjection:
+def _project_attribution_socio_facts(
+    socio_facts: tuple[_SocioFacts, ...],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> _AtribucionSocioProjection:
     # A row that is PRESENT but carries a value its declaration refuses is
     # not usable, and used to be treated as though it were: an out-of-range
     # share percentage reached the attribution calculation unchallenged, and
     # a malformed one crashed inside it. Both now stop here, as a visible
     # diagnostic naming the row -- never a silent number and never a
     # domain-less traceback.
-    invalid = {socio.index: _invalid_value_refusals(socio) for socio in socio_facts}
+    invalid = {socio.index: _invalid_value_refusals(socio, schema=schema) for socio in socio_facts}
     diagnostics = (
         *(_missing_field_diagnostic(socio) for socio in socio_facts if _missing_fields(socio)),
         *(_invalid_value_diagnostic(socio, invalid[socio.index]) for socio in socio_facts if invalid[socio.index]),
@@ -182,7 +208,11 @@ def _blank(value: object) -> bool:
     return value is None or (isinstance(value, str) and not value.strip())
 
 
-def _invalid_value_refusals(socio: _SocioFacts) -> tuple[str, ...]:
+def _invalid_value_refusals(
+    socio: _SocioFacts,
+    *,
+    schema: ProfileSchemaDefinition,
+) -> tuple[str, ...]:
     """Report why any of this row's values fail their own declaration.
 
     Asks the schema's own
@@ -192,7 +222,7 @@ def _invalid_value_refusals(socio: _SocioFacts) -> tuple[str, ...]:
     door would not have written -- which keeps the two from disagreeing
     about the same stored fact.
     """
-    section = load_user_profile_schema().section(_SOCIOS_SECTION_KEY)
+    section = schema.section(_SOCIOS_SECTION_KEY)
     declared = {field.key: field for field in section.fields}
     return tuple(
         refusal

@@ -9,18 +9,12 @@ coherent bundle for each profile bucket.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...core.observed_header_fact import ObservedHeaderFact
-from ...core.period import Period
-from ...core.time.utc import UtcInstant
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry.bindings import RegistryModeloObservation
-from ...domain.calculations.registry.ids import RevisionId
-from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -30,50 +24,15 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..calculations.observations_repository import (
+    CalculationObservationRepositoryProtocol,
+    IvaWalletDecisionRepositoryProtocol,
+)
 from ..filing.draft_review_ports import DraftReviewPorts
 from ..workflow.run_models import WorkflowResult
 
 if TYPE_CHECKING:
     from .workflow_gate_ports import WorkflowGatePorts
-
-
-@runtime_checkable
-class CalculationObservationPayloadProtocol(Protocol):
-    """Safe read DTO exposed by the calculation-observation capability."""
-
-    observation: RegistryModeloObservation
-    captured_at: UtcInstant
-    source_kind: object
-    member_nif: str | None
-    stamped_revision_id: RevisionId
-    source_metadata: Mapping[str, str]
-    source_headers: tuple[ObservedHeaderFact, ...]
-
-
-@runtime_checkable
-class CalculationObservationRepositoryProtocol(Protocol):
-    """Read-side contract for persisted calculation observations."""
-
-    def load_observation(self, modelo: str, period: Period) -> CalculationObservationPayloadProtocol | None:
-        """Return one observation for a modelo and period, when present."""
-        ...
-
-    def iter_modelo(self, modelo: str) -> Iterator[CalculationObservationPayloadProtocol]:
-        """Yield every persisted observation for ``modelo``."""
-        ...
-
-
-@runtime_checkable
-class IvaWalletDecisionRepositoryProtocol(Protocol):
-    """Read-side contract for persisted IVA-wallet decisions."""
-
-    def load_decision(
-        self,
-        taxpayer_nif: str,
-        target_period: Period,
-    ) -> IvaCompensationReconciliationDecision | None:
-        """Return the latest persisted decision for one target period."""
-        ...
 
 
 @runtime_checkable
@@ -114,7 +73,6 @@ VerificationRepositoryBundleFactory = Callable[[str], VerificationRepositoryBund
 
 
 __all__ = [
-    "CalculationObservationPayloadProtocol",
     "CalculationObservationRepositoryProtocol",
     "IvaWalletDecisionRepositoryProtocol",
     "VerificationRepositoryBundle",

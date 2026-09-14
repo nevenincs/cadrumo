@@ -29,6 +29,7 @@ from ...core.directory_scan import scan_directory
 from ...core.locks import exclusive_file_lock
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ._retrieval import run_retrieval
 from .citation_lookup import bundled_citation_lookup
 from .lexical_index import build_lexical_index, bundled_corpus_html_root, iter_corpus_chunks
@@ -173,12 +174,18 @@ def search_corpus(
     Returns:
         A :class:`RetrievalResponse`.
     """
-    return run_retrieval(
-        query,
-        database_path=ensure_corpus_index(settings),
-        citation_lookup=bundled_citation_lookup(),
-        limit=limit,
-    )
+    database_path = ensure_corpus_index(settings)
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            citation_lookup = bundled_citation_lookup((query.strip(),), operation=operation)
+        except LookupError:
+            citation_lookup = None
+        return run_retrieval(
+            query,
+            database_path=database_path,
+            citation_lookup=citation_lookup,
+            limit=limit,
+        )
 
 
 __all__ = [

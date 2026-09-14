@@ -25,7 +25,10 @@ from ...core.config import load_settings
 from ...core.decimal.coercion import coerce_decimal
 from ...core.period import Period
 from ...core.type_guards import is_object_dict
-from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
+from ...domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+)
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ._modelo_spreadsheet_payloads import (
@@ -97,25 +100,36 @@ def _resolve_credentials_or_refuse(profile: str) -> tuple[Credentials, str]:
         raise google_refusal(exc) from exc
 
 
-def load_snapshot(modelo: str, period: Period) -> RegistrySnapshot:
-    authority = _bundled_authority()
-    if modelo not in {candidate.id for candidate in authority.modelos}:
-        available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
-        raise CliRefusedBoundaryError(
-            translated_message="cli.app.modelo.spreadsheet.push.unknown_modelo",
-            context={"modelo": modelo, "available": available},
-        )
-    try:
-        return authority.snapshot(modelo, filing_year=period.filing_year, period=period.registry_token)
-    except (RegistrySnapshotError, RegistryValidationError) as exc:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.app.modelo.spreadsheet.push.snapshot_failure",
-            context={
-                "modelo": modelo,
-                "period": period.registry_token,
-                "year": period.filing_year,
-            },
-        ) from exc
+def load_snapshot(
+    modelo: str,
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> RegistrySnapshot:
+    if operation is not None:
+        try:
+            operation.modelo_directory(modelo)
+            return operation.snapshot(
+                modelo,
+                filing_year=period.filing_year,
+                period=period.registry_token,
+            )
+        except (RegistrySnapshotError, RegistryValidationError) as exc:
+            raise CliRefusedBoundaryError(
+                translated_message="cli.app.modelo.spreadsheet.push.snapshot_failure",
+                context={
+                    "modelo": modelo,
+                    "period": period.registry_token,
+                    "year": period.filing_year,
+                },
+            ) from exc
+        except ValueError as exc:
+            raise CliRefusedBoundaryError(
+                translated_message="cli.app.modelo.spreadsheet.push.unknown_modelo",
+                context={"modelo": modelo, "available": ""},
+            ) from exc
+    with bundled_indexed_authority().operation() as indexed_operation:
+        return load_snapshot(modelo, period, operation=indexed_operation)
 
 
 def _pull_operator_edits_for_command(
@@ -124,6 +138,7 @@ def _pull_operator_edits_for_command(
     period: str,
     year: int,
     spreadsheet_id: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[str, RegistrySnapshot, PullResult]:
     """Resolve the active profile, credentials, and snapshot, then pull operator edits.
 
@@ -136,7 +151,11 @@ def _pull_operator_edits_for_command(
     active = _resolve_active_profile_or_refuse()
     credentials, _ = _resolve_credentials_or_refuse(active)
 
-    snapshot = load_snapshot(modelo, filing_period_or_refusal(modelo=modelo, period=period, year=year))
+    snapshot = load_snapshot(
+        modelo,
+        filing_period_or_refusal(modelo=modelo, period=period, year=year),
+        operation=operation,
+    )
 
     try:
         result: PullResult = pull_operator_edits(
@@ -469,19 +488,24 @@ def modelo_spreadsheet_verify(
     active = _resolve_active_profile_or_refuse()
     credentials, root_folder_id = _resolve_credentials_or_refuse(active)
 
-    snapshot = load_snapshot(modelo, filing_period_or_refusal(modelo=modelo, period=period, year=year))
-    scenario = _load_parity_scenario(scenario_path)
-
-    try:
-        report = verify_modelo_parity(
-            snapshot,
-            scenario,
-            credentials=credentials,
-            root_folder_id=root_folder_id,
-            apply_port=build_calc_sheets_parity_apply_port(),
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = load_snapshot(
+            modelo,
+            filing_period_or_refusal(modelo=modelo, period=period, year=year),
+            operation=operation,
         )
-    except OutboundStorageError as exc:
-        raise google_refusal(exc) from exc
+        scenario = _load_parity_scenario(scenario_path)
+
+        try:
+            report = verify_modelo_parity(
+                snapshot,
+                scenario,
+                credentials=credentials,
+                root_folder_id=root_folder_id,
+                apply_port=build_calc_sheets_parity_apply_port(),
+            )
+        except OutboundStorageError as exc:
+            raise google_refusal(exc) from exc
     emit_envelope(
         ctx,
         command="modelo.spreadsheet.verify",
@@ -653,12 +677,14 @@ def modelo_spreadsheet_pull(
     assemble_observations: bool = False,
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records."""
-    active, snapshot, result = _pull_operator_edits_for_command(
-        modelo=modelo,
-        period=period,
-        year=year,
-        spreadsheet_id=spreadsheet_id,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        active, snapshot, result = _pull_operator_edits_for_command(
+            modelo=modelo,
+            period=period,
+            year=year,
+            spreadsheet_id=spreadsheet_id,
+            operation=operation,
+        )
 
     populated_operator, populated_bindings, populated_relations, populated_row_sets = _populated_pull_edits(result)
     row_set_cells_total = sum(len(rs.cells) for rs in populated_row_sets)
@@ -783,12 +809,14 @@ def modelo_spreadsheet_calculate(
     """Compute casilla values from a workbook's operator edits; persist nothing."""
     from ...adapters.outbound.google.calc_sheets_pull import compute_from_pull
 
-    active, snapshot, result = _pull_operator_edits_for_command(
-        modelo=modelo,
-        period=period,
-        year=year,
-        spreadsheet_id=spreadsheet_id,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        active, snapshot, result = _pull_operator_edits_for_command(
+            modelo=modelo,
+            period=period,
+            year=year,
+            spreadsheet_id=spreadsheet_id,
+            operation=operation,
+        )
 
     if result.metadata_match != "matches":
         raise CliRefusedBoundaryError(

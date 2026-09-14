@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
+from datetime import date
 from decimal import Decimal
 
 from ...core.aggregation import BindingAggregationOp, BindingSourceKind
@@ -51,6 +52,7 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
@@ -59,13 +61,15 @@ from ...domain.modelos.row_models import (
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
+    resolve_detail_bearing_modelos,
+    resolve_detail_row_owning_modelos,
 )
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 from .preconditions import build_modelo_precondition_failure
 
 
-def detail_row_declaration_modelos() -> frozenset[str]:
+def detail_row_declaration_modelos(*, effective_date: date) -> frozenset[str]:
     """Return registry-declared detail-row declaration modelos.
 
     Detail-row ownership is authored by the selected registry revision.  This
@@ -73,7 +77,7 @@ def detail_row_declaration_modelos() -> frozenset[str]:
     owner catalogue; callers that need the declaration surface query the
     revision instead.
     """
-    return frozenset()
+    return resolve_detail_bearing_modelos(effective_date=effective_date)
 
 
 def require_detail_rows_declared_for_their_owning_modelo(
@@ -97,9 +101,24 @@ def require_detail_rows_declared_for_their_owning_modelo(
     so both the direct and bucket-aggregation calculate entry points are
     covered.
     """
-    # The selected revision is the sole owner declaration.  This module keeps
-    # no duplicate Python catalogue to compare against it.
-    del work_unit, detail_rows
+    if not detail_rows:
+        return
+    ownership = resolve_detail_row_owning_modelos(
+        effective_date=date(work_unit.filing_year, 12, 31),
+    )
+    work_unit_modelo = str(work_unit.modelo)
+    for row in detail_rows:
+        owning_modelo = ownership.get(row.row_type)
+        if owning_modelo == work_unit_modelo:
+            continue
+        raise ModeloError(
+            translated_message="errors.error.error_modelos",
+            context={
+                "row_type": type(row).__name__,
+                "owning_modelo": owning_modelo,
+                "work_unit_modelo": work_unit_modelo,
+            },
+        )
 
 
 #: Each detail-row kind's own natural real-world identity -- the field tuple

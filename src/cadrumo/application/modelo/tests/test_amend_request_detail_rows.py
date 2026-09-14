@@ -25,6 +25,7 @@ than minting a second translation free to drift from the first.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -46,6 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: test fails if the domain ever changes which they are rather than silently
 #: covering a set that no longer matches.
 _EXPECTED_BEARING = frozenset({"184", "232", "347", "349"})
+_EFFECTIVE_DATE = date(2025, 12, 31)
 
 
 def _request(**overrides: object) -> ModeloWorkAmendRequest:
@@ -69,7 +71,7 @@ def _request(**overrides: object) -> ModeloWorkAmendRequest:
 
 def test_the_domain_still_names_the_four_modelos_this_field_exists_for() -> None:
     """The premise: rows are the declaration for exactly these four."""
-    assert detail_row_declaration_modelos() == _EXPECTED_BEARING
+    assert detail_row_declaration_modelos(effective_date=_EFFECTIVE_DATE) == _EXPECTED_BEARING
 
 
 def test_an_amendment_that_declares_nothing_about_rows_is_the_default() -> None:

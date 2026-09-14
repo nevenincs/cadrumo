@@ -12,11 +12,12 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from enum import StrEnum
-from typing import ClassVar, Final, Protocol, Self
+from typing import Final, Protocol, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
@@ -41,14 +42,8 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSta
 DECLARATIONS_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
 
-class DeclarationsWorkspaceProjectionError(ValueError):
+class DeclarationsWorkspaceProjectionError(CadrumoError):
     """The supplied authorities cannot form one coherent safe snapshot."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal Declarations projector-integrity carrier; "
-        "SecureProfileWorkbenchGenerationReadDoorV1.read_workbench_generation_inputs "
-        "converts it into the unavailable Declarations source result"
-    )
 
 
 class DeclarationsWorkspaceZone(StrEnum):

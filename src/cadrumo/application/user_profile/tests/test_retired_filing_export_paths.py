@@ -8,8 +8,8 @@ They are deliberately not user-profile facts: accepting a persisted
 from __future__ import annotations
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import ProfileValidationService
 

@@ -33,13 +33,15 @@ from ._m210_snapshot_fixture import m210_snapshot
 __all__ = ["m210_snapshot"]
 
 from ....core.casilla_id import CasillaId
-from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
+from ....core.irnr import TipoRentaIrnr
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
+from ....domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
+from ....domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.contribuyente.renta_codes import FiscalResidency
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from .._m210_convenio_facts import resolve_m210_convenio_override
 from .._m210_rate import resolve_m210_rate
@@ -54,6 +56,11 @@ from ..verification_predicates import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DEVENGO_DATE = date(2025, 12, 31)
+_IVA_REGIME = default_iva_regime(effective_date=_DEVENGO_DATE)
+
+
+def _tipo_renta(value: str) -> TipoRentaIrnr:
+    return require_tipo_renta_irnr(value, effective_date=_DEVENGO_DATE)
 
 
 def _resolve_m210_rate(
@@ -84,7 +91,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=_IVA_REGIME,
         fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
         country_of_fiscal_residence=country_code,
         representante_fiscal_nif="12345678Z",
@@ -100,7 +107,7 @@ def _resident_profile() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=_IVA_REGIME,
         fiscal_residency=FiscalResidency.RESIDENT_IRPF,
     )
 
@@ -109,7 +116,7 @@ def test_committed_convenio_fact_rows_resolve_corrected_legal_anchors() -> None:
     """Committed treaty overrides cite the treaty article and, where needed, domestic rate law."""
 
     gb_general = resolve_m210_convenio_override(
-        country_code="GB", tipo_renta=TipoRentaIrnr.GENERAL, devengo_date=_DEVENGO_DATE
+        country_code="GB", tipo_renta=_tipo_renta("general"), devengo_date=_DEVENGO_DATE
     )
     assert gb_general is not None
     assert gb_general.fact.legal_refs == (
@@ -118,16 +125,16 @@ def test_committed_convenio_fact_rows_resolve_corrected_legal_anchors() -> None:
     )
 
     ma_interest = resolve_m210_convenio_override(
-        country_code="MA", tipo_renta=TipoRentaIrnr.INTEREST, devengo_date=_DEVENGO_DATE
+        country_code="MA", tipo_renta=_tipo_renta("interest"), devengo_date=_DEVENGO_DATE
     )
     assert ma_interest is not None
     assert ma_interest.fact.legal_refs == ("convenio-es-ma-1978:art-11",)
 
     ar_pension = resolve_m210_convenio_override(
-        country_code="AR", tipo_renta=TipoRentaIrnr.PENSION, devengo_date=_DEVENGO_DATE
+        country_code="AR", tipo_renta=_tipo_renta("pension"), devengo_date=_DEVENGO_DATE
     )
     assert ar_pension is not None
-    assert ar_pension.kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF
+    assert ar_pension.delegates_to_domestic_tariff
     assert ar_pension.rate is None
     assert ar_pension.fact.legal_refs == (
         "convenio-es-ar-1992:art-19",
@@ -251,9 +258,22 @@ def test_resident_pension_uses_live_domestic_tariff_without_scalar_rate(
     assert findings == []
 
 
+def _m210_rate_formula_id(snapshot: RegistrySnapshot) -> str:
+    """Return the selected revision's formula that resolves ``tipo_gravamen``."""
+    matches = tuple(
+        formula.id
+        for formula in snapshot.revision.formulas
+        if formula.target_casilla_id == "tipo_gravamen" and formula.expression.op == "irnr_resolve_tipo_gravamen"
+    )
+    if len(matches) != 1:
+        raise AssertionError(f"selected M210 revision must declare one rate formula, got {matches!r}")
+    return matches[0]
+
+
 def _unresolved_rate_outcome(
     reason: RegistryUnresolvedOutcomeReason,
     *,
+    snapshot: RegistrySnapshot,
     tipo_renta: str = "general",
     country: str = "ZW",
 ) -> RegistryCalculationUnresolvedOutcome:
@@ -262,7 +282,7 @@ def _unresolved_rate_outcome(
     return RegistryCalculationUnresolvedOutcome(
         casilla_id="tipo_gravamen",
         reason=reason,
-        formula_id="m210-tipo-gravamen-2025-resolve",
+        formula_id=_m210_rate_formula_id(snapshot),
         op="irnr_resolve_tipo_gravamen",
         operand_refs=(
             "tipo_renta",
@@ -304,7 +324,10 @@ def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
 ) -> None:
     """A typed convenio-missing outcome emits the missing-row finding."""
 
-    outcome = _unresolved_rate_outcome(RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING)
+    outcome = _unresolved_rate_outcome(
+        RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+        snapshot=m210_snapshot,
+    )
     findings = m210_unresolved_outcome_findings(
         (outcome,),
         profile=_irnr_profile("ZW"),
@@ -326,6 +349,7 @@ def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
 
     outcome = _unresolved_rate_outcome(
         RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
+        snapshot=m210_snapshot,
         tipo_renta="royalty",
         country="",
     )
@@ -352,6 +376,7 @@ def test_m210_unresolved_outcome_findings_omits_finding_when_rate_resolves(
         (
             _unresolved_rate_outcome(
                 RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+                snapshot=m210_snapshot,
                 tipo_renta="interest",
                 country="MA",
             ),
@@ -389,7 +414,7 @@ def _irnr_profile_without_representante(country_code: str) -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=_IVA_REGIME,
         fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
         country_of_fiscal_residence=country_code,
     )
@@ -421,7 +446,7 @@ def test_representante_predicate_violated_for_non_eea_resident_without_represent
 
     profile = TaxpayerProfile.model_construct(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=_IVA_REGIME,
         fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
         country_of_fiscal_residence="AR",
         representante_fiscal_nif=None,
@@ -453,7 +478,7 @@ def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
     )
     profile = TaxpayerProfile.model_construct(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=_IVA_REGIME,
         fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
         country_of_fiscal_residence="AR",
         representante_fiscal_nif=None,

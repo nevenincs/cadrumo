@@ -2,13 +2,23 @@
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Iterator
-from pathlib import Path
+from typing import cast
 
 import pytest
 
+from ....core.hashing import sha256_hex
 from ....domain.calculations.registry import authority as authority_module
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority_artifact import (
+    AuthorityComponentKind,
+    AuthorityComponentQuery,
+    EvidenceComponentQuery,
+    PublishedLegalEvidence,
+    ReferenceComponentQuery,
+)
+from ....domain.calculations.registry.authority_store import SQLiteAuthorityReader
+from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ..citation_lookup import CitationLookup, bundled_citation_lookup
 from ..errors import CorpusSearchInputError
 
@@ -22,20 +32,33 @@ def compose_runtime_ports() -> Iterator[None]:
 
 
 @pytest.fixture(scope="module")
-def _published_authority(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Stage the committed authority artifact behind the runtime loader."""
-    root = tmp_path_factory.mktemp("citation-authority")
-    artifact_path = root / "registry" / "authority" / "authority.json"
-    artifact_path.parent.mkdir(parents=True)
-    shutil.copy2(authority_module.bundled_authority_artifact_path(), artifact_path)
-    return root
-
-
-@pytest.fixture
-def lookup(_published_authority: Path, monkeypatch: pytest.MonkeyPatch) -> CitationLookup:
-    """Read the staged publication through the same runtime authority boundary."""
-    monkeypatch.setattr(authority_module, "_bundled_path", lambda *parts: _published_authority.joinpath(*parts))
-    return bundled_citation_lookup()
+def lookup() -> CitationLookup:
+    """Build a point-addressed lookup over the selected citation ids."""
+    authority = authority_module.bundled_authority()
+    references = tuple(authority.catalogues.legal.values())
+    components: dict[AuthorityComponentQuery, object] = {}
+    for reference in references:
+        reference_id = str(reference.id)
+        components[
+            ReferenceComponentQuery(
+                reference_id=reference_id,
+                kind=AuthorityComponentKind.LEGAL_REFERENCE,
+            )
+        ] = reference
+        anchored_text = authority.legal_evidence_text(reference.id)
+        components[
+            EvidenceComponentQuery(
+                reference_id=reference_id,
+                kind=AuthorityComponentKind.LEGAL_EVIDENCE,
+            )
+        ] = PublishedLegalEvidence(
+            legal_reference_id=reference_id,
+            anchored_text=anchored_text,
+            text_sha256=sha256_hex(anchored_text.encode("utf-8")),
+        )
+    reader = FakeAuthorityComponentReader(components)
+    operation = PinnedAuthorityOperation(cast(SQLiteAuthorityReader, reader), reader.pin())
+    return bundled_citation_lookup(tuple(str(reference.id) for reference in references), operation=operation)
 
 
 def test_resolve_returns_verbatim_text_and_metadata(lookup: CitationLookup) -> None:
@@ -90,3 +113,51 @@ def test_resolve_corpus_text_accepts_a_corpus_ref(lookup: CitationLookup) -> Non
 def test_resolve_corpus_text_refuses_unknown_reference(lookup: CitationLookup) -> None:
     with pytest.raises(CorpusSearchInputError):
         lookup.resolve_corpus_text("corpus/normatives/html/does-not-exist.html#a1")
+
+
+def test_component_reader_loads_only_the_requested_legal_evidence() -> None:
+    reference = authority_module.bundled_authority().catalogues.legal["ley-58-2003:art-27.2"]
+    anchored_text = reference.required_text[0]
+    evidence = PublishedLegalEvidence(
+        legal_reference_id=str(reference.id),
+        anchored_text=anchored_text,
+        text_sha256=sha256_hex(anchored_text.encode("utf-8")),
+    )
+    query = EvidenceComponentQuery(
+        reference_id=str(reference.id),
+        kind=AuthorityComponentKind.LEGAL_EVIDENCE,
+    )
+    reader = FakeAuthorityComponentReader({query: evidence})
+    lookup = CitationLookup.from_component_reader(
+        {str(reference.id): reference},
+        reader=reader,
+        pin=reader.pin(),
+    )
+
+    assert lookup.resolve(str(reference.id)).verbatim_text == anchored_text
+    assert reader.loads == [query]
+
+
+def test_operation_loads_selected_reference_then_its_evidence_pointwise() -> None:
+    reference = authority_module.bundled_authority().catalogues.legal["ley-58-2003:art-27.2"]
+    anchored_text = reference.required_text[0]
+    reference_query = ReferenceComponentQuery(
+        reference_id=str(reference.id),
+        kind=AuthorityComponentKind.LEGAL_REFERENCE,
+    )
+    evidence_query = EvidenceComponentQuery(
+        reference_id=str(reference.id),
+        kind=AuthorityComponentKind.LEGAL_EVIDENCE,
+    )
+    evidence = PublishedLegalEvidence(
+        legal_reference_id=str(reference.id),
+        anchored_text=anchored_text,
+        text_sha256=sha256_hex(anchored_text.encode("utf-8")),
+    )
+    reader = FakeAuthorityComponentReader({reference_query: reference, evidence_query: evidence})
+    pin = reader.pin()
+    operation = PinnedAuthorityOperation(cast(SQLiteAuthorityReader, reader), pin)
+    lookup = CitationLookup.from_operation((str(reference.id),), operation=operation)
+
+    assert lookup.resolve(str(reference.id)).verbatim_text == anchored_text
+    assert reader.loads == [reference_query, evidence_query]

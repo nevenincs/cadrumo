@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from itertools import pairwise
-from typing import ClassVar, Literal, Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 
+from ....core.errors.hierarchy import CadrumoError
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
@@ -197,7 +198,7 @@ class OperationObservationMaterialization(BaseModel):
             raise ValueError("progress fold must cover every event after its checkpoint through the anchor")
 
 
-class OperationObservationUnknownOperationError(LookupError):
+class OperationObservationUnknownOperationError(CadrumoError):
     """The locked observation read found no journal for the requested operation."""
 
     def __init__(self, operation_id: OperationId) -> None:
@@ -206,14 +207,8 @@ class OperationObservationUnknownOperationError(LookupError):
         super().__init__("operation observation requires an existing operation")
 
 
-class OperationObservationCursorAheadError(ValueError):
+class OperationObservationCursorAheadError(CadrumoError):
     """The caller cursor is beyond the authoritative anchor read under the journal lock."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal-observation-cursor-ahead-carrier: the observation service catches this by "
-        "name and returns a typed CURSOR_AHEAD refusal rather than propagating, so it never "
-        "reaches an operator as itself"
-    )
 
     def __init__(self, *, requested_cursor: OperationEventCursor, anchor_cursor: OperationEventCursor) -> None:
         """Carry the requested and authoritative cursors for a refused read."""

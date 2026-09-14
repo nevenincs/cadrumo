@@ -107,6 +107,7 @@ from ...domain.iva.establishment import (
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
 from ...domain.iva.legend_derivation import match_regime_legend
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
+from ...domain.iva.regime_legend import RegimeLegend
 from ...domain.iva.schema import EUMemberState, spanish_eu_member_state
 
 # `names_spain` is the sibling module's authority on what positively names
@@ -379,7 +380,11 @@ def _spain_indicating(
     return tuple(signals)
 
 
-def _mention_declares_no_spanish_tax(regime_legend: str | None) -> bool:
+def _mention_declares_no_spanish_tax(
+    regime_legend: str | None,
+    *,
+    legends: tuple[RegimeLegend, ...],
+) -> bool:
     """Whether the printed mention itself declares the issuer charged nothing here.
 
     A reverse-charge mention shifts the tax to the recipient, and LIVA art.
@@ -392,7 +397,7 @@ def _mention_declares_no_spanish_tax(regime_legend: str | None) -> bool:
     because which mentions expect a repercutido line is already declared there;
     a second list here would be a second authority on the statutory vocabulary.
     """
-    legend = match_regime_legend(regime_legend)
+    legend = match_regime_legend(regime_legend, legends=legends)
     return legend is not None and not legend.expects_repercutido_line
 
 
@@ -458,6 +463,7 @@ def _treatment_concurs_with_non_establishment(
     charged_iva_rates: tuple[Decimal, ...],
     identification: EUMemberState,
     on_date: date | None,
+    legends: tuple[RegimeLegend, ...],
 ) -> bool:
     """Whether the printed treatment independently agrees the party is not here.
 
@@ -484,7 +490,7 @@ def _treatment_concurs_with_non_establishment(
     """
     if spanish_iva_charged:
         return False
-    if _mention_declares_no_spanish_tax(regime_legend):
+    if _mention_declares_no_spanish_tax(regime_legend, legends=legends):
         return True
     return _taxed_under_the_registration_state(
         charged_iva_rates,
@@ -498,6 +504,7 @@ def _printed_evidence(
     tax_identifier: str | None,
     country_code: str | None,
     postal_code: str | None,
+    legends: tuple[RegimeLegend, ...],
     regime_legend: str | None = None,
     charged_iva_rates: tuple[Decimal, ...] = (),
     on_date: date | None = None,
@@ -568,6 +575,7 @@ def _printed_evidence(
         charged_iva_rates=charged_iva_rates,
         identification=identification,
         on_date=on_date,
+        legends=legends,
     ):
         # The registration's OWN State, and only because something else agreed.
         # `None` here is not a failure to look up a country: Northern Ireland
@@ -583,6 +591,7 @@ def _printed_evidence(
 
 def scope_printed_evidence_would_establish(
     *,
+    legends: tuple[RegimeLegend, ...],
     tax_identifier: str | None = None,
     stated_country_name: str | None = None,
     resolved_country_code: str | None = None,
@@ -624,6 +633,8 @@ def scope_printed_evidence_would_establish(
             readily as an alpha-2, and both are ``str | None``, so feeding
             the stated token here type-checks and silently places nobody.
         postal_code: The party's printed postal code.
+        legends: The dated registry declarations selected by the enclosing
+            pinned authority operation.
 
     Returns:
         The territory the printed rungs settle, or ``None`` where they exhaust.
@@ -635,6 +646,7 @@ def scope_printed_evidence_would_establish(
             resolved_country_code=resolved_country_code,
         ),
         postal_code=postal_code,
+        legends=legends,
     )
     return scope
 
@@ -642,6 +654,7 @@ def scope_printed_evidence_would_establish(
 def resolve_counterparty_establishment_scope(
     *,
     bucket_id: str,
+    legends: tuple[RegimeLegend, ...],
     tax_identifier: str | None = None,
     stated_country_name: str | None = None,
     resolved_country_code: str | None = None,
@@ -664,6 +677,8 @@ def resolve_counterparty_establishment_scope(
 
     Args:
         bucket_id: Active profile bucket, for the confirmed-fact rung.
+        legends: The dated registry declarations selected by the enclosing
+            pinned authority operation.
         tax_identifier: The counterparty's identifier as printed, if any.
         stated_country_name: The country the document states for this party, in
             whatever language the issuer set it. Printed in an address block on
@@ -717,6 +732,7 @@ def resolve_counterparty_establishment_scope(
         tax_identifier=tax_identifier,
         country_code=country_code,
         postal_code=postal_code,
+        legends=legends,
         regime_legend=regime_legend,
         charged_iva_rates=charged_iva_rates,
         on_date=on_date,
@@ -826,6 +842,7 @@ def _draft_date(draft: InvoiceDraft) -> date | None:
 def resolve_draft_counterparty_establishment(
     *,
     bucket_id: str,
+    legends: tuple[RegimeLegend, ...],
     draft: InvoiceDraft,
     kind: InvoiceKind,
     repository: CounterpartyEstablishmentRepositoryProtocol,
@@ -865,6 +882,8 @@ def resolve_draft_counterparty_establishment(
 
     Args:
         bucket_id: Active profile bucket, for the confirmed-fact rung.
+        legends: The dated registry declarations selected by the enclosing
+            pinned authority operation.
         draft: The pre-direction reading of the document.
         kind: Which side of the invoice the filer is on, as the operator settled
             it at confirm. Never the reader's suggestion.
@@ -884,6 +903,7 @@ def resolve_draft_counterparty_establishment(
     side = counterparty_draft_side(draft, kind=kind)
     return resolve_counterparty_establishment_scope(
         bucket_id=bucket_id,
+        legends=legends,
         tax_identifier=side.tax_id,
         resolved_country_code=side.country_code,
         stated_country_name=side.country,

@@ -26,25 +26,35 @@ Notes:
 
 from __future__ import annotations
 
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError
+from abc import ABC, abstractmethod
+from collections.abc import Collection, Mapping
+from typing import TYPE_CHECKING
+
+from ...domain.calculations.registry.authority_artifact import (
+    AuthorityArtifactError,
+    AuthorityComponentKind,
+    AuthorityGenerationPin,
+    EvidenceComponentQuery,
+    PublishedLegalEvidence,
+)
 from ...domain.calculations.registry.schema_references import LegalReference
 from .errors import CorpusSearchInputError
 from .models import CitationResolution
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.authority_artifact import AuthorityComponentReader
 
-class CitationLookup:
+
+class CitationLookup(ABC):
     """Resolve a registry citation id to metadata plus verbatim text.
 
-    The lookup is built over a published authority. Its text projection is
-    signed with the authority, so resolving a citation never opens a bundled
-    corpus file or source root.
+    The lookup is built over one caller-selected component operation. Its text
+    projection is signed with the authority, so resolving a citation never
+    opens a bundled corpus file or source root.
     """
 
-    def __init__(self, authority: ValidatedRegistryAuthority) -> None:
-        """Initialize the lookup with one signed runtime authority."""
-        self._authority = authority
-        self._legal = dict(authority.catalogues.legal)
+    _legal: dict[str, LegalReference]
 
     @property
     def citation_ids(self) -> tuple[str, ...]:
@@ -108,20 +118,92 @@ class CitationLookup:
             raise CorpusSearchInputError(reason="corpus_text_unreadable", context={"ref": ref})
         return self._verbatim_text(references[0])
 
+    @abstractmethod
+    def _verbatim_text(self, reference: LegalReference) -> str:
+        """Return pinned verbatim evidence for one selected legal declaration."""
+
+    @classmethod
+    def from_component_reader(
+        cls,
+        legal: Mapping[str, LegalReference],
+        *,
+        reader: AuthorityComponentReader,
+        pin: AuthorityGenerationPin,
+    ) -> CitationLookup:
+        """Build a citation lookup over one pinned component reader.
+
+        ``legal`` is the metadata projection selected by the caller. Evidence
+        remains point-addressed: resolving one citation asks the reader for
+        only that citation's legal evidence component and never opens a corpus
+        path or hydrates sibling evidence.
+        """
+        return _ComponentCitationLookup(legal, reader=reader, pin=pin)
+
+    @classmethod
+    def from_operation(
+        cls,
+        reference_ids: Collection[str],
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> CitationLookup:
+        """Build an evidence lookup from exact ids under one pinned operation.
+
+        Legal declarations and their evidence are both addressed pointwise.
+        The caller supplies the ids it has selected; this constructor does not
+        hydrate a legal catalogue or accept a parallel metadata projection.
+        """
+        legal = {reference_id: operation.legal_reference(reference_id) for reference_id in reference_ids}
+        return cls.from_component_reader(legal, reader=operation, pin=operation.pin())
+
+
+class _ComponentCitationLookup(CitationLookup):
+    """Citation lookup whose evidence comes from one generation-pinned reader."""
+
+    def __init__(
+        self,
+        legal: Mapping[str, LegalReference],
+        *,
+        reader: AuthorityComponentReader,
+        pin: AuthorityGenerationPin,
+    ) -> None:
+        self._legal = dict(legal)
+        self._reader = reader
+        self._pin = pin
+
     def _verbatim_text(self, reference: LegalReference) -> str:
         try:
-            return self._authority.legal_evidence_text(reference.id)
-        except AuthorityArtifactError as exc:
+            evidence = self._reader.load(
+                EvidenceComponentQuery(
+                    reference_id=str(reference.id),
+                    kind=AuthorityComponentKind.LEGAL_EVIDENCE,
+                ),
+                pin=self._pin,
+            )
+        except (AuthorityArtifactError, LookupError) as exc:
             raise CorpusSearchInputError(
                 reason="citation_extracted_text_absent",
                 context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
             ) from exc
+        if not isinstance(evidence, PublishedLegalEvidence) or evidence.legal_reference_id != str(reference.id):
+            raise CorpusSearchInputError(
+                reason="citation_extracted_text_absent",
+                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
+            )
+        return evidence.anchored_text
 
 
-def bundled_citation_lookup() -> CitationLookup:
-    """Return a :class:`CitationLookup` over the bundled registry catalogue."""
-    authority = bundled_authority()
-    return CitationLookup(authority)
+def bundled_citation_lookup(
+    reference_ids: Collection[str],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> CitationLookup:
+    """Build the bundled lookup from caller-selected ids and one live operation.
+
+    The indexed authority does not expose a global legal catalogue projection
+    here.  Its composition root must select the ids and keep ``operation``
+    leased for every lookup call.
+    """
+    return CitationLookup.from_operation(reference_ids, operation=operation)
 
 
 __all__ = ["CitationLookup", "bundled_citation_lookup"]
