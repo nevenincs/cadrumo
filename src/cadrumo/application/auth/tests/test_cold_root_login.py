@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from ....core.auth_provider import AuthProviderKind
@@ -44,6 +46,7 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
     ) as settings:
         with active_auth_projection_span(
             settings=settings,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
             requested_provider=AuthProviderKind.CERTIFICATE.value,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         ) as snapshot:
@@ -56,6 +59,8 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
             asyncio.run(
                 login_operator_auth(
                     AuthProviderKind.CERTIFICATE.value,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
+                    browser_session_factory=default_browser_session_factory,
                     settings=settings,
                     guarded_read_context="",
                     operator_probe_ports=_OPERATOR_PROBE_PORTS,

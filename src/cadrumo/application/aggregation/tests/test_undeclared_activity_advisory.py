@@ -42,7 +42,13 @@ from ..renta_income_ledger import (
     aggregate_renta_m131_agrario_income_ledger,
 )
 from ..source_mesh import CalculationSourceDiagnostic
-from .renta_income_aggregation_support import raw_transaction
+from .renta_income_aggregation_support import (
+    _M130_INGRESOS_CASILLA,
+    _M130_MODELO,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+    raw_transaction,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -244,6 +250,10 @@ def test_the_m130_path_carries_no_census_and_never_fires() -> None:
         _catalogue(_income_row("row-1")),
         bucket_id=_BUCKET,
         period=_Q1,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
     )
 
     assert aggregation.unadmitted_activity_income is None

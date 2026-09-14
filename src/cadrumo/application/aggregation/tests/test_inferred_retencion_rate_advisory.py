@@ -62,6 +62,12 @@ from .._retencion_rate_advisory import (
     inferred_actividad_retencion_rate_advisory_observations,
 )
 from ..renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
+from .renta_income_aggregation_support import (
+    _M130_INGRESOS_CASILLA,
+    _M130_MODELO,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -132,6 +138,10 @@ def _observations(*rows: Transaction) -> tuple[RentaIncomeObservation, ...]:
         TransactionCatalogue.from_transactions(rows),
         bucket_id="test",
         period=Period.from_year_and_code(2024, "1T"),
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
     )
     return tuple(aggregation.observations)
 

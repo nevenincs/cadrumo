@@ -69,12 +69,13 @@ def test_live_modelo_100_assessment_covers_singleton_scalars_and_is_read_only() 
     completeness = [row for row in assessment.by_revision_family if row["family"] == "completeness_manifest"]
     scalars = [row for row in assessment.by_revision_family if row["family"] == "$scalars"]
     assert len(completeness) == len(scalars) == 6
-    assert all(_positive(row["authored_payload_fields"]) for row in completeness)
+    assert _positive(completeness[0]["authored_payload_fields"])
+    assert all(_positive(row["genuine_overrides"]) for row in completeness[1:])
     assert all(_positive(row["authored_payload_fields"]) for row in scalars)
     assert assessment.inputs_stable
     assert assessment.input_fingerprints == before == migration._file_fingerprints(_MODELO_100)
-    assert assessment.redundant_overrides > 0
-    assert not assessment.minimal
+    assert assessment.redundant_overrides == 0
+    assert assessment.minimal
 
 
 def test_changed_captured_input_blocks_minimality(monkeypatch: pytest.MonkeyPatch) -> None:

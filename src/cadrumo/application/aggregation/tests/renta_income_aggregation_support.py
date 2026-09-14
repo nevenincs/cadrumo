@@ -2,13 +2,19 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ....domain.transactions.models import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
@@ -84,9 +90,36 @@ _Q2_2024 = _period(2024, "2T")
 
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
 _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = validated_casilla_id("0171")
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
+_M130_MODELO: str = Modelo("130").value
+_M130_ACCEPT_ACTIVITY_MARKER: bool = True
+
+
+@cache
+def _renta_income_category_authority() -> GovernedFactSource:
+    """Pin the bundled registry authority used by the category matchers below."""
+    return compiled_bundled_authority()
+
+
+def _m130_activity_category_matcher(transaction: Transaction) -> bool:
+    """Resolve M130 activity eligibility from the registry-owned taxonomy."""
+    return has_activity_irpf_category(
+        transaction.irpf_category,
+        direction=transaction.direction,
+        authority=_renta_income_category_authority(),
+    )
+
+
+def _m130_employment_category_matcher(transaction: Transaction) -> bool:
+    """Resolve M130 employment exclusion from the registry-owned taxonomy."""
+    return has_employment_irpf_category(
+        transaction.irpf_category,
+        direction=transaction.direction,
+        authority=_renta_income_category_authority(),
+    )
 
 
 def raw_transaction(

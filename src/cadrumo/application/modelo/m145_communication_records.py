@@ -415,7 +415,7 @@ def _snapshot_for_scope(
                 period_token=period_token,
                 operation=indexed_operation,
             )
-    contract = build_m145_communication_service_contract(filing_year=communication_year)
+    contract = build_m145_communication_service_contract(filing_year=communication_year, operation=operation)
 
     snapshot = operation.snapshot(
         Modelo("145").value,

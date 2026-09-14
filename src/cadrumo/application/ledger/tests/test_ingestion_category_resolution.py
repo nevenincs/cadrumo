@@ -92,14 +92,21 @@ def _resolve(
     exists to accept.
     """
     declared = _facts(established=established, stated=stated)
-    assembly = assemble_classification_criteria(
-        transaction_date=_WHEN,
-        direction=InvoiceKind.RECEIVED,
-        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
-        declared=declared,
-        rate_tier=rate_tier,
-    )
-    return resolve_ingestion_iva_category(assembly, declared=declared, rate_tier=rate_tier)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assembly = assemble_classification_criteria(
+            transaction_date=_WHEN,
+            direction=InvoiceKind.RECEIVED,
+            inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+            declared=declared,
+            rate_tier=rate_tier,
+            operation=_authority_operation_for_test,
+        )
+        return resolve_ingestion_iva_category(
+            assembly,
+            declared=declared,
+            rate_tier=rate_tier,
+            operation=_authority_operation_for_test,
+        )
 
 
 # --------------------------------------------------------------------------
@@ -356,27 +363,32 @@ def _relief(
 ):
     """Resolve a declared relief claim through the real assembly and resolver."""
     declared = _facts(established=False, stated=stated)
-    assembly = assemble_classification_criteria(
-        transaction_date=_WHEN,
-        direction=direction,
-        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
-        declared=declared,
-    )
-    return resolve_ingestion_iva_category(
-        assembly,
-        declared=declared,
-        # Which party the counterparty IS, which is what says which residency
-        # slot the catalogue-gap exemption may forgive. Without it the exemption
-        # forgives nothing: a caller that cannot name the counterparty cannot
-        # claim our vocabulary is what failed.
-        direction=direction,
-        # The RECORD authority, which is the one the confirm path uses. The
-        # printed-value sibling beside it answers differently for an alpha-3
-        # token -- measured, 'ESP' is catalogued to this one and unresolved to
-        # that one -- so deriving the status here through the other authority
-        # would gate this guard on a value production never hands it.
-        counterparty_country_status=record_country_code_status(country_code),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assembly = assemble_classification_criteria(
+            transaction_date=_WHEN,
+            direction=direction,
+            inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+            declared=declared,
+            operation=_authority_operation_for_test,
+        )
+        return resolve_ingestion_iva_category(
+            assembly,
+            declared=declared,
+            # Which party the counterparty IS, which is what says which residency
+            # slot the catalogue-gap exemption may forgive. Without it the exemption
+            # forgives nothing: a caller that cannot name the counterparty cannot
+            # claim our vocabulary is what failed.
+            direction=direction,
+            # The RECORD authority, which is the one the confirm path uses. The
+            # printed-value sibling beside it answers differently for an alpha-3
+            # token -- measured, 'ESP' is catalogued to this one and unresolved to
+            # that one -- so deriving the status here through the other authority
+            # would gate this guard on a value production never hands it.
+            counterparty_country_status=record_country_code_status(
+                country_code, operation=_authority_operation_for_test
+            ),
+            operation=_authority_operation_for_test,
+        )
 
 
 @pytest.mark.parametrize(
@@ -549,20 +561,25 @@ def _record_relief(
     spared and every assertion below would hold for any status whatsoever.
     """
     declared = DeclaredFacts(issuer_scope=_fact(_ES), stated_category=_fact(stated))
-    assembly = assemble_classification_criteria(
-        transaction_date=_WHEN,
-        direction=direction,
-        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
-        declared=declared,
-    )
-    return resolve_ingestion_iva_category(
-        assembly,
-        declared=declared,
-        counterparty_country_status=record_country_code_status(country_token),
-        # Which party the counterparty IS, which is what says which residency
-        # slot the catalogue-gap exemption may forgive.
-        direction=direction,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assembly = assemble_classification_criteria(
+            transaction_date=_WHEN,
+            direction=direction,
+            inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+            declared=declared,
+            operation=_authority_operation_for_test,
+        )
+        return resolve_ingestion_iva_category(
+            assembly,
+            declared=declared,
+            counterparty_country_status=record_country_code_status(
+                country_token, operation=_authority_operation_for_test
+            ),
+            # Which party the counterparty IS, which is what says which residency
+            # slot the catalogue-gap exemption may forgive.
+            direction=direction,
+            operation=_authority_operation_for_test,
+        )
 
 
 @pytest.mark.parametrize("reserved", ["ZZZ", "QMA", "XAA"])
@@ -678,18 +695,23 @@ def _counterparty_only_relief(
         supply_nature=_fact(SupplyNature.GOODS),
         stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
     )
-    assembly = assemble_classification_criteria(
-        transaction_date=_WHEN,
-        direction=direction,
-        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
-        declared=declared,
-    )
-    return resolve_ingestion_iva_category(
-        assembly,
-        declared=declared,
-        direction=direction,
-        counterparty_country_status=record_country_code_status(country_code),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assembly = assemble_classification_criteria(
+            transaction_date=_WHEN,
+            direction=direction,
+            inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+            declared=declared,
+            operation=_authority_operation_for_test,
+        )
+        return resolve_ingestion_iva_category(
+            assembly,
+            declared=declared,
+            direction=direction,
+            counterparty_country_status=record_country_code_status(
+                country_code, operation=_authority_operation_for_test
+            ),
+            operation=_authority_operation_for_test,
+        )
 
 
 def test_the_counterparty_only_fixture_actually_fires_the_exemption() -> None:

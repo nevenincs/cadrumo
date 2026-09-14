@@ -507,6 +507,7 @@ def record_iva_compensation_override_for_bucket(
         snapshot,
         repository=observation_ports.observation_repository,
         iva_history_repository=ports.iva_compensation_history_repository,
+        operation=operation,
     )
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
@@ -518,6 +519,7 @@ def record_iva_compensation_override_for_bucket(
         local_recurrence=local_recurrence,
         prefill_report=prefill_report,
         persist=True,
+        operation=operation,
     )
 
     _emit_iva_wallet_override_event(

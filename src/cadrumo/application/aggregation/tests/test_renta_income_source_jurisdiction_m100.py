@@ -23,10 +23,13 @@ from .renta_income_aggregation_support import (
     _ANNUAL_2024,
     _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
     _M130_INGRESOS_CASILLA,
+    _M130_MODELO,
     _Q1_2024,
     _actividad_transaction_with_source,
     _catalogue_read_ports,
     _income_transaction,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -64,7 +67,15 @@ def test_renta_income_observation_preserves_es_source_jurisdiction() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
 
     assert len(result.observations) == 1
     assert result.observations[0].source_jurisdiction == "ES"
@@ -101,7 +112,15 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((es_row, fr_row))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
 
     # Art. 8 universal-base: both rows enter the casilla aggregation.
     assert len(result.observations) == 2

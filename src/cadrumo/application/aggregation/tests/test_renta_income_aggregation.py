@@ -10,7 +10,6 @@ from pydantic import ValidationError
 
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
@@ -25,22 +24,16 @@ from .renta_income_aggregation_support import (
     _Q2_2024,
     _catalogue_read_ports,
     _income_transaction,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
     raw_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
-
-
-def _is_activity_income(transaction: Transaction) -> bool:
-    """Use the registry-owned activity category predicate for this M130 fixture."""
-    return has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction)
-
-
-def _is_employment_income(transaction: Transaction) -> bool:
-    """Use the registry-owned employment category predicate for this M130 fixture."""
-    return has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction)
+_is_activity_income = _m130_activity_category_matcher
+_is_employment_income = _m130_employment_category_matcher
 
 
 # Pure-aggregator tests (no repository)

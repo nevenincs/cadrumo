@@ -28,6 +28,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva import lookup as _iva_lookup_module
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....tests.attribute_scope import scoped_attribute
@@ -61,21 +62,27 @@ def _fabricated_values() -> InvoiceExtractionAuthorityValues:
 class TestTheResolverFollowsTheRateAuthority:
     """Direction one: move the authority, and the resolved values move."""
 
-    def test_a_planted_rate_reaches_the_resolved_values(self) -> None:
+    def test_a_planted_rate_reaches_the_resolved_values(self, operation: PinnedAuthorityOperation) -> None:
         """The mutation is applied at RUNTIME, so no tracked file changes.
 
         A concurrent sweep therefore cannot commit it, and a crashed run leaves
         no residue -- the shared-tree-safe form of a mutation proof.
         """
-        baseline = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
+        baseline = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
         assert _FABRICATED_PCT not in baseline.iva_rate_pcts, (
             "positive control: pick a percentage the registry does not already carry"
         )
 
         real_lookup_rate = _iva_lookup_module.lookup_rate
 
-        def _planted_lookup_rate(member_state: EUMemberState, kind: IvaRateKind, on_date):
-            resolved = real_lookup_rate(member_state, kind, on_date)
+        def _planted_lookup_rate(
+            member_state: EUMemberState,
+            kind: IvaRateKind,
+            on_date,
+            *,
+            operation: PinnedAuthorityOperation,
+        ):
+            resolved = real_lookup_rate(member_state, kind, on_date, operation=operation)
             if member_state is EUMemberState._from_registry("es") and kind is IvaRateKind("general"):
                 return resolved.model_copy(update={"pct": _FABRICATED_PCT})
             return resolved
@@ -88,13 +95,13 @@ class TestTheResolverFollowsTheRateAuthority:
             "lookup_rate",
             _planted_lookup_rate,
         ):
-            after = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
+            after = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
 
         assert _FABRICATED_PCT in after.iva_rate_pcts, (
             "the resolver read a snapshot instead of the authority; a registry change would not reach a reader"
         )
 
-    def test_a_narrower_period_resolves_a_narrower_enumeration(self) -> None:
+    def test_a_narrower_period_resolves_a_narrower_enumeration(self, operation: PinnedAuthorityOperation) -> None:
         """A period is a span, and the enumeration is period-dependent.
 
         Asserted as a SUBSET relation rather than against copied figures: the
@@ -102,16 +109,25 @@ class TestTheResolverFollowsTheRateAuthority:
         which stays true when the registry moves. Hand-copied percentages would
         pass over a resolver that ignored the period entirely.
         """
-        annual = resolve_invoice_extraction_authority_values(period=Period.from_year_and_code(2024, "0A"))
-        quarter = resolve_invoice_extraction_authority_values(period=Period.from_year_and_code(2024, "3T"))
+        annual = resolve_invoice_extraction_authority_values(
+            period=Period.from_year_and_code(2024, "0A"),
+            operation=operation,
+        )
+        quarter = resolve_invoice_extraction_authority_values(
+            period=Period.from_year_and_code(2024, "3T"),
+            operation=operation,
+        )
 
         assert set(quarter.iva_rate_pcts) < set(annual.iva_rate_pcts), (
             "2024 stepped the reducido tiers mid-year, so an annual window must union what Q3 alone carries"
         )
 
-    def test_the_no_printed_tax_vocabulary_is_the_registry_closed_set(self) -> None:
+    def test_the_no_printed_tax_vocabulary_is_the_registry_closed_set(
+        self,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """Members, not rendered prose, and drawn from the canonical closed set."""
-        resolved = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
+        resolved = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
 
         assert all(isinstance(member, IvaCategory) for member in resolved.no_printed_tax_categories)
 

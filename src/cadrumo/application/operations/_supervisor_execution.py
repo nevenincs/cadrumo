@@ -3,17 +3,23 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
-from datetime import datetime
+from collections.abc import Callable, Coroutine
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
-from ...core.operations import OperationDeadline, OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...core.operations import (
+    OperationCancellation,
+    OperationDeadline,
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from .capabilities import OperationRequestStoragePolicy
@@ -28,7 +34,14 @@ from .interactions import (
     OperationPendingInteraction,
     OperationRejectResponse,
 )
-from .models import OperationId, OperationIdentity, OperationRequest, OperationTerminalReceipt, new_operation_id
+from .models import (
+    OperationId,
+    OperationIdentity,
+    OperationReference,
+    OperationRequest,
+    OperationTerminalReceipt,
+    new_operation_id,
+)
 from .persistence.events import (
     OperationEvent,
     OperationInteractionEvent,
@@ -36,16 +49,126 @@ from .persistence.events import (
     OperationPhaseEvent,
 )
 from .persistence.idempotency import OperationIdempotencyClaim
-from .persistence.journal import OperationPersistedSnapshot
-from .persistence.leases import OperationLeaseDisposition
-from .registry import OperationDefinition, OperationReconciliationPolicy
+from .persistence.journal import (
+    OperationJournal,
+    OperationLeaseRepository,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
+from .persistence.leases import OperationLeaseDisposition, OperationOwnerLease
+from .registry import OperationDefinition, OperationReconciliationPolicy, OperationRegistry
 from .secret_submission import BoundEphemeralSecretAccess, OperationSecretRequirement, zeroize_secret_buffer
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .financial_operand_submission import (
+        BoundTransientFinancialOperandAccess,
+        OperationTransientFinancialOperandBroker,
+    )
+    from .projection_services import OperationResponseAuthorityIssuer
+    from .secret_submission import EphemeralSecretBroker
 
 
 class SupervisorHost:
     if TYPE_CHECKING:
+        registry: OperationRegistry
+        _authority_operation: PinnedAuthorityOperation
+        _journal: OperationJournal
+        _leases: OperationLeaseRepository
+        _operands: OperationSecureReferenceStore | None
+        _clock: Callable[[], datetime]
+        _execution_timeout: timedelta | None
+        _cleanup_timeout: timedelta | None
+        _response_authority_issuer: OperationResponseAuthorityIssuer | None
+        _response_token_factory: Callable[[], str]
+        _leases_by_operation: dict[OperationId, OperationOwnerLease]
+        _contexts: dict[OperationId, DefinitionBoundContext]
+        _executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]]
+        _continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
+        _durable_change_events: dict[OperationId, asyncio.Event]
+        _durable_revisions: dict[OperationId, int]
+        _ephemeral_secrets: EphemeralSecretBroker
+        _financial_operands: OperationTransientFinancialOperandBroker | None
 
-        def __getattr__(self, name: str) -> Any: ...
+        @staticmethod
+        def _validate_request_payload[RequestPayloadT: BaseModel](
+            request: OperationRequest[RequestPayloadT], request_type: type[BaseModel]
+        ) -> None: ...
+
+        def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease: ...
+
+        def _lease_lock(self, operation_id: OperationId) -> asyncio.Lock: ...
+
+        async def _resolve_idempotency(self, claim: OperationIdempotencyClaim | None) -> OperationId | None: ...
+
+        async def _resolve_conflict_submission(self, claim: OperationIdempotencyClaim | None) -> OperationId: ...
+
+        async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None: ...
+
+        async def _require_owned_lease_unlocked(
+            self,
+            identity: OperationIdentity,
+            now: datetime,
+        ) -> OperationOwnerLease: ...
+
+        async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+        async def request_cancel(
+            self,
+            operation_id: OperationId,
+            *,
+            expected_revision: int | None = None,
+        ) -> OperationPersistedSnapshot: ...
+
+        def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None: ...
+
+        def _build_context(self, snapshot: OperationPersistedSnapshot) -> DefinitionBoundContext: ...
+
+        def _bound_financial_operand(
+            self,
+            identity: OperationIdentity,
+            definition: OperationDefinition,
+        ) -> BoundTransientFinancialOperandAccess: ...
+
+        async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None: ...
+
+        async def settle(
+            self,
+            operation_id: OperationId,
+            receipt: OperationTerminalReceipt,
+        ) -> OperationPersistedSnapshot: ...
+
+        def _validate_cancelled_settlement(self, snapshot: OperationPersistedSnapshot) -> None: ...
+
+        async def _renew_while_executing(
+            self,
+            *,
+            identity: OperationIdentity,
+            executor: Coroutine[None, None, OperationReference | None],
+        ) -> OperationReference | None: ...
+
+        @staticmethod
+        async def _wait_for_executor_or_deadline(
+            executor_task: asyncio.Task[OperationReference | None], deadline: datetime, now: datetime
+        ) -> None: ...
+
+        @staticmethod
+        def _acknowledged_cancellation_condition(
+            snapshot: OperationPersistedSnapshot,
+        ) -> OperationTerminalCondition: ...
+
+        async def _escalate_cleanup_deadline(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+        def _notify_durable_change(self, snapshot: OperationPersistedSnapshot) -> None: ...
+
+        async def _resume_from_checkpoint(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            definition: OperationDefinition,
+            continuation: OperationConsumedInteraction,
+        ) -> OperationPersistedSnapshot: ...
+
+        def _continuation_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None: ...
 
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
@@ -441,8 +564,8 @@ class SupervisorExecutionMixin(SupervisorHost):
         *,
         identity: OperationIdentity,
         context: DefinitionBoundContext,
-        executor: Coroutine[object, object, object],
-    ) -> object:
+        executor: Coroutine[None, None, OperationReference | None],
+    ) -> OperationReference | None:
         """Await executor completion while aggregate and cleanup deadlines remain supervisor-owned."""
         executor_task = asyncio.create_task(
             self._renew_while_executing(identity=identity, executor=executor),
@@ -475,7 +598,7 @@ class SupervisorExecutionMixin(SupervisorHost):
     async def _settle_returned_result(
         self,
         snapshot: OperationPersistedSnapshot,
-        result_ref: object,
+        result_ref: OperationReference | None,
     ) -> OperationPersistedSnapshot:
         """Join an executor's domain result to successful settlement after it stops."""
         if result_ref is None:

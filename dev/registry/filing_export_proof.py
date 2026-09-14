@@ -11,7 +11,7 @@ proof to the application closure composer.
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -21,9 +21,11 @@ from typing import Literal, Protocol, cast, runtime_checkable
 from pydantic import BaseModel, Field, ValidationError
 
 from cadrumo.adapters.persistence.storage.errors import PersistenceError
+from cadrumo.application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 from cadrumo.application.calculations.revision_carry_gate import revision_carry_outcome
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.draft_review import approve_draft
+from cadrumo.application.filing.draft_review_ports import DraftReviewPorts
 from cadrumo.application.filing.export import export_draft
 from cadrumo.application.filing.export_verification import (
     DeclaracionExportResult,
@@ -54,7 +56,11 @@ from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    ValidatedRegistryAuthority,
+    bundled_indexed_authority,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
@@ -66,7 +72,9 @@ from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
 from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from cadrumo.domain.transactions.models import TransactionCatalogue
+from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 from .compiler.authority import compile_validated_authority
 from .diagnostic_classification import (
@@ -518,6 +526,71 @@ def load_pinned_conformance_inputs(document: PinnedConformanceVectorDocument) ->
     return cast("ModeloInputs", inputs)
 
 
+class _ConformanceTransactionRepository:
+    """Keep the public mechanism vector's transaction state explicitly empty."""
+
+    @staticmethod
+    def load() -> TransactionCatalogue:
+        return TransactionCatalogue()
+
+
+class _ConformanceInvoiceRepository:
+    """Keep the public mechanism vector's invoice state explicitly empty."""
+
+    @staticmethod
+    def load() -> InvoiceCatalogue:
+        return InvoiceCatalogue()
+
+
+class _ConformanceObservationRepository:
+    """Unused observation capability because the vector supplies its digest."""
+
+    @staticmethod
+    def iter_records() -> Iterator[object]:
+        return iter(())
+
+
+class _ConformanceProfileRepository:
+    """Unused profile capability because the vector supplies its digest."""
+
+    @staticmethod
+    def load_path_values(*, bucket_id: str) -> Mapping[str, str] | None:
+        del bucket_id
+        return None
+
+
+class _ConformanceDraftRepository:
+    """Unused draft capability for a proof that never persists its synthetic draft."""
+
+    @staticmethod
+    def iter_drafts() -> Iterator[ModeloDraft]:
+        return iter(())
+
+    @staticmethod
+    def envelope_path_for(identifier: str) -> Path:
+        return Path("drafts") / f"{identifier}.json"
+
+
+def _conformance_draft_review_ports() -> DraftReviewPorts:
+    """Compose non-persisted review capabilities for the public mechanism vector."""
+    return DraftReviewPorts(
+        transaction_repository=cast(
+            TransactionCatalogueRepositoryProtocol,
+            _ConformanceTransactionRepository(),
+        ),
+        invoice_repository=cast(
+            InvoiceCatalogueRepositoryProtocol,
+            _ConformanceInvoiceRepository(),
+        ),
+        observation_repository=cast(
+            CalculationObservationRepositoryProtocol,
+            _ConformanceObservationRepository(),
+        ),
+        profile_repository=_ConformanceProfileRepository(),
+        draft_repository=_ConformanceDraftRepository(),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class ModeloSociedadesConformanceVectorBuilder:
     """Materialise value-independent Modelo 200 conformance inputs.
@@ -560,17 +633,18 @@ class ModeloSociedadesConformanceVectorBuilder:
         # canonical review path rather than stamping the status by hand. Every
         # catalogue and fingerprint is supplied explicitly so no bucket-scoped
         # secure repository is opened for a public mechanism proof.
-        approved = approve_draft(
-            draft,
-            bucket_id=_CONFORMANCE_BUCKET_ID,
-            approved_by=_CONFORMANCE_APPROVER,
-            schema_provider=schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
-            invoice_catalogue=InvoiceCatalogue(),
-            prior_filing_observations_fingerprint=_EMPTY_STATE_FINGERPRINT,
-            profile_activity_fingerprint=_EMPTY_STATE_FINGERPRINT,
-            category_profiles={},
-        )
+        with bundled_indexed_authority().operation() as operation:
+            approved = approve_draft(
+                draft,
+                bucket_id=_CONFORMANCE_BUCKET_ID,
+                approved_by=_CONFORMANCE_APPROVER,
+                schema_provider=schema_provider,
+                ports=_conformance_draft_review_ports(),
+                operation=operation,
+                prior_filing_observations_fingerprint=_EMPTY_STATE_FINGERPRINT,
+                profile_activity_fingerprint=_EMPTY_STATE_FINGERPRINT,
+                category_profiles={},
+            )
         return FilingExportConformanceRenderInputs(
             coordinate=evidence.coordinate,
             filing_year=evidence.filing_year,
@@ -1201,7 +1275,8 @@ def prove_secure_export_replay(
     record = consumer.record
     if record is None:
         raise ValueError("secure replay custody did not persist the canonical writer payload")
-    _require_custody_record(request, evidence, result, record)
+    with bundled_indexed_authority().operation() as operation:
+        _require_custody_record(request, evidence, result, record, operation=operation)
     return FilingExportSecureReplayReceipt(
         receipt_id=record.receipt_id,
         coordinate=request.coordinate,
@@ -1307,8 +1382,10 @@ def _require_custody_record(
     evidence: FilingExportSecureReplayEvidence,
     result: FilingExportConsumedResult,
     record: FilingExportSecureCustodyRecord,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
-    outcome = revision_carry_outcome(record.coordinate.snapshot_ref)
+    outcome = revision_carry_outcome(record.coordinate.snapshot_ref, operation=operation)
     if outcome.refused:
         raise ValueError(f"custody registry coordinate cannot be re-confirmed: {outcome.detail}")
     expected = (

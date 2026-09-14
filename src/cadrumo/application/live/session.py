@@ -25,6 +25,7 @@ from ...application.auth.session_types import AeatSession
 from ...application.auth.sessions import ensure_authenticated_aeat_session
 from ...core.access_gate.gate import AeatAccessGate
 from ...core.config import Settings, load_settings
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 
 
 async def active_verified_session(
@@ -43,14 +44,16 @@ async def active_verified_session(
     """
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
-    result = await ensure_authenticated_aeat_session(
-        settings,
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        browser_session_factory=browser_session_factory,
-        operation=operation,
-        target_url=target_url,
-        operator_scope_ports=operator_scope_ports,
-    )
+    with bundled_indexed_authority().operation() as authority_operation:
+        result = await ensure_authenticated_aeat_session(
+            settings,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            browser_session_factory=browser_session_factory,
+            operation=operation,
+            target_url=target_url,
+            operator_scope_ports=operator_scope_ports,
+            profile_decode_context=authority_operation.profile_decode_context(),
+        )
     session: AeatSession = result.session
     return session, settings
 

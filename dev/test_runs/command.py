@@ -13,7 +13,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final
+from typing import Final, TypeGuard
 
 from dev._paths import REPO_ROOT, UTF_8
 
@@ -97,6 +97,25 @@ _REMEDIATION_CODE_FAMILIES: Final[dict[str, frozenset[str]]] = {
 }
 
 
+def _is_json_object(value: object) -> TypeGuard[dict[str, object]]:
+    """Narrow a decoded JSON value to an object with string keys."""
+    return isinstance(value, dict) and all(isinstance(key, str) for key in value)
+
+
+def _json_int(value: object, *, field: str) -> int:
+    """Decode one JSON scalar accepted by the command transcript contract."""
+    if isinstance(value, (int, float, str)):
+        return int(value)
+    raise TypeError(f"JSON field {field!r} must be an integer-compatible scalar")
+
+
+def _json_string_list(value: object, *, field: str) -> tuple[str, ...]:
+    """Decode one JSON array whose values are rendered as transcript strings."""
+    if not isinstance(value, list):
+        raise TypeError(f"JSON field {field!r} must be an array")
+    return tuple(str(item) for item in value)
+
+
 @dataclass(frozen=True)
 class _ContractPath:
     """One normalized dependency path reported under one forbidden edge."""
@@ -132,7 +151,7 @@ class _RegistryHealthProcessor:
                 candidate = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if isinstance(candidate, dict):
+            if _is_json_object(candidate):
                 payload = candidate
                 break
         if payload is None:
@@ -220,7 +239,7 @@ class _PytestSummaryProcessor:
                 candidate = json.loads(text)
             except json.JSONDecodeError:
                 candidate = None
-            if isinstance(candidate, dict) and candidate.get("event") in {
+            if _is_json_object(candidate) and candidate.get("event") in {
                 "lane_started",
                 "lane_finished",
                 "lane_skipped",
@@ -241,11 +260,11 @@ class _PytestSummaryProcessor:
         if marker is not None and marker["event"] == "lane_finished":
             self.current_lane = str(marker["lane"])
             lane = self._lane()
-            status = int(marker["exit_status"])
+            status = _json_int(marker["exit_status"], field="exit_status")
             lane["kind"] = str(marker.get("kind", lane["kind"]))
             lane["role"] = str(marker.get("role", lane["role"]))
             lane["status"] = status
-            lane["seconds"] = int(marker["seconds"])
+            lane["seconds"] = _json_int(marker["seconds"], field="seconds")
             return {
                 "event": "lane_finished",
                 "kind": lane["kind"],
@@ -258,7 +277,9 @@ class _PytestSummaryProcessor:
         if marker is not None and marker["event"] == "lane_skipped":
             self.current_lane = str(marker["lane"])
             lane = self._lane()
-            blocked_by = tuple(str(item) for item in marker.get("blocked_by", ()))
+            blocked_by = (
+                () if "blocked_by" not in marker else _json_string_list(marker["blocked_by"], field="blocked_by")
+            )
             lane["kind"] = str(marker.get("kind", "command"))
             lane["role"] = str(marker.get("role", "execution"))
             lane["skipped"] = True
@@ -543,11 +564,11 @@ def _top(
     minimum_count: int = 1,
 ) -> list[dict[str, object]]:
     """Return a deterministic bounded frequency table."""
-    return [
-        {"count": count, "value": value}
-        for value, count in sorted(counter.items(), key=lambda item: (-item[1], item[0]))
-        if count >= minimum_count
-    ][:limit]
+    rows: list[dict[str, object]] = []
+    for value, count in sorted(counter.items(), key=lambda item: (-item[1], item[0])):
+        if count >= minimum_count:
+            rows.append({"count": count, "value": value})
+    return rows[:limit]
 
 
 def _module_is_test_scoped(module: str) -> bool:
@@ -580,7 +601,7 @@ def _path_is_test_scoped(path: str) -> bool:
 
 def _diagnostic_target(code: str, message: str, path: str) -> str | None:
     """Extract the module or symbol surface that makes a diagnostic repeat."""
-    quoted = _QUOTED_TARGET_RE.findall(message)
+    quoted = [str(match.group(1)) for match in _QUOTED_TARGET_RE.finditer(message)]
     if code == "CANONICAL_TARGET_MISSING" and quoted:
         return quoted[0]
     if code == "PACKAGE_FACADE" and quoted:
@@ -626,7 +647,7 @@ class _ImportBoundariesProcessor:
             structured = json.loads(text)
         except json.JSONDecodeError:
             structured = None
-        if isinstance(structured, dict) and structured.get("event") == "import_health":
+        if _is_json_object(structured) and structured.get("event") == "import_health":
             self._health_payload = structured
             return
         forbidden_edge = _FORBIDDEN_EDGE_RE.fullmatch(text)
@@ -829,6 +850,12 @@ class _ImportBoundariesProcessor:
         if self._health_payload is not None:
             payload = dict(self._health_payload)
             payload.pop("event", None)
+            run_outputs: dict[str, object] = {
+                "artifacts": str(run_dir / "artifacts"),
+                "candidate_inventory": str(run_dir / "artifacts" / "import-boundary-candidate.json"),
+                "log": str(log_path),
+                "metadata": str(run_dir / "run.json"),
+            }
             payload.update(
                 {
                     "command": label,
@@ -837,12 +864,7 @@ class _ImportBoundariesProcessor:
                     "exit_status": exit_status,
                     "finished_at": finished.isoformat(),
                     "run_id": run_dir.name,
-                    "run_outputs": {
-                        "artifacts": str(run_dir / "artifacts"),
-                        "candidate_inventory": str(run_dir / "artifacts" / "import-boundary-candidate.json"),
-                        "log": str(log_path),
-                        "metadata": str(run_dir / "run.json"),
-                    },
+                    "run_outputs": run_outputs,
                     "started_at": started.isoformat(),
                 }
             )
@@ -855,7 +877,7 @@ class _ImportBoundariesProcessor:
                 encoding=_UTF_8,
                 newline="\n",
             )
-            payload["run_outputs"]["report"] = str(run_dir / "artifacts" / "import-health.json")
+            run_outputs["report"] = str(run_dir / "artifacts" / "import-health.json")
             return payload
         if self._health_payload is None:
             classification = "tool_failure"
@@ -935,9 +957,12 @@ class _DeadWeightSignalProcessor:
                 payload = json.loads(candidate.read_text(encoding=_UTF_8))
             except (OSError, json.JSONDecodeError):
                 continue
-            if not isinstance(payload, dict) or not isinstance(payload.get("summary"), dict):
+            if not _is_json_object(payload):
                 continue
-            return str(payload.get("run_id", candidate.parents[1].name)), payload["summary"]
+            summary = payload.get("summary")
+            if not _is_json_object(summary):
+                continue
+            return str(payload.get("run_id", candidate.parents[1].name)), summary
         return None, None
 
     @staticmethod
@@ -984,14 +1009,15 @@ class _DeadWeightSignalProcessor:
         started: datetime,
         finished: datetime,
     ) -> dict[str, object]:
+        summary: dict[str, object]
         try:
             decoded = json.loads("".join(self.lines))
-            if not isinstance(decoded, dict):
+            if not _is_json_object(decoded):
                 raise ValueError("audit payload is not a JSON object")
         except (json.JSONDecodeError, ValueError) as exc:
             outcome = "unavailable"
             headline = f"{label} signal could not be normalized: {exc}"
-            summary: dict[str, object] = {
+            summary = {
                 "duplication": {
                     "result": "unavailable",
                     "available": False,
@@ -1010,8 +1036,8 @@ class _DeadWeightSignalProcessor:
         else:
             outcome = str(decoded.get("outcome", "unavailable"))
             headline = str(decoded.get("headline", f"{label} produced no headline"))
-            summary = decoded.get("summary", {})
-            if not isinstance(summary, dict):
+            raw_summary = decoded.get("summary", {})
+            if not _is_json_object(raw_summary):
                 outcome = "unavailable"
                 headline = f"{label} signal contained no structured summary"
                 summary = {
@@ -1030,6 +1056,8 @@ class _DeadWeightSignalProcessor:
                         "rate": 0.0,
                     },
                 }
+            else:
+                summary = raw_summary
         baseline_run_id, baseline = self._previous_summary(run_dir)
         comparison = self._comparison(summary, baseline_run_id, baseline)
         signal_artifact = {
@@ -1141,7 +1169,7 @@ class _LocalesStatusSignalProcessor:
             return self._decoded
         try:
             decoded = json.loads("".join(self.lines))
-            if not isinstance(decoded, dict):
+            if not _is_json_object(decoded):
                 raise ValueError("locale status payload is not a JSON object")
             if decoded.get("outcome") not in {"backlog", "complete"}:
                 raise ValueError("locale status payload has an unknown outcome")
@@ -1161,7 +1189,7 @@ class _LocalesStatusSignalProcessor:
                     candidate = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                if not isinstance(candidate, dict):
+                if not _is_json_object(candidate):
                     continue
                 if candidate.get("outcome") not in {"backlog", "complete"}:
                     continue

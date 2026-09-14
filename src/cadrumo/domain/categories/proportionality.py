@@ -338,6 +338,14 @@ class ProportionalityKind:
     callers cannot mint a token without a validated registry projection.
     """
 
+    _is_full_deductible: bool
+    _is_non_deductible: bool
+    _is_statutory_cap: bool
+    _is_usage_ratio: bool
+    _requires_exclusive_use: bool
+    _requires_fixed_pct: bool
+    _token: str
+
     __slots__ = (
         "_is_full_deductible",
         "_is_non_deductible",
@@ -458,6 +466,9 @@ class ProportionalityKind:
 
 class StatutoryCapPeriod:
     """Opaque statutory-cap period token projected from the facts registry."""
+
+    _is_per_person: bool
+    _token: str
 
     __slots__ = ("_is_per_person", "_token")
 
