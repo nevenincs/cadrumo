@@ -70,8 +70,8 @@ def _declared_row() -> Transaction:
     )
     return transaction.model_copy(
         update={
-            "art_104_tres_exclusion": Art104TresExclusion.DIRECT_IVA_CUOTAS,
-            "input_classification": InputClassification.COMMON,
+            "art_104_tres_exclusion": Art104TresExclusion("direct_iva_cuotas"),
+            "input_classification": InputClassification._from_registry("common"),
             "prorrata_sector_id": _SECTOR,
         },
     )
@@ -90,8 +90,8 @@ def _rebuild(patch: ManualLedgerTransactionPatch):
 @pytest.mark.parametrize(
     ("field", "expected"),
     [
-        ("art_104_tres_exclusion", Art104TresExclusion.DIRECT_IVA_CUOTAS),
-        ("input_classification", InputClassification.COMMON),
+        ("art_104_tres_exclusion", Art104TresExclusion("direct_iva_cuotas")),
+        ("input_classification", InputClassification._from_registry("common")),
         ("prorrata_sector_id", _SECTOR),
     ],
 )
@@ -108,8 +108,8 @@ def test_a_reclassification_keeps_them_too() -> None:
     """The reclassify path is the one an operator actually runs."""
     rebuilt = _rebuild(ManualLedgerTransactionPatch(category_id="office-supplies"))
 
-    assert rebuilt.art_104_tres_exclusion is Art104TresExclusion.DIRECT_IVA_CUOTAS
-    assert rebuilt.input_classification is InputClassification.COMMON
+    assert rebuilt.art_104_tres_exclusion is Art104TresExclusion("direct_iva_cuotas")
+    assert rebuilt.input_classification is InputClassification._from_registry("common")
     assert rebuilt.prorrata_sector_id == _SECTOR
 
 

@@ -186,7 +186,7 @@ def test_m123_result_disposition_uses_revision_specific_canonical_result_casilla
         revision_id=revision_id,
     )
     revision = _verified_revision(work_unit, {result_casilla: Decimal("223.44")})
-    profile = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+    profile = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
 
     disposition = resolve_modelo_result_disposition(
         work_unit=work_unit,
@@ -210,7 +210,7 @@ def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token
         resolve_modelo_result_disposition(
             work_unit=work_unit,
             revision=revision,
-            workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL),
+            workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL")),
             period=work_unit.period,
         )
 
@@ -229,7 +229,7 @@ def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_meta
         resolve_modelo_result_disposition(
             work_unit=work_unit,
             revision=revision,
-            workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL),
+            workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL")),
             period=work_unit.period,
         )
 

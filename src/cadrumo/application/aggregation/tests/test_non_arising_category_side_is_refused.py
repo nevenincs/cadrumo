@@ -73,7 +73,7 @@ def _transaction(
     *,
     direction: TransactionDirection,
     category: IvaCategory,
-    eu_member_state: EUMemberState | None = EUMemberState.DE,
+    eu_member_state: EUMemberState | None = EUMemberState._from_registry("de"),
     iva_rate: Decimal = Decimal("0.21"),
     iva_amount: Decimal = _CUOTA,
 ) -> Transaction:
@@ -127,14 +127,14 @@ def _transaction(
     }
     if direction is TransactionDirection.OUTGOING:
         if category in {
-            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+            IvaCategory("intra_community_acquisition_reverse_charge"),
+            IvaCategory("intra_community_service_acquisition_reverse_charge"),
         }:
-            payload["deduction_fact_kind"] = IvaDeductionFactKind.INTRA_EU_CURRENT
-            authority = IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT
+            payload["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("intra_eu_current")
+            authority = IvaDeductionEvidenceAuthority._from_registry("intra_eu_self_assessment")
         else:
-            payload["deduction_fact_kind"] = IvaDeductionFactKind.DOMESTIC_CURRENT
-            authority = IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE
+            payload["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("domestic_current")
+            authority = IvaDeductionEvidenceAuthority._from_registry("invoice_evidence")
         payload["deduction_provenance"] = IvaDeductionClassificationProvenance(
             authority=authority,
             source_locator=f"fixture:{row_id}",
@@ -167,7 +167,7 @@ def _non_arising_pairs() -> list[tuple[IvaCategory, InvoiceKind]]:
     return [
         (category, kind)
         for (category, kind), row in COMPONENT_CATALOGUE.items()
-        if row.applicability is IvaKindApplicability.DOES_NOT_ARISE
+        if row.applicability is IvaKindApplicability._from_registry("does_not_arise")
     ]
 
 
@@ -195,7 +195,7 @@ def test_a_mis_sided_intra_community_supply_is_refused() -> None:
         _transaction(
             "row-ics-received",
             direction=_direction_for(InvoiceKind.RECEIVED),
-            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            category=IvaCategory("intra_community_supply"),
         ),
     )
     assert list(observations) == [], "a mis-sided intra-community supply produced a deducible observation"
@@ -217,7 +217,7 @@ def test_the_same_category_on_its_own_side_is_untouched() -> None:
         _transaction(
             "row-ics-issued",
             direction=_direction_for(InvoiceKind.ISSUED),
-            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            category=IvaCategory("intra_community_supply"),
             iva_rate=Decimal("0"),
             iva_amount=Decimal("0"),
         ),
@@ -240,7 +240,7 @@ def test_an_ordinary_two_sided_category_is_untouched_on_both_sides() -> None:
             _transaction(
                 f"row-general-{kind.value}",
                 direction=_direction_for(kind),
-                category=IvaCategory.DOMESTIC_GENERAL,
+                category=IvaCategory("domestic_general"),
                 eu_member_state=None,
             ),
         )
@@ -296,14 +296,14 @@ def test_the_refusal_names_the_counterpart_the_operator_probably_meant() -> None
     transaction = _transaction(
         "row-detail",
         direction=_direction_for(InvoiceKind.RECEIVED),
-        category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        category=IvaCategory("intra_community_supply"),
     )
     catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
     detail = aggregate_iva_ledger_observations(catalogue, period=_PERIOD).issues[0].detail
 
-    note = COMPONENT_CATALOGUE[(IvaCategory.INTRA_COMMUNITY_SUPPLY, InvoiceKind.RECEIVED)].retencion_note
-    assert IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE.value in note, (
+    note = COMPONENT_CATALOGUE[(IvaCategory("intra_community_supply"), InvoiceKind.RECEIVED)].retencion_note
+    assert IvaCategory("intra_community_acquisition_reverse_charge").value in note, (
         "the table's note no longer names the counterpart, so the refusal below cannot carry it"
     )
-    assert IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE.value in detail
-    assert IvaCategory.INTRA_COMMUNITY_SUPPLY.value in detail
+    assert IvaCategory("intra_community_acquisition_reverse_charge").value in detail
+    assert IvaCategory("intra_community_supply").value in detail

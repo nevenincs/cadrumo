@@ -29,11 +29,11 @@ def _fully_populated_answers() -> SetupAnswers:
     return SetupAnswers(
         tax_id="12345678Z",
         activity="Software development",
-        entity_type=EntityType.NATURAL_PERSON,
+        entity_type=EntityType._from_registry("natural_person"),
         legal_entity_form="",
         irpf_income_categories="trabajo,capital_inmobiliario,pension",
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
-        iva_regime=IVARegime.REAGP,
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_simplificada"),
+        iva_regime=IVARegime("REAGP"),
         iva_group_member_enrolled=True,
         iva_group_dominant_entity_enrolled=True,
         iva_sii_enrolled=True,
@@ -49,10 +49,10 @@ class TestSetupAnswersTaxpayerAxes:
         answers = SetupAnswers(
             tax_id="B12345674",
             activity="Cooperative trading",
-            entity_type=EntityType.LEGAL_ENTITY,
-            legal_entity_form=LegalEntityForm.COOPERATIVA,
+            entity_type=EntityType._from_registry("legal_entity"),
+            legal_entity_form=LegalEntityForm._from_registry("cooperativa"),
         )
-        assert answers.legal_entity_form is LegalEntityForm.COOPERATIVA
+        assert answers.legal_entity_form is LegalEntityForm._from_registry("cooperativa")
 
     def test_irpf_income_categories_rejects_unknown_token(self) -> None:
         with pytest.raises(ValueError, match=r"not_a_category"):
@@ -142,13 +142,13 @@ class TestTaxpayerProfileProjection:
             },
             tax_id_default="00000000T",
         )
-        assert profile.entity_type is EntityType.NATURAL_PERSON
+        assert profile.entity_type is EntityType._from_registry("natural_person")
         assert profile.irpf_income_categories == frozenset(
-            {IrpfIncomeCategory.CAPITAL_INMOBILIARIO, IrpfIncomeCategory.PENSION},
+            {IrpfIncomeCategory._from_registry("capital_inmobiliario"), IrpfIncomeCategory._from_registry("pension")},
         )
-        assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+        assert profile.irpf_estimation_regime is IrpfEstimationRegime._from_registry("objetiva")
         assert profile.art109_activity_income_withholding_ge_70pct is True
-        assert profile.iva_regime is IVARegime.REAGP
+        assert profile.iva_regime is IVARegime("REAGP")
         iva = profile.iva
         assert iva is not None
         assert iva.regime_composition.value == "general"
@@ -188,7 +188,7 @@ class TestTaxpayerProfileProjection:
             },
             tax_id_default="00000000T",
         )
-        assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+        assert profile.irpf_estimation_regime is IrpfEstimationRegime._from_registry("objetiva")
 
     def test_objetiva_regime_projects_modulos_annual_profile_facts(self) -> None:
         """Annual módulos facts project from the real profile mapping."""
@@ -205,7 +205,7 @@ class TestTaxpayerProfileProjection:
             },
             tax_id_default="00000000T",
         )
-        assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+        assert profile.irpf_estimation_regime is IrpfEstimationRegime._from_registry("objetiva")
         assert profile.objective_estimation_modulos_iae_epigraph == "972.1"
         assert str(profile.objective_estimation_modulos_module_1_units) == "2.50"
         assert str(profile.objective_estimation_modulos_module_2_units) == "85"
@@ -253,8 +253,8 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         return SetupAnswers(
             tax_id="B66012345",
             activity="Software development",
-            entity_type=EntityType.LEGAL_ENTITY,
-            legal_entity_form=LegalEntityForm.SL,
+            entity_type=EntityType._from_registry("legal_entity"),
+            legal_entity_form=LegalEntityForm._from_registry("sl"),
             new_entity_first_two_profit_periods=new_entity,
         )
 
@@ -409,8 +409,8 @@ class TestLey49SpecialRegimeRoundTrip:
         return SetupAnswers(
             tax_id="G66012345",
             activity="Foundation activity",
-            entity_type=EntityType.LEGAL_ENTITY,
-            legal_entity_form=LegalEntityForm.SIN_FINES_LUCRATIVOS,
+            entity_type=EntityType._from_registry("legal_entity"),
+            legal_entity_form=LegalEntityForm._from_registry("sin_fines_lucrativos"),
             ley_49_2002_option_declared=option_declared,
             ley_49_2002_option_date=option_date,
             ley_49_2002_renunciation_declared=renunciation_declared,

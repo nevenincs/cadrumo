@@ -636,15 +636,12 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
         # The buyer's side still resolves from the same document, so this reads
         # as a refusal about the unplaceable token rather than a ladder that
         # stopped answering.
-        assert (
-            resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
-                draft=draft,
-                kind=InvoiceKind.ISSUED,
-                repository=repository,
-            ).scope
-            is IvaTerritorialScope.ES_MAINLAND
-        )
+        assert resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=draft,
+            kind=InvoiceKind.ISSUED,
+            repository=repository,
+        ).scope is IvaTerritorialScope._from_registry("es_mainland")
 
 
 #: The authored UBL export specimen. It declares UNTDID ``G`` -- free export
@@ -722,7 +719,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         # The document's own declared relief, asserted rather than assumed: if
         # the specimen stopped declaring `G` every case below would pass by
         # never reaching the guard at all.
-        assert draft.iva_category == IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED.value
+        assert draft.iva_category == IvaCategory("export_third_country_zero_rated").value
         return resolve_confirmed_establishment(
             bucket_id=_BUCKET_ID,
             draft=draft,
@@ -926,15 +923,15 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         )
         declared = DeclaredFacts(
             stated_category=DeclaredFact(
-                value=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+                value=IvaCategory("export_third_country_zero_rated"),
                 source=ClassifierInputSource.DOCUMENT_EVIDENCE,
             ),
             issuer_scope=DeclaredFact(
-                value=IvaTerritorialScope.ES_MAINLAND,
+                value=IvaTerritorialScope._from_registry("es_mainland"),
                 source=ClassifierInputSource.PROFILE_AUTHORITY,
             ),
             customer_tax_status=DeclaredFact(
-                value=CustomerTaxStatus.B2B_IVA_REGISTERED,
+                value=CustomerTaxStatus._from_registry("b2b_iva_registered"),
                 source=ClassifierInputSource.OPERATOR_ASSERTION,
             ),
             supply_nature=DeclaredFact(
@@ -962,7 +959,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         )
 
         assert resolution.outcome is not IvaCategoryOutcome.UNSUPPORTED_RELIEF
-        assert resolution.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+        assert resolution.category is IvaCategory("export_third_country_zero_rated")
 
     def test_the_filers_own_gap_is_never_forgiven_by_the_counterpartys_excuse(
         self,
@@ -988,11 +985,11 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         )
         declared = DeclaredFacts(
             stated_category=DeclaredFact(
-                value=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+                value=IvaCategory("export_third_country_zero_rated"),
                 source=ClassifierInputSource.DOCUMENT_EVIDENCE,
             ),
             customer_tax_status=DeclaredFact(
-                value=CustomerTaxStatus.B2B_IVA_REGISTERED,
+                value=CustomerTaxStatus._from_registry("b2b_iva_registered"),
                 source=ClassifierInputSource.OPERATOR_ASSERTION,
             ),
             supply_nature=DeclaredFact(
@@ -1043,4 +1040,4 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         )
 
         assert not self._counterparty_unestablished(confirmed)
-        assert confirmed.counterparty.scope is IvaTerritorialScope.THIRD_COUNTRY
+        assert confirmed.counterparty.scope is IvaTerritorialScope._from_registry("third_country")

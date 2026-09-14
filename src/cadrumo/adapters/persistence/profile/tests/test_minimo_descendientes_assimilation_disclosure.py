@@ -93,7 +93,7 @@ def _write(*descendants: DescendantInfo) -> None:
 
 def _assimilated_child(
     *,
-    relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE,
+    relacion: DescendantRelacion = DescendantRelacion._from_registry("descendiente"),
     inscripcion_registro_civil_date: date | None = None,
 ) -> DescendantInfo:
     """A NON-cohabiting descendant the filer economically supports.
@@ -167,7 +167,7 @@ def test_the_under_grant_disclosure_covers_an_assimilated_descendant() -> None:
     """
     _write(
         _assimilated_child(
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             inscripcion_registro_civil_date=None,
         ),
     )
@@ -188,7 +188,7 @@ def test_a_suppressed_household_is_still_excluded_from_both_disclosures() -> Non
     """
     descendants = (
         _assimilated_child(
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             inscripcion_registro_civil_date=None,
         ),
     )

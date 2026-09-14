@@ -156,8 +156,8 @@ def _irnr_gbworkflow_profile() -> TaxpayerProfile:
     """
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="GB",
         representante_fiscal_nif="12345678Z",
         representante_fiscal_nombre="Test Representative",

@@ -52,7 +52,7 @@ def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
                     quantity=Decimal("10"),
                     unit_price=Decimal("100.00"),
                     subtotal=Decimal("1000.00"),
-                    iva_rate=IvaRate.RATE_21,
+                    iva_rate=IvaRate._from_registry("RATE_21"),
                     iva_amount=Decimal("210.00"),
                     spending_category_id="consultoria",
                 ),
@@ -94,7 +94,7 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
         assert loaded_a.linked_transaction_ids == ("a" * 64,)
         assert len(loaded_a.lines) == 1
         loaded_line = loaded_a.lines[0]
-        assert loaded_line.iva_rate is IvaRate.RATE_21
+        assert loaded_line.iva_rate is IvaRate._from_registry("RATE_21")
         assert loaded_line.quantity == Decimal("10")
         assert loaded_line.iva_amount == Decimal("210.00")
         assert loaded_line.spending_category_id == "consultoria"

@@ -60,9 +60,9 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
             filing_year=2024,
             period=period,
             observations=[
-                _obs("11111111H", RetencionClave.A),
-                _obs("11111111H", RetencionClave.G),
-                _obs("22222222J", RetencionClave.A),
+                _obs("11111111H", RetencionClave._from_registry("A")),
+                _obs("11111111H", RetencionClave._from_registry("G")),
+                _obs("22222222J", RetencionClave._from_registry("A")),
             ],
         )
         snapshot = compiled_bundled_authority().snapshot("190", filing_year=2024, period="0A")

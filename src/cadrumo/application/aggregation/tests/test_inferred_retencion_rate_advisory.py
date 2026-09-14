@@ -44,6 +44,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.iva.schema import IvaCategory
+
 from ....core.aggregation import LedgerWithholdingDerivation
 from ....core.period import Period
 from ....domain.iva.schema import IvaCategory
@@ -98,7 +100,7 @@ def _income_row(
     *,
     cash: str,
     iva_amount: str | None = "420.00",
-    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
+    iva_category: IvaCategory | None = IvaCategory("domestic_general"),
 ) -> Transaction:
     return Transaction.model_validate(
         {
@@ -381,7 +383,7 @@ def test_a_cuota_less_exempt_row_is_screened_on_the_same_rate_basis() -> None:
     statutory rate, still a phantom credit.
     """
     observations = _observations(
-        _income_row("exempt-swift-fee", cash="1981.50", iva_amount=None, iva_category=IvaCategory.DOMESTIC_EXEMPT),
+        _income_row("exempt-swift-fee", cash="1981.50", iva_amount=None, iva_category=IvaCategory("domestic_exempt")),
     )
 
     assert len(observations) == 1

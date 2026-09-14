@@ -47,7 +47,7 @@ def test_payload_carries_every_canonical_descendant_field() -> None:
     """No canonical ``DescendantInfo`` field is dropped by the CLI projection."""
     canonical = DescendantInfo(
         birth_date=date(2022, 5, 1),
-        relacion=DescendantRelacion.ADOPTADO,
+        relacion=DescendantRelacion._from_registry("adoptado"),
         inscripcion_registro_civil_date=date(2023, 6, 2),
         acogimiento_resolucion_date=date(2022, 9, 3),
         discapacidad_grado=33,
@@ -81,7 +81,7 @@ def test_dates_keep_their_iso_wire_form() -> None:
     """Typing the fields as ``date`` must not change the emitted JSON shape."""
     canonical = DescendantInfo(
         birth_date=date(2018, 1, 1),
-        relacion=DescendantRelacion.ADOPTADO,
+        relacion=DescendantRelacion._from_registry("adoptado"),
         inscripcion_registro_civil_date=date(2019, 3, 4),
         acogimiento_resolucion_date=date(2018, 7, 5),
     )
@@ -104,7 +104,7 @@ def test_relacion_reaches_the_wire_as_its_token() -> None:
     """
     canonical = DescendantInfo(
         birth_date=date(2015, 1, 1),
-        relacion=DescendantRelacion.ACOGIMIENTO_TEMPORAL,
+        relacion=DescendantRelacion._from_registry("acogimiento_temporal"),
     )
 
     wire = _payload_from(canonical).model_dump(mode="json")
@@ -155,7 +155,7 @@ def test_payload_refuses_an_entry_event_predating_birth() -> None:
         ProfileDescendientePayload(
             index=0,
             birth_date=date(2020, 1, 1),
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             inscripcion_registro_civil_date=date(2019, 1, 1),
             convive_con_contribuyente=True,
             custodia_compartida=False,
@@ -168,7 +168,7 @@ def test_payload_refuses_a_future_entry_event() -> None:
         ProfileDescendientePayload(
             index=0,
             birth_date=date(2020, 1, 1),
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             inscripcion_registro_civil_date=date.today() + timedelta(days=365),
             convive_con_contribuyente=True,
             custodia_compartida=False,
@@ -178,12 +178,12 @@ def test_payload_refuses_a_future_entry_event() -> None:
 @pytest.mark.parametrize(
     ("relacion", "date_field"),
     [
-        (DescendantRelacion.TUTELA, "inscripcion_registro_civil_date"),
-        (DescendantRelacion.TUTELA, "acogimiento_resolucion_date"),
-        (DescendantRelacion.ACOGIMIENTO_TEMPORAL, "inscripcion_registro_civil_date"),
-        (DescendantRelacion.ACOGIMIENTO_TEMPORAL, "acogimiento_resolucion_date"),
-        (DescendantRelacion.DESCENDIENTE, "inscripcion_registro_civil_date"),
-        (DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE, "inscripcion_registro_civil_date"),
+        (DescendantRelacion._from_registry("tutela"), "inscripcion_registro_civil_date"),
+        (DescendantRelacion._from_registry("tutela"), "acogimiento_resolucion_date"),
+        (DescendantRelacion._from_registry("acogimiento_temporal"), "inscripcion_registro_civil_date"),
+        (DescendantRelacion._from_registry("acogimiento_temporal"), "acogimiento_resolucion_date"),
+        (DescendantRelacion._from_registry("descendiente"), "inscripcion_registro_civil_date"),
+        (DescendantRelacion._from_registry("acogimiento_preadoptivo_o_permanente"), "inscripcion_registro_civil_date"),
     ],
 )
 def test_payload_refuses_an_entry_date_the_relacion_cannot_carry(

@@ -31,7 +31,7 @@ _CUOTA = Decimal("8.40")
 
 
 def _profile(**overrides: Any) -> TaxpayerProfile:
-    payload: dict[str, Any] = {"tax_id": "12345678Z", "iva_regime": IVARegime.GENERAL}
+    payload: dict[str, Any] = {"tax_id": "12345678Z", "iva_regime": IVARegime("general")}
     payload.update(overrides)
     return TaxpayerProfile(**payload)  # type: ignore[arg-type]
 
@@ -42,12 +42,12 @@ def _invoice(**overrides: Any) -> Invoice:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=_CUOTA,
     )
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
-        "invoice_class": InvoiceClass.SIMPLIFICADA,
+        "invoice_class": InvoiceClass._from_registry("SIMPLIFICADA"),
         "invoice_number": "T-2026-001",
         "issued_at": date(2026, 5, 3),
         "counterparty_name": "Cliente de mostrador",
@@ -68,7 +68,7 @@ def test_a_domestic_ticket_from_an_established_issuer_wants_the_nif() -> None:
     """Case 3.º applying, so every refusal below is not vacuous."""
     outcome = resolve_simplificada_tax_id_advisory(
         invoice=_invoice(),
-        profile_resolver=lambda: _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF),
+        profile_resolver=lambda: _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf")),
     )
 
     assert outcome is SimplificadaTaxIdAdvisory.REQUIRED
@@ -79,7 +79,7 @@ def test_a_non_established_issuer_is_evaluated_and_cleared() -> None:
     outcome = resolve_simplificada_tax_id_advisory(
         invoice=_invoice(),
         profile_resolver=lambda: _profile(
-            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             tax_id="X1234567L",
             # Required by the domain when residency is NON_RESIDENT_IRNR
             # (TRLIRNR RDLeg 5/2004 art. 2); omitting it makes the profile

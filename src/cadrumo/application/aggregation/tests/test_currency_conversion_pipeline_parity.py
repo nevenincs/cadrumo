@@ -184,7 +184,7 @@ def test_renta_ledger_m100_expense_reads_converted_eur_amount() -> None:
     """Already-correct comparator: gross_amount is the converted 900.00, not 1000.00."""
     tx = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
-        category_id=SpendingCategory.CUOTAS_AUTONOMOS_SS.value,
+        category_id=SpendingCategory._from_registry("cuotas_autonomos_ss").value,
     )
     result = _classify_renta_transaction(
         tx,
@@ -214,7 +214,7 @@ def test_renta_ledger_m100_expense_taxable_base_fallback_is_converted() -> None:
     """
     tx = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
-        category_id=SpendingCategory.CUOTAS_AUTONOMOS_SS.value,
+        category_id=SpendingCategory._from_registry("cuotas_autonomos_ss").value,
         taxable_base=Decimal("826.45"),
     )
     result = _classify_renta_transaction(
@@ -247,7 +247,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted() -> Non
     """
     tx_provisional = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
-        category_id=SpendingCategory.CUOTAS_AUTONOMOS_SS.value,
+        category_id=SpendingCategory._from_registry("cuotas_autonomos_ss").value,
     )
     # A separate native amount from the module-level fixture (this test builds
     # its own linked invoice pair), so transaction_id is dropped and re-derived
@@ -265,7 +265,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted() -> Non
         quantity=Decimal("1"),
         unit_price=base_total_native,
         subtotal=base_total_native,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=iva_total_native,
     )
     invoice = Invoice.model_validate(
@@ -327,7 +327,7 @@ def test_iva_ledger_refuses_converted_row_rather_than_reading_native_substrate()
         tx,
         resolved_period=Period.from_year_and_code(2025, "1T"),
         operation_date=date(2025, 2, 10),
-        cash_treatment=IvaCashAccountingTreatment.NONE,
+        cash_treatment=IvaCashAccountingTreatment("none"),
     )
     assert issue is not None
     assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE
@@ -405,7 +405,7 @@ def _converted_usd_invoice(
         quantity=Decimal("1"),
         unit_price=base_total,
         subtotal=base_total,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=iva_total,
         oss_rate_kind=oss_rate_kind,
     )
@@ -478,9 +478,9 @@ def test_oss_ioss_candidate_converts_invoice_line_amounts() -> None:
         counterparty_tax_id="PL1234567890",
         base_total=base_total_native,
         iva_total=iva_total_native,
-        oss_ioss_regime=OssIossRegime.UNION_SCHEME,
-        oss_transaction_kind=TransactionKind.OSS_UNION_SERVICES,
-        oss_rate_kind=IvaRateKind.GENERAL,
+        oss_ioss_regime=OssIossRegime("union_scheme"),
+        oss_transaction_kind=TransactionKind("oss_union_services"),
+        oss_rate_kind=IvaRateKind("general"),
     )
     candidate = _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=date(2025, 2, 10))
     assert candidate is not None

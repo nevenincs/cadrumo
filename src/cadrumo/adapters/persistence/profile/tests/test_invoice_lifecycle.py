@@ -34,7 +34,7 @@ from cadrumo.application.invoices.catalogue_lifecycle import (
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
+from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from cadrumo.domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -235,7 +235,7 @@ def _linked_invoice(bucket_id: str):
                 quantity=Decimal("1"),
                 unit_price=Decimal("100.00"),
                 subtotal=Decimal("100.00"),
-                iva_rate=IvaRate.RATE_21,
+                iva_rate=resolve_iva_rate_token("rate_21", date.today()),
                 iva_amount=Decimal("21.00"),
             ),
         ),

@@ -119,7 +119,7 @@ def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
         transaction_id=tx_id,
         provenance="llm:claude:test-model",
         classification=BusinessClassification.BUSINESS,
-        category=SpendingCategory.MATERIAL_OFICINA,
+        category=SpendingCategory._from_registry("material_oficina"),
         confidence=Decimal("0.9"),
         reason="looks like office supplies",
     )
@@ -234,7 +234,7 @@ def _saturated_suggestion(repository: TransactionCatalogueRepository, tx_id: str
     return saturate_llm_classification(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
         transaction_repository=repository,
     )
 
@@ -273,7 +273,7 @@ def test_saturate_apply_composes_saturated_primitive_with_derived_source_command
 
     # Delegation to the saturated primitive: registry-derived IVA substrate lands.
     assert isinstance(result, ManualLedgerTransactionResult)
-    assert result.transaction.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert result.transaction.iva_category == IvaCategory("domestic_general")
     assert result.transaction.taxable_base == Decimal("100.00")
     assert result.transaction.iva_amount == Decimal("21.00")
 

@@ -26,6 +26,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
+
 from ....core.period import Period
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -85,7 +87,7 @@ def _row(provider_id: str, *, established_in: EUMemberState | None, identified_i
             "taxable_base": Decimal("4000.00"),
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
-            "iva_category": IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            "iva_category": IvaCategory("intra_community_supply"),
             "counterparty_country": (established_in.value.upper() if established_in is not None else None),
             "counterparty_identification_state": identified_in,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
@@ -105,15 +107,15 @@ def _accepted(transaction: Transaction) -> bool:
     ("established_in", "identified_in", "accepted"),
     [
         # Identification decides, across every establishment it can pair with.
-        (EUMemberState.ES, EUMemberState.DE, True),
-        (EUMemberState.FR, EUMemberState.DE, True),
-        (None, EUMemberState.DE, True),
-        (EUMemberState.DE, EUMemberState.ES, False),
-        (EUMemberState.ES, EUMemberState.ES, False),
-        (None, EUMemberState.ES, False),
+        (require_eu_member_state("ES"), require_eu_member_state("DE"), True),
+        (require_eu_member_state("FR"), require_eu_member_state("DE"), True),
+        (None, require_eu_member_state("DE"), True),
+        (require_eu_member_state("DE"), require_eu_member_state("ES"), False),
+        (require_eu_member_state("ES"), require_eu_member_state("ES"), False),
+        (None, require_eu_member_state("ES"), False),
         # Absent identification is absent, whatever the establishment says.
-        (EUMemberState.DE, None, False),
-        (EUMemberState.ES, None, False),
+        (require_eu_member_state("DE"), None, False),
+        (require_eu_member_state("ES"), None, False),
         (None, None, False),
     ],
 )

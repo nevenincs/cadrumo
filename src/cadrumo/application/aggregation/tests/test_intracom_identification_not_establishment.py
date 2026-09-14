@@ -93,7 +93,7 @@ def _intracom_supply(
             "taxable_base": Decimal("5000.00"),
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
-            "iva_category": IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            "iva_category": IvaCategory("intra_community_supply"),
             "counterparty_country": (established_in.value.upper() if established_in is not None else None),
             "counterparty_identification_state": identified_in,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
@@ -118,7 +118,9 @@ def test_art25_turns_on_identification_in_both_directions() -> None:
     # Established in Spain, IVA-identified in Germany. Art. 25 exempts this.
     spanish_established_german_identified = _aggregate(
         _intracom_supply(
-            "es-established-de-identified", established_in=EUMemberState.ES, identified_in=EUMemberState.DE
+            "es-established-de-identified",
+            established_in=EUMemberState._from_registry("es"),
+            identified_in=EUMemberState._from_registry("de"),
         ),
     )
     assert spanish_established_german_identified.issues == (), (
@@ -131,7 +133,9 @@ def test_art25_turns_on_identification_in_both_directions() -> None:
     # Established in Germany, purchasing under a Spanish NIF-IVA. Domestic supply.
     german_established_spanish_identified = _aggregate(
         _intracom_supply(
-            "de-established-es-identified", established_in=EUMemberState.DE, identified_in=EUMemberState.ES
+            "de-established-es-identified",
+            established_in=EUMemberState._from_registry("de"),
+            identified_in=EUMemberState._from_registry("es"),
         ),
     )
     assert german_established_spanish_identified.observations == (), (
@@ -153,8 +157,8 @@ def test_absent_identification_refuses_and_never_falls_back_to_the_country() -> 
     the wrong reason. Both are refused identically, for the one honest reason.
     """
     for label, established_in in (
-        ("non-ES establishment", EUMemberState.DE),
-        ("ES establishment", EUMemberState.ES),
+        ("non-ES establishment", EUMemberState._from_registry("de")),
+        ("ES establishment", EUMemberState._from_registry("es")),
         ("no establishment", None),
     ):
         aggregation = _aggregate(

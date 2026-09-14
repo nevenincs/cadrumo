@@ -52,17 +52,19 @@ _ORDINARY_DAY = date(2025, 6, 15)
 #: An exempt slot names no percentage at all, so there is no pairing to look up.
 #: This is the reachable silence; the test below records why the table's OWN
 #: silence cannot be reached through a validly-constructed invoice.
-_EXEMPT_SLOT = IvaRate.EXEMPT
+_EXEMPT_SLOT = IvaRate._from_registry("EXEMPT")
 
 
-def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate = IvaRate.RATE_21) -> Invoice:
+def _recargo_invoice(
+    *, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate = IvaRate._from_registry("RATE_21")
+) -> Invoice:
     """A retailer's purchase invoice bearing recargo de equivalencia.
 
     The cuota follows the slot rather than being fixed: an exempt line must
     carry zero, which the invoice model enforces, so a hardcoded figure would
     make the exempt variant unconstructible.
     """
-    cuota = Decimal("210.00") if slot is IvaRate.RATE_21 else Decimal("0.00")
+    cuota = Decimal("210.00") if slot is IvaRate._from_registry("RATE_21") else Decimal("0.00")
     total = _BASE + cuota + Decimal(recargo)
     return Invoice.model_validate(
         {
@@ -79,7 +81,7 @@ def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate =
             "grand_total": format(total, "f"),
             "currency": "EUR",
             "payment_status": "PENDING",
-            "iva_category": IvaCategory.RECARGO_EQUIVALENCIA.value,
+            "iva_category": IvaCategory("recargo_equivalencia").value,
             "lines": [
                 {
                     "description": "Genero para reventa",

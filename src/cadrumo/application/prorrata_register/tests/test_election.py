@@ -33,17 +33,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_the_carried_prior_definitive_needs_no_reference() -> None:
     """The art. 105.Uno normal case: carried from the prior settlement."""
     provenance, reference = validate_prorrata_election(
-        provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
         reference=None,
     )
 
-    assert provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    assert provenance is ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
     assert reference is None
 
 
 @pytest.mark.parametrize(
     "provenance",
-    [ProrrataProvisionalProvenance.AEAT_AUTORIZADA, ProrrataProvisionalProvenance.INICIO_ACTIVIDAD],
+    [
+        ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
+        ProrrataProvisionalProvenance._from_registry("inicio_actividad"),
+    ],
 )
 def test_a_document_backed_provenance_records_its_reference(
     provenance: ProrrataProvisionalProvenance,
@@ -59,7 +62,7 @@ def test_the_computed_interrupted_percentage_cannot_be_declared() -> None:
     """Art. 105.Cinco is derived; asserting it would displace the computation."""
     with pytest.raises(ProrrataElectionError) as excinfo:
         validate_prorrata_election(
-            provenance=ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
+            provenance=ProrrataProvisionalProvenance._from_registry("interrumpida_tres_ultimos"),
             reference=None,
         )
 
@@ -68,7 +71,10 @@ def test_the_computed_interrupted_percentage_cannot_be_declared() -> None:
 
 @pytest.mark.parametrize(
     "provenance",
-    [ProrrataProvisionalProvenance.AEAT_AUTORIZADA, ProrrataProvisionalProvenance.INICIO_ACTIVIDAD],
+    [
+        ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
+        ProrrataProvisionalProvenance._from_registry("inicio_actividad"),
+    ],
 )
 def test_a_document_backed_provenance_without_its_reference_is_refused(
     provenance: ProrrataProvisionalProvenance,
@@ -88,7 +94,7 @@ def test_a_blank_reference_does_not_satisfy_the_document_requirement() -> None:
     """
     with pytest.raises(ProrrataElectionError) as excinfo:
         validate_prorrata_election(
-            provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
+            provenance=ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
             reference="   ",
         )
 
@@ -99,7 +105,7 @@ def test_a_reference_against_an_undocumented_provenance_is_refused() -> None:
     """Evidence for an authority the provenance does not have."""
     with pytest.raises(ProrrataElectionError) as excinfo:
         validate_prorrata_election(
-            provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
             reference="AUT-2026-1",
         )
 
@@ -128,4 +134,4 @@ def test_exactly_one_electable_provenance_carries_no_document() -> None:
     """
     undocumented = set(prorrata_electable_provenances()) - set(prorrata_referenced_provenances())
 
-    assert undocumented == {ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA}
+    assert undocumented == {ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")}

@@ -85,12 +85,12 @@ def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
             "--classification",
             "BUSINESS",
             "--category-id",
-            SpendingCategory.MATERIAL_OFICINA.value,
+            SpendingCategory._from_registry("material_oficina").value,
         ],
     )
     assert result.exit_code == 0, result.output
     transaction = json.loads(result.output)["result"]["transaction"]
-    assert transaction["category_id"] == SpendingCategory.MATERIAL_OFICINA.value
+    assert transaction["category_id"] == SpendingCategory._from_registry("material_oficina").value
 
 
 def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> None:
@@ -139,7 +139,7 @@ def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
     output = result.output
     assert "category-id" in output
     assert "--category-id" in output
-    assert SpendingCategory.MATERIAL_OFICINA.value in output
+    assert SpendingCategory._from_registry("material_oficina").value in output
     assert "irpf-category" in output
     assert "--irpf-category arrendamiento_local" in output
     assert "actividad_economica" in output

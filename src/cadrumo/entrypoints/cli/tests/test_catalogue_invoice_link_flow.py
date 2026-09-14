@@ -222,7 +222,7 @@ def test_catalogue_create_stamps_intra_community_category() -> None:
 
     stored = InvoiceCatalogueRepository().load().get(invoice_id)
     assert stored is not None, "catalogue invoice missing after create"
-    assert stored.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert stored.iva_category == IvaCategory("intra_community_supply")
     assert stored.operation_type is IntracomOperationType.E
 
 
@@ -257,4 +257,4 @@ def test_catalogue_create_stamps_service_operation_type() -> None:
     stored = InvoiceCatalogueRepository().load().get(invoice_id)
     assert stored is not None, "catalogue invoice missing after create"
     assert stored.operation_type is IntracomOperationType.S
-    assert stored.iva_category is IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY
+    assert stored.iva_category == IvaCategory("intra_community_service_supply")

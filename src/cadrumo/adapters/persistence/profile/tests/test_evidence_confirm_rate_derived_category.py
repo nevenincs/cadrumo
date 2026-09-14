@@ -40,9 +40,10 @@ from cadrumo.application.ledger.confirmed_field_resolution import domestic_rate_
 from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft, InvoiceDraftRateBreakdown
 from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from cadrumo.domain.invoices.decomposition import decompose_invoice
 from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
+from cadrumo.domain.iva.schema import IvaCategory
 
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
@@ -110,7 +111,7 @@ def test_a_plain_rated_document_grounds_through_the_decomposition_contract(
     )
     verdict = decompose_invoice(result.invoice)
 
-    assert result.invoice.iva_category is IvaCategory.DOMESTIC_GENERAL, (
+    assert result.invoice.iva_category == IvaCategory("domestic_general"), (
         f"the 21% tier was not resolved from the document: {result.invoice.iva_category!r}"
     )
     assert verdict.is_grounded, (
@@ -200,4 +201,6 @@ def test_a_rate_unregistered_on_the_issue_date_resolves_to_nothing() -> None:
     assert domestic_rate_tier_from_the_document(draft, invoice_date=date(2010, 11, 20)) is None
     # The same draft on a date the rate WAS registered resolves, so the refusal
     # above is attributable to the date and not to the draft being unusable.
-    assert domestic_rate_tier_from_the_document(draft, invoice_date=date(2015, 11, 20)) is IvaRateKind.GENERAL
+    assert domestic_rate_tier_from_the_document(draft, invoice_date=date(2015, 11, 20)) == require_iva_rate_kind(
+        "general"
+    )

@@ -86,7 +86,7 @@ def _invoice(
                 quantity=Decimal("1"),
                 unit_price=total,
                 subtotal=total,
-                iva_rate=IvaRate.EXEMPT,
+                iva_rate=IvaRate._from_registry("EXEMPT"),
                 iva_amount=Decimal("0"),
             ),
         ),
@@ -139,7 +139,7 @@ def test_source_resolver_projects_an_invoice_through_the_reader_port() -> None:
     invoice = _invoice(
         kind=InvoiceKind.ISSUED,
         number="F-2026-001",
-        category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        category=IvaCategory("intra_community_supply"),
     )
     _modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in _modelos if candidate.id == "349")
@@ -164,12 +164,12 @@ def test_service_categories_resolve_directional_m349_claves_without_storage() ->
     issued = _invoice(
         kind=InvoiceKind.ISSUED,
         number="S-ISSUED",
-        category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+        category=IvaCategory("intra_community_service_supply"),
     )
     received = _invoice(
         kind=InvoiceKind.RECEIVED,
         number="S-RECEIVED",
-        category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
     assert _intracommunity_clave(issued) == "S"

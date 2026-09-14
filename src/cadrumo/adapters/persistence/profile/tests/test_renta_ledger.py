@@ -149,7 +149,7 @@ def _transaction(
     provider_id: str,
     *,
     amount: Decimal = Decimal("121.00"),
-    category: SpendingCategory = SpendingCategory.ASESORIA_FISCAL,
+    category: SpendingCategory = SpendingCategory._from_registry("asesoria_fiscal"),
     purchase_invoice_evidence_id: str | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
@@ -203,7 +203,7 @@ def _invoice(
         quantity=Decimal("1"),
         unit_price=base_total,
         subtotal=base_total,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=Decimal("21.00"),
     )
     return Invoice.model_validate(
@@ -302,7 +302,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     transaction = _transaction(
         "row-cli-renta",
         amount=Decimal("121.00"),
-        category=SpendingCategory.ASESORIA_FISCAL,
+        category=SpendingCategory._from_registry("asesoria_fiscal"),
     )
     tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
@@ -343,17 +343,17 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
         _transaction(
             "row-office",
             amount=Decimal("240.00"),
-            category=SpendingCategory.MATERIAL_OFICINA,
+            category=SpendingCategory._from_registry("material_oficina"),
         ),
         _transaction(
             "row-software",
             amount=Decimal("360.00"),
-            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            category=SpendingCategory._from_registry("software_suscripcion"),
         ),
         _transaction(
             "row-marketing",
             amount=Decimal("180.00"),
-            category=SpendingCategory.PUBLICIDAD_MARKETING,
+            category=SpendingCategory._from_registry("publicidad_marketing"),
         ),
     )
     tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
@@ -391,14 +391,14 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
     phone = _transaction(
         "row-phone",
         amount=Decimal("121.00"),
-        category=SpendingCategory.TELEFONIA_MOVIL,
+        category=SpendingCategory._from_registry("telefonia_movil"),
     )
     TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((phone,)),
     )
     InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}),
+        UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("0.50")}),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         objects=secure_objects,
     )
@@ -436,7 +436,7 @@ def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_exp
         _transaction(
             "sofia-office",
             amount=Decimal("847.00"),
-            category=SpendingCategory.MATERIAL_OFICINA,
+            category=SpendingCategory._from_registry("material_oficina"),
             booked_date=date(2025, 2, 3),
             value_date=date(2025, 2, 3),
             taxable_base=office_base,
@@ -446,7 +446,7 @@ def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_exp
         _transaction(
             "sofia-software",
             amount=Decimal("726.00"),
-            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            category=SpendingCategory._from_registry("software_suscripcion"),
             booked_date=date(2025, 2, 4),
             value_date=date(2025, 2, 4),
             taxable_base=software_base,
@@ -456,7 +456,7 @@ def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_exp
         _transaction(
             "sofia-marketing",
             amount=Decimal("968.00"),
-            category=SpendingCategory.PUBLICIDAD_MARKETING,
+            category=SpendingCategory._from_registry("publicidad_marketing"),
             booked_date=date(2025, 2, 5),
             value_date=date(2025, 2, 5),
             taxable_base=marketing_base,
@@ -497,7 +497,7 @@ def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_l
         _transaction(
             "shared-office",
             amount=Decimal("847.00"),
-            category=SpendingCategory.MATERIAL_OFICINA,
+            category=SpendingCategory._from_registry("material_oficina"),
             booked_date=date(2025, 1, 15),
             value_date=date(2025, 1, 15),
             taxable_base=bases[0],
@@ -507,7 +507,7 @@ def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_l
         _transaction(
             "shared-software",
             amount=Decimal("726.00"),
-            category=SpendingCategory.SOFTWARE_SUSCRIPCION,
+            category=SpendingCategory._from_registry("software_suscripcion"),
             booked_date=date(2025, 2, 15),
             value_date=date(2025, 2, 15),
             taxable_base=bases[1],
@@ -517,7 +517,7 @@ def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_l
         _transaction(
             "shared-marketing",
             amount=Decimal("968.00"),
-            category=SpendingCategory.PUBLICIDAD_MARKETING,
+            category=SpendingCategory._from_registry("publicidad_marketing"),
             booked_date=date(2025, 3, 15),
             value_date=date(2025, 3, 15),
             taxable_base=bases[2],
@@ -738,7 +738,15 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
         category=category,
         display_label=tr("Override territorial de prueba"),
         proportionality=ProportionalityRule(
-            kind=ProportionalityKind.FIXED_PERCENTAGE,
+            kind=ProportionalityKind._from_registry(
+                "fixed_percentage",
+                requires_fixed_pct=True,
+                is_full_deductible=False,
+                is_usage_ratio=False,
+                is_statutory_cap=False,
+                is_non_deductible=False,
+                requires_exclusive_use=False,
+            ),
             fixed_pct=Decimal("0.50"),
             citations=(
                 CategoryCitation(
@@ -828,13 +836,17 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
     row = _transaction(
         "row-region-wrapper-hit",
         amount=Decimal("100.00"),
-        category=SpendingCategory.GASTOS_BANCARIOS,
+        category=SpendingCategory._from_registry("gastos_bancarios"),
     )
     TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
         TransactionCatalogue.from_transactions((row,)),
     )
     overrides = {
-        CCAA.CANARIAS: {SpendingCategory.GASTOS_BANCARIOS: _region_override_profile(SpendingCategory.GASTOS_BANCARIOS)},
+        CCAA.CANARIAS: {
+            SpendingCategory._from_registry("gastos_bancarios"): _region_override_profile(
+                SpendingCategory._from_registry("gastos_bancarios")
+            )
+        },
     }
 
     def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
@@ -855,10 +867,26 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
 
     matched = _run(_profile_with_ccaa("canarias"))
     assert matched.issues == ()
-    assert matched.observations[0].proportionality_kind is ProportionalityKind.FIXED_PERCENTAGE
+    assert matched.observations[0].proportionality_kind is ProportionalityKind._from_registry(
+        "fixed_percentage",
+        requires_fixed_pct=True,
+        is_full_deductible=False,
+        is_usage_ratio=False,
+        is_statutory_cap=False,
+        is_non_deductible=False,
+        requires_exclusive_use=False,
+    )
     assert matched.observations[0].deductible_amount == Decimal("50.0000")
 
     other_region = _run(_profile_with_ccaa("madrid"))
     assert other_region.issues == ()
-    assert other_region.observations[0].proportionality_kind is not ProportionalityKind.FIXED_PERCENTAGE
+    assert other_region.observations[0].proportionality_kind is not ProportionalityKind._from_registry(
+        "fixed_percentage",
+        requires_fixed_pct=True,
+        is_full_deductible=False,
+        is_usage_ratio=False,
+        is_statutory_cap=False,
+        is_non_deductible=False,
+        requires_exclusive_use=False,
+    )
     assert other_region.observations[0].deductible_amount == Decimal("100.00")

@@ -83,7 +83,7 @@ def _classify_business(tx: str) -> None:
             "--classification",
             "BUSINESS",
             "--category-id",
-            SpendingCategory.MANUTENCION_DIETAS_NACIONAL.value,
+            SpendingCategory._from_registry("manutencion_dietas_nacional").value,
         ],
     )
     assert classified.exit_code == 0, classified.output
@@ -103,7 +103,7 @@ def test_operator_derive_without_llm_persists_derived_substrate(tmp_path: Path) 
             "classify",
             tx,
             "--iva-category",
-            IvaCategory.DOMESTIC_GENERAL.value,
+            IvaCategory("domestic_general").value,
             "--saturate",
         ],
     )
@@ -140,7 +140,7 @@ def test_operator_derive_refuses_non_business_row(tmp_path: Path) -> None:
     tx = _import_one_transaction(tmp_path)  # row stays NOT_YET_PROCESSED
 
     result = _invoke(
-        ["app", "ledger", "classify", tx, "--iva-category", IvaCategory.DOMESTIC_GENERAL.value, "--saturate"],
+        ["app", "ledger", "classify", tx, "--iva-category", IvaCategory("domestic_general").value, "--saturate"],
     )
     assert result.exit_code != 0
     assert "business" in result.output.lower()

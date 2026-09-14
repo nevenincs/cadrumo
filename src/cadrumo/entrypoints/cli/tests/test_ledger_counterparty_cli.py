@@ -115,15 +115,15 @@ def test_an_operator_answer_reaches_the_ladder() -> None:
     repository: writing to a store nothing consults is the defect being closed,
     so the check has to be made at the consumer.
     """
-    result = _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.ES_CANARIAS.value)
+    result = _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope._from_registry("es_canarias").value)
 
     assert result.exit_code == 0, result.output
-    assert _ladder_scope() == IvaTerritorialScope.ES_CANARIAS.value
+    assert _ladder_scope() == IvaTerritorialScope._from_registry("es_canarias").value
 
 
 def test_the_subject_is_positional() -> None:
     """A single-subject verb takes its subject as an argument, never as an option."""
-    rejected = _confirm("--id", _SUPPLIER_CIF, "--scope", IvaTerritorialScope.ES_MAINLAND.value)
+    rejected = _confirm("--id", _SUPPLIER_CIF, "--scope", IvaTerritorialScope._from_registry("es_mainland").value)
 
     assert rejected.exit_code != 0
 
@@ -134,11 +134,11 @@ def test_a_retry_is_a_no_op_that_says_so() -> None:
     A retrying agent must not be able to turn one answer into two, and must not
     be left inferring from an unchanged timestamp that nothing happened.
     """
-    first = _confirm_json(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.EU_MEMBER.value)
+    first = _confirm_json(_SUPPLIER_CIF, "--scope", IvaTerritorialScope._from_registry("eu_member").value)
     assert first.exit_code == 0, first.output
     assert _payload(first)["result"]["recorded"] is True
 
-    again = _confirm_json(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.EU_MEMBER.value)
+    again = _confirm_json(_SUPPLIER_CIF, "--scope", IvaTerritorialScope._from_registry("eu_member").value)
 
     assert again.exit_code == 0, again.output
     payload = _payload(again)
@@ -156,14 +156,14 @@ def test_a_conflicting_answer_refuses_and_names_the_route_out() -> None:
     asserts the instruction rather than only the refusal. An error naming a
     command that does not exist is a dead end wearing the shape of guidance.
     """
-    assert _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.ES_CANARIAS.value).exit_code == 0
+    assert _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope._from_registry("es_canarias").value).exit_code == 0
 
-    conflicted = _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.THIRD_COUNTRY.value)
+    conflicted = _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope._from_registry("third_country").value)
 
     assert conflicted.exit_code != 0
     assert "withdraw" in conflicted.output
     # The stored answer is untouched by the refused call.
-    assert _ladder_scope() == IvaTerritorialScope.ES_CANARIAS.value
+    assert _ladder_scope() == IvaTerritorialScope._from_registry("es_canarias").value
 
 
 def test_withdrawing_reopens_the_question_so_a_correction_can_land() -> None:
@@ -173,15 +173,15 @@ def test_withdrawing_reopens_the_question_so_a_correction_can_land() -> None:
     proof it works is that the ladder goes back to answering nothing and then
     accepts the corrected answer.
     """
-    assert _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.ES_CANARIAS.value).exit_code == 0
+    assert _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope._from_registry("es_canarias").value).exit_code == 0
 
     withdrawn = _invoke(["app", "ledger", "counterparty", "withdraw", _SUPPLIER_CIF])
 
     assert withdrawn.exit_code == 0, withdrawn.output
     assert _ladder_scope() is None
 
-    assert _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.ES_MAINLAND.value).exit_code == 0
-    assert _ladder_scope() == IvaTerritorialScope.ES_MAINLAND.value
+    assert _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope._from_registry("es_mainland").value).exit_code == 0
+    assert _ladder_scope() == IvaTerritorialScope._from_registry("es_mainland").value
 
 
 def test_withdrawing_nothing_is_a_successful_no_op() -> None:
@@ -195,7 +195,7 @@ def test_withdrawing_nothing_is_a_successful_no_op() -> None:
 
 def test_an_unverifiable_identifier_refuses_rather_than_storing_a_key_for_nothing() -> None:
     """There is no counterparty to answer for, so there is nothing to confirm."""
-    result = _confirm("not-a-tax-id", "--scope", IvaTerritorialScope.ES_MAINLAND.value)
+    result = _confirm("not-a-tax-id", "--scope", IvaTerritorialScope._from_registry("es_mainland").value)
 
     assert result.exit_code != 0
 
@@ -210,17 +210,17 @@ def test_an_identification_only_conflict_refuses_instead_of_raising() -> None:
     an operator correcting only an identification State was met with a crash
     instead of the withdraw route.
     """
-    assert _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState.DE.value).exit_code == 0
+    assert _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState._from_registry("de").value).exit_code == 0
 
-    conflicted = _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState.FR.value)
+    conflicted = _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState._from_registry("fr").value)
 
     assert conflicted.exit_code != 0
     # The route out, not merely a non-zero status: a refusal naming no
     # correction is the shape this surface exists to avoid.
     assert "withdraw" in conflicted.output
     # Both values are named, so the operator can see which answer is being kept.
-    assert EUMemberState.DE.value in conflicted.output
-    assert EUMemberState.FR.value in conflicted.output
+    assert EUMemberState._from_registry("de").value in conflicted.output
+    assert EUMemberState._from_registry("fr").value in conflicted.output
 
 
 def test_an_identification_only_retry_reports_the_stored_answer() -> None:
@@ -231,9 +231,9 @@ def test_an_identification_only_retry_reports_the_stored_answer() -> None:
     to be the safe path. A retrying agent is this CLI's operator, so the no-op
     branch is the more-travelled one, not the edge.
     """
-    assert _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState.DE.value).exit_code == 0
+    assert _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState._from_registry("de").value).exit_code == 0
 
-    again = _confirm_json(_SUPPLIER_CIF, "--identification-state", EUMemberState.DE.value)
+    again = _confirm_json(_SUPPLIER_CIF, "--identification-state", EUMemberState._from_registry("de").value)
 
     assert again.exit_code == 0, again.output
     assert _payload(again)["result"]["recorded"] is False
@@ -242,7 +242,7 @@ def test_an_identification_only_retry_reports_the_stored_answer() -> None:
     notice = next(
         item for item in _payload(again)["notices"] if item["code"] == "ledger.counterparty.already_confirmed"
     )
-    assert notice["context"]["identification_state"] == EUMemberState.DE.value
+    assert notice["context"]["identification_state"] == EUMemberState._from_registry("de").value
     assert "territorial_scope" not in notice["context"]
 
 
@@ -256,4 +256,4 @@ def test_the_accepted_scopes_are_offered_on_a_parse_failure() -> None:
     result = _confirm(_SUPPLIER_CIF, "--scope", "canarias")
 
     assert result.exit_code != 0
-    assert IvaTerritorialScope.ES_CANARIAS.value in result.output
+    assert IvaTerritorialScope._from_registry("es_canarias").value in result.output

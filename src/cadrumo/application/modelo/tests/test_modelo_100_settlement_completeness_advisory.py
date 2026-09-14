@@ -46,7 +46,7 @@ _CUOTA_RESULTANTE: CasillaId = validated_casilla_id("0595", surface="m100 settle
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("general"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

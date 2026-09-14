@@ -111,11 +111,11 @@ def _transaction(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "iva_category": category,
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current")
             if direction is TransactionDirection.OUTGOING
             else None,
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{row_id}",
                 evidence_digest="e" * 64,
             )
@@ -147,7 +147,7 @@ def _issued_reverse_charge(row_id: str, *, iva_rate: Decimal, iva_amount: Decima
     return _transaction(
         row_id,
         direction=TransactionDirection.INCOMING,
-        category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        category=IvaCategory("domestic_reverse_charge"),
         iva_rate=iva_rate,
         iva_amount=iva_amount,
         gross=_BASE,
@@ -191,7 +191,7 @@ def test_a_received_reverse_charge_row_at_the_same_rate_is_untouched() -> None:
         _transaction(
             "row-received-rc",
             direction=TransactionDirection.OUTGOING,
-            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            category=IvaCategory("domestic_reverse_charge"),
             iva_rate=Decimal("0.21"),
             iva_amount=_CUOTA,
             gross=_BASE,
@@ -213,7 +213,7 @@ def test_an_exempt_row_declaring_a_tipo_is_refused_by_the_same_screen() -> None:
         _transaction(
             "row-exempt-rated",
             direction=TransactionDirection.INCOMING,
-            category=IvaCategory.DOMESTIC_EXEMPT,
+            category=IvaCategory("domestic_exempt"),
             iva_rate=Decimal("0.21"),
             iva_amount=Decimal("0"),
             gross=_BASE,
@@ -234,7 +234,7 @@ def test_an_ordinary_rated_sale_is_untouched() -> None:
         _transaction(
             "row-general",
             direction=TransactionDirection.INCOMING,
-            category=IvaCategory.DOMESTIC_GENERAL,
+            category=IvaCategory("domestic_general"),
             iva_rate=Decimal("0.21"),
             iva_amount=_CUOTA,
             gross=_BASE + _CUOTA,
@@ -255,6 +255,6 @@ def test_the_refusal_names_the_category_the_side_and_the_rate() -> None:
     transaction = _issued_reverse_charge("row-detail", iva_rate=Decimal("0.21"), iva_amount=_CUOTA)
     catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
     detail = aggregate_iva_ledger_observations(catalogue, period=_PERIOD).issues[0].detail
-    assert IvaCategory.DOMESTIC_REVERSE_CHARGE.value in detail
+    assert IvaCategory("domestic_reverse_charge").value in detail
     assert "issued" in detail
     assert "0.21" in detail

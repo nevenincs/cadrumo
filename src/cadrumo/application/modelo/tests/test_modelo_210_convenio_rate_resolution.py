@@ -92,7 +92,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=_IVA_REGIME,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
         representante_fiscal_nif="12345678Z",
         representante_fiscal_nombre="Test Representative",
@@ -108,7 +108,7 @@ def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=_IVA_REGIME,
-        fiscal_residency=FiscalResidency.RESIDENT_IRPF,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -415,7 +415,7 @@ def _irnr_profile_without_representante(country_code: str) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=_IVA_REGIME,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
     )
 
@@ -447,7 +447,7 @@ def test_representante_predicate_violated_for_non_eea_resident_without_represent
     profile = TaxpayerProfile.model_construct(
         tax_id="X1234567L",
         iva_regime=_IVA_REGIME,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="AR",
         representante_fiscal_nif=None,
     )
@@ -479,7 +479,7 @@ def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
     profile = TaxpayerProfile.model_construct(
         tax_id="X1234567L",
         iva_regime=_IVA_REGIME,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="AR",
         representante_fiscal_nif=None,
     )

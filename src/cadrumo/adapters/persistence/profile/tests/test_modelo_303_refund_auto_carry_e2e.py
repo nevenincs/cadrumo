@@ -172,15 +172,15 @@ def _store_operator_profile(*, period_token: str) -> None:
 def workflow_profile(*, redeme_enrolled: bool, period_token: str) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
         activity_start_date=_activity_start_date_for_period(period_token),
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.COMMON_REGIME,
-            regime_composition=M303RegimeComposition.GENERAL,
+            tax_territory=M303TaxTerritory._from_registry("common_regime"),
+            regime_composition=M303RegimeComposition._from_registry("general"),
             redeme_enrolled=redeme_enrolled,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,

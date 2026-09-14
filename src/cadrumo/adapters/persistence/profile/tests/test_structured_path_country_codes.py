@@ -353,7 +353,7 @@ class TestTheStructuredPathOpensThePostalRung:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.ES_MAINLAND
+        assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_the_resolved_territory_follows_the_document_rather_than_a_constant(
@@ -393,7 +393,7 @@ class TestTheStructuredPathOpensThePostalRung:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.ES_CANARIAS
+        assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_ubl_document_resolves_its_counterparty_territory(
@@ -419,7 +419,7 @@ class TestTheStructuredPathOpensThePostalRung:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.ES_CANARIAS
+        assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_the_customer_side_resolves_its_own_country(
@@ -450,7 +450,7 @@ class TestTheStructuredPathOpensThePostalRung:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.ES_MAINLAND
+        assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_cii_document_resolves_a_spanish_counterparty_through_the_postal_rung(
@@ -483,7 +483,7 @@ class TestTheStructuredPathOpensThePostalRung:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.ES_MAINLAND
+        assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_cii_document_resolves_a_foreign_counterparty_through_the_country_rung(
@@ -516,7 +516,7 @@ class TestTheStructuredPathOpensThePostalRung:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.THIRD_COUNTRY
+        assert resolved.scope is IvaTerritorialScope._from_registry("third_country")
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     def test_a_document_stating_no_country_still_exhausts(
@@ -666,7 +666,7 @@ class TestTheOverseasAddressIsNotConsulted:
         # And the answer the ladder WOULD give from that country, so this reads
         # as a statement about unread evidence rather than about France being
         # unresolvable.
-        assert territorial_scope_for_country("FR") is IvaTerritorialScope.EU_MEMBER
+        assert territorial_scope_for_country("FR") is IvaTerritorialScope._from_registry("eu_member")
 
 
 class TestTheProvenanceTellsTheTwoApart:

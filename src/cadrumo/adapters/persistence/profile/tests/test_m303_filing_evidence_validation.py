@@ -16,7 +16,9 @@ from cadrumo.application.modelo.action_errors import M303FilingEvidenceError
 from cadrumo.application.modelo.m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.deadlines.models import M303RegimeComposition
@@ -220,7 +222,7 @@ def _activity_rows(reference: FilingEvidenceReference) -> tuple[M303Exonerado390
 
 def _store_profile(
     *,
-    composition: M303RegimeComposition = M303RegimeComposition.GENERAL,
+    composition: M303RegimeComposition = M303RegimeComposition._from_registry("general"),
     iae_epigraph: str | None = None,
 ) -> None:
     seed_test_profile_record(
@@ -270,7 +272,7 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path:
 
 @pytest.mark.parametrize(
     "composition",
-    (M303RegimeComposition.SIMPLIFIED, M303RegimeComposition.MIXED),
+    (M303RegimeComposition._from_registry("simplified"), M303RegimeComposition._from_registry("mixed")),
 )
 def test_evidence_scope_disagreeing_with_active_censo_refuses(
     tmp_path: Path,
@@ -325,7 +327,7 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
         activity = regimen.rows.activities[0]
         assert isinstance(activity, ActividadNoAgricolaSimplificado)
         _store_profile(
-            composition=M303RegimeComposition.SIMPLIFIED,
+            composition=M303RegimeComposition._from_registry("simplified"),
             iae_epigraph=activity.iae_epigrafe,
         )
         with pytest.raises(M303FilingEvidenceError) as raised_divergent_result:

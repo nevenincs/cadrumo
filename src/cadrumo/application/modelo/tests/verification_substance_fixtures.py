@@ -37,7 +37,7 @@ def _casilla_values(*entries: tuple[CasillaId, str]) -> dict[CasillaId, Decimal]
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

@@ -81,9 +81,9 @@ def _iva_transaction(transaction_id: str, *, direction: TransactionDirection, ta
         "classified_by": "manual",
     }
     if direction is TransactionDirection.OUTGOING:
-        fields["deduction_fact_kind"] = IvaDeductionFactKind.DOMESTIC_CURRENT
+        fields["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("domestic_current")
         fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
             source_locator=f"invoice:{transaction_id}",
             evidence_digest="a" * 64,
         )
@@ -145,7 +145,9 @@ def test_a_reclassified_deduction_is_drift_under_v2_and_invisible_under_v1() -> 
     """
     before = _purchase()
     assert before.input_classification is None
-    after = before.model_copy(update={"input_classification": InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE})
+    after = before.model_copy(
+        update={"input_classification": InputClassification._from_registry("exclusively_non_deductible")}
+    )
     live = _catalogue(after)
 
     current = evaluate_ledger_filing_staleness(_snapshot_of(before), live)
@@ -204,7 +206,7 @@ def test_a_new_capture_stamps_the_current_version_on_snapshot_and_evidence() -> 
 def test_the_widened_facts_reach_the_exported_evidence_row() -> None:
     """The record mirrors the fingerprint, so widening one widens both."""
     declared = _purchase().model_copy(
-        update={"input_classification": InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE},
+        update={"input_classification": InputClassification._from_registry("exclusively_non_deductible")},
     )
     evidence = compute_ledger_filing_evidence(
         source_transaction_ids=[declared.transaction_id],
@@ -214,4 +216,6 @@ def test_the_widened_facts_reach_the_exported_evidence_row() -> None:
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
     )
-    assert evidence.rows[0].input_classification == InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE.value
+    assert (
+        evidence.rows[0].input_classification == InputClassification._from_registry("exclusively_non_deductible").value
+    )

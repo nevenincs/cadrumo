@@ -20,7 +20,7 @@ from cadrumo.application.aggregation.retencion_observations_repository import (
 )
 from cadrumo.core.aggregation import BindingSourceKind, RetencionScheme
 from cadrumo.core.period import Period
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
+from cadrumo.domain.invoices.enums import PaymentStatus, iva_rate_percentage, resolve_iva_rate_token
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
@@ -39,14 +39,14 @@ def _invoice(
     retention_rate: str | None = "0.15",
 ) -> Invoice:
     subtotal = Decimal(base)
-    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
+    rate = iva_rate_percentage(resolve_iva_rate_token("rate_21", date.today()), date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
         quantity=Decimal("1"),
         unit_price=subtotal,
         subtotal=subtotal,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
         iva_amount=subtotal * rate,
     )
     return Invoice.model_validate(
@@ -63,7 +63,7 @@ def _invoice(
             "currency": "EUR",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
+            "iva_category": IvaCategory("domestic_general"),
             "retention_rate": None if retention_rate is None else Decimal(retention_rate),
             "retention_amount": None if retention_amount is None else Decimal(retention_amount),
         },

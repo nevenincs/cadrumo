@@ -61,7 +61,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _test_profile_resolver() -> TaxpayerProfile:
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("general"))
 
 
 def _definition():

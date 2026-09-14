@@ -60,17 +60,17 @@ def _invoice(
     tax_id: str = "B12345674",
     currency: str = "EUR",
     fx_rate: str | None = None,
-    category: IvaCategory = IvaCategory.DOMESTIC_GENERAL,
+    category: IvaCategory = IvaCategory("domestic_general"),
 ) -> Invoice:
     subtotal = Decimal(base)
-    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate._from_registry("RATE_21"), date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
         quantity=Decimal("1"),
         unit_price=subtotal,
         subtotal=subtotal,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=subtotal * rate,
     )
     return Invoice.model_validate(
@@ -334,15 +334,15 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
     re-derivation the module refuses; this case is what separates the two
     implementations.
     """
-    received_no_liability = _invoice(category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)
+    received_no_liability = _invoice(category=IvaCategory("intra_community_acquisition_reverse_charge"))
     role = category_components(
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory("intra_community_acquisition_reverse_charge"),
         InvoiceKind.RECEIVED,
     ).retencion_role
 
     projection = project_received_invoice_retencion(received_no_liability, scheme=_PROFESIONAL)
 
-    assert role is not IvaRetencionRole.TAXPAYER_LIABILITY
+    assert role is not IvaRetencionRole._from_registry("taxpayer_liability")
     assert received_no_liability.kind is InvoiceKind.RECEIVED
     assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
 

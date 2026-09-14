@@ -167,8 +167,8 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
 def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.RESIDENT_IRPF,
+        iva_regime=IVARegime("general"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 

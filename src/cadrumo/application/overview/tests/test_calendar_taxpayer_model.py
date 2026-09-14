@@ -29,16 +29,16 @@ def _landlord_profile() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.CAPITAL_INMOBILIARIO}),
-        iva_regime=IVARegime.EXENTO,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("capital_inmobiliario")}),
+        iva_regime=IVARegime("exento"),
     )
 
 
 def _undeclared_profile() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("general"))
 
 
 def test_calendar_landlord_never_shows_modelo_130() -> None:
@@ -76,9 +76,9 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        iva_regime=IVARegime("general"),
     )
 
 
@@ -213,10 +213,10 @@ def _fully_enrolled_autonomo() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("general"),
         has_employees=True,
         pays_professionals_with_retencion=True,
         pays_rent_with_retencion=True,
@@ -239,10 +239,10 @@ def _objetiva_autonomo() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
-        iva_regime=IVARegime.SIMPLIFICADO,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("objetiva"),
+        iva_regime=IVARegime("simplificado"),
     )
 
 
@@ -480,9 +480,9 @@ def _legal_entity() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("general"),
     )
 
 
@@ -491,8 +491,8 @@ def _attribution_entity() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="E12345674",
-        entity_type=EntityType.ATTRIBUTION_ENTITY,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("attribution_entity"),
+        iva_regime=IVARegime("general"),
     )
 
 
@@ -536,9 +536,9 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold() -> Non
 
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
+        iva_regime=IVARegime("general"),
         bienes_extranjero_above_threshold=False,
         monedas_virtuales_extranjero_above_threshold=False,
     )

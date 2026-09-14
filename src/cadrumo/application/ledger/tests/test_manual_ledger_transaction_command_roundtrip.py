@@ -66,8 +66,8 @@ def _populated_command() -> ManualLedgerTransactionCommand:
         irpf_category="rendimientos.actividades",
         usage_ratio_id="usage.home-office.2025",
         prorrata_reference="prorrata.iva.2025",
-        art_104_tres_exclusion=Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
-        input_classification=InputClassification.COMMON,
+        art_104_tres_exclusion=Art104TresExclusion("non_habitual_real_estate_or_financial"),
+        input_classification=InputClassification._from_registry("common"),
         purchase_invoice_evidence_id="evidence.invoice.AC-2025-042",
         attachment_ids=("attach.invoice.pdf", "attach.delivery-note.pdf"),
         notes="Q2 office expense, mixed personal/business",
@@ -114,17 +114,17 @@ def test_command_json_roundtrip_preserves_strict_equality() -> None:
 def test_command_preserves_art_104_tres_exclusion_through_json() -> None:
     """The operator-declared art-104.Tres exclusion tag survives the command wire contract."""
     original = _populated_command()
-    assert original.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
+    assert original.art_104_tres_exclusion is Art104TresExclusion("non_habitual_real_estate_or_financial")
     roundtripped = ManualLedgerTransactionCommand.model_validate_json(original.model_dump_json())
-    assert roundtripped.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
+    assert roundtripped.art_104_tres_exclusion is Art104TresExclusion("non_habitual_real_estate_or_financial")
 
 
 def test_command_preserves_input_classification_through_json() -> None:
     """The operator-declared LIVA art. 106 input_classification survives the command wire contract."""
     original = _populated_command()
-    assert original.input_classification is InputClassification.COMMON
+    assert original.input_classification is InputClassification._from_registry("common")
     roundtripped = ManualLedgerTransactionCommand.model_validate_json(original.model_dump_json())
-    assert roundtripped.input_classification is InputClassification.COMMON
+    assert roundtripped.input_classification is InputClassification._from_registry("common")
 
 
 def test_command_json_roundtrip_preserves_decimal_precision() -> None:

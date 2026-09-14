@@ -243,8 +243,8 @@ def test_the_advisory_names_the_territory_each_party_s_values_would_establish() 
 
     assert advisory is not None
     by_role = {party.role: party for party in advisory.parties}
-    assert by_role["supplier"].scope_if_attributed is IvaTerritorialScope.ES_MAINLAND
-    assert by_role["customer"].scope_if_attributed is IvaTerritorialScope.ES_CANARIAS
+    assert by_role["supplier"].scope_if_attributed is IvaTerritorialScope._from_registry("es_mainland")
+    assert by_role["customer"].scope_if_attributed is IvaTerritorialScope._from_registry("es_canarias")
 
 
 def test_a_transposition_produces_no_finding_and_only_the_stamp_says_so() -> None:

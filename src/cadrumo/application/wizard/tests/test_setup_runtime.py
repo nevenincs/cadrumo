@@ -272,7 +272,7 @@ def test_scripted_walk_visits_joint_taxation_spouse_questions() -> None:
             "spouse-sex": "",
             "spouse-disability-grade": "",
             "spouse-non-resident-irpf": "false",
-            # spouse-eu-eea-resident stays gate-hidden (non-resident=false)
+            # spouse-eu-eea-resident stays gate-hidden (non-resident=False)
         },
     )
     answers, committed = _drive_scripted(joint)
@@ -324,7 +324,7 @@ def test_legal_entity_intra_section_gate_walks_legal_entity_form() -> None:
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
     answers, committed = _drive_scripted(canonical, force_visible=explicit)
     assert "legal-entity-form" in committed
-    assert answers.legal_entity_form is LegalEntityForm.SL
+    assert answers.legal_entity_form is LegalEntityForm._from_registry("sl")
 
 
 def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:

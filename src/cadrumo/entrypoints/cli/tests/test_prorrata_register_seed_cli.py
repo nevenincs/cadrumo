@@ -141,7 +141,9 @@ def test_seed_persists_the_carried_prior_definitiva_entry() -> None:
 
     assert payload["entry"]["ejercicio"] == _CURRENT_YEAR
     assert payload["entry"]["provisional_percentage"] == str(_PRIOR_DEFINITIVE)
-    assert payload["entry"]["provisional_provenance"] == (ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value)
+    assert payload["entry"]["provisional_provenance"] == (
+        ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva").value
+    )
     assert payload["entry"]["source_observation_ref"] == f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}"
     assert payload["findings"] == []
     assert payload["source"] == {
@@ -160,7 +162,7 @@ def test_seed_persists_the_carried_prior_definitiva_entry() -> None:
     stored = ProrrataRegisterService().get(_CURRENT_YEAR)
     assert stored is not None
     assert stored.provisional_percentage == _PRIOR_DEFINITIVE
-    assert stored.provisional_provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    assert stored.provisional_provenance is ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
     assert stored.source_observation_ref == f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}"
 
     entries = _register_entries()
@@ -182,10 +184,10 @@ def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding() 
     service.declare(
         ProrrataRegisterEntry(
             ejercicio=_CURRENT_YEAR,
-            regime=ProrrataRegisterRegime.GENERAL,
+            regime=ProrrataRegisterRegime._from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("42"),
-            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
             source_observation_ref=f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}",
             source_registry_snapshot_refs=(
                 RegistrySnapshotRef(
@@ -258,12 +260,12 @@ def test_seed_refuses_to_displace_a_standing_regulated_override() -> None:
 
     refused = _seed()
     assert refused.exit_code != 0, refused.output
-    assert ProrrataProvisionalProvenance.AEAT_AUTORIZADA.value in refused.output
+    assert ProrrataProvisionalProvenance._from_registry("aeat_autorizada").value in refused.output
 
     standing = service.get(_CURRENT_YEAR)
     assert standing is not None
     assert standing.provisional_percentage == Decimal("55")
-    assert standing.provisional_provenance is ProrrataProvisionalProvenance.AEAT_AUTORIZADA
+    assert standing.provisional_provenance is ProrrataProvisionalProvenance._from_registry("aeat_autorizada")
 
 
 def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio() -> None:
@@ -325,7 +327,9 @@ def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio() -> None:
     seeded_entry = _json(seeded)["entry"]
     assert seeded_entry["sector_id"] == "arrendamiento"
     assert seeded_entry["provisional_percentage"] == definitive
-    assert seeded_entry["provisional_provenance"] == (ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value)
+    assert seeded_entry["provisional_provenance"] == (
+        ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva").value
+    )
     assert _json(seeded)["prior_ejercicio"] == _PRIOR_YEAR
 
     stored = ProrrataRegisterService().get(_CURRENT_YEAR, sector_id="arrendamiento")
