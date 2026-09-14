@@ -16,6 +16,7 @@ from ...application.state_projection import (
 from ...application.state_projection_ports import StateProjectionReadPorts
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
@@ -28,6 +29,7 @@ from ._modelo_payloads import (
 from .common import emit_envelope, no_active_profile_refusal, resolve_cli_precondition_action
 from .errors import CliRefusedBoundaryError
 from .state_projection_support import (
+    authority_operation,
     certificate_secret_backend_factory,
     operator_probe_ports,
     operator_scope_ports,
@@ -72,6 +74,7 @@ def modelo_readiness(
         operator_probe_ports=operator_probe_ports(ctx),
         operator_scope_ports=operator_scope_ports(ctx),
         read_ports=state_projection_read_ports(ctx),
+        operation=authority_operation(ctx),
     )
     readiness_result = _readiness_result(
         report,
@@ -129,6 +132,7 @@ def _readiness_report(
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
 ) -> ProjectionModeloReadiness:
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.i18n.render import tr as _tr
@@ -142,6 +146,7 @@ def _readiness_report(
             operator_scope_ports=operator_scope_ports,
             read_ports=read_ports,
             modelo_readiness_requests=(request,),
+            operation=operation,
         )
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(

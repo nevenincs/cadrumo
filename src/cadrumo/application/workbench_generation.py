@@ -117,6 +117,7 @@ _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavaila
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
 
 if TYPE_CHECKING:
+    from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from .ledger.action_ports import LedgerActionPorts
 
 
@@ -385,6 +386,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     """
 
     profile_id: str
+    operation: PinnedAuthorityOperation
     profile_repository: ProfileRecordReadRepositoryV1
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
@@ -449,6 +451,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             work_units=work_units,
             filings=filings,
             observed_at=observed_at,
+            operation=self.operation,
         )
         ledger_sources = self._load_ledger_sources()
         verification = self._load_verification_reports()
@@ -706,6 +709,7 @@ def _build_workbench_calendar_inputs(
     work_units: WorkUnitCatalogue,
     filings: ModeloRecordCatalogue,
     observed_at: UtcInstant,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda]:
     query_range = OverviewCalendarRange(
         from_date=date(as_of.year, 1, 1),
@@ -717,6 +721,7 @@ def _build_workbench_calendar_inputs(
         today=as_of,
         raw_values=raw_values,
         work_units=tuple(work_units.values()),
+        operation=operation,
     )
     evidence = build_calendar_evidence_projection(
         local=CalendarEvidenceReadOutcome(
@@ -743,6 +748,7 @@ def _build_workbench_calendar_inputs(
         raw_values=raw_values,
         filing_evidence=evidence.evidence,
         work_units=tuple(work_units.values()),
+        operation=operation,
     )
     declarations_calendar = project_declarations_calendar(
         calendar=calendar,
@@ -750,7 +756,7 @@ def _build_workbench_calendar_inputs(
         as_of=as_of,
         schedule_observation=_schedule_observation(calendar, observed_at),
     )
-    agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values)
+    agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values, operation=operation)
     return evidence, declarations_calendar, agenda
 
 

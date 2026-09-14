@@ -65,7 +65,7 @@ from ._app_live_notifications_payloads import (
     SancionReadingPayload,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope, notice_lines
-from .state_projection_support import certificate_secret_backend_factory, operator_probe_ports, operator_scope_ports
+from .state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
 if TYPE_CHECKING:
     from ...domain.notifications.sancion import SancionLiquidacion
@@ -96,9 +96,7 @@ def notifications_pull(ctx: typer.Context) -> None:
     """
     bucket_id = active_bucket_id_or_refuse()
     notifications_ports = compose_notifications_ports(settings=load_settings())
-    emit_live_auth_preflight(
-        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
-    )
+    emit_live_auth_preflight(ctx)
     persisted = asyncio.run(
         capture_notifications(
             bucket_id=bucket_id,
@@ -399,9 +397,7 @@ def notifications_document_pull(
     refused before any request crosses the wire.
     """
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight(
-        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
-    )
+    emit_live_auth_preflight(ctx)
     settings = load_settings()
     service = _notification_document_service(settings)
     notifications_ports = compose_notifications_ports(settings=settings)

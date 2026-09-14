@@ -132,7 +132,7 @@ def axis_forks_the_law(
             verdicts = {probe(status, kind) for status in statuses for kind in kinds}
         except Exception:  # reason: an unclassifiable probe is not evidence of indifference.
             return True
-        if len(verdicts) > 1 or require_iva_category("unknown", operation=operation) in verdicts:
+        if len(verdicts) > 1 or require_iva_category("unknown", authority=operation) in verdicts:
             return True
     return False
 

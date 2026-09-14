@@ -258,7 +258,11 @@ def bound_test_profile_record(
     session = _record_session(identity, root=storage_root)
     try:
         with bound_profile_record_session(session):
-            yield ProfileRecordRepository.for_current_session(identity, root=storage_root)
+            yield ProfileRecordRepository.for_current_session(
+                identity,
+                root=storage_root,
+                profile_decode_context=session.profile_decode_context,
+            )
     finally:
         session.close()
 

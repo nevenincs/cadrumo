@@ -221,6 +221,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
         context = self._build_context(snapshot)
         executor_context = _supervisor_context.SupervisorExecutorContext(
             context=context,
+            authority_operation=self._authority_operation,
             operands=self._operands,
             ephemeral_secret=BoundEphemeralSecretAccess(
                 requirement=snapshot.secret_requirement,

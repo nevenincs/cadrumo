@@ -27,7 +27,7 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final, Literal, cast
+from typing import TYPE_CHECKING, Final, Literal, cast
 
 from pydantic import BaseModel, PrivateAttr, ValidationError
 
@@ -57,6 +57,9 @@ from .persistence import workflow_state_repository
 from .profile_bucket_models import ProfileBucketPointer
 from .profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
 from .state_models import WorkflowState
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class ProfileHealthStatus(StrEnum):
@@ -492,6 +495,7 @@ def _assess_selected_profile(
     source: ProfileSource,
     total_keys: int,
     state: WorkflowState | None,
+    operation: PinnedAuthorityOperation,
 ) -> ActiveProfileHealth:
     """Resolve one selected profile through its committed capsule and record."""
     try:
@@ -522,7 +526,7 @@ def _assess_selected_profile(
             ),
             label=None,
         )
-    return _assess_registered_profile(registered_pointer, source, total_keys, state)
+    return _assess_registered_profile(registered_pointer, source, total_keys, state, operation)
 
 
 def _profile_record_session_is_missing(bucket_id: str) -> bool:
@@ -550,6 +554,7 @@ def _health_from_record_resolution(
     source: ProfileSource,
     total_keys: int,
     label: str,
+    operation: PinnedAuthorityOperation,
 ) -> ActiveProfileHealth:
     """Translate a resolved profile record or its typed unavailability reason."""
     record = resolution.record
@@ -575,7 +580,7 @@ def _health_from_record_resolution(
         )
 
     values = record_to_path_values(record)
-    validation = validate_profile_values(values)
+    validation = validate_profile_values(values, operation=operation)
     status: ProfileHealthStatusValue = ProfileHealthStatus.READY if validation.valid else ProfileHealthStatus.INCOMPLETE
     return _finalise_health(
         ActiveProfileHealth(
@@ -597,6 +602,7 @@ def _assess_registered_profile(
     source: ProfileSource,
     total_keys: int,
     state: WorkflowState | None,
+    operation: PinnedAuthorityOperation,
 ) -> ActiveProfileHealth:
     """Assess the committed profile after discovery has established its identity."""
     active_profile = pointer.bucket_id
@@ -643,10 +649,15 @@ def _assess_registered_profile(
         source=source,
         total_keys=total_keys,
         label=pointer.label,
+        operation=operation,
     )
 
 
-def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
+def assess_active_profile_health(
+    state: WorkflowState | None = None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ActiveProfileHealth:
     """Return a redacted, non-secret projection from current authenticated state.
 
     This is an observation boundary: it reads only the already-bound current
@@ -666,13 +677,18 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     override = (settings.cadrumo_active_profile or "").strip()
     active_profile = resolve_active_bucket_id()
     source: ProfileSource = "env_override" if override else ("pointer" if active_profile is not None else "none")
-    total_keys = len(profile_keys())
+    total_keys = len(profile_keys(operation))
     if active_profile is None:
         return _assess_without_active_profile(source, total_keys)
-    return _assess_selected_profile(active_profile, source, total_keys, state)
+    return _assess_selected_profile(active_profile, source, total_keys, state, operation)
 
 
-def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> ActiveProfileRepairResult:
+def repair_active_profile_pointer(
+    *,
+    clear_active: bool,
+    confirmed: bool,
+    operation: PinnedAuthorityOperation,
+) -> ActiveProfileRepairResult:
     """Clear an eligible degraded pointer-file active profile after locked reassessment.
 
     The preliminary best-effort probe keeps cold, unconfirmed, and ineligible
@@ -683,17 +699,17 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
     measured before releasing the transaction. Lock contention propagates
     without pointer mutation.
     """
-    before = assess_active_profile_health()
+    before = assess_active_profile_health(operation=operation)
     if not clear_active or not confirmed or not before.repairable_by_clearing_pointer:
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
     root = load_settings().cadrumo_local_storage_root
     with active_profile_pointer_transaction(root) as pointer_transaction:
-        before = assess_active_profile_health()
+        before = assess_active_profile_health(operation=operation)
         if not before.repairable_by_clearing_pointer:
             return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
         pointer_transaction.clear()
-        after = assess_active_profile_health()
+        after = assess_active_profile_health(operation=operation)
         return ActiveProfileRepairResult(
             dry_run=False,
             cleared_pointer=True,

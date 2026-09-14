@@ -24,6 +24,7 @@ from .calendar_models import (
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_probe_ports import OperatorProbePorts
     from ..auth.operator_scope_ports import OperatorScopePorts
@@ -191,6 +192,7 @@ def build_overview_status_report(
     operator_probe_ports: OperatorProbePorts,
     operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
     state: WorkflowState | None = None,
     raw_values: Mapping[str, object] | None = None,
 ) -> OverviewStatusReport:
@@ -212,5 +214,6 @@ def build_overview_status_report(
         operator_scope_ports=operator_scope_ports,
         state=state,
         read_ports=read_ports,
+        operation=operation,
     )
     return overview_status_report_from_projection(projection, raw_values=raw_values)

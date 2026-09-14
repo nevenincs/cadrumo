@@ -86,6 +86,7 @@ from .common import (
     transaction_catalogue_repo,
 )
 from .period_parsing import _canonical_period
+from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -95,6 +96,7 @@ if TYPE_CHECKING:
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ...application.workflow.state_models import WorkflowState
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.user_profile.schema import ProfileSchemaDefinition
     from .errors import CliRefusedBoundaryError
@@ -317,6 +319,7 @@ def _overview_status_coverage(
     current: WorkflowState | None,
     *,
     raw_values: Mapping[str, object] | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[str], list[Notice]]:
     """Build the obligation-coverage lines and notices for status output."""
     if current is None or current.active_profile_bucket_id() is None:
@@ -329,6 +332,7 @@ def _overview_status_coverage(
             from_date=_date(status_today.year, 1, 1),
             to_date=_date(status_today.year, 12, 31),
         ),
+        operation=operation,
         today=status_today,
         raw_values=raw_values,
     )
@@ -391,6 +395,7 @@ def overview_status(
         state=current,
         raw_values=raw_values,
         read_ports=state_projection_read_ports(ctx),
+        operation=authority_operation(ctx),
     )
     typed_status = strict_round_trip(OverviewStatusResult, report)
     status_lines, status_notices = overview_status_output(report)
@@ -398,7 +403,11 @@ def overview_status(
     # profile's obligation coverage over the current year and surface the same
     # default advisory the calendar does, so status never reads as complete while
     # obligations go unscoped. The coverage report rides the Notice channel.
-    coverage_lines, coverage_notices = _overview_status_coverage(current, raw_values=raw_values)
+    coverage_lines, coverage_notices = _overview_status_coverage(
+        current,
+        raw_values=raw_values,
+        operation=authority_operation(ctx),
+    )
     emit_envelope(
         ctx,
         command="overview.status",
@@ -438,6 +447,7 @@ def overview_calendar(
             rng=rng,
             allow_incomplete=allow_incomplete,
             show_suppressed=show_suppressed,
+            operation=authority_operation(ctx),
         )
         return
 
@@ -491,6 +501,7 @@ def overview_calendar(
     cal: OverviewCalendar = build_overview_calendar(
         workflow_profile,
         rng,
+        operation=authority_operation(ctx),
         today=calendar_today,
         raw_values=raw_values,
         show_suppressed=show_suppressed,
@@ -635,6 +646,7 @@ def _profile_calendar_projection(
     allow_incomplete: bool,
     show_suppressed: bool,
     expedientes_ports_factory: ExpedientesPortsFactory,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[dict[str, object], list[str], list[Notice]] | None:
     """Build one profile calendar block, or return ``None`` for a skipped bucket."""
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -652,6 +664,7 @@ def _profile_calendar_projection(
     cal = build_overview_calendar(
         inputs.taxpayer,
         rng,
+        operation=operation,
         today=as_of,
         raw_values=inputs.raw_values,
         show_suppressed=show_suppressed,
@@ -671,6 +684,7 @@ def _overview_calendar_all_profiles(
     rng: OverviewCalendarRange,
     allow_incomplete: bool,
     show_suppressed: bool,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Emit the deadline calendar for every registered active profile.
 
@@ -713,6 +727,7 @@ def _overview_calendar_all_profiles(
             allow_incomplete=allow_incomplete,
             show_suppressed=show_suppressed,
             expedientes_ports_factory=ports_factory,
+            operation=operation,
         )
         if projection is None:
             all_lines.append(f"profile_skipped\t{bucket_id}\t{pointer.label}")
@@ -757,6 +772,7 @@ def overview_agenda(
     agenda = build_overview_agenda(
         profile_to_taxpayer(current),
         as_of=as_of_date,
+        operation=authority_operation(ctx),
         horizon_days=horizon_days,
         raw_values=raw_values,
     )
@@ -801,6 +817,7 @@ def overview_backlog(
     work_units, work_units_notice = local_modelo_work_units(bucket_id)
     backlog = build_overview_backlog(
         profile_to_taxpayer(current),
+        operation=authority_operation(ctx),
         from_date=parsed_from,
         to_date=parsed_to,
         raw_values=raw_values,

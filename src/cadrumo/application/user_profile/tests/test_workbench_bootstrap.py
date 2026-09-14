@@ -5,9 +5,12 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....core.hashing import content_hash_hex
 from ....core.profile_discovery import ProfileSummaryOutcome
 from ....core.profile_publication import ProfilePublicationKind
+from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
 from ..login_interaction import ProfileLoginChoice
 from ..login_session import ProfileLoginOutcome
 from ..profile_summary import ProfileSummary, ProfileSummaryInventory
@@ -22,6 +25,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _PROFILE = "11111111-1111-4111-8111-111111111111"
+_PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
+    schema=load_user_profile_schema(),
+    generation=AuthorityGenerationPin(
+        content_hash_hex({"generation": "workbench-bootstrap-fixture"}),
+        content_hash_hex({"reader": "workbench-bootstrap-fixture"}),
+    ),
+)
 
 
 def _inventory(*, label: str = "Operator") -> ProfileSummaryInventory:
@@ -45,10 +55,11 @@ def _choice(*, label: str = "Operator") -> tuple[ProfileLoginChoice, ...]:
 def test_degraded_inventory_never_reads_choices_or_attempts_resume() -> None:
     calls: list[str] = []
     result = prepare_workbench_bootstrap(
+        profile_decode_context=_PROFILE_DECODE_CONTEXT,
         inventory_reader=lambda: ProfileSummaryInventory(outcome=ProfileSummaryOutcome.DEGRADED),
         choice_reader=lambda: calls.append("choices") or (),
         preselection_reader=lambda _name: calls.append("preselection") or None,
-        resume_session=lambda *, bucket_id: calls.append(bucket_id),
+        resume_session=lambda *, bucket_id, profile_decode_context: calls.append(bucket_id),
     )
 
     assert result.inventory_state is WorkbenchBootstrapInventoryState.DEGRADED
@@ -60,10 +71,11 @@ def test_degraded_inventory_never_reads_choices_or_attempts_resume() -> None:
 def test_concurrent_inventory_is_a_distinct_refusal_without_choices_or_resume() -> None:
     calls: list[str] = []
     result = prepare_workbench_bootstrap(
+        profile_decode_context=_PROFILE_DECODE_CONTEXT,
         inventory_reader=lambda: ProfileSummaryInventory(outcome=ProfileSummaryOutcome.CONCURRENT_CHANGE),
         choice_reader=lambda: calls.append("choices") or (),
         preselection_reader=lambda _name: calls.append("preselection") or None,
-        resume_session=lambda *, bucket_id: calls.append(bucket_id),
+        resume_session=lambda *, bucket_id, profile_decode_context: calls.append(bucket_id),
     )
 
     assert result.inventory_state is WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE
@@ -74,6 +86,7 @@ def test_concurrent_inventory_is_a_distinct_refusal_without_choices_or_resume() 
 
 def test_empty_inventory_is_explicit_registration_requirement_not_login() -> None:
     result = prepare_workbench_bootstrap(
+        profile_decode_context=_PROFILE_DECODE_CONTEXT,
         inventory_reader=ProfileSummaryInventory,
         choice_reader=lambda: pytest.fail("empty inventory must not fabricate login choices"),
     )
@@ -87,10 +100,11 @@ def test_empty_inventory_is_explicit_registration_requirement_not_login() -> Non
 def test_selected_profile_resumes_once_and_returns_safe_selected_identity() -> None:
     resumed: list[str] = []
     result = prepare_workbench_bootstrap(
+        profile_decode_context=_PROFILE_DECODE_CONTEXT,
         inventory_reader=_inventory,
         choice_reader=_choice,
         preselection_reader=lambda _name: _PROFILE,
-        resume_session=lambda *, bucket_id: resumed.append(bucket_id),
+        resume_session=lambda *, bucket_id, profile_decode_context: resumed.append(bucket_id),
     )
 
     assert result.inventory_state is WorkbenchBootstrapInventoryState.RECOGNIZED
@@ -103,10 +117,11 @@ def test_selected_profile_resumes_once_and_returns_safe_selected_identity() -> N
 
 def test_refused_resume_requires_login_and_login_completion_is_closed() -> None:
     prepared = prepare_workbench_bootstrap(
+        profile_decode_context=_PROFILE_DECODE_CONTEXT,
         inventory_reader=_inventory,
         choice_reader=_choice,
         preselection_reader=lambda _name: _PROFILE,
-        resume_session=lambda *, bucket_id: "expired",
+        resume_session=lambda *, bucket_id, profile_decode_context: "expired",
     )
     authenticated = complete_workbench_login(
         prepared,
@@ -132,10 +147,11 @@ def test_refused_resume_requires_login_and_login_completion_is_closed() -> None:
 def test_changed_inventory_fails_closed_before_preselection_or_resume() -> None:
     calls: list[str] = []
     result = prepare_workbench_bootstrap(
+        profile_decode_context=_PROFILE_DECODE_CONTEXT,
         inventory_reader=_inventory,
         choice_reader=lambda: _choice(label="Changed concurrently"),
         preselection_reader=lambda _name: calls.append("preselection") or _PROFILE,
-        resume_session=lambda *, bucket_id: calls.append(bucket_id),
+        resume_session=lambda *, bucket_id, profile_decode_context: calls.append(bucket_id),
     )
 
     assert result.inventory_state is WorkbenchBootstrapInventoryState.DEGRADED
@@ -145,6 +161,7 @@ def test_changed_inventory_fails_closed_before_preselection_or_resume() -> None:
 
 def test_login_outcome_cannot_select_profile_absent_from_recognized_inventory() -> None:
     prepared = prepare_workbench_bootstrap(
+        profile_decode_context=_PROFILE_DECODE_CONTEXT,
         inventory_reader=_inventory,
         choice_reader=_choice,
         preselection_reader=lambda _name: None,
@@ -166,6 +183,7 @@ def test_login_outcome_cannot_select_profile_absent_from_recognized_inventory() 
 
 def test_login_outcome_label_must_match_the_admitted_profile_choice() -> None:
     prepared = prepare_workbench_bootstrap(
+        profile_decode_context=_PROFILE_DECODE_CONTEXT,
         inventory_reader=_inventory,
         choice_reader=_choice,
         preselection_reader=lambda _name: None,

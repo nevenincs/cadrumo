@@ -203,7 +203,18 @@ async def _run(
     request = _active_censal_operation_request()
     from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
-    composed = services or compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
+    authority_scope = None
+    if services is None:
+        from ..domain.calculations.registry.authority import bundled_indexed_authority
+
+        authority_scope = bundled_indexed_authority().operation()
+        authority_operation = authority_scope.__enter__()
+        composed = compose_operation_dependencies(
+            authority_operation=authority_operation,
+            operator_scope_ports=build_operator_scope_ports(),
+        )
+    else:
+        composed = services
     owns_services = services is None
     try:
         submitted = await composed.submission.submit(
@@ -222,6 +233,8 @@ async def _run(
     finally:
         if owns_services:
             await composed.shutdown()
+        if authority_scope is not None:
+            authority_scope.__exit__(None, None, None)
 
 
 def run_censal_review(

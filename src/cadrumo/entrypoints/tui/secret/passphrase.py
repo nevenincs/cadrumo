@@ -43,6 +43,7 @@ if TYPE_CHECKING:
 
     from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
     from ....core.credentials import ProfilePasswordAssessment
+    from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 __all__ = [
     "PassphraseChangeAttempt",
@@ -259,7 +260,11 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         self.query_one("#btn-cancel", Button).disabled = busy
 
 
-def build_profile_passphrase_change_door(profile_id: str) -> Callable[[str, str, str], PassphraseChangeAttempt]:
+def build_profile_passphrase_change_door(
+    profile_id: str,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> Callable[[str, str, str], PassphraseChangeAttempt]:
     """Bind the canonical rotation door to one already-authenticated profile.
 
     The identity is closed over here so the screen never carries it, and the
@@ -283,6 +288,7 @@ def build_profile_passphrase_change_door(profile_id: str) -> Callable[[str, str,
                 current_passphrase=current,
                 new_passphrase=replacement,
                 new_passphrase_confirmation=confirmation,
+                profile_decode_context=profile_decode_context,
             )
         except ProfilePassphraseRotationError as refusal:
             if refusal.translated_message is None:

@@ -134,13 +134,14 @@ def auth_configure(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import configure_operator_auth
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import operator_scope_ports
+    from ..state_projection_support import authority_operation, operator_scope_ports
 
     try:
         result = configure_operator_auth(
             provider,
             certificate_path=file,
             operator_scope_ports=operator_scope_ports(ctx),
+            operation=authority_operation(ctx),
         )
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
@@ -178,6 +179,7 @@ def auth_status(
     from ....application.auth.operator import inspect_operator_auth
     from ..config_payloads import AuthStatusPayload
     from ..state_projection_support import (
+        authority_operation,
         certificate_secret_backend_factory,
         operator_probe_ports,
         operator_scope_ports,
@@ -191,6 +193,7 @@ def auth_status(
             operator_probe_ports=operator_probe_ports(ctx),
             operator_scope_ports=operator_scope_ports(ctx),
             read_ports=state_projection_read_ports(ctx),
+            operation=authority_operation(ctx),
         )
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
@@ -252,6 +255,7 @@ def auth_test(
     from ....application.auth.operator import test_operator_auth
     from ..config_payloads import AuthTestPayload
     from ..state_projection_support import (
+        authority_operation,
         certificate_secret_backend_factory,
         operator_probe_ports,
         operator_scope_ports,
@@ -265,6 +269,7 @@ def auth_test(
             operator_probe_ports=operator_probe_ports(ctx),
             operator_scope_ports=operator_scope_ports(ctx),
             read_ports=state_projection_read_ports(ctx),
+            operation=authority_operation(ctx),
         )
     except KeyError as exc:
         raise _CliRefusedBoundaryError(

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, TypeAdapter
 
@@ -36,6 +37,9 @@ from .projection_services import (
 from .registry import OperationPublicContractSetV1, OperationRegistry
 from .secret_submission import OperationSecretRequirement
 from .supervisor import OperationSupervisor
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _ACTOR_REFERENCE_ADAPTER: TypeAdapter[OperationActorReference] = TypeAdapter(OperationActorReference)
 
@@ -119,6 +123,7 @@ class OperationComposedServices:
 def compose_operation_services(
     *,
     registry: OperationRegistry,
+    authority_operation: PinnedAuthorityOperation,
     journal: OperationJournal,
     reader: OperationObservationReader,
     event_stream: OperationEventStream,
@@ -144,6 +149,7 @@ def compose_operation_services(
     authority_broker = OperationResponseAuthorityBroker()
     supervisor = OperationSupervisor(
         registry=registry,
+        authority_operation=authority_operation,
         journal=journal,
         event_stream=event_stream,
         leases=leases,

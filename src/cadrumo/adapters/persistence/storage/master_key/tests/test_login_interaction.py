@@ -6,6 +6,7 @@ import ast
 import inspect
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_interaction import (
@@ -24,11 +25,20 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _PASSWORD = "login-interaction-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
+def _authority_contexts():
+    """Pin create and decode contexts to one compiled fixture generation."""
+    authority = compiled_bundled_authority()
+    return authority.profile_create_context(), authority.profile_decode_context()
+
+
 def _register(label: str) -> str:
+    create_context, decode_context = _authority_contexts()
     outcome = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_PASSWORD,
+        profile_create_context=create_context,
+        profile_decode_context=decode_context,
     )
     return outcome.bucket_id
 
@@ -61,7 +71,8 @@ def test_named_preselection_uses_the_login_target_authority(tmp_path) -> None:
 
 def test_attempt_projects_an_expected_refusal_without_a_frontend_exception(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        attempt = attempt_profile_login("no-such-profile", _PASSWORD)
+        _, decode_context = _authority_contexts()
+        attempt = attempt_profile_login("no-such-profile", _PASSWORD, profile_decode_context=decode_context)
 
         assert isinstance(attempt, ProfileLoginAttempt)
         assert attempt.outcome is None
@@ -73,7 +84,8 @@ def test_attempt_returns_the_real_login_outcome_after_unlocking(tmp_path) -> Non
         profile_id = _register("Unlocked Subject")
         logout_active_profile()
 
-        attempt = attempt_profile_login(profile_id, _PASSWORD)
+        _, decode_context = _authority_contexts()
+        attempt = attempt_profile_login(profile_id, _PASSWORD, profile_decode_context=decode_context)
 
         assert attempt.refusal is None
         assert attempt.outcome is not None

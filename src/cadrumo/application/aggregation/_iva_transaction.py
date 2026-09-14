@@ -143,7 +143,7 @@ def _substrate_admission_issue(
     refusal itself.
     """
     transaction_id = transaction.transaction_id
-    if is_iva_cash_accounting_none(cash_treatment, operation=operation) and not resolved_period.contains(
+    if is_iva_cash_accounting_none(cash_treatment, authority=operation) and not resolved_period.contains(
         operation_date
     ):
         return IvaLedgerAggregationIssue(
@@ -323,12 +323,12 @@ def _resolve_iva_transaction_classification(
     if explicit_category is not None:
         effective_category = resolve_iva_category_catalogue(
             effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
-            operation=operation,
+            authority=operation,
         ).require(explicit_category)
     else:
         catalogue = resolve_iva_rate_kind_catalogue(
             effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
-            operation=operation,
+            authority=operation,
         )
         definition = next((item for item in catalogue.definitions if item.token == rate_kind), None)
         if definition is None:
@@ -404,7 +404,7 @@ def _project_iva_transaction(
         base_amount=amounts.base_amount,
         iva_amount=amounts.iva_amount,
     )
-    if not is_iva_cash_accounting_none(context.cash_treatment, operation=operation):
+    if not is_iva_cash_accounting_none(context.cash_treatment, authority=operation):
         observations = _cash_accounting_observations(
             transaction,
             resolved_period=resolved_period,
@@ -493,7 +493,7 @@ def _iva_observation(
     operation: PinnedAuthorityOperation,
 ) -> IvaLedgerObservation:
     if cash_accounting_treatment is None:
-        cash_accounting_treatment = default_iva_cash_accounting_treatment(operation=operation)
+        cash_accounting_treatment = default_iva_cash_accounting_treatment(authority=operation)
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=transaction_date,

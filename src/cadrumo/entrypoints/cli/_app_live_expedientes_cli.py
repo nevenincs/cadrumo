@@ -15,13 +15,13 @@ from typing import Protocol, TypedDict
 
 import typer
 
+from ...application.live.capture_mode import LiveCaptureMode
 from ...application.live.expedientes import capture_expedientes_bulk
 from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
 from .state_projection_support import (
     certificate_secret_backend_factory,
     expedientes_ports_factory,
-    operator_probe_ports,
     operator_scope_ports,
 )
 
@@ -70,9 +70,7 @@ def expedientes_pull(
     from ._app_live_expedientes_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight(
-        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
-    )
+    emit_live_auth_preflight(ctx)
     ports = expedientes_ports_factory(ctx)(bucket_id=bucket_id)
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
@@ -136,7 +134,7 @@ def expedientes_pull(
         for failure in report.failures
     )
     result = ExpedientesCaptureResult(
-        mode="bulk",
+        mode=LiveCaptureMode.BULK,
         bucket_id=report.bucket_id,
         modelos=list(report.modelos),
         year_from=report.year_from,

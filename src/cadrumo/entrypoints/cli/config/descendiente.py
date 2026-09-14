@@ -276,10 +276,11 @@ def _run_descendant_door(ctx: typer.Context) -> None:
     """Drive the descendant application flow through its line-mode frontend."""
     from ....application.wizard.descendant_door import run_descendant_door
     from ....application.workflow.persistence import workflow_state_repository
+    from ..state_projection_support import authority_operation
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
-    _state, _projection, _persisted = run_descendant_door()
+    _state, _projection, _persisted = run_descendant_door(operation=authority_operation(ctx))
     _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
 
 

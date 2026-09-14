@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from .login_session import ProfileLoginOutcome, login_profile, resolve_login_target
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,21 +46,30 @@ def preselected_profile_login_id(name: str | None) -> str | None:
     return resolve_login_target(name).bucket_id
 
 
-def attempt_profile_login(profile_id: str, passphrase: str) -> ProfileLoginAttempt:
-    """Unlock a chosen profile, converting expected operator refusals to data."""
+def attempt_profile_login(
+    profile_id: str,
+    passphrase: str,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileLoginAttempt:
+    """Unlock a chosen profile under the caller's pinned schema context.
+
+    The credential screen is deliberately frontend-neutral, so it receives the
+    decode context that the workflow owner already pinned.  Opening an
+    authority here would allow the screen to authenticate against a different
+    generation from the surrounding bootstrap/session composition.
+    """
     from ...core.errors.error_codes import resolve_error_message
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ...domain.user_profile.errors import ProfileNotFoundError
     from .authentication import ProfileAuthenticationRefusedError
     from .login_session import ProfileLoginThrottledError
 
     try:
-        with bundled_indexed_authority().operation() as operation:
-            outcome = login_profile(
-                name=profile_id,
-                passphrase_callback=lambda: passphrase,
-                profile_decode_context=operation.profile_decode_context(),
-            )
+        outcome = login_profile(
+            name=profile_id,
+            passphrase_callback=lambda: passphrase,
+            profile_decode_context=profile_decode_context,
+        )
     except (ProfileAuthenticationRefusedError, ProfileLoginThrottledError, ProfileNotFoundError) as refusal:
         return ProfileLoginAttempt(refusal=resolve_error_message(refusal))
     return ProfileLoginAttempt(outcome=outcome)
