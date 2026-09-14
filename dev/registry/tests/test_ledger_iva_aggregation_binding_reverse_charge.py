@@ -9,6 +9,7 @@ import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
@@ -191,44 +192,50 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
     (``aeat-quality-gates``). Dropping either category from the
     selectors, or splitting them onto separate casillas, breaks this.
     """
-    goods = classify_iva(_received_from_eu_criteria(kind=TransactionKind("goods")))
-    services = classify_iva(_received_from_eu_criteria(kind=TransactionKind("services_general")))
-    assert goods.category == IvaCategory("intra_community_acquisition_reverse_charge")
-    assert services.category == IvaCategory("intra_community_service_acquisition_reverse_charge")
-    assert goods.category != services.category
-    assert goods.matched_rule_id == "R11_intra_community_acquisition"
-    assert services.matched_rule_id == "R13_services_b2b_eu_inbound"
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        goods = classify_iva(
+            _received_from_eu_criteria(kind=TransactionKind("goods")), operation=_authority_operation_for_test
+        )
+        services = classify_iva(
+            _received_from_eu_criteria(kind=TransactionKind("services_general")),
+            operation=_authority_operation_for_test,
+        )
+        assert goods.category == IvaCategory("intra_community_acquisition_reverse_charge")
+        assert services.category == IvaCategory("intra_community_service_acquisition_reverse_charge")
+        assert goods.category != services.category
+        assert goods.matched_rule_id == "R11_intra_community_acquisition"
+        assert services.matched_rule_id == "R13_services_b2b_eu_inbound"
 
-    goods_cuota = Decimal("63.00")
-    services_cuota = Decimal("21.00")
-    combined = goods_cuota + services_cuota
-    revision = _revision_with_bindings(
-        _binding("modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"),
-        _binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
-    )
-    observations = [
-        _observation(
-            applied_rate=Decimal("0.21"),
-            ledger_id="aic-goods-leg",
-            category=goods.category,
-            flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
-            iva=goods_cuota,
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
-        ),
-        _observation(
-            applied_rate=Decimal("0.21"),
-            ledger_id="aic-services-leg",
-            category=services.category,
-            flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
-            iva=services_cuota,
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
-        ),
-    ]
-    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {
-        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": combined,
-        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": combined,
-    }
+        goods_cuota = Decimal("63.00")
+        services_cuota = Decimal("21.00")
+        combined = goods_cuota + services_cuota
+        revision = _revision_with_bindings(
+            _binding("modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"),
+            _binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
+        )
+        observations = [
+            _observation(
+                applied_rate=Decimal("0.21"),
+                ledger_id="aic-goods-leg",
+                category=goods.category,
+                flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                iva=goods_cuota,
+                deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+            ),
+            _observation(
+                applied_rate=Decimal("0.21"),
+                ledger_id="aic-services-leg",
+                category=services.category,
+                flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                iva=services_cuota,
+                deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+            ),
+        ]
+        result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+        assert result == {
+            "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": combined,
+            "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": combined,
+        }
 
 
 def test_resolve_import_third_country_routes_deducible_only() -> None:

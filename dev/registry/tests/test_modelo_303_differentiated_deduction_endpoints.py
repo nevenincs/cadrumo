@@ -32,6 +32,7 @@ from cadrumo.domain.bienes_inversion.register import (
 )
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from cadrumo.domain.calculations.registry.m303_differentiated_deduction_projection import (
@@ -278,54 +279,59 @@ def test_projection_refuses_incomplete_or_double_consumed_sources() -> None:
 
 
 def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> None:
-    provenance = IvaDeductionClassificationProvenance(
-        authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
-        source_locator="invoice:sector-a",
-        evidence_digest="a" * 64,
-    )
-    observations = tuple(
-        IvaLedgerObservation(
-            ledger_id=f"input-{index}",
-            transaction_date=date(2025, 10, index),
-            category=IvaCategory("domestic_general"),
-            rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection._from_registry("soportado"),
-            base_amount=Decimal("100"),
-            iva_amount=Decimal("20"),
-            input_classification=classification,
-            prorrata_sector_id="a",
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
-            deduction_provenance=provenance,
-            observation_role=IvaLedgerObservationRole.SETTLEMENT,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        provenance = IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+            source_locator="invoice:sector-a",
+            evidence_digest="a" * 64,
         )
-        for index, classification in enumerate(
-            (
-                InputClassification._from_registry("exclusively_deductible"),
-                InputClassification._from_registry("common"),
-            ),
-            1,
+        observations = tuple(
+            IvaLedgerObservation(
+                ledger_id=f"input-{index}",
+                transaction_date=date(2025, 10, index),
+                category=IvaCategory("domestic_general"),
+                rate_kind=IvaRateKind("general"),
+                flow_direction=IvaFlowDirection._from_registry("soportado"),
+                base_amount=Decimal("100"),
+                iva_amount=Decimal("20"),
+                input_classification=classification,
+                prorrata_sector_id="a",
+                deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+                deduction_provenance=provenance,
+                observation_role=IvaLedgerObservationRole.SETTLEMENT,
+            )
+            for index, classification in enumerate(
+                (
+                    InputClassification._from_registry("exclusively_deductible"),
+                    InputClassification._from_registry("common"),
+                ),
+                1,
+            )
         )
-    )
-    apportioned = resolve_iva_differentiated_deduction_contributions(
-        _revision(),
-        observations,
-        apportionment=IvaLedgerProrrataApportionment(
-            percentage=Decimal("50"),
-            provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
-            sector_apportionments=(
-                IvaLedgerSectorApportionment(
-                    sector_id="a", percentage=Decimal("50"), regime=ProrrataRegisterRegime._from_registry("especial")
+        apportioned = resolve_iva_differentiated_deduction_contributions(
+            _revision(),
+            observations,
+            apportionment=IvaLedgerProrrataApportionment(
+                percentage=Decimal("50"),
+                provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                sector_apportionments=(
+                    IvaLedgerSectorApportionment(
+                        sector_id="a",
+                        percentage=Decimal("50"),
+                        regime=ProrrataRegisterRegime._from_registry("especial"),
+                    ),
                 ),
             ),
-        ),
-    )
-    domestic = next(
-        item
-        for item in apportioned
-        if item.sector_id == "a" and item.deduction_fact_kind is IvaDeductionFactKind._from_registry("domestic_current")
-    )
-    assert domestic.base_amount == Decimal("200")
-    assert domestic.deducible_iva_amount == Decimal("30")
+            operation=_authority_operation_for_test,
+        )
+        domestic = next(
+            item
+            for item in apportioned
+            if item.sector_id == "a"
+            and item.deduction_fact_kind is IvaDeductionFactKind._from_registry("domestic_current")
+        )
+        assert domestic.base_amount == Decimal("200")
+        assert domestic.deducible_iva_amount == Decimal("30")
 
 
 @pytest.mark.parametrize(
@@ -339,17 +345,22 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
 def test_canonical_aggregation_refuses_unattributable_duplicate_and_wrong_owner_rows(
     observations: tuple[IvaLedgerObservation, ...], message: str
 ) -> None:
-    with pytest.raises(ValueError, match=message):
-        resolve_iva_differentiated_deduction_contributions(_revision(), observations, apportionment=_apportionment())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(ValueError, match=message):
+            resolve_iva_differentiated_deduction_contributions(
+                _revision(), observations, apportionment=_apportionment(), operation=_authority_operation_for_test
+            )
 
 
 def test_especial_common_use_must_be_explicit() -> None:
-    with pytest.raises(ValueError, match="common-use classification must be explicit"):
-        resolve_iva_differentiated_deduction_contributions(
-            _revision(),
-            (_observation("implicit-common", classification=None),),
-            apportionment=_apportionment(regime=ProrrataRegisterRegime._from_registry("especial")),
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(ValueError, match="common-use classification must be explicit"):
+            resolve_iva_differentiated_deduction_contributions(
+                _revision(),
+                (_observation("implicit-common", classification=None),),
+                apportionment=_apportionment(regime=ProrrataRegisterRegime._from_registry("especial")),
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_wrong_owner_regularisation_cannot_become_a_ledger_observation() -> None:

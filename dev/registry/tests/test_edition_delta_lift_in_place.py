@@ -221,7 +221,7 @@ def test_a_lift_in_place_keeps_every_stated_member_in_its_authored_order(tmp_pat
     plan, works = _plan(modelo_dir, _definition(modelo_dir))
 
     assert plan.already_delta_authored
-    assert [edition.basis for edition in plan.editions] == [PredecessorBasis.LIFT_ONLY] * 2
+    assert [edition.basis for edition in plan.editions] == [PredecessorBasis.FIRST, PredecessorBasis.LIFT_ONLY]
     predecessor, successor = plan.editions
     # The successor keeps the members it authored, in the order it authored
     # them, which is not the order its materialisation gives them.

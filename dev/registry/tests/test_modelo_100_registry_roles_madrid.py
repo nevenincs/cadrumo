@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.modelo.profile_binding import madrid_nacimiento_adopcion_candidate_weighted_count
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
 
 from ._modelo_100_registry_support import (
@@ -87,18 +88,21 @@ def test_madrid_nacimiento_adopcion_count_binding_declares_a_non_monetary_decima
     produces is genuinely fractional: an ``integer`` contract would truncate
     the prorrata away, and ``money`` would label a count as currency.
     """
-    revision = _modelo_100_snapshot(2025).revision
-    binding = next(item for item in revision.bindings if item.id == _NACIMIENTO_ADOPCION_COUNT_BINDING)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        revision = _modelo_100_snapshot(2025).revision
+        binding = next(item for item in revision.bindings if item.id == _NACIMIENTO_ADOPCION_COUNT_BINDING)
 
-    assert binding.value.data_type is BindingDataType.DECIMAL
-    assert binding.value.channel is BindingValueChannel.DECIMAL
+        assert binding.value.data_type is BindingDataType.DECIMAL
+        assert binding.value.channel is BindingValueChannel.DECIMAL
 
-    shared_custody_facts = {
-        "renta_family.descendiente.0.birth_date": "2024-06-01",
-        "renta_family.descendiente.0.convivencia": "true",
-        "renta_family.descendiente.0.custodia_compartida": "true",
-    }
-    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(shared_custody_facts, 2024)
+        shared_custody_facts = {
+            "renta_family.descendiente.0.birth_date": "2024-06-01",
+            "renta_family.descendiente.0.convivencia": "true",
+            "renta_family.descendiente.0.custodia_compartida": "true",
+        }
+        weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(
+            shared_custody_facts, 2024, operation=_authority_operation_for_test
+        )
 
-    assert weighted_count == Decimal("0.5")
-    assert weighted_count != weighted_count.to_integral_value()
+        assert weighted_count == Decimal("0.5")
+        assert weighted_count != weighted_count.to_integral_value()
