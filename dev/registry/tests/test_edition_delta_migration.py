@@ -20,6 +20,7 @@ may change.
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import tomllib
@@ -48,6 +49,7 @@ from ..edition_delta_migration import (
     MigrationOutcome,
     MigrationPlan,
     PredecessorBasis,
+    _validate_staged_modelo,
     main,
     migrate_modelo,
     persist_migration_report,
@@ -214,7 +216,8 @@ def test_the_pilot_migrates_every_successor_edition_in_merge_order(
     assert not [edition for edition in pilot.plan.editions if edition.basis is PredecessorBasis.BLOCKED]
 
     # Typed content and merge-order row order round-trip for every edition; the
-    # delta editions' export bytes are unchecked, which withholds publication.
+    # Delta editions' export bytes are unchecked.  That withholds authority
+    # publication, but it does not withhold the proven source replacement.
     assert _unexpected(pilot) == []
     unchecked = [
         revision
@@ -223,6 +226,9 @@ def test_the_pilot_migrates_every_successor_edition_in_merge_order(
     ]
     assert sorted(unchecked) == sorted(successors)
     assert pilot.applied
+    assert pilot.source_status == "applied"
+    assert pilot.publication_readiness_status == "failed"
+    assert pilot.publication_execution_status == "not_performed"
     assert pilot.staged_registry is not None
     assert {str(r.id) for r in _load(pilot_input, _PILOT).revisions.values() if r.predecessor is not None} == set()
 
@@ -415,25 +421,41 @@ def test_a_lower_grade_successor_reuses_the_adjacent_storage_baseline(
     assert str(hydrated.authority_grade) == "applicability"
 
 
-def test_a_row_the_successor_changed_is_kept_stated(pilot: MigrationOutcome, pilot_input: Path, tmp_path: Path) -> None:
+def test_a_changed_same_id_without_lineage_uses_a_storage_override(
+    pilot: MigrationOutcome,
+    pilot_before: ModeloDefinition,
+    pilot_input: Path,
+    tmp_path: Path,
+) -> None:
     edition = _last_edition(pilot)
     planted = shutil.copytree(pilot_input, tmp_path / "registry" / "aeat")
     edition_dir = _edition_dir(planted, _PILOT, edition.revision_id)
-    row_id = next(
-        row_id for row_id in edition.inherited_ids if _row_block(edition_dir, row_id)[1].count("required = false") == 1
+    successor = pilot_before.revisions[edition.revision_id]
+    predecessor = pilot_before.revisions[str(edition.predecessor)]
+    predecessor_ids = {casilla.id for casilla in predecessor.casillas if casilla.continuidad_id is None}
+    original = next(
+        casilla
+        for casilla in successor.casillas
+        if casilla.continuidad_id is None and casilla.id in predecessor_ids and casilla.number is not None
     )
+    row_id = str(original.id)
     fragment, block = _row_block(edition_dir, row_id)
     text = fragment.read_text(encoding="utf-8")
+    changed_number = f"{original.number}-changed"
     fragment.write_text(
-        text.replace(block, block.replace("required = false", "required = true")), encoding="utf-8", newline="\n"
+        text.replace(block, block.replace(f'number = "{original.number}"', f'number = "{changed_number}"', 1)),
+        encoding="utf-8",
+        newline="\n",
     )
 
     plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
 
     changed = next(item for item in plan.editions if item.revision_id == edition.revision_id)
-    assert row_id in changed.stated_ids
-    assert changed.kept[KeptReason.DIFFERS] == edition.kept.get(KeptReason.DIFFERS, 0) + 1
-    assert set(changed.inherited_ids) == set(edition.inherited_ids) - {row_id}
+    override = next(item for item in changed.casilla_overrides if item["selector"]["id"] == row_id)
+    assert override["selector"] == {"revision": edition.predecessor, "id": row_id}
+    assert override["fields"]["number"] == changed_number
+    assert row_id not in changed.stated_ids
+    assert row_id in changed.inherited_ids
 
 
 def _withdrawable_row(definition: ModeloDefinition, edition_dir: Path, candidates: tuple[str, ...]) -> str:
@@ -606,6 +628,39 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(tmp_path: Path) -> None:
     assert report.findings == ()
 
 
+def test_invalid_staged_candidate_leaves_the_live_modelo_byte_identical(
+    tmp_path: Path,
+) -> None:
+    registry = _registry(tmp_path / "target", _PILOT)
+    modelo_dir = registry / "modelos" / _PILOT
+    before = {
+        path.relative_to(modelo_dir).as_posix(): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()
+    }
+
+    staged = shutil.copytree(registry, tmp_path / "staged" / "registry" / "aeat")
+    revision = sorted((staged / "modelos" / _PILOT / "revisions").iterdir())[1]
+    manifest = revision / "revision.toml"
+    original_manifest = manifest.read_text(encoding="utf-8")
+    invalid_manifest, count = re.subn(
+        r'(?m)^(\[revisions\.(?:"[^"\n]+"|[^\]\n]+)\]\s*)$',
+        r'\1\npredecessor = "missing-revision"',
+        original_manifest,
+        count=1,
+    )
+    assert count == 1
+    manifest.write_text(
+        invalid_manifest,
+        encoding="utf-8",
+        newline="\n",
+    )
+    with pytest.raises(RegistryError, match="missing-revision"):
+        _validate_staged_modelo(staged_root=staged, modelo_id=_PILOT)
+
+    assert before == {
+        path.relative_to(modelo_dir).as_posix(): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()
+    }
+
+
 def test_the_command_line_renders_every_successors_export_bytes_from_the_canonical_scenarios(
     pilot_before: ModeloDefinition, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -627,8 +682,9 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     (persisted_line,) = [line for line in output.splitlines() if line.startswith("report persisted to ")]
     persisted = Path(persisted_line.removeprefix("report persisted to "))
     assert exit_code == 0, output
-    assert " gate_findings=0 " in summary, output
-    assert f" byte_compared={','.join(successors)} " in summary, output
+    assert " source_status=accepted " in summary, output
+    assert " publication_readiness_status=failed " in summary, output
+    assert " publication_execution_status=not_performed " in summary, output
     assert " applied=False " in summary, output
     assert persisted.is_relative_to((REPO_ROOT / ".logs" / "audit-runs").resolve())
     assert persisted.is_file()
@@ -691,4 +747,12 @@ def test_migration_reports_use_unique_logs_runs_and_not_the_scratch_directory(tm
     assert second.name == "report.md"
     assert first.read_text(encoding="utf-8").startswith("command: migration first")
     assert second.read_text(encoding="utf-8").startswith("command: migration second")
+    machine = json.loads((first.parent / "report.json").read_text(encoding="utf-8"))
+    assert machine["outcomes"] == {
+        "completed": [],
+        "unchanged": [],
+        "blocked": {},
+        "complete": True,
+        "applied": False,
+    }
     assert first.parent != second.parent

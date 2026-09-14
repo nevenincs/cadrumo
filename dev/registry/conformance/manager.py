@@ -378,6 +378,8 @@ class RevisionConformancePayload(ConformanceModel):
             renderer prints, carried in the payload so a JSON consumer reading
             only the reviewer column reaches the same qualified answer.
         reviewed_at: ISO date of the declared review, or :data:`None`.
+        reviewed_against: Historical comparison revision, or :data:`None` for
+            complete-edition review coverage.
         calc_grade: Whether the revision's calculation closure is non-empty.
         casillas: Casillas declared on the revision.
         formulas: Formulas declared on the revision.
@@ -433,6 +435,7 @@ class RevisionConformancePayload(ConformanceModel):
     reviewed_by: str | None
     reviewed_by_attribution: str | None
     reviewed_at: str | None
+    reviewed_against: str | None
     calc_grade: bool
     casillas: int = Field(ge=0)
     formulas: int = Field(ge=0)
@@ -1082,6 +1085,7 @@ def render_report(report: ConformanceReport) -> str:
                 # form contains the name, so nothing is lost by omitting it.
                 reviewed_by_attribution=row.reviewed_by_attribution,
                 reviewed_at=row.reviewed_at,
+                reviewed_against=row.reviewed_against,
                 calc_grade=row.calc_grade,
                 casillas=row.casillas,
                 formulas=row.formulas,
@@ -1376,6 +1380,7 @@ def _payload_row(
         reviewed_by=governance.reviewed_by,
         reviewed_by_attribution=reviewer_attribution(governance.review_status.value, governance.reviewed_by),
         reviewed_at=None if governance.reviewed_at is None else governance.reviewed_at.isoformat(),
+        reviewed_against=None if governance.reviewed_against is None else str(governance.reviewed_against),
         calc_grade=capabilities.calc_grade,
         casillas=capabilities.casilla_count,
         formulas=capabilities.formula_count,

@@ -195,6 +195,7 @@ def test_governance_stamp_is_read_from_the_revision_not_defaulted(
                         "review_status": RevisionReviewStatus.PENDING_REVIEW,
                         "reviewed_by": None,
                         "reviewed_at": None,
+                        "reviewed_against": None,
                         "engineered_by": None,
                     },
                 )
@@ -229,6 +230,7 @@ def test_governance_stamp_is_read_from_the_revision_not_defaulted(
     assert mutated_row.governance.is_reviewed is True
     assert mutated_row.governance.reviewed_by == "operator"
     assert mutated_row.governance.reviewed_at == date(2026, 7, 27)
+    assert mutated_row.governance.reviewed_against is None
     assert mutated_row.governance.engineered_by == "conformance-cli"
     assert mutated.reviewed_revision_count == 1
     assert mutated.engineered_by_declared_count == 1

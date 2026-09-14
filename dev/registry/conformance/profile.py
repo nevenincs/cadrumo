@@ -548,12 +548,15 @@ class RevisionGovernanceStamp(ConformanceModel):
         reviewed_by: Who reviewed it. Present exactly when ``review_status`` is
             beyond ``PENDING_REVIEW``; the schema refuses any other combination.
         reviewed_at: The date of that review, under the same pairing rule.
+        reviewed_against: Historical comparison revision, or :data:`None` for
+            a review of the complete materialised edition.
     """
 
     review_status: _RevisionReviewStatus
     engineered_by: str | None = None
     reviewed_by: str | None = None
     reviewed_at: date | None = None
+    reviewed_against: _RevisionId | None = None
 
     @property
     def is_reviewed(self) -> bool:
@@ -1263,6 +1266,7 @@ def _governance_stamp(revision: _ModeloRevision) -> RevisionGovernanceStamp:
         engineered_by=revision.engineered_by,
         reviewed_by=revision.reviewed_by,
         reviewed_at=revision.reviewed_at,
+        reviewed_against=revision.reviewed_against,
     )
 
 

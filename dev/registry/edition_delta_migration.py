@@ -141,6 +141,7 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
+from itertools import pairwise
 from pathlib import Path
 from typing import Final
 
@@ -175,6 +176,7 @@ from .edition_round_trip import (
 from .source_default_rule import edition_source_default
 
 __all__ = [
+    "AcceptanceCheckClass",
     "BlockedCause",
     "DropOutcome",
     "DropPlan",
@@ -213,7 +215,6 @@ _REFERENCE_SECTIONS: Final[Mapping[str, str]] = {
     "binding": "bindings",
     "alternate_bindings": "bindings",
 }
-_PENDING_REVIEW: Final = "pending_review"
 _RETIRED: Final = "retired"
 _REVISION_SEGMENT: Final = r'(?:"[^"\n]+"|[^".\]\n]+)'
 _ROW_HEADER: Final = re.compile(rf"^\[\[revisions\.{_REVISION_SEGMENT}\.casillas\]\]\s*$")
@@ -358,6 +359,28 @@ class AcceptanceCheckClass(StrEnum):
     PUBLICATION_READINESS = "publication_readiness"
 
 
+class SourceMigrationStatus(StrEnum):
+    """Machine states for source replacement alone."""
+
+    ACCEPTED = "accepted"
+    APPLIED = "applied"
+    PARTIAL = "partial"
+    REFUSED = "refused"
+
+
+class PublicationReadinessStatus(StrEnum):
+    """Machine states for the complete publication contract."""
+
+    FAILED = "failed"
+    NOT_CHECKED = "not_checked"
+
+
+class PublicationExecutionStatus(StrEnum):
+    """Machine states for authority publication execution."""
+
+    NOT_PERFORMED = "not_performed"
+
+
 _PUBLICATION_READINESS_FINDINGS: Final = frozenset(
     {
         RoundTripFindingKind.EXPORT_BYTES,
@@ -403,31 +426,41 @@ class MigrationOutcome:
         return tuple(finding for finding in self.report.findings if not _is_source_finding(finding))
 
     @property
-    def source_status(self) -> str:
+    def source_status(self) -> SourceMigrationStatus:
+        """Return the source replacement acceptance state."""
         if self.source_findings:
-            return "refused"
+            return SourceMigrationStatus.REFUSED
         if self.blocked:
-            return "partial"
-        return "applied" if self.applied else "accepted"
+            return SourceMigrationStatus.PARTIAL
+        return SourceMigrationStatus.APPLIED if self.applied else SourceMigrationStatus.ACCEPTED
 
     @property
-    def publication_readiness_status(self) -> str:
-        return "failed" if self.publication_readiness_findings else "not_checked"
+    def publication_readiness_status(self) -> PublicationReadinessStatus:
+        """Return the separately observed authority-readiness state."""
+        return (
+            PublicationReadinessStatus.FAILED
+            if self.publication_readiness_findings
+            else PublicationReadinessStatus.NOT_CHECKED
+        )
 
     @property
-    def publication_execution_status(self) -> str:
-        return "not_performed"
+    def publication_execution_status(self) -> PublicationExecutionStatus:
+        """Confirm that source migration did not execute publication."""
+        return PublicationExecutionStatus.NOT_PERFORMED
 
     @property
     def completed(self) -> tuple[str, ...]:
+        """Return revisions whose source representation was completed."""
         return self.plan.completed()
 
     @property
     def unchanged(self) -> tuple[str, ...]:
+        """Return revisions intentionally left unchanged."""
         return self.plan.unchanged()
 
     @property
     def blocked(self) -> Mapping[str, tuple[str, ...]]:
+        """Return blocked revisions and their typed planning details."""
         return {
             edition.revision_id: edition.blocked_detail
             for edition in self.plan.editions
@@ -1021,11 +1054,9 @@ def _plan(
                 str(value) if isinstance((value := source.manifest.get("reviewed_against")), str) else None
             ),
             dependencies=(predecessor,) if predecessor is not None else (),
-            blocked_detail=tuple(
-                f"requires readable authored source {predecessor!r}: {cause.value}" for cause in causes
-            )
-            if not failure_details
-            else failure_details,
+            blocked_detail=failure_details
+            if failure_details
+            else tuple(f"requires readable authored source {predecessor!r}: {cause.value}" for cause in causes),
             casilla_overrides=overrides,
             casilla_removals=removals,
             casilla_positions=positions,
@@ -1207,7 +1238,8 @@ def _choose_drops(
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
         if not storage_only:
-            assert lineage is not None
+            if lineage is None:
+                raise MigrationRefusedError(f"edition {revision_id!r}: lineage match lost its identity")
             typed_differences = restatement_differences(
                 typed[row_id], revision, typed_predecessor[lineage], predecessor_revision
             )
@@ -1259,7 +1291,7 @@ def _choose_drops(
             lineage_attestations.append(attestation)
         drops.add(row_id)
     successor_ids = {_row_id(row) for row in full_rows}
-    removals = tuple(
+    removals: tuple[_Row, ...] = tuple(
         {"selector": {"revision": predecessor, "id": _row_id(placed.row)}}
         for placed in inherited
         if _lineage(placed.row) is None
@@ -1269,8 +1301,18 @@ def _choose_drops(
     stated = frozenset(_row_id(row) for row in full_rows) - drops
     layout = _stated_layout(source, stated)
     stated_rows = [lifts[_row_id(block.row)].row for _, blocks in layout for block in blocks]
-    removed_ids = {str(removal["selector"]["id"]) for removal in removals}
-    overrides_by_id = {str(override["selector"]["id"]): override for override in overrides}
+    removed_ids: set[str] = set()
+    for removal in removals:
+        selector = removal["selector"]
+        if not isinstance(selector, dict):
+            raise MigrationRefusedError(f"edition {revision_id!r}: invalid generated removal selector")
+        removed_ids.add(str(selector["id"]))
+    overrides_by_id: dict[str, _Row] = {}
+    for override in overrides:
+        selector = override["selector"]
+        if not isinstance(selector, dict):
+            raise MigrationRefusedError(f"edition {revision_id!r}: invalid generated override selector")
+        overrides_by_id[str(selector["id"])] = override
     storage_inherited: list[_Placed] = []
     for placed in inherited:
         storage_id = _row_id(placed.row)
@@ -1281,7 +1323,10 @@ def _choose_drops(
             storage_inherited.append(placed)
             continue
         patched = _without_lineage_claims(placed.row)
-        for field in override["removed_fields"]:
+        removed_fields = override["removed_fields"]
+        if not isinstance(removed_fields, list | tuple):
+            raise MigrationRefusedError(f"edition {revision_id!r}: invalid generated removed fields")
+        for field in removed_fields:
             patched.pop(str(field))
         patched.update(_as_row(override["fields"]))
         storage_inherited.append(_Placed(patched, revision_id))
@@ -2225,6 +2270,11 @@ def _apply_proven_modelo(*, target: Path, staged: Path, original: Path) -> None:
     publish_staged_tree(target, staged, original, fingerprint(original))
 
 
+def _validate_staged_modelo(*, staged_root: Path, modelo_id: str) -> None:
+    """Hydrate the complete staged modelo immediately before live replacement."""
+    _load(staged_root, modelo_id)
+
+
 @dataclass(frozen=True, slots=True)
 class DropOutcome:
     """The result of planning, staging and proving one modelo's drop."""
@@ -2237,25 +2287,32 @@ class DropOutcome:
 
     @property
     def source_findings(self) -> tuple[RoundTripFinding, ...]:
+        """Return reconstruction and effective-data failures."""
         return () if self.report is None else tuple(f for f in self.report.findings if _is_source_finding(f))
 
     @property
     def publication_readiness_findings(self) -> tuple[RoundTripFinding, ...]:
+        """Return findings owned by later authority publication."""
         return () if self.report is None else tuple(f for f in self.report.findings if not _is_source_finding(f))
 
     @property
-    def source_status(self) -> str:
+    def source_status(self) -> SourceMigrationStatus:
+        """Return the source replacement acceptance state."""
         if self.source_findings:
-            return "refused"
-        return "applied" if self.applied else "accepted"
+            return SourceMigrationStatus.REFUSED
+        return SourceMigrationStatus.APPLIED if self.applied else SourceMigrationStatus.ACCEPTED
 
     @property
-    def publication_readiness_status(self) -> str:
-        return "failed" if self.publication_readiness_findings else "not_checked"
+    def publication_readiness_status(self) -> PublicationReadinessStatus:
+        """Return the separately observed authority-readiness state."""
+        if self.publication_readiness_findings:
+            return PublicationReadinessStatus.FAILED
+        return PublicationReadinessStatus.NOT_CHECKED
 
     @property
-    def publication_execution_status(self) -> str:
-        return "not_performed"
+    def publication_execution_status(self) -> PublicationExecutionStatus:
+        """Confirm that source migration did not execute publication."""
+        return PublicationExecutionStatus.NOT_PERFORMED
 
 
 def drop_restatement(
@@ -2318,6 +2375,7 @@ def drop_restatement(
     )
     applied = False
     if apply and not any(_is_source_finding(finding) for finding in report.findings):
+        _validate_staged_modelo(staged_root=staged, modelo_id=modelo_id)
         _assert_proof_inputs_unchanged(live_root=registry_root, captured_root=reference, modelo_id=modelo_id)
         _apply_proven_modelo(
             target=modelo_dir.resolve(),
@@ -2558,7 +2616,7 @@ def migrate_modelo_100_field_deltas(
     sources = {str(revision.id): _read_edition(modelo_dir, str(revision.id)) for revision in ordered}
     counts = Counter[str]()
     edition_rows: list[dict[str, object]] = []
-    for predecessor_revision, revision in zip(ordered[:-1], ordered[1:], strict=True):
+    for predecessor_revision, revision in pairwise(ordered):
         predecessor_id, revision_id = str(predecessor_revision.id), str(revision.id)
         predecessor_source, source = sources[predecessor_id], sources[revision_id]
         predecessor_rows = {_row_id(row): row for row in predecessor_source.rows}
@@ -2606,6 +2664,8 @@ def migrate_modelo_100_field_deltas(
         counts["member_removals"] += len(removals)
         counts["new_members"] += len(new_ids)
         counts["inherited_members"] += len(shared)
+        counts["ordering_metadata"] += len(positions)
+        counts["provenance_restatements"] += sum(restate for _, _, _, restate in overrides)
         counts["before_authored_payload_fields"] += sum(len(set(row) - {"id", "continuidad_id"}) for row in source.rows)
         counts["after_authored_new_member_payload_fields"] += sum(
             len(set(target_rows[row_id]) - {"id", "continuidad_id"}) for row_id in new_ids
@@ -2702,12 +2762,15 @@ def migrate_modelo_100_field_deltas(
         "hydration_differences": differences,
         "editions": edition_rows,
         **dict(counts),
+        # Overrides are emitted only by the unequal-field comprehension above.
+        "redundant_overrides": 0,
+        "unchanged_members": counts["inherited_members"] - counts["override_members"],
         "after_authored_payload_fields": counts["after_authored_new_member_payload_fields"] + counts["overrides"],
         "selector_fields": 2 * (counts["override_members"] + counts["member_removals"]),
-        "ordering_metadata_fields": 2 * sum(int(row["ordering_metadata"]) for row in edition_rows),
+        "ordering_metadata_fields": 2 * counts["ordering_metadata"],
         "storage_metadata_fields": counts["field_removals"]
         + counts["member_removals"]
-        + sum(int(row["provenance_restatements"]) for row in edition_rows),
+        + counts["provenance_restatements"],
         "applied": False,
     }
     if apply:
