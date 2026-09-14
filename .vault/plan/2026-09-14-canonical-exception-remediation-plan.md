@@ -8,7 +8,7 @@ related:
   - '[[2026-09-14-canonical-exception-remediation-adr]]'
 modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:f3e58bd81bd81b65c94df18eafa5e07f37b3200708b7d83112e050484ff54a9a'
+body_hash: 'sha256:fdf871f478a146232c9f30ec27fe0ca5ca17ea91b7b180998398b623b577f3a7'
 ---
 
 <!-- LINK RULES:
@@ -20,6 +20,8 @@ body_hash: 'sha256:f3e58bd81bd81b65c94df18eafa5e07f37b3200708b7d83112e050484ff54
        footers do not exist.
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
+
+<!-- RETIRED: P03, P05, S05, S06, S07, S08, S09 -->
 
 # `canonical-exception-remediation` plan
 
@@ -46,22 +48,9 @@ Replace bare ancestry and broad internal catches without moving defining modules
 
 - [ ] `W02.P02.S03` - Migrate application exception families; `src/cadrumo/application`.
 - [ ] `W02.P02.S04` - Migrate core domain adapter and entrypoint families; `src/cadrumo`.
-- [ ] `W02.P02.S05` - Migrate application exception families; `src/cadrumo/application`.
-- [ ] `W02.P02.S06` - Migrate core domain adapter and entrypoint families; `src/cadrumo`.
-
-### Phase `W02.P03` - Migrate package-owned exception families
-
-Replace bare ancestry and broad internal catches without moving defining modules.
-
-- [ ] `W02.P03.S07` - Enroll unique layer registry codes; `src/cadrumo/core/errors/registry`.
-- [ ] `W02.P03.S08` - Add localized envelope messages; `src/cadrumo/locales`.
-- [ ] `W02.P03.S09` - Enroll unique layer registry codes; `src/cadrumo/core/errors/registry`.
 
 ### Phase `W02.P04` - Enroll error contracts
 
 Bind each migrated identity once and supply localized envelope messages.
 
-
-### Phase `W02.P05` - Enroll error contracts
-
-Bind each migrated identity once and supply localized envelope messages.
+- [ ] `W02.P04.S10` - Enroll unique layer registry codes; `src/cadrumo/core/errors/registry`.
