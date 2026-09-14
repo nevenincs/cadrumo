@@ -388,6 +388,214 @@ class PublicationExecutionStatus(StrEnum):
     NOT_PERFORMED = "not_performed"
 
 
+class MigrationStatus(StrEnum):
+    """Independent verdicts carried by a source-migration report."""
+
+    PASSED = "passed"
+    FAILED = "failed"
+    COMPLETE = "complete"
+    INCOMPLETE = "incomplete"
+    APPLIED = "applied"
+    STAGED = "staged"
+    NOT_APPLIED = "not_applied"
+
+
+@dataclass(frozen=True, slots=True)
+class MigrationAssessment:
+    """Read-only physical and semantic measurements for one authored modelo tree.
+
+    A payload field is one value-bearing mapping entry, recursively. Empty
+    mappings/arrays are one explicit value. Array elements are part of their
+    owning field and are compared with order and type intact. ``id``, storage
+    selectors, baseline/predecessor references, removals, and position/order
+    declarations are structural overhead. Provenance and continuity fields are
+    payload and are deliberately absent from that structural classification.
+    """
+
+    fingerprint: str
+    physical_bytes: int
+    authored_payload_fields: int
+    inherited_payload_fields: int
+    genuine_overrides: int
+    redundant_overrides: int
+    additions: int
+    removals: int
+    structural_overhead: int
+    unresolved_duplication: tuple[Mapping[str, object], ...]
+    blocked_work: tuple[Mapping[str, object], ...]
+    by_revision_family: tuple[Mapping[str, object], ...]
+
+    @property
+    def minimal(self) -> bool:
+        return not self.unresolved_duplication and not self.blocked_work
+
+
+_STRUCTURAL_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "id",
+        "selector",
+        "position",
+        "predecessor",
+        "casilla_storage_baseline",
+        "removed_fields",
+        "restate_provenance",
+        "restated_families",
+        "family_dispositions",
+    }
+)
+
+
+def _field_count(value: object, *, structural: bool) -> tuple[int, int]:
+    """Count payload and representation fields without coercing values."""
+    if not isinstance(value, Mapping):
+        return (0 if structural else 1, 1 if structural else 0)
+    payload = overhead = 0
+    for key, child in value.items():
+        is_structural = structural or str(key) in _STRUCTURAL_FIELDS
+        if isinstance(child, Mapping) and child:
+            child_payload, child_overhead = _field_count(child, structural=is_structural)
+        else:
+            child_payload, child_overhead = (0, 1) if is_structural else (1, 0)
+        payload += child_payload
+        overhead += child_overhead
+    return payload, overhead
+
+
+def _source_fingerprint(modelo_dir: Path) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(item for item in modelo_dir.rglob("*") if item.is_file()):
+        digest.update(path.relative_to(modelo_dir).as_posix().encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return f"sha256:{digest.hexdigest()}"
+
+
+def _declared_baseline(raw: Mapping[str, object]) -> str | None:
+    baseline = raw.get("casilla_storage_baseline")
+    if isinstance(baseline, str):
+        return baseline
+    predecessor = raw.get("predecessor")
+    return predecessor if isinstance(predecessor, str) else None
+
+
+def _technical_root(raw: Mapping[str, object]) -> bool:
+    declaration = raw.get("predecessor")
+    if not isinstance(declaration, Mapping):
+        return False
+    none = declaration.get("none")
+    if not isinstance(none, Mapping):
+        return False
+    reason = str(none.get("reason", "")).lower()
+    return any(cause.value in reason for cause in BlockedCause) or "migration" in reason or "lineage" in reason
+
+
+def _members(raw: Mapping[str, object], section: str) -> tuple[Mapping[str, object], ...]:
+    value = raw.get(section)
+    if section == "completeness_manifest" and isinstance(value, Mapping):
+        return (value,)
+    if not isinstance(value, list | tuple):
+        return ()
+    return tuple(item for item in value if isinstance(item, Mapping))
+
+
+def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
+    """Measure authored duplication independently of any converter deletion plan."""
+    declarations = load_modelo_declarations(modelo_dir)
+    definition = load_modelo_directory(modelo_dir)
+    raw_revisions = declarations.get("revisions", {})
+    if not isinstance(raw_revisions, Mapping):
+        raise MigrationRefusedError(f"{modelo_dir}: revisions are not a mapping")
+    ordered = ordered_revisions(definition)
+    previous: str | None = None
+    totals = Counter[str]()
+    unresolved: list[Mapping[str, object]] = []
+    blocked: list[Mapping[str, object]] = []
+    rows: list[Mapping[str, object]] = []
+    for revision in ordered:
+        revision_id = str(revision.id)
+        raw = raw_revisions.get(revision_id, {})
+        if not isinstance(raw, Mapping):
+            continue
+        baseline_id = _declared_baseline(raw)
+        candidate_id = baseline_id or (previous if _technical_root(raw) else None)
+        for spec in CANONICAL_FAMILY_SPECS:
+            authored = _members(raw, spec.section)
+            row = Counter[str]()
+            for member in authored:
+                payload, overhead = _field_count(member, structural=False)
+                row["authored_payload_fields"] += payload
+                row["structural_overhead"] += overhead
+            if candidate_id is not None:
+                predecessor = definition.revisions.get(candidate_id)
+                current = definition.revisions[revision_id]
+                if predecessor is None:
+                    blocked.append({"revision": revision_id, "family": spec.section, "reason": "baseline_missing"})
+                else:
+                    predecessor_members = getattr(predecessor, spec.section, ())
+                    inherited_by_id = {
+                        family_identity_value(item, spec.storage_identity): item for item in predecessor_members
+                    }
+                    for member in authored:
+                        identity = family_identity_value(member, spec.storage_identity)
+                        inherited = inherited_by_id.get(identity)
+                        if inherited is None:
+                            row["additions"] += 1
+                            continue
+                        left = dict(member)
+                        right = inherited.model_dump(mode="python", exclude={"inherited_from"})
+                        different = [
+                            key for key in left if key not in _STRUCTURAL_FIELDS and left[key] != right.get(key)
+                        ]
+                        equal = [key for key in left if key not in _STRUCTURAL_FIELDS and left[key] == right.get(key)]
+                        row["genuine_overrides"] += len(different)
+                        row["redundant_overrides"] += len(equal)
+                        row["inherited_payload_fields"] += len(equal)
+                        if baseline_id is None or spec.inheritance is FamilyInheritanceMode.PER_EDITION:
+                            if equal and spec.inheritance is not FamilyInheritanceMode.PER_EDITION:
+                                unresolved.append(
+                                    {
+                                        "revision": revision_id,
+                                        "family": spec.section,
+                                        "member": identity,
+                                        "fields": sorted(equal),
+                                        "reason": "technical root prevents supported inheritance",
+                                    }
+                                )
+                        elif equal:
+                            unresolved.append(
+                                {
+                                    "revision": revision_id,
+                                    "family": spec.section,
+                                    "member": identity,
+                                    "fields": sorted(equal),
+                                    "reason": "authored value equals hydrated baseline",
+                                }
+                            )
+                    if authored and not spec.inherited and spec.inheritance is not FamilyInheritanceMode.PER_EDITION:
+                        blocked.append(
+                            {"revision": revision_id, "family": spec.section, "reason": "delta_support_missing"}
+                        )
+            row.update({"revision": revision_id, "family": spec.section})
+            rows.append(dict(row))
+            totals.update({key: value for key, value in row.items() if isinstance(value, int)})
+        previous = revision_id
+    return MigrationAssessment(
+        fingerprint=_source_fingerprint(modelo_dir),
+        physical_bytes=sum(path.stat().st_size for path in modelo_dir.rglob("*") if path.is_file()),
+        authored_payload_fields=totals["authored_payload_fields"],
+        inherited_payload_fields=totals["inherited_payload_fields"],
+        genuine_overrides=totals["genuine_overrides"],
+        redundant_overrides=totals["redundant_overrides"],
+        additions=totals["additions"],
+        removals=totals["removals"],
+        structural_overhead=totals["structural_overhead"],
+        unresolved_duplication=tuple(unresolved),
+        blocked_work=tuple(blocked),
+        by_revision_family=tuple(rows),
+    )
+
+
 _PUBLICATION_READINESS_FINDINGS: Final = frozenset(
     {
         RoundTripFindingKind.EXPORT_BYTES,
@@ -417,6 +625,8 @@ class MigrationOutcome:
     report: RoundTripReport | None
     applied: bool
     changed: bool
+    before_assessment: MigrationAssessment | None = None
+    after_assessment: MigrationAssessment | None = None
 
     @property
     def source_findings(self) -> tuple[RoundTripFinding, ...]:
@@ -476,8 +686,34 @@ class MigrationOutcome:
 
     @property
     def complete(self) -> bool:
-        """Whether no eligible revision remains blocked."""
-        return not self.blocked
+        """Whether reconstruction, scope coverage, and minimality all pass."""
+        return self.equivalence_status is MigrationStatus.PASSED and self.minimality_status is MigrationStatus.PASSED
+
+    @property
+    def equivalence_status(self) -> MigrationStatus:
+        return MigrationStatus.FAILED if self.source_findings else MigrationStatus.PASSED
+
+    @property
+    def compaction_status(self) -> MigrationStatus:
+        if self.before_assessment is None or self.after_assessment is None:
+            return MigrationStatus.INCOMPLETE
+        improved = (
+            self.after_assessment.physical_bytes < self.before_assessment.physical_bytes
+            or self.after_assessment.authored_payload_fields < self.before_assessment.authored_payload_fields
+        )
+        return MigrationStatus.COMPLETE if improved else MigrationStatus.INCOMPLETE
+
+    @property
+    def minimality_status(self) -> MigrationStatus:
+        if self.after_assessment is None:
+            return MigrationStatus.FAILED if self.blocked else MigrationStatus.INCOMPLETE
+        return MigrationStatus.PASSED if self.after_assessment.minimal and not self.blocked else MigrationStatus.FAILED
+
+    @property
+    def application_status(self) -> MigrationStatus:
+        if self.applied:
+            return MigrationStatus.APPLIED
+        return MigrationStatus.STAGED if self.staged_registry is not None else MigrationStatus.NOT_APPLIED
 
 
 # ── raw tree reading ────────────────────────────────────────────────────────
