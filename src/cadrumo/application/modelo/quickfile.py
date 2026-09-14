@@ -446,6 +446,7 @@ def run_modelo_quickfile(
             ),
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports,
+            operation=operation,
         )
     except CadrumoError as exc:
         return _halted(

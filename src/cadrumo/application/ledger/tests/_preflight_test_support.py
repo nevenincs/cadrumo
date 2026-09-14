@@ -59,7 +59,7 @@ def _transaction(
     amount: Decimal = Decimal("121.00"),
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
-    category_id: str | None = SpendingCategory.MATERIAL_OFICINA.value,
+    category_id: str | None = SpendingCategory._from_registry("material_oficina").value,
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_rate: Decimal | None = Decimal("0.21"),
     iva_amount: Decimal | None = Decimal("21.00"),

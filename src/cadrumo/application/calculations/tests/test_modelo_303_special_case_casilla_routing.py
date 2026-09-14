@@ -198,7 +198,7 @@ def _recargo_purchase() -> Transaction:
         group_label=None,
         business_classification=BusinessClassification.BUSINESS,
         source_jurisdiction="ES",
-        iva_category=IvaCategory.RECARGO_EQUIVALENCIA,
+        iva_category=IvaCategory("recargo_equivalencia"),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("21.00"),
@@ -224,7 +224,7 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted() -> None:
     )
 
     # No declarable deducible observation was _produced for the recargo purchase...
-    assert all(obs.category is not IvaCategory.RECARGO_EQUIVALENCIA for obs in report.observations), (
+    assert all(obs.category != IvaCategory("recargo_equivalencia") for obs in report.observations), (
         "recargo-equivalencia must not yield a declarable IVA observation (non-deductible cost)"
     )
     # ...and the exclusion is SURFACED (non-silent) with the unsupported-category reason.

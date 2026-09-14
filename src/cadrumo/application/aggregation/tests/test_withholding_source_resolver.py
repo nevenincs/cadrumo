@@ -139,9 +139,9 @@ def test_resolver_materialises_distinct_percepcion_count() -> None:
         filing_year=2024,
         period=period,
         observations=[
-            _obs("11111111H", RetencionClave.A),
-            _obs("11111111H", RetencionClave.G),
-            _obs("22222222J", RetencionClave.A),
+            _obs("11111111H", RetencionClave._from_registry("A")),
+            _obs("11111111H", RetencionClave._from_registry("G")),
+            _obs("22222222J", RetencionClave._from_registry("A")),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )

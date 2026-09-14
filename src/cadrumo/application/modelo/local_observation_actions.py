@@ -35,7 +35,6 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -96,7 +95,7 @@ def record_operator_local_observation[CasillaKey](
     repository: CalculationObservationRepositoryProtocol,
     clock: datetime | None = None,
     replace_official_evidence: bool = False,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloLocalObservationResult:
     """Persist an operator-supplied local observation for later calculation prefill.
 
@@ -166,17 +165,9 @@ def _load_revision(
     modelo: str,
     filing_year: int,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloRevision:
     try:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return _load_revision(
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    operation=indexed_operation,
-                )
         return operation.revision_for_context(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError as exc:
         raise ModeloLocalObservationError(

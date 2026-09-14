@@ -58,14 +58,14 @@ def _professional_services_invoice(
     number: str = "F-PROV-900",
 ) -> Invoice:
     subtotal = Decimal("1000.00")
-    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate._from_registry("RATE_21"), date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
         quantity=Decimal("1"),
         unit_price=subtotal,
         subtotal=subtotal,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=subtotal * rate,
     )
     return Invoice.model_validate(
@@ -83,7 +83,7 @@ def _professional_services_invoice(
             "currency": "EUR",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
+            "iva_category": IvaCategory("domestic_general"),
             "retention_rate": Decimal("0.15"),
             "retention_amount": Decimal("150.00"),
         },
@@ -275,7 +275,7 @@ def _producer_created_invoice(
             taxable_base=Decimal("1000.00"),
             iva_rate=Decimal("21"),
             currency="EUR",
-            iva_category=IvaCategory.DOMESTIC_GENERAL,
+            iva_category=IvaCategory("domestic_general"),
             retention_rate=retention_rate,
             retention_amount=retention_amount,
         ),

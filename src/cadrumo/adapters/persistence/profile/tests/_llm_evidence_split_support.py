@@ -52,14 +52,14 @@ def _two_line_proposal() -> LLMSplitResponse:
         children=(
             LLMSplitChild(
                 proportion=Decimal("0.6"),
-                category=SpendingCategory.MATERIAL_OFICINA,
-                iva_category=IvaCategory.DOMESTIC_GENERAL,
+                category=SpendingCategory._from_registry("material_oficina"),
+                iva_category=IvaCategory("domestic_general"),
                 evidence_citation="material de oficina",
             ),
             LLMSplitChild(
                 proportion=Decimal("0.4"),
-                category=SpendingCategory.SOFTWARE_SUSCRIPCION,
-                iva_category=IvaCategory.DOMESTIC_GENERAL,
+                category=SpendingCategory._from_registry("software_suscripcion"),
+                iva_category=IvaCategory("domestic_general"),
                 evidence_citation="licencia software",
             ),
         ),
@@ -73,8 +73,8 @@ def _single_line_proposal() -> LLMSplitResponse:
         children=(
             LLMSplitChild(
                 proportion=Decimal("1.0"),
-                category=SpendingCategory.MATERIAL_OFICINA,
-                iva_category=IvaCategory.DOMESTIC_GENERAL,
+                category=SpendingCategory._from_registry("material_oficina"),
+                iva_category=IvaCategory("domestic_general"),
                 evidence_citation="material de oficina",
             ),
         ),
@@ -102,7 +102,7 @@ def _seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: s
         quantity=Decimal("1"),
         unit_price=Decimal("100.00"),
         subtotal=Decimal("100.00"),
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=Decimal("21.00"),
     )
     invoice = Invoice.model_validate(

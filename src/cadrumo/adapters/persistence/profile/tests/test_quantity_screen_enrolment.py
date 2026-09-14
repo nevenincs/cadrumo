@@ -228,7 +228,7 @@ def _iva_sale() -> Transaction:
             "taxable_base": Decimal("1000.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
+            "iva_category": IvaCategory("domestic_general"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",

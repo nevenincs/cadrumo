@@ -145,7 +145,7 @@ def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(2
             "taxable_base": Decimal("1000.00"),
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
-            "iva_category": IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            "iva_category": IvaCategory("intra_community_supply"),
             "counterparty_country": "DE",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),

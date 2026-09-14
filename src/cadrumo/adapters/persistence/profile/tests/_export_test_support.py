@@ -77,10 +77,10 @@ def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistryS
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("general"),
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.COMMON_REGIME,
-            regime_composition=M303RegimeComposition.GENERAL,
+            tax_territory=M303TaxTerritory._from_registry("common_regime"),
+            regime_composition=M303RegimeComposition._from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,

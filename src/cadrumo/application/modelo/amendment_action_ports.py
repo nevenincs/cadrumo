@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -20,7 +21,6 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 @dataclass(frozen=True, slots=True)

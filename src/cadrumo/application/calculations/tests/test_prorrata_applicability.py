@@ -38,7 +38,9 @@ def _entry(regime: ProrrataRegisterRegime) -> ProrrataRegisterEntry:
 
 
 def test_prorrata_applies_when_register_holds_active_general_entry() -> None:
-    projection = derive_prorrata_applicability(register_entries=(_entry(ProrrataRegisterRegime.GENERAL),))
+    projection = derive_prorrata_applicability(
+        register_entries=(_entry(ProrrataRegisterRegime._from_registry("general")),)
+    )
 
     assert projection.applies is True
     assert projection.register_active is True
@@ -46,7 +48,9 @@ def test_prorrata_applies_when_register_holds_active_general_entry() -> None:
 
 
 def test_prorrata_applies_when_register_holds_active_especial_entry() -> None:
-    projection = derive_prorrata_applicability(register_entries=(_entry(ProrrataRegisterRegime.ESPECIAL),))
+    projection = derive_prorrata_applicability(
+        register_entries=(_entry(ProrrataRegisterRegime._from_registry("especial")),)
+    )
 
     assert projection.applies is True
     assert projection.evidence_kinds == ("register_active",)
@@ -83,7 +87,7 @@ def test_prorrata_applies_from_ledger_projected_sin_derecho_volume() -> None:
 
 def test_prorrata_does_not_apply_for_ninguna_and_full_declared_right_to_deduct() -> None:
     projection = derive_prorrata_applicability(
-        register_entries=(_entry(ProrrataRegisterRegime.NINGUNA),),
+        register_entries=(_entry(ProrrataRegisterRegime._from_registry("ninguna")),),
         declared_volume_total=Decimal("100000.00"),
         declared_volume_con_derecho=Decimal("100000.00"),
     )

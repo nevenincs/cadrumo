@@ -310,7 +310,7 @@ _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         activity_start_date=date(2000, 1, 1),
         has_employees=False,
         pays_rent_with_retencion=False,

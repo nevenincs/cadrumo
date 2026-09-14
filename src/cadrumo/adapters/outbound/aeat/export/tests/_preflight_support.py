@@ -59,7 +59,7 @@ def deadline_checker() -> DeadlineWindowChecker:
     """Return the production registry-backed filing-window adapter."""
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

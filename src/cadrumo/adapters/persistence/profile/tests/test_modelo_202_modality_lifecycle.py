@@ -86,15 +86,15 @@ _ZERO_M202_CASILLA_VALUES = {
 def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("general"),
         activity_start_date=date(2020, 1, 1),
         incn_prior_12_months=incn,
         new_entity_first_two_profit_periods=False,
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.COMMON_REGIME,
-            regime_composition=M303RegimeComposition.GENERAL,
+            tax_territory=M303TaxTerritory._from_registry("common_regime"),
+            regime_composition=M303RegimeComposition._from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,

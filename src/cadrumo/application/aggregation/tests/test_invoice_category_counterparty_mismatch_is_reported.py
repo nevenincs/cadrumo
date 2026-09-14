@@ -47,7 +47,7 @@ def test_the_predicate_narrows_to_categories_that_had_a_casilla_to_reach() -> No
         taxable_base=_BASE,
         iva_rate=Decimal("0"),
         currency="EUR",
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         # Clave E: an ordinary entrega intracomunitaria. Stated because the
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,
@@ -63,7 +63,7 @@ def test_the_predicate_narrows_to_categories_that_had_a_casilla_to_reach() -> No
         taxable_base=_BASE,
         iva_rate=Decimal("0"),
         currency="EUR",
-        iva_category=IvaCategory.DOMESTIC_EXEMPT,
+        iva_category=IvaCategory("domestic_exempt"),
     )
 
     revision = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD).revision

@@ -31,7 +31,6 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
@@ -206,7 +205,7 @@ async def capture_expedientes_bulk(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ExpedientesBulkCaptureReport:
     """Capture each requested declaration-register view while reporting isolated failures."""
     if year_from > year_to:
@@ -214,19 +213,6 @@ async def capture_expedientes_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return await capture_expedientes_bulk(
-                bucket_id=bucket_id,
-                year_from=year_from,
-                year_to=year_to,
-                modelos=modelos,
-                ports=ports,
-                certificate_secret_backend_factory=certificate_secret_backend_factory,
-                browser_session_factory=browser_session_factory,
-                operator_scope_ports=operator_scope_ports,
-                operation=indexed_operation,
-            )
     resolved_modelos = modelos if modelos is not None else operation.modelo_ids()
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,

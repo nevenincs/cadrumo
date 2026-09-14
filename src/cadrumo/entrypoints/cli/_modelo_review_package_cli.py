@@ -197,6 +197,7 @@ def review_package_build(
             refund_election=operator_input.refund_election,
             payment_election=operator_input.payment_election,
             prior_domiciliation_election=operator_input.prior_domiciliation_election,
+            operation=authority_operation(ctx),
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports_factory(ctx)(
                 bucket_id=str(work_unit.bucket_id),

@@ -51,8 +51,8 @@ _EXPECTED_TOTAL = Decimal("176.00")
 # slot is what a Modelo 303 tier is summed from, so asserting on it is asserting
 # on the thing that reaches the declaration.
 _EXPECTED_RATE_SPLIT = (
-    (IvaRate.RATE_21, Decimal("100.00"), Decimal("21.00")),
-    (IvaRate.RATE_10, Decimal("50.00"), Decimal("5.00")),
+    (IvaRate._from_registry("RATE_21"), Decimal("100.00"), Decimal("21.00")),
+    (IvaRate._from_registry("RATE_10"), Decimal("50.00"), Decimal("5.00")),
 )
 
 

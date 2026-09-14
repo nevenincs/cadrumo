@@ -28,7 +28,7 @@ def _fabricated_values() -> InvoiceExtractionAuthorityValues:
         period=_ANNUAL_2026,
         iva_rate_pcts=(_FABRICATED_PCT,),
         retencion_rate_pcts=(_FABRICATED_RETENCION_PCT,),
-        no_printed_tax_categories=(IvaCategory.DOMESTIC_EXEMPT,),
+        no_printed_tax_categories=(IvaCategory("domestic_exempt"),),
         regime_legend_phrases=("regimen inventado a efectos de prueba",),
     )
 

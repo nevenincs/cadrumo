@@ -232,7 +232,7 @@ def test_a_withheld_relief_reaches_the_operator_as_a_warning(tmp_path: Path) -> 
     assert isinstance(context, dict)
     # The claim the operator has to contest is named, not merely alluded to.
     assert context["outcome"] == IvaCategoryOutcome.UNSUPPORTED_RELIEF.value
-    assert context["declared_category"] == IvaCategory.INTRA_COMMUNITY_SUPPLY.value
+    assert context["declared_category"] == IvaCategory("intra_community_supply").value
     assert str(context["note"]).strip()
 
 
@@ -255,7 +255,7 @@ def test_a_rate_inferred_category_is_distinguishable_from_a_placed_one(tmp_path:
     body = _confirmed(tmp_path, _DOMESTIC_STANDARD, name="domestic")["result"]
 
     assert isinstance(body, dict)
-    assert body["iva_category"] == IvaCategory.DOMESTIC_GENERAL.value
+    assert body["iva_category"] == IvaCategory("domestic_general").value
     assert body["iva_category_outcome"] == IvaCategoryOutcome.RATE_INFERRED.value
 
 

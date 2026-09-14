@@ -109,33 +109,33 @@ def _empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
 _M369_DE_SERVICES = OssIossLedgerCandidate(
     ledger_id="oss-de-services",
     transaction_date=date(2026, 2, 15),
-    regime=OssIossRegime.UNION_SCHEME,
-    destination_member_state=EUMemberState.DE,
-    rate_kind=IvaRateKind.GENERAL,
+    regime=OssIossRegime("union_scheme"),
+    destination_member_state=EUMemberState._from_registry("de"),
+    rate_kind=IvaRateKind("general"),
     invoice_direction=InvoiceKind.ISSUED,
-    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+    transaction_kind=TransactionKind("oss_union_services"),
     base_amount=Decimal("100.00"),
     iva_amount=Decimal("19.00"),  # 100 * 19% (DE general)
 )
 _M369_FR_SERVICES = OssIossLedgerCandidate(
     ledger_id="oss-fr-services",
     transaction_date=date(2026, 2, 16),
-    regime=OssIossRegime.UNION_SCHEME,
-    destination_member_state=EUMemberState.FR,
-    rate_kind=IvaRateKind.GENERAL,
+    regime=OssIossRegime("union_scheme"),
+    destination_member_state=EUMemberState._from_registry("fr"),
+    rate_kind=IvaRateKind("general"),
     invoice_direction=InvoiceKind.ISSUED,
-    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+    transaction_kind=TransactionKind("oss_union_services"),
     base_amount=Decimal("200.00"),
     iva_amount=Decimal("40.00"),  # 200 * 20% (FR general)
 )
 _M369_DE_GOODS = OssIossLedgerCandidate(
     ledger_id="oss-de-goods",
     transaction_date=date(2026, 2, 17),
-    regime=OssIossRegime.UNION_SCHEME,
-    destination_member_state=EUMemberState.DE,
-    rate_kind=IvaRateKind.GENERAL,
+    regime=OssIossRegime("union_scheme"),
+    destination_member_state=EUMemberState._from_registry("de"),
+    rate_kind=IvaRateKind("general"),
     invoice_direction=InvoiceKind.ISSUED,
-    transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+    transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
     base_amount=Decimal("300.00"),
     iva_amount=Decimal("57.00"),  # 300 * 19% (DE general)
 )
@@ -151,7 +151,7 @@ _M369_DE_GOODS_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.g
 
 def workflow_profile() -> TaxpayerProfile:
     """Return the real profile projection used by the M369 verify/export gates."""
-    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("general"))
 
 
 @pytest.fixture
@@ -208,15 +208,15 @@ def _m369_invoice(
     base_amount: Decimal,
     iva_amount: Decimal,
     operation_date: date | None = None,
-    regime: OssIossRegime = OssIossRegime.UNION_SCHEME,
+    regime: OssIossRegime = OssIossRegime("union_scheme"),
 ) -> Invoice:
     line = InvoiceLine(
         description=f"OSS supply {invoice_number}",
         quantity=Decimal("1"),
         unit_price=base_amount,
         subtotal=base_amount,
-        iva_rate=IvaRate.RATE_21,
-        oss_rate_kind=IvaRateKind.GENERAL,
+        iva_rate=IvaRate._from_registry("RATE_21"),
+        oss_rate_kind=IvaRateKind("general"),
         iva_amount=iva_amount,
     )
     invoice_id = derive_invoice_id(
@@ -244,7 +244,9 @@ def _m369_invoice(
         oss_ioss_regime=regime,
         oss_transaction_kind=transaction_kind,
         operation_date=operation_date,
-        operation_date_role=(None if operation_date is None else InvoiceOperationDateRole.OPERATION_PERFORMED),
+        operation_date_role=(
+            None if operation_date is None else InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED")
+        ),
     )
 
 
@@ -280,10 +282,10 @@ def test_m369_exterior_period_calculate_review_export_e2e(
                     counterparty_name="DE Exterior Consumer",
                     counterparty_tax_id=f"DE{period_token[-2]}23456789",
                     counterparty_country="DE",
-                    transaction_kind=TransactionKind.EXTERNAL_SCHEME_SERVICES,
+                    transaction_kind=TransactionKind("external_scheme_services"),
                     base_amount=Decimal("100.00"),
                     iva_amount=Decimal("19.00"),
-                    regime=OssIossRegime.EXTERNAL_SCHEME,
+                    regime=OssIossRegime("external_scheme"),
                 ),
             ),
         ),
@@ -371,7 +373,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
         parse_export_payload(layout, malformed_optional)
 
 
-@pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind.SUPER_REDUCED, IvaRateKind.ZERO))
+@pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind("super_reduced"), IvaRateKind("zero")))
 def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_vocabulary(
     unsupported_rate_kind: IvaRateKind,
 ) -> None:
@@ -379,11 +381,11 @@ def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_voca
     observation = OssIossLedgerObservation(
         ledger_id=f"unsupported-{unsupported_rate_kind.value}",
         transaction_date=date(2026, 2, 15),
-        regime=OssIossRegime.EXTERNAL_SCHEME,
-        destination_member_state=EUMemberState.DE,
+        regime=OssIossRegime("external_scheme"),
+        destination_member_state=EUMemberState._from_registry("de"),
         rate_kind=unsupported_rate_kind,
         invoice_direction=InvoiceKind.ISSUED,
-        transaction_kind=TransactionKind.EXTERNAL_SCHEME_SERVICES,
+        transaction_kind=TransactionKind("external_scheme_services"),
         base_amount=Decimal("100"),
         iva_amount=Decimal("0"),
     )
@@ -424,7 +426,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                             counterparty_name="DE Consumer",
                             counterparty_tax_id="DE123456789",
                             counterparty_country="DE",
-                            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                            transaction_kind=TransactionKind("oss_union_services"),
                             base_amount=Decimal("100.00"),
                             iva_amount=Decimal("19.00"),
                         ),
@@ -434,7 +436,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                             counterparty_name="FR Consumer",
                             counterparty_tax_id="FR12345678901",
                             counterparty_country="FR",
-                            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                            transaction_kind=TransactionKind("oss_union_services"),
                             base_amount=Decimal("200.00"),
                             iva_amount=Decimal("40.00"),
                         ),
@@ -444,7 +446,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                             counterparty_name="DE Consumer Goods",
                             counterparty_tax_id="DE987654321",
                             counterparty_country="DE",
-                            transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+                            transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
                             base_amount=Decimal("300.00"),
                             iva_amount=Decimal("57.00"),
                         ),
@@ -533,7 +535,7 @@ def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
                     counterparty_name="DE Consumer",
                     counterparty_tax_id="DE123456789",
                     counterparty_country="DE",
-                    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                    transaction_kind=TransactionKind("oss_union_services"),
                     base_amount=Decimal("100.00"),
                     iva_amount=Decimal("19.00"),
                     operation_date=date(2026, 3, 28),
@@ -544,7 +546,7 @@ def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
                     counterparty_name="FR Consumer",
                     counterparty_tax_id="FR12345678901",
                     counterparty_country="FR",
-                    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                    transaction_kind=TransactionKind("oss_union_services"),
                     base_amount=Decimal("200.00"),
                     iva_amount=Decimal("40.00"),
                 ),
@@ -684,7 +686,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
                     counterparty_name="FR Consumer Goods",
                     counterparty_tax_id="FR98765432109",
                     counterparty_country="FR",
-                    transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+                    transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
                     base_amount=Decimal("200.00"),
                     iva_amount=Decimal("40.00"),
                 ),
@@ -803,7 +805,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
                     counterparty_name="FR Zero Consumer Goods",
                     counterparty_tax_id="FR00000000000",
                     counterparty_country="FR",
-                    transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+                    transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
                     base_amount=Decimal("0.00"),
                     iva_amount=Decimal("0.00"),
                 ),

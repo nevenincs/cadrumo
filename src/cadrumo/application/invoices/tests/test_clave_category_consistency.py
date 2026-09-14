@@ -34,17 +34,19 @@ def test_every_publicly_declared_invoice_clave_round_trips_to_its_category() -> 
     """
     catalogue = resolve_iva_category_catalogue()
     expected = {
-        "issued.intra_community_supply": IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        "issued.intra_community_service_supply": IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-        "received.intra_community_acquisition_reverse_charge": (IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE),
-        "received.intra_community_service_acquisition_reverse_charge": (
-            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
+        "issued.intra_community_supply": IvaCategory("intra_community_supply"),
+        "issued.intra_community_service_supply": IvaCategory("intra_community_service_supply"),
+        "received.intra_community_acquisition_reverse_charge": IvaCategory(
+            "intra_community_acquisition_reverse_charge"
+        ),
+        "received.intra_community_service_acquisition_reverse_charge": IvaCategory(
+            "intra_community_service_acquisition_reverse_charge"
         ),
     }
 
     for key, category in expected.items():
         clave = IntracomOperationType(catalogue.operation_type(key))
-        assert iva_category_for_operation_type(clave) is category
+        assert iva_category_for_operation_type(clave) == category
 
 
 def test_no_clave_is_supplied_without_an_operator_facing_meaning() -> None:
@@ -65,7 +67,7 @@ def test_no_clave_is_supplied_without_an_operator_facing_meaning() -> None:
 
 def test_triangulation_is_forward_only_and_that_is_deliberate() -> None:
     """T is filed from either side and therefore has no direction-specific input."""
-    assert iva_category_for_operation_type(IntracomOperationType.T) is IvaCategory.INTRA_COMMUNITY_TRIANGULATION
+    assert iva_category_for_operation_type(IntracomOperationType.T) == IvaCategory("intra_community_triangulation")
 
 
 def test_goods_and_service_claves_never_collapse_into_each_other() -> None:
@@ -75,15 +77,13 @@ def test_goods_and_service_claves_never_collapse_into_each_other() -> None:
     localises the service — so a shared category would misstate the law, not
     merely the paperwork.
     """
-    assert iva_category_for_operation_type(IntracomOperationType.E) is IvaCategory.INTRA_COMMUNITY_SUPPLY
-    assert iva_category_for_operation_type(IntracomOperationType.S) is IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY
-    assert (
-        iva_category_for_operation_type(IntracomOperationType.A)
-        is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
+    assert iva_category_for_operation_type(IntracomOperationType.E) == IvaCategory("intra_community_supply")
+    assert iva_category_for_operation_type(IntracomOperationType.S) == IvaCategory("intra_community_service_supply")
+    assert iva_category_for_operation_type(IntracomOperationType.A) == IvaCategory(
+        "intra_community_acquisition_reverse_charge"
     )
-    assert (
-        iva_category_for_operation_type(IntracomOperationType.ADQUISICION_SERVICIOS)
-        is IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
+    assert iva_category_for_operation_type(IntracomOperationType.ADQUISICION_SERVICIOS) == IvaCategory(
+        "intra_community_service_acquisition_reverse_charge"
     )
 
 

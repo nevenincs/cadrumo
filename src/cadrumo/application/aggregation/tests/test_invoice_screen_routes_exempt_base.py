@@ -89,7 +89,7 @@ def _invoice(
                     "quantity": "1",
                     "unit_price": format(_BASE, "f"),
                     "subtotal": format(_BASE, "f"),
-                    "iva_rate": IvaRate.EXEMPT.value,
+                    "iva_rate": IvaRate._from_registry("EXEMPT").value,
                     "iva_amount": "0.00",
                 },
             ],
@@ -125,7 +125,7 @@ def test_an_intra_community_supply_base_reaches_casilla_59() -> None:
     an intra-community one rather than a domestic exemption. Both print an
     exempt slot, so nothing but the declared category distinguishes them.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, country="DE"))
+    resolved = _resolved_for(_invoice(category=IvaCategory("intra_community_supply"), country="DE"))
 
     assert resolved.get(_CASILLA_59) == _BASE, (
         f"the intra-community base never reached casilla 59: {resolved.get(_CASILLA_59)!r}"
@@ -142,7 +142,7 @@ def test_an_export_base_reaches_casilla_60() -> None:
     """
     resolved = _resolved_for(
         _invoice(
-            category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            category=IvaCategory("export_third_country_zero_rated"),
             country="US",
             tax_id="US987654321",
             identification=None,
@@ -165,7 +165,7 @@ def test_a_domestic_exemption_is_not_routed_to_either_base_casilla() -> None:
     would put this base in casilla 59 and over-declare intra-community volume.
     """
     resolved = _resolved_for(
-        _invoice(category=IvaCategory.DOMESTIC_EXEMPT, country="ES", tax_id="ESB12345674", identification="es")
+        _invoice(category=IvaCategory("domestic_exempt"), country="ES", tax_id="ESB12345674", identification="es")
     )
 
     assert not resolved.get(_CASILLA_59)
@@ -184,7 +184,7 @@ def test_an_intra_community_supply_to_a_third_country_is_not_routed() -> None:
     """
     resolved = _resolved_for(
         _invoice(
-            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            category=IvaCategory("intra_community_supply"),
             country="US",
             tax_id="US987654321",
             identification=None,
@@ -205,7 +205,7 @@ def test_the_aggregate_already_refuses_an_intra_community_supply_to_spain() -> N
     """
     with pytest.raises(ValidationError):
         _invoice(
-            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            category=IvaCategory("intra_community_supply"),
             country="ES",
             tax_id="ESB12345674",
             identification="es",
@@ -216,7 +216,7 @@ def test_an_export_claimed_to_a_member_state_is_not_routed() -> None:
     """The mirror coupling: an export leaves the Union, so an EU counterparty contradicts it."""
     resolved = _resolved_for(
         _invoice(
-            category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            category=IvaCategory("export_third_country_zero_rated"),
             country="FR",
             tax_id="FR12345678901",
             identification="fr",
@@ -253,7 +253,7 @@ def test_an_ordinary_rated_line_still_routes_through_the_standard_path() -> None
                     "quantity": "1",
                     "unit_price": "1000.00",
                     "subtotal": "1000.00",
-                    "iva_rate": IvaRate.RATE_21.value,
+                    "iva_rate": IvaRate._from_registry("RATE_21").value,
                     "iva_amount": "210.00",
                 },
             ],
@@ -275,6 +275,6 @@ def test_an_ordinary_rated_line_still_routes_through_the_standard_path() -> None
     )
 
     assert observation is not None
-    assert observation.category is IvaCategory.DOMESTIC_GENERAL
+    assert observation.category == IvaCategory("domestic_general")
     assert observation.base_amount == Decimal("1000.00")
     assert observation.iva_amount == Decimal("210.00")

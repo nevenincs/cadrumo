@@ -86,7 +86,7 @@ def _domestic_zero_sale() -> Transaction:
             "taxable_base": Decimal("500.00"),
             "iva_rate": Decimal("0.00"),
             "iva_amount": Decimal("0.00"),
-            "iva_category": IvaCategory.DOMESTIC_ZERO,
+            "iva_category": IvaCategory("domestic_zero"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
@@ -124,7 +124,7 @@ def _domestic_general_sale() -> Transaction:
             "taxable_base": Decimal("1000.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
+            "iva_category": IvaCategory("domestic_general"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
@@ -141,7 +141,7 @@ def test_domestic_zero_is_structurally_unroutable_on_m303() -> None:
     """
     unroutable = structurally_unroutable_iva_base_categories(_m303_revision())
 
-    assert IvaCategory.DOMESTIC_ZERO in unroutable, (
+    assert IvaCategory("domestic_zero") in unroutable, (
         "refutation, not a tuning target: if this ever fails, M303 has gained a base_amount_sum "
         "binding for domestic_zero and the fixture/finding is stale, not the screen"
     )
@@ -151,7 +151,7 @@ def test_a_fully_covered_category_is_not_reported() -> None:
     """Negative control: the domestic general tier IS routed on the committed revision."""
     unroutable = structurally_unroutable_iva_base_categories(_m303_revision())
 
-    assert IvaCategory.DOMESTIC_GENERAL not in unroutable
+    assert IvaCategory("domestic_general") not in unroutable
 
 
 def test_the_out_of_scope_declaration_is_not_a_re_export_of_cuota_less() -> None:
@@ -169,7 +169,7 @@ def test_the_out_of_scope_declaration_is_not_a_re_export_of_cuota_less() -> None
     unroutable = set(structurally_unroutable_iva_base_categories(_m303_revision()))
 
     cuota_less = registry_category_projection("cuota_less_m303")
-    assert IvaCategory.DOMESTIC_ZERO in cuota_less
-    assert IvaCategory.REGIMEN_SIMPLIFICADO in cuota_less
-    assert IvaCategory.DOMESTIC_ZERO in unroutable
-    assert IvaCategory.REGIMEN_SIMPLIFICADO not in unroutable
+    assert IvaCategory("domestic_zero") in cuota_less
+    assert IvaCategory("regimen_simplificado") in cuota_less
+    assert IvaCategory("domestic_zero") in unroutable
+    assert IvaCategory("regimen_simplificado") not in unroutable

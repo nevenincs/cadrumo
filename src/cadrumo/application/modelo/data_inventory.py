@@ -34,7 +34,6 @@ from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n.render import output_language
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -192,7 +191,7 @@ def data_inventory_checklist(
     filing_year: int,
     period: Period,
     bucket_id: str | None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> DataInventoryChecklist:
     """Compose the data-inventory checklist for one modelo / year / period.
 
@@ -228,15 +227,6 @@ def data_inventory_checklist(
     Returns:
         A :class:`DataInventoryChecklist`.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return data_inventory_checklist(
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                bucket_id=bucket_id,
-                operation=indexed_operation,
-            )
     revision = operation.revision_for_context(
         modelo,
         filing_year=filing_year,

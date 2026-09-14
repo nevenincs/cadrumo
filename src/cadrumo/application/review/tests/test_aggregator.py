@@ -9,6 +9,8 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
 from ....application.filing.draft_review_ports import DraftReviewPorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
@@ -24,7 +26,7 @@ from ....domain.filing.schema import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.submission.models import ModeloDraftStatus
@@ -91,7 +93,7 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
         quantity=Decimal("1"),
         unit_price=Decimal("100.00"),
         subtotal=Decimal("100.00"),
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
         iva_amount=Decimal("21.00"),
     )
     invoice = Invoice.model_validate(

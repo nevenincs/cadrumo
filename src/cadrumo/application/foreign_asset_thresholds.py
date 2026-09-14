@@ -11,7 +11,7 @@ from types import MappingProxyType
 from ..core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ..core.modelo import Modelo
 from ..core.revision_review import RevisionReviewStatus
-from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.errors import RegistryValidationError
 from ..domain.calculations.registry.foreign_asset_obligation_catalogue import (
     resolve_foreign_asset_obligation_catalogue,
@@ -66,7 +66,7 @@ def foreign_asset_declaration_thresholds(
     *,
     modelo: str,
     filing_year: int,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold]:
     """Resolve foreign-asset thresholds from the selected bundled registry revision.
 
@@ -77,16 +77,8 @@ def foreign_asset_declaration_thresholds(
     builds its own filing-grade snapshot when it files.
 
     Reads the selected revision through the caller's generation-pinned
-    operation. When no operation is supplied, the indexed bundled authority is
-    opened at this public boundary for backwards-compatible callers.
+    operation.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return foreign_asset_declaration_thresholds(
-                modelo=modelo,
-                filing_year=filing_year,
-                operation=indexed_operation,
-            )
     selected = operation.revision_for_context(
         modelo,
         filing_year=filing_year,

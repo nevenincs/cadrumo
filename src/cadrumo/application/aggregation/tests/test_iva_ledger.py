@@ -109,16 +109,16 @@ def _modelo_303_iva_revision() -> ModeloRevision:
         "2022",
         _iva_binding(
             "modelo-303-iva-repercutido-general-cuota",
-            categories=(IvaCategory.DOMESTIC_GENERAL,),
+            categories=(IvaCategory("domestic_general"),),
             rate_kinds=(IvaRateKind.GENERAL,),
             flow_direction=IvaFlowDirection.REPERCUTIDO,
         ),
         _iva_binding(
             "modelo-303-iva-soportado-interiores-cuota",
             categories=(
-                IvaCategory.DOMESTIC_GENERAL,
-                IvaCategory.DOMESTIC_REDUCED,
-                IvaCategory.DOMESTIC_SUPER_REDUCED,
+                IvaCategory("domestic_general"),
+                IvaCategory("domestic_reduced"),
+                IvaCategory("domestic_super_reduced"),
             ),
             rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
             flow_direction=IvaFlowDirection.SOPORTADO,
@@ -332,7 +332,7 @@ def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -
     observation = result.observations[0]
     assert observation.ledger_id == transaction.transaction_id
     assert observation.transaction_date == date(2026, 4, 5)
-    assert observation.category is IvaCategory.DOMESTIC_GENERAL
+    assert observation.category == IvaCategory("domestic_general")
     assert observation.rate_kind is IvaRateKind.GENERAL
     assert observation.flow_direction is IvaFlowDirection.SOPORTADO
     assert observation.base_amount == transaction.taxable_base
@@ -407,7 +407,7 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
 
     assert result.issues == ()
     observation = result.observations[0]
-    assert observation.category is IvaCategory.DOMESTIC_REDUCED
+    assert observation.category == IvaCategory("domestic_reduced")
     assert observation.rate_kind is IvaRateKind.REDUCED
     assert observation.flow_direction is IvaFlowDirection.REPERCUTIDO
     assert observation.iva_amount == Decimal("10.00")
@@ -832,8 +832,8 @@ def test_zero_and_super_reduced_rates_project_to_canonical_iva_categories() -> N
     )
 
     assert [observation.category for observation in result.observations] == [
-        IvaCategory.DOMESTIC_ZERO,
-        IvaCategory.DOMESTIC_SUPER_REDUCED,
+        IvaCategory("domestic_zero"),
+        IvaCategory("domestic_super_reduced"),
     ]
 
 
@@ -845,7 +845,7 @@ def test_transaction_exemption_article_projects_to_iva_observation() -> None:
         taxable_base=Decimal("400.00"),
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
-        iva_category=IvaCategory.DOMESTIC_EXEMPT,
+        iva_category=IvaCategory("domestic_exempt"),
         exemption_article=IvaExemptionArticle.ART_20_UNO_8,
     )
 
@@ -857,7 +857,7 @@ def test_transaction_exemption_article_projects_to_iva_observation() -> None:
     assert result.issues == ()
     assert len(result.observations) == 1
     observation = result.observations[0]
-    assert observation.category is IvaCategory.DOMESTIC_EXEMPT
+    assert observation.category == IvaCategory("domestic_exempt")
     assert observation.ledger_id == transaction.transaction_id
     assert observation.exemption_article is IvaExemptionArticle.ART_20_UNO_8
 

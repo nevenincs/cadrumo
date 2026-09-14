@@ -367,19 +367,19 @@ def test_the_confirm_boundary_carries_the_writer_regime_axes(
         tmp_path=tmp_path,
         filename="factura_regimen.pdf",
         recargo_amount=Decimal("5.20"),
-        invoice_class=InvoiceClass.RECTIFICATIVA,
+        invoice_class=InvoiceClass._from_registry("RECTIFICATIVA"),
         series="R",
         rectifies_invoice_number="F-2026-0044",
         retention_rate=Decimal("0.15"),
         retention_amount=Decimal("15.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
 
     invoice = result.invoice
-    assert invoice.invoice_class is InvoiceClass.RECTIFICATIVA
+    assert invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
     assert invoice.series == "R"
     assert invoice.rectifies_invoice_number == "F-2026-0044"
     assert invoice.retention_amount == Decimal("15.00")
-    assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert invoice.iva_category is IvaCategory("domestic_general")
     # The retención is settled OUTSIDE the invoice total; only the recargo is in it.
     assert invoice.grand_total == Decimal("126.20")

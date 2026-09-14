@@ -102,7 +102,7 @@ class TestTheVocabularyIsQuotedFromTheBundledRegulation:
         """
         declaring = {legend.phrase: legend.declares for legend in REGIME_LEGENDS if legend.declares is not None}
 
-        assert declaring == {"inversión del sujeto pasivo": IvaCategory.DOMESTIC_REVERSE_CHARGE}
+        assert declaring == {"inversión del sujeto pasivo": IvaCategory("domestic_reverse_charge")}
 
     def test_the_reverse_charge_mention_expects_no_repercutido_line(self) -> None:
         """The signal a contradiction check needs: this invoice charges no Spanish IVA."""

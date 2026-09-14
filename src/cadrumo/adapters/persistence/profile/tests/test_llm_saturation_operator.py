@@ -39,7 +39,7 @@ def test_operator_derive_persists_substrate_with_derived_provenance(
     derivation = derive_operator_iva_substrate(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
         actor="operator-A",
         source_command="aeat app ledger classify --iva-category --saturate",
         transaction_repository=repository,
@@ -58,8 +58,8 @@ def test_operator_derive_persists_substrate_with_derived_provenance(
     assert reloaded is not None
     assert reloaded.classified_by == "derived:iva-category"
     assert reloaded.business_classification is BusinessClassification.BUSINESS
-    assert reloaded.category_id == SpendingCategory.ARRENDAMIENTO_LOCAL.value
-    assert reloaded.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert reloaded.category_id == SpendingCategory._from_registry("arrendamiento_local").value
+    assert reloaded.iva_category is IvaCategory("domestic_general")
     assert reloaded.taxable_base is not None and reloaded.iva_amount is not None
     assert reloaded.taxable_base + reloaded.iva_amount == gross
 
@@ -73,7 +73,7 @@ def test_operator_derive_non_derivable_returns_reason_and_leaves_row_unmutated(
     derivation = derive_operator_iva_substrate(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         actor="operator-A",
         source_command="aeat app ledger classify --iva-category --saturate",
         transaction_repository=repository,
@@ -105,7 +105,7 @@ def test_operator_derive_refuses_non_business_row(
         derive_operator_iva_substrate(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            iva_category=IvaCategory.DOMESTIC_GENERAL,
+            iva_category=IvaCategory("domestic_general"),
             actor="operator-A",
             source_command="aeat app ledger classify --iva-category --saturate",
             transaction_repository=repository,
@@ -124,7 +124,7 @@ def test_operator_derive_zero_rated_category_derives_zero_iva(
     derivation = derive_operator_iva_substrate(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        iva_category=IvaCategory.DOMESTIC_ZERO,
+        iva_category=IvaCategory("domestic_zero"),
         actor="operator-A",
         source_command="aeat app ledger classify --iva-category --saturate",
         transaction_repository=repository,

@@ -15,7 +15,7 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.casilla_id import CasillaId
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_verification import VerificationExpectationDefinition
@@ -241,7 +241,7 @@ def m303_m349_intracom_reconcile_findings(
     target: CalculationRevision,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> list[ModeloVerificationFinding]:
     """Compare the two registry-declared cross-model operand aggregates.
 
@@ -251,15 +251,6 @@ def m303_m349_intracom_reconcile_findings(
     stays a closed no-op.  A material gap produces the existing non-blocking
     reconciliation warning.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return m303_m349_intracom_reconcile_findings(
-                work_unit=work_unit,
-                target=target,
-                work_unit_repository=work_unit_repository,
-                calculation_repository=calculation_repository,
-                operation=indexed_operation,
-            )
     contract = _selected_reconciliation_contract(work_unit, operation=operation)
     if contract is None:
         return []

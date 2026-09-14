@@ -84,9 +84,9 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
     txn = _active_repo().load().get(tx)
     assert txn is not None
     assert txn.business_classification is BusinessClassification.BUSINESS
-    assert txn.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert txn.iva_category == IvaCategory("intra_community_supply")
     assert txn.counterparty_country == "DE"
-    assert txn.counterparty_eu_member_state is EUMemberState.DE
+    assert txn.counterparty_eu_member_state is EUMemberState._from_registry("de")
 
 
 def test_allocate_records_business_proportion() -> None:

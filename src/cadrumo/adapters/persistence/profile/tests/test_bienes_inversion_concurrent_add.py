@@ -40,7 +40,7 @@ def _record(identifier: str, *, year: int) -> BienInversionIvaRecord:
         acquisition_year=year,
         cuota_soportada=Decimal("4200.00"),
         prorrata_inicial_pct=Decimal("80"),
-        kind=BienInversionKind.MUEBLE,
+        kind=BienInversionKind._from_registry("mueble"),
         acquisition_ledger_id=f"ledger-{identifier}",
     )
 

@@ -10,10 +10,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
 from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
-from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
@@ -63,7 +65,7 @@ def _invoice_line_validation(*, description: str, quantity: object) -> Validatio
                 "quantity": quantity,
                 "unit_price": Decimal("100"),
                 "subtotal": Decimal("100"),
-                "iva_rate": IvaRate.RATE_21,
+                "iva_rate": resolve_iva_rate_token("rate_21", date.today()),
                 "iva_amount": Decimal("21"),
             },
         )
@@ -94,7 +96,7 @@ def _invoice_payload(*, counterparty_country: object = "DE") -> dict[str, object
                 quantity=Decimal("1"),
                 unit_price=Decimal("100.00"),
                 subtotal=Decimal("100.00"),
-                iva_rate=IvaRate.RATE_21,
+                iva_rate=resolve_iva_rate_token("rate_21", date.today()),
                 iva_amount=Decimal("21.00"),
             ),
         ),

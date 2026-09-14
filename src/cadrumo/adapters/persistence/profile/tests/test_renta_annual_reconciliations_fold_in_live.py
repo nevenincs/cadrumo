@@ -383,7 +383,7 @@ def _seed_retencion_perceptors(
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("general"))
 
 
 def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: SecureObjectRepository) -> None:
@@ -476,7 +476,7 @@ def _seed_m190_withholding_detail(secure_objects: SecureObjectRepository) -> Non
                 perceptor_tax_id="12345678Z",
                 perceptor_legal_name="Profesional Ejemplo",
                 transaction_date=date(_YEAR, 3, 15),
-                clave=RetencionClave.G,
+                clave=RetencionClave._from_registry("G"),
                 subclave="01",
                 percibido_dinerario=Decimal("1000.00"),
                 retencion_practicada=Decimal("150.00"),

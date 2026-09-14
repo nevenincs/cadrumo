@@ -113,7 +113,7 @@ def _findings(transactions: dict[str, Transaction], *, consumed: tuple[str, ...]
 
 def test_a_cuota_less_row_with_no_base_blocks() -> None:
     """The subject: nothing to contribute, and no second measure to fall back on."""
-    findings = _findings({"tx-1": _transaction("tx-1", iva_category=IvaCategory.DOMESTIC_EXEMPT, taxable_base=None)})
+    findings = _findings({"tx-1": _transaction("tx-1", iva_category=IvaCategory("domestic_exempt"), taxable_base=None)})
 
     assert len(findings) == 1
     finding = findings[0]
@@ -130,7 +130,8 @@ def test_a_cuota_less_row_with_no_base_blocks() -> None:
 def test_the_same_row_carrying_a_base_is_accepted() -> None:
     """The control that keeps this from refusing every exempt operation."""
     assert (
-        _findings({"tx-1": _transaction("tx-1", iva_category=IvaCategory.DOMESTIC_EXEMPT, taxable_base=_AMOUNT)}) == []
+        _findings({"tx-1": _transaction("tx-1", iva_category=IvaCategory("domestic_exempt"), taxable_base=_AMOUNT)})
+        == []
     )
 
 
@@ -141,7 +142,9 @@ def test_a_cuota_bearing_row_with_no_base_is_not_this_gate_s_business() -> None:
     its base is imprecise, not certainly understated -- the cuota reaches the
     return either way -- so it stays with the advisory rather than blocking here.
     """
-    row = _transaction("tx-1", iva_category=IvaCategory.DOMESTIC_GENERAL, taxable_base=None, iva_amount=Decimal("210"))
+    row = _transaction(
+        "tx-1", iva_category=IvaCategory("domestic_general"), taxable_base=None, iva_amount=Decimal("210")
+    )
 
     assert _findings({"tx-1": row}) == []
 
@@ -163,8 +166,8 @@ def test_a_row_the_revision_never_consumed_is_out_of_scope() -> None:
     on this revision, so it understates nothing here.
     """
     transactions = {
-        "consumed": _transaction("consumed", iva_category=IvaCategory.DOMESTIC_EXEMPT, taxable_base=_AMOUNT),
-        "ignored": _transaction("ignored", iva_category=IvaCategory.DOMESTIC_EXEMPT, taxable_base=None),
+        "consumed": _transaction("consumed", iva_category=IvaCategory("domestic_exempt"), taxable_base=_AMOUNT),
+        "ignored": _transaction("ignored", iva_category=IvaCategory("domestic_exempt"), taxable_base=None),
     }
 
     assert _findings(transactions, consumed=("consumed",)) == []

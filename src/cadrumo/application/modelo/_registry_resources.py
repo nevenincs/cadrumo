@@ -11,7 +11,7 @@ not declare, before a work unit records a law-determined registry identity.
 See Also:
     :mod:`cadrumo.core.resources`:
         Owns the packaged resource registry and bundled-path resolution.
-    :class:`cadrumo.domain.calculations.registry.ValidatedRegistryAuthority`:
+    :class:`cadrumo.domain.calculations.registry.PinnedAuthorityOperation`:
         Loads and validates modelo definitions, then serves registry snapshots.
     :mod:`cadrumo.application.modelo._registry_helpers`:
         Owns import/amendment registry checks.
@@ -22,7 +22,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.errors import ModeloError
 
@@ -34,7 +33,7 @@ def reject_unknown_revision(
     *,
     modelo: str,
     revision_id: RevisionId,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse a work-unit create that names an undeclared revision id.
 
@@ -46,11 +45,7 @@ def reject_unknown_revision(
     from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     try:
-        if operation is not None:
-            revisions = operation.modelo_directory(modelo).revisions
-        else:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return reject_unknown_revision(modelo=modelo, revision_id=revision_id, operation=indexed_operation)
+        revisions = operation.modelo_directory(modelo).revisions
     except (RegistrySnapshotError, ValueError) as exc:
         raise ModeloError(str(exc)) from exc
     if any(revision.id == revision_id for revision in revisions):
@@ -66,7 +61,7 @@ def reject_unknown_period_for_revision(
     modelo: str,
     revision_id: RevisionId,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse a work-unit create whose :class:`Period` is absent from the revision schedules.
 
@@ -79,16 +74,7 @@ def reject_unknown_period_for_revision(
     from ...domain.calculations.registry.period_selector_match import selector_period_matches_request
 
     try:
-        if operation is not None:
-            revision = operation.revision(modelo, str(revision_id))
-        else:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return reject_unknown_period_for_revision(
-                    modelo=modelo,
-                    revision_id=revision_id,
-                    period=period,
-                    operation=indexed_operation,
-                )
+        revision = operation.revision(modelo, str(revision_id))
     except (RegistrySnapshotError, ValueError) as exc:
         raise ModeloError(str(exc)) from exc
     declared: set[str] = set()

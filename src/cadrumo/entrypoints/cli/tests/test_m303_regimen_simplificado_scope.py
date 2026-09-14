@@ -118,7 +118,7 @@ def _calculate(work_unit_id: str):
 
 
 def test_m303_general_scope_reaches_real_cli_calculation(runtime_profile: TestRuntimeProfile) -> None:
-    _store_current_profile(runtime_profile, composition=M303RegimeComposition.GENERAL)
+    _store_current_profile(runtime_profile, composition=M303RegimeComposition._from_registry("general"))
     _store_zero_prior_compensation(runtime_profile)
 
     result = _calculate(_m303_work_id())
@@ -128,7 +128,9 @@ def test_m303_general_scope_reaches_real_cli_calculation(runtime_profile: TestRu
     assert "iva.resultado" in payload["casilla_values"]
 
 
-@pytest.mark.parametrize("composition", (M303RegimeComposition.SIMPLIFIED, M303RegimeComposition.MIXED))
+@pytest.mark.parametrize(
+    "composition", (M303RegimeComposition._from_registry("simplified"), M303RegimeComposition._from_registry("mixed"))
+)
 def test_m303_simplified_and_mixed_scope_block_real_cli_before_formula(
     runtime_profile: TestRuntimeProfile,
     composition: M303RegimeComposition,

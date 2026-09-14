@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_no_warning_for_non_home_office_category() -> None:
     result = censo_override_warning(
-        category=SpendingCategory.TELEFONIA_MOVIL,
+        category=SpendingCategory._from_registry("telefonia_movil"),
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
         year=2025,
@@ -36,14 +36,14 @@ def test_no_warning_for_non_home_office_category() -> None:
 
 def test_warning_emitted_when_home_office_override_diverges() -> None:
     result = censo_override_warning(
-        category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+        category=SpendingCategory._from_registry("suministros_home_office_luz"),
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
         year=2025,
     )
 
     assert isinstance(result, RatiosCensoOverrideWarning)
-    assert result.category is SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ
+    assert result.category is SpendingCategory._from_registry("suministros_home_office_luz")
     assert result.override_ratio == Decimal("0.50")
     assert result.raw_afectacion_ratio == Decimal("0.20")
 
@@ -55,7 +55,7 @@ def test_no_warning_when_suministros_override_matches_30pct_of_raw() -> None:
     raw = Decimal("0.20")
 
     result = censo_override_warning(
-        category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+        category=SpendingCategory._from_registry("suministros_home_office_luz"),
         override_ratio=Decimal("0.060"),
         raw_afectacion_ratio=raw,
         year=2025,
@@ -71,7 +71,7 @@ def test_no_warning_when_ownership_override_matches_raw_afectacion() -> None:
     raw = Decimal("0.20")
 
     result = censo_override_warning(
-        category=SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
+        category=SpendingCategory._from_registry("amortizacion_vivienda_afecto"),
         override_ratio=raw,
         raw_afectacion_ratio=raw,
         year=2025,
@@ -83,7 +83,7 @@ def test_no_warning_when_ownership_override_matches_raw_afectacion() -> None:
 def test_business_pct_is_none_when_censo_unset() -> None:
     assert (
         censo_business_pct_for(
-            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+            SpendingCategory._from_registry("suministros_home_office_luz"),
             None,
             year=2025,
         )
@@ -94,7 +94,7 @@ def test_business_pct_is_none_when_censo_unset() -> None:
 def test_business_pct_is_none_for_non_home_office_category() -> None:
     assert (
         censo_business_pct_for(
-            SpendingCategory.TELEFONIA_MOVIL,
+            SpendingCategory._from_registry("telefonia_movil"),
             Decimal("0.20"),
             year=2025,
         )
@@ -108,7 +108,7 @@ def test_business_pct_for_suministros_applies_lirpf_30_2_rule_5_factor() -> None
     raw = Decimal("0.20")
 
     suministros = censo_business_pct_for(
-        SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
+        SpendingCategory._from_registry("suministros_home_office_agua"),
         raw,
         year=2025,
     )
@@ -122,7 +122,7 @@ def test_business_pct_for_ownership_uses_raw_afectacion() -> None:
     raw = Decimal("0.20")
 
     ownership = censo_business_pct_for(
-        SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
+        SpendingCategory._from_registry("comunidad_vivienda_afecto"),
         raw,
         year=2025,
     )
@@ -132,7 +132,7 @@ def test_business_pct_for_ownership_uses_raw_afectacion() -> None:
 
 def test_warning_carries_censo_derived_ratio() -> None:
     result = censo_override_warning(
-        category=SpendingCategory.IBI_VIVIENDA_AFECTO,
+        category=SpendingCategory._from_registry("ibi_vivienda_afecto"),
         override_ratio=Decimal("0.40"),
         raw_afectacion_ratio=Decimal("0.20"),
         year=2025,

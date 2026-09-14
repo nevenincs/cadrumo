@@ -798,6 +798,7 @@ def _build_prorrata_settlement_write(
     filed_target: CalculationRevision,
     work_unit: WorkUnit,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> SecureObjectWrite | None:
     """Build the settlement prorrata-register write for an M303 year close."""
     values = _prorrata_settlement_values(filed_target=filed_target, work_unit=work_unit)
@@ -808,7 +809,7 @@ def _build_prorrata_settlement_write(
     # it cannot self-commit, and an unguarded read would put the whole register
     # back over a sector entry another writer added in between.
     register, register_revision_id = prorrata_register_repository.load_revisioned()
-    register = require_prorrata_register_coordinates_current(register)
+    register = require_prorrata_register_coordinates_current(register, operation=operation)
     entry = _settled_prorrata_register_entry(
         work_unit=work_unit,
         register=register,
@@ -1044,6 +1045,7 @@ def persist_filed_revision(
     iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
     participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     result_disposition: ResultDisposition | None = None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
     taxpayer_nif: str | None = None,
@@ -1138,6 +1140,7 @@ def persist_filed_revision(
         filed_target=filed_target,
         work_unit=work_unit,
         prorrata_register_repository=prorrata_register_repository,
+        operation=operation,
     )
     advanced_work_units = upsert_work_unit(
         work_units,

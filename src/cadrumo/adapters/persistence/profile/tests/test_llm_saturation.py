@@ -58,12 +58,12 @@ def test_suggest_derives_substrate_from_selected_category(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
         transaction_repository=repository,
     )
 
     assert isinstance(suggestion, LLMSaturatedSuggestion)
-    assert suggestion.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert suggestion.iva_category == IvaCategory("domestic_general")
     assert suggestion.rate_derivable is True
     assert suggestion.iva_rate == Decimal("0.21")
     assert suggestion.taxable_base == Decimal("100.00")
@@ -83,7 +83,7 @@ def test_suggest_zero_rated_category_derives_zero_iva(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_ZERO),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_zero")),
         transaction_repository=repository,
     )
 
@@ -102,11 +102,11 @@ def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("intra_community_supply")),
         transaction_repository=repository,
     )
 
-    assert suggestion.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert suggestion.iva_category == IvaCategory("intra_community_supply")
     assert suggestion.rate_derivable is False
     assert suggestion.iva_rate is None
     assert suggestion.taxable_base is None

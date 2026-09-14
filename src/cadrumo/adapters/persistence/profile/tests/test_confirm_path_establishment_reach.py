@@ -176,7 +176,7 @@ def test_a_confirmed_canarian_counterparty_resolves_its_territory_through_the_ve
 
     establishment = confirmation.establishment
     assert establishment is not None
-    assert establishment.counterparty.scope is IvaTerritorialScope.ES_CANARIAS
+    assert establishment.counterparty.scope is IvaTerritorialScope._from_registry("es_canarias")
     assert establishment.counterparty.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
 
@@ -204,13 +204,13 @@ def test_the_resolved_scope_reaches_the_criteria_as_a_declared_fact(
     assert establishment is not None
     declared_issuer = establishment.declared.issuer_scope
     assert declared_issuer is not None
-    assert declared_issuer.value is IvaTerritorialScope.ES_CANARIAS
+    assert declared_issuer.value is IvaTerritorialScope._from_registry("es_canarias")
     # The FILER's own profile resolution belongs in the customer slot. The
     # counterparties' document resolution must not be copied there, or every
     # operation would appear to have both parties in one territory.
     declared_customer = establishment.declared.customer_scope
     assert declared_customer is not None
-    assert declared_customer.value is IvaTerritorialScope.ES_MAINLAND
+    assert declared_customer.value is IvaTerritorialScope._from_registry("es_mainland")
 
 
 def test_a_document_whose_paper_settles_nothing_reaches_the_review_gate(
