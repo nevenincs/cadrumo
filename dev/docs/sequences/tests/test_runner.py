@@ -367,7 +367,8 @@ class TestSandboxEvictsBoundBucketSession:
     the storage runtime correctly refuses every profile-bound verb because the
     route bucket is not the session bucket.
 
-    The login is driven through :func:`~cadrumo.tests.user_profile.register_cli_profile`
+    The login is driven through
+    :func:`~cadrumo.adapters.persistence.profile.tests.profile_registration.register_cli_profile`
     rather than through ``config profile create`` / ``config login`` FRAMES.
     Profile custody now demands an explicit bounded secret channel — the
     ``--secrets-stdin`` / ``--secrets-fd`` payload plus the one-time recovery
@@ -382,7 +383,7 @@ class TestSandboxEvictsBoundBucketSession:
     def test_login_binding_is_evicted_at_teardown(self, tmp_path: Path) -> None:
         """A real login binds a real session inside, and nothing survives outside."""
         from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
-        from cadrumo.tests.user_profile import register_cli_profile
+        from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
         assert current_active_bucket_session() is None, "a prior test leaked a bucket session"
 
@@ -409,7 +410,7 @@ class TestSandboxEvictsBoundBucketSession:
         :func:`execute_sequence` raises.
         """
         from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
-        from cadrumo.tests.user_profile import register_cli_profile
+        from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
         with sequence_sandbox(sequence_id="runner-session-leak-a", sandbox_root=tmp_path / "leak-a"):
             register_cli_profile(label="me")

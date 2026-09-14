@@ -1,7 +1,7 @@
-cadrumo.application.modelo._reconcile_casilla module
+cadrumo.application.modelo.reconcile_casilla module
 ====================================================
 
-.. automodule:: cadrumo.application.modelo._reconcile_casilla
+.. automodule:: cadrumo.application.modelo.reconcile_casilla
    :members:
    :show-inheritance:
    :ignore-module-all:

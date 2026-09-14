@@ -35,7 +35,6 @@ Submodules
    cadrumo.application.filing.export_verification
    cadrumo.application.filing.history_models
    cadrumo.application.filing.history_repository
-   cadrumo.application.filing.persistence_wiring
    cadrumo.application.filing.producer_snapshot
    cadrumo.application.filing.projection
    cadrumo.application.filing.record_renderer

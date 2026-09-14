@@ -1,7 +1,7 @@
-cadrumo.application.modelo._prorrata_regularizacion_advisory module
+cadrumo.application.modelo.prorrata_regularizacion_advisory module
 ===================================================================
 
-.. automodule:: cadrumo.application.modelo._prorrata_regularizacion_advisory
+.. automodule:: cadrumo.application.modelo.prorrata_regularizacion_advisory
    :members:
    :show-inheritance:
    :ignore-module-all:
