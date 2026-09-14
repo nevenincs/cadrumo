@@ -519,6 +519,9 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
         if not isinstance(raw, Mapping):
             continue
         baseline_id = _declared_baseline(raw)
+        casilla_only_baseline = isinstance(raw.get("casilla_storage_baseline"), str) and not isinstance(
+            raw.get("predecessor"), str
+        )
         candidate_id = baseline_id or (previous if _technical_root(raw) else None)
         for spec in CANONICAL_FAMILY_SPECS:
             authored = _members(raw, spec.section)
@@ -588,13 +591,19 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                     }
                                 )
                         elif equal:
+                            reason = "authored value equals hydrated baseline"
+                            if casilla_only_baseline and spec.section != CASILLAS_FAMILY:
+                                reason = "family delta support absent; casilla baseline does not compact this family"
+                                blocked.append(
+                                    {"revision": revision_id, "family": spec.section, "reason": "delta_support_missing"}
+                                )
                             unresolved.append(
                                 {
                                     "revision": revision_id,
                                     "family": spec.section,
                                     "member": identity,
                                     "fields": sorted(equal),
-                                    "reason": "authored value equals hydrated baseline",
+                                    "reason": reason,
                                 }
                             )
                     if authored and not spec.inherited and spec.inheritance is not FamilyInheritanceMode.PER_EDITION:
