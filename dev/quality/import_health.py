@@ -169,8 +169,8 @@ def build_import_health(
     failed_reasons: list[str] = []
     if blocking_findings:
         failed_reasons.append(f"{len(blocking_findings)} hard import-authority finding(s)")
-    load_failures = int(loadability.get("failed", 0))
-    load_root_causes = int(loadability.get("root_cause_count", load_failures))
+    load_failures = _loadability_int(loadability, "failed")
+    load_root_causes = _loadability_int(loadability, "root_cause_count", load_failures)
     if load_failures:
         failed_reasons.append(
             f"{load_failures} governed module load failure(s) across {load_root_causes} root-cause group(s)"
@@ -264,12 +264,12 @@ def build_import_health(
         "headline": headline,
         "loadability": {
             "artifact": loadability.get("artifact"),
-            "attempted": int(loadability.get("attempted", 0)),
+            "attempted": _loadability_int(loadability, "attempted"),
             "failed": load_failures,
-            "failure_sample": list(loadability.get("failures", ()))[:20],
-            "loaded": int(loadability.get("loaded", 0)),
+            "failure_sample": _loadability_items(loadability, "failures")[:20],
+            "loaded": _loadability_int(loadability, "loaded"),
             "root_cause_count": load_root_causes,
-            "root_cause_sample": list(loadability.get("root_causes", ()))[:20],
+            "root_cause_sample": _loadability_items(loadability, "root_causes")[:20],
             "scope": loadability.get("scope", "unavailable"),
             "status": "unavailable" if load_returncode not in {0, 1} else "failed" if load_failures else "loaded",
             "target_digest": loadability.get("target_digest"),
