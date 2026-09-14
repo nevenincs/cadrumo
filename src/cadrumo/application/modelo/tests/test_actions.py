@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
 
 from ....core.aggregation import BindingSourceKind
@@ -443,26 +444,28 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
     deliberately not asserted verbatim so a translation edit cannot red this
     contract.
     """
-    work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
-    target = _minimal_calculation_revision(work_unit)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
+        target = _minimal_calculation_revision(work_unit)
 
-    findings, _resolved, _missing, failures_by_finding_id = _collect_revision_verification_findings(
-        work_unit=work_unit,
-        target=target,
-        profile=_resident_profile(),
-        transaction_repository=None,
-    )
-    assert len(findings) == 1
-    finding = findings[0]
-    assert finding.message_locale_key == "application.modelo.findings.registry_snapshot_unresolved"
-    assert dict(finding.message_facts) == {"modelo": "999", "filing_year": 2026, "period": "0A"}
-    failure = failures_by_finding_id[id(finding)]
-    assert failure.identity == (
-        "modelo.work.verify",
-        "modelo.work.verify.registry_snapshot.available",
-        "modelo.work.verify.registry_snapshot.unavailable",
-    )
-    assert failure.verdict.action is None
+        findings, _resolved, _missing, failures_by_finding_id = _collect_revision_verification_findings(
+            work_unit=work_unit,
+            target=target,
+            profile=_resident_profile(),
+            transaction_repository=None,
+            operation=_authority_operation_for_test,
+        )
+        assert len(findings) == 1
+        finding = findings[0]
+        assert finding.message_locale_key == "application.modelo.findings.registry_snapshot_unresolved"
+        assert dict(finding.message_facts) == {"modelo": "999", "filing_year": 2026, "period": "0A"}
+        failure = failures_by_finding_id[id(finding)]
+        assert failure.identity == (
+            "modelo.work.verify",
+            "modelo.work.verify.registry_snapshot.available",
+            "modelo.work.verify.registry_snapshot.unavailable",
+        )
+        assert failure.verdict.action is None
 
 
 # ---------------------------------------------------------------------------

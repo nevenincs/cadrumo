@@ -17,6 +17,8 @@ from typing import Any
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ..profile_binding import inject_derived_anualidades_eligibility_facts
 
@@ -35,54 +37,69 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 
 def test_default_eligible_when_no_descendants() -> None:
-    fact_index: dict[str, object] = {}
-    fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] is True
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        fact_index: dict[str, object] = {}
+        fact_index_narrowed: Any = fact_index
+        inject_derived_anualidades_eligibility_facts(
+            fact_index_narrowed, _snapshot(2024), operation=_authority_operation_for_test
+        )
+        assert fact_index[_key(2024)] is True
 
 
 def test_flag_off_when_custody_shared() -> None:
-    fact_index: dict[str, object] = {
-        "renta_family.descendiente.0.birth_date": "2015-05-01",
-        "renta_family.descendiente.0.custodia_compartida": "true",
-    }
-    fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] is False
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        fact_index: dict[str, object] = {
+            "renta_family.descendiente.0.birth_date": "2015-05-01",
+            "renta_family.descendiente.0.custodia_compartida": "true",
+        }
+        fact_index_narrowed: Any = fact_index
+        inject_derived_anualidades_eligibility_facts(
+            fact_index_narrowed, _snapshot(2024), operation=_authority_operation_for_test
+        )
+        assert fact_index[_key(2024)] is False
 
 
 def test_flag_eligible_when_custody_not_shared() -> None:
-    fact_index: dict[str, object] = {
-        "renta_family.descendiente.0.birth_date": "2015-05-01",
-        "renta_family.descendiente.0.custodia_compartida": "false",
-    }
-    fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] is True
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        fact_index: dict[str, object] = {
+            "renta_family.descendiente.0.birth_date": "2015-05-01",
+            "renta_family.descendiente.0.custodia_compartida": "false",
+        }
+        fact_index_narrowed: Any = fact_index
+        inject_derived_anualidades_eligibility_facts(
+            fact_index_narrowed, _snapshot(2024), operation=_authority_operation_for_test
+        )
+        assert fact_index[_key(2024)] is True
 
 
 def test_shared_custody_ignored_when_descendant_not_eligible_ordinary() -> None:
-    # A non-cohabiting descendant is not eligible for the Art. 58.1 ordinary
-    # mínimo, so a shared-custody flag on that row does not negate eligibility.
-    fact_index: dict[str, object] = {
-        "renta_family.descendiente.0.birth_date": "2015-05-01",
-        "renta_family.descendiente.0.custodia_compartida": "true",
-        "renta_family.descendiente.0.convivencia": "false",
-    }
-    fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] is True
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        # A non-cohabiting descendant is not eligible for the Art. 58.1 ordinary
+        # mínimo, so a shared-custody flag on that row does not negate eligibility.
+        fact_index: dict[str, object] = {
+            "renta_family.descendiente.0.birth_date": "2015-05-01",
+            "renta_family.descendiente.0.custodia_compartida": "true",
+            "renta_family.descendiente.0.convivencia": "false",
+        }
+        fact_index_narrowed: Any = fact_index
+        inject_derived_anualidades_eligibility_facts(
+            fact_index_narrowed, _snapshot(2024), operation=_authority_operation_for_test
+        )
+        assert fact_index[_key(2024)] is True
 
 
 def test_untouched_for_out_of_scope_year() -> None:
-    # Modelo 100 publishes no 2019 revision, so the out-of-scope year is
-    # exercised by re-stamping a real snapshot's filing_year rather than by
-    # asking the authority for a revision that does not exist.
-    out_of_scope = _snapshot(2024).model_copy(update={"filing_year": 2019})
-    fact_index: dict[str, object] = {}
-    fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, out_of_scope)
-    assert _key(2019) not in fact_index
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        # Modelo 100 publishes no 2019 revision, so the out-of-scope year is
+        # exercised by re-stamping a real snapshot's filing_year rather than by
+        # asking the authority for a revision that does not exist.
+        out_of_scope = _snapshot(2024).model_copy(update={"filing_year": 2019})
+        fact_index: dict[str, object] = {}
+        fact_index_narrowed: Any = fact_index
+        inject_derived_anualidades_eligibility_facts(
+            fact_index_narrowed, out_of_scope, operation=_authority_operation_for_test
+        )
+        assert _key(2019) not in fact_index
 
 
 def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> None:
@@ -99,15 +116,21 @@ def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> 
     ``True``. Seed and computation therefore differ, and the assertion proves
     which one survived rather than restating the seed.
     """
-    fact_index: dict[str, object] = {_key(2024): False}
-    fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] is True
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        fact_index: dict[str, object] = {_key(2024): False}
+        fact_index_narrowed: Any = fact_index
+        inject_derived_anualidades_eligibility_facts(
+            fact_index_narrowed, _snapshot(2024), operation=_authority_operation_for_test
+        )
+        assert fact_index[_key(2024)] is True
 
 
 @pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
 def test_all_in_scope_years_default_eligible(year: int) -> None:
-    fact_index: dict[str, object] = {}
-    fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(year))
-    assert fact_index[_key(year)] is True
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        fact_index: dict[str, object] = {}
+        fact_index_narrowed: Any = fact_index
+        inject_derived_anualidades_eligibility_facts(
+            fact_index_narrowed, _snapshot(year), operation=_authority_operation_for_test
+        )
+        assert fact_index[_key(year)] is True

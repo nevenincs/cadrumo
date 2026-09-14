@@ -25,6 +25,8 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.i18n.translatable import Translatable as tr
 from ..commands import (
     _CCAA_CHOICE_VALUES,
@@ -332,32 +334,36 @@ def test_wizard_command_metadata_keeps_signature_and_annotations_in_lockstep() -
 
 def test_build_wizard_command_exposes_resolvable_annotation_metadata() -> None:
     """Future-annotation source policy does not erase dynamic Typer metadata."""
-    command = build_wizard_command(
-        _flow(_question(qid="activity", widget=WizardWidget.TEXT)),
-        mode="create",
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        command = build_wizard_command(
+            _flow(_question(qid="activity", widget=WizardWidget.TEXT)),
+            mode="create",
+            operation=_authority_operation_for_test,
+        )
 
-    signature = inspect.signature(command)
-    raw_annotations = inspect.get_annotations(command, eval_str=False)
-    resolved_annotations = typing.get_type_hints(command, include_extras=True)
+        signature = inspect.signature(command)
+        raw_annotations = inspect.get_annotations(command, eval_str=False)
+        resolved_annotations = typing.get_type_hints(command, include_extras=True)
 
-    assert tuple(raw_annotations) == tuple(signature.parameters)
-    assert tuple(resolved_annotations) == tuple(signature.parameters)
-    assert resolved_annotations["activity"] == signature.parameters["activity"].annotation
-    assert typing.get_origin(resolved_annotations["activity"]) is typing.Annotated
-    assert typing.get_args(resolved_annotations["activity"])[1].help is not None
+        assert tuple(raw_annotations) == tuple(signature.parameters)
+        assert tuple(resolved_annotations) == tuple(signature.parameters)
+        assert resolved_annotations["activity"] == signature.parameters["activity"].annotation
+        assert typing.get_origin(resolved_annotations["activity"]) is typing.Annotated
+        assert typing.get_args(resolved_annotations["activity"])[1].help is not None
 
 
 def test_build_wizard_command_is_discoverable_by_typer() -> None:
     """Typer can register the generated signature and expose its flag."""
-    command = build_wizard_command(
-        _flow(_question(qid="activity", widget=WizardWidget.TEXT)),
-        mode="create",
-    )
-    app = typer.Typer()
-    app.command()(command)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        command = build_wizard_command(
+            _flow(_question(qid="activity", widget=WizardWidget.TEXT)),
+            mode="create",
+            operation=_authority_operation_for_test,
+        )
+        app = typer.Typer()
+        app.command()(command)
 
-    result = CliRunner().invoke(app, ["--help"])
+        result = CliRunner().invoke(app, ["--help"])
 
-    assert result.exit_code == 0
-    assert "--activity" in result.stdout
+        assert result.exit_code == 0
+        assert "--activity" in result.stdout

@@ -29,6 +29,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 
 from ....domain.iva.schema import EUMemberState, IvaCategory
@@ -91,10 +92,13 @@ def _row(
 @pytest.mark.parametrize("category", _EXPORT_FAMILIES)
 def test_an_export_placing_the_counterparty_nowhere_is_refused(category: IvaCategory) -> None:
     """The defect itself: no establishment recorded, and the supply zero-rated anyway."""
-    issue = validate_iva_ledger_counterparty_category(_row(category=category, counterparty_country=None))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        issue = validate_iva_ledger_counterparty_category(
+            _row(category=category, counterparty_country=None), operation=_authority_operation_for_test
+        )
 
-    assert issue is not None, "an unplaced counterparty was granted export relief"
-    assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT
+        assert issue is not None, "an unplaced counterparty was granted export relief"
+        assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT
 
 
 @pytest.mark.parametrize("category", _EXPORT_FAMILIES)
@@ -107,10 +111,13 @@ def test_an_iso_unassigned_code_establishes_nothing(category: IvaCategory, unass
     the member-state field could not hold them -- and they arrived as the same
     blank a genuine export produced.
     """
-    issue = validate_iva_ledger_counterparty_category(_row(category=category, counterparty_country=unassigned))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        issue = validate_iva_ledger_counterparty_category(
+            _row(category=category, counterparty_country=unassigned), operation=_authority_operation_for_test
+        )
 
-    assert issue is not None, f"{unassigned} placed a counterparty outside the Union"
-    assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT
+        assert issue is not None, f"{unassigned} placed a counterparty outside the Union"
+        assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT
 
 
 @pytest.mark.parametrize("category", _EXPORT_FAMILIES)
@@ -121,7 +128,13 @@ def test_a_genuine_third_country_export_still_classifies(category: IvaCategory) 
     legitimate exports would produce valid output, no refusal, and no signal to
     the taxpayer.
     """
-    assert validate_iva_ledger_counterparty_category(_row(category=category, counterparty_country="US")) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            validate_iva_ledger_counterparty_category(
+                _row(category=category, counterparty_country="US"), operation=_authority_operation_for_test
+            )
+            is None
+        )
 
 
 @pytest.mark.parametrize("category", _EXPORT_FAMILIES)
@@ -134,9 +147,10 @@ def test_an_eu_iva_number_does_not_disqualify_a_third_country_export(category: I
     identification-for-establishment substitution the intra-community branch
     exists to prevent, run in the opposite direction.
     """
-    row = _row(category=category, counterparty_country="US", identification_state=require_eu_member_state("IE"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        row = _row(category=category, counterparty_country="US", identification_state=require_eu_member_state("IE"))
 
-    assert validate_iva_ledger_counterparty_category(row) is None
+        assert validate_iva_ledger_counterparty_category(row, operation=_authority_operation_for_test) is None
 
 
 @pytest.mark.parametrize("category", _EXPORT_FAMILIES)
@@ -152,9 +166,10 @@ def test_a_country_our_own_vocabulary_omits_is_spared(category: IvaCategory) -> 
     boundary rather than reddening the day that country is admitted, which would
     report a fixture change as a behaviour change.
     """
-    row = _row(category=category, counterparty_country=an_uncatalogued_alpha2())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        row = _row(category=category, counterparty_country=an_uncatalogued_alpha2())
 
-    assert validate_iva_ledger_counterparty_category(row) is None
+        assert validate_iva_ledger_counterparty_category(row, operation=_authority_operation_for_test) is None
 
 
 @pytest.mark.parametrize("category", _EXPORT_FAMILIES)
@@ -165,10 +180,13 @@ def test_an_eu_established_counterparty_keeps_its_own_refusal(category: IvaCateg
     category is wrong, the other says a fact is missing. Collapsing them would
     send half the population to correct the wrong thing.
     """
-    issue = validate_iva_ledger_counterparty_category(_row(category=category, counterparty_country="DE"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        issue = validate_iva_ledger_counterparty_category(
+            _row(category=category, counterparty_country="DE"), operation=_authority_operation_for_test
+        )
 
-    assert issue is not None
-    assert issue.reason is IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION
+        assert issue is not None
+        assert issue.reason is IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION
 
 
 def test_the_intra_community_branch_is_untouched_by_the_export_rule() -> None:
@@ -178,18 +196,19 @@ def test_the_intra_community_branch_is_untouched_by_the_export_rule() -> None:
     State and says nothing about its sede, so recording a country must neither
     satisfy nor break that branch.
     """
-    unidentified = _row(category=IvaCategory("intra_community_supply"), counterparty_country="US")
-    issue = validate_iva_ledger_counterparty_category(unidentified)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        unidentified = _row(category=IvaCategory("intra_community_supply"), counterparty_country="US")
+        issue = validate_iva_ledger_counterparty_category(unidentified, operation=_authority_operation_for_test)
 
-    assert issue is not None, "a country was accepted in place of an IVA identification"
-    assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
+        assert issue is not None, "a country was accepted in place of an IVA identification"
+        assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
 
-    identified = _row(
-        category=IvaCategory("intra_community_supply"),
-        counterparty_country=None,
-        identification_state=require_eu_member_state("DE"),
-    )
-    assert validate_iva_ledger_counterparty_category(identified) is None
+        identified = _row(
+            category=IvaCategory("intra_community_supply"),
+            counterparty_country=None,
+            identification_state=require_eu_member_state("DE"),
+        )
+        assert validate_iva_ledger_counterparty_category(identified, operation=_authority_operation_for_test) is None
 
 
 def test_the_declared_emission_set_matches_what_the_gate_actually_emits() -> None:
@@ -198,18 +217,20 @@ def test_the_declared_emission_set_matches_what_the_gate_actually_emits() -> Non
     A reason declared but unreachable, or emitted but undeclared, would break
     the preflight totality partition that keys operator messages off this set.
     """
-    observed: set[IvaLedgerAggregationIssueReason] = set()
-    probes = (
-        (IvaCategory("intra_community_supply"), None, None),
-        (IvaCategory("intra_community_supply"), None, require_eu_member_state("ES")),
-        (IvaCategory("export_third_country_zero_rated"), "DE", None),
-        (IvaCategory("export_third_country_zero_rated"), None, None),
-    )
-    for category, country, identification in probes:
-        issue = validate_iva_ledger_counterparty_category(
-            _row(category=category, counterparty_country=country, identification_state=identification),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observed: set[IvaLedgerAggregationIssueReason] = set()
+        probes = (
+            (IvaCategory("intra_community_supply"), None, None),
+            (IvaCategory("intra_community_supply"), None, require_eu_member_state("ES")),
+            (IvaCategory("export_third_country_zero_rated"), "DE", None),
+            (IvaCategory("export_third_country_zero_rated"), None, None),
         )
-        if issue is not None:
-            observed.add(issue.reason)
+        for category, country, identification in probes:
+            issue = validate_iva_ledger_counterparty_category(
+                _row(category=category, counterparty_country=country, identification_state=identification),
+                operation=_authority_operation_for_test,
+            )
+            if issue is not None:
+                observed.add(issue.reason)
 
-    assert observed == IVA_LEDGER_COUNTERPARTY_GATE_REASONS
+        assert observed == IVA_LEDGER_COUNTERPARTY_GATE_REASONS

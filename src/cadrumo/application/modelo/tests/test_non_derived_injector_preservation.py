@@ -40,6 +40,8 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..profile_binding import (
     _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY,
     _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY,
@@ -98,15 +100,16 @@ def test_marriage_facts_preserve_a_stored_value() -> None:
 
 
 def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
-    seeded: dict[str, Any] = {**_common_regime_profile(), _STATE_ATTRIBUTION: _UNREACHABLE_RATIO}
-    _inject_derived_state_attribution_facts(seeded)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        seeded: dict[str, Any] = {**_common_regime_profile(), _STATE_ATTRIBUTION: _UNREACHABLE_RATIO}
+        _inject_derived_state_attribution_facts(seeded, operation=_authority_operation_for_test)
 
-    assert seeded[_STATE_ATTRIBUTION] == Decimal("100")
+        assert seeded[_STATE_ATTRIBUTION] == Decimal("100")
 
-    computed: dict[str, Any] = _common_regime_profile()
-    _inject_derived_state_attribution_facts(computed)
-    assert _STATE_ATTRIBUTION in computed
-    assert computed[_STATE_ATTRIBUTION] != _UNREACHABLE_RATIO
+        computed: dict[str, Any] = _common_regime_profile()
+        _inject_derived_state_attribution_facts(computed, operation=_authority_operation_for_test)
+        assert _STATE_ATTRIBUTION in computed
+        assert computed[_STATE_ATTRIBUTION] != _UNREACHABLE_RATIO
 
 
 # ---------------------------------------------------------------------------
@@ -123,15 +126,16 @@ def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
 
 def test_madrid_count_preserves_a_stored_value_for_a_non_madrid_filer() -> None:
     """Outside Madrid the injector only defaults, so a stored value survives."""
-    seeded: dict[str, Any] = {
-        "tax_residence.ccaa": "cataluna",
-        _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
-    }
-    inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        seeded: dict[str, Any] = {
+            "tax_residence.ccaa": "cataluna",
+            _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
+        }
+        inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR, operation=_authority_operation_for_test)
 
-    assert seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] == _UNREACHABLE_COUNT
-    # The neutral default still lands on the sibling key it does own.
-    assert seeded[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] == Decimal("0")
+        assert seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] == _UNREACHABLE_COUNT
+        # The neutral default still lands on the sibling key it does own.
+        assert seeded[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] == Decimal("0")
 
 
 def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
@@ -140,42 +144,44 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
     The override direction of the same injector. Pinned so the preservation
     assertion above cannot be read as "this key is never computed".
     """
-    seeded: dict[str, Any] = {
-        "tax_residence.ccaa": "madrid",
-        "renta_taxpayer.marital_status": "1",
-        "renta_filing.declaration_type": "1",
-        "renta_family.descendiente.0.birth_date": f"{_MADRID_YEAR}-03-01",
-        "renta_family.descendiente.0.convivencia": "true",
-        _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
-    }
-    inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        seeded: dict[str, Any] = {
+            "tax_residence.ccaa": "madrid",
+            "renta_taxpayer.marital_status": "1",
+            "renta_filing.declaration_type": "1",
+            "renta_family.descendiente.0.birth_date": f"{_MADRID_YEAR}-03-01",
+            "renta_family.descendiente.0.convivencia": "true",
+            _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
+        }
+        inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR, operation=_authority_operation_for_test)
 
-    resolved = seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY]
-    assert isinstance(resolved, Decimal)
-    assert resolved != _UNREACHABLE_COUNT, "a determinable Madrid unit must overwrite the stored count"
-    assert resolved > 0
+        resolved = seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY]
+        assert isinstance(resolved, Decimal)
+        assert resolved != _UNREACHABLE_COUNT, "a determinable Madrid unit must overwrite the stored count"
+        assert resolved > 0
 
 
 def test_unidad_familiar_base_preserves_a_stored_value() -> None:
     """The sibling Madrid key is default-only and never overwritten."""
-    determinable_madrid: dict[str, Any] = {
-        "tax_residence.ccaa": "madrid",
-        "renta_taxpayer.marital_status": "1",
-        "renta_filing.declaration_type": "1",
-    }
-    seeded: dict[str, Any] = {**determinable_madrid, _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY: _UNREACHABLE_COUNT}
-    inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        determinable_madrid: dict[str, Any] = {
+            "tax_residence.ccaa": "madrid",
+            "renta_taxpayer.marital_status": "1",
+            "renta_filing.declaration_type": "1",
+        }
+        seeded: dict[str, Any] = {**determinable_madrid, _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY: _UNREACHABLE_COUNT}
+        inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR, operation=_authority_operation_for_test)
 
-    assert seeded[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] == _UNREACHABLE_COUNT
+        assert seeded[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] == _UNREACHABLE_COUNT
 
-    # Positive control, in this test rather than borrowed from a sibling: the
-    # injector does write this key when it is absent, and writes something
-    # different, so the survival above is the setdefault deferring rather than
-    # the injector never touching the key at all.
-    computed: dict[str, Any] = dict(determinable_madrid)
-    inject_derived_autonomic_deduccion_facts(computed, _MADRID_YEAR)
-    assert _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY in computed
-    assert computed[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] != _UNREACHABLE_COUNT
+        # Positive control, in this test rather than borrowed from a sibling: the
+        # injector does write this key when it is absent, and writes something
+        # different, so the survival above is the setdefault deferring rather than
+        # the injector never touching the key at all.
+        computed: dict[str, Any] = dict(determinable_madrid)
+        inject_derived_autonomic_deduccion_facts(computed, _MADRID_YEAR, operation=_authority_operation_for_test)
+        assert _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY in computed
+        assert computed[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] != _UNREACHABLE_COUNT
 
 
 # ---------------------------------------------------------------------------

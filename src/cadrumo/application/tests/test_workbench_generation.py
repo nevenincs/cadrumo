@@ -14,11 +14,16 @@ from pydantic import ValidationError
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ...domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from .. import workbench_generation as generation_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
@@ -69,8 +74,8 @@ _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 @pytest.fixture
 def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Pin one compiled generation for the production workbench door."""
-    with compiled_bundled_authority().operation() as operation:
+    """Pin one published generation for the production workbench door."""
+    with bundled_indexed_authority().operation() as operation:
         yield operation
 
 
@@ -78,6 +83,18 @@ def _test_censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
+
+
+def _profile_record(
+    operation: PinnedAuthorityOperation, *, facts: tuple[UserProfileFact, ...] = ()
+) -> UserProfileRecord:
+    """Create the incomplete profile fixture under the operation's schema authority."""
+    return create_user_profile_record(
+        context=operation.profile_create_context(),
+        profile_id=_PROFILE_ID,
+        setup_state=ProfileSetupState.INCOMPLETE,
+        facts=facts,
     )
 
 
@@ -196,7 +213,7 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
 ) -> None:
     """The production door verifies real local authorities without fake fixtures."""
 
-    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    profile = _Repository(_profile_record(authority_operation))
     work_units = _Repository(WorkUnitCatalogue())
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
@@ -259,7 +276,7 @@ def test_secure_profile_provider_contains_rejected_declarations_projection(
         updated_at=_NOW,
     )
     duplicate_address = unit.model_copy(update={"work_unit_id": "a" * 64})
-    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    profile = _Repository(_profile_record(authority_operation))
     work_units = _Repository(
         WorkUnitCatalogue.model_construct(
             work_units={unit.work_unit_id: unit, duplicate_address.work_unit_id: duplicate_address}
@@ -300,9 +317,8 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
     from ..aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
     profile = _Repository(
-        UserProfileRecord(
-            profile_id=_PROFILE_ID,
-            setup_state=ProfileSetupState.INCOMPLETE,
+        _profile_record(
+            authority_operation,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="00000000T"),
                 UserProfileFact(path="contact.fiscal_address", value="x" * 257),
@@ -363,7 +379,7 @@ def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error(
     """A malformed subject reaches the real projector and is contained at the door."""
     from ..aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
-    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    profile = _Repository(_profile_record(authority_operation))
     work_units = _Repository(WorkUnitCatalogue())
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
@@ -412,7 +428,7 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A cross-repository capture is never published after a revision changes."""
-    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    profile = _Repository(_profile_record(authority_operation))
     work_units = _Repository(WorkUnitCatalogue(), revisions=("work-1", "work-2"))
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
@@ -524,7 +540,7 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
-    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    profile = _Repository(_profile_record(authority_operation))
     work_units = _Repository(WorkUnitCatalogue())
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
@@ -563,7 +579,7 @@ def test_a_quiet_ledger_publishes_its_generation(
     from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
-    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    profile = _Repository(_profile_record(authority_operation))
     work_units = _Repository(WorkUnitCatalogue())
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())

@@ -21,6 +21,7 @@ what "did this spend arrive" means.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -34,6 +35,7 @@ from dev.registry.tests.profile_schema_support import (
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -42,6 +44,13 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..profile_binding import ProfileBindingResolutionError, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for each guardería resolver path."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000613"
 _T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)
@@ -57,7 +66,10 @@ def _snapshot() -> RegistrySnapshot:
     return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
 
 
-def _resolved(*descendientes: DescendantInfo) -> dict[str, Decimal]:
+def _resolved(
+    *descendientes: DescendantInfo,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, Decimal]:
     """Resolve the profile-sourced bindings for a record carrying *descendientes*."""
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
@@ -69,7 +81,12 @@ def _resolved(*descendientes: DescendantInfo) -> dict[str, Decimal]:
         updated_at=_T0,
         context=_profile_creation_context_for_test(),
     )
-    resolution = resolve_profile_sourced_bindings(_snapshot(), bucket_id=_BUCKET, profile_record=record)
+    resolution = resolve_profile_sourced_bindings(
+        _snapshot(),
+        bucket_id=_BUCKET,
+        profile_record=record,
+        operation=operation,
+    )
     return dict(resolution.binding_values)
 
 
@@ -77,7 +94,7 @@ def _monthly(raw: str) -> tuple[object, ...]:
     return parse_guarderia_mensual(raw, field="probe")
 
 
-def test_a_monthly_map_reaches_the_spend_binding() -> None:
+def test_a_monthly_map_reaches_the_spend_binding(authority_operation: PinnedAuthorityOperation) -> None:
     """The regression this file exists for.
 
     A child under three for the whole period, with spend declared ONLY as a
@@ -89,21 +106,23 @@ def test_a_monthly_map_reaches_the_spend_binding() -> None:
         gastos_guarderia_mensuales=_monthly("1-4:180"),  # type: ignore[arg-type]
     )
 
-    resolved = _resolved(child)
+    resolved = _resolved(child, operation=authority_operation)
 
     assert resolved[_SPEND_BINDING] == Decimal("720")
 
 
-def test_the_annual_figure_still_reaches_the_spend_binding() -> None:
+def test_the_annual_figure_still_reaches_the_spend_binding(authority_operation: PinnedAuthorityOperation) -> None:
     """The path every existing profile uses is unchanged by the delegation."""
     child = DescendantInfo(birth_date=date(2022, 6, 1), gastos_guarderia_euros=900)
 
-    resolved = _resolved(child)
+    resolved = _resolved(child, operation=authority_operation)
 
     assert resolved[_SPEND_BINDING] == Decimal("900")
 
 
-def test_every_declared_month_reaches_the_binding_in_the_turning_three_period() -> None:
+def test_every_declared_month_reaches_the_binding_in_the_turning_three_period(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The third birthday is not a boundary for the Art. 81.2 increment.
 
     "los gastos incurridos con posterioridad al cumplimiento de dicha edad"
@@ -120,12 +139,14 @@ def test_every_declared_month_reaches_the_binding_in_the_turning_three_period() 
         gastos_guarderia_mensuales=_monthly("1-4:180;5-8:210"),  # type: ignore[arg-type]
     )
 
-    resolved = _resolved(child)
+    resolved = _resolved(child, operation=authority_operation)
 
     assert resolved[_SPEND_BINDING] == Decimal("1560")  # 4x180 + 4x210
 
 
-def test_an_annual_only_figure_contributes_nothing_in_the_turning_three_period() -> None:
+def test_an_annual_only_figure_contributes_nothing_in_the_turning_three_period(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """An annual total cannot be apportioned to a window whose upper edge is not derived.
 
     The reason is the closing month, not the birthday, which draws no line: the
@@ -138,12 +159,14 @@ def test_an_annual_only_figure_contributes_nothing_in_the_turning_three_period()
     """
     child = DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_euros=2400)
 
-    resolved = _resolved(child)
+    resolved = _resolved(child, operation=authority_operation)
 
     assert resolved[_SPEND_BINDING] == Decimal("0")
 
 
-def test_the_turning_three_child_is_counted_in_the_cap_population() -> None:
+def test_the_turning_three_child_is_counted_in_the_cap_population(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Otherwise the cap term zeroes exactly the spend the extension admits.
 
     ``0613 = min(gastos_reales, count x 1000, cotizaciones)``. A turning-three
@@ -156,25 +179,27 @@ def test_the_turning_three_child_is_counted_in_the_cap_population() -> None:
         gastos_guarderia_mensuales=_monthly("5-8:210"),  # type: ignore[arg-type]
     )
 
-    resolved = _resolved(child)
+    resolved = _resolved(child, operation=authority_operation)
 
     assert resolved[_COUNT_BINDING] == Decimal("1")
 
 
-def test_a_child_past_the_turning_three_period_contributes_nothing_and_is_not_counted() -> None:
+def test_a_child_past_the_turning_three_period_contributes_nothing_and_is_not_counted(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The widening stops at the extension's edge; it is not an open door."""
     child = DescendantInfo(
         birth_date=date(2019, 4, 15),
         gastos_guarderia_mensuales=_monthly("1-12:210"),  # type: ignore[arg-type]
     )
 
-    resolved = _resolved(child)
+    resolved = _resolved(child, operation=authority_operation)
 
     assert resolved[_SPEND_BINDING] == Decimal("0")
     assert resolved[_COUNT_BINDING] == Decimal("0")
 
 
-def test_a_non_cohabiting_child_contributes_nothing() -> None:
+def test_a_non_cohabiting_child_contributes_nothing(authority_operation: PinnedAuthorityOperation) -> None:
     """Cohabitation gates the whole Art. 58 limb, monthly map or not."""
     child = DescendantInfo(
         birth_date=date(2022, 6, 1),
@@ -182,13 +207,15 @@ def test_a_non_cohabiting_child_contributes_nothing() -> None:
         gastos_guarderia_mensuales=_monthly("1-4:180"),  # type: ignore[arg-type]
     )
 
-    resolved = _resolved(child)
+    resolved = _resolved(child, operation=authority_operation)
 
     assert resolved[_SPEND_BINDING] == Decimal("0")
     assert resolved[_COUNT_BINDING] == Decimal("0")
 
 
-def test_mixed_households_sum_each_child_under_its_own_rule() -> None:
+def test_mixed_households_sum_each_child_under_its_own_rule(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """One profile, three children, three different Art. 81.2 outcomes.
 
     Proves the terms are per-child and then summed, rather than one rule applied
@@ -204,13 +231,15 @@ def test_mixed_households_sum_each_child_under_its_own_rule() -> None:
         gastos_guarderia_mensuales=_monthly("1-4:180;5-8:210"),  # type: ignore[arg-type]
     )
 
-    resolved = _resolved(under_three_monthly, under_three_annual, turning_three)
+    resolved = _resolved(under_three_monthly, under_three_annual, turning_three, operation=authority_operation)
 
     assert resolved[_SPEND_BINDING] == Decimal("2880")  # 720 + 600 + 1560
     assert resolved[_COUNT_BINDING] == Decimal("3")
 
 
-def test_an_unparseable_stored_birth_date_still_refuses_by_index() -> None:
+def test_an_unparseable_stored_birth_date_still_refuses_by_index(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The named refusal must survive the fold onto the canonical record.
 
     Before the delegation this loop carried its own diagnostic naming the row,
@@ -231,4 +260,9 @@ def test_an_unparseable_stored_birth_date_still_refuses_by_index() -> None:
     )
 
     with pytest.raises(ProfileBindingResolutionError, match=re.escape("renta_family.descendiente.0.birth_date")):
-        resolve_profile_sourced_bindings(_snapshot(), bucket_id=_BUCKET, profile_record=record)
+        resolve_profile_sourced_bindings(
+            _snapshot(),
+            bucket_id=_BUCKET,
+            profile_record=record,
+            operation=authority_operation,
+        )

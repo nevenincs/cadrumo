@@ -33,9 +33,8 @@ from ...core.config import Settings, load_settings
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from .action_ports import LedgerActionPorts
 from .extraction_draft_store import ExtractionDraftDocument, write_extraction_draft
 from .invoice_draft_records import InvoiceDraft
 from .llm_classification import (
@@ -53,6 +52,7 @@ from .llm_classification_ports import (
     OperatorIvaDerivationResult,
 )
 from .models import ManualLedgerTransactionResult
+from .protocols import BucketEventHistoryCoCommitWriterProtocol
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -201,8 +201,7 @@ def execute_reviewed_decision(
     business_pct: Decimal | None = None,
     reason: str = "",
     actor: str = "operator",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: LedgerActionPorts | None = None,
     occurred_at: datetime | None = None,
     settings: Settings | None = None,
 ) -> LlmReviewResult:
@@ -223,11 +222,9 @@ def execute_reviewed_decision(
     """
     source_command = origin.source_command
 
-    if not isinstance(suggestion, ReviewedInvoiceDraft) and (
-        transaction_repository is None or bucket_event_repository is None
-    ):
+    if not isinstance(suggestion, ReviewedInvoiceDraft) and ports is None:
         raise TransactionValidationError(
-            "LLM review persistence requires caller-composed transaction and bucket-event repositories",
+            "LLM review persistence requires caller-composed ledger action ports",
             context={"origin": origin.value},
         )
 
@@ -243,17 +240,18 @@ def execute_reviewed_decision(
                 bucket_id=bucket_id,
                 reason=reason,
                 actor=actor,
-                bucket_event_repository=bucket_event_repository,
+                bucket_event_repository=ports.bucket_event_repository if ports is not None else None,
                 occurred_at=occurred_at,
             )
+        assert ports is not None
         return reject_llm_suggestion(
             suggestion,
             bucket_id=bucket_id,
             reason=reason,
             actor=actor,
             source_command=source_command,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=bucket_event_repository,
+            transaction_repository=ports.transaction_repository,
+            bucket_event_repository=ports.bucket_event_repository,
             occurred_at=occurred_at,
         )
 
@@ -272,25 +270,26 @@ def execute_reviewed_decision(
                 settings=settings if settings is not None else load_settings(),
             )
         if isinstance(suggestion, LLMSaturatedSuggestion):
+            assert ports is not None
             return apply_saturated_llm_classification(
                 suggestion,
                 bucket_id=bucket_id,
                 business_pct=business_pct,
                 actor=actor,
                 source_command=source_command,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=bucket_event_repository,
+                ports=ports,
                 occurred_at=occurred_at,
             )
         if isinstance(suggestion, LLMClassificationSuggestion):
+            assert ports is not None
             return apply_llm_classification(
                 suggestion,
                 bucket_id=bucket_id,
                 business_pct=business_pct,
                 actor=actor,
                 source_command=source_command,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=bucket_event_repository,
+                transaction_repository=ports.transaction_repository,
+                bucket_event_repository=ports.bucket_event_repository,
                 occurred_at=occurred_at,
             )
         raise TransactionValidationError(
@@ -300,13 +299,13 @@ def execute_reviewed_decision(
 
     if decision is LlmReviewDecision.SPLIT:
         if isinstance(suggestion, LLMSplitSuggestion):
+            assert ports is not None
             return apply_evidence_split(
                 suggestion,
                 bucket_id=bucket_id,
                 actor=actor,
                 source_command=source_command,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=bucket_event_repository,
+                ports=ports,
                 occurred_at=occurred_at,
             )
         raise TransactionValidationError(
@@ -335,7 +334,7 @@ def _decline_invoice_draft(
     bucket_id: str,
     reason: str,
     actor: str,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None,
     occurred_at: datetime | None,
 ) -> InvoiceDraftDeclineResult:
     """Record a declined draft as an audit event, writing no draft.

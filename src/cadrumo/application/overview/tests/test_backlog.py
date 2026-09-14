@@ -14,6 +14,8 @@ from typing import TypedDict
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..backlog import OverviewBacklog, build_overview_backlog
 from .calendar_test_support import profile as _profile
 
@@ -50,16 +52,17 @@ def test_backlog_explicit_window_is_honored() -> None:
     """An operator-supplied --from / --to scopes the calendar query
     accordingly; the envelope echoes the window so renderers can show
     what was queried."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        backlog = build_overview_backlog(
+            _profile(),
+            from_date=date(2026, 1, 1),
+            to_date=date(2026, 6, 30),
+            as_of=date(2026, 12, 31),
+            operation=_authority_operation_for_test,
+        )
 
-    backlog = build_overview_backlog(
-        _profile(),
-        from_date=date(2026, 1, 1),
-        to_date=date(2026, 6, 30),
-        as_of=date(2026, 12, 31),
-    )
-
-    assert backlog.range.from_date == date(2026, 1, 1)
-    assert backlog.range.to_date == date(2026, 6, 30)
+        assert backlog.range.from_date == date(2026, 1, 1)
+        assert backlog.range.to_date == date(2026, 6, 30)
 
 
 def test_backlog_items_are_strictly_past_due_and_late() -> None:
@@ -105,16 +108,17 @@ def test_backlog_future_window_carries_no_past_due_items() -> None:
     both dates stay inside 2026, a registry-known year (far-future years carry
     no deadline calendar and are refused upstream).
     """
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        backlog = build_overview_backlog(
+            _profile(),
+            from_date=date(2026, 7, 1),
+            to_date=date(2026, 12, 31),
+            as_of=date(2026, 1, 15),
+            operation=_authority_operation_for_test,
+        )
 
-    backlog = build_overview_backlog(
-        _profile(),
-        from_date=date(2026, 7, 1),
-        to_date=date(2026, 12, 31),
-        as_of=date(2026, 1, 15),
-    )
-
-    assert backlog.items == ()
-    assert backlog.late_count == 0
+        assert backlog.items == ()
+        assert backlog.late_count == 0
 
 
 def test_backlog_default_lookback_is_365_days() -> None:
@@ -126,11 +130,11 @@ def test_backlog_default_lookback_is_365_days() -> None:
     registry validation crash tracked as a cross-cutting follow-up,
     so this test deliberately keeps the engine inside one year while
     still exercising the default-window arithmetic in the service."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from datetime import timedelta
 
-    from datetime import timedelta
+        as_of = date(2026, 12, 31)
+        backlog = build_overview_backlog(_profile(), as_of=as_of, operation=_authority_operation_for_test)
 
-    as_of = date(2026, 12, 31)
-    backlog = build_overview_backlog(_profile(), as_of=as_of)
-
-    assert backlog.range.to_date == as_of
-    assert backlog.range.from_date == as_of - timedelta(days=365)
+        assert backlog.range.to_date == as_of
+        assert backlog.range.from_date == as_of - timedelta(days=365)

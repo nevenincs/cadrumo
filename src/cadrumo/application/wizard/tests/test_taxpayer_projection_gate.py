@@ -23,6 +23,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.flows import FlowMode
 from ....core.i18n.render import tr
@@ -90,8 +91,9 @@ def _blocking_keys(projection: ReviewProjection) -> set[str]:
 
 def test_setup_definition_names_the_taxpayer_projection_validator(*, registry_setup_flow: WizardFlow) -> None:
     """The composed definition carries the flow-scope validator id."""
-    definition = setup_flow_definition(registry_setup_flow)
-    assert TAXPAYER_PROJECTION_VALIDATOR_ID in definition.flow_validator_ids
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
+        assert TAXPAYER_PROJECTION_VALIDATOR_ID in definition.flow_validator_ids
 
 
 def test_impatriado_without_start_date_blocks_review_and_submit(*, registry_setup_flow: WizardFlow) -> None:
@@ -135,26 +137,30 @@ def test_legally_complete_profiles_still_reach_submit(*, registry_setup_flow: Wi
     construct cleanly, so the review surface stays submit-eligible and the
     production scripted path completes.
     """
-    valid_sets = (
-        _canonical(),
-        _canonical(**{"irpf-special-regime": "impatriado", "irpf-special-regime-start-date": "2024-01-15"}),
-        _canonical(
-            **{
-                "fiscal-residency": "non_resident_irnr",
-                "country-of-fiscal-residence": "US",
-                "representante-fiscal-nif": "12345678Z",
-                "representante-fiscal-nombre": "Representante",
-            },
-        ),
-    )
-    for canonical in valid_sets:
-        projection = _review(canonical, registry_setup_flow=registry_setup_flow)
-        assert projection.submit_eligible, sorted(_blocking_keys(projection))
-        definition = setup_flow_definition(registry_setup_flow)
-        tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
-        run_scripted_flow(
-            definition, tokens, mode=FlowMode.CREATE, defaults=_default_tokens(registry_setup_flow=registry_setup_flow)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        valid_sets = (
+            _canonical(),
+            _canonical(**{"irpf-special-regime": "impatriado", "irpf-special-regime-start-date": "2024-01-15"}),
+            _canonical(
+                **{
+                    "fiscal-residency": "non_resident_irnr",
+                    "country-of-fiscal-residence": "US",
+                    "representante-fiscal-nif": "12345678Z",
+                    "representante-fiscal-nombre": "Representante",
+                },
+            ),
         )
+        for canonical in valid_sets:
+            projection = _review(canonical, registry_setup_flow=registry_setup_flow)
+            assert projection.submit_eligible, sorted(_blocking_keys(projection))
+            definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
+            tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+            run_scripted_flow(
+                definition,
+                tokens,
+                mode=FlowMode.CREATE,
+                defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
+            )
 
 
 @pytest.mark.parametrize("message_key", [_IMPATRIADO_KEY, _REPRESENTANTE_KEY])

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
 from typing import Literal
 
+import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, BaseModel, TypeAdapter
 
@@ -19,6 +21,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.models import TaxpayerProfile
@@ -106,13 +109,20 @@ def april_2025_range() -> OverviewCalendarRange:
     return OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30))
 
 
+@pytest.fixture
+def calendar_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one indexed authority generation for a calendar test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 def calendar_with_evidence(
     *,
     events: tuple[OverviewCalendarEvent, ...],
     filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
     calendar_range: OverviewCalendarRange | None = None,
 ) -> OverviewCalendar:
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return build_overview_calendar(
             profile(),
             calendar_range or april_2025_range(),

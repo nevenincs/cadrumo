@@ -55,6 +55,8 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
@@ -176,58 +178,80 @@ def test_a_genuine_third_country_still_classifies_as_the_export() -> None:
     the entire file -- and refusing a legitimate export is the over-payment
     direction nothing else in this codebase watches.
     """
-    assembly = _issued_goods_to("US")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assembly = _issued_goods_to("US")
 
-    assert assembly.assembled
-    classification = classify_from_assembled_criteria(assembly)
-    assert classification is not None
-    assert classification.category == IvaCategory("export_third_country_zero_rated")
+        assert assembly.assembled
+        classification = classify_from_assembled_criteria(assembly, operation=_authority_operation_for_test)
+        assert classification is not None
+        assert classification.category == IvaCategory("export_third_country_zero_rated")
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
 def test_an_unassigned_code_raises_the_typo_advisory(code: str) -> None:
     """The operator's typo signal, on the non-blocking channel."""
-    advisory = country_vocabulary_advisory(InvoiceDraft(customer_stated_country_code=code))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        advisory = country_vocabulary_advisory(
+            InvoiceDraft(customer_stated_country_code=code), operation=_authority_operation_for_test
+        )
 
-    assert advisory is not None
-    warning = next(party for party in advisory.parties if party.field == "customer_stated_country_code")
-    assert warning.status is StatedCountryCodeStatus.UNASSIGNED
-    assert warning.stated_code == code
-    assert repr(code) in warning.detail
+        assert advisory is not None
+        warning = next(party for party in advisory.parties if party.field == "customer_stated_country_code")
+        assert warning.status is StatedCountryCodeStatus.UNASSIGNED
+        assert warning.stated_code == code
+        assert repr(code) in warning.detail
 
 
 def test_an_assigned_uncatalogued_code_raises_the_catalogue_gap_advisory() -> None:
     """The two kinds must be distinguishable, or the operator hunts a typo we caused."""
-    specimen = an_uncatalogued_alpha2()
-    advisory = country_vocabulary_advisory(InvoiceDraft(customer_stated_country_code=specimen))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        specimen = an_uncatalogued_alpha2()
+        advisory = country_vocabulary_advisory(
+            InvoiceDraft(customer_stated_country_code=specimen), operation=_authority_operation_for_test
+        )
 
-    assert advisory is not None
-    warning = next(party for party in advisory.parties if party.field == "customer_stated_country_code")
-    assert warning.status is StatedCountryCodeStatus.UNCATALOGUED
-    assert repr(specimen) in warning.detail
-    assert "vocabulary" in warning.detail
-    assert advisory.by_status(StatedCountryCodeStatus.UNASSIGNED) == ()
+        assert advisory is not None
+        warning = next(party for party in advisory.parties if party.field == "customer_stated_country_code")
+        assert warning.status is StatedCountryCodeStatus.UNCATALOGUED
+        assert repr(specimen) in warning.detail
+        assert "vocabulary" in warning.detail
+        assert advisory.by_status(StatedCountryCodeStatus.UNASSIGNED) == ()
 
 
 def test_the_check_runs_on_the_issuing_side_too() -> None:
     """Both parties, because establishment is asked of each independently."""
-    advisory = country_vocabulary_advisory(InvoiceDraft(supplier_stated_country_code="XX"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        advisory = country_vocabulary_advisory(
+            InvoiceDraft(supplier_stated_country_code="XX"), operation=_authority_operation_for_test
+        )
 
-    assert advisory is not None
-    assert advisory.fields == ("supplier_stated_country_code",)
-    assert advisory.parties[0].role == "issuing"
+        assert advisory is not None
+        assert advisory.fields == ("supplier_stated_country_code",)
+        assert advisory.parties[0].role == "issuing"
 
 
 @pytest.mark.parametrize("code", ["US", "DE", "ES", "XI"])
 def test_a_catalogued_code_raises_no_country_advisory(code: str) -> None:
     """The negative control. A check that fired on everything would be noise."""
-    assert country_vocabulary_advisory(InvoiceDraft(customer_stated_country_code=code)) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            country_vocabulary_advisory(
+                InvoiceDraft(customer_stated_country_code=code), operation=_authority_operation_for_test
+            )
+            is None
+        )
 
 
 @pytest.mark.parametrize("stated", [None, "", "  ", "Calle Mayor 3, 28013 Madrid"])
 def test_nothing_that_is_not_a_code_raises_a_country_advisory(stated: str | None) -> None:
     """An absent field is an honest absence, and an address line is not a bad code."""
-    assert country_vocabulary_advisory(InvoiceDraft(customer_stated_country_code=stated)) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            country_vocabulary_advisory(
+                InvoiceDraft(customer_stated_country_code=stated), operation=_authority_operation_for_test
+            )
+            is None
+        )
 
 
 def test_a_resolved_printed_name_suppresses_the_advisory() -> None:
@@ -237,11 +261,13 @@ def test_a_resolved_printed_name_suppresses_the_advisory() -> None:
     printed "Alemania" while the structured country-code slot carried a
     placeholder. The territory is established, so the placeholder cost nothing.
     """
-    advisory = country_vocabulary_advisory(
-        InvoiceDraft(customer_country="Alemania", customer_stated_country_code="XX"),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        advisory = country_vocabulary_advisory(
+            InvoiceDraft(customer_country="Alemania", customer_stated_country_code="XX"),
+            operation=_authority_operation_for_test,
+        )
 
-    assert advisory is None
+        assert advisory is None
 
 
 @pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, an_uncatalogued_alpha2()])
@@ -253,11 +279,12 @@ def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(code: 
     reader checking only blockers would not know why), and a blocker could be
     raised from something other than a finding.
     """
-    draft = _as_read(InvoiceDraft(customer_stated_country_code=code))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        draft = _as_read(InvoiceDraft(customer_stated_country_code=code))
 
-    assert country_vocabulary_advisory(draft) is not None
-    assert draft.discrepancies == ()
-    assert confirmation_blockers(draft) == ()
+        assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is not None
+        assert draft.discrepancies == ()
+        assert confirmation_blockers(draft) == ()
 
 
 @pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, an_uncatalogued_alpha2()])
@@ -270,13 +297,14 @@ def test_an_unreadable_postal_code_on_the_same_draft_still_blocks(code: str) -> 
     conditions, so the same call that returns no country blocker returns the
     postal one.
     """
-    draft = _as_read(InvoiceDraft(customer_stated_country_code=code, customer_postal_code=_UNREADABLE_POSTAL))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        draft = _as_read(InvoiceDraft(customer_stated_country_code=code, customer_postal_code=_UNREADABLE_POSTAL))
 
-    blockers = confirmation_blockers(draft)
+        blockers = confirmation_blockers(draft)
 
-    assert [blocker.field for blocker in blockers] == ["customer_postal_code"]
-    assert [finding.kind for finding in draft.discrepancies] == [DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE]
-    assert country_vocabulary_advisory(draft) is not None
+        assert [blocker.field for blocker in blockers] == ["customer_postal_code"]
+        assert [finding.kind for finding in draft.discrepancies] == [DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE]
+        assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is not None
 
 
 def test_the_blocking_axis_carries_no_country_condition() -> None:

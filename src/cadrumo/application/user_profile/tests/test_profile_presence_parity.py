@@ -22,6 +22,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -58,37 +59,44 @@ def test_completeness_reports_a_whitespace_only_required_field_missing(blank: st
 
 @pytest.mark.parametrize("blank", _BLANK_VALUES)
 def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None:
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_PROFILE_ID,
-        facts=(UserProfileFact(path=_TAX_ID_PATH, value=blank),),
-        context=_profile_creation_context_for_test(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        record = _create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=_PROFILE_ID,
+            facts=(UserProfileFact(path=_TAX_ID_PATH, value=blank),),
+            context=_profile_creation_context_for_test(),
+        )
 
-    overview = build_profile_overview(record)
-    field = next(view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH)
-    cli = validate_profile_values({_TAX_ID_PATH: blank})
+        overview = build_profile_overview(record)
+        field = next(view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH)
+        cli = validate_profile_values({_TAX_ID_PATH: blank}, operation=_authority_operation_for_test)
 
-    assert field.present is False
-    assert _TAX_ID_PATH in overview.missing_required
-    assert cli.valid is False
-    assert _TAX_ID_PATH in cli.missing_required
+        assert field.present is False
+        assert _TAX_ID_PATH in overview.missing_required
+        assert cli.valid is False
+        assert _TAX_ID_PATH in cli.missing_required
 
 
 def test_overview_and_key_authority_agree_on_a_real_value() -> None:
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_PROFILE_ID,
-        facts=(UserProfileFact(path=_TAX_ID_PATH, value="12345678Z"),),
-        context=_profile_creation_context_for_test(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        record = _create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=_PROFILE_ID,
+            facts=(UserProfileFact(path=_TAX_ID_PATH, value="12345678Z"),),
+            context=_profile_creation_context_for_test(),
+        )
 
-    overview = build_profile_overview(record)
-    field = next(view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH)
+        overview = build_profile_overview(record)
+        field = next(view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH)
 
-    assert field.present is True
-    assert _TAX_ID_PATH not in overview.missing_required
-    assert _TAX_ID_PATH in validate_profile_values({_TAX_ID_PATH: "12345678Z"}).present_required
+        assert field.present is True
+        assert _TAX_ID_PATH not in overview.missing_required
+        assert (
+            _TAX_ID_PATH
+            in validate_profile_values(
+                {_TAX_ID_PATH: "12345678Z"}, operation=_authority_operation_for_test
+            ).present_required
+        )
 
 
 def test_cleared_and_absent_values_are_equally_absent() -> None:

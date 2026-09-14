@@ -6,6 +6,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ...foreign_asset_thresholds import foreign_asset_declaration_thresholds
 
@@ -46,12 +48,15 @@ def test_effective_registry_revision_supplies_each_modelos_threshold_and_groundi
     legal_refs: set[str],
     source_refs: set[str],
 ) -> None:
-    thresholds = foreign_asset_declaration_thresholds(modelo=modelo, filing_year=filing_year)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        thresholds = foreign_asset_declaration_thresholds(
+            modelo=modelo, filing_year=filing_year, operation=_authority_operation_for_test
+        )
 
-    assert set(thresholds) == set(groups)
-    for group in groups:
-        threshold = thresholds[group]
-        assert threshold.initial_declaration_floor_eur == Decimal("50000.00")
-        assert threshold.redeclaration_increase_delta_eur == Decimal("20000.00")
-        assert set(threshold.legal_refs) == legal_refs
-        assert set(threshold.source_refs) == source_refs
+        assert set(thresholds) == set(groups)
+        for group in groups:
+            threshold = thresholds[group]
+            assert threshold.initial_declaration_floor_eur == Decimal("50000.00")
+            assert threshold.redeclaration_increase_delta_eur == Decimal("20000.00")
+            assert set(threshold.legal_refs) == legal_refs
+            assert set(threshold.source_refs) == source_refs

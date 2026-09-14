@@ -15,6 +15,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
@@ -347,54 +348,55 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         the canonical dict must not carry the new-entity key at all,
         and the projection must reload at ``None``.
         """
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            from ..commands import _run_scripted_walk
 
-        from ..commands import _run_scripted_walk
+            # The scripted walk is driven by a sparse canonical dict; every
+            # visible question falls back to its descriptor default (or
+            # blank). The required-flag tax-id and activity must be seeded
+            # explicitly — they are unconditionally required.
+            canonical: dict[str, str] = {
+                "tax-id": "B66012345",
+                "activity": "Software development",
+                "entity-type": "legal_entity",
+                "legal-entity-form": "sl",
+                "tax-residence-jurisdiction-scope": "common_regime",
+                "iva-regime": "GENERAL",
+                "iva-m303-regime-composition": "general",
+                "iva-redeme-enrolled": "false",
+                "iva-cash-accounting-regime-enrolled": "false",
+                "iva-voluntary-sii-enrolled": "false",
+                "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
+            }
+            answers = _run_scripted_walk(
+                registry_setup_flow,
+                canonical,
+                mode="create",
+                explicit_question_ids=frozenset(),
+                operation=_authority_operation_for_test,
+            )
+            assert isinstance(answers, SetupAnswers)
 
-        # The scripted walk is driven by a sparse canonical dict; every
-        # visible question falls back to its descriptor default (or
-        # blank). The required-flag tax-id and activity must be seeded
-        # explicitly — they are unconditionally required.
-        canonical: dict[str, str] = {
-            "tax-id": "B66012345",
-            "activity": "Software development",
-            "entity-type": "legal_entity",
-            "legal-entity-form": "sl",
-            "tax-residence-jurisdiction-scope": "common_regime",
-            "iva-regime": "GENERAL",
-            "iva-m303-regime-composition": "general",
-            "iva-redeme-enrolled": "false",
-            "iva-cash-accounting-regime-enrolled": "false",
-            "iva-voluntary-sii-enrolled": "false",
-            "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
-        }
-        answers = _run_scripted_walk(
-            registry_setup_flow,
-            canonical,
-            mode="create",
-            explicit_question_ids=frozenset(),
-        )
-        assert isinstance(answers, SetupAnswers)
+            # The new-entity field stays at the undeclared sentinel; never
+            # collapses onto False because the operator never declared it.
+            assert answers.new_entity_first_two_profit_periods == ""
 
-        # The new-entity field stays at the undeclared sentinel; never
-        # collapses onto False because the operator never declared it.
-        assert answers.new_entity_first_two_profit_periods == ""
+            # Serialise; the canonical dict drops the undeclared field at
+            # the ``if value`` persistence filter ⇒ blank canonical token.
+            serialised = serialise_answers(registry_setup_flow, answers)
+            assert serialised.get("taxpayer_type.new_entity_first_two_profit_periods") == ""
 
-        # Serialise; the canonical dict drops the undeclared field at
-        # the ``if value`` persistence filter ⇒ blank canonical token.
-        serialised = serialise_answers(registry_setup_flow, answers)
-        assert serialised.get("taxpayer_type.new_entity_first_two_profit_periods") == ""
-
-        # Filter blanks and the wizard's undeclared IVA defaults before
-        # projecting the deadline-layer TaxpayerProfile. Those ``false``
-        # tokens are not declared IVA block facts in this scenario.
-        persisted = {key: value for key, value in serialised.items() if value and not key.startswith("iva.")}
-        assert "taxpayer_type.new_entity_first_two_profit_periods" not in persisted
-        profile = taxpayer_profile_from_mapping(
-            persisted,
-            tax_id_default="00000000T",
-        )
-        assert profile.new_entity_first_two_profit_periods is None
-        assert profile.iva is None
+            # Filter blanks and the wizard's undeclared IVA defaults before
+            # projecting the deadline-layer TaxpayerProfile. Those ``false``
+            # tokens are not declared IVA block facts in this scenario.
+            persisted = {key: value for key, value in serialised.items() if value and not key.startswith("iva.")}
+            assert "taxpayer_type.new_entity_first_two_profit_periods" not in persisted
+            profile = taxpayer_profile_from_mapping(
+                persisted,
+                tax_id_default="00000000T",
+            )
+            assert profile.new_entity_first_two_profit_periods is None
+            assert profile.iva is None
 
 
 class TestLey49SpecialRegimeRoundTrip:

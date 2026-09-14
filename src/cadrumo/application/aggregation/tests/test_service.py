@@ -12,6 +12,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind, ForeignAssetClass, RetencionScheme
 from ....core.errors.error_codes import build_error_envelope, get_registered_error_code
 from ....core.period import Period
@@ -173,127 +175,130 @@ def test_site5_command_rejects_cross_family_observations() -> None:
 
 def test_site6_result_rejects_duplicate_source_kinds() -> None:
     """PerModeloAggregationResult._source_kinds_are_unique raises AggregationConfigError."""
-    from ..retenciones import RetencionObservation
-    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..retenciones import RetencionObservation
+        from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
-    obs = RetencionObservation(
-        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-        source_object_id="ret-1",
-        perceptor_nif="B00000001",
-        perceptor_name="Proveedor",
-        scheme=RetencionScheme("rendimientos_trabajo"),
-        taxable_base=Decimal("1000.00"),
-        retencion_amount=Decimal("150.00"),
-        accrued_on="2025-03-01",
-    )
-    cmd = PerModeloAggregationCommand(modelo="111", period=_P_2025_Q1, retencion_observations=(obs,))
-    agg = aggregate_per_modelo(cmd).aggregation
-    log = PerModeloAggregationLogFields(
-        modelo="111",
-        period=_P_2025_Q1,
-        provider=PerModeloAggregationContributor.RETENCIONES,
-        observation_count=1,
-        source_kind_count=1,
-        result_row_count=1,
-    )
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationResult(
+        obs = RetencionObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ret-1",
+            perceptor_nif="B00000001",
+            perceptor_name="Proveedor",
+            scheme=RetencionScheme("rendimientos_trabajo"),
+            taxable_base=Decimal("1000.00"),
+            retencion_amount=Decimal("150.00"),
+            accrued_on="2025-03-01",
+        )
+        cmd = PerModeloAggregationCommand(modelo="111", period=_P_2025_Q1, retencion_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation
+        log = PerModeloAggregationLogFields(
             modelo="111",
             period=_P_2025_Q1,
             provider=PerModeloAggregationContributor.RETENCIONES,
-            aggregation=agg,
-            source_kinds=(
-                BindingSourceKind.LEDGER_TRANSACTION,
-                BindingSourceKind.LEDGER_TRANSACTION,  # duplicate
-            ),
-            log_fields=log,
+            observation_count=1,
+            source_kind_count=1,
+            result_row_count=1,
         )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes)
+        with pytest.raises(ValidationError) as exc_info:
+            PerModeloAggregationResult(
+                modelo="111",
+                period=_P_2025_Q1,
+                provider=PerModeloAggregationContributor.RETENCIONES,
+                aggregation=agg,
+                source_kinds=(
+                    BindingSourceKind.LEDGER_TRANSACTION,
+                    BindingSourceKind.LEDGER_TRANSACTION,  # duplicate
+                ),
+                log_fields=log,
+            )
+        causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+        assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 
 def test_site7_result_rejects_modelo_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for modelo mismatch."""
-    from ..counterpart import CounterpartObservation
-    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..counterpart import CounterpartObservation
+        from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
-    obs = CounterpartObservation(
-        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-        source_object_id="ctr-1",
-        counterparty_nif="B00000001",
-        counterparty_name="Cliente",
-        counterparty_country="ES",
-        operation_kind="entregas_y_prestaciones",
-        operation_period="0A",
-        taxable_base=Decimal("2000.00"),
-        invoice_total=Decimal("2000.00"),
-        accrued_on="2025-03-01",
-        groi_verified=True,
-        nif_iva_verified=True,
-    )
-    cmd = PerModeloAggregationCommand(modelo="347", period=_P_2025_ANNUAL, counterpart_observations=(obs,))
-    agg = aggregate_per_modelo(cmd).aggregation  # modelo=347
-    log = PerModeloAggregationLogFields(
-        modelo="349",
-        period=_P_2025_ANNUAL,
-        provider=PerModeloAggregationContributor.COUNTERPART,
-        observation_count=1,
-        source_kind_count=1,
-        result_row_count=1,
-    )
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationResult(
-            modelo="349",  # mismatch: aggregation says 347
+        obs = CounterpartObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ctr-1",
+            counterparty_nif="B00000001",
+            counterparty_name="Cliente",
+            counterparty_country="ES",
+            operation_kind="entregas_y_prestaciones",
+            operation_period="0A",
+            taxable_base=Decimal("2000.00"),
+            invoice_total=Decimal("2000.00"),
+            accrued_on="2025-03-01",
+            groi_verified=True,
+            nif_iva_verified=True,
+        )
+        cmd = PerModeloAggregationCommand(modelo="347", period=_P_2025_ANNUAL, counterpart_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # modelo=347
+        log = PerModeloAggregationLogFields(
+            modelo="349",
             period=_P_2025_ANNUAL,
             provider=PerModeloAggregationContributor.COUNTERPART,
-            aggregation=agg,
-            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
-            log_fields=log,
+            observation_count=1,
+            source_kind_count=1,
+            result_row_count=1,
         )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes)
+        with pytest.raises(ValidationError) as exc_info:
+            PerModeloAggregationResult(
+                modelo="349",  # mismatch: aggregation says 347
+                period=_P_2025_ANNUAL,
+                provider=PerModeloAggregationContributor.COUNTERPART,
+                aggregation=agg,
+                source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
+                log_fields=log,
+            )
+        causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+        assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 
 def test_site8_result_rejects_period_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for period mismatch."""
-    from ..counterpart import CounterpartObservation
-    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..counterpart import CounterpartObservation
+        from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
-    obs = CounterpartObservation(
-        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-        source_object_id="ctr-2",
-        counterparty_nif="B00000002",
-        counterparty_name="Cliente B",
-        counterparty_country="ES",
-        operation_kind="entregas_y_prestaciones",
-        operation_period="0A",
-        taxable_base=Decimal("5000.00"),
-        invoice_total=Decimal("5000.00"),
-        accrued_on="2025-06-01",
-        groi_verified=True,
-        nif_iva_verified=True,
-    )
-    cmd = PerModeloAggregationCommand(modelo="347", period=_P_2025_ANNUAL, counterpart_observations=(obs,))
-    agg = aggregate_per_modelo(cmd).aggregation  # period=2025
-    log = PerModeloAggregationLogFields(
-        modelo="347",
-        period=_P_2024_ANNUAL,
-        provider=PerModeloAggregationContributor.COUNTERPART,
-        observation_count=1,
-        source_kind_count=1,
-        result_row_count=1,
-    )
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationResult(
-            modelo="347",
-            period=_P_2024_ANNUAL,  # mismatch: aggregation says 2025
-            provider=PerModeloAggregationContributor.COUNTERPART,
-            aggregation=agg,
-            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
-            log_fields=log,
+        obs = CounterpartObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ctr-2",
+            counterparty_nif="B00000002",
+            counterparty_name="Cliente B",
+            counterparty_country="ES",
+            operation_kind="entregas_y_prestaciones",
+            operation_period="0A",
+            taxable_base=Decimal("5000.00"),
+            invoice_total=Decimal("5000.00"),
+            accrued_on="2025-06-01",
+            groi_verified=True,
+            nif_iva_verified=True,
         )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes)
+        cmd = PerModeloAggregationCommand(modelo="347", period=_P_2025_ANNUAL, counterpart_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # period=2025
+        log = PerModeloAggregationLogFields(
+            modelo="347",
+            period=_P_2024_ANNUAL,
+            provider=PerModeloAggregationContributor.COUNTERPART,
+            observation_count=1,
+            source_kind_count=1,
+            result_row_count=1,
+        )
+        with pytest.raises(ValidationError) as exc_info:
+            PerModeloAggregationResult(
+                modelo="347",
+                period=_P_2024_ANNUAL,  # mismatch: aggregation says 2025
+                provider=PerModeloAggregationContributor.COUNTERPART,
+                aggregation=agg,
+                source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
+                log_fields=log,
+            )
+        causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+        assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 
 def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
@@ -301,40 +306,41 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
 
     Triggered by a provider / payload type mismatch.
     """
-    from ..retenciones import RetencionObservation
-    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..retenciones import RetencionObservation
+        from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
-    obs = RetencionObservation(
-        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-        source_object_id="ret-2",
-        perceptor_nif="B00000001",
-        perceptor_name="Proveedor",
-        scheme=RetencionScheme("rendimientos_trabajo"),
-        taxable_base=Decimal("1000.00"),
-        retencion_amount=Decimal("150.00"),
-        accrued_on="2025-03-01",
-    )
-    cmd = PerModeloAggregationCommand(modelo="111", period=_P_2025_Q1, retencion_observations=(obs,))
-    agg = aggregate_per_modelo(cmd).aggregation  # RetencionesAggregation
-    log = PerModeloAggregationLogFields(
-        modelo="111",
-        period=_P_2025_Q1,
-        provider=PerModeloAggregationContributor.COUNTERPART,
-        observation_count=1,
-        source_kind_count=1,
-        result_row_count=1,
-    )
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationResult(
+        obs = RetencionObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ret-2",
+            perceptor_nif="B00000001",
+            perceptor_name="Proveedor",
+            scheme=RetencionScheme("rendimientos_trabajo"),
+            taxable_base=Decimal("1000.00"),
+            retencion_amount=Decimal("150.00"),
+            accrued_on="2025-03-01",
+        )
+        cmd = PerModeloAggregationCommand(modelo="111", period=_P_2025_Q1, retencion_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # RetencionesAggregation
+        log = PerModeloAggregationLogFields(
             modelo="111",
             period=_P_2025_Q1,
-            provider=PerModeloAggregationContributor.COUNTERPART,  # wrong provider for RetencionesAggregation
-            aggregation=agg,
-            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
-            log_fields=log,
+            provider=PerModeloAggregationContributor.COUNTERPART,
+            observation_count=1,
+            source_kind_count=1,
+            result_row_count=1,
         )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes)
+        with pytest.raises(ValidationError) as exc_info:
+            PerModeloAggregationResult(
+                modelo="111",
+                period=_P_2025_Q1,
+                provider=PerModeloAggregationContributor.COUNTERPART,  # wrong provider for RetencionesAggregation
+                aggregation=agg,
+                source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
+                log_fields=log,
+            )
+        causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+        assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 
 # ---------------------------------------------------------------------------

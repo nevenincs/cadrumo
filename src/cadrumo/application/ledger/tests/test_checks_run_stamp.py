@@ -32,6 +32,8 @@ from importlib import import_module
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....tests.attribute_scope import scoped_attribute
 
 # The MODULE object, not names from it: the tests below scope an attribute
@@ -88,18 +90,19 @@ def test_a_check_added_to_the_declaration_also_runs() -> None:
     truthfully naming checks that never executed, which is worse than the gap it
     replaced because it reads as evidence.
     """
-    from ....core.draft_discrepancy import DraftDiscrepancyKind
-    from ..invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ....core.draft_discrepancy import DraftDiscrepancyKind
+        from ..invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 
-    sentinel = DraftDiscrepancyFinding(kind=DraftDiscrepancyKind.ROLE_UNRESOLVED, detail="sentinel")
-    with scoped_attribute(
-        deterministic_findings_module,
-        "DETERMINISTIC_CHECKS",
-        (*DETERMINISTIC_CHECKS, DeterministicCheck("sentinel_check", lambda draft: (sentinel,))),
-    ):
-        findings = deterministic_findings(InvoiceDraft())
+        sentinel = DraftDiscrepancyFinding(kind=DraftDiscrepancyKind.ROLE_UNRESOLVED, detail="sentinel")
+        with scoped_attribute(
+            deterministic_findings_module,
+            "DETERMINISTIC_CHECKS",
+            (*DETERMINISTIC_CHECKS, DeterministicCheck("sentinel_check", lambda draft: (sentinel,))),
+        ):
+            findings = deterministic_findings(InvoiceDraft(), operation=_authority_operation_for_test)
 
-    assert sentinel in findings
+        assert sentinel in findings
 
 
 def test_the_names_are_the_checks_own_not_their_findings() -> None:

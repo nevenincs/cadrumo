@@ -30,6 +30,7 @@ rates are exercised on dates where they were actually in force.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -37,11 +38,13 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind, require_eu_member_state
 
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -54,6 +57,13 @@ from ..iva_ledger import resolve_iva_ledger_binding_values
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation across the transitional-rate binding checks."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 # Each rung: its two binding ids, the rate a row must carry to reach it, a date
@@ -130,13 +140,25 @@ def _transaction(
     )
 
 
-def _resolve(transactions: tuple[Transaction, ...], *, period: Period) -> dict[str, Decimal]:
+def _resolve(
+    transactions: tuple[Transaction, ...],
+    *,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, Decimal]:
     catalogue = TransactionCatalogue.model_validate(
         {"transactions": {t.transaction_id: t for t in transactions}},
     )
     aggregation = aggregate_iva_ledger_observations(catalogue, period=period)
     assert aggregation.issues == (), f"classifier refused a row: {aggregation.issues}"
-    return {str(k): v for k, v in resolve_iva_ledger_binding_values(_revision(), aggregation.observations).items()}
+    return {
+        str(k): v
+        for k, v in resolve_iva_ledger_binding_values(
+            _revision(),
+            aggregation.observations,
+            operation=operation,
+        ).items()
+    }
 
 
 def _all_rungs_catalogue() -> tuple[Transaction, ...]:
@@ -152,7 +174,9 @@ def _all_rungs_catalogue() -> tuple[Transaction, ...]:
     )
 
 
-def test_each_rate_reaches_its_own_rung_and_no_other() -> None:
+def test_each_rate_reaches_its_own_rung_and_no_other(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """One row per rate, all in one period: each rung gets exactly its own row.
 
     This is the finding's direct inverse. Before the split, the 7,5 % row landed
@@ -160,14 +184,16 @@ def test_each_rate_reaches_its_own_rung_and_no_other() -> None:
     so those two rungs held a sum of two rows and the transitional rungs held
     nothing.
     """
-    values = _resolve(_all_rungs_catalogue(), period=_PERIOD_4T_2024)
+    values = _resolve(_all_rungs_catalogue(), period=_PERIOD_4T_2024, operation=authority_operation)
 
     for suffix, _rate, _on_date, base, cuota in _RUNGS:
         assert values[f"modelo-303-iva-repercutido-{suffix}-base"] == Decimal(base)
         assert values[f"modelo-303-iva-repercutido-{suffix}-cuota"] == Decimal(cuota)
 
 
-def test_the_five_percent_half_reaches_the_same_rung_as_seven_and_a_half() -> None:
+def test_the_five_percent_half_reaches_the_same_rung_as_seven_and_a_half(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Nota 8 reuses [153] across the flip, so the rung admits both its rates.
 
     A revision split per AEAT design would not separate these: the flip happens
@@ -180,7 +206,7 @@ def test_the_five_percent_half_reaches_the_same_rung_as_seven_and_a_half() -> No
         iva_rate=Decimal("0.05"),
         iva_amount=Decimal("70.00"),
     )
-    values = _resolve((row,), period=_PERIOD_3T_2024)
+    values = _resolve((row,), period=_PERIOD_3T_2024, operation=authority_operation)
 
     assert values["modelo-303-iva-repercutido-reducido-transitorio-base"] == Decimal("1400.00")
     assert values["modelo-303-iva-repercutido-reducido-transitorio-cuota"] == Decimal("70.00")
@@ -189,7 +215,9 @@ def test_the_five_percent_half_reaches_the_same_rung_as_seven_and_a_half() -> No
     assert values["modelo-303-iva-repercutido-reducido-cuota"] == Decimal("0")
 
 
-def test_the_rung_split_neither_loses_nor_duplicates_a_row() -> None:
+def test_the_rung_split_neither_loses_nor_duplicates_a_row(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Narrowing a tier binding is only safe if its siblings cover the remainder.
 
     Modelo 390 could add rate-specific boxes beside rate-blind tier bindings
@@ -198,7 +226,7 @@ def test_the_rung_split_neither_loses_nor_duplicates_a_row() -> None:
     so the tier bindings had to be narrowed, and a rate that fell between the
     narrowed sets would leave the return silently.
     """
-    values = _resolve(_all_rungs_catalogue(), period=_PERIOD_4T_2024)
+    values = _resolve(_all_rungs_catalogue(), period=_PERIOD_4T_2024, operation=authority_operation)
 
     declared_cuota = sum(
         (values[f"modelo-303-iva-repercutido-{suffix}-cuota"] for suffix, *_ in _RUNGS),
@@ -251,39 +279,44 @@ def test_the_narrowed_rate_sets_are_exhaustive_against_the_rate_table() -> None:
     casilla at all. Derived from the registry rather than restated, so adding a
     rate to the table without giving it a rung reds this.
     """
-    revision = _revision()
-    # ``None`` is the rate-blind marker -- that tier's rung covers everything it
-    # admits, which is not the same as covering nothing. Declared in the type so
-    # the distinction is not carried by a suppression.
-    rungs_by_tier: dict[IvaRateKind, set[Decimal] | None] = {}
-    for binding in revision.bindings:
-        if not binding.id.startswith("modelo-303-iva-repercutido-") or not binding.id.endswith("-cuota"):
-            continue
-        axes = selector_as_dict(binding)
-        rates = axes.get("applied_rates")
-        assert rates is None or isinstance(rates, (list, tuple)), "applied_rates is not a sequence"
-        rate_kinds = axes["rate_kinds"]
-        assert isinstance(rate_kinds, (list, tuple)), "rate_kinds is not a sequence"
-        for kind in rate_kinds:
-            tier = IvaRateKind(kind)
-            # A rate-blind rung covers everything its tier admits.
-            rungs_by_tier.setdefault(tier, set())
-            if rates is None:
-                rungs_by_tier[tier] = None
-            else:
-                covered = rungs_by_tier[tier]
-                if covered is not None:
-                    covered.update(Decimal(str(rate)) for rate in rates)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        revision = _revision()
+        # ``None`` is the rate-blind marker -- that tier's rung covers everything it
+        # admits, which is not the same as covering nothing. Declared in the type so
+        # the distinction is not carried by a suppression.
+        rungs_by_tier: dict[IvaRateKind, set[Decimal] | None] = {}
+        for binding in revision.bindings:
+            if not binding.id.startswith("modelo-303-iva-repercutido-") or not binding.id.endswith("-cuota"):
+                continue
+            axes = selector_as_dict(binding)
+            rates = axes.get("applied_rates")
+            assert rates is None or isinstance(rates, (list, tuple)), "applied_rates is not a sequence"
+            rate_kinds = axes["rate_kinds"]
+            assert isinstance(rate_kinds, (list, tuple)), "rate_kinds is not a sequence"
+            for kind in rate_kinds:
+                tier = IvaRateKind(kind)
+                # A rate-blind rung covers everything its tier admits.
+                rungs_by_tier.setdefault(tier, set())
+                if rates is None:
+                    rungs_by_tier[tier] = None
+                else:
+                    covered = rungs_by_tier[tier]
+                    if covered is not None:
+                        covered.update(Decimal(str(rate)) for rate in rates)
 
-    probe_dates = (date(2024, 3, 1), _EARLIER_WINDOW, date(2024, 11, 1), date(2025, 6, 1), date(2026, 6, 1))
-    candidates = [Decimal(n) / Decimal("1000") for n in range(0, 300, 5)]
-    for tier, covered in rungs_by_tier.items():
-        if covered is None:
-            continue
-        for on_date in probe_dates:
-            for pct in candidates:
-                if tier in rate_kinds_for_declared_rate(require_eu_member_state("ES"), pct, on_date):
-                    assert pct in covered, f"{tier.value} admits {pct} on {on_date} but no Modelo 303 rung accepts it"
+        probe_dates = (date(2024, 3, 1), _EARLIER_WINDOW, date(2024, 11, 1), date(2025, 6, 1), date(2026, 6, 1))
+        candidates = [Decimal(n) / Decimal("1000") for n in range(0, 300, 5)]
+        for tier, covered in rungs_by_tier.items():
+            if covered is None:
+                continue
+            for on_date in probe_dates:
+                for pct in candidates:
+                    if tier in rate_kinds_for_declared_rate(
+                        require_eu_member_state("ES"), pct, on_date, operation=_authority_operation_for_test
+                    ):
+                        assert pct in covered, (
+                            f"{tier.value} admits {pct} on {on_date} but no Modelo 303 rung accepts it"
+                        )
 
 
 def test_a_domestic_row_always_carries_the_rate_the_rungs_key_on() -> None:
@@ -347,7 +380,9 @@ def test_a_rate_less_row_is_refused_at_ingest_rather_than_silently_dropped() -> 
     assert [i.reason.value for i in aggregation.issues] == ["missing_iva_rate"]
 
 
-def test_an_underdetermined_observation_would_reach_no_rung_at_all() -> None:
+def test_an_underdetermined_observation_would_reach_no_rung_at_all(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Positive control: the probe above can only mean something if this fails.
 
     Proving a rate-less row never appears says nothing unless we also show what
@@ -371,7 +406,7 @@ def test_an_underdetermined_observation_would_reach_no_rung_at_all() -> None:
             applied_rate=applied_rate,
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
-        values = resolve_iva_ledger_binding_values(revision, (observation,))
+        values = resolve_iva_ledger_binding_values(revision, (observation,), operation=authority_operation)
         return {str(k): v for k, v in values.items() if "iva-repercutido" in str(k) and v != Decimal("0")}
 
     assert reached(None) == {}, "an underdetermined row reached a rate-specific rung"

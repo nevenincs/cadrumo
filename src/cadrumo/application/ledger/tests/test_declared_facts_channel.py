@@ -34,6 +34,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope
 from cadrumo.domain.iva.schema import IvaRateKind
 
@@ -139,52 +140,61 @@ class TestTheChannelReachesTheAssembly:
     """Wiring, not just shape: a fact supplied here changes what the assembly does."""
 
     def test_a_declared_status_settles_a_gap_the_evidence_leaves_open(self) -> None:
-        bare = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=ClassifierInputs(),
-            declared=DeclaredFacts(supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED)),
-            issuer_country_code="DE",
-            customer_country_code="FR",
-        )
-        supplied = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=ClassifierInputs(),
-            declared=DeclaredFacts(
-                supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            bare = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=ClassifierInputs(),
+                declared=DeclaredFacts(supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED)),
+                issuer_country_code="DE",
+                customer_country_code="FR",
+                operation=_authority_operation_for_test,
+            )
+            supplied = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=ClassifierInputs(),
+                declared=DeclaredFacts(
+                    supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
+                    customer_tax_status=DeclaredFact(
+                        value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED
+                    ),
                 ),
-            ),
-            issuer_country_code="DE",
-            customer_country_code="FR",
-        )
+                issuer_country_code="DE",
+                customer_country_code="FR",
+                operation=_authority_operation_for_test,
+            )
 
-        assert "customer_tax_status" in {gap.field for gap in bare.missing}
-        assert "customer_tax_status" not in {gap.field for gap in supplied.missing}
+            assert "customer_tax_status" in {gap.field for gap in bare.missing}
+            assert "customer_tax_status" not in {gap.field for gap in supplied.missing}
 
     def test_a_declared_scope_settles_the_territory_a_country_code_cannot(self) -> None:
         """Spain: the code names the State while the IVA territory stays undetermined."""
-        supplied = assemble_classification_criteria(
-            transaction_date=_DATE,
-            direction=InvoiceKind.ISSUED,
-            inputs=ClassifierInputs(),
-            declared=DeclaredFacts(
-                supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            supplied = assemble_classification_criteria(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=ClassifierInputs(),
+                declared=DeclaredFacts(
+                    supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
+                    customer_tax_status=DeclaredFact(
+                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                    ),
+                    issuer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                    ),
+                    customer_scope=DeclaredFact(
+                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                    ),
                 ),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
-            ),
-            issuer_country_code="ES",
-            customer_country_code="ES",
-            rate_tier=IvaRateKind("general"),
-        )
+                issuer_country_code="ES",
+                customer_country_code="ES",
+                rate_tier=IvaRateKind("general"),
+                operation=_authority_operation_for_test,
+            )
 
-        assert "issuer_residency" not in {gap.field for gap in supplied.missing}
-        assert "customer_residency" not in {gap.field for gap in supplied.missing}
+            assert "issuer_residency" not in {gap.field for gap in supplied.missing}
+            assert "customer_residency" not in {gap.field for gap in supplied.missing}
 
 
 class TestTheEnvelopeRefusesLaunderedBacking:

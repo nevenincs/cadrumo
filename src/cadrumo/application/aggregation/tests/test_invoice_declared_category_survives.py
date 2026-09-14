@@ -28,6 +28,7 @@ already reports an invoice withheld for a category its counterparty contradicts.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -35,6 +36,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
@@ -51,6 +53,13 @@ from .._modelo_bindings_invoice_iva_refusal import _uncovered_withheld_invoice_c
 from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for the declared-category binding assertion."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _BASE = Decimal("2000.00")
 _DAY = date(2026, 3, 15)
@@ -150,7 +159,9 @@ def test_the_declared_reverse_charge_survives_the_projection() -> None:
     assert observation.base_amount == _BASE
 
 
-def test_the_preserved_category_does_not_by_itself_declare_the_cuota() -> None:
+def test_the_preserved_category_does_not_by_itself_declare_the_cuota(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The honest half: the record is right and the return is still short.
 
     Pinned deliberately. The recipient-side selector is a triple and only two of
@@ -162,7 +173,14 @@ def test_the_preserved_category_does_not_by_itself_declare_the_cuota() -> None:
     assert observation is not None
     revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
 
-    resolved = {str(k): v for k, v in resolve_iva_ledger_binding_values(revision, (observation,)).items()}
+    resolved = {
+        str(k): v
+        for k, v in resolve_iva_ledger_binding_values(
+            revision,
+            (observation,),
+            operation=authority_operation,
+        ).items()
+    }
 
     assert not any(resolved.values()), (
         f"this change is not supposed to route anything yet, but it did: "

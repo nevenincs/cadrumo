@@ -15,6 +15,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.flows import FlowMode
 from ....domain.contribuyente.entity_type import LegalEntityForm
@@ -207,26 +208,26 @@ def test_scripted_walk_skips_spouse_questions_when_declaration_is_individual(
 
 def test_scripted_driver_rejects_unconsumed_tokens(*, registry_setup_flow: WizardFlow) -> None:
     """A queue longer than the visible walk raises overflow, counts only."""
-
-    definition = setup_flow_definition(registry_setup_flow)
-    tokens, _intended = _project_scripted_answers(
-        definition,
-        _individual_declaration_canonical(),
-        mode=FlowMode.CREATE,
-    )
-    with pytest.raises(FlowAnswerError) as excinfo:
-        run_scripted_flow(
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        definition = setup_flow_definition(registry_setup_flow, operation=_authority_operation_for_test)
+        tokens, _intended = _project_scripted_answers(
             definition,
-            [*tokens, "orphan"],
+            _individual_declaration_canonical(),
             mode=FlowMode.CREATE,
-            defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
         )
-    assert excinfo.value.translated_message == "application.flows.errors.scripted_queue_overflow"
-    assert excinfo.value.context == {
-        "remaining_count": 1,
-        "consumed_count": len(tokens),
-    }
-    assert "orphan" not in str(excinfo.value.context)
+        with pytest.raises(FlowAnswerError) as excinfo:
+            run_scripted_flow(
+                definition,
+                [*tokens, "orphan"],
+                mode=FlowMode.CREATE,
+                defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
+            )
+        assert excinfo.value.translated_message == "application.flows.errors.scripted_queue_overflow"
+        assert excinfo.value.context == {
+            "remaining_count": 1,
+            "consumed_count": len(tokens),
+        }
+        assert "orphan" not in str(excinfo.value.context)
 
 
 def test_serialised_answers_round_trip_via_project_answers(*, registry_setup_flow: WizardFlow) -> None:

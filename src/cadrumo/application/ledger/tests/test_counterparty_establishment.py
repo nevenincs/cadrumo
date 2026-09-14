@@ -28,6 +28,8 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import IvaTerritorialScope, classify_iva
 from ..classification_assembly import (
@@ -441,48 +443,53 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
     category it derives is ``DOMESTIC_NOT_SUBJECT`` -- the Canarian outcome a
     mainland default would have replaced with a subject-to-IVA one.
     """
-    from datetime import date
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from datetime import date
 
-    from ....domain.iva.classification import InvoiceKind
-    from ....domain.iva.schema import IvaCategory
+        from ....domain.iva.classification import InvoiceKind
+        from ....domain.iva.schema import IvaCategory
 
-    filer_side = DeclaredFact[IvaTerritorialScope](
-        value=IvaTerritorialScope._from_registry("es_mainland"),
-        source=ClassifierInputSource.PROFILE_AUTHORITY,
-    )
+        filer_side = DeclaredFact[IvaTerritorialScope](
+            value=IvaTerritorialScope._from_registry("es_mainland"),
+            source=ClassifierInputSource.PROFILE_AUTHORITY,
+        )
 
-    blocked = assemble_classification_criteria(
-        transaction_date=date(2026, 3, 10),
-        direction=InvoiceKind.RECEIVED,
-        inputs=ClassifierInputs(),
-        declared=DeclaredFacts(
-            customer_scope=filer_side,
-            issuer_scope=resolve_confirmed_counterparty_facts(
-                bucket_id=_BUCKET_ID,
-                tax_identifier=_SUPPLIER_CIF,
-                repository=repository,
-            ).fact,
-        ),
-    )
-    assert not blocked.assembled
-    assert "issuer_residency" in {gap.field for gap in blocked.missing}
+        blocked = assemble_classification_criteria(
+            transaction_date=date(2026, 3, 10),
+            direction=InvoiceKind.RECEIVED,
+            inputs=ClassifierInputs(),
+            declared=DeclaredFacts(
+                customer_scope=filer_side,
+                issuer_scope=resolve_confirmed_counterparty_facts(
+                    bucket_id=_BUCKET_ID,
+                    tax_identifier=_SUPPLIER_CIF,
+                    repository=repository,
+                ).fact,
+            ),
+            operation=_authority_operation_for_test,
+        )
+        assert not blocked.assembled
+        assert "issuer_residency" in {gap.field for gap in blocked.missing}
 
-    _confirm(repository)
+        _confirm(repository)
 
-    remembered = resolve_confirmed_counterparty_facts(
-        bucket_id=_BUCKET_ID,
-        tax_identifier=_SUPPLIER_CIF,
-        repository=repository,
-    ).fact
-    assert remembered is not None
+        remembered = resolve_confirmed_counterparty_facts(
+            bucket_id=_BUCKET_ID,
+            tax_identifier=_SUPPLIER_CIF,
+            repository=repository,
+        ).fact
+        assert remembered is not None
 
-    derived = assemble_classification_criteria(
-        transaction_date=date(2026, 3, 10),
-        direction=InvoiceKind.RECEIVED,
-        inputs=ClassifierInputs(),
-        declared=DeclaredFacts(customer_scope=filer_side, issuer_scope=remembered),
-    )
-    assert derived.assembled, [gap.field for gap in derived.missing]
-    assert derived.criteria is not None
-    assert derived.criteria.issuer_residency == IvaTerritorialScope._from_registry("es_canarias")
-    assert classify_iva(derived.criteria).category == IvaCategory("domestic_not_subject")
+        derived = assemble_classification_criteria(
+            transaction_date=date(2026, 3, 10),
+            direction=InvoiceKind.RECEIVED,
+            inputs=ClassifierInputs(),
+            declared=DeclaredFacts(customer_scope=filer_side, issuer_scope=remembered),
+            operation=_authority_operation_for_test,
+        )
+        assert derived.assembled, [gap.field for gap in derived.missing]
+        assert derived.criteria is not None
+        assert derived.criteria.issuer_residency == IvaTerritorialScope._from_registry("es_canarias")
+        assert classify_iva(derived.criteria, operation=_authority_operation_for_test).category == IvaCategory(
+            "domestic_not_subject"
+        )

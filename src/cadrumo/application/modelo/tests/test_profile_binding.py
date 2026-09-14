@@ -11,6 +11,7 @@ enum/Decimal channel mismatch is rejected at the binding boundary.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -23,6 +24,7 @@ from dev.registry.tests.profile_schema_support import (
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingSourceKind
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
@@ -35,6 +37,13 @@ from ..profile_binding import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for each profile-binding resolution test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000476"
 _BUCKET_ID = _PROFILE_ID
@@ -91,7 +100,9 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     )
 
 
-def test_profile_ccaa_fact_resolves_into_the_enum_binding_channel() -> None:
+def test_profile_ccaa_fact_resolves_into_the_enum_binding_channel(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The tax-residence CCAA profile fact lands in the string enum channel.
 
     The Modelo 100 autonomic chain consumes the CCAA binding via the
@@ -104,25 +115,31 @@ def test_profile_ccaa_fact_resolves_into_the_enum_binding_channel() -> None:
         _modelo_100_snapshot(),
         bucket_id=_BUCKET_ID,
         profile_record=_profile_with_ccaa("cataluna"),
+        operation=authority_operation,
     )
     assert result.enum_binding_values[_CCAA_BINDING] == "cataluna"
     assert _CCAA_BINDING not in result.binding_values
     assert _CCAA_BINDING in _sourced_binding_ids(result)
 
 
-def test_profile_resolution_skips_caller_supplied_bindings() -> None:
+def test_profile_resolution_skips_caller_supplied_bindings(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A binding the caller already supplied is not overridden by the profile."""
     result = resolve_profile_sourced_bindings(
         _modelo_100_snapshot(),
         bucket_id=_BUCKET_ID,
         profile_record=_profile_with_ccaa("madrid"),
         caller_binding_ids=frozenset({_CCAA_BINDING}),
+        operation=authority_operation,
     )
     assert _CCAA_BINDING not in result.enum_binding_values
     assert _CCAA_BINDING not in _sourced_binding_ids(result)
 
 
-def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
+def test_profile_resolution_is_empty_when_no_profile_fact_is_set(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A profile without the CCAA fact contributes nothing for that binding."""
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
@@ -136,12 +153,15 @@ def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
         _modelo_100_snapshot(),
         bucket_id=_BUCKET_ID,
         profile_record=record,
+        operation=authority_operation,
     )
     assert _CCAA_BINDING not in result.enum_binding_values
     assert _CCAA_BINDING not in result.binding_values
 
 
-def test_profile_resolution_routes_two_ccaa_values_distinctly() -> None:
+def test_profile_resolution_routes_two_ccaa_values_distinctly(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Anti-tautology: the resolved enum value tracks the profile fact.
 
     Two profiles differing only by their CCAA fact resolve to distinct
@@ -151,18 +171,22 @@ def test_profile_resolution_routes_two_ccaa_values_distinctly() -> None:
         _modelo_100_snapshot(),
         bucket_id=_BUCKET_ID,
         profile_record=_profile_with_ccaa("cataluna"),
+        operation=authority_operation,
     )
     madrid = resolve_profile_sourced_bindings(
         _modelo_100_snapshot(),
         bucket_id=_BUCKET_ID,
         profile_record=_profile_with_ccaa("madrid"),
+        operation=authority_operation,
     )
     assert cataluna.enum_binding_values[_CCAA_BINDING] == "cataluna"
     assert madrid.enum_binding_values[_CCAA_BINDING] == "madrid"
     assert cataluna.enum_binding_values[_CCAA_BINDING] != madrid.enum_binding_values[_CCAA_BINDING]
 
 
-def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> None:
+def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A formula-consumed numeric profile fact lands in the Decimal channel.
 
     Modelo 100 currently consumes its real profile-sourced CCAA binding
@@ -188,6 +212,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
         snapshot,
         bucket_id=_BUCKET_ID,
         profile_record=record,
+        operation=authority_operation,
     )
 
     assert result.binding_values[_SYNTHETIC_DECIMAL_PROFILE_BINDING] == Decimal("0.37")
@@ -284,45 +309,61 @@ class TestBoolTypedProfileBinding:
     subclass path without the explicit bool check.
     """
 
-    def test_bool_true_fact_resolves_to_decimal_one_in_binding_channel(self) -> None:
+    def test_bool_true_fact_resolves_to_decimal_one_in_binding_channel(
+        self,
+        authority_operation: PinnedAuthorityOperation,
+    ) -> None:
         snapshot = _snapshot_with_bool_profile_binding(_modelo_100_snapshot())
         result = resolve_profile_sourced_bindings(
             snapshot,
             bucket_id=_BUCKET_ID,
             profile_record=_profile_with_bool_fact(True),
+            operation=authority_operation,
         )
         assert result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING] == Decimal("1")
         assert _SYNTHETIC_BOOL_PROFILE_BINDING not in result.enum_binding_values
 
-    def test_bool_false_fact_resolves_to_decimal_zero_in_binding_channel(self) -> None:
+    def test_bool_false_fact_resolves_to_decimal_zero_in_binding_channel(
+        self,
+        authority_operation: PinnedAuthorityOperation,
+    ) -> None:
         snapshot = _snapshot_with_bool_profile_binding(_modelo_100_snapshot())
         result = resolve_profile_sourced_bindings(
             snapshot,
             bucket_id=_BUCKET_ID,
             profile_record=_profile_with_bool_fact(False),
+            operation=authority_operation,
         )
         assert result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING] == Decimal("0")
         assert _SYNTHETIC_BOOL_PROFILE_BINDING not in result.enum_binding_values
 
-    def test_bool_true_and_false_resolve_to_distinct_decimal_values(self) -> None:
+    def test_bool_true_and_false_resolve_to_distinct_decimal_values(
+        self,
+        authority_operation: PinnedAuthorityOperation,
+    ) -> None:
         """Anti-tautology: the two bool values produce distinct Decimal outputs."""
         snapshot = _snapshot_with_bool_profile_binding(_modelo_100_snapshot())
         true_result = resolve_profile_sourced_bindings(
             snapshot,
             bucket_id=_BUCKET_ID,
             profile_record=_profile_with_bool_fact(True),
+            operation=authority_operation,
         )
         false_result = resolve_profile_sourced_bindings(
             snapshot,
             bucket_id=_BUCKET_ID,
             profile_record=_profile_with_bool_fact(False),
+            operation=authority_operation,
         )
         assert (
             true_result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING]
             != false_result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING]
         )
 
-    def test_bool_fact_on_enum_channel_raises(self) -> None:
+    def test_bool_fact_on_enum_channel_raises(
+        self,
+        authority_operation: PinnedAuthorityOperation,
+    ) -> None:
         """A bool fact wired to an enum-dispatch binding raises ProfileBindingResolutionError.
 
         Boolean facts are never valid enum dispatch keys; the resolver
@@ -351,12 +392,15 @@ class TestBoolTypedProfileBinding:
                 snapshot,
                 bucket_id=_BUCKET_ID,
                 profile_record=bool_profile,
+                operation=authority_operation,
             )
         assert exc_info.value.translated_message == "application.modelo.profile_binding.errors.enum_boolean_invalid"
         assert exc_info.value.context == {"binding_id": _CCAA_BINDING, "value_type": "bool"}
 
 
-def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value() -> None:
+def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A string-typed profile fact in a Decimal channel raises a type-invalid error.
 
     ``_coerce_profile_fact_value`` promotes canonical Decimal/bool/date strings
@@ -383,6 +427,7 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
             snapshot,
             bucket_id=_BUCKET_ID,
             profile_record=record,
+            operation=authority_operation,
         )
 
     assert "not-a-decimal-secret" not in str(exc_info.value)
@@ -390,7 +435,9 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
     assert exc_info.value.context == {"binding_id": _SYNTHETIC_DECIMAL_PROFILE_BINDING, "value_type": "str"}
 
 
-def test_profile_resolution_declares_the_terminal_origin_it_produced() -> None:
+def test_profile_resolution_declares_the_terminal_origin_it_produced(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The real resolver names the class of terminal fact behind each value.
 
     Provenance that says which resolver ran but not what kind of fact it
@@ -403,6 +450,7 @@ def test_profile_resolution_declares_the_terminal_origin_it_produced() -> None:
         _modelo_100_snapshot(),
         bucket_id=_BUCKET_ID,
         profile_record=_profile_with_ccaa("cataluna"),
+        operation=authority_operation,
     )
 
     assert result.provenance

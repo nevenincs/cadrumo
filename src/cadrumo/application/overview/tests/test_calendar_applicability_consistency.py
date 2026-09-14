@@ -28,11 +28,13 @@ from datetime import date
 import pytest
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 from ..explain import build_overview_explain
+from .calendar_test_support import calendar_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,7 +82,11 @@ def _attribution_entity() -> TaxpayerProfile:
     )
 
 
-def _collect_verdicts_from_calendar(profile: TaxpayerProfile) -> dict[str, ApplicabilityVerdict]:
+def _collect_verdicts_from_calendar(
+    profile: TaxpayerProfile,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, ApplicabilityVerdict]:
     """Build a calendar with suppressed entries and collect verdict per modelo.
 
     Returns {modelo: verdict} for all modelos the engine produced at
@@ -91,6 +97,7 @@ def _collect_verdicts_from_calendar(profile: TaxpayerProfile) -> dict[str, Appli
     cal = build_overview_calendar(
         profile,
         _CALENDAR_RANGE,
+        operation=operation,
         today=_TODAY,
         show_suppressed=True,
     )
@@ -106,11 +113,13 @@ def _collect_verdicts_from_calendar(profile: TaxpayerProfile) -> dict[str, Appli
 def _collect_verdicts_from_explain(
     profile: TaxpayerProfile,
     modelos: set[str],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> dict[str, ApplicabilityVerdict]:
     """Call build_overview_explain for each modelo and collect the verdict."""
     verdicts: dict[str, ApplicabilityVerdict] = {}
     for modelo in modelos:
-        explain = build_overview_explain(profile, modelo=modelo, year=2026)
+        explain = build_overview_explain(profile, modelo=modelo, year=2026, operation=operation)
         verdicts[modelo] = explain.verdict
     return verdicts
 
@@ -127,6 +136,7 @@ def _collect_verdicts_from_explain(
 )
 def test_calendar_and_explain_agree_on_applicability_verdict(
     profile_factory: Callable[[], TaxpayerProfile],
+    calendar_operation: PinnedAuthorityOperation,
 ) -> None:
     """Calendar and explain surfaces agree on the verdict for every modelo.
 
@@ -138,7 +148,7 @@ def test_calendar_and_explain_agree_on_applicability_verdict(
     regression in either surface will be caught by this test.
     """
     profile = profile_factory()
-    calendar_verdicts = _collect_verdicts_from_calendar(profile)
+    calendar_verdicts = _collect_verdicts_from_calendar(profile, operation=calendar_operation)
 
     assert calendar_verdicts, (
         f"No obligations produced for profile {profile.entity_type}; "
@@ -146,7 +156,11 @@ def test_calendar_and_explain_agree_on_applicability_verdict(
         "covers no registered modelos. Check _CALENDAR_RANGE and registry data."
     )
 
-    explain_verdicts = _collect_verdicts_from_explain(profile, set(calendar_verdicts))
+    explain_verdicts = _collect_verdicts_from_explain(
+        profile,
+        set(calendar_verdicts),
+        operation=calendar_operation,
+    )
 
     mismatches: list[str] = []
     for modelo in sorted(calendar_verdicts):

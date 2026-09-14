@@ -29,6 +29,8 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
@@ -112,11 +114,14 @@ def test_a_declared_code_is_read_into_a_fact_carrying_its_attribution() -> None:
     classification resting on the document's own record must be distinguishable
     later from one resting on an operator's assertion.
     """
-    fact = declared_category_from_document_record(IvaCategory("domestic_reverse_charge").value)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        fact = declared_category_from_document_record(
+            IvaCategory("domestic_reverse_charge").value, operation=_authority_operation_for_test
+        )
 
-    assert fact is not None
-    assert fact.value is IvaCategory("domestic_reverse_charge")
-    assert fact.source is ClassifierInputSource.DOCUMENT_EVIDENCE
+        assert fact is not None
+        assert fact.value is IvaCategory("domestic_reverse_charge")
+        assert fact.source is ClassifierInputSource.DOCUMENT_EVIDENCE
 
 
 @pytest.mark.parametrize("printed", [None, "", "   ", "not-a-category-token"])
@@ -129,7 +134,8 @@ def test_an_absent_blank_or_unrecognised_code_establishes_nothing(printed: str |
     label the operator can supply would block a filing the rest of the record
     fully supports.
     """
-    assert declared_category_from_document_record(printed) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert declared_category_from_document_record(printed, operation=_authority_operation_for_test) is None
 
 
 # --------------------------------------------------------------------------
@@ -290,24 +296,28 @@ def test_a_domestic_case_derives_with_the_supply_nature_unknown_and_asks_nothing
     demanding the nature would still return a category here and would only be
     visible as an operator prompt nobody could answer from the page.
     """
-    declared = DeclaredFacts(issuer_scope=_fact(_ES), customer_scope=_fact(_ES))
-    assembly = assemble_classification_criteria(
-        transaction_date=_WHEN,
-        direction=InvoiceKind.RECEIVED,
-        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
-        declared=declared,
-        rate_tier=IvaRateKind("general"),
-    )
-    resolution = resolve_ingestion_iva_category(assembly, declared=declared, rate_tier=IvaRateKind("general"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        declared = DeclaredFacts(issuer_scope=_fact(_ES), customer_scope=_fact(_ES))
+        assembly = assemble_classification_criteria(
+            transaction_date=_WHEN,
+            direction=InvoiceKind.RECEIVED,
+            inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+            declared=declared,
+            rate_tier=IvaRateKind("general"),
+            operation=_authority_operation_for_test,
+        )
+        resolution = resolve_ingestion_iva_category(
+            assembly, declared=declared, rate_tier=IvaRateKind("general"), operation=_authority_operation_for_test
+        )
 
-    assert [gap.field for gap in assembly.missing] == [], (
-        "a domestic operation asked the operator for an axis its treatment cannot turn on"
-    )
-    assert assembly.assembled
-    assert resolution.outcome is IvaCategoryOutcome.CLASSIFIED, (
-        "the domestic case must reach the rule table, not fall back to the tier inference"
-    )
-    assert resolution.category is not None
+        assert [gap.field for gap in assembly.missing] == [], (
+            "a domestic operation asked the operator for an axis its treatment cannot turn on"
+        )
+        assert assembly.assembled
+        assert resolution.outcome is IvaCategoryOutcome.CLASSIFIED, (
+            "the domestic case must reach the rule table, not fall back to the tier inference"
+        )
+        assert resolution.category is not None
 
 
 def test_the_inference_never_displaces_a_verdict_or_a_declaration() -> None:
@@ -413,25 +423,28 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
     an operator meeting false refusals stops reading them. Here both territories
     resolve, so no residency gap is recorded and the claim stands untouched.
     """
-    declared = DeclaredFacts(
-        issuer_scope=_fact(_ES),
-        customer_scope=_fact(IvaTerritorialScope._from_registry("third_country")),
-        stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
-    )
-    assembly = assemble_classification_criteria(
-        transaction_date=_WHEN,
-        direction=InvoiceKind.ISSUED,
-        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
-        declared=declared,
-    )
-    resolution = resolve_ingestion_iva_category(
-        assembly,
-        declared=declared,
-        counterparty_country_status=stated_country_code_status("US"),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        declared = DeclaredFacts(
+            issuer_scope=_fact(_ES),
+            customer_scope=_fact(IvaTerritorialScope._from_registry("third_country")),
+            stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
+        )
+        assembly = assemble_classification_criteria(
+            transaction_date=_WHEN,
+            direction=InvoiceKind.ISSUED,
+            inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+            declared=declared,
+            operation=_authority_operation_for_test,
+        )
+        resolution = resolve_ingestion_iva_category(
+            assembly,
+            declared=declared,
+            counterparty_country_status=stated_country_code_status("US", operation=_authority_operation_for_test),
+            operation=_authority_operation_for_test,
+        )
 
-    assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is IvaCategory("export_third_country_zero_rated")
+        assert resolution.outcome is IvaCategoryOutcome.DECLARED
+        assert resolution.category is IvaCategory("export_third_country_zero_rated")
 
 
 def test_a_country_our_vocabulary_does_not_carry_forgives_that_partys_slot() -> None:
@@ -610,26 +623,29 @@ def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
     would trade an under-declaration for an over-payment, which nothing in this
     apparatus watches.
     """
-    declared = DeclaredFacts(
-        issuer_scope=_fact(_ES),
-        customer_scope=_fact(IvaTerritorialScope._from_registry("third_country")),
-        stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
-    )
-    assembly = assemble_classification_criteria(
-        transaction_date=_WHEN,
-        direction=InvoiceKind.ISSUED,
-        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
-        declared=declared,
-    )
-    resolution = resolve_ingestion_iva_category(
-        assembly,
-        declared=declared,
-        counterparty_country_status=record_country_code_status("USA"),
-        direction=InvoiceKind.ISSUED,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        declared = DeclaredFacts(
+            issuer_scope=_fact(_ES),
+            customer_scope=_fact(IvaTerritorialScope._from_registry("third_country")),
+            stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
+        )
+        assembly = assemble_classification_criteria(
+            transaction_date=_WHEN,
+            direction=InvoiceKind.ISSUED,
+            inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+            declared=declared,
+            operation=_authority_operation_for_test,
+        )
+        resolution = resolve_ingestion_iva_category(
+            assembly,
+            declared=declared,
+            counterparty_country_status=record_country_code_status("USA", operation=_authority_operation_for_test),
+            direction=InvoiceKind.ISSUED,
+            operation=_authority_operation_for_test,
+        )
 
-    assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is IvaCategory("export_third_country_zero_rated")
+        assert resolution.outcome is IvaCategoryOutcome.DECLARED
+        assert resolution.category is IvaCategory("export_third_country_zero_rated")
 
 
 def _counterparty_only_relief(

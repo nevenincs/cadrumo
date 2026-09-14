@@ -23,6 +23,7 @@ one residence fact.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
@@ -33,6 +34,7 @@ from dev.registry.tests.profile_schema_support import (
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ....domain.calculations.registry.binding_terminal_audit import (
     effective_terminal_origins,
@@ -44,6 +46,13 @@ from ...modelo.profile_binding import resolve_profile_sourced_bindings
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation for the live terminal-origin resolution."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
@@ -93,7 +102,9 @@ def test_unauthored_bindings_take_the_registration_derived_expectation() -> None
     assert with_expectation, "no unauthored binding carries a registration-derived expectation"
 
 
-def test_clean_profile_resolution_emits_no_terminal_origin_mismatch() -> None:
+def test_clean_profile_resolution_emits_no_terminal_origin_mismatch(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Real resolver output over a synthetic profile audits clean.
 
     The resolution comes from the production profile resolver, not a fabricated
@@ -105,6 +116,7 @@ def test_clean_profile_resolution_emits_no_terminal_origin_mismatch() -> None:
         snapshot,
         bucket_id=_PROFILE_ID,
         profile_record=_profile_record(),
+        operation=authority_operation,
     )
     assert resolution.provenance, "the profile resolver resolved nothing, so the audit has nothing to audit"
 

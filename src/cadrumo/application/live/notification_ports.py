@@ -15,9 +15,11 @@ from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, Field
 
+from ...core.config import Settings
 from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.notifications.sancion import SancionLiquidacion
+from ..auth.session_types import AeatSession
 from .snapshot_base import SnapshotRepository
 
 
@@ -76,7 +78,7 @@ class NotificationsSnapshot(BaseModel):
 class NotificationSnapshotQueryProtocol(Protocol):
     """Read the authenticated notification surface and translate its result."""
 
-    async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
+    async def fetch(self, session: AeatSession, *, settings: Settings) -> NotificationsSnapshot:
         """Return one application-owned notifications snapshot."""
         ...
 

@@ -13,6 +13,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
@@ -401,27 +402,29 @@ def test_missing_profile_name_has_an_exact_runtime_operator_decision_verdict(
 def test_quiet_missing_required_flags_has_an_exact_runtime_operator_decision_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
-    missing = commands_module._missing_required_flags(registry_setup_flow, {})
-    assert missing
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        missing = commands_module._missing_required_flags(registry_setup_flow, {})
+        assert missing
 
-    with pytest.raises(WizardMissingFlagError) as raised:
-        _run_full_flow(
-            registry_setup_flow,
-            {},
-            quiet=True,
-            accept_defaults=False,
-            profile_name="Existing profile",
-            profile_id="profile-id",
-            mode="edit",
+        with pytest.raises(WizardMissingFlagError) as raised:
+            _run_full_flow(
+                registry_setup_flow,
+                {},
+                quiet=True,
+                accept_defaults=False,
+                profile_name="Existing profile",
+                profile_id="profile-id",
+                mode="edit",
+                operation=_authority_operation_for_test,
+            )
+
+        _assert_terminal_contract(
+            raised.value,
+            condition=WizardPreconditionCondition.REQUIRED_FLAGS_SUPPLIED,
+            facts={"required_flags_supplied": False, "missing_flag_count": len(missing)},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         )
-
-    _assert_terminal_contract(
-        raised.value,
-        condition=WizardPreconditionCondition.REQUIRED_FLAGS_SUPPLIED,
-        facts={"required_flags_supplied": False, "missing_flag_count": len(missing)},
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-    )
 
 
 def test_missing_filing_baseline_has_an_exact_runtime_operator_decision_verdict(
@@ -473,37 +476,41 @@ def test_unregistered_profile_label_passes_the_application_state_gate(*, registr
 def test_edit_without_an_interactive_console_has_an_exact_runtime_safety_verdict(
     *, registry_setup_flow: WizardFlow
 ) -> None:
-    with pytest.raises(WizardEditUnsupportedConsoleError) as raised:
-        _run_full_flow(
-            registry_setup_flow,
-            {},
-            quiet=False,
-            accept_defaults=False,
-            profile_name="Existing profile",
-            profile_id="profile-id",
-            mode="edit",
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(WizardEditUnsupportedConsoleError) as raised:
+            _run_full_flow(
+                registry_setup_flow,
+                {},
+                quiet=False,
+                accept_defaults=False,
+                profile_name="Existing profile",
+                profile_id="profile-id",
+                mode="edit",
+                operation=_authority_operation_for_test,
+            )
 
-    _assert_terminal_contract(
-        raised.value,
-        condition=WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
-        facts={"interactive_console_available": False},
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=NoRecoveryOutcome.SAFETY,
-    )
+        _assert_terminal_contract(
+            raised.value,
+            condition=WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
+            facts={"interactive_console_available": False},
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.SAFETY,
+        )
 
 
 def test_interactive_profile_create_remains_custody_refused_before_console_handling(
     *, registry_setup_flow: WizardFlow
 ) -> None:
     """Current custody rejects create; neither status nor wizard offers it as recovery."""
-    with pytest.raises(ProfileRegistrationError):
-        _run_full_flow(
-            registry_setup_flow,
-            {},
-            quiet=False,
-            accept_defaults=False,
-            profile_name="New profile",
-            profile_id="profile-id",
-            mode="create",
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(ProfileRegistrationError):
+            _run_full_flow(
+                registry_setup_flow,
+                {},
+                quiet=False,
+                accept_defaults=False,
+                profile_name="New profile",
+                profile_id="profile-id",
+                mode="create",
+                operation=_authority_operation_for_test,
+            )

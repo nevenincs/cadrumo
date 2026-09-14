@@ -25,8 +25,11 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.applicability import iter_modelo_applicability_rules
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.modelo_obligation_scope import (
     OUT_OF_SCOPE_OBLIGATIONS,
     UNMODELED_OBLIGATIONS,
@@ -51,6 +54,7 @@ from ..coverage import (
     ObligationCoverageReport,
     build_obligation_coverage,
 )
+from .calendar_test_support import calendar_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -302,7 +306,9 @@ def _dispositions(report: ObligationCoverageReport) -> set[str]:
     )
 
 
-def test_calendar_attaches_coverage_by_default() -> None:
+def test_calendar_attaches_coverage_by_default(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A default calendar build (show_suppressed=False) still carries coverage.
 
     The report is populated regardless of the suppressed-entries flag, so the
@@ -311,6 +317,7 @@ def test_calendar_attaches_coverage_by_default() -> None:
     calendar = build_overview_calendar(
         _paying_autonomo(),
         OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        operation=calendar_operation,
         today=_TODAY,
     )
     _assert_total_partition(calendar.coverage)
@@ -322,12 +329,13 @@ def test_calendar_attaches_coverage_by_default() -> None:
 
 def test_agenda_and_backlog_inherit_calendar_coverage() -> None:
     """Agenda and backlog compose the calendar, so they inherit its coverage."""
-    profile = _paying_autonomo()
-    agenda = build_overview_agenda(profile, as_of=_TODAY)
-    backlog = build_overview_backlog(profile, as_of=_TODAY)
-    _assert_total_partition(agenda.coverage)
-    _assert_total_partition(backlog.coverage)
-    assert "190" in agenda.coverage.surfaced
-    assert "190" in backlog.coverage.surfaced
-    assert "190" not in agenda.coverage.advised_modelos
-    assert "190" not in backlog.coverage.advised_modelos
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        profile = _paying_autonomo()
+        agenda = build_overview_agenda(profile, as_of=_TODAY, operation=_authority_operation_for_test)
+        backlog = build_overview_backlog(profile, as_of=_TODAY, operation=_authority_operation_for_test)
+        _assert_total_partition(agenda.coverage)
+        _assert_total_partition(backlog.coverage)
+        assert "190" in agenda.coverage.surfaced
+        assert "190" in backlog.coverage.surfaced
+        assert "190" not in agenda.coverage.advised_modelos
+        assert "190" not in backlog.coverage.advised_modelos

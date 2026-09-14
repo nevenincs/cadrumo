@@ -26,6 +26,8 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
@@ -162,20 +164,26 @@ def test_the_interim_stamp_is_absent_on_a_co_located_value() -> None:
     side: the resolver attributes the value while the envelope still says nothing
     verified it, and every reader downstream sees the weaker claim.
     """
-    grounded = ground_draft_against_transcription(draft=_straight(), transcription=_transcription())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_straight(), transcription=_transcription(), operation=_authority_operation_for_test
+        )
 
-    stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
-    assert stamps["supplier_postal_code"] is False
-    assert stamps["customer_postal_code"] is False
+        stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
+        assert stamps["supplier_postal_code"] is False
+        assert stamps["customer_postal_code"] is False
 
 
 def test_a_transposed_value_keeps_the_stamp_rather_than_reading_as_attributed() -> None:
     """A contradiction must never clear the stamp -- it is the opposite of a clean bill."""
-    grounded = ground_draft_against_transcription(draft=_transposed(), transcription=_transcription())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_transposed(), transcription=_transcription(), operation=_authority_operation_for_test
+        )
 
-    stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
-    assert stamps["supplier_postal_code"] is True
-    assert stamps["customer_postal_code"] is True
+        stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
+        assert stamps["supplier_postal_code"] is True
+        assert stamps["customer_postal_code"] is True
 
 
 def test_a_value_printed_in_both_regions_stays_unresolved() -> None:
@@ -239,48 +247,56 @@ def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
     Detecting a swap and discarding it is the same shape as evidence no resolver
     consumes: the check runs, nothing acts, and the draft confirms clean.
     """
-    from ..confirmation_gate import confirmation_blockers
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..confirmation_gate import confirmation_blockers
 
-    grounded = ground_draft_against_transcription(draft=_transposed(), transcription=_transcription())
+        grounded = ground_draft_against_transcription(
+            draft=_transposed(), transcription=_transcription(), operation=_authority_operation_for_test
+        )
 
-    kinds = [finding.kind for finding in grounded.discrepancies]
-    assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED in kinds
-    blocked_fields = {
-        blocker.field
-        for blocker in confirmation_blockers(grounded)
-        if blocker.reason is ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT
-    }
-    assert {"supplier_postal_code", "customer_postal_code"} <= blocked_fields
+        kinds = [finding.kind for finding in grounded.discrepancies]
+        assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED in kinds
+        blocked_fields = {
+            blocker.field
+            for blocker in confirmation_blockers(grounded)
+            if blocker.reason is ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT
+        }
+        assert {"supplier_postal_code", "customer_postal_code"} <= blocked_fields
 
 
 def test_a_correctly_filed_document_raises_no_attribution_blocker() -> None:
     """The ordinary case must not be refused, or the blocker trains operators to ignore it."""
-    from ..confirmation_gate import confirmation_blockers
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..confirmation_gate import confirmation_blockers
 
-    grounded = ground_draft_against_transcription(draft=_straight(), transcription=_transcription())
+        grounded = ground_draft_against_transcription(
+            draft=_straight(), transcription=_transcription(), operation=_authority_operation_for_test
+        )
 
-    assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
-    assert confirmation_blockers(grounded) == ()
+        assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
+        assert confirmation_blockers(grounded) == ()
 
 
 def test_an_unresolvable_document_advises_rather_than_refuses() -> None:
     """A layout that cannot be separated stays on the advisory, never the blocker."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        draft = _straight()
+        unanchorable = draft.model_copy(
+            update={
+                "provenance": tuple(
+                    _envelope("customer_tax_id", "B44444444") if envelope.field == "customer_tax_id" else envelope
+                    for envelope in draft.provenance
+                ),
+            },
+        )
 
-    draft = _straight()
-    unanchorable = draft.model_copy(
-        update={
-            "provenance": tuple(
-                _envelope("customer_tax_id", "B44444444") if envelope.field == "customer_tax_id" else envelope
-                for envelope in draft.provenance
-            ),
-        },
-    )
+        grounded = ground_draft_against_transcription(
+            draft=unanchorable, transcription=_transcription(), operation=_authority_operation_for_test
+        )
 
-    grounded = ground_draft_against_transcription(draft=unanchorable, transcription=_transcription())
-
-    assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
-    stamps = {e.field: e.attribution_unverified for e in grounded.provenance}
-    assert stamps["supplier_postal_code"] is True
+        assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
+        stamps = {e.field: e.attribution_unverified for e in grounded.provenance}
+        assert stamps["supplier_postal_code"] is True
 
 
 # The layout every real document measured actually has: a two-column header,
@@ -358,14 +374,14 @@ def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_adviso
     actually print. The stamp surviving on the real layout is the claim, and a
     fixture-shaped route to the same resolution does not make it.
     """
-    grounded = ground_draft_against_transcription(
-        draft=_straight(),
-        transcription=_transcription(_TWO_COLUMN_PAGE),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = ground_draft_against_transcription(
+            draft=_straight(), transcription=_transcription(_TWO_COLUMN_PAGE), operation=_authority_operation_for_test
+        )
 
-    stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
-    assert stamps["supplier_postal_code"] is True
-    assert stamps["customer_postal_code"] is True
-    # Advisory, never blocker: an unpartitionable layout is not a contradiction.
-    assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
-    assert party_attribution_advisory(grounded) is not None
+        stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
+        assert stamps["supplier_postal_code"] is True
+        assert stamps["customer_postal_code"] is True
+        # Advisory, never blocker: an unpartitionable layout is not a contradiction.
+        assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
+        assert party_attribution_advisory(grounded) is not None

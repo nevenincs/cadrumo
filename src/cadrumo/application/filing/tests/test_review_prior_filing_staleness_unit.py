@@ -21,6 +21,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
@@ -67,82 +69,99 @@ def _carrier(
 
 
 def test_prior_filing_fingerprint_changes_when_a_filed_value_changes() -> None:
-    before = _prior_filing_observations_fingerprint([_carrier(value="100.00")])
-    after = _prior_filing_observations_fingerprint([_carrier(value="250.00")])
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        before = _prior_filing_observations_fingerprint(
+            [_carrier(value="100.00")], operation=_authority_operation_for_test
+        )
+        after = _prior_filing_observations_fingerprint(
+            [_carrier(value="250.00")], operation=_authority_operation_for_test
+        )
 
-    assert before != after
+        assert before != after
 
 
 def test_prior_filing_fingerprint_tracks_a_text_casilla_without_decimal_coercion() -> None:
-    def carrier(value: str) -> ObservationEnvelopePayload:
-        observation = RegistryModeloObservation(
-            modelo="130",
-            filing_year=2026,
-            period="1T",
-            observations=(
-                CasillaObservation(
-                    casilla_id=_M130_RESULTADO_CASILLA,
-                    value_kind="text",
-                    value=value,
-                    legal_refs=_LEGAL_REFS,
-                    source_refs=_SOURCE_REFS,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+
+        def carrier(value: str) -> ObservationEnvelopePayload:
+            observation = RegistryModeloObservation(
+                modelo="130",
+                filing_year=2026,
+                period="1T",
+                observations=(
+                    CasillaObservation(
+                        casilla_id=_M130_RESULTADO_CASILLA,
+                        value_kind="text",
+                        value=value,
+                        legal_refs=_LEGAL_REFS,
+                        source_refs=_SOURCE_REFS,
+                    ),
+                ),
+            )
+            return ObservationEnvelopePayload(
+                observation=observation,
+                captured_at=datetime(2026, 1, 1, tzinfo=UTC),
+                source_kind="app_filing",
+                member_nif=None,
+                stamped_revision_id="2019-y-siguientes",
+                source_metadata={},
+            )
+
+        before = _prior_filing_observations_fingerprint([carrier("1T")], operation=_authority_operation_for_test)
+        after = _prior_filing_observations_fingerprint([carrier("2T")], operation=_authority_operation_for_test)
+
+        assert before != after
+
+
+def test_prior_filing_fingerprint_refuses_a_stale_stamped_revision() -> None:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        _prior_filing_observations_fingerprint(
+            [_carrier(value="100.00", stamped_revision_id="2019-y-siguientes")], operation=_authority_operation_for_test
+        )
+
+        with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+            _prior_filing_observations_fingerprint(
+                [_carrier(value="100.00", stamped_revision_id="2024-y-siguientes")],
+                operation=_authority_operation_for_test,
+            )
+
+
+def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> None:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        a = _carrier(value="100.00")
+        b = ObservationEnvelopePayload(
+            observation=RegistryModeloObservation(
+                modelo="130",
+                filing_year=2025,
+                period="1T",
+                observations=(
+                    CasillaObservation(
+                        casilla_id=_M130_RESULTADO_CASILLA,
+                        value=Decimal("200.00"),
+                        legal_refs=_LEGAL_REFS,
+                        source_refs=_SOURCE_REFS,
+                    ),
                 ),
             ),
-        )
-        return ObservationEnvelopePayload(
-            observation=observation,
-            captured_at=datetime(2026, 1, 1, tzinfo=UTC),
+            captured_at=datetime(2026, 1, 2, tzinfo=UTC),
             source_kind="app_filing",
             member_nif=None,
             stamped_revision_id="2019-y-siguientes",
             source_metadata={},
         )
 
-    before = _prior_filing_observations_fingerprint([carrier("1T")])
-    after = _prior_filing_observations_fingerprint([carrier("2T")])
-
-    assert before != after
-
-
-def test_prior_filing_fingerprint_refuses_a_stale_stamped_revision() -> None:
-    _prior_filing_observations_fingerprint([_carrier(value="100.00", stamped_revision_id="2019-y-siguientes")])
-
-    with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
-        _prior_filing_observations_fingerprint(
-            [_carrier(value="100.00", stamped_revision_id="2024-y-siguientes")],
-        )
-
-
-def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> None:
-    a = _carrier(value="100.00")
-    b = ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="130",
-            filing_year=2025,
-            period="1T",
-            observations=(
-                CasillaObservation(
-                    casilla_id=_M130_RESULTADO_CASILLA,
-                    value=Decimal("200.00"),
-                    legal_refs=_LEGAL_REFS,
-                    source_refs=_SOURCE_REFS,
-                ),
-            ),
-        ),
-        captured_at=datetime(2026, 1, 2, tzinfo=UTC),
-        source_kind="app_filing",
-        member_nif=None,
-        stamped_revision_id="2019-y-siguientes",
-        source_metadata={},
-    )
-
-    assert _prior_filing_observations_fingerprint([a, b]) == _prior_filing_observations_fingerprint([b, a])
+        assert _prior_filing_observations_fingerprint(
+            [a, b], operation=_authority_operation_for_test
+        ) == _prior_filing_observations_fingerprint([b, a], operation=_authority_operation_for_test)
 
 
 def test_prior_filing_fingerprint_distinguishes_empty_from_populated() -> None:
-    empty = _prior_filing_observations_fingerprint([])
-    populated = _prior_filing_observations_fingerprint([_carrier(value="100.00")])
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        empty = _prior_filing_observations_fingerprint([], operation=_authority_operation_for_test)
+        populated = _prior_filing_observations_fingerprint(
+            [_carrier(value="100.00")], operation=_authority_operation_for_test
+        )
 
-    assert empty != populated
-    assert empty == empty_prior_filing_observations_fingerprint()
-    assert empty == _prior_filing_observations_fingerprint([])
+        assert empty != populated
+        assert empty == empty_prior_filing_observations_fingerprint()
+        assert empty == _prior_filing_observations_fingerprint([], operation=_authority_operation_for_test)

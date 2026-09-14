@@ -17,12 +17,22 @@ and refusal contract.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import SecretStr
 
 from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
@@ -44,10 +54,7 @@ _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
 _SOPORTE = "E12345678"
 _FECHA_VALIDEZ = "2030-01-01"
-_PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
-    schema=load_user_profile_schema(),
-    generation=AuthorityGenerationPin(logical_generation="test-profile", reader_incarnation="test-reader"),
-)
+_, _PROFILE_DECODE_CONTEXT = _profile_contexts_for_test()
 
 _ACTIVE_PROFILE_FACTS = ClaveAuthFacts()
 
@@ -63,8 +70,21 @@ def _register_profile(**overrides: str) -> None:
     )
 
 
+@pytest.fixture(scope="module")
+def _profile_fact_operation() -> PinnedAuthorityOperation:
+    """Expose the authored tax-ID declaration through one pinned test reader."""
+    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()}
+    )
+    return PinnedAuthorityOperation(reader, reader.pin())
+
+
 @pytest.fixture(autouse=True)
-def _bind_profile_facts(monkeypatch: pytest.MonkeyPatch) -> None:
+def _bind_profile_facts(
+    monkeypatch: pytest.MonkeyPatch,
+    _profile_fact_operation: PinnedAuthorityOperation,
+) -> Iterator[None]:
     """Inject one explicit application-owned profile-facts capability per test."""
 
     global _ACTIVE_PROFILE_FACTS
@@ -74,6 +94,8 @@ def _bind_profile_facts(monkeypatch: pytest.MonkeyPatch) -> None:
         "_active_profile_auth_facts",
         lambda **_: _ACTIVE_PROFILE_FACTS,
     )
+    with validating_governed_facts(_profile_fact_operation):
+        yield
 
 
 def test_profile_dni_nie_wins_over_settings_and_reaches_the_provider() -> None:
@@ -90,6 +112,7 @@ def test_profile_dni_nie_wins_over_settings_and_reaches_the_provider() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert expected_identity == _TAX_ID
@@ -110,6 +133,7 @@ def test_settings_remain_the_identity_fallback_when_the_profile_carries_the_requ
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert expected_identity == _TAX_ID
@@ -165,6 +189,7 @@ def test_profile_numero_soporte_reaches_the_non_qr_contraste_setting() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert bound.cadrumo_clave_movil_nie_soporte is not None
@@ -189,6 +214,7 @@ def test_rebinding_the_settings_preserves_every_other_secret() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert bound is not settings
@@ -247,7 +273,12 @@ def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> 
         ) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+        )
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
 
@@ -270,6 +301,7 @@ def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert expected_identity == _TAX_ID
@@ -291,6 +323,7 @@ def test_profile_qr_route_overrides_an_environment_app_request() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert expected_identity == _TAX_ID
@@ -314,6 +347,7 @@ def test_profile_app_request_route_requires_contraste_and_reaches_provider_setti
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert expected_identity == _TAX_ID
@@ -341,6 +375,7 @@ def test_dni_validity_date_from_settings_satisfies_the_contraste() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert expected_identity == _TAX_ID
@@ -373,6 +408,7 @@ def test_profile_fecha_validez_carries_a_dni_holder_through_the_non_qr_route() -
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert expected_identity == _TAX_ID
@@ -399,7 +435,12 @@ def test_a_profile_carrying_neither_contraste_still_refuses_the_non_qr_route() -
         ) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        _prepare_clave_auth(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+        )
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
 
@@ -417,6 +458,7 @@ def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:
             settings,
             AuthProviderKind.CLAVE_PERMANENTE,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert bound.cadrumo_clave_permanente_dni_nie is not None
@@ -445,6 +487,7 @@ def test_certificate_provider_needs_neither_clave_field() -> None:
             settings,
             AuthProviderKind.CERTIFICATE,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            profile_decode_context=_PROFILE_DECODE_CONTEXT,
         )
 
     assert bound is settings
@@ -479,6 +522,7 @@ def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
                 settings,
                 kind,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                profile_decode_context=_PROFILE_DECODE_CONTEXT,
             )
         if expected_identity != _TAX_ID:
             missing.append(f"{kind.value} -> {expected_identity!r}")
@@ -505,7 +549,12 @@ def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clav
             cadrumo_clave_permanente_dni_nie=SecretStr(_OTHER_TAX_ID),
         ) as settings:
             try:
-                _prepare_clave_auth(settings, kind, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+                _prepare_clave_auth(
+                    settings,
+                    kind,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    profile_decode_context=_PROFILE_DECODE_CONTEXT,
+                )
             except AuthProfileIdentityMismatchError:
                 refused[kind.value] = True
             else:

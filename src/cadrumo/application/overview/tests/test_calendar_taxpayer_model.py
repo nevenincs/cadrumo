@@ -6,7 +6,10 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ...live.expedientes import PersistedExpedientesSnapshot
@@ -15,6 +18,7 @@ from ..calendar import build_overview_calendar, calendar_events_from_expedientes
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
 from .calendar_test_support import BUCKET_ID as _BUCKET_ID
 from .calendar_test_support import SOURCE_URL as _SOURCE_URL
+from .calendar_test_support import calendar_operation
 from .calendar_test_support import profile as _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -41,24 +45,24 @@ def _undeclared_profile() -> TaxpayerProfile:
     return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("general"))
 
 
-def test_calendar_landlord_never_shows_modelo_130() -> None:
+def test_calendar_landlord_never_shows_modelo_130(calendar_operation: PinnedAuthorityOperation) -> None:
     """The wrong-guidance fix at the calendar surface: a pure
     landlord's calendar must not list Modelo 130, even across a full
     year where every quarterly window is registered."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_landlord_profile(), rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_landlord_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
     assert cal.taxpayer_model_declared is True
     modelos = {entry.modelo for entry in cal.entries}
     assert "130" not in modelos
     assert "303" not in modelos
 
 
-def test_calendar_autonomo_still_shows_modelo_130() -> None:
+def test_calendar_autonomo_still_shows_modelo_130(calendar_operation: PinnedAuthorityOperation) -> None:
     """The autónomo persona is unchanged: Modelo 130 still appears."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
     modelos = {entry.modelo for entry in cal.entries}
     assert "130" in modelos
 
@@ -82,7 +86,9 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
     )
 
 
-def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130_quarters() -> None:
+def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130_quarters(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """Operator repro fix: an actividad-económica profile with no declared
     estimation regime owes the four Modelo 130 quarterly pago-fraccionado
     deadlines.
@@ -104,7 +110,7 @@ def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130
     # The range includes the closing 2025 4T filing window in January
     # 2026 and all four filing-year 2026 quarterly windows.
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
-    cal = build_overview_calendar(profile, rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile, rng, operation=calendar_operation, today=date(2026, 4, 1))
 
     assert cal.taxpayer_model_declared is True
     m130_entries = sorted(
@@ -139,7 +145,9 @@ def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130
     assert "131" not in {entry.modelo for entry in cal.entries}
 
 
-def test_calendar_pure_landlord_without_regime_owes_no_m130() -> None:
+def test_calendar_pure_landlord_without_regime_owes_no_m130(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """The directa default must not over-include a non-owing profile.
 
     A pure landlord (rendimientos del capital inmobiliario only, no
@@ -150,16 +158,18 @@ def test_calendar_pure_landlord_without_regime_owes_no_m130() -> None:
     """
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
-    cal = build_overview_calendar(_landlord_profile(), rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_landlord_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
     assert "130" not in {entry.modelo for entry in cal.entries}
 
 
-def test_calendar_undeclared_profile_yields_incomplete_empty_calendar() -> None:
+def test_calendar_undeclared_profile_yields_incomplete_empty_calendar(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """An undeclared taxpayer model yields an empty calendar flagged
     taxpayer_model_declared=False — never the autónomo guess."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_undeclared_profile(), rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_undeclared_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
     assert cal.taxpayer_model_declared is False
     assert cal.entries == ()
     assert cal.incomplete_reason is not None
@@ -167,7 +177,9 @@ def test_calendar_undeclared_profile_yields_incomplete_empty_calendar() -> None:
     assert "perfil" in cal.incomplete_reason
 
 
-def test_calendar_undeclared_profile_preserves_observed_events() -> None:
+def test_calendar_undeclared_profile_preserves_observed_events(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """Observed AEAT events remain visible even when obligations cannot be derived."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
@@ -194,7 +206,13 @@ def test_calendar_undeclared_profile_preserves_observed_events() -> None:
         rng,
     )
 
-    cal = build_overview_calendar(_undeclared_profile(), rng, today=date(2026, 4, 1), events=events)
+    cal = build_overview_calendar(
+        _undeclared_profile(),
+        rng,
+        operation=calendar_operation,
+        today=date(2026, 4, 1),
+        events=events,
+    )
 
     assert cal.taxpayer_model_declared is False
     assert cal.entries == ()
@@ -246,7 +264,9 @@ def _objetiva_autonomo() -> TaxpayerProfile:
     )
 
 
-def test_calendar_excludes_non_applicable_modelos() -> None:
+def test_calendar_excludes_non_applicable_modelos(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A modelo the taxpayer model does not positively trigger must
     never appear as a confident calendar row.
 
@@ -261,7 +281,7 @@ def test_calendar_excludes_non_applicable_modelos() -> None:
 
     profile = _objetiva_autonomo()
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(profile, rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(profile, rng, operation=calendar_operation, today=date(2026, 4, 1))
 
     calendar_modelos = {entry.modelo for entry in cal.entries}
     # Modelo 130 is NOT_APPLICABLE for an objetiva autónomo...
@@ -281,29 +301,32 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
     """Agenda and backlog compose the calendar, so the non-applicable
     exclusion must reach them too — neither may leak the NOT_APPLICABLE
     Modelo 130 as a confident due / late row for an objetiva autónomo."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..agenda import build_overview_agenda
+        from ..backlog import build_overview_backlog
 
-    from ..agenda import build_overview_agenda
-    from ..backlog import build_overview_backlog
+        profile = _objetiva_autonomo()
 
-    profile = _objetiva_autonomo()
+        # A horizon that keeps the agenda window inside 2026 (the agenda
+        # adds a 90-day overdue lookback, so the horizon must leave room).
+        agenda = build_overview_agenda(
+            profile, as_of=date(2026, 4, 1), horizon_days=200, operation=_authority_operation_for_test
+        )
+        agenda_modelos = {
+            entry.modelo for bucket in (agenda.due_today, agenda.due_soon, agenda.overdue) for entry in bucket
+        }
+        assert agenda_modelos, "expected the objetiva autónomo to have agenda obligations"
+        assert "130" not in agenda_modelos
 
-    # A horizon that keeps the agenda window inside 2026 (the agenda
-    # adds a 90-day overdue lookback, so the horizon must leave room).
-    agenda = build_overview_agenda(profile, as_of=date(2026, 4, 1), horizon_days=200)
-    agenda_modelos = {
-        entry.modelo for bucket in (agenda.due_today, agenda.due_soon, agenda.overdue) for entry in bucket
-    }
-    assert agenda_modelos, "expected the objetiva autónomo to have agenda obligations"
-    assert "130" not in agenda_modelos
-
-    backlog = build_overview_backlog(
-        profile,
-        from_date=date(2026, 1, 1),
-        to_date=date(2026, 12, 31),
-        as_of=date(2026, 12, 31),
-    )
-    backlog_modelos = {item.modelo for item in backlog.items}
-    assert "130" not in backlog_modelos
+        backlog = build_overview_backlog(
+            profile,
+            from_date=date(2026, 1, 1),
+            to_date=date(2026, 12, 31),
+            as_of=date(2026, 12, 31),
+            operation=_authority_operation_for_test,
+        )
+        backlog_modelos = {item.modelo for item in backlog.items}
+        assert "130" not in backlog_modelos
 
 
 # ---------------------------------------------------------------------
@@ -311,7 +334,9 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_calendar_year_without_windows_only_does_not_raise() -> None:
+def test_calendar_year_without_windows_only_does_not_raise(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A range whose primary year has no registered deadline windows
     does not raise, and the taxpayer-model state is answered.
 
@@ -333,7 +358,7 @@ def test_calendar_year_without_windows_only_does_not_raise() -> None:
     rng = OverviewCalendarRange(from_date=date(2027, 1, 1), to_date=date(2027, 12, 31))
 
     # The contract: this call does not raise.
-    cal = build_overview_calendar(profile, rng, today=date(2027, 6, 1))
+    cal = build_overview_calendar(profile, rng, operation=calendar_operation, today=date(2027, 6, 1))
 
     assert isinstance(cal, OverviewCalendar)
     assert cal.taxpayer_model_declared is True
@@ -344,7 +369,9 @@ def test_calendar_year_without_windows_only_does_not_raise() -> None:
         assert entry.opens_on <= rng.to_date
 
 
-def test_calendar_spanning_a_year_without_windows_does_not_raise() -> None:
+def test_calendar_spanning_a_year_without_windows_does_not_raise(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A range crossing into a year with no registered deadline windows
     must succeed instead of raising.
 
@@ -367,8 +394,13 @@ def test_calendar_spanning_a_year_without_windows_does_not_raise() -> None:
     populated_only = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
 
     # The contract: neither call raises on the empty 2027 year.
-    multi_cal = build_overview_calendar(profile, multi_year, today=date(2026, 4, 1))
-    populated_cal = build_overview_calendar(profile, populated_only, today=date(2026, 4, 1))
+    multi_cal = build_overview_calendar(profile, multi_year, operation=calendar_operation, today=date(2026, 4, 1))
+    populated_cal = build_overview_calendar(
+        profile,
+        populated_only,
+        operation=calendar_operation,
+        today=date(2026, 4, 1),
+    )
 
     assert isinstance(multi_cal, OverviewCalendar)
     assert multi_cal.taxpayer_model_declared is True
@@ -391,21 +423,23 @@ def test_agenda_across_year_boundary_without_windows_does_not_raise() -> None:
     operator error. The agenda must answer instead — every cohort is a
     valid tuple.
     """
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..agenda import build_overview_agenda
 
-    from ..agenda import build_overview_agenda
+        profile = _fully_enrolled_autonomo()
 
-    profile = _fully_enrolled_autonomo()
+        # The contract: this call does not raise on the empty 2027 year.
+        agenda = build_overview_agenda(
+            profile, as_of=date(2026, 11, 1), horizon_days=365, operation=_authority_operation_for_test
+        )
 
-    # The contract: this call does not raise on the empty 2027 year.
-    agenda = build_overview_agenda(profile, as_of=date(2026, 11, 1), horizon_days=365)
-
-    assert agenda.taxpayer_model_declared is True
-    assert agenda.incomplete_reason is None
-    # Every cohort is a valid tuple; the agenda answered rather than
-    # crashing on the uncovered 2027 year.
-    assert isinstance(agenda.due_today, tuple)
-    assert isinstance(agenda.due_soon, tuple)
-    assert isinstance(agenda.overdue, tuple)
+        assert agenda.taxpayer_model_declared is True
+        assert agenda.incomplete_reason is None
+        # Every cohort is a valid tuple; the agenda answered rather than
+        # crashing on the uncovered 2027 year.
+        assert isinstance(agenda.due_today, tuple)
+        assert isinstance(agenda.due_soon, tuple)
+        assert isinstance(agenda.overdue, tuple)
 
 
 def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
@@ -416,18 +450,18 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
     spans into 2026. The backlog must answer rather than crash on the
     uncovered 2027 year.
     """
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..backlog import build_overview_backlog
 
-    from ..backlog import build_overview_backlog
+        profile = _fully_enrolled_autonomo()
 
-    profile = _fully_enrolled_autonomo()
+        # The contract: this call does not raise on the empty 2027 year.
+        backlog = build_overview_backlog(profile, as_of=date(2027, 3, 1), operation=_authority_operation_for_test)
 
-    # The contract: this call does not raise on the empty 2027 year.
-    backlog = build_overview_backlog(profile, as_of=date(2027, 3, 1))
-
-    assert backlog.taxpayer_model_declared is True
-    # Every surfaced backlog item is past-due relative to as_of — the
-    # backlog answered instead of crashing on the uncovered 2027 year.
-    assert all(item.adjusted_closes_on < date(2027, 3, 1) for item in backlog.items)
+        assert backlog.taxpayer_model_declared is True
+        # Every surfaced backlog item is past-due relative to as_of — the
+        # backlog answered instead of crashing on the uncovered 2027 year.
+        assert all(item.adjusted_closes_on < date(2027, 3, 1) for item in backlog.items)
 
 
 # ---------------------------------------------------------------------
@@ -435,7 +469,9 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
+def test_undeclared_profile_message_resolves_to_real_localised_text(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """The undeclared-profile guidance must be a shipped locale string,
     not the raw translation key.
 
@@ -462,7 +498,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
 
     # The calendar surface delivers exactly that resolved text.
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_undeclared_profile(), rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_undeclared_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
     assert cal.incomplete_reason == tr(key)
     assert cal.incomplete_reason is not None
     assert cal.incomplete_reason != key
@@ -496,7 +532,9 @@ def _attribution_entity() -> TaxpayerProfile:
     )
 
 
-def test_calendar_legal_entity_is_never_shown_an_irpf_cuota() -> None:
+def test_calendar_legal_entity_is_never_shown_an_irpf_cuota(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A legal entity's calendar must never list an IRPF cuota modelo.
 
     Modelo 100 / 130 / 303 deadline windows are registered and the
@@ -509,7 +547,7 @@ def test_calendar_legal_entity_is_never_shown_an_irpf_cuota() -> None:
     IRPF tarifa obligation (corporate-entity contract §4)."""
 
     rng = OverviewCalendarRange(from_date=date(2024, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, today=date(2025, 7, 1))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=calendar_operation, today=date(2025, 7, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     # No IRPF cuota modelo reaches a legal entity's calendar.
@@ -517,13 +555,15 @@ def test_calendar_legal_entity_is_never_shown_an_irpf_cuota() -> None:
     assert cal.taxpayer_model_declared is True
 
 
-def test_calendar_natural_person_shows_irpf_not_corporate() -> None:
+def test_calendar_natural_person_shows_irpf_not_corporate(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A natural person's calendar shows the IRPF obligations and never
     a corporate-tax modelo. An autónomo en estimación directa keeps
     Modelo 130 / 303; Modelo 200 / 202 never reach the calendar."""
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_profile(), rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_profile(), rng, operation=calendar_operation, today=date(2026, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "130" in surfaced
@@ -531,7 +571,9 @@ def test_calendar_natural_person_shows_irpf_not_corporate() -> None:
     assert surfaced.isdisjoint({"200", "202"})
 
 
-def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold() -> None:
+def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """A default foreign-asset false profile must not receive active M721 rows."""
 
     profile = TaxpayerProfile(
@@ -544,7 +586,13 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold() -> Non
     )
     rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 3, 31))
 
-    cal = build_overview_calendar(profile, rng, today=date(2025, 1, 15), show_suppressed=True)
+    cal = build_overview_calendar(
+        profile,
+        rng,
+        operation=calendar_operation,
+        today=date(2025, 1, 15),
+        show_suppressed=True,
+    )
 
     assert "721" not in {entry.modelo for entry in cal.entries}
     suppressed_721 = [entry for entry in cal.suppressed_entries if entry.modelo == "721"]
@@ -552,7 +600,9 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold() -> Non
     assert {entry.verdict.value for entry in suppressed_721} == {"incomplete"}
 
 
-def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
+def test_calendar_attribution_entity_is_shown_no_cuota_obligation(
+    calendar_operation: PinnedAuthorityOperation,
+) -> None:
     """An attribution entity's calendar lists no IS and no IRPF cuota.
 
     A comunidad de bienes runs no cuota self-assessment of its own —
@@ -563,7 +613,12 @@ def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
     owe."""
 
     rng = OverviewCalendarRange(from_date=date(2024, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_attribution_entity(), rng, today=date(2025, 7, 1))
+    cal = build_overview_calendar(
+        _attribution_entity(),
+        rng,
+        operation=calendar_operation,
+        today=date(2025, 7, 1),
+    )
 
     surfaced = {entry.modelo for entry in cal.entries}
     # No cuota self-assessment reaches an attribution entity's calendar.

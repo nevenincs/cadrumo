@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....domain.deadlines.errors import ProfileError
 from ....domain.deadlines.profiles import (
     MODELO_IVA_BLOCK_CLAIMING_PATHS,
@@ -40,34 +42,37 @@ _SATISFIED_IVA_BLOCK: dict[str, str] = {
 
 def test_declared_iva_regime_reports_the_whole_block_as_missing() -> None:
     """The reported symptom: a regime with no composition must not read as ready."""
-    result = validate_profile_values(
-        {
-            "identity.tax_id": "12345678Z",
-            "activities.description": "consultoria",
-            "iva.regime": "GENERAL",
-            "tax_residence.ccaa": "madrid",
-        },
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = validate_profile_values(
+            {
+                "identity.tax_id": "12345678Z",
+                "activities.description": "consultoria",
+                "iva.regime": "GENERAL",
+                "tax_residence.ccaa": "madrid",
+            },
+            operation=_authority_operation_for_test,
+        )
 
-    assert result.valid is False
-    assert "iva.m303_regime_composition" in result.missing_required
-    assert "tax_residence.jurisdiction_scope" in result.missing_required
+        assert result.valid is False
+        assert "iva.m303_regime_composition" in result.missing_required
+        assert "tax_residence.jurisdiction_scope" in result.missing_required
 
 
 def test_profile_with_no_iva_facts_is_never_asked_for_the_block() -> None:
     """A taxpayer with no IVA obligation declares none of the block-owned paths."""
-    values = {
-        "identity.tax_id": "12345678Z",
-        "taxpayer_type.entity_type": "natural_person",
-        "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
-        "tax_residence.ccaa": "madrid",
-        "tax_residence.jurisdiction_scope": "common_regime",
-    }
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        values = {
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
+            "tax_residence.ccaa": "madrid",
+            "tax_residence.jurisdiction_scope": "common_regime",
+        }
 
-    assert profile_claims_modelo_iva_block(values) is False
-    assert modelo_iva_profile_required_paths(values) == ()
-    assert conditional_profile_missing_required(values) == ()
-    assert validate_profile_values(values).valid is True
+        assert profile_claims_modelo_iva_block(values) is False
+        assert modelo_iva_profile_required_paths(values) == ()
+        assert conditional_profile_missing_required(values) == ()
+        assert validate_profile_values(values, operation=_authority_operation_for_test).valid is True
 
 
 def test_any_single_iva_fact_claims_the_block_including_a_declined_enrolment() -> None:
@@ -77,20 +82,21 @@ def test_any_single_iva_fact_claims_the_block_including_a_declined_enrolment() -
     ``config profile set`` claimed the block for the resolver while every
     readiness surface stayed silent.
     """
-    values = {
-        "identity.tax_id": "12345678Z",
-        "taxpayer_type.entity_type": "natural_person",
-        "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
-        "tax_residence.ccaa": "madrid",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.roi_enrolled": "false",
-    }
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        values = {
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
+            "tax_residence.ccaa": "madrid",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.roi_enrolled": "false",
+        }
 
-    result = validate_profile_values(values)
+        result = validate_profile_values(values, operation=_authority_operation_for_test)
 
-    assert profile_claims_modelo_iva_block(values) is True
-    assert result.valid is False
-    assert "iva.m303_regime_composition" in result.missing_required
+        assert profile_claims_modelo_iva_block(values) is True
+        assert result.valid is False
+        assert "iva.m303_regime_composition" in result.missing_required
 
 
 def test_every_block_owned_path_claims_the_block_on_its_own() -> None:

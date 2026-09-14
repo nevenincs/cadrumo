@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
@@ -91,72 +93,74 @@ def _assert_single_issue(
 
 
 def test_preflight_surfaces_non_declarable_iva_anomalies() -> None:
-    cases: tuple[tuple[str, Transaction, R, tuple[str, ...], tuple[str, ...]], ...] = (
-        (
-            "outgoing-recargo",
-            _tx(iva_category=IvaCategory("recargo_equivalencia"), iva_amount=None, iva_rate=None),
-            R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
-            ("non-deductible acquisition cost",),
-            (),
-        ),
-        (
-            "incoming-recargo",
-            _tx(
-                direction=TransactionDirection.INCOMING,
-                iva_category=IvaCategory("recargo_equivalencia"),
-                iva_amount=None,
-                iva_rate=None,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        cases: tuple[tuple[str, Transaction, R, tuple[str, ...], tuple[str, ...]], ...] = (
+            (
+                "outgoing-recargo",
+                _tx(iva_category=IvaCategory("recargo_equivalencia"), iva_amount=None, iva_rate=None),
+                R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
+                ("non-deductible acquisition cost",),
+                (),
             ),
-            R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
-            ("recargo_amount",),
-            ("purchase",),
-        ),
-        (
-            "unknown",
-            _tx(iva_category=IvaCategory("unknown"), iva_amount=None, iva_rate=None, taxable_base=None),
-            R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
-            (),
-            (),
-        ),
-        (
-            "erroneous-invoice",
-            _tx(iva_category=IvaCategory("erroneous_invoice"), iva_amount=None, iva_rate=None, taxable_base=None),
-            R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
-            (),
-            (),
-        ),
-    )
-
-    for label, transaction, expected_reason, present_detail, absent_detail in cases:
-        _assert_single_issue(
-            label,
-            _issues_for_transaction(transaction),
-            expected_reason,
-            present_detail=present_detail,
-            absent_detail=absent_detail,
+            (
+                "incoming-recargo",
+                _tx(
+                    direction=TransactionDirection.INCOMING,
+                    iva_category=IvaCategory("recargo_equivalencia"),
+                    iva_amount=None,
+                    iva_rate=None,
+                ),
+                R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
+                ("recargo_amount",),
+                ("purchase",),
+            ),
+            (
+                "unknown",
+                _tx(iva_category=IvaCategory("unknown"), iva_amount=None, iva_rate=None, taxable_base=None),
+                R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+                (),
+                (),
+            ),
+            (
+                "erroneous-invoice",
+                _tx(iva_category=IvaCategory("erroneous_invoice"), iva_amount=None, iva_rate=None, taxable_base=None),
+                R.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+                (),
+                (),
+            ),
         )
+
+        for label, transaction, expected_reason, present_detail, absent_detail in cases:
+            _assert_single_issue(
+                label,
+                _issues_for_transaction(transaction, operation=_authority_operation_for_test),
+                expected_reason,
+                present_detail=present_detail,
+                absent_detail=absent_detail,
+            )
 
 
 def test_foreign_currency_preflight_separates_converted_and_unconverted_rows() -> None:
-    cases: tuple[tuple[str, Transaction, R, tuple[str, ...]], ...] = (
-        (
-            "converted",
-            _tx(currency="GBP", value_in_eur=Decimal("142.35"), fx_rate=Decimal("1.176")),
-            R.MISSING_EUR_TAX_SUBSTRATE,
-            ("value_in_eur", "explicit EUR tax substrate", "exclude the row"),
-        ),
-        (
-            "unconverted",
-            _tx(currency="GBP", value_in_eur=None, fx_rate=None),
-            R.UNSUPPORTED_CURRENCY,
-            (),
-        ),
-    )
-
-    for label, transaction, expected_reason, present_detail in cases:
-        _assert_single_issue(
-            label,
-            _issues_for_transaction(transaction),
-            expected_reason,
-            present_detail=present_detail,
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        cases: tuple[tuple[str, Transaction, R, tuple[str, ...]], ...] = (
+            (
+                "converted",
+                _tx(currency="GBP", value_in_eur=Decimal("142.35"), fx_rate=Decimal("1.176")),
+                R.MISSING_EUR_TAX_SUBSTRATE,
+                ("value_in_eur", "explicit EUR tax substrate", "exclude the row"),
+            ),
+            (
+                "unconverted",
+                _tx(currency="GBP", value_in_eur=None, fx_rate=None),
+                R.UNSUPPORTED_CURRENCY,
+                (),
+            ),
         )
+
+        for label, transaction, expected_reason, present_detail in cases:
+            _assert_single_issue(
+                label,
+                _issues_for_transaction(transaction, operation=_authority_operation_for_test),
+                expected_reason,
+                present_detail=present_detail,
+            )
