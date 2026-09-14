@@ -7607,6 +7607,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1412+50. Domicilio social en Espana, si distinto del fiscal. Nombre de la via publica.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "pj.dsoc-nombre-via"
+continuidad_id = "persona-juridica-domicilio-social-nombre-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: domicilio social en Espana, nombre de la via publica [B72], campos 78 y 90. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "B72"
 section = ["declaracion", "persona_juridica", "domicilio_social"]
 data_type = "text"
@@ -7636,6 +7639,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1465+5. Domicilio social en Espana, si distinto del fiscal. Numero de casa.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "pj.dsoc-numero-casa"
+continuidad_id = "persona-juridica-domicilio-social-numero-casa"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: domicilio social en Espana, numero de casa [B74], campos 80 y 92. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "B74"
 section = ["declaracion", "persona_juridica", "domicilio_social"]
 data_type = "integer"
@@ -7665,6 +7671,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1473+3. Domicilio social en Espana, si distinto del fiscal. Bloque.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "pj.dsoc-bloque"
+continuidad_id = "persona-juridica-domicilio-social-bloque"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: domicilio social en Espana, bloque [B76], campos 82 y 94. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "B76"
 section = ["declaracion", "persona_juridica", "domicilio_social"]
 data_type = "text"
@@ -10277,6 +10286,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @247+8. Registro de extractores de depositos fiscales. Fecha de la solicitud para alcohol y bebidas derivadas. ONE casilla over @247+2 dia, @249+2 mes and @251+4 ano, all printed under the single number 717.a.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.extractores-depositos-alcohol-fecha"
+continuidad_id = "extractores-depositos-alcohol-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: extractores de depositos fiscales de alcohol y bebidas derivadas, fecha [717.a], sus tres componentes dia, mes y ano. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "717.a"
 section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
 data_type = "date"
@@ -10306,6 +10318,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @256+8. Registro de extractores de depositos fiscales. Fecha de la solicitud para hidrocarburos. ONE casilla over @256+2 dia, @258+2 mes and @260+4 ano, all printed under the single number 717.b.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.extractores-depositos-hidrocarburos-fecha"
+continuidad_id = "extractores-depositos-hidrocarburos-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: extractores de depositos fiscales de hidrocarburos, fecha [717.b], sus tres componentes dia, mes y ano. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "717.b"
 section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
 data_type = "date"
@@ -10382,6 +10397,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components, all printed under the single number 805.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "soc.causa-fecha"
+continuidad_id = "socio-principal-causa-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: bloque 12a de socios, causa de presentacion fecha [805], campos 4 a 6. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "805"
 section = ["declaracion", "socios"]
 data_type = "date"
@@ -10395,6 +10413,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # N.I.F. del socio, miembro o participe.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "soc.nif"
+continuidad_id = "socio-principal-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: bloque 12a de socios, NIF [800], campo 7. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "800"
 section = ["declaracion", "socios"]
 data_type = "nif"
@@ -10408,6 +10429,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # Apellidos y nombre, razon o denominacion social del socio, miembro o participe.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "soc.nombre-razon-social"
+continuidad_id = "socio-principal-nombre-razon-social"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: bloque 12a de socios, apellidos y nombre o razon social [801], campo 8. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "801"
 section = ["declaracion", "socios"]
 data_type = "name"
@@ -10481,6 +10505,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # Cuota o porcentaje de participacion, 3 enteros y 2 decimales.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "soc.cuota-participacion"
+continuidad_id = "socio-principal-cuota-participacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: bloque 12a de socios, cuota o porcentaje de participacion [818], campo 13. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "818"
 section = ["declaracion", "socios"]
 data_type = "decimal"
@@ -10494,6 +10521,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # Cuota o porcentaje de atribucion, 3 enteros y 2 decimales.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "soc.cuota-atribucion"
+continuidad_id = "socio-principal-cuota-atribucion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-036-2023 y aeat-dr-036-2025: bloque 12a de socios, cuota o porcentaje de atribucion [859], campo 14. Ambos disenos mantienen la descripcion y funcion de este campo. La identificacion incluye su bloque semantico: no confunde numeros repetidos de otras secciones ni otras ocurrencias de socios."
 number = "859"
 section = ["declaracion", "socios"]
 data_type = "decimal"

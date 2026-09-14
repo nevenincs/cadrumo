@@ -1,5 +1,8 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02"
+continuidad_id = "irnr-resumen-base"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-296-2023 y aeat-dr-296-2024, registro tipo 1, posiciones 145-159: BASE RETENCIONES E INGRESOS A CUENTA. Ambos disenos exigen la suma algebraica de las bases de los registros de perceptor, con el mismo signo y desglose decimal; continua el mismo total, no una identidad inferida de su posicion."
 number = "02"
 section = ["resumen"]
 semantic_role = "irnr_resumen_base"
@@ -9,6 +12,9 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "03"
+continuidad_id = "irnr-resumen-retenciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-296-2023 y aeat-dr-296-2024, registro tipo 1, posiciones 160-174: RETENCIONES E INGRESOS A CUENTA. Ambos disenos definen la suma de las retenciones de los registros de perceptor, sin cambio de poblacion ni de funcion."
 number = "03"
 section = ["resumen"]
 semantic_role = "irnr_resumen_retenciones"
@@ -18,6 +24,9 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "04"
+continuidad_id = "irnr-resumen-retenciones-ingresadas"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-296-2023 y aeat-dr-296-2024, registro tipo 1, posiciones 175-189: RETENCIONES E INGRESOS A CUENTA INGRESADOS. Ambos disenos suman los perceptores con claves 3 a 25 y las claves 1 o 2 cuando PAGO es 1; la misma seleccion prueba la continuidad del total ingresado."
 number = "04"
 section = ["resumen"]
 semantic_role = "irnr_resumen_retenciones_ingresadas"

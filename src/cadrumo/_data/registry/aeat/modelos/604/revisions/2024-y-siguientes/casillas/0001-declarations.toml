@@ -352,6 +352,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.03-signo-base-rectificaciones"
+continuidad_id = "signo-base-sujetas"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 41: Signo BI [03], Blanco o N. En ambos, el campo 42 contiene Rectificaciones - BI [03]; el signo pertenece a esa misma base. El diseno 2024 corrige el encabezado de grupo del campo 41 a Rectificaciones, sin cambiar su funcion, dominio ni casilla [03]. Es evolucion de la etiqueta, no retirada del signo."
 number = "liq-03-signo-base-rectificaciones"
 section = ["liquidacion"]
 data_type = "text"
