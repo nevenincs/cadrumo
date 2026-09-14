@@ -67,6 +67,9 @@ from cadrumo.domain.calculations.registry.schema import (
     CasillaFieldOverride,
     CasillaMemberPosition,
     CasillaMemberRemoval,
+    FamilyFieldOverride,
+    FamilyMemberPosition,
+    FamilyMemberRemoval,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -106,6 +109,7 @@ from .loader_semantics import compile_export_semantic_field, compile_projection_
 
 _PREDECESSOR_FIELD: Final = "predecessor"
 _CASILLA_STORAGE_BASELINE_FIELD: Final = "casilla_storage_baseline"
+_FAMILY_STORAGE_BASELINE_FIELD: Final = "family_storage_baseline"
 _RESTATED_FAMILIES_FIELD: Final = "restated_families"
 _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
@@ -191,6 +195,8 @@ def _inherit_keyed_family(
     context: str,
     *,
     revision_id: str,
+    predecessor_id: str,
+    predecessor: Mapping[str, object],
     family: _KeyedFamily,
     inherited: tuple[object, ...],
     inherited_casillas: tuple[object, ...],
@@ -213,10 +219,19 @@ def _inherit_keyed_family(
     supersedes; and a stated member carrying an identity the same edition
     retires.
     """
+    cleared = as_toml_array(successor.get("cleared_families", ())) or ()
+    if family.section in cleared:
+        if successor.get(family.section):
+            raise RegistryLoadError(f"{context}: cleared family {family.section!r} also states members")
+        return ()
     stated = as_toml_array(successor.get(family.section, ()))
     if stated is None:
         raise RegistryLoadError(f"{context}: {family.section} must be an array")
-    retired = _keyed_retirements(successor, revision_id, family)
+    inherited = tuple(_pin_family_source_default(member, predecessor, family) for member in inherited)
+    inherited, removed, positions, patched = _apply_family_storage_delta(
+        context, predecessor_id=predecessor_id, family=family, inherited=inherited, successor=successor
+    )
+    retired = _keyed_retirements(successor, revision_id, family) | removed
     superseders: dict[str, object] = {}
     for member in stated:
         identity = _member_identity(member, family)
@@ -258,36 +273,145 @@ def _inherit_keyed_family(
         if family.period_scoped and not _selector_covers(successor.get("period_selector"), member):
             continue
         if identity in superseders:
-            _refuse_undeclared_repurpose(
-                context,
-                family,
-                identity,
-                member,
-                superseders[identity],
-                inherited_casillas=inherited_casillas,
-                successor_casillas=successor_casillas,
-            )
+            if identity not in patched:
+                _refuse_undeclared_repurpose(
+                    context,
+                    family,
+                    identity,
+                    member,
+                    superseders[identity],
+                    inherited_casillas=inherited_casillas,
+                    successor_casillas=successor_casillas,
+                )
             members.append(superseders[identity])
             superseded.add(identity)
             continue
         # Even an omitted declaration is interpreted against the successor's
         # casillas. An unchanged target token can now identify a split child,
         # so inheritance needs the same identity guard as a supersession.
-        _refuse_undeclared_repurpose(
-            context,
-            family,
-            identity,
-            member,
-            member,
-            inherited_casillas=inherited_casillas,
-            successor_casillas=successor_casillas,
-        )
+        if identity not in patched:
+            _refuse_undeclared_repurpose(
+                context,
+                family,
+                identity,
+                member,
+                member,
+                inherited_casillas=inherited_casillas,
+                successor_casillas=successor_casillas,
+            )
         members.append(member)
     for member in stated:
         identity = _member_identity(member, family)
         if identity is not None and identity not in superseded:
             members.append(member)
+    if positions:
+        by_identity = {_member_identity(member, family): member for member in members}
+        for identity, position in positions:
+            member = by_identity.get(identity)
+            if member is None:
+                raise RegistryLoadError(f"{context}: family position names missing {family.section} {identity!r}")
+            members.remove(member)
+            members.insert(min(position, len(members)), member)
     return tuple(members)
+
+
+def _pin_family_source_default(member: object, predecessor: Mapping[str, object], family: _KeyedFamily) -> object:
+    """Keep an inherited member bound to the source default effective at its origin."""
+    table = _as_toml_table(member)
+    if table is None or family.source_default_key is None or "source_refs" in table:
+        return member
+    default = predecessor.get(family.source_default_key)
+    if not isinstance(default, list | tuple) or not default:
+        return member
+    pinned = dict(table)
+    additions = pinned.pop("additional_source_refs", ())
+    pinned["source_refs"] = tuple(dict.fromkeys((*default, *additions)))
+    return pinned
+
+
+def _patch_family_table(context: str, value: object, fields: Mapping[str, object], removed: tuple[str, ...]) -> object:
+    table = _as_toml_table(value)
+    if table is None:
+        raise RegistryLoadError(f"{context}: selected family member is not a table")
+    result: dict[str, object] = dict(table)
+    for key, replacement in fields.items():
+        if isinstance(replacement, Mapping) and isinstance(result.get(key), Mapping):
+            result[key] = _patch_family_table(context, result[key], replacement, ())
+        else:
+            result[key] = replacement
+    for path in removed:
+        segments = path.split(".")
+        target = result
+        for segment in segments[:-1]:
+            child = target.get(segment)
+            if not isinstance(child, Mapping):
+                raise RegistryLoadError(f"{context}: removed field {path!r} does not exist")
+            copied = dict(child)
+            target[segment] = copied
+            target = copied
+        if target.pop(segments[-1], None) is None:
+            raise RegistryLoadError(f"{context}: removed field {path!r} does not exist")
+    return result
+
+
+def _apply_family_storage_delta(
+    context: str,
+    *,
+    predecessor_id: str,
+    family: _KeyedFamily,
+    inherited: tuple[object, ...],
+    successor: Mapping[str, object],
+) -> tuple[tuple[object, ...], frozenset[str], tuple[tuple[str, int], ...], frozenset[str]]:
+    """Apply the canonical field/removal/order delta to one keyed family."""
+    if family.section in (as_toml_array(successor.get("cleared_families", ())) or ()):
+        return tuple(), frozenset[str](), tuple(), frozenset[str]()
+    try:
+        overrides = tuple(
+            FamilyFieldOverride.model_validate(value)
+            for value in (as_toml_array(successor.get("family_overrides", ())) or ())
+            if isinstance(value, Mapping) and value.get("family") == family.section
+        )
+        removals = tuple(
+            FamilyMemberRemoval.model_validate(value)
+            for value in (as_toml_array(successor.get("family_removals", ())) or ())
+            if isinstance(value, Mapping) and value.get("family") == family.section
+        )
+        positions = tuple(
+            FamilyMemberPosition.model_validate(value)
+            for value in (as_toml_array(successor.get("family_positions", ())) or ())
+            if isinstance(value, Mapping) and value.get("family") == family.section
+        )
+    except ValidationError as exc:
+        raise RegistryLoadError(f"{context}: invalid {family.section} storage delta: {exc}") from exc
+    result = list(inherited)
+    by_identity = {_member_identity(member, family): index for index, member in enumerate(result)}
+    seen: set[str] = set()
+    removed: set[str] = set()
+    patched: set[str] = set()
+    for declaration in removals:
+        if str(declaration.selector.revision) != predecessor_id:
+            raise RegistryLoadError(f"{context}: family removal baseline is not predecessor {predecessor_id!r}")
+        identity = declaration.selector.id
+        if identity not in by_identity or identity in seen:
+            raise RegistryLoadError(f"{context}: family removal selector {identity!r} is missing or repeated")
+        seen.add(identity)
+        removed.add(identity)
+    for declaration in overrides:
+        if str(declaration.selector.revision) != predecessor_id:
+            raise RegistryLoadError(f"{context}: family override baseline is not predecessor {predecessor_id!r}")
+        identity = declaration.selector.id
+        if identity not in by_identity or identity in seen:
+            raise RegistryLoadError(f"{context}: family override selector {identity!r} is missing or repeated")
+        seen.add(identity)
+        index = by_identity[identity]
+        result[index] = _patch_family_table(context, result[index], declaration.fields, declaration.removed_fields)
+        patched.add(identity)
+    return (
+        tuple(result),
+        frozenset(removed),
+        tuple((item.id, item.position) for item in positions),
+        frozenset(patched),
+    )
 
 
 def _raw_keyed_members(
@@ -813,6 +937,7 @@ def _materialise_revisions(
     """
     declarations = _raw_predecessor_declarations(raw_revisions)
     storage_named: dict[str, str] = {}
+    family_storage_named: dict[str, str] = {}
     for revision_id, raw_revision in raw_revisions.items():
         table = _as_toml_table(raw_revision)
         baseline = None if table is None else table.get(_CASILLA_STORAGE_BASELINE_FIELD)
@@ -822,7 +947,14 @@ def _materialise_revisions(
                     f"{source_path}: revision {revision_id!r} has invalid casilla storage baseline {baseline!r}"
                 )
             storage_named[revision_id] = baseline
-    if (declarations is None or not declarations.named) and not storage_named:
+        family_baseline = None if table is None else table.get(_FAMILY_STORAGE_BASELINE_FIELD)
+        if isinstance(family_baseline, str):
+            if family_baseline == revision_id or family_baseline not in raw_revisions:
+                raise RegistryLoadError(
+                    f"{source_path}: revision {revision_id!r} has invalid family storage baseline {family_baseline!r}"
+                )
+            family_storage_named[revision_id] = family_baseline
+    if (declarations is None or not declarations.named) and not storage_named and not family_storage_named:
         return _MaterialisedRevisions(revisions=raw_revisions, label_origins={})
     if declarations is not None and declarations.named:
         try:
@@ -838,12 +970,13 @@ def _materialise_revisions(
     resolved: dict[str, _MaterialisedRevision] = {}
     materialised: dict[str, object] = dict(raw_revisions)
     label_origins: dict[str, _LabelOrigins] = {}
-    for revision_id in dict.fromkeys((*semantic_named, *storage_named)):
+    for revision_id in dict.fromkeys((*semantic_named, *storage_named, *family_storage_named)):
         revision = _materialise_revision(
             source_path,
             raw_revisions,
             semantic_named,
             storage_named,
+            family_storage_named,
             revision_id,
             resolved,
         )
@@ -858,6 +991,7 @@ def _materialise_revision(
     raw_revisions: Mapping[str, object],
     named: Mapping[str, str],
     storage_named: Mapping[str, str],
+    family_storage_named: Mapping[str, str],
     revision_id: str,
     resolved: dict[str, _MaterialisedRevision],
 ) -> _MaterialisedRevision:
@@ -870,10 +1004,13 @@ def _materialise_revision(
         raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
     predecessor_id = named.get(revision_id)
     storage_baseline_id = storage_named.get(revision_id)
-    baseline_id = predecessor_id or storage_baseline_id
+    family_baseline_id = family_storage_named.get(revision_id)
+    baseline_id = predecessor_id or storage_baseline_id or family_baseline_id
     result = _MaterialisedRevision(table=table, label_origins=None)
     if baseline_id is not None:
-        predecessor = _materialise_revision(source_path, raw_revisions, named, storage_named, baseline_id, resolved)
+        predecessor = _materialise_revision(
+            source_path, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
+        )
         relation = "inheriting from" if predecessor_id is not None else "hydrating casillas from"
         rows, label_origins = _inherit_casillas(
             f"{source_path}: revision {revision_id!r} {relation} {baseline_id!r}",
@@ -885,7 +1022,7 @@ def _materialise_revision(
         )
         merged: dict[str, object] = {**table, _INHERITED_SECTION: rows}
         restated = _restated_families(table)
-        semantic_predecessor_id = predecessor_id
+        semantic_predecessor_id = predecessor_id or family_baseline_id
         if semantic_predecessor_id is not None:
             for family in _KEYED_FAMILIES:
                 if family.section in restated:
@@ -893,6 +1030,8 @@ def _materialise_revision(
                 merged[family.section] = _inherit_keyed_family(
                     f"{source_path}: revision {revision_id!r} inheriting from {semantic_predecessor_id!r}",
                     revision_id=revision_id,
+                    predecessor_id=semantic_predecessor_id,
+                    predecessor=predecessor.table,
                     family=family,
                     inherited=_raw_keyed_members(source_path, semantic_predecessor_id, predecessor.table, family),
                     inherited_casillas=_raw_casilla_rows(source_path, semantic_predecessor_id, predecessor.table),

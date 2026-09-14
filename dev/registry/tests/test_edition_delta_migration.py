@@ -685,7 +685,9 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     (summary,) = [line for line in output.splitlines() if line.startswith("summary ")]
     (persisted_line,) = [line for line in output.splitlines() if line.startswith("report persisted to ")]
     persisted = Path(persisted_line.removeprefix("report persisted to "))
-    assert exit_code == 0, output
+    assert exit_code == 1, output
+    assert " equivalence_status=passed " in summary, output
+    assert " minimality_status=failed " in summary, output
     assert " source_status=accepted " in summary, output
     assert " publication_readiness_status=failed " in summary, output
     assert " publication_execution_status=not_performed " in summary, output
@@ -752,11 +754,12 @@ def test_migration_reports_use_unique_logs_runs_and_not_the_scratch_directory(tm
     assert first.read_text(encoding="utf-8").startswith("command: migration first")
     assert second.read_text(encoding="utf-8").startswith("command: migration second")
     machine = json.loads((first.parent / "report.json").read_text(encoding="utf-8"))
-    assert machine["outcomes"] == {
-        "completed": [],
-        "unchanged": [],
-        "blocked": {},
-        "complete": True,
-        "applied": False,
-    }
+    assert machine["outcomes"]["completed"] == []
+    assert machine["outcomes"]["unchanged"] == []
+    assert machine["outcomes"]["blocked"] == {}
+    assert not machine["outcomes"]["complete"]
+    assert machine["outcomes"]["equivalence"] == "passed"
+    assert machine["outcomes"]["minimality"] == "incomplete"
+    assert machine["outcomes"]["application"] == "not_applied"
+    assert machine["measurements"] == {"before": None, "after": None}
     assert first.parent != second.parent
