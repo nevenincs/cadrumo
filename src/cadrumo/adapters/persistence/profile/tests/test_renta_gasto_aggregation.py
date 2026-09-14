@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.aggregation.renta_gasto_ledger import (
     aggregate_renta_gasto_ledger,
     aggregate_renta_gasto_ledger_from_repositories,
@@ -141,6 +142,9 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     result_q1 = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
@@ -162,6 +166,9 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     result_q2 = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q2_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
@@ -191,6 +198,9 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
@@ -226,6 +236,9 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     partitioned = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
@@ -233,7 +246,14 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
     )
-    full_scan = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    full_scan = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert set(partitioned.observations) == set(full_scan.observations)
     assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
@@ -278,6 +298,9 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterl
         result = aggregate_renta_gasto_ledger_from_repositories(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_Q1_2024,
+            modelo="130",
+            target_casilla_id=_M130_GASTOS_CASILLA,
+            accept_activity_marker=True,
             transaction_repository=TransactionCatalogueRepository(
                 bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
             ),
@@ -333,6 +356,9 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
@@ -371,6 +397,9 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
@@ -411,6 +440,9 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
     m130_result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
@@ -424,10 +456,14 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
     m100_result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=Period.from_year_and_code(2025, "0A"),
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=InvoiceCatalogueReadPorts(
+            invoice_reader=InvoiceCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            transaction_reader=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects

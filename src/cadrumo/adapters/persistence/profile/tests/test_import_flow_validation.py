@@ -21,6 +21,7 @@ from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
+from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 __all__ = ["repos"]
 
@@ -33,8 +34,8 @@ def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:
     Imported baselines are the legal source of truth for amend
     paths - fabricated casilla ids cannot be silently accepted."""
 
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository)
 
     with pytest.raises(ExternalModeloImportError) as exc_info:
         _import_external_filing(
@@ -61,7 +62,7 @@ def test_import_refuses_printed_number_metadata_token(repos: _Repos) -> None:
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         revision_id="2025",
-        repository=wu_repo,
+        ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
         clock=_T0,
     )
 
@@ -83,8 +84,8 @@ def test_import_refuses_printed_number_metadata_token(repos: _Repos) -> None:
 def test_import_refuses_non_string_casilla_keys_without_coercion(repos: _Repos) -> None:
     """Malformed external casilla keys fail before registry membership checks."""
 
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository)
 
     with pytest.raises(ExternalModeloImportError) as exc_info:
         _import_external_filing(
@@ -102,8 +103,8 @@ def test_import_refuses_non_string_casilla_keys_without_coercion(repos: _Repos) 
 def test_import_refuses_empty_casilla_values(repos: _Repos) -> None:
     """The import path requires at least one casilla value."""
 
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository)
 
     with pytest.raises(ExternalModeloImportError) as raised:
         _import_external_filing(
@@ -119,8 +120,8 @@ def test_import_refuses_empty_casilla_values(repos: _Repos) -> None:
 def test_import_refuses_empty_evidence_reference(repos: _Repos) -> None:
     """The import path requires a non-empty evidence reference id."""
 
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository)
 
     with pytest.raises(ExternalModeloImportError) as raised:
         _import_external_filing(

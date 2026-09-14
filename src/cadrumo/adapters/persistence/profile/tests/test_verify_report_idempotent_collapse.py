@@ -12,6 +12,7 @@ against the real registry and the encrypted report catalogue - no mocks.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal
 
 import pytest
@@ -29,16 +30,47 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     workflow_profile,
 )
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import list_verification_reports
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
+from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _verification_repositories_for_test(repos: Repos):
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    return replace(
+        build_test_verification_repository_bundle(),
+        calculation=cr_repo,
+        work_unit=wu_repo,
+        filing=fr_repo,
+        verification=vr_repo,
+        bucket_event=bv_repo,
+    )
+
+
+def _filing_ports_for_test(repos: Repos):
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    bucket_id = wu_repo.bucket_id
+    assert bucket_id is not None
+    return replace(
+        build_filing_action_ports(bucket_id=bucket_id),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+    )
 
 
 def _seed_nongranting_revision(repos: Repos):
@@ -85,10 +117,8 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(repos: Repos
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories_for_test(repos),
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
@@ -97,10 +127,8 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(repos: Repos
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories_for_test(repos),
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
@@ -120,7 +148,7 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(repos: Repos
         # the last-seen run_at (T3 from the upsert), not two accumulated rows.
         stored = list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            verification_repository=vr_repo,
+            ports=_filing_ports_for_test(repos),
             operation=_authority_operation_for_test,
         )
         assert len(stored) == 1
@@ -139,10 +167,8 @@ def test_distinct_outcome_verify_produces_a_distinct_report(repos: Repos) -> Non
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories_for_test(repos),
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
@@ -151,10 +177,8 @@ def test_distinct_outcome_verify_produces_a_distinct_report(repos: Repos) -> Non
             revision.calculation_revision_id,
             actor="operator-B",
             workflow_profile=workflow_profile(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories_for_test(repos),
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
@@ -165,7 +189,7 @@ def test_distinct_outcome_verify_produces_a_distinct_report(repos: Repos) -> Non
         assert by_b.verification_report_id != by_a.verification_report_id
         stored = list_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            verification_repository=vr_repo,
+            ports=_filing_ports_for_test(repos),
             operation=_authority_operation_for_test,
         )
         assert len(stored) == 2

@@ -131,7 +131,14 @@ def test_q1_window_sums_jan_mar_expense_bases() -> None:
     apr = _gasto_transaction("apr", value_date=date(2025, 4, 1), taxable_base=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, feb, mar, apr))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, feb.transaction_id, mar.transaction_id}
@@ -154,7 +161,14 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
     jul = _gasto_transaction("jul", value_date=date(2025, 7, 1), taxable_base=Decimal("400.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, may, jul))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q2_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q2_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
@@ -180,7 +194,14 @@ def test_taxable_base_preferred_over_gross_for_deductible_amount() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert result.observations[0].deductible_amount == Decimal("100.00")
     assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == Decimal("100.00")
@@ -197,7 +218,14 @@ def test_untagged_expense_is_surfaced_not_gross_folded() -> None:
     tx = _gasto_transaction("untagged", value_date=date(2025, 2, 1), amount=Decimal("80.00"), taxable_base=None)
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert result.observations == ()
     assert len(result.issues) == 1
@@ -216,7 +244,14 @@ def test_mixed_classification_applies_business_pct() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert result.observations[0].deductible_amount == Decimal("100.00")
 
@@ -231,7 +266,14 @@ def test_personal_outgoing_is_skipped_silently() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert result.observations == ()
     assert result.issues == ()
@@ -264,7 +306,14 @@ def test_irpf_actividad_economica_gasto_flows_despite_unclassified_business() ->
     )
     catalogue = TransactionCatalogue.from_transactions((tagged, untagged))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert {observation.transaction_id for observation in result.observations} == {tagged.transaction_id}
     assert result.observations[0].deductible_amount == actividad_base
@@ -283,7 +332,14 @@ def test_reviewed_excluded_irpf_actividad_gasto_stays_excluded() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert result.observations == ()
     assert result.issues == ()
@@ -300,7 +356,14 @@ def test_incoming_transaction_is_not_a_gasto() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert result.observations == ()
     assert result.issues == ()
@@ -316,7 +379,14 @@ def test_inactive_transaction_skipped_silently() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert result.observations == ()
     assert result.issues == ()
@@ -329,7 +399,14 @@ def test_all_observations_target_casilla_02() -> None:
     ]
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
-    result = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     assert all(o.target_casilla_id == _M130_GASTOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
@@ -343,6 +420,9 @@ def test_gasto_observation_rejects_legacy_target_casilla_key() -> None:
         TransactionCatalogue.from_transactions(transactions),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
     )
     payload = result.observations[0].model_dump()
     payload["target_casilla"] = payload.pop("target_casilla_id")
@@ -375,7 +455,14 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     feb = _gasto_transaction("feb", value_date=date(2025, 2, 1), taxable_base=feb_base)
     apr = _gasto_transaction("apr", value_date=date(2025, 4, 2), taxable_base=apr_base)
     catalogue = TransactionCatalogue.from_transactions((feb, apr))
-    aggregation = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q2_2024)
+    aggregation = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q2_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
 
     resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
         revision, aggregation.observations
@@ -412,7 +499,14 @@ def test_actividad_marked_row_accepted_by_m130_is_visibly_held_by_m100() -> None
     )
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
-    quarterly = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    quarterly = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
     annual = aggregate_renta_ledger_expenses(
         catalogue,
         InvoiceCatalogue(),
@@ -448,7 +542,14 @@ def test_reviewed_business_row_is_accepted_by_both_projections() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
-    quarterly = aggregate_renta_gasto_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    quarterly = aggregate_renta_gasto_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+    )
     annual = aggregate_renta_ledger_expenses(
         catalogue,
         InvoiceCatalogue(),
