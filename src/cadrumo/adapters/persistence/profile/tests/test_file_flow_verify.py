@@ -1,39 +1,14 @@
 """Modelo file-flow application tests split by workflow."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 import asyncio
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.verification_report import (    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-)
-from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
-from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
-from cadrumo.application.modelo.action_errors import (    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
-    VerificationReportNotFoundError,
-    WorkUnitRevisionDivergenceError,
-)
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
-from cadrumo.application.modelo.filing_actions import get_verification_report, list_verification_reports
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import get_work_unit
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import (    DEFAULT_130_BASELINE_INPUTS,
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
+    DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
     DEFAULT_180_BINDING_VALUES,
     DEFAULT_180_RELATION_VALUES,
@@ -64,6 +39,32 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (    D
     verify_revision,
     workflow_gate,
     workflow_profile,
+)
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.modelo.action_errors import (
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    VerificationReportNotFoundError,
+    WorkUnitRevisionDivergenceError,
+)
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
+from cadrumo.application.modelo.filing_actions import get_verification_report, list_verification_reports
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import get_work_unit
+from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
+from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.verification_report import (
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -424,8 +425,8 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
 def test_work_unit_creation_refuses_unresolvable_registry_snapshot_before_verify(repos: Repos) -> None:
     """An unsupported coordinate cannot create state for a later verify path."""
 
-    
     from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+
     wu_repo, _, _, _, _ = repos
     with pytest.raises(NoRevisionForPeriodError):
         seed_work_unit(

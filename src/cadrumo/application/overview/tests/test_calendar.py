@@ -19,8 +19,8 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
-from ...live.notifications import PersistedNotificationsSnapshot
 from ...live.notification_ports import RemoteNotification
+from ...live.notifications import PersistedNotificationsSnapshot
 from ..calendar import (
     _registry_window_for_work_unit,
     build_overview_calendar,

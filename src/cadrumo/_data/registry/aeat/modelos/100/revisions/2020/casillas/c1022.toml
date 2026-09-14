@@ -1,7 +1,0 @@
-[[revisions."2020".casillas]]
-id = "1022"
-number = "1022"
-section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
-semantic_role = "irpf_deduccion_galicia_familia_numerosa"
-continuidad_id = "irpf-deduccion-galicia-familia-numerosa"
-legal_refs = ["ley-35-2006:art-77"]

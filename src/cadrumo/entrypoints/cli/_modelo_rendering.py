@@ -595,9 +595,7 @@ def calculation_revision_payload(
         casilla_values={k: str(v) for k, v in visible_calculation_casilla_values(rev).items()},
         observations=observations,
         result_summary=(
-            result_summary_payload(rev, work_unit=work_unit)
-            if include_result_summary and work_unit is not None
-            else ()
+            result_summary_payload(rev, work_unit=work_unit) if include_result_summary and work_unit is not None else ()
         ),
         detail_rows=detail_row_payloads(rev),
         source_provenance=source_provenance,
@@ -826,9 +824,7 @@ def calculation_revision_lines(
     ]
     lines.extend(_calculation_revision_lifecycle_lines(rev))
     summary_lines = (
-        result_summary_lines(rev, work_unit=work_unit)
-        if include_result_summary and work_unit is not None
-        else []
+        result_summary_lines(rev, work_unit=work_unit) if include_result_summary and work_unit is not None else []
     )
     if summary_lines:
         lines.extend(summary_lines)

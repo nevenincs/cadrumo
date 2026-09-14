@@ -1,7 +1,0 @@
-[[revisions."2020".casillas]]
-id = "0103"
-number = "0103"
-section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-semantic_role = "irpf_inmueble_gastos_financiacion_pendientes_previos"
-continuidad_id = "irpf-inmueble-gastos-financiacion-pendientes-previos"
-legal_refs = ["ley-35-2006:art-23"]

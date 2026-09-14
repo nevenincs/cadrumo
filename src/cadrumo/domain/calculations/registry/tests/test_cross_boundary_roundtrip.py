@@ -25,8 +25,9 @@ from typing import TypedDict, get_type_hints
 import pytest
 from pydantic import ValidationError
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
+
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from ....filing.schema import (
     ModeloBindingValue,

@@ -18,6 +18,8 @@ import pytest
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
@@ -25,7 +27,6 @@ from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import ProfileManagerScreen

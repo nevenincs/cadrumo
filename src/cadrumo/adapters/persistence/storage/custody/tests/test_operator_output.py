@@ -28,6 +28,7 @@ from cadrumo.adapters.persistence.storage.custody.records import (
     ProfileCustodyWrappedDek,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operator_output.emit import emit_operator_json_success
 from cadrumo.application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
@@ -37,7 +38,6 @@ from cadrumo.application.wizard.results import ConfigProfileCreateResult, Profil
 from cadrumo.core.config import override_settings
 from cadrumo.core.json_contract import NoticeSeverity
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -190,5 +190,3 @@ def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
     document = json.loads(capsys.readouterr().out)
     codes = [notice["code"] for notice in document["notices"]]
     assert codes == ["probe.caller_notice"]
-
-

@@ -19,8 +19,8 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     lineage_totality,
     unresolved_successor_rows,
 )
-from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition

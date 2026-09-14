@@ -31,6 +31,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -38,8 +40,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -11,8 +11,8 @@ import hashlib
 
 import pytest
 
-from ....tests.pdf_fixtures import text_pdf_bytes
 from ....core.document_shape import DocumentShape
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import extract_evidence_text
 from ._evidence_textlayer_test_support import text_layer_ports_for_pages

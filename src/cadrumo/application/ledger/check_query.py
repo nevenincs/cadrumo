@@ -37,6 +37,7 @@ if TYPE_CHECKING:
 #: The AEAT period code covering a whole filing year, used by the sweep.
 _ANNUAL_PERIOD_CODE = "0A"
 
+
 class LedgerCheckV1(BaseModel):
     """One readiness verdict with the findings that produced it."""
 

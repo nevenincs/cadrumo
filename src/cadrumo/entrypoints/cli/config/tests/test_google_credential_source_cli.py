@@ -65,6 +65,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from .....adapters.outbound.google.impersonation import GoogleAuthAdcUnavailableError
 from .....adapters.outbound.google.session_store import load_credential_source_selection
 from .....adapters.outbound.storage.factory import build_google_credentials
@@ -74,7 +76,6 @@ from .....adapters.persistence.storage.tests.secure_sql import (
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....tests.env_scope import scoped_env_var
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

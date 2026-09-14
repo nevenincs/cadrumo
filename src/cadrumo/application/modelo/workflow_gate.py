@@ -50,8 +50,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...application.auth.providers import select_provider
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ...application.auth.providers import select_provider
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.period import Period
@@ -74,9 +74,9 @@ from ..workflow.errors import WorkflowInputMismatchError
 from ..workflow.persistence import WorkflowRunRepository
 from ..workflow.protocols import RegistryModeloDraftProtocol
 from ..workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
-from .revision_replay_inputs import revision_filing_replay_inputs
 from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import ModeloWorkflowGateError
+from .revision_replay_inputs import revision_filing_replay_inputs
 from .workflow_gate_ports import WorkflowGateDraftRepositoryProtocol, WorkflowGatePorts
 
 if TYPE_CHECKING:

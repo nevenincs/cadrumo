@@ -234,6 +234,7 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
     """
 
     from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
     from .cli_runner import invoke_cached_cli
 
     register_cli_profile(

@@ -337,13 +337,13 @@ class ProportionalityKind:
     """
 
     __slots__ = (
-        "_token",
         "_is_full_deductible",
-        "_is_usage_ratio",
-        "_is_statutory_cap",
-        "_requires_fixed_pct",
         "_is_non_deductible",
+        "_is_statutory_cap",
+        "_is_usage_ratio",
         "_requires_exclusive_use",
+        "_requires_fixed_pct",
+        "_token",
     )
 
     def __new__(
@@ -453,7 +453,7 @@ class ProportionalityKind:
 class StatutoryCapPeriod:
     """Opaque statutory-cap period token projected from the facts registry."""
 
-    __slots__ = ("_token", "_is_per_person")
+    __slots__ = ("_is_per_person", "_token")
 
     def __new__(cls, token: str, *, is_per_person: bool, _registry_validated: bool = False) -> Self:
         if not _registry_validated:

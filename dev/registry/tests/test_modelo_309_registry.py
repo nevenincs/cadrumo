@@ -10,8 +10,8 @@ import pytest
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.iva.schema import IvaLedgerObservationRole
 
 from ..compiler.loader import (
     load_modelo_directory,

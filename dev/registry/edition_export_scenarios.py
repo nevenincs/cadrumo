@@ -373,6 +373,8 @@ _EVIDENCE: Final = FilingEvidenceReference(reference="edition-round-trip:m303-fa
 _M303_EXONERADO_ENDPOINT: Final = validated_casilla_id("79", surface="edition round-trip scenario")
 _M303_EXONERADO_ACTIVITY_SLOTS: Final = range(1, 7)
 _M303_PRORRATA_ACTIVITY_SLOTS: Final = range(1, 6)
+
+
 def _m303_differentiated_sectors() -> tuple[SectorDefinition, ...]:
     """Modelo 303's two differentiated sectors, built on demand rather than at import.
 
@@ -394,6 +396,8 @@ def _m303_differentiated_sectors() -> tuple[SectorDefinition, ...]:
         SectorDefinition(sector_id="a", letra=letters[0], member_activity_codes=("4711",)),
         SectorDefinition(sector_id="b", letra=letters[1], member_activity_codes=("6820",)),
     )
+
+
 _M303_NON_AGRICULTURAL: Final = "no_agricola"
 
 

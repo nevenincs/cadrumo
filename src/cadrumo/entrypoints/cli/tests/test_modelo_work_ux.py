@@ -27,6 +27,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
 )
@@ -34,7 +36,6 @@ from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit,
     _create_gb_non_resident_profile,

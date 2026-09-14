@@ -73,7 +73,13 @@ from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    bound_test_profile_record,
+    open_test_profile_session,
+    publish_test_profile_capsule,
+    upsert_test_profile_facts,
+)
+from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
@@ -81,12 +87,6 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    bound_test_profile_record,
-    open_test_profile_session,
-    upsert_test_profile_facts,
-)
-from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
@@ -347,8 +347,8 @@ def _seed_m303_filing_evidence(fixtures_dir: Path) -> None:
     from the shared evidence helper binds it to the live snapshot every time,
     and keeps a six-figure-byte blob out of the tree.
     """
-    from cadrumo.core.period import Period
     from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+    from cadrumo.core.period import Period
 
     fixtures_dir.mkdir(parents=True, exist_ok=True)
     for filing_year, code in _M303_EVIDENCE_PERIODS:

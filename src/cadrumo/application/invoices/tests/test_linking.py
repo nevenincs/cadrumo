@@ -19,6 +19,7 @@ from ..transaction_linking import link_invoice_transaction_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 def test_link_invoice_transaction_catalogues_roundtrips_bidirectional_link() -> None:
     invoice = _invoice()
     transaction = _transaction()

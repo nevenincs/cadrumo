@@ -17,24 +17,23 @@ from hashlib import sha256
 from pathlib import Path
 from uuid import UUID
 
+from .....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.custody_ports import ProfileCustodyRecoveryEnvelopePort
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from .....application.user_profile.recovery_custody import mint_profile_creation_recovery
 from .....application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
     bound_profile_record_session,
     close_active_profile_record_session,
 )
+from .....application.user_profile.recovery_custody import mint_profile_creation_recovery
 from .....core.bucket_pointer import resolve_active_bucket_id
 from .....core.config import override_settings
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
 from .....domain.buckets.event import BucketEventType
 from .....domain.user_profile.errors import ProfileSchemaValidationError
-from .....domain.user_profile.values import ProfileSetupState, UserProfileRecord
-from .....domain.user_profile.values import UserProfileFact
-from .....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..bucket.directory_layout import BucketPaths, bucket_paths
 from ..custody.capsule import list_current_profile_custody_capsule_ids, load_committed_profile_password_material
 from ..custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek

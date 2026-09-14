@@ -10,11 +10,16 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
+from cadrumo.application.ledger.models import (
+    ManualLedgerTransactionCommand,
+    ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
+)
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
-from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
-from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch, ManualLedgerTransactionResult
+
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,

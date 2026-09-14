@@ -210,9 +210,7 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
     foral_aliases = frozenset(_normalize_token(alias) for alias in raw_foral_aliases)
     if foral_aliases & {str(token) for token in token_set}:
         raise RegistryValidationError("foral aliases must remain outside the common-regime CCAA vocabulary")
-    excluded_territories = frozenset(
-        _normalize_token(value) for value in _csv(entries, _EXCLUDED_ORDER_KEY)
-    )
+    excluded_territories = frozenset(_normalize_token(value) for value in _csv(entries, _EXCLUDED_ORDER_KEY))
     for territory in excluded_territories:
         _required(entries, f"{_EXCLUDED_PREFIX}{territory}.classification")
         _required(entries, f"{_EXCLUDED_PREFIX}{territory}.iso_aliases")

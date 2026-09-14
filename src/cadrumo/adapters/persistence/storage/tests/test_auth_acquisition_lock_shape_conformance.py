@@ -18,6 +18,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
+
 from .storage_path_grammar import assert_path_matches_grammar
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

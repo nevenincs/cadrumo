@@ -1,0 +1,416 @@
+# Modelo 131 casilla 05: volumen de ingresos del trimestre de las actividades
+# agricolas, ganaderas y forestales, que la casilla 06 multiplica por el 2 por
+# ciento del art 110.1.c.
+#
+# Los dos filtros que separan esta agregacion de la del Modelo 130 son legales,
+# no incidentales, y viven en la proyeccion porque deciden que filas EXISTEN
+# como observaciones, no que observaciones reclama un binding:
+#
+#  - actividad: solo las filas cuyo tipo de actividad del Modelo 036 figura en
+#    el selector rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-
+#    agrario-objetiva. Una fila sin actividad declarada NO entra: el silencio no
+#    puede significar agrario, porque encaminaria el ingreso de un declarante no
+#    agrario a una casilla agraria.
+#  - concepto: se excluyen subvenciones de capital e indemnizaciones, segun
+#    rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario. Las
+#    subvenciones CORRIENTES si computan, y las instrucciones AEAT del modelo lo
+#    dicen expresamente.
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131-resultados-negativos-anteriores"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions.2019-2023.bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "previous_filing"
+source_modelo = "131"
+source_casilla_id = "saldo-negativo-fin-periodo"
+
+[revisions.2019-2023.bindings.provider.temporal]
+kind = "target_period_offset"
+periods = -1
+within_filing_year = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2019-2023.bindings.aggregation]
+op = "copy"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131-volumen-ingresos-agrario"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions.2019-2023.bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["volumen de ingresos del trimestre"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "ledger_renta_income_aggregation"
+modelo = "131"
+target_casilla_id = "05"
+fact = "ingresos_integros_sum"
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2019-2023.bindings.aggregation]
+op = "sum"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-1-epigrafe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-1-epigrafe"
+offset = 109
+length = 4
+data_type = "text"
+
+[revisions.2019-2023.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-1-rendimiento-neto"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-1-rendimiento-neto"
+offset = 113
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-1-porcentaje"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-1-porcentaje"
+offset = 130
+length = 5
+data_type = "decimal"
+decimals = 2
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-1-resultado"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-1-resultado"
+offset = 135
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-2-epigrafe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-2-epigrafe"
+offset = 152
+length = 4
+data_type = "text"
+
+[revisions.2019-2023.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-2-rendimiento-neto"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-2-rendimiento-neto"
+offset = 156
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-2-porcentaje"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-2-porcentaje"
+offset = 173
+length = 5
+data_type = "decimal"
+decimals = 2
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-2-resultado"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-2-resultado"
+offset = 178
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-3-epigrafe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-3-epigrafe"
+offset = 195
+length = 4
+data_type = "text"
+
+[revisions.2019-2023.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-3-rendimiento-neto"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-3-rendimiento-neto"
+offset = 199
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-3-porcentaje"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-3-porcentaje"
+offset = 216
+length = 5
+data_type = "decimal"
+decimals = 2
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-3-resultado"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-3-resultado"
+offset = 221
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-4-epigrafe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-4-epigrafe"
+offset = 238
+length = 4
+data_type = "text"
+
+[revisions.2019-2023.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-4-rendimiento-neto"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-4-rendimiento-neto"
+offset = 242
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-4-porcentaje"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-4-porcentaje"
+offset = 259
+length = 5
+data_type = "decimal"
+decimals = 2
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-4-resultado"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-4-resultado"
+offset = 264
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-5-epigrafe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-5-epigrafe"
+offset = 281
+length = 4
+data_type = "text"
+
+[revisions.2019-2023.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-5-rendimiento-neto"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-5-rendimiento-neto"
+offset = 285
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-5-porcentaje"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-5-porcentaje"
+offset = 302
+length = 5
+data_type = "decimal"
+decimals = 2
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.actividad-5-resultado"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "actividad-5-resultado"
+offset = 307
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2019-2023.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2019-2023.bindings]]
+id = "modelo-131.page1.justificante-anterior"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "justificante-anterior"
+offset = 614
+length = 13
+data_type = "text"
+
+[revisions.2019-2023.bindings.value]
+data_type = "text"
+channel = "text"

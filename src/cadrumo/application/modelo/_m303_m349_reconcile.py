@@ -120,10 +120,7 @@ def _expectations_are_counterparts(
     # Reciprocal source references are the registry's cross-surface identity;
     # requiring an intersection prevents pairing unrelated expectations that
     # happen to share a tolerance and legal vocabulary.
-    return bool(
-        frozenset(str(ref) for ref in left.source_refs)
-        & frozenset(str(ref) for ref in right.source_refs)
-    )
+    return bool(frozenset(str(ref) for ref in left.source_refs) & frozenset(str(ref) for ref in right.source_refs))
 
 
 def _selected_reconciliation_contract(work_unit: WorkUnit) -> _ReconciliationContract | None:

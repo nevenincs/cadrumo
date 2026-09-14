@@ -11,8 +11,11 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....application.modelo.tests.registry_revision import active_registry_revision_id
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -30,8 +33,6 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
-from ....application.modelo.tests.registry_revision import active_registry_revision_id
 from ._modelo_review_package_support import seed_exportable_modelo_revision
 from ._strict_cli_fixture_support import binding_isolated_backend
 from .cli_runner import invoke_cached_cli

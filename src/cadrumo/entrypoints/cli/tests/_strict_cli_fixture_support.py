@@ -7,11 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.config import override_settings
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ._cli_surface_support import isolated_cli_surface_backend
 
 _DIAGNOSTICS_BUCKET_ID = "22222222-3333-4444-8555-666666666666"

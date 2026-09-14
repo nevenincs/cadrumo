@@ -109,8 +109,8 @@ def censo_pull(
     from ....application.live.censo import pull_censal_datos
     from ....application.user_profile.projections import record_to_effective_facts
     from ....entrypoints.censal_review import run_censal_review
-    from ._censo_review_cli import confirm_censal_review
     from ..state_projection_support import censal_fetch_port, certificate_secret_backend_factory, operator_scope_ports
+    from ._censo_review_cli import confirm_censal_review
 
     # Refuse an absent active profile before the read, not after: the live
     # navigation can trigger a Cl@ve push, and asking the operator to

@@ -29,7 +29,6 @@ from .common import (
     active_bucket_id_or_refuse as _inventory_bucket_id,
 )
 from .common import emit_envelope
-from .state_projection_support import inventory_service_ports_factory
 from .ledger_business_payloads import (
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
@@ -37,6 +36,7 @@ from .ledger_business_payloads import (
     InventoryMovementAddResult,
     InventoryValuationPreviewPayload,
 )
+from .state_projection_support import inventory_service_ports_factory
 
 
 def _inventory_service(ctx: typer.Context, *, bucket_id: str) -> InventoryService:

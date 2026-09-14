@@ -1,7 +1,6 @@
 """Backend integration for AEAT IVA wallet decisions in Modelo 303."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -10,23 +9,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.observed_header_fact import ObservedHeaderFact
-from cadrumo.core.period import Period
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationOverride, IvaCompensationReconciliationDecision
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.calculations.binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva_compensation_recurrence
-from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
-from cadrumo.application.modelo.iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
-    lazily_reconcile_local_iva_compensation_for_work_unit,
-    resolve_iva_compensation_decision_for_calculation,
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
@@ -49,6 +36,28 @@ from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support impor
     _wallet_observation,
     _work_unit_repositories,
     _work_unit_repositories_with_modelo_303_work_unit,
+)
+from cadrumo.application.calculations.binding_prefill import (
+    BindingPrefillReport,
+    extract_modelo_303_local_iva_compensation_recurrence,
+)
+from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
+from cadrumo.application.modelo.iva_wallet_gate import (
+    ModeloIvaWalletReconciliationBlocked,
+    lazily_reconcile_local_iva_compensation_for_work_unit,
+    resolve_iva_compensation_decision_for_calculation,
+)
+from cadrumo.core.observed_header_fact import ObservedHeaderFact
+from cadrumo.core.period import Period
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationOverride,
+    IvaCompensationReconciliationDecision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

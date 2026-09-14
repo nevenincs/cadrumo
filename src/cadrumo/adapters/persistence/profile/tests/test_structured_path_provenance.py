@@ -30,15 +30,15 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.core.config import Settings
-from cadrumo.core.field_grounding import FieldGroundingOutcome
-from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.application.ledger.grounding_anchor import normalise_for_anchor_search
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
-from ._evidence_test_support import _BUCKET_ID, _make_svc
+from cadrumo.core.config import Settings
+from cadrumo.core.field_grounding import FieldGroundingOutcome
+from cadrumo.core.field_origin import FieldOrigin
+
+from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
-from ._evidence_test_support import isolated_settings, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]

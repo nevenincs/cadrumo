@@ -68,17 +68,6 @@ from ...domain.calculations.registry.iva_deduction_catalogue import (
     is_iva_deduction_kind,
     iva_deduction_fact_kinds,
 )
-from ...domain.calculations.registry.prorrata_register_catalogue import (
-    especial_prorrata_register_regime,
-    general_prorrata_register_regime,
-    ninguna_prorrata_register_regime,
-    regime_apportions_deduction,
-)
-from ...domain.calculations.registry.prorrata_vocabulary import (
-    default_input_classification,
-    input_classification_tokens,
-    require_input_classification,
-)
 from ...domain.calculations.registry.iva_schema_vocabulary import (
     require_iva_cash_accounting_treatment,
     require_iva_exemption_article,
@@ -89,6 +78,17 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
+)
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    especial_prorrata_register_regime,
+    general_prorrata_register_regime,
+    ninguna_prorrata_register_regime,
+    regime_apportions_deduction,
+)
+from ...domain.calculations.registry.prorrata_vocabulary import (
+    default_input_classification,
+    input_classification_tokens,
+    require_input_classification,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -1216,8 +1216,7 @@ def _validate_differentiated_observation_identities(rows: tuple[IvaLedgerObserva
     if len(ledger_ids) != len(set(ledger_ids)):
         raise ValueError("differentiated deduction observations contain duplicate ledger identity")
     if any(
-        row.deduction_fact_kind is not None
-        and is_iva_deduction_kind(row.deduction_fact_kind, "kind.owner_only")
+        row.deduction_fact_kind is not None and is_iva_deduction_kind(row.deduction_fact_kind, "kind.owner_only")
         for row in rows
     ):
         raise ValueError("investment-goods regularisation is owned only by the bienes-inversion register")

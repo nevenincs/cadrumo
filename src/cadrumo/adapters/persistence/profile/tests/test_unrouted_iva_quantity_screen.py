@@ -20,9 +20,9 @@ from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

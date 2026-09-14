@@ -16,14 +16,14 @@ import pytest
 from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.domain.iva.classification import IvaTerritorialScope
-from cadrumo.domain.iva.schema import EUMemberState
 from cadrumo.application.ledger.counterparty_establishment import (
     ConfirmedCounterpartyFacts,
     record_confirmed_counterparty_facts,
 )
 from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
+from cadrumo.core.classification.policies import SensitivityClass
+from cadrumo.domain.iva.classification import IvaTerritorialScope
+from cadrumo.domain.iva.schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

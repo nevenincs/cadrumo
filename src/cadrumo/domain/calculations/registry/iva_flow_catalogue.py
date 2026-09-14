@@ -292,14 +292,17 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
         devengada_token=devengada_token,
         deducible_token=deducible_token,
     )
-    if len(
-        {
-            catalogue.issued_token,
-            catalogue.received_token,
-            catalogue.recipient_reverse_charge_token,
-            catalogue.supplier_reverse_charge_token,
-        },
-    ) < 4:
+    if (
+        len(
+            {
+                catalogue.issued_token,
+                catalogue.received_token,
+                catalogue.recipient_reverse_charge_token,
+                catalogue.supplier_reverse_charge_token,
+            },
+        )
+        < 4
+    ):
         raise RegistryValidationError("IVA flow catalogue pointers must identify four distinct flow directions")
     return catalogue
 

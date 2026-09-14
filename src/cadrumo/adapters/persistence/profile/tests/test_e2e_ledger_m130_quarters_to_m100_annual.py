@@ -44,14 +44,6 @@ the *wiring*, leaving the rate's legal currency to the registry grounding gate.
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
@@ -61,19 +53,40 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
+from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.registry_observations import (    registry_grounded_observations,
+from cadrumo.domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
     revision_id_for_observation,
 )
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -89,19 +102,8 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.tests.env_scope import ready_clave_settings
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

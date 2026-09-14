@@ -14,11 +14,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
+from .....core.config import override_settings
 from ..sql.engine import dispose_engine
 from .secure_sql import isolated_profile_storage_root
-from .....core.config import override_settings
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 #: The bucket id most callers of this fixture share.
 DEFAULT_BUCKET_ID = "11111111-1111-4111-8111-111111111111"

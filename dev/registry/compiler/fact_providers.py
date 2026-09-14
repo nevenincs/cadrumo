@@ -19,8 +19,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import (
     EntitySetFactPayload,
     GovernedFact,
@@ -40,8 +39,8 @@ __all__ = [
     "FACT_PROVIDER_REGISTRATIONS",
     "FactProviderCompiler",
     "FactProviderRegistration",
-    "compile_authored_fact_catalogue",
     "collect_registered_fact_provider_fingerprints",
+    "compile_authored_fact_catalogue",
     "compile_registered_fact_providers",
     "deterministic_fact_index",
     "fact_catalogue_digest",

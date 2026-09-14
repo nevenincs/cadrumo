@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 import asyncio
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 from pydantic import SecretStr
+
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings

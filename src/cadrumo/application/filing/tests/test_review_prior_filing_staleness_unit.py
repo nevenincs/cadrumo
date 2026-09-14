@@ -24,9 +24,9 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
-from .filing_support import empty_prior_filing_observations_fingerprint
 from ...calculations.observations_repository import ObservationEnvelopePayload
 from ..draft_review import _prior_filing_observations_fingerprint
+from .filing_support import empty_prior_filing_observations_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

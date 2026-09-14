@@ -1,6 +1,0 @@
-# The revision-wide Modelo 100 applicability declaration lives in
-# 0001-applicability.toml. A second rule here would make selection ambiguous;
-# this retained fragment contributes no additional rule. The maritime formula
-# and bindings are scoped within that one revision rule.
-[revisions."2025"]
-applicability = []

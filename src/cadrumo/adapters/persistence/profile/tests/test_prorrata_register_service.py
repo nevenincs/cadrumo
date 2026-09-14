@@ -132,5 +132,3 @@ def test_record_inicio_actividad_persists_proposed_override(tmp_path: Path) -> N
     assert entry.provisional_provenance is ProrrataProvisionalProvenance.INICIO_ACTIVIDAD
     assert entry.authorisation_reference == "INICIO-036-2026-0003"
     assert entry.source_observation_ref is None
-
-

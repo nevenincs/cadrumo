@@ -7,12 +7,13 @@ from functools import lru_cache
 
 import pytest
 
+from cadrumo.application.modelo.tests.verification_substance_fixtures import _CASILLA_01, _CASILLA_02, workflow_profile
+
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
-from cadrumo.application.modelo.tests.verification_substance_fixtures import _CASILLA_01, _CASILLA_02, workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

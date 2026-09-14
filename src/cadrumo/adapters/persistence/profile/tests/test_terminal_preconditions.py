@@ -12,7 +12,17 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations import errors as errors_module
+from cadrumo.application.calculations import m303_carry_ingress as m303_module
+from cadrumo.application.calculations import observations_repository as observations_module
+from cadrumo.application.calculations.errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
+from cadrumo.application.calculations.m303_carry_ingress import (
+    M303CarryIngressError,
+    resolve_available_compensation_formula_id,
+)
+from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.errors.hierarchy import TerminalPreconditionErrorMixin
 from cadrumo.core.modelo import Modelo
@@ -34,13 +44,6 @@ from cadrumo.domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     M303CompensationBasis,
 )
-from cadrumo.application.calculations import errors as errors_module
-from cadrumo.application.calculations import m303_carry_ingress as m303_module
-from cadrumo.application.calculations import observations_repository as observations_module
-from cadrumo.application.calculations.errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
-from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError, resolve_available_compensation_formula_id
-from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 if TYPE_CHECKING:
     from pathlib import Path

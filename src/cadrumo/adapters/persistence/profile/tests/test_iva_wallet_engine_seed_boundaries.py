@@ -1,7 +1,6 @@
 """Seed and caller-binding boundary coverage for Modelo 303 IVA wallet decisions."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date
 from decimal import Decimal
@@ -9,14 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
-from cadrumo.application.calculations.iva_compensation_history import seed_iva_compensation_period
-from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -32,6 +28,13 @@ from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support impor
     _store_operator_profile_with_tax_id,
     _work_unit_repositories_with_modelo_303_work_unit,
 )
+from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
+from cadrumo.application.calculations.iva_compensation_history import seed_iva_compensation_period
+from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

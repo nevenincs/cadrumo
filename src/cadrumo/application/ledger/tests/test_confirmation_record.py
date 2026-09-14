@@ -214,6 +214,7 @@ def _populated_record() -> InvoiceConfirmationRecord:
         ),
     )
 
+
 def test_the_derived_id_is_clock_free() -> None:
     """Two confirmations of the same outcome at different moments address one record.
 

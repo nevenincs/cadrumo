@@ -21,7 +21,6 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 

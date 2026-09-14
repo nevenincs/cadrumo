@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 from datetime import UTC, datetime
 from functools import cache
 
 from pydantic import SecretStr
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from ......application.auth.providers import AuthProvider, select_provider
 from ......application.modelo.workflow_gate import build_revision_deadline_window_checker
@@ -25,6 +25,7 @@ _DRAFT_TIME = datetime(2026, 4, 10, 12, 0, tzinfo=UTC)
 
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 
 def modelo_draft(
     *,

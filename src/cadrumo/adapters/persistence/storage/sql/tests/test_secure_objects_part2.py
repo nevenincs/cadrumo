@@ -15,13 +15,13 @@ from sqlalchemy import event
 
 from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import SecureObjectWrite
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import SecureObjectRevisionConflictError, StorageValidationError
 from ...namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
 from ...secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
     StorageHierarchyRegistry,
 )
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..secure_object_records import SecureObjectNamespaceIntegrity, SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (

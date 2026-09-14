@@ -48,15 +48,9 @@ _TRANSLATION_MARKDOWN_LINK_RE: Final[re.Pattern[str]] = re.compile(
 _TRANSLATION_RST_LINK_RE: Final[re.Pattern[str]] = re.compile(
     r"`(?P<label>[^`\r\n<>]*?)\s*<(?P<target>[^>\r\n]+)>\s*`_?"
 )
-_TRANSLATION_RST_ROLE_RE: Final[re.Pattern[str]] = re.compile(
-    r":[A-Za-z][A-Za-z0-9_-]*:`(?P<target>[^`\r\n]+)`"
-)
-_TRANSLATION_MYST_ROLE_RE: Final[re.Pattern[str]] = re.compile(
-    r"\{[A-Za-z][A-Za-z0-9_-]*\}`(?P<target>[^`\r\n]+)`"
-)
-_TRANSLATION_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
-    r"```[\s\S]*?```|``[^`\r\n]*``|`[^`\r\n]*`"
-)
+_TRANSLATION_RST_ROLE_RE: Final[re.Pattern[str]] = re.compile(r":[A-Za-z][A-Za-z0-9_-]*:`(?P<target>[^`\r\n]+)`")
+_TRANSLATION_MYST_ROLE_RE: Final[re.Pattern[str]] = re.compile(r"\{[A-Za-z][A-Za-z0-9_-]*\}`(?P<target>[^`\r\n]+)`")
+_TRANSLATION_LITERAL_RE: Final[re.Pattern[str]] = re.compile(r"```[\s\S]*?```|``[^`\r\n]*``|`[^`\r\n]*`")
 _TRANSLATION_BRACKET_REFERENCE_RE: Final[re.Pattern[str]] = re.compile(
     r"\[(?:\d+|(?=[^\]\r\n]*[=+\-*/])[A-Za-z0-9_.+*/=-]+)\]"
 )
@@ -73,9 +67,7 @@ _TRANSLATION_FORMULA_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w])(?:[A-Za-z_][A-Za-z0-9_]*|\d+(?:[.,]\d+)?)(?:\s*(?:=|[+\-*/×÷<>≤≥])\s*"
     r"(?:[A-Za-z_][A-Za-z0-9_]*|\d+(?:[.,]\d+)?))+(?![\w])"
 )
-_TRANSLATION_NUMERIC_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w])\d+(?:[.,]\d+)*(?:%)?(?![\w])"
-)
+_TRANSLATION_NUMERIC_RE: Final[re.Pattern[str]] = re.compile(r"(?<![\w])\d+(?:[.,]\d+)*(?:%)?(?![\w])")
 _TRANSLATION_OPTION_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w])--[A-Za-z][A-Za-z0-9-]*(?:=[^\s,;:()[\]{}]+)?|"
     r"(?<![\w])-[A-Za-z](?=\s|$|[,;:.)\]}])"
@@ -86,12 +78,8 @@ _TRANSLATION_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(
     r"[A-Za-z_]*\d[A-Za-z0-9_]*|"
     r"[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+){2,})(?![\w])"
 )
-_TRANSLATION_ROLE_MARKER_RE: Final[re.Pattern[str]] = re.compile(
-    r":[A-Za-z][A-Za-z0-9_-]*:|\{[A-Za-z][A-Za-z0-9_-]*\}"
-)
-_TRANSLATION_HTML_TAG_RE: Final[re.Pattern[str]] = re.compile(
-    r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*?)?/?>"
-)
+_TRANSLATION_ROLE_MARKER_RE: Final[re.Pattern[str]] = re.compile(r":[A-Za-z][A-Za-z0-9_-]*:|\{[A-Za-z][A-Za-z0-9_-]*\}")
+_TRANSLATION_HTML_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*?)?/?>")
 _TRANSLATION_HTML_LANGUAGE_RE: Final[re.Pattern[str]] = re.compile(
     r"<(?P<tag>[A-Za-z][A-Za-z0-9:-]*)\b"
     r"(?=[^<>]*?\blang\s*=\s*[\"'](?P<locale>[A-Za-z]{2})(?:-[^\"']*)?[\"'])"
@@ -438,9 +426,7 @@ def _spellcheck_catalogues(
                 language_words_mutable: dict[str, set[str]] = defaultdict(set)
                 for language, words, _excluded in language_segments:
                     language_words_mutable[language].update(word for word in words if len(word) > 1)
-                language_words = {
-                    language: frozenset(words) for language, words in language_words_mutable.items()
-                }
+                language_words = {language: frozenset(words) for language, words in language_words_mutable.items()}
                 cell_words_by_language[cell] = language_words
                 cell_words[cell] = frozenset(word for words in language_words.values() for word in words)
                 excluded_tokens = sum(excluded for _language, _words, excluded in language_segments)
@@ -506,9 +492,7 @@ def _spellcheck_catalogues(
                 "spelling_prose_cells": prose_cells,
                 "spelling_prose_cells_by_locale": dict(sorted(prose_cells_by_locale.items())),
                 "spelling_structural_only_cells": sum(structural_only_cells_by_locale.values()),
-                "spelling_structural_only_cells_by_locale": dict(
-                    sorted(structural_only_cells_by_locale.items())
-                ),
+                "spelling_structural_only_cells_by_locale": dict(sorted(structural_only_cells_by_locale.items())),
                 "spelling_unknown_cells": 0,
                 "spelling_unknown_words": 0,
                 "spelling_tool_failures": 1,
@@ -767,9 +751,7 @@ def _translation_spelling_segments(
     for start, end, _language, _text, _excluded in accepted:
         masked[start:end] = [" "] * (end - start)
     filtered, excluded = _filtered_translation_text("".join(masked))
-    segments: list[tuple[str, tuple[str, ...], int]] = [
-        (default_locale, _translation_words(filtered), excluded)
-    ]
+    segments: list[tuple[str, tuple[str, ...], int]] = [(default_locale, _translation_words(filtered), excluded)]
     for _start, _end, language, text, structural_excluded in accepted:
         segments.append((language, _translation_words(_filtered_translation_text(text)[0]), structural_excluded))
     return tuple(segments)
@@ -802,10 +784,7 @@ def _spanish_word_context(
         "/legal/" in key.casefold()
         or _TRANSLATION_LEGAL_TITLE_RE.search(value) is not None
         or _MODELO_FORM_RE.search(value) is not None
-        or any(
-            _is_legal_authority_target(match.group("target"))
-            for match in _TRANSLATION_RST_LINK_RE.finditer(value)
-        )
+        or any(_is_legal_authority_target(match.group("target")) for match in _TRANSLATION_RST_LINK_RE.finditer(value))
         or any(
             _is_legal_authority_target(match.group("angle_target") or match.group("target") or "")
             for match in _TRANSLATION_MARKDOWN_LINK_CONTEXT_RE.finditer(value)
@@ -887,9 +866,7 @@ def _spelling_surface(key: str) -> str:
 def _excluded_structural_inventory(excluded: Counter[tuple[str, str]]) -> dict[str, object]:
     """Return stable structural-exclusion totals for every surface/locale."""
     by_surface_locale = {
-        f"{surface}/{locale}": excluded[(surface, locale)]
-        for surface in _SPELLING_SURFACES
-        for locale in _LOCALES
+        f"{surface}/{locale}": excluded[(surface, locale)] for surface in _SPELLING_SURFACES for locale in _LOCALES
     }
     return {
         "excluded_structural_tokens": sum(excluded.values()),
@@ -999,11 +976,7 @@ def _source_inventory(
                 "kind": "conflicting_duplicate_translation_key",
                 "key": key,
                 "declarations": [
-                    {
-                        name: value
-                        for name, value in declaration.items()
-                        if name != "semantic_signature"
-                    }
+                    {name: value for name, value in declaration.items() if name != "semantic_signature"}
                     for declaration in key_declarations
                 ],
                 "next_action": "align duplicate translation-key placeholder declarations",
@@ -1263,9 +1236,7 @@ def _documentation_source_inventory(
             for line, text in prose:
                 spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
             for line, language, text in embedded:
-                spelling_values.setdefault(language, {})[
-                    f"parallel:{relative}:line[{line}]:lang[{language}]"
-                ] = text
+                spelling_values.setdefault(language, {})[f"parallel:{relative}:line[{line}]:lang[{language}]"] = text
     extracted = pot_root(docs_root)
     for locale in TARGET_LANGUAGES:
         counts[f"docs_catalogue_files_expected_{locale}"] = len(pages)
@@ -1495,10 +1466,7 @@ def _translation_echo_normalize(value: str) -> str:
     """Normalize a translation/source pair for semantic echo comparison."""
     normalized = unicodedata.normalize("NFKC", value)
     normalized = " ".join(normalized.split()).casefold()
-    normalized = "".join(
-        " " if unicodedata.category(char).startswith("P") else char
-        for char in normalized
-    )
+    normalized = "".join(" " if unicodedata.category(char).startswith("P") else char for char in normalized)
     return " ".join(normalized.split())
 
 

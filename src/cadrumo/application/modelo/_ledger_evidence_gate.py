@@ -12,13 +12,13 @@ from enum import Enum, StrEnum, auto
 from typing import Final, cast
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.iva.components import registry_category_projection
 from ...domain.iva.flow import (
     IvaFlowDirection,
     derive_flow_for_classification,
     flow_direction_for_invoice_kind,
     is_deducible_flow,
 )
-from ...domain.iva.components import registry_category_projection
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError

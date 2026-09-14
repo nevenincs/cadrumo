@@ -13,7 +13,7 @@ import pytest
 
 from .....domain.calculations.registry.authority import bundled_authority
 from ..engine import build_export_plan
-from ..export_service import _SingleExportCoverage, _export_scope_description
+from ..export_service import _export_scope_description, _SingleExportCoverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -20,9 +20,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry.authority import bundled_authority
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -36,7 +37,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

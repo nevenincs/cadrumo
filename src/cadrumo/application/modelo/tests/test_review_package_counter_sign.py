@@ -33,10 +33,10 @@ See Also:
 
 from __future__ import annotations
 
+import functools
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-import functools
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path

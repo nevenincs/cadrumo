@@ -22,8 +22,9 @@ from datetime import date
 
 import pytest
 
-from ....domain.user_profile.values import UserProfileFact
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+
+from ....domain.user_profile.values import UserProfileFact
 from ._strict_cli_fixture_support import binding_isolated_backend
 from .cli_runner import invoke_cached_cli
 

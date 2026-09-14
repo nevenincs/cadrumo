@@ -12,7 +12,6 @@ from typing import Final
 
 from cadrumo.domain.user_profile.values import UserProfileFact
 
-
 MODELO_READY_PROFILE_FACTS: Final[tuple[UserProfileFact, ...]] = (
     UserProfileFact(path="identity.tax_id", value="12345678Z"),
     # A fichero carries the declarant's legal name, composed from these two

@@ -41,6 +41,7 @@ from cadrumo.application.user_profile.profile_record_repository import (
     bound_profile_record_session,
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.application.user_profile.validation import (
     CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
     REQUIRED_FIELD_MISSING_CODE,
@@ -48,7 +49,6 @@ from cadrumo.application.user_profile.validation import (
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -71,7 +71,11 @@ def test_validate_m145_communication_record_accepts_registry_backed_required_fie
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
-        result = validate_m145_communication_record(record.communication_record_id[:12], bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        result = validate_m145_communication_record(
+            record.communication_record_id[:12],
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     assert result.valid is True
     assert result.issue_count == 0
@@ -96,7 +100,11 @@ def test_validate_m145_communication_record_reports_missing_required_casilla_wit
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
-        result = validate_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        result = validate_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     issue = next(
         issue for issue in result.issues if issue.kind is M145CommunicationValidationIssueKind.MISSING_REQUIRED
@@ -136,7 +144,11 @@ def test_validate_m145_communication_record_reports_registry_data_type_failures(
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
-        result = validate_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        result = validate_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     issue = next(
         issue

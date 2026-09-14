@@ -1,7 +1,0 @@
-[[revisions."2020".casillas]]
-id = "0638"
-number = "0638"
-section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ctrd"]
-data_type = "nif"
-semantic_role = "irpf_arrendador_nif"
-legal_refs = ["ley-35-2006:art-77", "ley-35-2006:dt-15"]

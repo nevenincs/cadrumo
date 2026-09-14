@@ -9,8 +9,8 @@ import typer
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.auth.operator import build_live_auth_preflight_report
 from ...application.auth.operator_probe_ports import OperatorProbePorts
-from ...application.auth.operator_scope_ports import OperatorScopePorts
 from ...application.auth.operator_results import LiveAuthPreflightReport
+from ...application.auth.operator_scope_ports import OperatorScopePorts
 from ...core.redaction.rules import redact_for_cli_output
 
 

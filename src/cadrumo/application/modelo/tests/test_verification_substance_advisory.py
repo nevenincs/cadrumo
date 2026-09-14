@@ -6,11 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.casilla_id import CasillaId
-from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.modelos.errors import ModeloError
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 from cadrumo.application.modelo.tests.verification_substance_fixtures import (
     _CASILLA_00501,
     _CASILLA_01,
@@ -19,6 +14,12 @@ from cadrumo.application.modelo.tests.verification_substance_fixtures import (
     _casilla_values,
     workflow_profile,
 )
+
+from ....core.casilla_id import CasillaId
+from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.modelos.errors import ModeloError
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -135,7 +135,9 @@ def iva_wallet_pull_cmd(
     from ...application.live.iva_remote_state import capture_iva_compensation_wallet
     from ..live_state_composition import compose_live_state
 
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     composition = compose_live_state()
     report = asyncio.run(
         capture_iva_compensation_wallet(
@@ -430,7 +432,9 @@ def iva_wallet_pull_history_cmd(
     from ...core.config import load_settings
     from ..live_state_composition import compose_live_state
 
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     resolved_root = resolve_optional_root(
         output_root,
         lambda: load_settings().cadrumo_iva_compensation_history_dir,
@@ -497,7 +501,9 @@ def iva_wallet_pull_evidence_cmd(
     from ..live_state_composition import compose_live_state
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_iva_read_evidence_dir)
     composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
@@ -898,7 +904,9 @@ def filed_list_cmd(
     resolved_from = year_from if year_from is not None else today_madrid().year
     resolved_to = year_to if year_to is not None else today_madrid().year
     composition = compose_live_state()
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     if modelo is None:
         bulk_report = asyncio.run(
             list_filed_data_bulk(
@@ -1167,7 +1175,9 @@ def filed_pull_all_cmd(
     profile = _active_taxpayer_profile_or_none()
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     composition = compose_live_state(output_root=resolved_root)
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     run = asyncio.run(
         pull_filed_history(
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
@@ -1528,7 +1538,9 @@ def filed_pull_cmd(
     :class:`ModeloRecord` evidence when an existing current filing record
     matches.
     """
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         if dry_run:
@@ -1620,7 +1632,9 @@ def filed_pull_sources_cmd(
     from ..live_state_composition import compose_live_state
     from ._app_live_filed_payloads import FiledCaptureSourcesResult
 
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(

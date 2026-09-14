@@ -104,9 +104,7 @@ class ProrrataRegisterCatalogue:
 
     @property
     def referenced_provenances(self) -> frozenset[ProrrataProvisionalProvenance]:
-        return frozenset(
-            definition.token for definition in self.provenances if definition.authorisation_required
-        )
+        return frozenset(definition.token for definition in self.provenances if definition.authorisation_required)
 
     @property
     def electable_provenances(self) -> tuple[ProrrataProvisionalProvenance, ...]:
@@ -516,7 +514,9 @@ def require_prorrata_transition(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ProrrataEspecialTransitionKind:
-    return resolve_prorrata_register_catalogue(effective_date=effective_date, authority=authority).require_transition(value)
+    return resolve_prorrata_register_catalogue(effective_date=effective_date, authority=authority).require_transition(
+        value
+    )
 
 
 def require_prorrata_provenance(
@@ -525,7 +525,9 @@ def require_prorrata_provenance(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ProrrataProvisionalProvenance:
-    return resolve_prorrata_register_catalogue(effective_date=effective_date, authority=authority).require_provenance(value)
+    return resolve_prorrata_register_catalogue(effective_date=effective_date, authority=authority).require_provenance(
+        value
+    )
 
 
 def require_sector_diferenciado_letra(
@@ -534,31 +536,41 @@ def require_sector_diferenciado_letra(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> SectorDiferenciadoLetra:
-    return resolve_prorrata_register_catalogue(effective_date=effective_date, authority=authority).require_sector_letter(value)
+    return resolve_prorrata_register_catalogue(
+        effective_date=effective_date, authority=authority
+    ).require_sector_letter(value)
 
 
-def require_registry_declared_prorrata_register_regime(value: object, *, effective_date: date) -> ProrrataRegisterRegime:
+def require_registry_declared_prorrata_register_regime(
+    value: object, *, effective_date: date
+) -> ProrrataRegisterRegime:
     authority = governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("prorrata register regime validation requires the candidate facts in scope")
     return require_prorrata_register_regime(value, effective_date=effective_date, authority=authority)
 
 
-def require_registry_declared_prorrata_transition(value: object, *, effective_date: date) -> ProrrataEspecialTransitionKind:
+def require_registry_declared_prorrata_transition(
+    value: object, *, effective_date: date
+) -> ProrrataEspecialTransitionKind:
     authority = governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("prorrata transition validation requires the candidate facts in scope")
     return require_prorrata_transition(value, effective_date=effective_date, authority=authority)
 
 
-def require_registry_declared_prorrata_provenance(value: object, *, effective_date: date) -> ProrrataProvisionalProvenance:
+def require_registry_declared_prorrata_provenance(
+    value: object, *, effective_date: date
+) -> ProrrataProvisionalProvenance:
     authority = governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("prorrata provenance validation requires the candidate facts in scope")
     return require_prorrata_provenance(value, effective_date=effective_date, authority=authority)
 
 
-def require_registry_declared_sector_diferenciado_letra(value: object, *, effective_date: date) -> SectorDiferenciadoLetra:
+def require_registry_declared_sector_diferenciado_letra(
+    value: object, *, effective_date: date
+) -> SectorDiferenciadoLetra:
     authority = governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("sector-letter validation requires the candidate facts in scope")
@@ -566,6 +578,11 @@ def require_registry_declared_sector_diferenciado_letra(value: object, *, effect
 
 
 __all__ = [
+    "ProrrataProvenanceDefinition",
+    "ProrrataRegisterCatalogue",
+    "ProrrataRegisterRegimeDefinition",
+    "ProrrataTransitionDefinition",
+    "SectorDiferenciadoLetraDefinition",
     "aeat_autorizada_prorrata_provenance",
     "carried_prior_definitiva_prorrata_provenance",
     "especial_prorrata_register_regime",
@@ -574,16 +591,11 @@ __all__ = [
     "interrumpida_tres_ultimos_prorrata_provenance",
     "ninguna_prorrata_register_regime",
     "opcion_prorrata_transition",
-    "ProrrataProvenanceDefinition",
-    "ProrrataRegisterCatalogue",
-    "ProrrataRegisterRegimeDefinition",
-    "ProrrataTransitionDefinition",
     "prorrata_electable_provenances",
     "prorrata_provenance_precedence",
     "prorrata_referenced_provenances",
     "prorrata_sector_letters",
     "regime_apportions_deduction",
-    "SectorDiferenciadoLetraDefinition",
     "require_prorrata_provenance",
     "require_prorrata_register_regime",
     "require_prorrata_transition",
@@ -592,6 +604,6 @@ __all__ = [
     "require_registry_declared_prorrata_transition",
     "require_registry_declared_sector_diferenciado_letra",
     "require_sector_diferenciado_letra",
-    "revocacion_prorrata_transition",
     "resolve_prorrata_register_catalogue",
+    "revocacion_prorrata_transition",
 ]

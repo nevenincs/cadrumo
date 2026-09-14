@@ -24,9 +24,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ......core.paths import is_windows_long_path_error
 from ..directory_layout import bucket_paths
 from ..errors import BucketAlreadyPresentError, BucketPathTooLongError
-from ......core.paths import is_windows_long_path_error
 
 if TYPE_CHECKING:
     from pathlib import Path

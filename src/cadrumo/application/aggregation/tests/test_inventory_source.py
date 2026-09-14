@@ -14,6 +14,7 @@ from typing import get_args
 
 import pytest
 from pydantic import ValidationError
+
 from ....core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,

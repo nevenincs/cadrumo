@@ -13,6 +13,7 @@ from typing import Annotated, ClassVar, Final, Literal
 from pydantic import BaseModel, StringConstraints, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
+
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection

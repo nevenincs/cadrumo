@@ -1,9 +1,0 @@
-[[revisions."2024".casillas]]
-id = "ZRUE2"
-number = "*27"
-section = ["datos_identificativos", "conyuge"]
-data_type = "text"
-semantic_role = "spouse_resident_ue_eee_country"
-input_kind = "bound"
-binding = "renta-profile-spouse-eu-eea-country"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]

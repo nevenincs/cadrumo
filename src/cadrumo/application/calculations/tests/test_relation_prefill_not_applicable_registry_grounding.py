@@ -32,10 +32,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.application.user_profile.profile_read_ports import ProfilePathValuesReadPort
+
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import UserProfileFact
-from cadrumo.application.user_profile.profile_read_ports import ProfilePathValuesReadPort
 from ..relation_prefill import (
     _economic_activity_conditional_source_modelos,
     _not_applicable_source_modelos_for_bucket,
@@ -208,11 +209,14 @@ class TestFailClosed:
         bucket_id = _PROFILE_ID
         snapshot = _m100_snapshot(2024)
 
-        assert _not_applicable_source_modelos_for_bucket(
-            snapshot,
-            bucket_id,
-            profile_path_values_reader=_ProfilePathValuesFake(None),
-        ) == frozenset(), (
+        assert (
+            _not_applicable_source_modelos_for_bucket(
+                snapshot,
+                bucket_id,
+                profile_path_values_reader=_ProfilePathValuesFake(None),
+            )
+            == frozenset()
+        ), (
             "an absent profile must leave every cross-period source enforced, never fold a "
             "relation in as a zero the operator never declared"
         )
@@ -223,11 +227,14 @@ class TestFailClosed:
         profile_reader = _profile_reader((UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),))
         snapshot = _m100_snapshot(2024)
 
-        assert _not_applicable_source_modelos_for_bucket(
-            snapshot,
-            bucket_id,
-            profile_path_values_reader=profile_reader,
-        ) == frozenset(), (
+        assert (
+            _not_applicable_source_modelos_for_bucket(
+                snapshot,
+                bucket_id,
+                profile_path_values_reader=profile_reader,
+            )
+            == frozenset()
+        ), (
             "undeclared income categories must fail closed: the taxpayer may well carry on an "
             "economic activity, so both pago-fraccionado sources stay enforced"
         )
@@ -243,11 +250,14 @@ class TestFailClosed:
         )
         snapshot = _m100_snapshot(2024)
 
-        assert _not_applicable_source_modelos_for_bucket(
-            snapshot,
-            bucket_id,
-            profile_path_values_reader=profile_reader,
-        ) == frozenset(), (
+        assert (
+            _not_applicable_source_modelos_for_bucket(
+                snapshot,
+                bucket_id,
+                profile_path_values_reader=profile_reader,
+            )
+            == frozenset()
+        ), (
             "an undeclared estimation regime must fail closed here: neither pago-fraccionado "
             "source is positively not applicable, so both stay enforced"
         )
@@ -271,10 +281,11 @@ class TestFailClosed:
             "test precondition: Modelo 303 must declare no economic-activity-conditional dependency"
         )
 
-        assert _not_applicable_source_modelos_for_bucket(
-            snapshot,
-            bucket_id,
-            profile_path_values_reader=profile_reader,
-        ) == frozenset(), (
-            "a revision declaring no conditional dependency must suppress nothing regardless of the profile"
-        )
+        assert (
+            _not_applicable_source_modelos_for_bucket(
+                snapshot,
+                bucket_id,
+                profile_path_values_reader=profile_reader,
+            )
+            == frozenset()
+        ), "a revision declaring no conditional dependency must suppress nothing regardless of the profile"

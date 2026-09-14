@@ -64,11 +64,8 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from .errors import (
-    CalculationRefusalPrecondition,
     ObservationCasillaReferenceError,
-    ObservationEvidenceDisplacementError,
     ObservationKeyError,
-    calculation_no_recovery_verdict,
 )
 from .revision_carry_gate import revision_carry_outcome
 
@@ -658,16 +655,16 @@ __all__ = [
     "CalculationObservationPorts",
     "CalculationObservationRepositoryProtocol",
     "CalculationObservationStorageProtocol",
-    "IvaWalletDecisionRepositoryProtocol",
     "IvaWalletDecisionEnvelopePayload",
+    "IvaWalletDecisionRepositoryProtocol",
     "ObservationEnvelopePayload",
     "ObservationSourceKind",
     "PriorDomiciliationElectionProjection",
     "ResultDispositionProjection",
     "decision_payload_digest",
+    "is_official_aeat_observation_source",
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
-    "is_official_aeat_observation_source",
     "member_observation_key",
     "member_observation_key_for_token",
     "observation_key",

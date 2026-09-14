@@ -34,8 +34,8 @@ from ...domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
-from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.verification_report import (

@@ -1,9 +1,0 @@
-[[revisions."2025".casillas]]
-id = "FALLASDLG"
-number = "*97"
-section = ["datos_identificativos", "ascendientes", "ascendiente"]
-data_type = "text"
-semantic_role = "irpf_ascendiente_fecha_fallecimiento"
-input_kind = "bound"
-binding = "renta-family-ascendant-death-date"
-additional_source_refs = ["aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

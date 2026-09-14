@@ -171,9 +171,9 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-    from ...domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
     from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_choices
     from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_tokens
+    from ...domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
 
     return (
         [member.value for member in entity_type_tokens()],

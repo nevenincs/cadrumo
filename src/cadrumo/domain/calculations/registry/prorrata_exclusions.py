@@ -47,9 +47,7 @@ class Art104TresExclusionCatalogue:
     @property
     def operator_declared(self) -> frozenset[Art104TresExclusion]:
         """Return tokens the registry permits an operator to declare."""
-        return frozenset(
-            definition.token for definition in self.definitions if definition.kind == "operator_declared"
-        )
+        return frozenset(definition.token for definition in self.definitions if definition.kind == "operator_declared")
 
     @property
     def auto_derived(self) -> frozenset[Art104TresExclusion]:

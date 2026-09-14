@@ -33,7 +33,11 @@ from decimal import Decimal
 from ...core.prorrata_register import ProrrataRegisterRegime as _ProrrataRegisterRegime
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     aeat_autorizada_prorrata_provenance as _aeat_autorizada_provenance,
+)
+from ...domain.calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime as _general_regime,
+)
+from ...domain.calculations.registry.prorrata_register_catalogue import (
     inicio_actividad_prorrata_provenance as _inicio_actividad_provenance,
 )
 from ...domain.prorrata_register.register import (

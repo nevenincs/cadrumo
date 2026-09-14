@@ -8,26 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
-from cadrumo.application.calculations.cross_period_clean_state import (
-    cross_period_dependency_inventory,
-    cross_period_dependency_requirements,
-    partition_cross_period_requirements_by_activity_start,
-)
-from cadrumo.application.calculations.cross_period_models import (
-    CrossPeriodCleanStateBlocker,
-    CrossPeriodCleanStateVerdict,
-    CrossPeriodDependencyOrigin,
-    CrossPeriodExpectedMemberSet,
-    NoPriorObligationProvenanceKind,
-)
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
     BUCKET_ID as _BUCKET_ID,
 )
@@ -79,6 +61,24 @@ from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_suppor
 from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
     snapshot_390 as _snapshot_390,
 )
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.cross_period_clean_state import (
+    cross_period_dependency_inventory,
+    cross_period_dependency_requirements,
+    partition_cross_period_requirements_by_activity_start,
+)
+from cadrumo.application.calculations.cross_period_models import (
+    CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyOrigin,
+    CrossPeriodExpectedMemberSet,
+    NoPriorObligationProvenanceKind,
+)
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

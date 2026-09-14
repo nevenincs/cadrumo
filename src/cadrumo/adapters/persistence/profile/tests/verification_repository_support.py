@@ -9,6 +9,10 @@ not add adapter imports merely to satisfy verification's required dependency.
 from __future__ import annotations
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -16,13 +20,14 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.runtime_repository import (    secure_object_repository_for_active_bucket,
+from cadrumo.adapters.persistence.storage.runtime_repository import (
+    secure_object_repository_for_active_bucket,
 )
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+
 
 def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
     """Compose the real adapter bundle over the active isolated test bucket."""

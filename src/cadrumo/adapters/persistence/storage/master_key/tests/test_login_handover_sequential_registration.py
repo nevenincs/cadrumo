@@ -22,13 +22,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.adapters.persistence.storage.master_key.login_handover_journal import (
     clear_handover_journal,
     handover_journal_path,
     load_handover_journal,
     save_handover_journal,
 )
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_handover import HandoverPhase, ProfileLoginHandoverJournal
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.profile_pointer import ActiveProfilePointerTransactionError

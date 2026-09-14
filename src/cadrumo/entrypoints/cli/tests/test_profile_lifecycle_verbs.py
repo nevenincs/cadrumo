@@ -46,12 +46,13 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
+from ....adapters.persistence.storage.tests.profile_storage_root_fixture import profile_storage_root_fixture
 from ....core.config import load_settings
 from ....core.i18n.render import tr
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from ....adapters.persistence.storage.tests.profile_storage_root_fixture import profile_storage_root_fixture
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ._profile_lifecycle_support import seed
 from .cli_runner import invoke_cached_cli
 

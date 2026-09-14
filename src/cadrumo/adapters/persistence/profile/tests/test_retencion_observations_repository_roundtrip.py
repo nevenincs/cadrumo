@@ -460,20 +460,19 @@ def test_repository_refuses_a_capture_instant_without_utc(captured_at: datetime,
     against UTC-aware instants silently answered a different question. All three
     now use the one canonical UtcInstant.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        with pytest.raises(ValidationError):
-            RetencionObservationRepositoryAdapter().save_observation(
-                modelo="180",
-                filing_year=2024,
-                period=Period.from_year_and_code(2024, "0A"),
-                observation=_observation(
-                    nif="11111111H",
-                    scheme=RetencionScheme("actividades_economicas"),
-                    retencion=Decimal("100"),
-                ),
-                captured_at=captured_at,
-                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-            )
+    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(ValidationError):
+        RetencionObservationRepositoryAdapter().save_observation(
+            modelo="180",
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "0A"),
+            observation=_observation(
+                nif="11111111H",
+                scheme=RetencionScheme("actividades_economicas"),
+                retencion=Decimal("100"),
+            ),
+            captured_at=captured_at,
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+        )
 
 
 def test_repository_accepts_a_utc_capture_instant(tmp_path: Path) -> None:
@@ -573,17 +572,16 @@ def test_an_evidence_authority_value_cannot_enter_this_store(tmp_path: Path) -> 
     nothing else, so the exemption would have expired silently the day something
     wrote an AEAT kind here. This is the refusal that makes it structural.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        with pytest.raises(ValidationError):
-            RetencionObservationRepositoryAdapter().save_observation(
-                modelo="180",
-                filing_year=2024,
-                period=Period.from_year_and_code(2024, "0A"),
-                observation=_observation(
-                    nif="11111111H",
-                    scheme=RetencionScheme("actividades_economicas"),
-                    retencion=Decimal("100"),
-                ),
-                captured_at=datetime.now(UTC),
-                source_kind="aeat_sede_justificante",
-            )
+    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(ValidationError):
+        RetencionObservationRepositoryAdapter().save_observation(
+            modelo="180",
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "0A"),
+            observation=_observation(
+                nif="11111111H",
+                scheme=RetencionScheme("actividades_economicas"),
+                retencion=Decimal("100"),
+            ),
+            captured_at=datetime.now(UTC),
+            source_kind="aeat_sede_justificante",
+        )

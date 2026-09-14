@@ -52,19 +52,8 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
 from cadrumo.adapters.persistence.profile.review_package_signing import ReviewPackageSigningKeypairAdapter
+from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_path
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from cadrumo.application.modelo.review_package_collab_audit import emit_collab_feedback_countersign_attached_event
 from cadrumo.application.modelo.review_package_counter_sign import counter_sign_review_package
 from cadrumo.application.modelo.review_package_feedback import (
@@ -81,7 +70,18 @@ from cadrumo.application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
 )
 from cadrumo.application.modelo.review_package_signing import ensure_review_package_signing_keypair, sign_review_package
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_path
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -94,6 +94,7 @@ _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-FEEDBACK-ROUNDTRIP-TEST"
 def _signing_capability(runtime, *, bucket_id: str) -> ReviewPackageSigningKeypairAdapter:
     profile = runtime.primary if bucket_id == runtime.primary.bucket_id else runtime.secondary
     return ReviewPackageSigningKeypairAdapter(repository=profile.repository, bucket_id=profile.bucket_id)
+
 
 #: Standalone placeholder ids for tests that exercise only the
 #: encrypt/decrypt primitive (no real work unit or revision is built), still
@@ -244,7 +245,7 @@ def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_fe
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
         # Originator imports and verifies the feedback against their own
@@ -256,7 +257,7 @@ def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_fe
             operator_public_key_hex=operator_signing_keypair.public_key_hex,
             counter_signer_public_key_hex=accountant_signing_keypair.public_key_hex,
             now=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
         assert imported.counter_signature_verified is True
@@ -313,7 +314,7 @@ def test_unstructured_feedback_with_no_counter_signed_receipt_imports_cleanly(tm
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
         imported = import_feedback_package(
@@ -322,7 +323,7 @@ def test_unstructured_feedback_with_no_counter_signed_receipt_imports_cleanly(tm
             reviewed_package_path=package_path,
             operator_public_key_hex=operator_signing_keypair.public_key_hex,
             now=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
         assert imported.counter_signature_verified is None
@@ -347,14 +348,14 @@ def test_decrypt_feedback_package_recovers_document_byte_for_byte(tmp_path: Path
         feedback,
         originator_public_key_hex=originator_public_key_hex,
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
 
     recovered = decrypt_feedback_package_from_originator_envelope(
         envelope,
         originator_private_key_hex=originator_private_key.private_bytes_raw().hex(),
         now=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert recovered == feedback
 
@@ -376,7 +377,7 @@ def test_decrypt_feedback_package_fails_with_wrong_private_key() -> None:
         feedback,
         originator_public_key_hex=originator_public_key_hex,
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
 
     with pytest.raises(RecipientDecryptionError):
@@ -384,7 +385,7 @@ def test_decrypt_feedback_package_fails_with_wrong_private_key() -> None:
             envelope,
             originator_private_key_hex=wrong_private_key.private_bytes_raw().hex(),
             now=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -405,7 +406,7 @@ def test_decrypt_feedback_package_fails_when_ciphertext_tampered() -> None:
         feedback,
         originator_public_key_hex=originator_public_key_hex,
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
 
     tampered_bytes = bytearray(envelope.ciphertext)
@@ -417,7 +418,7 @@ def test_decrypt_feedback_package_fails_when_ciphertext_tampered() -> None:
             tampered_envelope,
             originator_private_key_hex=originator_private_key.private_bytes_raw().hex(),
             now=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -438,7 +439,7 @@ def test_expired_feedback_envelope_refuses() -> None:
         originator_public_key_hex=originator_public_key_hex,
         valid_for=timedelta(days=1),
         issued_at=_NOW,
-        recipient_encryption=_CRYPTO_CAPABILITY
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
 
     with pytest.raises(RecipientPackageExpiredError):
@@ -446,7 +447,7 @@ def test_expired_feedback_envelope_refuses() -> None:
             envelope,
             originator_private_key_hex=originator_private_key.private_bytes_raw().hex(),
             now=_NOW + timedelta(days=2),
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -493,7 +494,7 @@ def test_import_feedback_package_refuses_when_archive_tampered_after_countersign
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
         # Tamper the LOCAL archive the originator still holds, after signing.
@@ -512,7 +513,7 @@ def test_import_feedback_package_refuses_when_archive_tampered_after_countersign
                 operator_public_key_hex=operator_signing_keypair.public_key_hex,
                 counter_signer_public_key_hex=accountant_signing_keypair.public_key_hex,
                 now=_NOW,
-                recipient_encryption=_CRYPTO_CAPABILITY
+                recipient_encryption=_CRYPTO_CAPABILITY,
             )
 
 
@@ -557,7 +558,7 @@ def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
         forged_counter_signer_public_key_hex = X25519PrivateKey.generate().public_key().public_bytes_raw().hex()
@@ -570,7 +571,7 @@ def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path
                 operator_public_key_hex=operator_signing_keypair.public_key_hex,
                 counter_signer_public_key_hex=forged_counter_signer_public_key_hex,
                 now=_NOW,
-                recipient_encryption=_CRYPTO_CAPABILITY
+                recipient_encryption=_CRYPTO_CAPABILITY,
             )
 
 
@@ -617,7 +618,7 @@ def test_import_feedback_package_raises_when_receipt_present_but_no_counter_sign
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
-            recipient_encryption=_CRYPTO_CAPABILITY
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
         with pytest.raises(ReviewPackageFeedbackError):
@@ -628,7 +629,7 @@ def test_import_feedback_package_raises_when_receipt_present_but_no_counter_sign
                 operator_public_key_hex=operator_signing_keypair.public_key_hex,
                 counter_signer_public_key_hex=None,
                 now=_NOW,
-                recipient_encryption=_CRYPTO_CAPABILITY
+                recipient_encryption=_CRYPTO_CAPABILITY,
             )
 
 

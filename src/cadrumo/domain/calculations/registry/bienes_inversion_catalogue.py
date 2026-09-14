@@ -240,7 +240,9 @@ def _catalogue(entries: Mapping[str, str]) -> BienInversionCatalogue:
     if set(catalogue.kind_choices) != {item.token for item in kind_definitions}:
         raise RegistryValidationError("LIVA capital-goods kind projections must be declared in kind.order")
     if set(catalogue.disposal_regime_choices) != {item.token for item in disposal_definitions}:
-        raise RegistryValidationError("LIVA capital-goods disposal projections must be declared in disposal_regime.order")
+        raise RegistryValidationError(
+            "LIVA capital-goods disposal projections must be declared in disposal_regime.order"
+        )
     if catalogue.real_estate_kind not in catalogue.kind_choices:
         raise RegistryValidationError("real-estate kind projection is not declared in kind.order")
     if catalogue.non_real_estate_kind not in catalogue.kind_choices:

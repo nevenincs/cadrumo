@@ -135,15 +135,11 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_c
         return aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=_BUCKET_ID, objects=secure_objects
-            ),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             profile_year=2025,
             profile_record=profile_record,
-            prorrata_register_repository=ProrrataRegisterRepository(
-                bucket_id=_BUCKET_ID, objects=secure_objects
-            ),
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         )
 
     exento = _run(
@@ -195,14 +191,10 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=_BUCKET_ID, objects=secure_objects
-        ),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=_BUCKET_ID, objects=secure_objects
-        ),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
     )
 
     assert result.issues == ()
@@ -236,14 +228,10 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=_BUCKET_ID, objects=secure_objects
-        ),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
-        prorrata_register_repository=ProrrataRegisterRepository(
-            bucket_id=_BUCKET_ID, objects=secure_objects
-        ),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
     )
 
     assert result.issues == ()

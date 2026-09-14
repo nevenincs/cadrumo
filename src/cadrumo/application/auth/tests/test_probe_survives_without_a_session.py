@@ -7,19 +7,19 @@ unbound session without importing a concrete storage implementation.
 
 from __future__ import annotations
 
-from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 import pytest
 
-from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from cadrumo.application.auth.operator import build_live_auth_preflight_report
 from cadrumo.application.auth.operator_probes import (
     _active_profile_path_values,
     live_auth_identity_state,
     probe_clave_credentials,
 )
-from cadrumo.application.auth.operator import build_live_auth_preflight_report
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import override_settings
+
 from ._operator_probe_fakes import fake_operator_probe_ports
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()

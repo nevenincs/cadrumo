@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from pydantic import BaseModel
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
+
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.schema import RegistrySnapshot

@@ -38,12 +38,12 @@ import pytest
 from ..classification.policies import RedactionRule, SensitivityClass
 from ..hashing import sha256_hex
 from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ..identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
 from ..identity.documents import (
     IdentityError,
     validate_identity,
 )
 from ..identity.nif_iva import is_nif_iva_structurally_shaped, normalise_nif_iva
+from ..identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
 from ..redaction.rules import (
     NIF_PATTERN,
     default_rules_for_class,

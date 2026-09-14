@@ -382,8 +382,8 @@ class TestSandboxEvictsBoundBucketSession:
 
     def test_login_binding_is_evicted_at_teardown(self, tmp_path: Path) -> None:
         """A real login binds a real session inside, and nothing survives outside."""
-        from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
         from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+        from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 
         assert current_active_bucket_session() is None, "a prior test leaked a bucket session"
 
@@ -409,8 +409,8 @@ class TestSandboxEvictsBoundBucketSession:
         route does not match the active bucket session) and
         :func:`execute_sequence` raises.
         """
-        from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
         from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+        from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 
         with sequence_sandbox(sequence_id="runner-session-leak-a", sandbox_root=tmp_path / "leak-a"):
             register_cli_profile(label="me")

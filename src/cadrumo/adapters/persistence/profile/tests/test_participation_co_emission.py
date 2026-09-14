@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.actions_common import blocking_modelo_references
+from cadrumo.application.modelo.revision_persistence import persist_filed_revision
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
@@ -37,10 +38,12 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
+from cadrumo.domain.modelos.participation_index import (
+    TransactionRevisionParticipation,
+    upsert_transaction_participation,
+)
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.application.modelo.revision_persistence import persist_filed_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

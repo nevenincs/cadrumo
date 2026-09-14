@@ -21,8 +21,13 @@ import pytest
 
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.models import LedgerDatePartition, OutOfWindowTransactionIndexEntry, OutOfWindowTransactionSummary
+from ....domain.transactions.models import (
+    LedgerDatePartition,
+    OutOfWindowTransactionIndexEntry,
+    OutOfWindowTransactionSummary,
+    Transaction,
+    TransactionCatalogue,
+)
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...review.filter import LedgerReviewFilterSpec

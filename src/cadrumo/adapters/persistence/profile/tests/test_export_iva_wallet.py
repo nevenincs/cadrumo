@@ -1,46 +1,46 @@
 """Modelo 303 IVA wallet export readiness tests."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from pathlib import Path
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests._export_test_support import isolated_backend
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 __all__ = ["isolated_backend"]
 
+from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.core.config import Settings
-from cadrumo.core.period import Period
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.adapters.persistence.profile.tests._export_modelo_303_support import (    _blocked_wallet_decision,
+from cadrumo.adapters.persistence.profile.tests._export_modelo_303_support import (
+    _blocked_wallet_decision,
     _filed_history_only_wallet_decision,
     _seed_modelo_303_1t_clean_state,
 )
-from cadrumo.adapters.persistence.profile.tests._export_test_support import (    _general_m303_filing_evidence,
+from cadrumo.adapters.persistence.profile.tests._export_test_support import (
+    _general_m303_filing_evidence,
     _profile,
     _seed_profile,
     _seed_revision,
 )
 from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.filing_actions import file_modelo_revision
+from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.core.config import Settings
+from cadrumo.core.period import Period
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -30,15 +30,15 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from dev._paths import REPO_ROOT
-from dev.registry.analysis.governed_literal_discovery import (
-    GovernedLiteralCandidate,
-    discover_governed_literal_candidates,
-)
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifactError,
     read_authority_artifact,
+)
+from dev._paths import REPO_ROOT
+from dev.registry.analysis.governed_literal_discovery import (
+    GovernedLiteralCandidate,
+    discover_governed_literal_candidates,
 )
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -720,8 +720,7 @@ def _source_identity_retirement_scope(row: Mapping[str, Any]) -> str | None:
         if isinstance(destination, Mapping) and isinstance(destination.get("path"), str)
     ]
     if closure.get("contains_model_fact") is True or any(
-        "modelos" in {part.casefold() for part in PurePosixPath(path).parts}
-        for path in destination_paths
+        "modelos" in {part.casefold() for part in PurePosixPath(path).parts} for path in destination_paths
     ):
         return "modelo_registry"
     return "facts_registry"
@@ -1136,8 +1135,7 @@ def _consumer_source_paths() -> dict[str, Any]:
                 {
                     line.replace("\\", "/").strip()
                     for line in result.stdout.splitlines()
-                    if line.strip()
-                    and not _fd_excluded(PurePosixPath(line.replace("\\", "/").strip()))
+                    if line.strip() and not _fd_excluded(PurePosixPath(line.replace("\\", "/").strip()))
                 }
             )
             return {
@@ -1565,7 +1563,9 @@ def _module_enum_member_literal(tree: ast.AST, class_name: str, member_name: str
     )
     if not has_strenum_import:
         return None
-    classes = [statement for statement in tree.body if isinstance(statement, ast.ClassDef) and statement.name == class_name]
+    classes = [
+        statement for statement in tree.body if isinstance(statement, ast.ClassDef) and statement.name == class_name
+    ]
     if len(classes) != 1:
         return None
     class_node = classes[0]
@@ -1634,9 +1634,7 @@ def _immutable_module_values(tree: ast.AST) -> dict[str, tuple[str, ...]]:
         elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
             assignments.setdefault(statement.target.id, []).append(statement.value)
     writes = Counter(
-        node.id
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
+        node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
     )
     values: dict[str, tuple[str, ...]] = {}
 
@@ -1679,7 +1677,11 @@ def _module_exported_names(tree: ast.AST) -> set[str]:
         if isinstance(statement, ast.Assign) and "__all__" in _simple_assignment_names(statement.targets):
             values = _literal_string_sequence(statement.value)
             return set(values or ())
-        if isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name) and statement.target.id == "__all__":
+        if (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and statement.target.id == "__all__"
+        ):
             values = _literal_string_sequence(statement.value)
             return set(values or ())
     return set()
@@ -1768,11 +1770,7 @@ class _ClosedWorldFlowVisitor(ast.NodeVisitor):
     ) -> dict[str, tuple[str, ...] | None]:
         parameters = _function_parameter_names(callee)
         values: dict[str, tuple[str, ...] | None] = {parameter: None for parameter in parameters}
-        positional = [
-            argument
-            for argument in node.args
-            if not isinstance(argument, ast.Starred)
-        ]
+        positional = [argument for argument in node.args if not isinstance(argument, ast.Starred)]
         if any(isinstance(argument, ast.Starred) for argument in node.args):
             return values
         for index, argument in enumerate(positional):
@@ -1863,9 +1861,7 @@ def _closed_world_parameter_values(
                 functions[statement.name] = statement
     exported = _module_exported_names(tree)
     private = {
-        name
-        for name in functions
-        if name.startswith("_") and name not in exported and name not in duplicate_names
+        name for name in functions if name.startswith("_") and name not in exported and name not in duplicate_names
     }
     targets = private & CLOSED_WORLD_A_HELPER_NAMES
     if not targets:
@@ -2084,11 +2080,11 @@ def _registry_mapping_candidates(mapping_fact_id: str, key: str) -> tuple[str, .
     for variant in variants:
         payload = variant.get("payload") if isinstance(variant, dict) else None
         entries = payload.get("entries") if isinstance(payload, dict) else None
-        matches = [
-            entry.get("value")
-            for entry in entries
-            if isinstance(entry, dict) and entry.get("key") == key
-        ] if isinstance(entries, list) else []
+        matches = (
+            [entry.get("value") for entry in entries if isinstance(entry, dict) and entry.get("key") == key]
+            if isinstance(entries, list)
+            else []
+        )
         if len(matches) != 1 or not isinstance(matches[0], str) or not matches[0].strip():
             _MAPPING_CANDIDATE_CACHE[cache_key] = None
             return None
@@ -2266,10 +2262,7 @@ def _generic_mapping_producers(
             continue
         if not _function_has_raise(function_node) or _function_has_fallback_return_in_except(function_node):
             continue
-        if not any(
-            isinstance(node, ast.Name) and node.id == "ResolvedMappingFact"
-            for node in ast.walk(function_node)
-        ):
+        if not any(isinstance(node, ast.Name) and node.id == "ResolvedMappingFact" for node in ast.walk(function_node)):
             continue
         mapping_names: set[str] = set()
         for node in ast.walk(function_node):
@@ -2283,8 +2276,7 @@ def _generic_mapping_producers(
             isinstance(node, ast.Return)
             and node.value is not None
             and any(
-                isinstance(name_node, ast.Name) and name_node.id in mapping_names
-                for name_node in ast.walk(node.value)
+                isinstance(name_node, ast.Name) and name_node.id in mapping_names for name_node in ast.walk(node.value)
             )
             for node in ast.walk(function_node)
         )
@@ -2625,14 +2617,10 @@ def _function_has_registry_date_axis_helper(tree: ast.AST, node: ast.AST, fact_p
     if not called:
         return False
     has_mapping_query = any(
-        isinstance(item, ast.Call)
-        and _call_symbol(item.func) == "MappingFactQuery"
-        for item in ast.walk(tree)
+        isinstance(item, ast.Call) and _call_symbol(item.func) == "MappingFactQuery" for item in ast.walk(tree)
     )
     has_axis_validation = any(
-        isinstance(item, ast.Call)
-        and _call_symbol(item.func) == "DateAxis"
-        for item in ast.walk(tree)
+        isinstance(item, ast.Call) and _call_symbol(item.func) == "DateAxis" for item in ast.walk(tree)
     )
     return has_mapping_query and has_axis_validation and _function_has_raise(tree)
 
@@ -2652,10 +2640,7 @@ def _function_has_authority_query(node: ast.AST | None) -> bool:
     """Find the validated-authority call that consumes the query object."""
     if node is None:
         return False
-    return any(
-        isinstance(item, ast.Call) and _authority_receiver_proven(item)
-        for item in ast.walk(node)
-    )
+    return any(isinstance(item, ast.Call) and _authority_receiver_proven(item) for item in ast.walk(node))
 
 
 def _dynamic_seam_static_proof(
@@ -2673,7 +2658,11 @@ def _dynamic_seam_static_proof(
     if function_node is None:
         failures.append("function_scope_unresolved")
     else:
-        parameters = set(_function_parameter_names(function_node)) if isinstance(function_node, (ast.FunctionDef, ast.AsyncFunctionDef)) else set()
+        parameters = (
+            set(_function_parameter_names(function_node))
+            if isinstance(function_node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            else set()
+        )
         parameter = spec["fact_parameter"]
         query_parameter = spec.get("query_fact_parameter", parameter)
         if parameter not in parameters:
@@ -2693,21 +2682,27 @@ def _dynamic_seam_static_proof(
             proof.append("fact_id_normalized_then_membership_checked_against_registry_catalogue")
 
         if spec["axis_mode"] == "direct":
-            axis_expression = next((keyword.value for keyword in query_node.keywords if keyword.arg == "date_axis"), None)
+            axis_expression = next(
+                (keyword.value for keyword in query_node.keywords if keyword.arg == "date_axis"), None
+            )
             axis_name = _date_axis_name(axis_expression)
             if axis_name is None:
                 failures.append("typed_date_axis_unproven")
             else:
                 proof.append(
-                    "typed_filing_period_axis"
-                    if axis_name == "filing_period"
-                    else f"typed_date_axis:{axis_name}"
+                    "typed_filing_period_axis" if axis_name == "filing_period" else f"typed_date_axis:{axis_name}"
                 )
         elif spec["axis_mode"] == "typed_module_mapping":
-            axis_expression = next((keyword.value for keyword in query_node.keywords if keyword.arg == "date_axis"), None)
+            axis_expression = next(
+                (keyword.value for keyword in query_node.keywords if keyword.arg == "date_axis"), None
+            )
             mapping_name = spec["axis_mapping"]
             valid_mapping, _ = _typed_date_axis_mapping_proof(tree, mapping_name)
-            if not isinstance(axis_expression, ast.Name) or not valid_mapping or not _function_has_typed_axis_map_use(function_node, mapping_name, parameter):
+            if (
+                not isinstance(axis_expression, ast.Name)
+                or not valid_mapping
+                or not _function_has_typed_axis_map_use(function_node, mapping_name, parameter)
+            ):
                 failures.append("typed_date_axis_mapping_unproven")
             else:
                 proof.append(f"typed_date_axis_mapping:{mapping_name}")
@@ -2719,7 +2714,9 @@ def _dynamic_seam_static_proof(
         else:
             failures.append("unknown_axis_proof_rule")
 
-        effective_date = next((keyword.value for keyword in query_node.keywords if keyword.arg == "effective_date"), None)
+        effective_date = next(
+            (keyword.value for keyword in query_node.keywords if keyword.arg == "effective_date"), None
+        )
         if effective_date is None:
             failures.append("effective_date_missing")
         else:
@@ -2743,7 +2740,11 @@ def _dynamic_seam_static_proof(
             failures.append("validated_registry_query_service_scope_unproven")
         else:
             proof.append("validated_registry_query_service_scope")
-    if spec.get("requires_catalogue_membership") and function_node is not None and _function_has_catalogue_membership(function_node, spec.get("query_fact_parameter", spec["fact_parameter"])):
+    if (
+        spec.get("requires_catalogue_membership")
+        and function_node is not None
+        and _function_has_catalogue_membership(function_node, spec.get("query_fact_parameter", spec["fact_parameter"]))
+    ):
         proof.append("bounded_registry_catalogue_membership")
     elif spec.get("requires_catalogue_membership"):
         failures.append("bounded_registry_catalogue_membership_unproven")
@@ -2798,11 +2799,7 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
             candidates = self.helper_call_candidates.get(helper, ()) if isinstance(helper, str) else ()
             names = spec.get("candidate_constant_names", ())
             if names:
-                candidates = tuple(candidates) + tuple(
-                    self.constants[name]
-                    for name in names
-                    if name in self.constants
-                )
+                candidates = tuple(candidates) + tuple(self.constants[name] for name in names if name in self.constants)
             return tuple(sorted(set(candidates)))
         if mode == "module_mapping_keys":
             mapping_name = spec.get("candidate_mapping")
@@ -3302,7 +3299,9 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
             if isinstance(fact_expr, ast.Name) and self.function_scope_stack:
                 function_name = self.function_scope_stack[-1]
                 family_key = (function_name, fact_expr.id)
-                if family_key in self.closed_world_values and (query_family := self.query_family_by_symbol.get(query_kind)):
+                if family_key in self.closed_world_values and (
+                    query_family := self.query_family_by_symbol.get(query_kind)
+                ):
                     allowed_families = self.closed_world_families.get(family_key, set())
                     if query_family not in allowed_families:
                         fact_ids = None
@@ -3462,8 +3461,8 @@ def _normalise_fact_wire_value(value: Any, *, key: str | None = None) -> Any:
 
 def _canonical_fact_wire_digest(fact: Any) -> str:
     """Digest one fact through the existing facts compiler serialization."""
-    from dev.registry.compiler.fact_providers import serialize_fact_catalogue
     from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+    from dev.registry.compiler.fact_providers import serialize_fact_catalogue
 
     provider_neutral = fact.model_copy(update={"provider_id": None})
     serialized = serialize_fact_catalogue(
@@ -3526,7 +3525,7 @@ def _authored_bundled_payload_staleness(artifact_status: str) -> dict[str, Any]:
                 },
             )
         result["stale"] = stale
-    except Exception as exc:  # noqa: BLE001 - facts-only signal must report a closed comparison failure
+    except Exception as exc:
         result["status"] = f"error:{type(exc).__name__}"
         result["errors"] = [f"authored-bundled-payload-comparison:{type(exc).__name__}:{exc}"]
     return result
@@ -3634,19 +3633,13 @@ def _consumer_fact_scan(
     dynamic_blockers: list[dict[str, Any]] = []
     for dynamic in dynamic_callsites:
         candidate_ids = tuple(
-            fact_id
-            for fact_id in dynamic.get("candidate_fact_ids", ())
-            if isinstance(fact_id, str) and fact_id.strip()
+            fact_id for fact_id in dynamic.get("candidate_fact_ids", ()) if isinstance(fact_id, str) and fact_id.strip()
         )
         authored_missing = sorted(set(candidate_ids) - set(authored))
         compiled_missing = sorted(set(candidate_ids) - set(compiled))
         dynamic["candidate_fact_ids"] = list(candidate_ids)
-        dynamic["candidate_authored_presence"] = {
-            fact_id: bool(authored.get(fact_id)) for fact_id in candidate_ids
-        }
-        dynamic["candidate_bundled_presence"] = {
-            fact_id: fact_id in compiled for fact_id in candidate_ids
-        }
+        dynamic["candidate_authored_presence"] = {fact_id: bool(authored.get(fact_id)) for fact_id in candidate_ids}
+        dynamic["candidate_bundled_presence"] = {fact_id: fact_id in compiled for fact_id in candidate_ids}
         dynamic["dynamic_seam_proof"] = {
             **dict(dynamic.get("dynamic_seam_proof") or {}),
             "candidate_authored_presence": not authored_missing,
@@ -3663,9 +3656,7 @@ def _consumer_fact_scan(
         dynamic["blockers"] = list(dict.fromkeys(blockers))
         dynamic["blocking"] = bool(dynamic["blockers"])
         dynamic["consumer_seam_loadability"] = (
-            "typed_dynamic_seam"
-            if not dynamic["blocking"]
-            else "blocked:" + ",".join(dynamic["blockers"])
+            "typed_dynamic_seam" if not dynamic["blocking"] else "blocked:" + ",".join(dynamic["blockers"])
         )
         dynamic["source_call_sites"] = [
             {
@@ -3751,7 +3742,9 @@ def _consumer_fact_scan(
             if isinstance(callsite.get("query_family"), str)
         }
         compiled_family = compiled_fact.get("family") if isinstance(compiled_fact, dict) else None
-        family_compatible = bool(compiled_fact is not None and query_families and query_families == {str(compiled_family)})
+        family_compatible = bool(
+            compiled_fact is not None and query_families and query_families == {str(compiled_family)}
+        )
         associated_row_ids = sorted(
             row_id
             for row_id, paths in row_files.items()
@@ -3772,8 +3765,7 @@ def _consumer_fact_scan(
         if compiled_fact is not None and not family_compatible:
             blockers.append("query_family_unresolved")
         if any(
-            callsite.get("source_kind") == "ast_query_call"
-            and not callsite.get("effective_date_expression")
+            callsite.get("source_kind") == "ast_query_call" and not callsite.get("effective_date_expression")
             for callsite in deduped_callsites
         ):
             blockers.append("query_effective_date_unresolved")
@@ -3884,7 +3876,7 @@ def _bundled_fact_authority_probe() -> dict[str, Any]:
             "identity_digest": authority._identity_digest,
             "error": None,
         }
-    except Exception as exc:  # noqa: BLE001 - the signal must name any loader refusal
+    except Exception as exc:
         return {
             "status": f"load-error:{type(exc).__name__}",
             "fact_count": 0,
@@ -3913,11 +3905,8 @@ def _facts_only_signal() -> dict[str, Any]:
             observation["blocking"] = True
             observation["consumer_seam_loadability"] = "blocked:" + ",".join(observation["blockers"])
             observation["proof_chain"]["consumer_seam_loadability"] = False
-        consumer_scan["blockers"] = [
-            item for item in consumer_scan["observations"] if item["blocking"]
-        ] + [
-            item for item in consumer_scan["blockers"]
-            if item.get("fact_id") is None
+        consumer_scan["blockers"] = [item for item in consumer_scan["observations"] if item["blocking"]] + [
+            item for item in consumer_scan["blockers"] if item.get("fact_id") is None
         ]
 
     authored, authored_errors = _authored_fact_index()
@@ -3937,20 +3926,17 @@ def _facts_only_signal() -> dict[str, Any]:
     provider_owned_required_ids = sorted(set(required_ids) & set(provider_owned_compiled_ids))
     compiled_unaccounted_ids = sorted(set(compiled_ids) - set(authored_ids) - set(provider_owned_compiled_ids))
     authored_uncompiled_ids = sorted(set(authored_ids) - set(compiled_ids))
-    resolved_ids = sorted(
-        item["fact_id"] for item in consumer_scan["observations"] if not item["blocking"]
-    )
+    resolved_ids = sorted(item["fact_id"] for item in consumer_scan["observations"] if not item["blocking"])
     authored_missing = sorted(set(required_ids) - set(authored) - set(provider_owned_required_ids))
     compiled_missing = sorted(set(required_ids) - set(compiled))
     axis_blockers = [
-        item
-        for item in consumer_scan["blockers"]
-        if "query_date_axis_unresolved" in item.get("blockers", [])
+        item for item in consumer_scan["blockers"] if "query_date_axis_unresolved" in item.get("blockers", [])
     ]
-    authority_errors = sum(
-        status != "ok"
-        for status in (artifact_status, bundled_probe["status"])
-    ) + len(authored_errors) + len(payload_staleness["errors"])
+    authority_errors = (
+        sum(status != "ok" for status in (artifact_status, bundled_probe["status"]))
+        + len(authored_errors)
+        + len(payload_staleness["errors"])
+    )
     publication_blockers = list(consumer_scan["blockers"])
     publication_blockers.extend(
         {
@@ -4127,10 +4113,12 @@ def _facts_only_human(signal: dict[str, Any]) -> str:
         lines.append("(none)")
     else:
         for blocker in blockers:
-            callsites = ", ".join(
-                f"{item.get('file')}:{item.get('line', '?')}"
-                for item in blocker.get("source_call_sites", [])
-            ) or "(no callsite)"
+            callsites = (
+                ", ".join(
+                    f"{item.get('file')}:{item.get('line', '?')}" for item in blocker.get("source_call_sites", [])
+                )
+                or "(no callsite)"
+            )
             lines.append(
                 f"- {blocker.get('fact_id') or '<malformed-query>'}: "
                 f"{', '.join(blocker.get('blockers', []))}; source={callsites}"
@@ -4301,37 +4289,28 @@ def _enum_is_tax_catalogue(
     has_model_anchor = any(_ENUM_MODEL_RE.fullmatch(token) for token in class_tokens) or (
         "modelo" in class_tokens and any(token.isdigit() for token in class_tokens)
     )
-    has_legal_marker = bool(class_tokens & _ENUM_LEGAL_CONTEXT_TOKENS) or class_has_numbered_legal_marker or (
-        member_has_numbered_legal_marker and (has_iva_anchor or has_irnr_anchor or has_model_anchor)
+    has_legal_marker = (
+        bool(class_tokens & _ENUM_LEGAL_CONTEXT_TOKENS)
+        or class_has_numbered_legal_marker
+        or (member_has_numbered_legal_marker and (has_iva_anchor or has_irnr_anchor or has_model_anchor))
     )
-    has_iva_vocabulary = (
-        has_iva_anchor
-        and bool(
-            class_and_member_tokens
-            & {"cash", "category", "exempt", "exemption", "rate", "regime", "regimen", "scheme", "service"}
-        )
+    has_iva_vocabulary = has_iva_anchor and bool(
+        class_and_member_tokens
+        & {"cash", "category", "exempt", "exemption", "rate", "regime", "regimen", "scheme", "service"}
     )
     has_withholding_vocabulary = has_withholding_anchor and bool(
         class_and_member_tokens
         & {"category", "clave", "code", "income", "kind", "rate", "regime", "regimen", "scheme", "tipo"}
     )
-    has_irnr_income_vocabulary = (
-        has_irnr_anchor
-        and bool(class_and_member_tokens & {"code", "income", "renta", "tipo"})
-    )
-    has_model_tax_vocabulary = (
-        has_model_anchor
-        and bool(
-            class_and_member_tokens
-            & {"category", "code", "income", "rate", "regime", "regimen", "scheme", "tipo", "territory"}
-        )
+    has_irnr_income_vocabulary = has_irnr_anchor and bool(class_and_member_tokens & {"code", "income", "renta", "tipo"})
+    has_model_tax_vocabulary = has_model_anchor and bool(
+        class_and_member_tokens
+        & {"category", "code", "income", "rate", "regime", "regimen", "scheme", "tipo", "territory"}
     )
 
     if has_legal_marker:
         family = "legal_article_identifiers"
-    elif has_iva_vocabulary or has_invoice_iva_anchor or (
-        "iva" in path_tokens and "regime" in class_and_member_tokens
-    ):
+    elif has_iva_vocabulary or has_invoice_iva_anchor or ("iva" in path_tokens and "regime" in class_and_member_tokens):
         family = "iva_tax_vocabulary"
     elif has_withholding_vocabulary:
         family = "withholding_scheme_vocabulary"
@@ -4383,8 +4362,7 @@ def _discover_tax_enum_catalogues(source_root: Path = SOURCE_ROOT) -> list[dict[
                         "kind": "mapping",
                     }
                     candidate_id = (
-                        "fact-discovery:enum-catalogue:"
-                        + hashlib.sha256(canonical_json_bytes(identity)).hexdigest()
+                        "fact-discovery:enum-catalogue:" + hashlib.sha256(canonical_json_bytes(identity)).hexdigest()
                     )
                     catalogues.append(
                         {
@@ -5053,7 +5031,14 @@ def _load_verified_fact_authority_artifact(path: Path) -> tuple[Any, str, dict[s
     try:
         read_authority_artifact(path)
         frame = json.loads(data)
-    except (AuthorityArtifactError, ImportError, TypeError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
+    except (
+        AuthorityArtifactError,
+        ImportError,
+        TypeError,
+        UnicodeDecodeError,
+        ValueError,
+        json.JSONDecodeError,
+    ) as exc:
         metadata["status"] = f"invalid-authority:{type(exc).__name__}"
         return None, metadata["status"], metadata
     payload = frame["payload"]
@@ -5126,14 +5111,18 @@ def _load_v4_authority_frame(path: Path) -> tuple[dict[str, Any] | None, str, di
         metadata["status"] = "invalid-authority:payload-digest"
         return None, metadata["status"], metadata
     metadata["status"] = "ok"
-    return {
-        "artifact": artifact,
-        "payload": payload,
-        "payload_sha256": recorded,
-        "identity_digest": identity_digest,
-        "facts": facts,
-        "raw_facts": raw_facts,
-    }, "ok", metadata
+    return (
+        {
+            "artifact": artifact,
+            "payload": payload,
+            "payload_sha256": recorded,
+            "identity_digest": identity_digest,
+            "facts": facts,
+            "raw_facts": raw_facts,
+        },
+        "ok",
+        metadata,
+    )
 
 
 def _authoring_fact_proof(
@@ -5169,11 +5158,15 @@ def _authoring_fact_proof(
     declared_id = declaration.get("fact_id")
     declared_family = declaration.get("family")
     variants = declaration.get("variants")
-    variant_ids = [
-        variant.get("variant_id")
-        for variant in variants
-        if isinstance(variant, dict) and isinstance(variant.get("variant_id"), str)
-    ] if isinstance(variants, list) else []
+    variant_ids = (
+        [
+            variant.get("variant_id")
+            for variant in variants
+            if isinstance(variant, dict) and isinstance(variant.get("variant_id"), str)
+        ]
+        if isinstance(variants, list)
+        else []
+    )
     result.update(
         {
             "declaration_id": declared_id,
@@ -5187,10 +5180,7 @@ def _authoring_fact_proof(
         and isinstance(variants, list)
         and bool(variants)
         and len(variant_ids) == len(variants)
-        and all(
-            isinstance(variant, dict) and isinstance(variant.get("payload"), dict)
-            for variant in variants
-        )
+        and all(isinstance(variant, dict) and isinstance(variant.get("payload"), dict) for variant in variants)
     )
     return result
 
@@ -5236,16 +5226,9 @@ def _governed_fact_proof(
         isinstance(variants, (list, tuple))
         and bool(variants)
         and len(variant_ids) == len(variants)
-        and all(
-            isinstance(variant, dict) and isinstance(variant.get("payload"), dict)
-            for variant in variants
-        )
+        and all(isinstance(variant, dict) and isinstance(variant.get("payload"), dict) for variant in variants)
     )
-    result["present"] = bool(
-        observed_id == declaration_id
-        and observed_family == family
-        and result["variant_proof"]
-    )
+    result["present"] = bool(observed_id == declaration_id and observed_family == family and result["variant_proof"])
     return result
 
 
@@ -5491,9 +5474,7 @@ def _typed_modelo_declarations(
         declaration = declarations.get(declaration_id)
         if declaration is None:
             continue
-        missing: list[str] = [
-            field for field in destination["required_fields"] if field not in declaration
-        ]
+        missing: list[str] = [field for field in destination["required_fields"] if field not in declaration]
         if declaration_id in duplicate_ids:
             missing.append("duplicate id")
         for field in ("legal_refs", "source_refs"):
@@ -5527,10 +5508,7 @@ def _ast_registry_symbols(tree: ast.AST) -> set[str]:
 def _ast_registry_query_call(node: ast.AST, symbols: set[str]) -> bool:
     """Require a real query-constructor call in an AST subtree."""
     query_symbols = symbols - {"RegistrySnapshot"}
-    return any(
-        isinstance(item, ast.Call) and _call_symbol(item.func) in query_symbols
-        for item in ast.walk(node)
-    )
+    return any(isinstance(item, ast.Call) and _call_symbol(item.func) in query_symbols for item in ast.walk(node))
 
 
 def _ast_registry_snapshot_use(node: ast.AST, symbols: set[str]) -> bool:
@@ -5614,10 +5592,7 @@ def _ast_registry_query_call_direct(
         receiver = item.func.value
         if isinstance(receiver, ast.Name) and receiver.id in service_parameters:
             return True
-        if (
-            isinstance(receiver, ast.Attribute)
-            and receiver.attr in service_parameters
-        ):
+        if isinstance(receiver, ast.Attribute) and receiver.attr in service_parameters:
             return True
     return False
 
@@ -5652,8 +5627,7 @@ def _ast_function_call_graph(
                 graph[name].update(
                     child.name
                     for child in node.body
-                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
-                    and child.name in definitions
+                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and child.name in definitions
                 )
             for item in _ast_direct_walk(node):
                 if not isinstance(item, ast.Call):
@@ -5677,15 +5651,9 @@ def _ast_exported_names(tree: ast.AST) -> set[str]:
     exported: set[str] = set()
     for node in getattr(tree, "body", []):
         value: ast.AST | None = None
-        if isinstance(node, ast.Assign) and any(
+        if (isinstance(node, ast.Assign) and any(
             isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
-        ):
-            value = node.value
-        elif (
-            isinstance(node, ast.AnnAssign)
-            and isinstance(node.target, ast.Name)
-            and node.target.id == "__all__"
-        ):
+        )) or (isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__"):
             value = node.value
         if value is None:
             continue
@@ -5702,9 +5670,7 @@ def _ast_reachable_functions(
     module_targets: set[str],
 ) -> set[str]:
     """Return functions reachable from public/exported/module-level roots."""
-    roots = {
-        name for name in definitions if not name.startswith("_")
-    }
+    roots = {name for name in definitions if not name.startswith("_")}
     roots.update(_ast_exported_names(tree) & definitions.keys())
     roots.update(module_targets)
     reachable: set[str] = set()
@@ -5728,9 +5694,7 @@ def _ast_scoped_registry_evidence(
     definitions = _ast_function_definitions(tree)
     graph, module_targets = _ast_function_call_graph(tree, definitions)
     service_symbols = _ast_import_aliases(tree, "RegistryQueryService")
-    evidence_symbols = (
-        _ast_import_aliases(tree, "RegistrySnapshot") if snapshot_kind else symbols
-    )
+    evidence_symbols = _ast_import_aliases(tree, "RegistrySnapshot") if snapshot_kind else symbols
     direct_evidence: dict[str, bool] = {}
     for name, nodes in definitions.items():
         direct_evidence[name] = any(
@@ -5754,9 +5718,7 @@ def _ast_scoped_registry_evidence(
         if name in active:
             return False
         active.add(name)
-        result = direct_evidence.get(name, False) or any(
-            has_evidence(target, active) for target in graph.get(name, ())
-        )
+        result = direct_evidence.get(name, False) or any(has_evidence(target, active) for target in graph.get(name, ()))
         cache[name] = result
         return result
 
@@ -5830,19 +5792,20 @@ def _consumer_registry_resolution(
     # rooted in exported/public functions and module-level calls, then follows
     # only real local Call nodes.  This still accepts public API seams whose
     # caller is outside the consumer module.
-    seam_present = seam in reachable and _ast_scoped_registry_evidence(
-        tree,
-        symbols,
-        snapshot_kind=snapshot_kind,
-    )[1]
+    seam_present = (
+        seam in reachable
+        and _ast_scoped_registry_evidence(
+            tree,
+            symbols,
+            snapshot_kind=snapshot_kind,
+        )[1]
+    )
     if seam_present:
         # The scoped helper above proves that some reachable function contains
         # evidence.  Re-evaluate the declared seam's own call chain so another
         # unrelated consumer cannot satisfy this row.
         service_symbols = _ast_import_aliases(tree, "RegistryQueryService")
-        evidence_symbols = (
-            _ast_import_aliases(tree, "RegistrySnapshot") if snapshot_kind else symbols
-        )
+        evidence_symbols = _ast_import_aliases(tree, "RegistrySnapshot") if snapshot_kind else symbols
         direct_evidence = {
             name: any(
                 _ast_registry_snapshot_use_direct(node, evidence_symbols)
@@ -6107,10 +6070,7 @@ def _placement_scan(
     unclassified_destination_observations = [
         observation
         for destination, observation in zip(placement["destinations"], destination_observations, strict=True)
-        if not (
-            {part.casefold() for part in PurePosixPath(destination["path"]).parts}
-            & {"facts", "modelos"}
-        )
+        if not ({part.casefold() for part in PurePosixPath(destination["path"]).parts} & {"facts", "modelos"})
     ]
     facts_publication = _facts_publication_scan(
         placement["publication"],
@@ -6127,11 +6087,7 @@ def _placement_scan(
         failure_reasons.append("python_fact_literal_present")
     if not todo_present and not consumer_resolved:
         failure_reasons.append("todo_hole_missing")
-    if (
-        isinstance(consumer_resolution, dict)
-        and consumer_resolution.get("resolved") is True
-        and not consumer_resolved
-    ):
+    if isinstance(consumer_resolution, dict) and consumer_resolution.get("resolved") is True and not consumer_resolved:
         failure_reasons.append("consumer_resolution_unresolved")
     if (
         isinstance(consumer_resolution, dict)
@@ -6185,9 +6141,7 @@ def _placement_scan(
         "destination_verified": destination_verified,
         "fact_destination_verified": fact_destination_verified,
         "modelo_destination_verified": modelo_destination_verified,
-        "modelo_destination_error_count": sum(
-            not item["verified"] for item in modelo_destination_observations
-        ),
+        "modelo_destination_error_count": sum(not item["verified"] for item in modelo_destination_observations),
         "modelo_destinations_nonblocking": True,
         "destination_gate_verified": destination_gate_verified,
         "facts_publication": facts_publication,
@@ -6294,9 +6248,7 @@ def _authority_scan(
         authoring_presence = bool(authoring_observations) and all(
             item["exists"] and item["read_status"] == "ok" for item in authoring_observations
         )
-        authoring_fact_proof = authoring_presence and all(
-            item["exact_fact_proof"] for item in authoring_observations
-        )
+        authoring_fact_proof = authoring_presence and all(item["exact_fact_proof"] for item in authoring_observations)
         legacy_metadata_stale: list[str] = []
         declared_digest = authority.get("digest")
         if declared_digest is not None and declared_digest != artifact_actual_digest:
@@ -6399,9 +6351,7 @@ def _authority_scan(
             "placement_integrity_error_count": placement_failed,
             "facts_publication_claim_count": len(facts_publication_claims),
             "facts_publication_verified_count": sum(item["verified"] for item in facts_publication_claims),
-            "facts_publication_integrity_error_count": sum(
-                not item["verified"] for item in facts_publication_claims
-            ),
+            "facts_publication_integrity_error_count": sum(not item["verified"] for item in facts_publication_claims),
         },
     }
 
@@ -7331,8 +7281,7 @@ def _signal(
                         "declaration_count": len(enrichment["records"][row["id"]]["declarations"]),
                         "canonical_actionable": enrichment["records"][row["id"]].get("canonical_actionable"),
                         "identity_error": any(
-                            item["candidate_id"] == row["id"]
-                            and item["identity_status"] in {"missing", "drifted"}
+                            item["candidate_id"] == row["id"] and item["identity_status"] in {"missing", "drifted"}
                             for item in source_scan["identities"]
                         ),
                     }
@@ -7397,9 +7346,7 @@ def _signal(
             ),
         ),
         "authority_observations": authority_scan["observations"],
-        "excluded_modelo_authority_observations": authority_scan[
-            "excluded_modelo_authority_observations"
-        ],
+        "excluded_modelo_authority_observations": authority_scan["excluded_modelo_authority_observations"],
         "placement_observations": authority_scan["placement_observations"],
         "consumer_fact_observations": consumer_fact_scan["observations"],
         "consumer_fact_blockers": consumer_fact_scan["blockers"],
@@ -7462,13 +7409,9 @@ def _human(signal: dict[str, Any]) -> str:
     category_counts = counts["actionable_by_category"]
     status_counts = counts["status_counts"]
     stale_disposition_ids = [
-        value
-        for value in signal.get("discovery", {}).get("stale_disposition_ids", [])
-        if isinstance(value, str)
+        value for value in signal.get("discovery", {}).get("stale_disposition_ids", []) if isinstance(value, str)
     ]
-    stale_disposition_line = (
-        f"stale discovery dispositions: {counts['discovery_stale_disposition_count']}"
-    )
+    stale_disposition_line = f"stale discovery dispositions: {counts['discovery_stale_disposition_count']}"
     if stale_disposition_ids:
         stale_disposition_line += "; ids=" + ", ".join(stale_disposition_ids)
     lines = [
@@ -7478,8 +7421,7 @@ def _human(signal: dict[str, Any]) -> str:
         f"campaign_work={counts['campaign_work_remaining_count']}, "
         f"publication={counts['publication_blocker_count']}, "
         f"accounting={counts['accounting_error_count']}",
-        "facts-only authored/bundled accounting: "
-        f"errors={counts['fact_accounting_error_count']}",
+        f"facts-only authored/bundled accounting: errors={counts['fact_accounting_error_count']}",
         stale_disposition_line,
         "accounting components: "
         f"source_integrity={counts['source_integrity_error_count']}, "

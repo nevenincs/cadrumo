@@ -1,13 +1,6 @@
 """Live M369 OSS/IOSS resolver tests."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from collections.abc import Iterator
 from datetime import date
@@ -21,11 +14,46 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogu
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._dormant_resolver_live_support import (
+    _T0,
+    _T1,
+    _revision,
+    _seed_ready_profile,
+)
+from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (    isolated_injected_secure_object_repository,
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    isolated_injected_secure_object_repository,
     isolated_runtime_profile,
 )
+from cadrumo.application.aggregation import oss_ioss as oss_ioss_module
+from cadrumo.application.aggregation.errors import (
+    AggregationValidationError,
+)
+from cadrumo.application.aggregation.oss_ioss import (
+    OssIossLedgerCandidate,
+    OssIossLedgerSourceResolver,
+    aggregate_oss_ioss_bindings,
+)
+from cadrumo.application.aggregation.source_mesh import (
+    CalculationSourceContext,
+)
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
+from cadrumo.application.modelo.calculation_actions import (
+    BucketAggregationCalculationResult,
+    calculate_modelo_revision,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -36,31 +64,12 @@ from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedg
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
-from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.application.aggregation import oss_ioss as oss_ioss_module
-from cadrumo.application.aggregation.errors import (    AggregationValidationError,
-)
-from cadrumo.application.aggregation.oss_ioss import (    OssIossLedgerCandidate,
-    OssIossLedgerSourceResolver,
-    aggregate_oss_ioss_bindings,
-)
-from cadrumo.application.aggregation.source_mesh import (    CalculationSourceContext,
-)
-from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
-from cadrumo.application.modelo.calculation_actions import (    BucketAggregationCalculationResult,
-    calculate_modelo_revision,
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -91,6 +100,7 @@ def _empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
         invoice_reader=_EmptyInvoiceCatalogueReader(),
         transaction_reader=_EmptyTransactionCatalogueReader(),
     )
+
 
 # Three DISTINCT OSS candidates whose persisted IVA matches the destination MS
 # published rate (DE general 19%, FR general 20%): the resolver validates each

@@ -25,11 +25,11 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConflictError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.ledger.actions_manual import link_manual_transaction_invoice
 from cadrumo.application.invoices.transaction_linking import (
     link_invoice_transaction_catalogues,
     link_invoice_transaction_repositories,
 )
+from cadrumo.application.ledger.actions_manual import link_manual_transaction_invoice
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.errors import InvoiceLinkError

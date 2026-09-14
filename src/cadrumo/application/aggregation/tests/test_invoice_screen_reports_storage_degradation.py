@@ -31,14 +31,14 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ....application.invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
+from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from .._modelo_bindings_invoice_iva import (
     screened_invoice_iva_observations,
 )

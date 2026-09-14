@@ -11,8 +11,20 @@ import pytest
 
 from cadrumo.adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.invoices.source_resolver import (
+    M349_CLAVE_INFERRED_REASON,
+    InvoiceCatalogueSourceResolver,
+    invoice_direction_to_source_kind,
+)
+from cadrumo.application.invoices.source_resolver_ports import (
+    InvoiceSourceCatalogueReader,
+    InvoiceSourcePersistenceError,
+    InvoiceSourceResolverPorts,
+)
 from cadrumo.core.aggregation import (
     BindingSourceKind,
     IntracomOperationType,
@@ -36,18 +48,6 @@ from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349CountryPrefixContextError, Modelo349OperadorRow
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.invoices.source_resolver import (
-    M349_CLAVE_INFERRED_REASON,
-    InvoiceCatalogueSourceResolver,
-    invoice_direction_to_source_kind,
-)
-from cadrumo.application.invoices.source_resolver_ports import (
-    InvoiceSourceCatalogueReader,
-    InvoiceSourcePersistenceError,
-    InvoiceSourceResolverPorts,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -123,11 +123,7 @@ def _public_m349_claves(invoices: Sequence[Invoice]) -> tuple[str, ...]:
             revision=_modelo_revision("349", "2020-y-siguientes"),
         ),
     )
-    return tuple(
-        row.clave_operacion
-        for row in resolution.detail_rows
-        if isinstance(row, Modelo349OperadorRow)
-    )
+    return tuple(row.clave_operacion for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow))
 
 
 def _invoice(
@@ -2114,6 +2110,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     coincide would not detect the two being confused.
     """
     from cadrumo.domain.invoices.models import derive_invoice_id
+
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",

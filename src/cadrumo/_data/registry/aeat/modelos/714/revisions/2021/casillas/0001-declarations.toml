@@ -1,0 +1,1314 @@
+# Modelo 714 casillas for ejercicio 2021, derived row by row from the
+# bundled Diseno de Registros (DR714_2021.xls). The `number` is the box number
+# the design prints in square brackets; `segmento` is the record page on which
+# the box is defined. Boxes reprinted on the resumen or ingreso pages are the
+# same box carried forward, not a second casilla.
+#
+# Two independent box-number series share this form: the identification page's
+# domicilio and modalidad boxes, and the declaration's [01]-[63]. They collide
+# on 15-28 and 35-42, which is why every casilla here declares a segmento.
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-09
+# also printed on 714-Ingreso
+# also printed on 714-09
+# also printed on 714-Ingreso
+# also printed on 714-Ingreso
+# also printed on 714-Ingreso
+# also printed on 714-09
+# also printed on 714-Ingreso
+# also printed on 714-Ingreso
+# also printed on 714-09
+# also printed on 714-09
+# Recovered from the pre-split revision: neither row carries a bracket
+# number on the record design, so the design-derived sweep above cannot
+# produce them. Their `number` is the pre-split declarative token.
+
+[[revisions.2021.casillas]]
+id = "declaracion-01"
+continuidad_id = "patrimonio-inmuebles-urbanos-no-exentos"
+number = "01"
+segmento = "714-02"
+data_type = "money"
+semantic_role = "patrimonio_inmuebles_urbanos_no_exentos"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-02"
+continuidad_id = "patrimonio-inmuebles-rusticos"
+number = "02"
+segmento = "714-02"
+data_type = "money"
+semantic_role = "patrimonio_inmuebles_rusticos"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-03"
+continuidad_id = "patrimonio-bienes-afectos-no-exentos"
+number = "03"
+segmento = "714-03"
+data_type = "money"
+semantic_role = "patrimonio_bienes_afectos_no_exentos"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-04"
+continuidad_id = "patrimonio-bienes-afectos-exentos"
+number = "04"
+segmento = "714-03"
+data_type = "money"
+semantic_role = "patrimonio_bienes_afectos_exentos"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-05"
+continuidad_id = "patrimonio-depositos-cuentas"
+number = "05"
+segmento = "714-04"
+data_type = "money"
+semantic_role = "patrimonio_depositos_cuentas"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-06"
+continuidad_id = "patrimonio-valores-cesion-capitales-negociados"
+number = "06"
+segmento = "714-04"
+data_type = "money"
+semantic_role = "patrimonio_valores_cesion_capitales_negociados"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-07"
+continuidad_id = "patrimonio-valores-cesion-capitales-no-negociados"
+number = "07"
+segmento = "714-04"
+data_type = "money"
+semantic_role = "patrimonio_valores_cesion_capitales_no_negociados"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-08"
+continuidad_id = "patrimonio-inversion-colectiva-negociada-no-exenta"
+number = "08"
+segmento = "714-05"
+data_type = "money"
+semantic_role = "patrimonio_inversion_colectiva_negociada_no_exenta"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-09"
+continuidad_id = "patrimonio-otras-entidades-negociadas-no-exentas"
+number = "09"
+segmento = "714-05"
+data_type = "money"
+semantic_role = "patrimonio_otras_entidades_negociadas_no_exentas"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-10"
+continuidad_id = "patrimonio-inversion-colectiva-no-negociada-no-exenta"
+number = "10"
+segmento = "714-05"
+data_type = "money"
+semantic_role = "patrimonio_inversion_colectiva_no_negociada_no_exenta"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-11"
+continuidad_id = "patrimonio-otras-entidades-no-negociadas-no-exentas"
+number = "11"
+segmento = "714-05"
+data_type = "money"
+semantic_role = "patrimonio_otras_entidades_no_negociadas_no_exentas"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-12"
+continuidad_id = "patrimonio-participaciones-negociadas-exentas"
+number = "12"
+segmento = "714-06"
+data_type = "money"
+semantic_role = "patrimonio_participaciones_negociadas_exentas"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-13"
+continuidad_id = "patrimonio-participaciones-no-negociadas-exentas"
+number = "13"
+segmento = "714-06"
+data_type = "money"
+semantic_role = "patrimonio_participaciones_no_negociadas_exentas"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-14"
+continuidad_id = "patrimonio-seguros-vida"
+number = "14"
+segmento = "714-06"
+data_type = "money"
+semantic_role = "patrimonio_seguros_vida"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-15"
+continuidad_id = "patrimonio-rentas-temporales-vitalicias"
+number = "15"
+segmento = "714-06"
+data_type = "money"
+semantic_role = "patrimonio_rentas_temporales_vitalicias"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-16"
+continuidad_id = "patrimonio-vehiculos-joyas-pieles-embarcaciones-aeronaves"
+number = "16"
+segmento = "714-07"
+data_type = "money"
+semantic_role = "patrimonio_vehiculos_joyas_pieles_embarcaciones_aeronaves"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-17"
+continuidad_id = "patrimonio-arte-antiguedades"
+number = "17"
+segmento = "714-07"
+data_type = "money"
+semantic_role = "patrimonio_arte_antiguedades"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-18"
+continuidad_id = "patrimonio-derechos-reales-uso-disfrute"
+number = "18"
+segmento = "714-07"
+data_type = "money"
+semantic_role = "patrimonio_derechos_reales_uso_disfrute"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-19"
+continuidad_id = "patrimonio-concesiones-administrativas"
+number = "19"
+segmento = "714-07"
+data_type = "money"
+semantic_role = "patrimonio_concesiones_administrativas"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-20"
+continuidad_id = "patrimonio-propiedad-intelectual-industrial"
+number = "20"
+segmento = "714-08"
+data_type = "money"
+semantic_role = "patrimonio_propiedad_intelectual_industrial"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-21"
+continuidad_id = "patrimonio-opciones-contractuales"
+number = "21"
+segmento = "714-08"
+data_type = "money"
+semantic_role = "patrimonio_opciones_contractuales"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-22"
+continuidad_id = "patrimonio-demas-bienes-derechos"
+number = "22"
+segmento = "714-08"
+data_type = "money"
+semantic_role = "patrimonio_demas_bienes_derechos"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-23"
+continuidad_id = "patrimonio-total-bienes-derechos-no-exentos"
+number = "23"
+segmento = "714-09"
+data_type = "money"
+semantic_role = "patrimonio_total_bienes_derechos_no_exentos"
+required = false
+input_kind = "manual"
+section = ["resumen_patrimonio_neto"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-24"
+continuidad_id = "patrimonio-deudas-deducibles"
+number = "24"
+segmento = "714-08"
+data_type = "money"
+semantic_role = "patrimonio_deudas_deducibles"
+required = false
+input_kind = "manual"
+section = ["deudas_deducibles"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.base-imponible"
+continuidad_id = "patrimonio-base-imponible"
+number = "25"
+segmento = "714-09"
+data_type = "money"
+semantic_role = "patrimonio_base_imponible"
+required = false
+input_kind = "manual"
+section = ["resumen_patrimonio_neto"]
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-26"
+continuidad_id = "patrimonio-minimo-exento"
+number = "26"
+segmento = "714-09"
+data_type = "money"
+semantic_role = "patrimonio_minimo_exento"
+required = false
+input_kind = "manual"
+section = ["resumen_patrimonio_neto"]
+legal_refs = ["ley-19-1991:art-28", "orden-hfp-207-2022:art-4"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.base-liquidable"
+continuidad_id = "patrimonio-base-liquidable"
+number = "27"
+segmento = "714-09"
+data_type = "money"
+semantic_role = "patrimonio_base_liquidable"
+required = false
+input_kind = "manual"
+section = ["resumen_patrimonio_neto"]
+legal_refs = ["ley-19-1991:art-28", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-28"
+continuidad_id = "patrimonio-exento-progresividad"
+number = "28"
+segmento = "714-09"
+data_type = "money"
+semantic_role = "patrimonio_exento_progresividad"
+required = false
+input_kind = "manual"
+section = ["patrimonio_exento_con_progresividad"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.cuota-integra"
+continuidad_id = "patrimonio-cuota-integra"
+number = "29"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_cuota_integra"
+required = false
+input_kind = "computed"
+formula = "patrimonio-cuota-integra-escala-estatal"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-30", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.irpf-bases-imponibles"
+continuidad_id = "patrimonio-irpf-bases-imponibles"
+number = "30"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_irpf_bases_imponibles"
+required = false
+input_kind = "computed"
+formula = "patrimonio-irpf-bases-imponibles-m100"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-48", "ley-35-2006:art-49", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.dividendos-no-irpf"
+continuidad_id = "patrimonio-dividendos-no-irpf"
+number = "31"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_dividendos_no_irpf"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.base-ahorro-excluida"
+continuidad_id = "patrimonio-base-ahorro-excluida"
+number = "32"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_base_ahorro_excluida"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.limite-conjunto"
+continuidad_id = "patrimonio-limite-conjunto"
+number = "33"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_limite_conjunto"
+required = false
+input_kind = "computed"
+formula = "patrimonio-limite-conjunto-art31"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.irpf-cuotas-integras"
+continuidad_id = "patrimonio-irpf-cuotas-integras"
+number = "34"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_irpf_cuotas_integras"
+required = false
+input_kind = "computed"
+formula = "patrimonio-irpf-cuotas-integras-m100"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-63", "ley-35-2006:art-74", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.irpf-cuotas-excluidas-base-ahorro"
+continuidad_id = "patrimonio-irpf-cuotas-excluidas-base-ahorro"
+number = "35"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_irpf_cuotas_excluidas_base_ahorro"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.cuota-integra-susceptible-limitacion"
+continuidad_id = "patrimonio-cuota-integra-susceptible-limitacion"
+number = "36"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_cuota_integra_susceptible_limitacion"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.suma-cuotas-limite"
+continuidad_id = "patrimonio-suma-cuotas-limite"
+number = "37"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_suma_cuotas_limite"
+required = false
+input_kind = "computed"
+formula = "patrimonio-suma-cuotas-limite-art31"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.exceso-limite-conjunto"
+continuidad_id = "patrimonio-exceso-limite-conjunto"
+number = "38"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_exceso_limite_conjunto"
+required = false
+input_kind = "computed"
+formula = "patrimonio-exceso-limite-conjunto-art31"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.reduccion-limite-80"
+continuidad_id = "patrimonio-reduccion-limite-ochenta"
+number = "39"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_reduccion_limite_ochenta"
+required = false
+input_kind = "computed"
+formula = "patrimonio-reduccion-limite-80-suelo"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.total-cuota-integra"
+continuidad_id = "patrimonio-total-cuota-integra"
+number = "40"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_total_cuota_integra"
+required = false
+input_kind = "computed"
+formula = "patrimonio-total-cuota-integra-art31"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-41"
+continuidad_id = "patrimonio-deduccion-impuestos-extranjero"
+number = "41"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_deduccion_impuestos_extranjero"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-42"
+continuidad_id = "patrimonio-valor-neto-bienes-ceuta-melilla"
+number = "42"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_valor_neto_bienes_ceuta_melilla"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-43"
+continuidad_id = "patrimonio-cuota-proporcional-bienes-ceuta-melilla"
+number = "43"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_cuota_proporcional_bienes_ceuta_melilla"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-44"
+continuidad_id = "patrimonio-bonificacion-ceuta-melilla"
+number = "44"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_bonificacion_ceuta_melilla"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.cuota-minorada"
+continuidad_id = "patrimonio-cuota-minorada"
+number = "45"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_cuota_minorada"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-46"
+continuidad_id = "patrimonio-monedas-virtuales"
+number = "46"
+segmento = "714-08"
+data_type = "money"
+semantic_role = "patrimonio_monedas_virtuales"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-48"
+continuidad_id = "patrimonio-deducciones-autonomicas-derecho"
+number = "48"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_deducciones_autonomicas_derecho"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-49"
+continuidad_id = "patrimonio-deducciones-autonomicas-aplicadas"
+number = "49"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_deducciones_autonomicas_aplicadas"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-50"
+continuidad_id = "patrimonio-bonificacion-autonomica-aplicada"
+number = "50"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_bonificacion_autonomica_aplicada"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "patrimonio.cuota-a-ingresar"
+continuidad_id = "patrimonio-cuota-a-ingresar"
+number = "55"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_cuota_a_ingresar"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-56"
+continuidad_id = "patrimonio-cuotas-previas-complementaria"
+number = "56"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_cuotas_previas_complementaria"
+required = false
+input_kind = "manual"
+section = ["regularizacion_declaracion_complementaria"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-57"
+continuidad_id = "patrimonio-diferencia-ingresar-complementaria"
+number = "57"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_diferencia_ingresar_complementaria"
+required = false
+input_kind = "manual"
+section = ["regularizacion_declaracion_complementaria"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-60"
+continuidad_id = "patrimonio-vivienda-habitual-susceptible-exencion"
+number = "60"
+segmento = "714-02"
+data_type = "money"
+semantic_role = "patrimonio_vivienda_habitual_susceptible_exencion"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-61"
+continuidad_id = "patrimonio-vivienda-habitual-exenta"
+number = "61"
+segmento = "714-02"
+data_type = "money"
+semantic_role = "patrimonio_vivienda_habitual_exenta"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-62"
+continuidad_id = "patrimonio-vivienda-habitual-no-exenta"
+number = "62"
+segmento = "714-02"
+data_type = "money"
+semantic_role = "patrimonio_vivienda_habitual_no_exenta"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-63"
+continuidad_id = "patrimonio-otros-inmuebles-urbanos"
+number = "63"
+segmento = "714-02"
+data_type = "money"
+semantic_role = "patrimonio_otros_inmuebles_urbanos"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-1"
+continuidad_id = "patrimonio-obligacion-real-no-residente"
+number = "1"
+segmento = "714-01"
+data_type = "boolean"
+semantic_role = "patrimonio_obligacion_real_no_residente"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-2"
+continuidad_id = "patrimonio-opcion-obligacion-personal-no-residente"
+number = "2"
+segmento = "714-01"
+data_type = "boolean"
+semantic_role = "patrimonio_opcion_obligacion_personal_no_residente"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-3"
+continuidad_id = "patrimonio-comunidad-mayor-valor-bienes"
+number = "3"
+segmento = "714-01"
+data_type = "ccaa_code"
+semantic_role = "patrimonio_comunidad_mayor_valor_bienes"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-4"
+continuidad_id = "patrimonio-obligacion-real-regimen-impatriados"
+number = "4"
+segmento = "714-01"
+data_type = "boolean"
+semantic_role = "patrimonio_obligacion_real_regimen_impatriados"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-8"
+continuidad_id = "patrimonio-comunidad-residencia"
+number = "8"
+segmento = "714-01"
+data_type = "ccaa_code"
+semantic_role = "patrimonio_comunidad_residencia"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-10"
+continuidad_id = "patrimonio-declaracion-complementaria"
+number = "10"
+segmento = "714-01"
+data_type = "boolean"
+semantic_role = "patrimonio_declaracion_complementaria"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-12"
+continuidad_id = "patrimonio-opcion-normativa-autonomica-impatriados"
+number = "12"
+segmento = "714-01"
+data_type = "boolean"
+semantic_role = "patrimonio_opcion_normativa_autonomica_impatriados"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-15"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-via"
+number = "15"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_tipo_via"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-16"
+continuidad_id = "patrimonio-domicilio-habitual-nombre-via"
+number = "16"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_nombre_via"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-17"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-numeracion"
+number = "17"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_tipo_numeracion"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-18"
+continuidad_id = "patrimonio-domicilio-habitual-numero-casa"
+number = "18"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_numero_casa"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-19"
+continuidad_id = "patrimonio-domicilio-habitual-calificador-numero"
+number = "19"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_calificador_numero"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-20"
+continuidad_id = "patrimonio-domicilio-habitual-bloque"
+number = "20"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_bloque"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-21"
+continuidad_id = "patrimonio-domicilio-habitual-portal"
+number = "21"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_portal"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-22"
+continuidad_id = "patrimonio-domicilio-habitual-escalera"
+number = "22"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_escalera"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-23"
+continuidad_id = "patrimonio-domicilio-habitual-planta"
+number = "23"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_planta"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-24"
+continuidad_id = "patrimonio-domicilio-habitual-puerta"
+number = "24"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_puerta"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-25"
+continuidad_id = "patrimonio-domicilio-habitual-datos-complementarios"
+number = "25"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_datos_complementarios"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-26"
+continuidad_id = "patrimonio-domicilio-habitual-localidad"
+number = "26"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_localidad"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-27"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-postal"
+number = "27"
+segmento = "714-01"
+data_type = "postal_code"
+semantic_role = "patrimonio_domicilio_habitual_codigo_postal"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-28"
+continuidad_id = "patrimonio-domicilio-habitual-municipio"
+number = "28"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_municipio"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-29"
+continuidad_id = "patrimonio-domicilio-habitual-provincia"
+number = "29"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_provincia"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-35"
+continuidad_id = "patrimonio-domicilio-extranjero-direccion"
+number = "35"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_direccion"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-36"
+continuidad_id = "patrimonio-domicilio-extranjero-datos-complementarios"
+number = "36"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_datos_complementarios"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-37"
+continuidad_id = "patrimonio-domicilio-extranjero-poblacion"
+number = "37"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_poblacion"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-39"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-postal"
+number = "39"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_codigo_postal"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-40"
+continuidad_id = "patrimonio-domicilio-extranjero-provincia-region-estado"
+number = "40"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_provincia_region_estado"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-41"
+continuidad_id = "patrimonio-domicilio-extranjero-pais"
+number = "41"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_pais"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion-42"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-pais"
+number = "42"
+segmento = "714-01"
+data_type = "country_code"
+semantic_role = "patrimonio_domicilio_extranjero_codigo_pais"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "decl.ejercicio"
+continuidad_id = "filing-year"
+number = "ejercicio"
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions.2021.casillas]]
+id = "decl.periodo"
+continuidad_id = "filing-period"
+number = "periodo"
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-a"
+continuidad_id = "patrimonio-impuestos-satisfechos-extranjero"
+number = "a"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_impuestos_satisfechos_extranjero"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-b"
+continuidad_id = "patrimonio-base-liquidable-gravada-extranjero"
+number = "b"
+segmento = "714-10"
+data_type = "money"
+semantic_role = "patrimonio_base_liquidable_gravada_extranjero"
+required = false
+input_kind = "manual"
+section = ["liquidacion"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-i"
+continuidad_id = "patrimonio-importe-ingreso"
+number = "I"
+segmento = "714-ID"
+data_type = "money"
+semantic_role = "patrimonio_importe_ingreso"
+required = false
+input_kind = "manual"
+section = ["ingreso_devolucion"]
+
+[[revisions.2021.casillas]]
+id = "ingreso.forma-de-pago"
+continuidad_id = "patrimonio-forma-pago"
+number = "forma-de-pago"
+segmento = "714-ID"
+data_type = "integer"
+semantic_role = "patrimonio_forma_pago"
+required = false
+input_kind = "manual"
+section = ["ingreso_devolucion"]
+
+[[revisions.2021.casillas]]
+id = "declaracion-negativa"
+continuidad_id = "patrimonio-declaracion-negativa"
+number = "declaracion-negativa"
+segmento = "714-ID"
+data_type = "boolean"
+semantic_role = "patrimonio_declaracion_negativa"
+required = false
+input_kind = "manual"
+section = ["ingreso_devolucion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.tipo-declaracion"
+continuidad_id = "patrimonio-tipo-declaracion"
+number = "tipo-declaracion"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_tipo_declaracion"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.sexo"
+continuidad_id = "patrimonio-sexo-contribuyente"
+number = "sexo"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_sexo_contribuyente"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.estado-civil"
+continuidad_id = "patrimonio-estado-civil"
+number = "estado-civil"
+segmento = "714-01"
+data_type = "integer"
+semantic_role = "patrimonio_estado_civil"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.fecha-nacimiento"
+continuidad_id = "patrimonio-fecha-nacimiento"
+number = "fecha-nacimiento"
+segmento = "714-01"
+data_type = "date"
+semantic_role = "patrimonio_fecha_nacimiento"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.discapacidad-porcentaje"
+continuidad_id = "patrimonio-porcentaje-discapacidad"
+number = "discapacidad-porcentaje"
+segmento = "714-01"
+data_type = "integer"
+semantic_role = "patrimonio_porcentaje_discapacidad"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.discapacidad-clase"
+continuidad_id = "patrimonio-clase-discapacidad"
+number = "discapacidad-clase"
+segmento = "714-01"
+data_type = "integer"
+semantic_role = "patrimonio_clase_discapacidad"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.codigo-provincia"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-provincia"
+number = "codigo-provincia"
+segmento = "714-01"
+data_type = "province_code"
+semantic_role = "patrimonio_domicilio_habitual_codigo_provincia"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.nacionalidad"
+continuidad_id = "patrimonio-nacionalidad"
+number = "nacionalidad"
+segmento = "714-01"
+data_type = "integer"
+semantic_role = "patrimonio_nacionalidad"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.regimen-economico-matrimonio"
+continuidad_id = "patrimonio-regimen-economico-matrimonio"
+number = "regimen-economico-matrimonio"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_regimen_economico_matrimonio"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.representante-nif"
+continuidad_id = "patrimonio-representante-nif"
+number = "representante-nif"
+segmento = "714-01"
+data_type = "nif"
+semantic_role = "patrimonio_representante_nif"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.representante-nombre"
+continuidad_id = "patrimonio-representante-nombre"
+number = "representante-nombre"
+segmento = "714-01"
+data_type = "name"
+semantic_role = "patrimonio_representante_nombre"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.fecha-declaracion-localidad"
+continuidad_id = "patrimonio-localidad-declaracion"
+number = "fecha-declaracion-localidad"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_localidad_declaracion"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.fecha-declaracion-dia"
+continuidad_id = "patrimonio-dia-declaracion"
+number = "fecha-declaracion-dia"
+segmento = "714-01"
+data_type = "integer"
+semantic_role = "patrimonio_dia_declaracion"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.fecha-declaracion-mes"
+continuidad_id = "patrimonio-mes-declaracion"
+number = "fecha-declaracion-mes"
+segmento = "714-01"
+data_type = "text"
+semantic_role = "patrimonio_mes_declaracion"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.fecha-declaracion-anio"
+continuidad_id = "patrimonio-anio-declaracion"
+number = "fecha-declaracion-anio"
+segmento = "714-01"
+data_type = "year"
+semantic_role = "patrimonio_anio_declaracion"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "identificacion.complementaria-cuotas-anteriores"
+continuidad_id = "patrimonio-complementaria-cuotas-anteriores"
+number = "complementaria-cuotas-anteriores"
+segmento = "714-01"
+data_type = "money"
+semantic_role = "patrimonio_complementaria_cuotas_anteriores"
+required = false
+input_kind = "manual"
+section = ["identificacion"]
+
+[[revisions.2021.casillas]]
+id = "decl.idioma"
+continuidad_id = "patrimonio-idioma-declaracion"
+number = "idioma"
+segmento = "714-00"
+data_type = "text"
+semantic_role = "patrimonio_idioma_declaracion"
+required = false
+input_kind = "manual"
+section = ["declarante"]
+
+[[revisions.2021.casillas]]
+id = "bienes.c1-total"
+continuidad_id = "patrimonio-bienes-afectos-no-exentos-excluidos-inmuebles"
+number = "a"
+segmento = "714-03"
+data_type = "money"
+semantic_role = "patrimonio_bienes_afectos_no_exentos_excluidos_inmuebles"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]
+
+[[revisions.2021.casillas]]
+id = "bienes.c2-total"
+continuidad_id = "patrimonio-inmuebles-afectos-no-exentos"
+number = "b"
+segmento = "714-03"
+data_type = "money"
+semantic_role = "patrimonio_inmuebles_afectos_no_exentos"
+required = false
+input_kind = "manual"
+section = ["bienes_y_derechos"]

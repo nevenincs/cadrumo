@@ -51,7 +51,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
 
 
 def test_profile_source_resolver_fingerprints_storage_loaded_profile(
-    secure_profile_backend: None,  # noqa: F811
+    secure_profile_backend: None,
 ) -> None:
     snapshot = _modelo_100_snapshot()
     profile_record = _profile_with_ccaa("madrid")

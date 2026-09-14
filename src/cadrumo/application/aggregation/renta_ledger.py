@@ -40,8 +40,8 @@ from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
 from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_exento_token, require_iva_regime
+from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.categories.profile import CategoryProfile
@@ -73,6 +73,7 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileRecord
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import fact_value, profile_fact_index
@@ -89,7 +90,6 @@ from .currency_predicates import (
     is_non_eur_without_conversion,
 )
 from .errors import AggregationPeriodError
-from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
 _LEDGER_CATALOGUE_ID = "ledger"
 

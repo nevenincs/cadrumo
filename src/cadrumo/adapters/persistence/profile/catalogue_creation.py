@@ -21,13 +21,13 @@ from ....application.invoices.catalogue_creation_ports import (
     CatalogueInvoiceRepositoryPort,
 )
 from ....application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePorts
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.errors import BucketEventValidationError
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ....domain.currency.errors import ExchangeRateProviderError
 from ....domain.invoices.errors import InvoicePersistenceError, InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
-from ....core.secure_object_write import SecureObjectWrite
 from ...outbound.fx.ecb_provider import EcbReferenceRateProvider
 from ..storage.errors import StorageError
 from .buckets import BucketEventHistoryRepository

@@ -1,13 +1,6 @@
 """Cross-period clean-state external evidence provenance coverage."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from decimal import Decimal
 from pathlib import Path
@@ -15,58 +8,81 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    CLOCK as _CLOCK,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    GROUP_MEMBER_A as _GROUP_MEMBER_A,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    GROUP_MEMBER_B as _GROUP_MEMBER_B,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    M353_PERIOD as _M353_PERIOD,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    M353_YEAR as _M353_YEAR,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    M390_PERIOD as _M390_PERIOD,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    M390_REVISION as _M390_REVISION,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    M390_YEAR as _M390_YEAR,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    m390_first_quarter_evidence as _m390_first_quarter_evidence,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    member_fan_in_requirement as _member_fan_in_requirement,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    persist_justificante_metadata as _persist_justificante_metadata,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    seed_member_322_filing as _seed_member_322_filing,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    seed_official_303_source_filings as _seed_official_303_source_filings,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    snapshot_353 as _snapshot_353,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    snapshot_390 as _snapshot_390,
+)
+from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+    store_ready_profile as _store_ready_profile,
+)
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.cross_period_clean_state import evaluate_cross_period_clean_state
+from cadrumo.application.calculations.cross_period_models import (
+    CrossPeriodCleanStateBlocker,
+    CrossPeriodExpectedMemberSet,
+)
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationCompletenessStatus
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.calculations.cross_period_clean_state import evaluate_cross_period_clean_state
-from cadrumo.application.calculations.cross_period_models import (    CrossPeriodCleanStateBlocker,
-    CrossPeriodExpectedMemberSet,
-)
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    BUCKET_ID as _BUCKET_ID,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    CLOCK as _CLOCK,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    GROUP_MEMBER_A as _GROUP_MEMBER_A,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    GROUP_MEMBER_B as _GROUP_MEMBER_B,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    M353_PERIOD as _M353_PERIOD,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    M353_YEAR as _M353_YEAR,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    M390_PERIOD as _M390_PERIOD,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    M390_REVISION as _M390_REVISION,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    M390_YEAR as _M390_YEAR,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    m390_first_quarter_evidence as _m390_first_quarter_evidence,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    member_fan_in_requirement as _member_fan_in_requirement,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    persist_justificante_metadata as _persist_justificante_metadata,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    seed_member_322_filing as _seed_member_322_filing,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    seed_official_303_source_filings as _seed_official_303_source_filings,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    snapshot_353 as _snapshot_353,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    snapshot_390 as _snapshot_390,
-)
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (    store_ready_profile as _store_ready_profile,
-)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

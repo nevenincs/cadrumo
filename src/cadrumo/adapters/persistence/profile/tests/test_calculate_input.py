@@ -8,15 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.contribuyente.descendant import DescendantInfo
-from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.modelo.calculate_input import (
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,
@@ -25,6 +19,12 @@ from cadrumo.application.modelo.calculate_input import (
     build_work_calculate_input_bundle,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.contribuyente.descendant import DescendantInfo
+from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -336,4 +336,3 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
     source_kinds = {diagnostic.source_kind for diagnostic in bundle.shortcut_diagnostics}
     assert "maternidad_cotizaciones_ceiling_inexpressible" in source_kinds
     assert "maternidad_ambiguous_relacion" not in source_kinds
-

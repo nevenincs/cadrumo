@@ -14,8 +14,8 @@ from collections import deque
 import pytest
 
 from ....core.flows import FlowMode
-from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ....domain.contribuyente.entity_type import LegalEntityForm
+from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ...flows.errors import FlowAnswerError
 from ...flows.scripted import run_scripted_flow
 from ..catalogue import SETUP_FLOW

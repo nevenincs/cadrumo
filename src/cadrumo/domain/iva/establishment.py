@@ -116,6 +116,7 @@ resolver's refusal, and the gate that proves the refusal holds. A literal spelle
 twice is the drift this codebase keeps closing.
 """
 
+
 def _eu_member_codes() -> frozenset[str]:
     """Return non-Spanish EU codes projected from fact 0131."""
     return frozenset(

@@ -15,6 +15,7 @@ entry the taxpayer cannot defend. The rules live here so both readings of art.
 from __future__ import annotations
 
 from enum import StrEnum
+
 from ...core.prorrata_register import ProrrataProvisionalProvenance
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     prorrata_electable_provenances,

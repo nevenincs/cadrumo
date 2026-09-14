@@ -8,6 +8,8 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
+
 from .....adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from .....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
@@ -25,7 +27,6 @@ from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
 from .....core.config import override_settings
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

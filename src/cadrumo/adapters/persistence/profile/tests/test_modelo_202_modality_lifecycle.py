@@ -7,13 +7,6 @@ revision, local filing, or export can be produced.
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -21,37 +14,25 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
 __all__ = ["register_wizard_catalogue"]
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
-from cadrumo.domain.deadlines.models import (    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
-from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.env_scope import ready_clave_settings
+from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloRequiredBindingsMissingError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.export import ModeloExportCommand, ModeloExportUnsupportedError, export_modelo_revision
@@ -59,8 +40,29 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
+from cadrumo.domain.deadlines.models import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.tests.env_scope import ready_clave_settings
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

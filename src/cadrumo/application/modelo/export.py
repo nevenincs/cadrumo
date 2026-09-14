@@ -129,16 +129,9 @@ from ..filing.producer_snapshot import (
 from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
-from .prior_domiciliation import resolveprior_domiciliation_election
-from .profile_export_binding import (
-    resolve_declaration_contact,
-    resolve_export_identity,
-    resolve_profile_export_values,
-)
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from .revision_replay_inputs import revision_filing_replay_inputs
 from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import (
     CalculationRevisionNotFoundError,
@@ -160,6 +153,12 @@ from .preconditions import (
     build_modelo_precondition_failure,
     build_modelo_precondition_failure_for_scenario,
 )
+from .prior_domiciliation import resolveprior_domiciliation_election
+from .profile_export_binding import (
+    resolve_declaration_contact,
+    resolve_export_identity,
+    resolve_profile_export_values,
+)
 from .result_disposition_resolution import resolve_modelo_result_disposition
 from .revision_persistence import (
     emit_modelo_bucket_event as _emit_bucket_event,
@@ -167,6 +166,7 @@ from .revision_persistence import (
 from .revision_persistence import (
     require_filing_instance_evidence_for_work_unit,
 )
+from .revision_replay_inputs import revision_filing_replay_inputs
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
 _LOCAL_EXPORT_EVIDENCE_STATUS = "local_export_not_official_aeat_filing_evidence"

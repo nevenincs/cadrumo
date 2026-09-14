@@ -46,8 +46,8 @@ from cadrumo.application.ledger.invoice_draft_extraction_ports import (
     StructuredInvoiceReadError,
 )
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.document_shape import DocumentShape
+from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -64,6 +64,7 @@ def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPort
     """Bind deterministic page text locally for this outbound reader integration."""
 
     return EvidenceTextLayerPorts(extract_pages_text=lambda _data: pages)
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -107,6 +108,7 @@ def _reader_ports() -> InvoiceDraftExtractionPorts:
         transcribe_vision=vision_not_expected,
         consent_binding_error=lambda _facts: RuntimeError("consent binding was not expected"),
     )
+
 
 #: The reply the stub returns. Authored from the control document's OWN printed
 #: forms, so the anchors are real and the upgrade under test is genuine -- except
@@ -297,10 +299,13 @@ def test_the_transcription_address_is_stamped_on_the_wired_path(
 
     draft = _read_through_the_wired_path(chat_url)
 
-    assert draft.transcription_sha256 == transcribe_text_layer(
-        evidence,
-        text_layer_ports=_CONTROL_TEXT_LAYER_PORTS,
-    ).source_content_sha256
+    assert (
+        draft.transcription_sha256
+        == transcribe_text_layer(
+            evidence,
+            text_layer_ports=_CONTROL_TEXT_LAYER_PORTS,
+        ).source_content_sha256
+    )
 
 
 def test_a_clean_document_extracts_without_findings_on_the_wired_path(

@@ -68,7 +68,9 @@ def fake_operator_probe_ports(
     """Build application probe capabilities without importing auth adapters."""
     clave_probe = _ClaveIdentity()
     if clave_identity is not None:
-        clave_probe.default_kind = clave_identity.kind if isinstance(clave_identity, ClaveIdentityObservation) else "DNI"
+        clave_probe.default_kind = (
+            clave_identity.kind if isinstance(clave_identity, ClaveIdentityObservation) else "DNI"
+        )
     if clave_identity_results is not None:
         clave_probe.result_by_raw.update(clave_identity_results)
     return OperatorProbePorts(

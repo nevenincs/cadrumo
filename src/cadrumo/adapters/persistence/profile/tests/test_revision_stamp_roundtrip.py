@@ -17,7 +17,6 @@
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -26,18 +25,19 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
+from cadrumo.application.calculations.binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
+from cadrumo.application.calculations.observations_repository import observation_key
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.application.calculations.binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
-from cadrumo.application.calculations.observations_repository import observation_key
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -318,7 +318,9 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
             filing_year=_M303_CARRY_YEAR,
             period=_M303_CARRY_TARGET_PERIOD,
         )
-        report = resolve_bindings_from_local_store(snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository())
+        report = resolve_bindings_from_local_store(
+            snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository()
+        )
 
         assert isinstance(report, BindingPrefillReport)
         # The carry was refused: 1T was dropped by the R2 gate.
@@ -356,7 +358,9 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
             filing_year=_M303_CARRY_YEAR,
             period=_M303_CARRY_TARGET_PERIOD,
         )
-        report = resolve_bindings_from_local_store(snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository())
+        report = resolve_bindings_from_local_store(
+            snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository()
+        )
 
         assert isinstance(report, BindingPrefillReport)
         assert report.prefilled, "correctly stamped 1T observation must carry; the prefill must not be empty."

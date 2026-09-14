@@ -40,10 +40,10 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     FactsAuthorityMergeBase,
     PublishedLegalEvidence,
     PublishedSourceEvidence,
-    read_facts_authority_merge_base,
     read_authority_artifact,
-    write_facts_authority_artifact,
+    read_facts_authority_merge_base,
     write_authority_artifact,
+    write_facts_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import FactOwnership, GovernedFact, GovernedFactCatalogue

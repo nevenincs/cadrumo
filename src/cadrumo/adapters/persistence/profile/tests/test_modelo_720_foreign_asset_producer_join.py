@@ -43,13 +43,6 @@ See Also:
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -59,15 +52,30 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+
 __all__ = ["register_wizard_catalogue"]
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.foreign_assets import ForeignAssetIngestObservation
+from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_720_evidence_observation
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
@@ -80,13 +88,7 @@ from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.aggregation.foreign_assets import ForeignAssetIngestObservation
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_720_evidence_observation
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

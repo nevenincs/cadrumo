@@ -63,10 +63,10 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante.errors import JustificanteParseError
-from .reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
 from .action_errors import WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
 from .reconciliation_parsing import (
     ReconciliationDeclaracionObservation,
     reconciliation_evidence_parser,

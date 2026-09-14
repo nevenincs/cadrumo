@@ -9,6 +9,7 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl, ValidationError
 
+from cadrumo.application.user_profile.profile_keys import profile_keys as catalogue_profile_keys
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
@@ -24,11 +25,10 @@ from cadrumo.domain.calculations.registry.schema import BindingDefinition, Regis
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
 from cadrumo.domain.contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
-from cadrumo.application.user_profile.profile_keys import profile_keys as catalogue_profile_keys
 from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES
 from ..compiler.validator import RegistryValidator

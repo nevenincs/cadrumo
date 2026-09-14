@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
 from ._ledger_corpus_support import (
     _REVISION_CASILLA,

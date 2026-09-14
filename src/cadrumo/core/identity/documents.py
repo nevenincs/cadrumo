@@ -142,10 +142,7 @@ def is_identity_structurally_shaped(candidate: object) -> bool:
     normalised = candidate.strip().upper().replace("-", "").replace(" ", "").replace(".", "")
     if not normalised.isascii() or not normalised.isalnum():
         return False
-    return bool(
-        re.fullmatch(r"[0-9]+[A-Z]", normalised)
-        or re.fullmatch(r"[A-Z][0-9]+[A-Z0-9]", normalised)
-    )
+    return bool(re.fullmatch(r"[0-9]+[A-Z]", normalised) or re.fullmatch(r"[A-Z][0-9]+[A-Z0-9]", normalised))
 
 
 class IdentityError(CadrumoError, ValueError):

@@ -11,6 +11,7 @@ from cadrumo.application.ledger.actions_lifecycle import archive_manual_transact
 from cadrumo.application.ledger.actions_split_merge import split_transaction
 from cadrumo.application.ledger.models import SplitChildCommand
 from cadrumo.domain.transactions.errors import TransactionValidationError
+
 from ._split_test_support import _BUCKET_ID, _create_parent, _repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

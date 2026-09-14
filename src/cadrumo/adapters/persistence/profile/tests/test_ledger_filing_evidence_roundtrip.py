@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import CasillaObservation
@@ -20,11 +21,10 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 from .....domain.modelos.work_unit import derive_work_unit_id
-from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from .secure_objects_fixture import secure_objects
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

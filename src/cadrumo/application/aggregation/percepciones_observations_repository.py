@@ -151,6 +151,6 @@ __all__ = [
     "PercepcionObservationPorts",
     "PercepcionObservationPortsFactory",
     "PercepcionObservationRepository",
-    "persist_percepcion_observations",
     "percepcion_observation_key",
+    "persist_percepcion_observations",
 ]

@@ -43,7 +43,6 @@ figure. Member 322 totals are engine-_produced.
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date
 from decimal import Decimal
@@ -51,7 +50,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -68,8 +70,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import rev
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -227,7 +227,9 @@ def _resolve_353_aggregate(
     322 for ``(322, filing_year, period)``.
     """
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
-    prefill = resolve_bindings_from_local_store(snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
+    prefill = resolve_bindings_from_local_store(
+        snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
+    )
     binding_values = {
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),
         **prefill.binding_values,

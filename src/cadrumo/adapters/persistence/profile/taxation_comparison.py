@@ -7,8 +7,8 @@ from ....application.modelo.taxation_comparison_ports import (
     TaxationComparisonPorts,
     TaxationComparisonWorkUnitReader,
 )
-from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.modelos.repository import WorkUnitPersistenceError
+from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ..storage.errors import StorageError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from .modelos_work_units import WorkUnitCatalogueRepository

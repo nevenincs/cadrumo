@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 # Importing the wizard catalogue + persistence modules triggers
 # register_wizard_catalogue() at import time, exactly as the production CLI
 # startup does.
@@ -12,7 +14,6 @@ from ....application.wizard import persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 

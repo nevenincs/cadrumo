@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.concepto_ingreso import ConceptoIngreso
 from ..calculations.registry.concepto_ingreso import resolve_concepto_ingreso_catalogue
-from ..calculations.registry.errors import RegistryError
 from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
 from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError

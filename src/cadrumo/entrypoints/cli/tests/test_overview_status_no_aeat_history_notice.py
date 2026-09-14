@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -98,6 +99,7 @@ def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action() -> 
 def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_too() -> None:
     """The predicate stays official-source membership, not a Sociedades-only exemption."""
     from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.bindings import RegistryModeloObservation

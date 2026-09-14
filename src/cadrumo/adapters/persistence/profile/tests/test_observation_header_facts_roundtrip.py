@@ -35,18 +35,18 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
+from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, member_observation_key
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, member_observation_key
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

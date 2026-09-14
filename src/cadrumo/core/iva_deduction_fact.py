@@ -54,6 +54,7 @@ class IvaDeductionFactKind(str):
         """Return the canonical token for diagnostics."""
         return str(self)
 
+
 class IvaDeductionEvidenceAuthority(str):
     """Opaque evidence-authority token projected from governed fact 0085."""
 

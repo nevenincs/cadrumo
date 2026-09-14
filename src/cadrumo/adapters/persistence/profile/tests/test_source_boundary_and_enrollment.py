@@ -36,12 +36,21 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.foreign_assets import ForeignAssetIngestObservation
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
+from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError, ModeloProfileReadinessError
+from cadrumo.application.modelo.calculation_actions import (
+    BucketAggregationCalculationResult,
+    assert_no_novel_source_kinds,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
 from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.period import Period
@@ -50,15 +59,6 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.modelos.row_models import Modelo184MemberRow
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError, ModeloProfileReadinessError
-from cadrumo.application.modelo.calculation_actions import (
-    BucketAggregationCalculationResult,
-    assert_no_novel_source_kinds,
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -403,7 +403,6 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     separate concern exercised by the carry-forward continuity tests in
     test_modelo_130_carry_forward_continuity.py.
     """
-    from cadrumo.core.period import Period
     from cadrumo.application.aggregation.modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
     from cadrumo.application.aggregation.source_mesh import (
         CalculationSourceContext,
@@ -414,6 +413,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     )
     from cadrumo.application.calculations.multi_year import PreviousFilingSourceResolver
     from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
+    from cadrumo.core.period import Period
 
     _wu_repo, _cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     revision = _revision("130", "2019-y-siguientes")
@@ -430,6 +430,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
     from cadrumo.application.aggregation.oss_ioss import OssIossLedgerSourceResolver
+
     catalogue_read_ports = InvoiceCatalogueReadPorts(
         invoice_reader=InvoiceCatalogueReadAdapter(repository=invoice_repo),
         transaction_reader=TransactionCatalogueReadAdapter(repository=tx_repo),

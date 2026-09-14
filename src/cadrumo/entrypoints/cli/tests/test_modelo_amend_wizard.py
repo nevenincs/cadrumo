@@ -35,6 +35,9 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.storage.tests.secure_sql import (
@@ -55,8 +58,6 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.justificante.schema import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .._modelo_amend_wizard_cli import (
     _ACTIVE_RUNS,
     _KIND_PAGE_ID,

@@ -295,9 +295,7 @@ def _module_scope_nodes(tree: ast.AST) -> list[ast.AST]:
 
 def test_no_module_level_call_defeats_a_deferred_registry_import() -> None:
     closure = _compile_path_closure()
-    defeated = tuple(
-        entry for path, tree in sorted(closure.items()) for entry in _defeated_deferrals(tree, path)
-    )
+    defeated = tuple(entry for path, tree in sorted(closure.items()) for entry in _defeated_deferrals(tree, path))
     assert not defeated, (
         "a module in the compile path defers a registry import to break a cycle and then "
         f"calls the deferring function at module scope, at {', '.join(str(e) for e in defeated)}. "

@@ -1,0 +1,62 @@
+[[revisions.2026-y-siguientes.formulas]]
+id = "modelo-322-iva-cuota-devengada-total"
+target_casilla_id = "iva.cuota-devengada-total"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions.2026-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-322-procedure"
+required_text = ["modelo 322"]
+
+[revisions.2026-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2026-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.general"
+
+[[revisions.2026-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.reducido"
+
+[[revisions.2026-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.super-reducido"
+
+[[revisions.2026-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2026-y-siguientes.formulas]]
+id = "modelo-322-iva-cuota-deducible-total"
+target_casilla_id = "iva.cuota-deducible-total"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions.2026-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-322-procedure"
+required_text = ["modelo 322"]
+
+[revisions.2026-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2026-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.soportado.interiores"
+
+[[revisions.2026-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2026-y-siguientes.formulas]]
+id = "modelo-322-iva-resultado-regimen-general"
+target_casilla_id = "iva.resultado-regimen-general"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions.2026-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-322-procedure"
+required_text = ["modelo 322"]
+
+[revisions.2026-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2026-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.cuota-devengada-total"
+
+[[revisions.2026-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.cuota-deducible-total"

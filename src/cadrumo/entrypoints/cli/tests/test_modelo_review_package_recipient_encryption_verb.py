@@ -50,17 +50,22 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+
+from ....adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
+from ....adapters.persistence.profile.review_package_recipient_registry import (
+    build_recipient_fingerprint_registry_ports,
+)
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
 )
-from ....adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
-from ....adapters.persistence.profile.review_package_recipient_registry import build_recipient_fingerprint_registry_ports
 from ....application.modelo.review_package_recipient_registry import add_recipient_fingerprint
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.user_profile.values import UserProfileFact
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from ._modelo_review_package_support import build_review_package_via_cli
 from .cli_runner import invoke_cached_cli
 

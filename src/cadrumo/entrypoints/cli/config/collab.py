@@ -53,13 +53,13 @@ from ....application.modelo.review_package_recipient_registry_ports import Recip
 from ....core.i18n.render import tr
 from ..common import active_bucket_id_or_refuse as _active_bucket_id_or_refuse
 from ..common import emit_envelope
+from ..state_projection_support import recipient_fingerprint_registry_ports_factory
 from .collab_payloads import (
     ConfigCollabRecipientAddResult,
     ConfigCollabRecipientListResult,
     ConfigCollabRecipientRemoveResult,
     RecipientFingerprintRowPayload,
 )
-from ..state_projection_support import recipient_fingerprint_registry_ports_factory
 
 
 def _registry(ctx: typer.Context, *, bucket_id: str) -> RecipientFingerprintRegistryPorts:

@@ -1,0 +1,919 @@
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.tipo-de-registro"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "design_constant"
+record = "type_1"
+field = "tipo-de-registro"
+offset = 1
+length = 1
+data_type = "integer"
+value = "1"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.modelo-declaracion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "design_constant"
+record = "type_1"
+field = "modelo-declaracion"
+offset = 2
+length = 3
+data_type = "integer"
+value = "720"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.ejercicio"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "ejercicio"
+offset = 5
+length = 4
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.n-i-f-del-declarante"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "n-i-f-del-declarante"
+offset = 9
+length = 9
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.apellidos-y-nombre-o-razon-social-del-declarante"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "apellidos-y-nombre-o-razon-social-del-declarante"
+offset = 18
+length = 40
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.tipo-de-soporte"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "tipo-de-soporte"
+offset = 58
+length = 1
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.persona-con-quien-relacionarse"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "persona-con-quien-relacionarse"
+offset = 59
+length = 49
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.numero-identificativo-de-la-declaracion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "numero-identificativo-de-la-declaracion"
+offset = 108
+length = 13
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.declaracion-complementaria-o-sustitutiva"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "declaracion-complementaria-o-sustitutiva"
+offset = 121
+length = 2
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.numero-identificativo-de-la-declaracion-anterior"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "numero-identificativo-de-la-declaracion-anterior"
+offset = 123
+length = 13
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.numero-total-de-registros-declarados"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "numero-total-de-registros-declarados"
+offset = 136
+length = 9
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s"
+offset = 145
+length = 18
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_1.suma-total-de-valoracion-2-importe-o-valor-de-la-transmision"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_1"
+field = "suma-total-de-valoracion-2-importe-o-valor-de-la-transmision"
+offset = 163
+length = 18
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.tipo-de-registro"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "design_constant"
+record = "type_2"
+field = "tipo-de-registro"
+offset = 1
+length = 1
+data_type = "integer"
+value = "2"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.modelo-declaracion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "design_constant"
+record = "type_2"
+field = "modelo-declaracion"
+offset = 2
+length = 3
+data_type = "integer"
+value = "720"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.ejercicio"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "ejercicio"
+offset = 5
+length = 4
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.n-i-f-del-declarante"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "n-i-f-del-declarante"
+offset = 9
+length = 9
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.n-i-f-del-declarado"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "n-i-f-del-declarado"
+offset = 18
+length = 9
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.n-i-f-del-representante-legal"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "n-i-f-del-representante-legal"
+offset = 27
+length = 9
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.apellidos-y-nombre-razon-social-o-denominacion-del-declarado"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "apellidos-y-nombre-razon-social-o-denominacion-del-declarado"
+offset = 36
+length = 40
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.clave-de-condicion-del-declarante"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "clave-de-condicion-del-declarante"
+offset = 76
+length = 1
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.tipo-de-titularidad-sobre-el-bien-o-derecho"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "tipo-de-titularidad-sobre-el-bien-o-derecho"
+offset = 77
+length = 25
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.clave-tipo-de-bien-o-derecho"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "clave-tipo-de-bien-o-derecho"
+offset = 102
+length = 1
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.subclave-de-bien-o-derecho"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "subclave-de-bien-o-derecho"
+offset = 103
+length = 1
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.tipo-de-derecho-real-sobre-inmueble"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "tipo-de-derecho-real-sobre-inmueble"
+offset = 104
+length = 25
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.codigo-de-pais"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "codigo-de-pais"
+offset = 129
+length = 2
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.clave-de-identificacion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "clave-de-identificacion"
+offset = 131
+length = 1
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.identificacion-de-valores"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "identificacion-de-valores"
+offset = 132
+length = 12
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.clave-identificacion-de-cuenta"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "clave-identificacion-de-cuenta"
+offset = 144
+length = 1
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.codigo-bic"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "codigo-bic"
+offset = 145
+length = 11
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.codigo-de-cuenta"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "codigo-de-cuenta"
+offset = 156
+length = 34
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.identificacion-de-la-entidad"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "identificacion-de-la-entidad"
+offset = 190
+length = 41
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.numero-de-identificacion-fiscal-en-el-pais-de-residencia-fis"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "numero-de-identificacion-fiscal-en-el-pais-de-residencia-fis"
+offset = 231
+length = 20
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.domicilio-de-la-entidad-o-ubicacion-del-inmueble"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "domicilio-de-la-entidad-o-ubicacion-del-inmueble"
+offset = 251
+length = 164
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.fecha-de-incorporacion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "fecha-de-incorporacion"
+offset = 415
+length = 8
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.origen-del-bien-o-derecho"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "origen-del-bien-o-derecho"
+offset = 423
+length = 1
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.fecha-de-extincion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "fecha-de-extincion"
+offset = 424
+length = 8
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.valoracion-1-saldo-o-valor-a-31-de-diciembre-saldo-o-valor-e"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "valoracion-1-saldo-o-valor-a-31-de-diciembre-saldo-o-valor-e"
+offset = 432
+length = 15
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.valoracion-2-importe-o-valor-de-la-transmision-saldo-medio-u"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "valoracion-2-importe-o-valor-de-la-transmision-saldo-medio-u"
+offset = 447
+length = 15
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.clave-de-representacion-de-valores"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "clave-de-representacion-de-valores"
+offset = 462
+length = 1
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.numero-de-valores"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "numero-de-valores"
+offset = 463
+length = 12
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.clave-tipo-de-bien-inmueble"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "clave-tipo-de-bien-inmueble"
+offset = 475
+length = 1
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720.type_2.porcentaje-de-participacion"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "manual_input"
+record = "type_2"
+field = "porcentaje-de-participacion"
+offset = 476
+length = 5
+data_type = "integer"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-asset-row-class"
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "foreign_asset"
+fact = "row_field"
+row_field = "asset_class_code"
+grouping = "per_foreign_asset"
+record = "bien"
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "foreign_asset"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-asset-row-country"
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "foreign_asset"
+fact = "row_field"
+row_field = "country_code"
+grouping = "per_foreign_asset"
+record = "bien"
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "foreign_asset"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-asset-row-currency"
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "foreign_asset"
+fact = "row_field"
+row_field = "currency_code"
+grouping = "per_foreign_asset"
+record = "bien"
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "foreign_asset"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-asset-row-identifier"
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "foreign_asset"
+fact = "row_field"
+row_field = "asset_identifier"
+grouping = "per_foreign_asset"
+record = "bien"
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "foreign_asset"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-asset-row-valuation"
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "foreign_asset"
+fact = "row_field"
+row_field = "valuation_amount"
+grouping = "per_foreign_asset"
+record = "bien"
+data_type = "money"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "money"
+channel = "row_set"
+row_grouping = "foreign_asset"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-asset-row-acquisition-date"
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "foreign_asset"
+fact = "row_field"
+row_field = "acquisition_date"
+grouping = "per_foreign_asset"
+record = "bien"
+data_type = "text"
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "foreign_asset"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "rows"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-prior-year-cuentas-valoracion-baseline"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "orden-hap-72-2013:art-2"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "previous_filing"
+source_modelo = "720"
+source_casilla_id = "cuentas.valoracion"
+
+[revisions.2013-y-siguientes.bindings.provider.temporal]
+kind = "filing_year_offset"
+years = -1
+source_periods = ["0A"]
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "copy"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-prior-year-valores-valoracion-baseline"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-ter", "orden-hap-72-2013:art-2"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "previous_filing"
+source_modelo = "720"
+source_casilla_id = "valores.valoracion"
+
+[revisions.2013-y-siguientes.bindings.provider.temporal]
+kind = "filing_year_offset"
+years = -1
+source_periods = ["0A"]
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "copy"
+
+[[revisions.2013-y-siguientes.bindings]]
+id = "modelo-720-prior-year-inmuebles-valoracion-baseline"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-2"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions.2013-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[revisions.2013-y-siguientes.bindings.provider]
+kind = "previous_filing"
+source_modelo = "720"
+source_casilla_id = "inmuebles.valoracion"
+
+[revisions.2013-y-siguientes.bindings.provider.temporal]
+kind = "filing_year_offset"
+years = -1
+source_periods = ["0A"]
+
+[revisions.2013-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2013-y-siguientes.bindings.aggregation]
+op = "copy"

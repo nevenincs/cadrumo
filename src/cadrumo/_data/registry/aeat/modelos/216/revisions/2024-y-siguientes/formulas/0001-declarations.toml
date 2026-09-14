@@ -1,0 +1,123 @@
+# The three "Totales" rows the bundled diseño `aeat-dr-216-2024` adds beside
+# the already-declared base and retenciones totals. Each is the sum of the two
+# rows AEAT prints directly above it in the same block, exactly as
+# `modelo-216-base-total` ([10] = [08] + [09]) and
+# `modelo-216-retenciones-total` ([13] = [11] + [12]) already model that shape:
+#
+#   [07] = [05] + [06]   número de rentas, block I (sometidas)
+#   [16] = [14] + [15]   número de rentas, block II (no sometidas)
+#   [19] = [17] + [18]   base, block II (no sometidas)
+
+[[revisions.2024-y-siguientes.formulas]]
+id = "modelo-216-base-total"
+target_casilla_id = "10"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["la suma total de las bases de retención o de ingreso a cuenta declaradas en las casillas 08 y 09"]
+
+[revisions.2024-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "08"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "09"
+
+[[revisions.2024-y-siguientes.formulas]]
+id = "modelo-216-retenciones-total"
+target_casilla_id = "13"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["el importe total de las retenciones e ingresos a cuenta declaradas en las casillas 11 y 12"]
+
+[revisions.2024-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "11"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "12"
+
+[[revisions.2024-y-siguientes.formulas]]
+id = "modelo-216-resultado"
+target_casilla_id = "21"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["el importe correspondiente a la resta de las casillas 13 y 20"]
+
+[revisions.2024-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "13"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "20"
+
+[[revisions.2024-y-siguientes.formulas]]
+id = "modelo-216-numero-rentas-sometidas-total"
+target_casilla_id = "07"
+rounding = "integer"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["declaradas en las casillas 05 y 06"]
+
+[revisions.2024-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "05"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "06"
+
+[[revisions.2024-y-siguientes.formulas]]
+id = "modelo-216-numero-rentas-no-sometidas-total"
+target_casilla_id = "16"
+rounding = "integer"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["declaradas en las casillas 14 y 15"]
+
+[revisions.2024-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "14"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "15"
+
+[[revisions.2024-y-siguientes.formulas]]
+id = "modelo-216-base-no-sometidas-total"
+target_casilla_id = "19"
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-216-procedure"
+required_text = ["correspondientes a las rentas declaradas en las casillas 17 y 18"]
+
+[revisions.2024-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "17"
+
+[[revisions.2024-y-siguientes.formulas.expression.args]]
+casilla_id = "18"

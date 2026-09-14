@@ -103,12 +103,56 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
 @pytest.mark.parametrize(
     ("build_payload", "expected_context"),
     [
-        pytest.param(lambda: {"diagnostic_id": "diag-1", "reason": "r"}, {"validation_rule": "captured_at_present"}, id="captured_at_missing"),
-        pytest.param(lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "not-an-instant"}, {"validation_rule": "iso_8601_instant", "field": "captured_at"}, id="captured_at_not_iso"),
-        pytest.param(lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "2026-08-13T09:00:00"}, {"validation_rule": "utc_aware_instant", "field": "captured_at"}, id="captured_at_naive"),
-        pytest.param(lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "2026-08-13T09:00:00+00:00", "phone_state": "not_a_known_state"}, {"validation_rule": "closed_phone_state_vocabulary", "phone_state": "not_a_known_state", "accepted_phone_states": ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES)}, id="phone_state_outside_vocabulary"),
-        pytest.param(lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "2026-08-13T09:00:00+00:00", "phone_state": "app_did_not_prompt"}, {"validation_rule": "browser_proven_state_requires_landing_source", "phone_state_source": ""}, id="browser_proven_state_without_landing_source"),
-        pytest.param(lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "2026-08-13T09:00:00+00:00", "phone_state": "app_did_not_prompt", "phone_state_source": "aeat_authenticated_landing"}, {"validation_rule": "browser_proven_state_requires_observation_instant"}, id="browser_proven_state_without_observation_instant"),
+        pytest.param(
+            lambda: {"diagnostic_id": "diag-1", "reason": "r"},
+            {"validation_rule": "captured_at_present"},
+            id="captured_at_missing",
+        ),
+        pytest.param(
+            lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "not-an-instant"},
+            {"validation_rule": "iso_8601_instant", "field": "captured_at"},
+            id="captured_at_not_iso",
+        ),
+        pytest.param(
+            lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "2026-08-13T09:00:00"},
+            {"validation_rule": "utc_aware_instant", "field": "captured_at"},
+            id="captured_at_naive",
+        ),
+        pytest.param(
+            lambda: {
+                "diagnostic_id": "diag-1",
+                "reason": "r",
+                "captured_at": "2026-08-13T09:00:00+00:00",
+                "phone_state": "not_a_known_state",
+            },
+            {
+                "validation_rule": "closed_phone_state_vocabulary",
+                "phone_state": "not_a_known_state",
+                "accepted_phone_states": ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
+            },
+            id="phone_state_outside_vocabulary",
+        ),
+        pytest.param(
+            lambda: {
+                "diagnostic_id": "diag-1",
+                "reason": "r",
+                "captured_at": "2026-08-13T09:00:00+00:00",
+                "phone_state": "app_did_not_prompt",
+            },
+            {"validation_rule": "browser_proven_state_requires_landing_source", "phone_state_source": ""},
+            id="browser_proven_state_without_landing_source",
+        ),
+        pytest.param(
+            lambda: {
+                "diagnostic_id": "diag-1",
+                "reason": "r",
+                "captured_at": "2026-08-13T09:00:00+00:00",
+                "phone_state": "app_did_not_prompt",
+                "phone_state_source": "aeat_authenticated_landing",
+            },
+            {"validation_rule": "browser_proven_state_requires_observation_instant"},
+            id="browser_proven_state_without_observation_instant",
+        ),
     ],
 )
 def test_diagnostic_payload_refusals_author_no_sentence(

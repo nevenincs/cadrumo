@@ -56,7 +56,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.observations_repository import ObservationSourceKind
+from cadrumo.application.modelo.pulled_filing_reconcile import pulled_filing_divergence_findings
+from cadrumo.application.modelo.reconcile_casilla import (
+    CasillaDivergenceKind,
+    detect_casilla_divergences,
+)
 from cadrumo.core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
@@ -77,13 +84,6 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.application.calculations.observations_repository import ObservationSourceKind
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo.pulled_filing_reconcile import pulled_filing_divergence_findings
-from cadrumo.application.modelo.reconcile_casilla import (
-    CasillaDivergenceKind,
-    detect_casilla_divergences,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

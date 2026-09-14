@@ -63,6 +63,7 @@ from .preconditions import build_modelo_precondition_failure
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 
+
 class Modelo100BorradorBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when borrador values cannot be consumed for a calculation."""
 

@@ -1,0 +1,25 @@
+# NOT externally grounded. The only bundled oracles for this modelo are the AEAT
+# Manual practico IVA 2024 grupo-de-entidades worked examples
+# (corpus/manual_oracles/modelo-322-2024-grupo-entidades-{omega,delta}.json), whose
+# figures are authority for filing year 2024 only. This revision does not cover that
+# year, so declaring these casillas externally_grounded here claimed an AEAT check
+# that no bundled oracle performs. The casillas stay enrolled in the verification
+# expectation above -- reconciled filed-versus-engine -- which is the weaker and
+# accurate claim. The grounding declaration lives on the 2024-2025 revision, where
+# the oracle actually applies.
+# -----------------------------------------------------------------------------
+# Ledger IVA aggregation bindings for the individual monthly group-entity
+# settlement. Each binding selects substrate-classified ledger lines for the
+# IVA flow (repercutido / soportado / autorepercutido) for the individual group
+# member's cuota.
+# -----------------------------------------------------------------------------
+
+[[revisions.2026-y-siguientes.verification_expectations]]
+id = "modelo-322-iva-chain-verification"
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general"]
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure"]

@@ -37,8 +37,8 @@ from typing import TypedDict
 import pytest
 
 from ......core.classification.policies import SensitivityClass
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import SecureObjectUnreadableError
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..secure_object_crypto import derive_revision_id
 from ._secure_objects_support import (
     _repo_at,

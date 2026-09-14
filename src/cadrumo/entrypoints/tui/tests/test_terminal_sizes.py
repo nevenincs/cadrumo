@@ -16,8 +16,6 @@ from the same catalogue the surface reads would be tautological.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -30,6 +28,9 @@ import pytest
 from textual.app import App
 from textual.widget import Widget
 from textual.widgets import Button, DataTable, Input, Select
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -52,7 +53,6 @@ from ....application.user_profile.overview import ProfileOverview, build_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.time.clock import now
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ..components.host import ScreenHostApp
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal

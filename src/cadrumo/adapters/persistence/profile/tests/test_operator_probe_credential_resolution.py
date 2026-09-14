@@ -15,24 +15,25 @@ real lifecycle service; no test doubles stand in for the read.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.config import load_settings, override_settings
-from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
+from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.application.state_projection_auth import build_auth_readiness
-from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from cadrumo.application.auth.operator import build_live_auth_preflight_report, configure_operator_auth
 from cadrumo.application.auth.operator_probes import (
     live_auth_identity_kind,
     live_auth_identity_state,
     probe_clave_credentials,
 )
-from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.state_projection_auth import build_auth_readiness
+from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.core.auth_provider import AuthProviderKind
+from cadrumo.core.config import load_settings, override_settings
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

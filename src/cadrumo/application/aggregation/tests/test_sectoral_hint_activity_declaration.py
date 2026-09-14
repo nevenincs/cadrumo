@@ -79,10 +79,13 @@ def test_the_declaration_outranks_the_estimacion_objetiva_surrogate() -> None:
     after the surrogates instead of before, so it pins the ordering rather than
     merely exercising the new branch.
     """
-    assert _suggests(
-        UserProfileFact(path="irpf.activity_kind", value="profesional"),
-        UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
-    ) is False
+    assert (
+        _suggests(
+            UserProfileFact(path="irpf.activity_kind", value="profesional"),
+            UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
+        )
+        is False
+    )
 
 
 def test_the_objetiva_surrogate_still_answers_an_undeclared_profile() -> None:
@@ -108,7 +111,10 @@ def test_a_declared_sectorial_activity_needs_no_agrarian_gross_figure() -> None:
     directa simplificada, which the surrogates read as NON-sectoral, so a True
     can only have come from the declaration.
     """
-    assert _suggests(
-        UserProfileFact(path="irpf.activity_kind", value="sectorial"),
-        UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
-    ) is True
+    assert (
+        _suggests(
+            UserProfileFact(path="irpf.activity_kind", value="sectorial"),
+            UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
+        )
+        is True
+    )

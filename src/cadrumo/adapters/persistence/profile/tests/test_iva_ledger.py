@@ -3,16 +3,25 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+
 import pytest
 
+import cadrumo.application.aggregation.iva_ledger as iva_ledger
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from cadrumo.application.aggregation.errors import (
+    AggregationValidationError,
+)
+from cadrumo.application.aggregation.iva_ledger import (
+    IvaLedgerAggregation,
+    IvaLedgerAggregationIssueReason,
+    aggregate_iva_ledger_observations_from_repositories,
+)
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -32,15 +41,6 @@ from cadrumo.domain.iva.schema import (
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-import cadrumo.application.aggregation.iva_ledger as iva_ledger
-from cadrumo.application.aggregation.errors import (
-    AggregationValidationError,
-)
-from cadrumo.application.aggregation.iva_ledger import (
-    IvaLedgerAggregation,
-    IvaLedgerAggregationIssueReason,
-    aggregate_iva_ledger_observations_from_repositories,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -53,6 +53,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
+
 
 _TEST_ASSET_REGISTER = BienesInversionIvaRegister()
 
@@ -258,46 +259,6 @@ def _transaction(
     )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -496,23 +457,3 @@ def test_repository_backed_projection_partition_matches_full_scan(
     # excluded_q3_row is silently skipped by full-scan (no issue) but surfaces
     # under the partitioned path.
     assert excluded_q3_row.transaction_id not in full_scan_ids_with_issues
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

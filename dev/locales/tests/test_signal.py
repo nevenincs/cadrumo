@@ -172,11 +172,7 @@ def test_spellcheck_reports_structural_exclusions_by_surface_and_locale(tmp_path
                 "parallel:docs/locales/ca/LC_MESSAGES/guide.po:message": "[Guide](https://example.test)",
             },
             "en": {
-                "parallel:docs/cli/guide.rst:line[1]": "{term}"
-                + tick
-                + "modelo 100"
-                + tick
-                + " --dry-run",
+                "parallel:docs/cli/guide.rst:line[1]": "{term}" + tick + "modelo 100" + tick + " --dry-run",
             },
         },
     )
@@ -232,9 +228,10 @@ def test_spellcheck_reconciles_enrolled_cells_with_prose_and_structural_cells(tm
     assert inventory["spellchecked_cells"] == sum(inventory["spelling_cells_by_locale"].values()) == 3
     assert inventory["spelling_prose_cells_by_locale"] == {"ca": 1, "en": 1}
     assert inventory["spelling_structural_only_cells_by_locale"] == {"ca": 1}
-    assert inventory["spelling_prose_cells"] + inventory["spelling_structural_only_cells"] == inventory[
-        "spellchecked_cells"
-    ]
+    assert (
+        inventory["spelling_prose_cells"] + inventory["spelling_structural_only_cells"]
+        == inventory["spellchecked_cells"]
+    )
 
 
 def test_spellcheck_returns_actionable_finding_for_each_unknown_parallel_cell(tmp_path, monkeypatch) -> None:
@@ -256,9 +253,7 @@ def test_spellcheck_returns_actionable_finding_for_each_unknown_parallel_cell(tm
         additional_values={"es": {"parallel:docs/locales/es/LC_MESSAGES/guide.po:message": "known typo"}},
     )
 
-    assert spelling == {
-        ("es", "parallel:docs/locales/es/LC_MESSAGES/guide.po:message"): ("typo",)
-    }
+    assert spelling == {("es", "parallel:docs/locales/es/LC_MESSAGES/guide.po:message"): ("typo",)}
     assert inventory["spelling_unknown_cells"] == 1
     assert findings == [
         {
@@ -306,9 +301,7 @@ def test_spellcheck_routes_lang_annotated_embedded_prose_to_declared_dictionary(
         },
     )
 
-    assert spelling == {
-        ("en", "parallel:docs/_generated/legal/guide.rst:line[5]"): ("typo",)
-    }
+    assert spelling == {("en", "parallel:docs/_generated/legal/guide.rst:line[5]"): ("typo",)}
 
 
 def test_domain_summary_enumerates_every_domain_and_unassigned_inventory() -> None:
@@ -543,7 +536,7 @@ def test_generated_user_doc_adapter_enrols_explicit_embedded_language(tmp_path) 
     page.write_text(
         "Legal reference\n===============\n\n"
         ".. raw:: html\n\n"
-        "   <blockquote lang=\"es\"><p>Administracion Tributaria</p></blockquote>\n",
+        '   <blockquote lang="es"><p>Administracion Tributaria</p></blockquote>\n',
         encoding="utf-8",
     )
 
@@ -722,13 +715,9 @@ def test_documentation_inventory_classifies_only_provable_invariant_echoes(tmp_p
         "Cadrumo",
         "Manual",
     )
-    pot = 'msgid ""\nmsgstr ""\n\n' + "\n".join(
-        f'msgid "{message}"\nmsgstr ""\n' for message in messages
-    )
+    pot = 'msgid ""\nmsgstr ""\n\n' + "\n".join(f'msgid "{message}"\nmsgstr ""\n' for message in messages)
     _write_docs_source_cache(docs, "guide.md", "# Echo classification\n", pot)
-    catalogue_messages = {
-        ("guide.po", message): {"ca": True, "es": True, "hu": True} for message in messages
-    }
+    catalogue_messages = {("guide.po", message): {"ca": True, "es": True, "hu": True} for message in messages}
     catalogue_translations = {
         ("guide.po", "Download"): {"ca": ("Download",)},
         ("guide.po", "Review the current return"): {"es": ("Review the current return",)},

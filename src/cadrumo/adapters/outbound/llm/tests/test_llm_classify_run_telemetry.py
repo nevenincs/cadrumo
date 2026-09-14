@@ -20,11 +20,12 @@ import pytest
 from cadrumo.adapters.outbound.llm.run_telemetry import LLMRunTelemetryRecorder
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.ledger.llm_classification import suggest_llm_classification
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import LLMClassifierError
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.application.ledger.llm_classification import suggest_llm_classification
+
 from .subprocess_classifier_support import SubprocessLLMClassifier
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]

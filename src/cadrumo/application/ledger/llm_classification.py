@@ -1524,7 +1524,6 @@ def reject_llm_suggestion(
 
 
 __all__ = [
-    "resolve_llm_evidence",
     "ResolvedEvidence",
     "apply_evidence_classification",
     "apply_evidence_split",
@@ -1533,6 +1532,7 @@ __all__ = [
     "classify_with_evidence",
     "derive_operator_iva_substrate",
     "reject_llm_suggestion",
+    "resolve_llm_evidence",
     "saturate_llm_classification",
     "suggest_evidence_split",
     "suggest_llm_classification",

@@ -16,6 +16,7 @@ from ....application.ledger.invoice_confirmation_ports import (
     InvoiceConfirmationPersistenceError,
     InvoiceConfirmationPorts,
 )
+from ....core.identity.bucket import canonical_bucket_id
 from ....domain.attachments.errors import (
     AttachmentNotFoundError,
     AttachmentPersistenceError,
@@ -23,7 +24,6 @@ from ....domain.attachments.errors import (
 )
 from ....domain.attachments.models import Attachment
 from ....domain.attachments.protocols import AttachmentStoreProtocol
-from ....core.identity.bucket import canonical_bucket_id
 from ..storage.attachment import AttachmentStore
 from ..storage.errors import StorageError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
@@ -65,7 +65,9 @@ class InvoiceConfirmationAttachmentStoreAdapter(AttachmentStoreProtocol):
 
     def load_manifest(self, attachment_id: str) -> Attachment:
         """Load a manifest while preserving an ordinary domain miss."""
-        return _translate_attachment_failure("attachment_load_manifest", lambda: self._store.load_manifest(attachment_id))
+        return _translate_attachment_failure(
+            "attachment_load_manifest", lambda: self._store.load_manifest(attachment_id)
+        )
 
     def iter_manifests(self) -> Iterator[Attachment]:
         """Iterate manifests while translating failures raised during iteration."""

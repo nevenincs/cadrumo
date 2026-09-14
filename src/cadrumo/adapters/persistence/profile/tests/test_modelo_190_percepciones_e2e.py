@@ -21,6 +21,7 @@ from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
     persist_percepcion_observations,
 )
+from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.aggregation.withholding_source import WithholdingSourceResolver
 from .....core.aggregation import RetencionClave
 from .....core.casilla_id import validated_casilla_id
@@ -28,7 +29,6 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
-from .....application.aggregation.source_mesh import CalculationSourceContext
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

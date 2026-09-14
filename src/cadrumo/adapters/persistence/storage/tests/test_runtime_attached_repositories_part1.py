@@ -8,6 +8,13 @@ from typing import cast
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
+
 from .....adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -18,10 +25,7 @@ from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalog
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
 from .....application.auth.diagnostics import list_auth_diagnostics
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
@@ -132,6 +136,7 @@ def _diagnostics_ports() -> DiagnosticsPorts:
         secure_object_repository=_StorageDiagnosticsPort(),
         session_failure_classifier=lambda _error: False,
     )
+
 
 _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("workflow_state", lambda: WorkflowStateRepository().load()),

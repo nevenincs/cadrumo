@@ -26,7 +26,10 @@ from ...core.operations import (
     OperationInteractionKind,
 )
 from ...domain.user_profile.values import UserProfileRecord
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
+from ..auth.protocols import BrowserSessionFactoryPort
+from ..live.censo_ports import CensalFetchPort
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -48,9 +51,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
-from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ..auth.protocols import BrowserSessionFactoryPort
-from ..live.censo_ports import CensalFetchPort
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation
 from .censo_sync import (

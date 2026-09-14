@@ -19,10 +19,14 @@ from datetime import date
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    open_test_profile_session,
+    set_active_test_profile_facts,
+)
+
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, set_active_test_profile_facts
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ._modelo_empty_profile_fixture import _isolated_backend
 from .cli_runner import invoke_cached_cli
 

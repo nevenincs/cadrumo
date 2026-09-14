@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 import ast
 from collections.abc import Callable
 from datetime import UTC, date, datetime
@@ -15,6 +13,8 @@ import yaml
 from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from .....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,

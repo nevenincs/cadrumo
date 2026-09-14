@@ -16,8 +16,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
 from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
 from ..adapters.outbound.aeat.sede.filed_data_capture_port import SedeFiledDataCapturePort
 from ..adapters.outbound.aeat.sede.filed_observation_persistence import (
@@ -40,6 +40,10 @@ from ..adapters.outbound.aeat.sede.notifications import fetch_notifications_quer
 from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ..adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ..adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ..adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..adapters.persistence.profile.justificante import JustificanteRepository
@@ -48,22 +52,18 @@ from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueR
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
-from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ..adapters.persistence.storage.errors import StorageValidationError
 from ..adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
+from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ..application.auth.session_types import AeatSession
-from ..application.auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
 from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.auth.protocols import BrowserSessionFactoryPort
+from ..application.auth.session_types import AeatSession
+from ..application.auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from ..adapters.persistence.profile.calculation_observations import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
 from ..application.calculations.observations_repository import iva_wallet_decision_key
 from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
 from ..application.live.filed_data_capture import capture_report_path
@@ -73,7 +73,6 @@ from ..application.live.filed_observation_persistence import (
     persistiva_compensation_history_observations_strict,
 )
 from ..application.live.filed_observation_ports import FiledObservationPersistencePorts
-from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ..application.live.iva_remote_state_ports import IvaRemoteStatePort
 from ..application.live.notification_ports import (
     NotificationSnapshotQueryProtocol,
@@ -98,6 +97,7 @@ from ..application.live.remote_state_models import (
 )
 from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import active_verified_session
+from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError

@@ -12,7 +12,6 @@ import pytest
 from ......core.classification.policies import SensitivityClass
 from ......core.errors.hierarchy import CoreValidationError
 from ......core.secure_object_write import SecureObjectWrite
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import (
     ClassificationError,
     DecryptionError,
@@ -21,6 +20,7 @@ from ...errors import (
     StorageValidationError,
 )
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (

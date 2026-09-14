@@ -12,11 +12,11 @@ from __future__ import annotations
 
 import pytest
 
+from ...user_profile.profile_keys import profile_keys as catalogue_profile_keys
 from ..catalogue import SETUP_FLOW, WIZARD_FLOWS
 from ..compiler import compile_profile_keys
 from ..models import WizardQuestion, iter_conditions
 from ..widgets import validate_widget_answer
-from ...user_profile.profile_keys import profile_keys as catalogue_profile_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -164,8 +164,7 @@ def resolve_iva_deduction_catalogue(
     """Resolve all fifteen IVA-deduction axis tokens from fact 0085."""
     declarations = _selected_entries(effective_date=effective_date, authority=authority)
     kinds = tuple(
-        IvaDeductionFactKind._from_registry(value)
-        for value in _csv(_required(declarations, _KIND_ORDER_KEY))
+        IvaDeductionFactKind._from_registry(value) for value in _csv(_required(declarations, _KIND_ORDER_KEY))
     )
     authorities = tuple(
         IvaDeductionEvidenceAuthority._from_registry(value)

@@ -110,6 +110,7 @@ def _apply_home_office_censo(bucket_id: str) -> None:
     merged.update(derived.ratios)
     save_usage_ratios(UsageRatioProfile(ratios=merged), bucket_id=bucket_id)
 
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 

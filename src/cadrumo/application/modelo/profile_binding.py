@@ -59,9 +59,9 @@ from ...domain.calculations.registry.binding_value_contract import BindingValueC
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.iva_schema_vocabulary import m303_tax_territory_state_attribution_ratio
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.rental_reduction import require_rental_reduction_art232_tier
-from ...domain.calculations.registry.iva_schema_vocabulary import m303_tax_territory_state_attribution_ratio
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,

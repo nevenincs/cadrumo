@@ -1,0 +1,446 @@
+# M210 IRNR baseline tipo-de-gravamen table.
+#
+# Keyed-bracket-table parameter mapping each declarable tipo_renta to
+# its TRLIRNR baseline rate. The lookup is exact-match on tipo_renta;
+# there is no notion of numeric-interval overlap because the domain is
+# an enum of regulatory categories, not an income amount.
+#
+# Current rows:
+# - general                 → 24% (TRLIRNR Art 25.1.a baseline)
+# - ue_residente            → 19% (TRLIRNR Art 25.1.a UE/EEE)
+# - ganancia_patrimonial    → 19% (TRLIRNR Art 25.1.f, savings-base rate)
+# - inmobiliaria            → 24% (TRLIRNR Art 25.1.a; Art 24.5 reaches
+#                                  the imputed-real-estate base mechanics)
+# - interest                → 19% (TRLIRNR Art 25.1.f.2º: "intereses y otros
+#                                  rendimientos obtenidos por la cesión a
+#                                  terceros de capitales propios" tributan al
+#                                  19% para TODO no residente sin EP, SIN
+#                                  condición de residencia UE/EEE — la letra f)
+#                                  fija el 19% por tipo de renta, igual que
+#                                  ganancia_patrimonial (25.1.f.3º). El previo
+#                                  24% "fallback no-UE" era incorrecto: confundía
+#                                  la reducción UE/EEE del tipo general (25.1.a)
+#                                  con el 25.1.f incondicional. Verified vs BOE
+#                                  RDLeg 5/2004 art.25.1.f + AEAT manual no
+#                                  residentes (2026-06-14 grounding pass).)
+# - dividend                → 19% (TRLIRNR Art 25.1.f.1º: "Dividendos y otros
+#                                  rendimientos derivados de la participación
+#                                  en los fondos propios de una entidad"
+#                                  tributan al 19% para TODO no residente sin
+#                                  EP, SIN condición de residencia UE/EEE —
+#                                  la misma letra f) incondicional que rige
+#                                  interest (25.1.f.2º) y ganancia_patrimonial
+#                                  (25.1.f.3º). Verified vs BOE RDLeg 5/2004
+#                                  art.25.1.f (2026-07-04 grounding pass,
+#                                  closing the missing 25.1.f.1º category).)
+# - canones                 → 24% (TRLIRNR Art 25.1.a: los cánones (royalties)
+#                                  no tienen letra específica en el art 25.1
+#                                  consolidado, por lo que tributan al tipo
+#                                  general de rendimientos, el 24% "con carácter
+#                                  general". La reducción al 19% para residentes
+#                                  UE/EEE del art 25.1.a se alcanza por el
+#                                  concepto `ue_residente`; los convenios de
+#                                  doble imposición (art 12 del CDI) rebajan o
+#                                  eximen habitualmente el tipo en fuente muy por
+#                                  debajo de ambos, y el ceiling min(doméstico,
+#                                  convenio) computa el resultado más favorable.)
+#
+# Pension is intentionally absent from this flat-rate table because
+# TRLIRNR Art 25.1.b is a progressive bracket tariff. The live branch
+# is represented by parameter `m210-pension-tarifa-2025`, and
+# `m210_resolve_rate` derives an effective rate from that table when
+# tipo_renta is `pension`. Other future tipos with no row still surface
+# as deferred/missing coverage through the lookup helper.
+#
+# `m210-convenio-rates` replaces this baseline when the profile declares a
+# treaty country with a matching row for the filed tipo_renta.
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
+# valid_to open: TRLIRNR Art 25.1.a general rate (cánones has no specific letter in
+# the consolidated Art 25.1; the UE/EEE 19% reduction is the `ue_residente` concept).
+# M210 IRNR imputed-real-estate coefficients.
+#
+# TRLIRNR Art. 13.1.h treats imputed real-estate income from Spanish
+# urban property as Spanish-source IRNR income. Art. 24.5 routes the
+# taxable base to the IRPF imputation rule. Current LIRPF Art. 85
+# provides the 1.1% / 2% coefficients and the no-cadastral-value
+# 50% substitute-base rule.
+# M210 IRNR pension tariff (TRLIRNR Art 25.1.b).
+#
+# This is a real progressive cuota schedule, not a flat `tipo_gravamen`.
+# The runtime resolves an effective rate for the computed `base_imponible`
+# so the existing `cuota_integra = base_imponible * tipo_gravamen`
+# calculation path produces the same cuota as this bracket table.
+# M210 IRNR official tipo-de-renta code enrolment ledger.
+#
+# The official Modelo 210 form asks the operator for a two-digit
+# "Tipo de renta" code (Orden EHA/3316/2010, "HOJA INFORMATIVA 210 -
+# TIPOS DE RENTA"). This parameter declares the set of official codes the
+# 2025 revision currently accepts, so the codes carry the canonical registry
+# legal-grounding gate (legal_refs -> corpus). It is a presence ledger, not a
+# rate table: the `value` column is a sentinel (1) marking the code as
+# declared, and the RATE lives in `m210-tipo-gravamen-2025` keyed by the
+# conceptual `tipo_renta` the code projects to.
+#
+# KNOWN ITEM (cleanliness, not correctness): the sentinel presence-value abuses
+# the keyed_bracket_table (rate-table) shape with non-rate data. It is contained
+# and documented; if code-review pushes on the type-shape, the clean resolution
+# is a categorical / string-valued parameter type (representation C), and the
+# grounding stays exactly here — registry-resident.
+#
+# The code -> `TipoRentaIrnr` projection lives in `aeat.core._irnr`
+# (`OFFICIAL_M210_TIPO_RENTA_CODES`); the registry-build parity gate
+# (`validate_m210_tipo_renta_code_projection_parity`) refuses at build time if
+# this declared code set and that core projection diverge in either direction
+# (a declared code with no projection, or a projected code not declared here).
+#
+# Only the RATE-CONCEPT-grounded codes are declared. The bundled TRLIRNR corpus
+# is a partial extract carrying Art. 25 letters a) general 24%, b) pensiones,
+# and f) 19% dividendos/intereses/ganancias only; the special-rate letters
+# c/d/e/g/h are absent. The cánones codes 08/09/10/11/12/32 ARE enrolled: cánones
+# has no specific letter in the consolidated Art. 25.1, so it is the general
+# rendimiento rate under Art. 25.1.a (24%) — bundle-grounded, no fabrication. The
+# codes whose rate is still not bundle-verifiable are NOT enrolled yet: asistencia
+# técnica 13 (cánones-ADJACENT in the HOJA INFORMATIVA, a possible un-bundled
+# special letter, NOT cánones proper), reaseguros 19 (Art. 25.1.e 1.5%),
+# navegación 20 (Art. 25.1.d 4%), imposición complementaria 27 (Art. 19.2), and
+# premios de loterías 31 (D.A. 5ª gravamen especial). They enrol code-by-code
+# once the full consolidated Art. 25 is fetched. Force-mapping any to a rate
+# would fabricate it.
+# The code table lives in the AEAT instructions HOJA INFORMATIVA (an
+# official_source_guidance source, the only tier a source_citation admits);
+# the establishing Orden EHA/3316/2010 (boe-modelo-210-base-order,
+# layout_authority tier) stays a source_ref reference above without a citation.
+# Rendimientos de inmuebles arrendados o subarrendados (general 24%, Art 25.1.a).
+# Rentas imputadas de inmuebles urbanos (inmobiliaria, Art 13.1.h + Art 24.5).
+# Rentas de actividades empresariales sin EP (general 24%, Art 25.1.a).
+# Dividendos y participación en fondos propios (dividend 19%, Art 25.1.f.1º).
+# Intereses y otros rendimientos (interest 19%, Art 25.1.f.2º).
+# Intereses exentos (interest concept, Art 25.1.f.2º; exención Art 14).
+# Intereses bonificados (interest concept, Art 25.1.f.2º).
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+# Rentas de actividades artísticas (general 24%, Art 25.1.a).
+# Rentas de actividades deportivas (general 24%, Art 25.1.a).
+# Rentas de actividades profesionales (general 24%, Art 25.1.a).
+# Rentas del trabajo (general 24%, Art 25.1.a).
+# Pensiones y haberes pasivos (pension tariff, Art 25.1.b).
+# Servicios de apoyo a la gestión (general 24%, Art 25.1.a).
+# Otras rentas (general 24%, Art 25.1.a).
+# Ganancias de acciones admitidas a negociación (ganancia 19%, Art 25.1.f.3º).
+# Ganancias de IIC / fondos (ganancia 19%, Art 25.1.f.3º).
+# Otras ganancias (ganancia 19%, Art 25.1.f.3º).
+# Ganancias de transmisiones de bienes inmuebles (ganancia 19%, Art 25.1.f.3º).
+# Dividendos exentos, fondos de pensiones (dividend concept, Art 25.1.f.1º; exención Art 14.1.k).
+# Dividendos exentos, IIC Directiva 2009/65/CE (dividend concept, Art 25.1.f.1º; exención Art 14.1.l).
+# Cánones (canones, general 24%, Art 25.1.a residual — sin letra específica).
+# Ganancias de vivienda habitual exenta por reinversión anticipada (ganancia 19%, Art 25.1.f.3º).
+# Ganancias de vivienda habitual exenta por reinversión posterior (ganancia 19%, Art 25.1.f.3º).
+# Rendimientos de inmuebles arrendados agrupados de varios pagadores (general 24%, Art 25.1.a).
+# Ganancias de transmisión de derechos de suscripción (ganancia 19%, Art 25.1.f.3º).
+# Intereses exentos, fondos de pensiones / IIC (interest concept, Art 25.1.f.2º; exención Art 14.1.c).
+# Ganancias de bienes muebles exentas, fondos de pensiones / IIC (ganancia 19%, Art 25.1.f.3º; exención Art 14.1.c).
+
+[[revisions.2024.parameters]]
+id = "m210-tipo-gravamen"
+data_type = "keyed_bracket_table"
+unit = "percent"
+legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "general"
+value = "0.24"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "ue_residente"
+value = "0.19"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "ganancia_patrimonial"
+value = "0.19"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "inmobiliaria"
+value = "0.24"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "interest"
+value = "0.19"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "dividend"
+value = "0.19"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "canones"
+value = "0.24"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters]]
+id = "m210-imputacion-rate-recent-revision"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-irnr-renta-imputada-inmueble-urbano"
+required_text = ["1,1%", "diez per&iacute;odos impositivos anteriores", "valor catastral"]
+
+[[revisions.2024.parameters.values]]
+value = "0.011"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters]]
+id = "m210-imputacion-rate-old-or-no-revision"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-irnr-renta-imputada-inmueble-urbano"
+required_text = ["Restantes inmuebles: 2%", "valor catastral"]
+
+[[revisions.2024.parameters.values]]
+value = "0.02"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters]]
+id = "m210-imputacion-no-catastral-base-fraction"
+data_type = "ratio"
+unit = "fraction"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-irnr-renta-imputada-inmueble-urbano"
+required_text = ["50% del mayor", "valor de adquisici&oacute;n", "1,1%"]
+
+[[revisions.2024.parameters.values]]
+value = "0.50"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters]]
+id = "m210-pension-tarifa"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.b"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12000"
+fixed_addition = "0"
+marginal_rate = "0.08"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "12000"
+upper_bound = "18700"
+fixed_addition = "960"
+marginal_rate = "0.30"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.brackets]]
+lower_bound = "18700"
+fixed_addition = "2970"
+marginal_rate = "0.40"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters]]
+id = "m210-tipo-renta-code"
+data_type = "keyed_bracket_table"
+unit = "code"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-base-order"]
+
+[[revisions.2024.parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["HOJA INFORMATIVA 210", "TIPOS DE RENTA"]
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "01"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "02"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "03"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "04"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "05"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "06"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "07"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "08"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "09"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "10"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "11"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "12"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "14"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "15"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "16"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "17"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "18"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "21"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "22"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "24"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "25"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "26"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "28"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "29"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "30"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "32"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "33"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "34"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "35"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "36"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "37"
+value = "1"
+valid_from = 2024-01-01
+
+[[revisions.2024.parameters.keyed_brackets]]
+key = "38"
+value = "1"
+valid_from = 2024-01-01

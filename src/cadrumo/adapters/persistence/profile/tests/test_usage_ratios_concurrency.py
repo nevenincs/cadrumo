@@ -29,12 +29,12 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.ledger.ratios import set_usage_ratio
 from cadrumo.core.config import override_settings
 from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES
 from cadrumo.domain.usage_ratios.service import usage_ratio_bucket_lock
-from cadrumo.application.ledger.ratios import set_usage_ratio
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -114,5 +114,3 @@ def test_usage_ratio_bucket_lock_is_a_real_mutex(tmp_path: Path) -> None:
                 with pytest.raises(LockAcquisitionError):
                     with usage_ratio_bucket_lock(bucket_id):
                         pass
-
-

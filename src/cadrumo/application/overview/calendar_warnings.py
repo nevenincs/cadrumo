@@ -33,8 +33,8 @@ from ...domain.calculations.registry.applicability import (
 )
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_simplificado_token
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
+from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_simplificado_token
 from ...domain.deadlines.models import IVARegime as _IVARegime
 from ..operator_actions.models import DeclaredNextAction
 from .calendar_models import (

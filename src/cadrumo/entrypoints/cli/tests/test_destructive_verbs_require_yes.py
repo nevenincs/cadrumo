@@ -25,9 +25,9 @@ test, giving the safeguard contract two-layer enforcement.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 import pytest
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli

@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
+from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
+from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
 from ...domain.contribuyente.entity_type import (
     entity_type_legal_entity_token,
     entity_type_natural_person_token,
 )
-from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
-from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.deadlines.models import irnr_representante_fiscal_required
 from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
 

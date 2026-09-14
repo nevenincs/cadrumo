@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -29,7 +30,6 @@ from ....domain.modelos.calculation_revision_m303_evidence import (
     M303InsolvencyFilingSubtype,
 )
 from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
-from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 
 __all__ = ["build_m303_filing_evidence", "default_insolvency_fact", "write_m303_filing_evidence"]
 

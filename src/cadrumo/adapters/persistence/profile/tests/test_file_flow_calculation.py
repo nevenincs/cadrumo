@@ -2,21 +2,11 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
-from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, list_calculation_revisions
-from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -32,6 +22,15 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     verify_revision,
     workflow_gate,
 )
+from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, list_calculation_revisions
+from cadrumo.application.modelo.filing_actions import file_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import get_work_unit
+from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -193,8 +192,8 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos: Repos) -> None:
     """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
     bucket event with actor + reason payload."""
 
-    from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
     from cadrumo.application.modelo.work_lifecycle import discard_work_unit
+    from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 
     wu_repo, _, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)

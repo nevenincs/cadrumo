@@ -35,9 +35,9 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...crypto.aead import KEY_SIZE
 from ...errors import BlobIntegrityError
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..blob_store import BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

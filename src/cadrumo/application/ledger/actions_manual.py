@@ -30,10 +30,10 @@ from ...domain.attachments.protocols import AttachmentStoreProtocol as _Attachme
 from ...domain.attachments.service import link_attachment_transaction
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
+from ...domain.calculations.registry.iva_deduction_catalogue import invoice_evidence_authority
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
-from ...domain.calculations.registry.iva_deduction_catalogue import invoice_evidence_authority
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError

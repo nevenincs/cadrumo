@@ -28,15 +28,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.core.period import Period
-from cadrumo.core.rescate_type import RescateType
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
 from cadrumo.application.modelo.semantic_role_resolution import casilla_id_for_unique_semantic_role
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.core.period import Period
+from cadrumo.core.rescate_type import RescateType
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

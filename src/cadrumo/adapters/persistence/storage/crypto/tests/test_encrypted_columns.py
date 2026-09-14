@@ -17,8 +17,8 @@ import pytest
 from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import StorageValidationError
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..encrypted_columns import HashedLookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

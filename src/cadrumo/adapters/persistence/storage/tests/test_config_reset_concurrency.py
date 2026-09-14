@@ -246,9 +246,9 @@ def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
 ) -> None:
     from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from cadrumo.adapters.persistence.storage.bucket.lockfile import lock_path
-    from cadrumo.core.bucket_pointer import pointer_path
     from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+    from cadrumo.core.bucket_pointer import pointer_path
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
@@ -356,12 +356,12 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
     tmp_path: Path,
 ) -> None:
     from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
-    from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
     from cadrumo.application.config_reset_models import (
         ConfigResetOperation,
         ConfigResetOperationStatus,
         ConfigResetPauseReason,
     )
+    from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")

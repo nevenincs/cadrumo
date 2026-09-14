@@ -20,7 +20,13 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
 )
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    isolated_profile_storage_root,
+    isolated_runtime_profile,
+)
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
@@ -29,16 +35,18 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from cadrumo.domain.modelos.filing_record import (
+    ExternalEvidence,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.application.workflow.persistence import workflow_state_repository
 
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
 #: A checksum-valid synthetic NIF. This value reaches

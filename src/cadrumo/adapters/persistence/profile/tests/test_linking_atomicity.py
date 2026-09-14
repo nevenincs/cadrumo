@@ -59,8 +59,12 @@ def test_link_invoice_transaction_repositories_binds_both_catalogues_to_requeste
         )
 
         reloaded_invoice = InvoiceCatalogueRepository(bucket_id=profile.bucket_id).load().get(invoice.invoice_id)
-        reloaded_transaction = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load().get(
-            transaction.transaction_id,
+        reloaded_transaction = (
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+            .load()
+            .get(
+                transaction.transaction_id,
+            )
         )
         assert result.transaction_id == transaction.transaction_id
         assert reloaded_invoice is not None

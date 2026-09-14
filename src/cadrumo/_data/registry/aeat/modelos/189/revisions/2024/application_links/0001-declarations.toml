@@ -1,0 +1,32 @@
+# Filing and deadline surfaces for this era. The successor edition declares both
+# on these same articles; this edition declared neither, so two surfaces the
+# application consumes were undeclared while the articles applied throughout.
+# Every legal_ref below is already declared in this revision's own legal_refs --
+# nothing new is asserted about what governs it.
+#
+# THE DEADLINE LINK CARRIES NO source_refs, following the modelo-490
+# 2023-y-siguientes sibling which declares its deadline surface the same way.
+# The plazo is grounded in orden-eha-3481-2008:art-5 (1 to 31 March). The successor cites its
+# procedure page here; that page contains no statement of this modelo's plazo,
+# so citing it would satisfy the source-tier gate with a document silent on the
+# claim. The article is the grounding and nothing further is asserted.
+# source_refs names the document that CONTAINS the cited article. It is the
+# honest citation for this surface even where its tier is layout_authority:
+# the field is required, and naming a document that does state the plazo is
+# better than naming a guidance page that does not.
+
+[[revisions.2024.application_links]]
+id = "modelo-189-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["aeat-modelo-189-procedure", "boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284"]
+
+[[revisions.2024.application_links]]
+id = "modelo-189-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3481-2008:art-5"]
+source_refs = ["boe-modelo-189-base-order"]

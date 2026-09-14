@@ -58,6 +58,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile.repository
 
+
 # ECB EXR.D.USD.EUR.SP00.A, 2024-01-15: OBS_VALUE = 1.0945 (1 EUR = 1.0945 USD).
 # Provider contract (original * rate = eur_amount) needs the inverse:
 #   1 USD = 1/1.0945 EUR = 0.913659... EUR

@@ -123,19 +123,16 @@ def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
     authority snapshot.
     """
     from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
+    from ...domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
     from ...domain.iva.errors import IvaRateNotFoundError
     from ...domain.iva.lookup import coexisting_tier_rates, lookup_rate
-    from ...domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
     from ...domain.iva.schema import spanish_eu_member_state
 
     overlapping: set[Decimal] = set()
     on_date = period.start_date
     while on_date <= period.end_date:
         catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date)
-        kinds = tuple(
-            definition.token
-            for definition in catalogue.definitions
-        )
+        kinds = tuple(definition.token for definition in catalogue.definitions)
         for kind in kinds:
             if kind == catalogue.zero_token:
                 # RATE_0 is a permanent registry slot, while 0062's zero rows
@@ -155,9 +152,7 @@ def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
                 continue
                 overlapping.update(
                     rate.pct
-                    for rate in coexisting_tier_rates(
-                        spanish_eu_member_state(effective_date=on_date), kind, on_date
-                    )
+                    for rate in coexisting_tier_rates(spanish_eu_member_state(effective_date=on_date), kind, on_date)
                 )
         on_date += timedelta(days=1)
     return tuple(sorted(overlapping))

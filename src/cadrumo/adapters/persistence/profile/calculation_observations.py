@@ -18,7 +18,6 @@ from cadrumo.application.calculations.errors import (
     calculation_no_recovery_verdict,
 )
 from cadrumo.application.calculations.m303_carry_ingress import normalize_m303_carry_observation_envelope
-from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.application.calculations.observations_repository import (
     IvaWalletDecisionEnvelopePayload,
     ObservationEnvelopePayload,
@@ -34,6 +33,7 @@ from cadrumo.application.calculations.observations_repository import (
     require_observation_period,
     validate_observation_casilla_ids,
 )
+from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.identity.tax_id import same_tax_identifier
@@ -45,6 +45,7 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+
 from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.errors import StorageError
@@ -467,7 +468,6 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
                 require_decision_registry_coordinates_current(decision)
                 decisions.append(decision)
         return tuple(sorted(decisions, key=lambda item: (item.decided_at, item.wallet_captured_at or item.decided_at)))
-
 
 
 __all__ = [

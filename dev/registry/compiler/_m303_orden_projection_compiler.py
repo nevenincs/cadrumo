@@ -40,6 +40,7 @@ from ._m303_orden_keys import (
 from ._m303_orden_source import annual_orden_raw_activity_identity
 from .m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenSourceCensus
 
+
 def compile_m303_annual_orden_projection(
     *,
     census: M303AnnualOrdenSourceCensus,

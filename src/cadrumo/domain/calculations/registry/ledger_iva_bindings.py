@@ -47,21 +47,21 @@ from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .iva_category_catalogue import resolve_iva_category_catalogue
+from .iva_flow_catalogue import require_iva_flow_direction
 from .iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     require_registry_declared_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
 )
-from .prorrata_vocabulary import require_input_classification
 from .iva_schema_vocabulary import (
     require_iva_cash_accounting_treatment,
     require_iva_exemption_article,
     require_registry_declared_iva_cash_accounting_treatment,
 )
 from .ledger_binding_selector_support import LedgerIvaFact, LedgerIvaFactValue
+from .prorrata_vocabulary import require_input_classification
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
-from .iva_flow_catalogue import require_iva_flow_direction
-from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_tuple
+from .schema_base import coerce_decimal_tuple, coerce_enum_tuple
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
@@ -210,7 +210,9 @@ class IvaLedgerObservation(BaseModel):
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
                 f"got category {self.category.value!r}",
             )
-        if not is_deducible_flow(self.flow_direction) or self.category == category_catalogue.require("recargo_equivalencia"):
+        if not is_deducible_flow(self.flow_direction) or self.category == category_catalogue.require(
+            "recargo_equivalencia"
+        ):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
                 raise RegistryValidationError("output IVA facts cannot carry deduction authority")
             return self
@@ -884,8 +886,7 @@ def unsupported_ledger_iva_observations(
         parse_selector=iva_ledger_selector,
         build_matcher=_iva_build_matcher,
         is_declarable=lambda observation: True,
-        extra_exclusion=lambda observation: observation.category
-        in registry_category_projection("cuota_less_m303"),
+        extra_exclusion=lambda observation: observation.category in registry_category_projection("cuota_less_m303"),
     )
 
 

@@ -34,6 +34,8 @@ from cadrumo.domain.calculations.registry.identifier_lineage import identifier_l
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.keyed_families import (
     INHERITED_FAMILY_SPECS as _CANONICAL_INHERITED_FAMILY_SPECS,
+)
+from cadrumo.domain.calculations.registry.keyed_families import (
     KEYED_FAMILY_SPECS as _CANONICAL_KEYED_FAMILY_SPECS,
 )
 from cadrumo.domain.calculations.registry.keyed_families import (
@@ -519,9 +521,7 @@ def _validate_lineage_sidecars(
         # casilla attestation look stale at load time.
         families: dict[str, tuple[str, ...]] = {
             _INHERITED_SECTION: tuple(
-                str(member.continuidad_id)
-                for member in revision.casillas
-                if member.continuidad_id is not None
+                str(member.continuidad_id) for member in revision.casillas if member.continuidad_id is not None
             )
         }
         for family in _CANONICAL_INHERITED_FAMILY_SPECS:

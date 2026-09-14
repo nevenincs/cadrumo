@@ -1,24 +1,32 @@
 """Shared Modelo 303 export builders for wallet and output-path tests."""
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
-
-from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
-
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._export_test_support import _seed_profile, _synthetic_valid_nif
+from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
+from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -28,15 +36,18 @@ from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.iva_compensation.reconciliation import (    IvaCompensationAuthoritySource,
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (    CalculationRevision,
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from cadrumo.domain.modelos.filing_record import (    ExternalEvidence,
+from cadrumo.domain.modelos.filing_record import (
+    ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
@@ -45,17 +56,9 @@ from cadrumo.domain.modelos.filing_record import (    ExternalEvidence,
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.tests.env_scope import ready_clave_settings
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests._export_test_support import _seed_profile, _synthetic_valid_nif
-from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 
 def external_filing_observations(*, casilla_values, snapshot):
     """Build grounded observations for the imported baseline fixture.
@@ -83,6 +86,7 @@ def external_filing_observations(*, casilla_values, snapshot):
             )
         )
     return tuple(observations)
+
 
 def _m303_snapshot_ref(period: str) -> RegistrySnapshotRef:
     return bundled_authority().snapshot("303", filing_year=2026, period=period).snapshot_ref

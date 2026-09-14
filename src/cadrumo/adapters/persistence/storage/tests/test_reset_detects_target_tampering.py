@@ -28,11 +28,12 @@ lives in `adapters/persistence/storage/custody/tests/`.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 from pathlib import Path
 
 import pytest
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
 
 from .test_config_reset import (
     _OVERRIDE_REASON,
@@ -40,7 +41,6 @@ from .test_config_reset import (
     _isolated_reset_root,
     _persist_filing,
 )
-from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

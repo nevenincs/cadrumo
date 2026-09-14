@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
+from .....adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from .....adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.calculations.revision_carry_gate import RevisionCarryOutcome
@@ -33,9 +33,9 @@ from .....application.modelo.m145_communication_records import (
     M145CommunicationRecordValidationError,
     M145CommunicationServiceError,
     create_m145_communication_record,
+    m145_communication_record_object_key,
     mark_m145_communication_record_delivered_to_payer,
     mark_m145_communication_record_locally_completed,
-    m145_communication_record_object_key,
     read_m145_communication_record,
 )
 from .....domain.buckets.event import BucketEventType
@@ -66,7 +66,11 @@ def test_mark_m145_communication_record_delivered_to_payer_persists_transition(t
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
-        read_back = read_m145_communication_record(created.communication_record_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        read_back = read_m145_communication_record(
+            created.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     assert delivered.state is M145CommunicationRecordState.DELIVERED_TO_PAYER
     assert delivered.created_at == created.created_at
@@ -125,7 +129,11 @@ def test_m145_transition_and_existing_create_refuse_divergent_registry_coordinat
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         command = M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values())
-        created = create_m145_communication_record(command, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        created = create_m145_communication_record(
+            command,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
         monkeypatch.setattr(
             m145_records_module,
             "revision_carry_outcome",
@@ -139,7 +147,11 @@ def test_m145_transition_and_existing_create_refuse_divergent_registry_coordinat
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
         with pytest.raises(M145CommunicationRecordValidationError):
-            create_m145_communication_record(command, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+            create_m145_communication_record(
+                command,
+                bucket_id=runtime.bucket_id,
+                ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            )
 
 
 def test_mark_m145_communication_record_locally_completed_requires_prior_delivery(tmp_path: Path) -> None:
@@ -155,7 +167,11 @@ def test_mark_m145_communication_record_locally_completed_requires_prior_deliver
                 bucket_id=runtime.bucket_id,
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
-        read_back = read_m145_communication_record(created.communication_record_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        read_back = read_m145_communication_record(
+            created.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     assert read_back.state is M145CommunicationRecordState.CREATED
     assert read_back.delivered_to_payer_at is None
@@ -178,7 +194,11 @@ def test_mark_m145_communication_record_delivered_to_payer_requires_valid_record
                 bucket_id=runtime.bucket_id,
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
-        read_back = read_m145_communication_record(created.communication_record_id, bucket_id=runtime.bucket_id, ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id))
+        read_back = read_m145_communication_record(
+            created.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+        )
 
     assert read_back.state is M145CommunicationRecordState.CREATED
     assert read_back.delivered_to_payer_at is None

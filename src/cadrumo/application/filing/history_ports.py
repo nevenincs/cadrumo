@@ -16,7 +16,6 @@ from ...core.classification.policies import SensitivityClass
 from .errors import ModeloApplicationError
 from .history_models import ModeloHistory
 
-
 FILING_HISTORY_NAMESPACE = "cadrumo.application.filing.history"
 FILING_HISTORY_SENSITIVITY: Final[SensitivityClass] = SensitivityClass("audit")
 FILING_HISTORY_SCHEMA_VERSION = 1

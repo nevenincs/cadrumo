@@ -17,6 +17,9 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.profile.evidence_bundles import (
     EvidenceBundleRepository,
     EvidenceBundleWorkUnitRepository,
@@ -27,8 +30,6 @@ from ....application.evidence.ports import EvidenceBundlePorts
 from ....application.evidence.service import EvidenceBundleService
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

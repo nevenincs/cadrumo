@@ -50,9 +50,7 @@ def publish_facts_authority(
         artifact_path=artifact_path,
     )
     provider_counts = Counter(
-        str(fact.provider_id)
-        for fact in published.catalogues.facts.facts.values()
-        if fact.provider_id is not None
+        str(fact.provider_id) for fact in published.catalogues.facts.facts.values() if fact.provider_id is not None
     )
     authored_count = provider_counts.get(AUTHORED_FACT_PROVIDER_ID, 0)
     provider_owned_count = sum(

@@ -183,10 +183,7 @@ def list_auth_diagnostics(*, persistence: AuthDiagnosticPersistencePort) -> Auth
     """
     rows = tuple(
         sorted(
-            (
-                _summary_from_payload(diagnostic_payload(record.payload))
-                for record in _diagnostic_records(persistence)
-            ),
+            (_summary_from_payload(diagnostic_payload(record.payload)) for record in _diagnostic_records(persistence)),
             key=lambda row: row.captured_at,
             reverse=True,
         ),

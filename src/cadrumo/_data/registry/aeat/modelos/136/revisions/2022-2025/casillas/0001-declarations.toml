@@ -1,0 +1,317 @@
+# The twenty-four fields of the modelo 136 form reproduced as anexo III of Orden
+# HAC/763/2018, in force for autoliquidaciones from 3T 2018 onward and therefore
+# across the whole of this edition's 2022-2025 span.
+#
+# Transcribed from the bundled boe-modelo-136-current-form-text, whose printed
+# captions are quoted here as they appear:
+#
+#   01 "Importe del premio obtenido por el boleto, cupon o apuesta premiado
+#      (o valor de mercado, si el premio es en especie)"
+#   02 "Importe o valor del premio que corresponde individualmente al declarante"
+#   03 "Cuantia exenta del gravamen especial"
+#   04 "Base imponible ( 02 - 03 )"
+#   05 "Cuota del gravamen especial (el 20% del importe de la casilla 04 )"
+#   06 "Resultados a ingresar de anteriores autoliquidaciones por el mismo
+#      concepto y correspondientes al mismo premio"
+#   07 "Resultado a ingresar ( 05 - 06 )"
+#   09 "Importe (casilla 09 )"
+#
+# The form prints NO box 08: the numbering runs 07 then 09. The absence of an 08
+# casilla below is therefore the design's own shape, measured on the document,
+# and not a row dropped in transcription.
+#
+# Casilla 03 is manual rather than computed on purpose. The form supplies only a
+# proration rule for it -- "Si el precio unitario del boleto, cupon o apuesta es
+# igual o superior a 0,50 EUR: 03 = Importe exento EUR x 02 / 01" -- and prints no
+# exempt figure, so the 40.000 euro threshold that LIRPF DA 33 fixes from
+# 2020-01-01 is never embedded here as a year-varying constant. The filer states
+# the exempt amount and the engine derives the base from it.
+
+[[revisions.2022-2025.casillas]]
+id = "declarante-nif"
+continuidad_id = "m136-declarante-nif"
+number = "declarante.nif"
+data_type = "nif"
+semantic_role = "m136_declarante_nif"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 136 identifies one declarant per autoliquidation."
+required = false
+input_kind = "manual"
+section = ["declarante", "datos_identificacion"]
+legal_refs = ["orden-hap-70-2013:art-5", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "declarante-nombre"
+continuidad_id = "m136-declarante-nombre"
+number = "declarante.nombre"
+data_type = "name"
+semantic_role = "m136_declarante_nombre"
+required = false
+input_kind = "manual"
+section = ["declarante", "datos_identificacion"]
+legal_refs = ["orden-hap-70-2013:art-5", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "fecha-cobro-premio"
+continuidad_id = "m136-fecha-cobro-premio"
+number = "devengo.fecha-cobro-premio"
+data_type = "date"
+semantic_role = "m136_fecha_cobro_premio"
+required = false
+input_kind = "manual"
+section = ["devengo"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "ejercicio-declaracion"
+continuidad_id = "m136-ejercicio-declaracion"
+number = "devengo.ejercicio"
+data_type = "year"
+semantic_role = "m136_ejercicio_declaracion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 136 carries one exercise field per quarterly autoliquidation."
+required = false
+input_kind = "manual"
+section = ["devengo"]
+legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "periodo-declaracion"
+continuidad_id = "m136-periodo-declaracion"
+number = "devengo.periodo"
+data_type = "period_code"
+semantic_role = "m136_periodo_declaracion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 136 declares one quarterly period code per autoliquidation."
+required = false
+input_kind = "manual"
+section = ["devengo"]
+legal_refs = ["orden-hap-70-2013:art-7", "orden-hap-70-2013:art-11"]
+source_refs = ["boe-modelo-136-base-order", "boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
+
+[[revisions.2022-2025.casillas]]
+id = "provincia-residencia-irpf"
+continuidad_id = "m136-provincia-residencia-irpf"
+number = "declarante.provincia-residencia-irpf"
+data_type = "province_code"
+semantic_role = "m136_provincia_residencia_irpf"
+required = false
+input_kind = "manual"
+section = ["declarante", "residencia"]
+legal_refs = ["orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "organizador-denominacion"
+continuidad_id = "m136-organizador-denominacion"
+number = "loteria.organizador.denominacion"
+data_type = "name"
+semantic_role = "m136_organizador_denominacion"
+required = false
+input_kind = "manual"
+section = ["loteria_apuesta_premiada", "organizador"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "organizador-pais"
+continuidad_id = "m136-organizador-pais"
+number = "loteria.organizador.pais"
+data_type = "text"
+semantic_role = "m136_organizador_pais"
+required = false
+input_kind = "manual"
+section = ["loteria_apuesta_premiada", "organizador"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "organizador-codigo-pais"
+continuidad_id = "m136-organizador-codigo-pais"
+number = "loteria.organizador.codigo-pais"
+data_type = "country_code"
+semantic_role = "m136_organizador_codigo_pais"
+required = false
+input_kind = "manual"
+section = ["loteria_apuesta_premiada", "organizador"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "loteria-apuesta-denominacion"
+continuidad_id = "m136-loteria-apuesta-denominacion"
+number = "loteria.denominacion"
+data_type = "text"
+semantic_role = "m136_loteria_apuesta_denominacion"
+required = false
+input_kind = "manual"
+section = ["loteria_apuesta_premiada", "identificacion"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "fecha-celebracion"
+continuidad_id = "m136-fecha-celebracion"
+number = "loteria.fecha-celebracion"
+data_type = "date"
+semantic_role = "m136_fecha_celebracion"
+required = false
+input_kind = "manual"
+section = ["loteria_apuesta_premiada", "identificacion"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "precio-unitario"
+continuidad_id = "m136-precio-unitario"
+number = "loteria.precio-unitario"
+data_type = "money"
+semantic_role = "m136_precio_unitario"
+required = false
+input_kind = "manual"
+section = ["loteria_apuesta_premiada", "identificacion"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "01"
+continuidad_id = "m136-importe-premio-total"
+number = "01"
+data_type = "money"
+semantic_role = "m136_importe_premio_total"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "premio"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "02"
+continuidad_id = "m136-importe-premio-declarante"
+number = "02"
+data_type = "money"
+semantic_role = "m136_importe_premio_declarante"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "premio"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "03"
+continuidad_id = "m136-cuantia-exenta-gravamen"
+number = "03"
+data_type = "money"
+semantic_role = "m136_cuantia_exenta_gravamen"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "exencion"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
+
+[[revisions.2022-2025.casillas]]
+id = "04"
+continuidad_id = "m136-base-imponible-gravamen"
+number = "04"
+data_type = "money"
+semantic_role = "m136_base_imponible_gravamen"
+required = false
+input_kind = "computed"
+formula = "modelo-136-base-imponible"
+section = ["liquidacion", "base"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
+
+[[revisions.2022-2025.casillas]]
+id = "05"
+continuidad_id = "m136-cuota-gravamen-especial"
+number = "05"
+data_type = "money"
+semantic_role = "m136_cuota_gravamen_especial"
+required = false
+input_kind = "computed"
+formula = "modelo-136-cuota-gravamen-especial"
+section = ["liquidacion", "cuota"]
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
+
+[[revisions.2022-2025.casillas]]
+id = "06"
+continuidad_id = "m136-resultados-anteriores-mismo-premio"
+number = "06"
+data_type = "money"
+semantic_role = "m136_resultados_anteriores_mismo_premio"
+required = false
+input_kind = "manual"
+section = ["liquidacion", "complementaria"]
+legal_refs = ["orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "07"
+continuidad_id = "cuota-a-ingresar"
+number = "07"
+data_type = "money"
+semantic_role = "cuota_a_ingresar"
+required = false
+input_kind = "computed"
+formula = "modelo-136-resultado-ingresar"
+section = ["liquidacion", "resultado"]
+legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
+
+[revisions.2022-2025.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "autoliquidacion-complementaria"
+continuidad_id = "m136-autoliquidacion-complementaria"
+number = "complementaria.marca"
+data_type = "boolean"
+semantic_role = "m136_autoliquidacion_complementaria"
+required = false
+input_kind = "manual"
+section = ["complementaria"]
+legal_refs = ["orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "justificante-anterior"
+continuidad_id = "m136-justificante-anterior"
+number = "complementaria.justificante-anterior"
+data_type = "text"
+semantic_role = "m136_justificante_anterior"
+required = false
+input_kind = "manual"
+section = ["complementaria"]
+legal_refs = ["orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "09"
+continuidad_id = "m136-importe-ingresado"
+number = "09"
+data_type = "money"
+semantic_role = "m136_importe_ingresado"
+required = false
+input_kind = "manual"
+section = ["ingreso"]
+legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
+
+[revisions.2022-2025.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "forma-pago"
+continuidad_id = "m136-forma-pago"
+number = "ingreso.forma-pago"
+data_type = "text"
+semantic_role = "m136_forma_pago"
+required = false
+input_kind = "manual"
+section = ["ingreso"]
+legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"]
+
+[revisions.2022-2025.casillas.constraints]
+enum = ["adeudo_en_cuenta", "efectivo", "domiciliacion_bancaria"]
+legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"]
+
+[[revisions.2022-2025.casillas]]
+id = "iban"
+continuidad_id = "m136-codigo-iban"
+number = "ingreso.iban"
+data_type = "iban"
+semantic_role = "m136_codigo_iban"
+required = false
+input_kind = "manual"
+section = ["ingreso"]
+legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"]

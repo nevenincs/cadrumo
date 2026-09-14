@@ -1,7 +1,0 @@
-[[revisions."2020".casillas]]
-id = "0918"
-number = "0918"
-section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
-semantic_role = "irpf_deduccion_canarias_restauracion_bienes"
-continuidad_id = "irpf-deduccion-canarias-restauracion-bienes"
-legal_refs = ["ley-35-2006:art-77"]

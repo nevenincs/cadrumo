@@ -58,7 +58,6 @@ from ._modelo_cli_support import (
 )
 from ._modelo_payloads import WorkResumeResult
 from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
-from .state_projection_support import calculation_action_ports_factory
 from .modelo_aux_payloads import (
     WorkflowRunPayload,
     WorkflowRunSummaryPayload,
@@ -66,6 +65,7 @@ from .modelo_aux_payloads import (
     WorkRunResult,
     WorkRunsResult,
 )
+from .state_projection_support import calculation_action_ports_factory
 
 
 def _render_workflow_step_summary(summary_locale_key: str, details: WorkflowStepDetails | None) -> str:

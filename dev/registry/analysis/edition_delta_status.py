@@ -2249,11 +2249,7 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
                     status._add("identifier_is_address", entry["id"], f"{family} offset={offset}")
         status.members[family] = keyed
         default_key = _family_default_keys().get(family)
-        if (
-            default_key is not None
-            and family != _CASILLAS
-            and default_key not in manifest_table
-        ):
+        if default_key is not None and family != _CASILLAS and default_key not in manifest_table:
             derived_default, _withheld = edition_source_default(members)
             if derived_default:
                 status._add("family_default_undeclared", family, json.dumps(list(derived_default)))

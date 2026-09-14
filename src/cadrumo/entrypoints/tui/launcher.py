@@ -697,8 +697,8 @@ async def operation_services_scope() -> AsyncGenerator[TuiOperationCompositionV1
     this package would oblige every other frontend to import the TUI to reach
     it, which is the dependency the TUI boundary exists to forbid.
     """
-    from ..operation_composition import compose_operation_dependencies
     from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
+    from ..operation_composition import compose_operation_dependencies
 
     services = compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
     composition = TuiOperationCompositionV1(

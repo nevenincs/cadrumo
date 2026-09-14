@@ -30,9 +30,10 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from .....core.logging import get_logger
 from .....tests.live_gate import requires_live_enabled, requires_live_google_enabled
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ..errors import OutboundStorageNotFoundError
 from ..factory import get_storage_provider
 from ..mirror_manifest import (

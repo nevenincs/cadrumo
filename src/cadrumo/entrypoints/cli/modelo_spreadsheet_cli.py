@@ -235,6 +235,7 @@ def execute_google_sheets_export(
     """Submit the export through supervision and project its terminal result."""
     from uuid import UUID
 
+    from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
     from ...application.export.google_operation import (
         GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
         GoogleSheetsExportOperationRequest,
@@ -250,7 +251,6 @@ def execute_google_sheets_export(
     from ...application.operations.models import OperationRequest
     from ...core.operations import OperationTerminalCondition, profile_operation_subject
     from ...entrypoints.operation_composition import compose_operation_dependencies
-    from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
     active = resolve_active_profile()
 
@@ -454,10 +454,10 @@ def modelo_spreadsheet_verify(
     scenario_path: Path | None = None,
 ) -> None:
     """Run a three-way parity check across AEAT oracle, local Decimal runtime, and Sheets."""
-    from ..adapter_composition import build_calc_sheets_parity_apply_port
     from ...application.storage.calc_sheets.parity_harness import verify_modelo_parity
     from ...application.user_profile.capabilities import resolve_active_capability
     from ...core.capabilities import ServiceCapability
+    from ..adapter_composition import build_calc_sheets_parity_apply_port
 
     # `verify` creates a Drive spreadsheet and writes cells, so it is a Google
     # export egress and is gated on the same capability as `export`.

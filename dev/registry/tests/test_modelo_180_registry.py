@@ -10,8 +10,8 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (

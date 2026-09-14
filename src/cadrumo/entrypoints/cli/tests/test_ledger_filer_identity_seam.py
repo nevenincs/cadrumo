@@ -35,10 +35,11 @@ from typing import Final
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
 from ....application.workflow.persistence import workflow_state_repository
 from ....domain.user_profile.values import UserProfileFact
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from ._ledger_validation_fixtures import bucket
 
 __all__ = ["bucket"]

@@ -112,4 +112,3 @@ def test_an_excluded_invoice_leaves_the_store_empty(tmp_path: Path) -> None:
     assert routing.observations == ()
     assert stored == ()
     assert routing.excluded[0].defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
-

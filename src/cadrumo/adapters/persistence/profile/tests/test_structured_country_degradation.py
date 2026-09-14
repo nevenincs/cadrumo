@@ -71,6 +71,19 @@ from typing import Final
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.classification_assembly import (
+    DeclaredFact,
+    DeclaredFacts,
+    assemble_classification_criteria,
+    resolve_ingestion_iva_category,
+)
+from cadrumo.application.ledger.classifier_inputs import collect_classifier_inputs
+from cadrumo.application.ledger.confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
+from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
+from cadrumo.application.ledger.country_vocabulary_advisory import country_vocabulary_advisory
+from cadrumo.application.ledger.establishment_ladder import resolve_draft_counterparty_establishment
+from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
+from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.core.classifier_input_source import ClassifierInputSource
 from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
@@ -81,23 +94,10 @@ from cadrumo.domain.iva.establishment import StatedCountryCodeStatus, record_cou
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
-from cadrumo.application.ledger.classification_assembly import (
-    DeclaredFact,
-    DeclaredFacts,
-    assemble_classification_criteria,
-    resolve_ingestion_iva_category,
-)
-from cadrumo.application.ledger.classifier_inputs import collect_classifier_inputs
-from cadrumo.application.ledger.confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
-from cadrumo.application.ledger.country_vocabulary_advisory import country_vocabulary_advisory
-from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
-from cadrumo.application.ledger.establishment_ladder import resolve_draft_counterparty_establishment
-from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
-from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
-from ._evidence_test_support import _BUCKET_ID, _make_svc
+
+from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, repository, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile
-from ._evidence_test_support import isolated_settings, repository, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects", "seeded_filer_profile"]

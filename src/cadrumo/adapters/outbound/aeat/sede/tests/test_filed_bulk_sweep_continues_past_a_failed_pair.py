@@ -27,15 +27,15 @@ import asyncio
 
 import pytest
 
+from ......application.live.filed_data import BulkFiledDataListingReport
+from ......application.live.filed_data_capture import list_filed_data_bulk
 from .declarations_register_test_support import (
+    RoutedFiledDataCapturePort,
     aeat_sede_fixture,
     declared_register_total,
     open_routed_declarations_register,
     rendered_register_rows,
-    RoutedFiledDataCapturePort,
 )
-from ......application.live.filed_data import BulkFiledDataListingReport
-from ......application.live.filed_data_capture import list_filed_data_bulk
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

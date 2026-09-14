@@ -132,7 +132,9 @@ def test_export_m145_communication_record_applies_registry_numeric_and_money_pad
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         result = export_m145_communication_record(
-            record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            renderer=RegistryFixedWidthRecordRenderer(),
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
 
@@ -160,7 +162,9 @@ def test_export_m145_communication_record_matches_canonical_encoder_for_money_an
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
         result = export_m145_communication_record(
-            record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            renderer=RegistryFixedWidthRecordRenderer(),
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         )
 
@@ -199,7 +203,9 @@ def test_export_m145_communication_record_refuses_invalid_record(tmp_path: Path)
         )
         with pytest.raises(ValueError, match="validation passes"):
             export_m145_communication_record(
-                record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+                record.communication_record_id,
+                bucket_id=runtime.bucket_id,
+                renderer=RegistryFixedWidthRecordRenderer(),
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
 
@@ -219,7 +225,9 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path
         )
         with pytest.raises(ValueError):
             export_m145_communication_record(
-                record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+                record.communication_record_id,
+                bucket_id=runtime.bucket_id,
+                renderer=RegistryFixedWidthRecordRenderer(),
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             )
 
@@ -232,7 +240,9 @@ def _seeded_export(runtime) -> M145CommunicationExportResult:
         ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
     )
     return export_m145_communication_record(
-        record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer(),
+        record.communication_record_id,
+        bucket_id=runtime.bucket_id,
+        renderer=RegistryFixedWidthRecordRenderer(),
         ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
     )
 

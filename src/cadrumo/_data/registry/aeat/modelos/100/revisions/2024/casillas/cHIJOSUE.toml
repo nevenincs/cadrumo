@@ -1,9 +1,0 @@
-[[revisions."2024".casillas]]
-id = "HIJOSUE"
-number = "*88"
-section = ["datos_identificativos", "hijos"]
-data_type = "boolean"
-semantic_role = "irpf_hijos_residentes_ue_eee_flag"
-input_kind = "bound"
-binding = "renta-profile-family-descendants-eu-eea-deduction"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]

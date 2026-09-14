@@ -178,7 +178,10 @@ def resolve_fiscal_residency_catalogue(
         raise RegistryValidationError("fiscal-residency default token is not declared in the order")
     if sum(definition.is_default for definition in catalogue.definitions) != 1:
         raise RegistryValidationError("fiscal-residency catalogue must declare exactly one default token")
-    if next(definition for definition in catalogue.definitions if definition.is_default).token != catalogue.default_token:
+    if (
+        next(definition for definition in catalogue.definitions if definition.is_default).token
+        != catalogue.default_token
+    ):
         raise RegistryValidationError("fiscal-residency default declaration disagrees with default_token")
     return catalogue
 
@@ -229,10 +232,14 @@ def fiscal_residency_requires_country(
     """Return the registry-declared country requirement for one token."""
     if value is None or value == "":
         return False
-    return resolve_fiscal_residency_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).definition(value).requires_country
+    return (
+        resolve_fiscal_residency_catalogue(
+            effective_date=effective_date,
+            authority=authority,
+        )
+        .definition(value)
+        .requires_country
+    )
 
 
 def _resolve_country_entities(

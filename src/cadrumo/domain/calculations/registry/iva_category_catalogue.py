@@ -85,9 +85,10 @@ class IvaCategoryCatalogue:
     def hint(self, token: object) -> str:
         """Return the registry-declared concise classifier hint."""
         category = self.require(token)
-        return self.hints.get(str(category), next(
-            definition.description for definition in self.definitions if definition.token == category
-        ))
+        return self.hints.get(
+            str(category),
+            next(definition.description for definition in self.definitions if definition.token == category),
+        )
 
     def operation_type(self, key: str) -> str:
         """Return a registry-declared Modelo 349 operation-type token."""

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, override
 
 from ....application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceDocument

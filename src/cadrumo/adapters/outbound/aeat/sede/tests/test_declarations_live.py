@@ -20,9 +20,9 @@ holds the read-only boundary and what the residual is.
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 import pytest
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from ......core.aeat_csv import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled

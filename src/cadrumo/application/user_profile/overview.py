@@ -49,7 +49,6 @@ from ...core.identity.profile import ProfileId
 from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
-from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.labels import profile_field_label, profile_section_title
 from ...domain.user_profile.loader import load_user_profile_schema
 
@@ -57,6 +56,7 @@ from ...domain.user_profile.loader import load_user_profile_schema
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
 from ...domain.user_profile.schema import ProfileFieldType, derived_selector_for_path
+from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState
 from .completeness import missing_required_field_paths, profile_section_rows, profile_value_is_present
 from .projections import record_to_path_values

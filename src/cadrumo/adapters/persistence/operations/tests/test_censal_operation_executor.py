@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -18,6 +16,7 @@ from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesyst
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.interactions import (

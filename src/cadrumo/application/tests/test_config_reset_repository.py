@@ -18,12 +18,6 @@ from ...core.directory_scan import scan_directory
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
 from ...domain.user_profile.values import ProfileSetupState
-from ..config_reset_repository import (
-    ConfigResetJournalAlreadyExistsError,
-    ConfigResetJournalCorruptError,
-    ConfigResetJournalError,
-    ConfigResetJournalRepository,
-)
 from ..bucket_deletion_contracts import BucketDeletionFingerprint
 from ..config_reset_models import (
     ConfigResetDeletionMarker,
@@ -35,6 +29,12 @@ from ..config_reset_models import (
     ConfigResetSummary,
     ConfigResetTarget,
     ConfigResetTargetPhase,
+)
+from ..config_reset_repository import (
+    ConfigResetJournalAlreadyExistsError,
+    ConfigResetJournalCorruptError,
+    ConfigResetJournalError,
+    ConfigResetJournalRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

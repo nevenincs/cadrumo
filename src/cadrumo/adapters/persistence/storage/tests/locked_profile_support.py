@@ -17,9 +17,10 @@ from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
+
 from .....core.bucket_pointer import BucketPointer, write_pointer
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from ..custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,

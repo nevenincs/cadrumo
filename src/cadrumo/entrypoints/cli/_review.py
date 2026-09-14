@@ -18,7 +18,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.unit_proportion import is_unit_proportion
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
-from .common import active_bucket_id_or_refuse, activate_subcommand_output_language, bad, emit_envelope
+from .common import activate_subcommand_output_language, active_bucket_id_or_refuse, bad, emit_envelope
 from .state_projection_support import draft_review_ports_factory
 
 

@@ -45,6 +45,8 @@ _PERIOD = "0A"
 _DECIMAL_BINDING: BindingId = "renta-modelo-111-retenciones-periodicas"
 _ENUM_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
 _R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
+
+
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:
     return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
@@ -71,7 +73,9 @@ def _borrador_repository(objects: SecureObjectRepository) -> Borrador100Snapshot
 
 
 @pytest.fixture
-def service_repositories(tmp_path: Path) -> Generator[
+def service_repositories(
+    tmp_path: Path,
+) -> Generator[
     tuple[
         WorkUnitCatalogueRepository,
         CalculationRevisionCatalogueRepository,

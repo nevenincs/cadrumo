@@ -83,21 +83,21 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.filing.draft_construction import build_draft, filing_period_date
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from cadrumo.application.modelo.calculation_actions import (
+    BucketAggregationCalculationResult,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.revision_replay_inputs import revision_filing_replay_inputs
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.period import calculation_filing_date
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.filing.draft_construction import build_draft, filing_period_date
-from cadrumo.application.modelo.revision_replay_inputs import revision_filing_replay_inputs
-from cadrumo.application.modelo.calculation_actions import (
-    BucketAggregationCalculationResult,
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

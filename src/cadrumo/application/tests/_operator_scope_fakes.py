@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from ...core.config import load_settings
 from ..auth.operator_scope_ports import (
     OperatorScopeBucketPaths,
     OperatorScopePorts,
@@ -12,7 +13,6 @@ from ..auth.operator_scope_ports import (
     OperatorScopeStorageError,
 )
 from ..user_profile.profile_pointer import observe_active_profile_pointer
-from ...core.config import load_settings
 
 
 @dataclass(slots=True)

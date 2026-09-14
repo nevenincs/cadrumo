@@ -22,11 +22,13 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
 from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
 from cadrumo.core.config import load_settings
@@ -65,7 +67,9 @@ def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_b
         certificate_path = tmp_path / "operator.p12"
         certificate_path.write_bytes(b"test certificate")
         with open_test_profile_session(_PROFILE_ID):
-            register_operator_certificate_source(name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            register_operator_certificate_source(
+                name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            )
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="personal",
@@ -75,15 +79,26 @@ def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_b
             assert _certificate_secret_present(_PROFILE_ID, certificate_secret_backend_factory) is True
 
         # Cold: no session serves the profile, so a revocation cannot open it.
-        assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is False
+        assert (
+            operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            is False
+        )
 
         with open_test_profile_session(_PROFILE_ID):
-            assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is True
+            assert (
+                operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+                is True
+            )
             # An open session for ONE profile is not an open session for another:
             # a predicate that reported reachability from any session at all
             # would let a caller revoke against whichever bucket happened to be
             # bound, which is the confusion the underlying span refuses.
-            assert operator_auth_revocation_is_reachable(bucket_id=_OTHER_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is False
+            assert (
+                operator_auth_revocation_is_reachable(
+                    bucket_id=_OTHER_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                )
+                is False
+            )
 
             result = reset_operator_auth(
                 all_providers=True,
@@ -119,7 +134,10 @@ def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(
         write_pointer(root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
         settings = load_settings()
 
-        assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is False
+        assert (
+            operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            is False
+        )
         with pytest.raises(AuthOperationRequiresCustodySessionError) as refused:
             reset_operator_auth(
                 all_providers=True,

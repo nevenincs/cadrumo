@@ -30,12 +30,12 @@ import pytest
 from textual.widget import Widget
 
 from ....core.external_constants import OutputLanguage
-from .modelo_workspace_session import real_workspace_inspection_result
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..modelo.routes import MODELO_WORKSPACE_DESTINATIONS
 from ..modelo.view.controller import ModeloWorkspaceReadSession, open_workspace_read_session, semantic_identity
 from ..modelo.view.models import ModeloWorkspaceDestinationIdV1
+from .modelo_workspace_session import real_workspace_inspection_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

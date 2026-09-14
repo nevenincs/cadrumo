@@ -1,0 +1,1779 @@
+# Ley 35/2006 art. 50.3 — base liquidable general negativa carry-forward.
+# The prior year's end-of-year generated saldo (casilla 1391, semantic_role
+# irpf_anexo_c_base_liq_neg_generado) becomes, in the following year's
+# declaration, the opening pending balance for the immediately-prior
+# origin ejercicio (casilla 1388, "Ejercicio 2023: Pendiente de
+# aplicacion al principio del periodo" in the 2024 revision). This
+# previous_filing copy auto-resolves casilla 1388 from the prior filing
+# so the operator does not re-key the carried saldo. Origin-year-matched:
+# the 2024-revision's 1388 (ejercicio 2023) sources the 2023 filing's
+# 1391, exactly as the 2025-revision's 1388 (ejercicio 2024) sources the
+# 2024 filing's 1391. Art. 48's 25%-limited base-imponible mechanism is
+# distinct and does not ground this base-liquidable carry.
+# Modelo 100 (2024) casilla 0171 "Ingresos de explotacion" (estimacion directa)
+# is the annual counterpart of the M130 income aggregation: it sums
+# actividad-economica income from the bucket ledger over the full ejercicio.
+# IVA repercutido is collected on behalf of Hacienda and is not computable
+# income, so the ingresos_integros_sum fact contributes each transaction's
+# IVA-exclusive base imponible (taxable_base) when tagged, falling back to the
+# gross amount. The annual income aggregator (modelo == "100" path,
+# aggregate_renta_m100_income_ledger) feeds this binding; the same source kind
+# serves the M130 cumulative-quarter income. This brings the 2024 revision to
+# parity with the 2025 renta-2025-ledger-income-0171 binding, closing the gap
+# where the annual M100 silently declared zero actividad-economica income.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0186. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0186-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0192. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0192-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0199. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0199-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0203. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0203-deductible.
+# Eligibility flag for the LIRPF art. 64/75 anualidades por alimentos separate-
+# escala régimen. Art. 64 grants the separate escala only to a payer who
+# satisfies judicial anualidades "sin derecho a la aplicación por estos últimos
+# del mínimo por descendientes previsto en el artículo 58". The flag is a
+# derived profile fact (renta_family.anualidades_sin_minimo_descendientes_2024):
+# true (eligible — the non-custodial payer without the mínimo) by default, false
+# when custody is shared (custodia compartida splits the mínimo por descendientes, so
+# the payer retains it and the régimen does not apply). Consumed by the cuota
+# escala formulas (0528/0530/0529/0531) inside the régimen predicate.
+# Art. 58 LIRPF mínimo por descendientes aggregate, parte estatal. The
+# derived-fact injector (`_inject_derived_minimo_descendientes_facts`) ranks
+# every Art. 58.1-eligible descendant by birth_date, sums the birth-order
+# tranche (Art. 58.1: 2.400 / 2.700 / 4.000 / 4.500 €) plus the Art. 58.2
+# menor-3 supplement (2.800 €), and applies the Art. 61.1ª custodia-compartida
+# prorrata (0.5) per descendant, projecting the result onto the Decimal fact
+# `renta_family.descendientes_minimos_aggregate_2024` (the user-profile schema
+# field named as a dangling selector, its former binding deleted in commit
+# bc3b89594 -- retired here).
+# Feeds casilla 0513 (estatal) only — casilla 0514 (autonómico) is fed by the
+# sibling binding `renta-2024-profile-minimo-descendientes-autonomico`, which
+# resolves each tranche against the filer's declared tax-residence CCAA (some
+# comunidades, e.g. Madrid, publish their own divergent figures; Ley 22/2009
+# art. 46.1.a), matching the 0511/0512 mínimo-del-contribuyente precedent
+# (`renta-2024-minimo-contribuyente-autonomico`).
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0183. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0183-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0191. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0191-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0193. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0193-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0194. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0194-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0195. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0195-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0200. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0200-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0202. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0202-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0206. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0206-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0208. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0208-deductible.
+# Modelo 100 (2024) first-slice deductible-expense aggregation into casilla
+# 0217. The ledger_renta_gastos_estimacion_directa_aggregation source routes each deductible ledger
+# fact to its first-slice casilla via FIRST_SLICE_EXPENSE_CASILLAS over the full
+# ejercicio (period 0A). Parity with renta-2025-ledger-expense-0217-deductible.
+# Art. 58/61 LIRPF mínimo por descendientes aggregate, parte autonómica. The
+# derived-fact injector (`_inject_derived_minimo_descendientes_facts`) computes
+# this aggregate using the SAME Art. 58.1/58.2 birth-order-tranche method as
+# the estatal half, but resolves each tranche amount against the filer's
+# declared tax-residence CCAA first (Ley 22/2009 art. 46.1.a cedes normative
+# competence over this figure to each comunidad). Comunidad de Madrid publishes
+# its own full mínimo por descendientes table for 2024 (Decreto Legislativo
+# 1/2010 art. 2, as modified by Ley 13/2023: 2.575,85 € / 2.897,83 € / 4.400 €
+# / 4.950 € + 3.005,16 € menor-3, vs the general LIRPF Art. 58 2.400 € /
+# 2.700 € / 4.000 € / 4.500 € + 2.800 €); every other CCAA mirrors the
+# estatal aggregate exactly. Feeds casilla 0514 (autonómico).
+# Modelo 100 casilla 0613: the Art. 81.2 guarderia increment, already prorated
+# and capped per child by the application layer.
+#
+# One resolved value rather than the terms of a calculation. The increment is
+# prorated per descendant by the months the art. 81.1 and 81.2 requirements hold
+# simultaneously and bounded by that child's own non-subsidised spend -- art.
+# 81.3 third paragraph caps it at the spend "en relacion con ese hijo", per
+# child by its own words. The registry schema has no per-child fold, so the
+# fold happens where the descendant records live and the registry consumes the
+# result, exactly as the minimo por descendientes aggregates do.
+#
+# This binding's presence is what ACTIVATES the injector: the derived-fact path
+# is gated on a declared consuming selector, so coverage extends to another
+# revision by declaring this binding there rather than by editing code.
+#
+# Declaring the binding does not by itself change any computed figure. The 0613
+# formula still reads the count-times-cap terms until it is rewritten to consume
+# this value, which is a separate change that moves a live number and carries
+# its own end-to-end proof.
+# Modelo 100 casilla 0611: Art. 81.1 LIRPF deducción por maternidad.
+#
+# Art. 81.1 applies a different cap to each qualifying child (1.200 EUR, or
+# 1.350 EUR in the post-birth-alta month).  The registry formula language has
+# no descendant fold, so the canonical profile resolver computes that fold from
+# the declared descendant records once and exposes this derived scalar.  This
+# binding is the revision-scoped enrolment point; adding a future revision needs
+# an explicit binding and its own proof, not a cross-year Python fallback.
+
+[[revisions.2024.bindings]]
+id = "renta-modelo-100-estimacion-directa-es-normal"
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2024-dictionary", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+casilla_id = "0168"
+data_type = "boolean"
+true_value = "N"
+false_value = "S"
+
+[revisions.2024.bindings.value]
+data_type = "boolean"
+channel = "boolean"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-tax-residence-ccaa"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "TaxResidenceProfile"
+field = "ccaa"
+xsd_attribute = "codigoCADeclaracion"
+dictionary_field = "ZCCAD"
+
+[revisions.2024.bindings.value]
+data_type = "enum"
+channel = "enum"
+typed_enum = "CCAA"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-modelo-111-retenciones-periodicas"
+aeat_prefilled = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "111"
+source_casilla_id = "28"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-modelo-123-retenciones-periodicas"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "123"
+source_casilla_id = "09"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-modelo-193-retenciones-anuales"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "se comunican las retenciones practicadas"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "193"
+source_casilla_id = "decl.retenciones-total"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["0A"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-taxpayer-birth-date"
+legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
+additional_source_refs = ["aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_taxpayer.birth_date"
+xsd_path = "/DatosIdentificativos/Declarante/DPFNAC_D"
+dictionary_field = "DPFNAC_D"
+format = "date"
+
+[revisions.2024.bindings.value]
+data_type = "date"
+channel = "date"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-declaration-type"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_filing.declaration_type"
+xsd_attribute = "TIPOTRIBUTACION"
+dictionary_field = "TIPOTRIBUTACION"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-family-minor-children-in-unit"
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.minor_children_in_unit"
+xsd_path = "/DatosIdentificativos/Hijos/PH18"
+dictionary_field = "PH18"
+
+[revisions.2024.bindings.value]
+data_type = "boolean"
+channel = "boolean"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-modelo-131-pagos-fraccionados"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "cross_model_output"
+dependency_role = "instalment_to_final_settlement"
+source_modelo = "131"
+source_casilla_id = "15"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-modelo-130-pagos-fraccionados"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "cross_model_output"
+dependency_role = "instalment_to_final_settlement"
+source_modelo = "130"
+source_casilla_id = "19"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-modelo-131-rendimiento-neto-modulos"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32", "rd-439-2007:art-110"]
+source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["estimación objetiva", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "131"
+source_casilla_id = "01"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-descendientes-count"
+legal_refs = ["ley-35-2006:art-58"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por descendientes"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.descendientes_count"
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-marriage-full-year"
+legal_refs = ["ley-35-2006:art-82"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["matrimonio", "vigente"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_taxpayer.marriage_full_year"
+
+[revisions.2024.bindings.value]
+data_type = "boolean"
+channel = "boolean"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-marriage-month-start"
+legal_refs = ["ley-35-2006:art-82"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_taxpayer.marriage_month_start"
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-marriage-month-end"
+legal_refs = ["ley-35-2006:art-82"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_taxpayer.marriage_month_end"
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-guarderia-gastos-reales"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["guarderias", "incremento", "Art. 81"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.gastos_guarderia_reales_2024"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-cotizaciones-ss-madre"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["cotizaciones", "Seguridad Social"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.cotizaciones_ss_madre_2024"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-descendientes-guarderia"
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-58"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["menor de tres", "guarder"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.descendientes_guarderia_2024"
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-base-liquidable-negativa-general-anterior"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "previous_filing"
+source_modelo = "100"
+source_casilla_id = "1391"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filing_year_offset"
+years = -1
+source_periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-income-0171"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_income_aggregation"
+modelo = "100"
+target_casilla_id = "0171"
+fact = "ingresos_integros_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0186-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0186"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0192-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0192"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0199-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0199"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0203-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0203"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-certificado-trabajo-retenciones"
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-80", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+casilla_id = "0596"
+data_type = "money"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-tax-id"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "identity.tax_id"
+xsd_path = "/DatosIdentificativos/Declarante/DPNIF_D"
+dictionary_field = "DPNIF_D"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-display-name"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+format = "surnames_name"
+xsd_path = "/DatosIdentificativos/Declarante/DP_APENOM_D"
+dictionary_field = "DP_APENOM_D"
+profile_keys = ["identity.surnames", "identity.name"]
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-taxpayer-sex"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_taxpayer.sex"
+xsd_path = "/DatosIdentificativos/Declarante/SEXO_D"
+dictionary_field = "SEXO_D"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-marital-status"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_taxpayer.marital_status"
+xsd_path = "/DatosIdentificativos/Declarante/ECIVIL"
+dictionary_field = "ECIVIL"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-spouse-tax-id"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_spouse.tax_id"
+xsd_path = "/DatosIdentificativos/Conyuge/DPNIF_C"
+dictionary_field = "DPNIF_C"
+required_when_profile_key = "renta_filing.declaration_type"
+required_when_value = "2"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-spouse-display-name"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+format = "surnames_name"
+xsd_path = "/DatosIdentificativos/Conyuge/DP_APENOM_C"
+dictionary_field = "DP_APENOM_C"
+required_when_profile_key = "renta_filing.declaration_type"
+required_when_value = "2"
+profile_keys = ["renta_spouse.surnames", "renta_spouse.name"]
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-spouse-birth-date"
+legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_spouse.birth_date"
+xsd_path = "/DatosIdentificativos/Conyuge/DPFNAC_C"
+dictionary_field = "DPFNAC_C"
+format = "date"
+required_when_profile_key = "renta_filing.declaration_type"
+required_when_value = "2"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-spouse-sex"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_spouse.sex"
+xsd_path = "/DatosIdentificativos/Conyuge/SEXO_C"
+dictionary_field = "SEXO_C"
+required_when_profile_key = "renta_filing.declaration_type"
+required_when_value = "2"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-taxpayer-disability-grade"
+legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_taxpayer.disability_grade"
+xsd_path = "/DatosIdentificativos/Declarante/DPGMIN_D"
+dictionary_field = "DPGMIN_D"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-taxpayer-death-date"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_taxpayer.death_date"
+xsd_path = "/DatosIdentificativos/Declarante/DECFAL"
+dictionary_field = "DECFAL"
+format = "date"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-spouse-disability-grade"
+legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_spouse.disability_grade"
+xsd_path = "/DatosIdentificativos/Conyuge/DPGMIN_C"
+dictionary_field = "DPGMIN_C"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-spouse-non-resident-irpf"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_spouse.non_resident_irpf"
+xsd_path = "/DatosIdentificativos/Conyuge/@NORESIDENTE"
+dictionary_field = "NORESIDENTE"
+
+[revisions.2024.bindings.value]
+data_type = "boolean"
+channel = "boolean"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-spouse-eu-eea-resident"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_spouse.eu_eea_resident"
+xsd_path = "/DatosIdentificativos/Conyuge/RESIDENTEUE"
+dictionary_field = "RESIDENTEUE"
+required_when_profile_key = "renta_spouse.non_resident_irpf"
+required_when_value = "true"
+
+[revisions.2024.bindings.value]
+data_type = "boolean"
+channel = "boolean"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-spouse-eu-eea-country"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_spouse.eu_eea_country"
+xsd_path = "/DatosIdentificativos/Conyuge/ZRUE2"
+dictionary_field = "ZRUE2"
+required_when_profile_key = "renta_spouse.eu_eea_resident"
+required_when_value = "true"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-family-descendants-eu-eea-deduction"
+legal_refs = ["orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.descendants_eu_eea_deduction"
+xsd_path = "/DatosIdentificativos/Hijos/HIJOSUE"
+dictionary_field = "HIJOSUE"
+
+[revisions.2024.bindings.value]
+data_type = "boolean"
+channel = "boolean"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-family-descendant-tax-id"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64", "ley-35-2006:art-75-2015", "ley-35-2006:art-81-bis", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "descendants"
+field = "tax_id"
+xsd_path = "/DatosIdentificativos/Hijos/Hijo/NIFDLG"
+dictionary_field = "NIFDLG"
+repeating = true
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-rental-reduccion-art-23-2-tier"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["90 por 100", "70 por 100", "60 por 100", "50 por 100"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["En un 90 por ciento", "En un 70 por ciento", "En un 60 por ciento", "En un 50 por ciento"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_rental.reduccion_art_23_2_tier_2024"
+
+[revisions.2024.bindings.value]
+data_type = "enum"
+channel = "enum"
+typed_enum = "RentalReductionArt232Tier"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-family-descendant-display-name"
+legal_refs = ["ley-35-2006:art-58", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "descendants"
+field = "display_name"
+xsd_path = "/DatosIdentificativos/Hijos/Hijo/APENOMDLG"
+dictionary_field = "APENOMDLG"
+repeating = true
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-descendant-birth-date"
+legal_refs = ["ley-35-2006:art-58", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "descendants"
+field = "birth_date"
+xsd_path = "/DatosIdentificativos/Hijos/Hijo/FNACDLG"
+dictionary_field = "FNACDLG"
+repeating = true
+format = "date"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-descendant-disability-grade"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-60", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "descendants"
+field = "disability_grade"
+xsd_path = "/DatosIdentificativos/Hijos/Hijo/MINUSDLG"
+dictionary_field = "MINUSDLG"
+repeating = true
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-descendant-death-date"
+legal_refs = ["ley-35-2006:art-58", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "descendants"
+field = "death_date"
+xsd_path = "/DatosIdentificativos/Hijos/Hijo/FALLDLG"
+dictionary_field = "FALLDLG"
+repeating = true
+format = "date"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-ascendant-tax-id"
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-81-bis", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "ascendants"
+field = "tax_id"
+xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/DNIASDLG"
+dictionary_field = "DNIASDLG"
+repeating = true
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-ascendant-display-name"
+legal_refs = ["ley-35-2006:art-59", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "ascendants"
+field = "display_name"
+xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/APENOMDLG_ASC"
+dictionary_field = "APENOMDLG_ASC"
+repeating = true
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-ascendant-birth-date"
+legal_refs = ["ley-35-2006:art-59", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "ascendants"
+field = "birth_date"
+xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/ANOASDLG"
+dictionary_field = "ANOASDLG"
+repeating = true
+format = "date"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-ascendant-disability-grade"
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-60", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "ascendants"
+field = "disability_grade"
+xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/PCTMINASDLG"
+dictionary_field = "PCTMINASDLG"
+repeating = true
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-ascendant-cohabiting-descendant-count"
+legal_refs = ["ley-35-2006:art-59", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "ascendants"
+field = "cohabiting_descendant_count"
+xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/CONVASDLG"
+dictionary_field = "CONVASDLG"
+repeating = true
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-family-ascendant-death-date"
+legal_refs = ["ley-35-2006:art-59", "orden-hac-242-2025:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_model = "RentaFamilyProfile"
+collection = "ascendants"
+field = "death_date"
+xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/FALLASDLG"
+dictionary_field = "FALLASDLG"
+repeating = true
+format = "date"
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "row_set"
+
+[revisions.2024.bindings.aggregation]
+op = "rows"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-anualidades-sin-minimo-descendientes"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["mínimo por descendientes", "sin derecho a la aplicación"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.anualidades_sin_minimo_descendientes_2024"
+
+[revisions.2024.bindings.value]
+data_type = "boolean"
+channel = "boolean"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-minimo-descendientes-estatal"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por descendientes"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.descendientes_minimos_aggregate_2024"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0183-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0183"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0191-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0191"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0193-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0193"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0194-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0194"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0195-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0195"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0200-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0200"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0202-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0202"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0206-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0206"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0208-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0208"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-ledger-expense-0217-deductible"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Concepto y ámbito de aplicación del método de estimación directa", "Fase 1ª. Determinación del rendimiento neto", "Fase 2ª. Determinación del rendimiento neto reducido"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_renta_gastos_estimacion_directa_aggregation"
+modelo = "100"
+period = "0A"
+target_casilla_id = "0217"
+fact = "deductible_amount_sum"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-minimo-descendientes-autonomico"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por descendientes"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2024"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-incremento-guarderia"
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses", "Límite del incremento"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.incremento_guarderia_2024"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"
+
+[[revisions.2024.bindings]]
+id = "renta-profile-deduccion-maternidad"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Deducción por maternidad", "Por tanto, 100 euros por cada mes.", "El importe de la deducción por maternidad por cada hijo que otorgue derecho a la misma no podrá superar 1.200 euros anuales"]
+
+[revisions.2024.bindings.provider]
+kind = "profile"
+profile_key = "renta_family.deduccion_maternidad_2024"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "copy"

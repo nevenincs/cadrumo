@@ -22,20 +22,20 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...application.ledger.document_transcription import DocumentTranscription
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
-from ...application.ledger.evidence_ports import LedgerEvidencePorts
 from ...application.ledger.evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
 from ...application.ledger.evidence_input_ports import EvidenceInputPorts
-from ...application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
+from ...application.ledger.evidence_ports import LedgerEvidencePorts
 from ...application.ledger.evidence_reference import (
     EvidenceReferenceOutcome,
     classify_evidence_reference,
     refuse_reference_without_document_bytes,
     refuse_unresolved_evidence_reference,
 )
+from ...application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from ...application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
@@ -80,7 +80,6 @@ def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
 
 def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> InvoiceDraftExtractionPorts:
     """Bind the CLI evidence commands to their concrete adapters."""
-
     evidence_input_ports = EvidenceInputPorts(document_shape_probe=probe_document_shape)
 
     def resolve_evidence_input(

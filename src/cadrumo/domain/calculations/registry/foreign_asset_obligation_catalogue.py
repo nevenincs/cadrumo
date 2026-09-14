@@ -83,11 +83,7 @@ class ForeignAssetObligationCatalogue:
     ) -> frozenset[ForeignAssetObligationGroup]:
         """Return groups whose registry citation appears in selected legal refs."""
         cited = set(legal_refs)
-        return frozenset(
-            definition.token
-            for definition in self.groups
-            if definition.establishing_legal_ref in cited
-        )
+        return frozenset(definition.token for definition in self.groups if definition.establishing_legal_ref in cited)
 
 
 def _required(entries: Mapping[str, str], key: str) -> str:

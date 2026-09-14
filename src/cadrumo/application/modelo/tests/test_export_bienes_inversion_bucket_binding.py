@@ -8,7 +8,7 @@ import pytest
 
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
-from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienesInversionIvaRegister
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry

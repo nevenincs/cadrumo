@@ -13,7 +13,6 @@ See Also:
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -22,12 +21,24 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.prorrata_regularizacion import (
+    build_prorrata_declared_volume_divergence_advisory,
+    build_prorrata_missing_provisional_advisory,
+    buildprorrata_regularizacion_advisory,
+    derive_prorrata_applicability,
+    project_prorrata_regularizacion_feed,
+)
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.revision_persistence import persist_filed_revision
+from cadrumo.application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
@@ -61,17 +72,6 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.prorrata_register.register import ProrrataProvisionalResolution
-from cadrumo.application.modelo.revision_persistence import persist_filed_revision
-from cadrumo.application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.prorrata_regularizacion import (
-    build_prorrata_declared_volume_divergence_advisory,
-    build_prorrata_missing_provisional_advisory,
-    buildprorrata_regularizacion_advisory,
-    derive_prorrata_applicability,
-    project_prorrata_regularizacion_feed,
-)
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

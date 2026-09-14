@@ -28,8 +28,11 @@ from typing import Any
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
+from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -44,9 +47,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import reg
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

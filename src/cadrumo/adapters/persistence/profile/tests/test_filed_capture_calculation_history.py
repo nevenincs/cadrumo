@@ -19,45 +19,10 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
     ObservedCasillaValue,
 )
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.casilla_value_kind import CasillaValueKind
-from cadrumo.core.config import Settings
-from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
-from cadrumo.core.json_contract import NoticeSeverity
-from cadrumo.core.period import Period
-from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.tests.registry_observations import (
-    registry_grounded_observations,
-    revision_id_for_observation,
-)
-from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
-from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
-from cadrumo.application.calculations.binding_prefill import (
-    extract_modelo_303_local_iva_compensation_recurrence,
-    resolve_bindings_from_local_store,
-)
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.application.calculations.observations_repository import ObservationSourceKind
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.live.errors import LiveApplicationError, LiveApplicationInputError
-from cadrumo.application.live.filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
-from cadrumo.application.live.filed_observation_persistence import (
-    FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
-    FiledJustificanteUnreachedReason,
-    enroll_filed_justificante_evidence,
-    latest_declarations_by_period,
-    persist_filed_calculation_observation,
-    persistiva_compensation_history_observations_strict,
-    select_latest_filed_observations_in_history_order,
-)
-from cadrumo.application.live.iva_remote_state import (
-    list_iva_compensation_history,
-)
 from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import (
     _CAPTURED_AT,
     _M303_DECLARATION_TYPE_C,
@@ -83,6 +48,41 @@ from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support i
     _stored_303_justificante_observation,
     _stored_justificante_observation,
 )
+from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
+from cadrumo.application.calculations.binding_prefill import (
+    extract_modelo_303_local_iva_compensation_recurrence,
+    resolve_bindings_from_local_store,
+)
+from cadrumo.application.calculations.observations_repository import ObservationSourceKind
+from cadrumo.application.live.errors import LiveApplicationError, LiveApplicationInputError
+from cadrumo.application.live.filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
+from cadrumo.application.live.filed_observation_persistence import (
+    FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+    FiledJustificanteUnreachedReason,
+    enroll_filed_justificante_evidence,
+    latest_declarations_by_period,
+    persist_filed_calculation_observation,
+    persistiva_compensation_history_observations_strict,
+    select_latest_filed_observations_in_history_order,
+)
+from cadrumo.application.live.iva_remote_state import (
+    list_iva_compensation_history,
+)
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.casilla_value_kind import CasillaValueKind
+from cadrumo.core.config import Settings
+from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
+from cadrumo.core.json_contract import NoticeSeverity
+from cadrumo.core.period import Period
+from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
+from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -96,7 +96,12 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
         )
 
         target_snapshot = _registry_snapshot("303", 2026, "2T")
-        prefill = resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT, iva_history_repository=IvaCompensationHistoryRepository())
+        prefill = resolve_bindings_from_local_store(
+            target_snapshot,
+            repository=repository,
+            captured_at=_CAPTURED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+        )
         recurrence, recurrence_prefill = extract_modelo_303_local_iva_compensation_recurrence(
             target_snapshot,
             repository=repository,
@@ -307,7 +312,12 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
         )
 
         target_snapshot = _registry_snapshot("303", 2026, "1T")
-        prefill = resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT, iva_history_repository=IvaCompensationHistoryRepository())
+        prefill = resolve_bindings_from_local_store(
+            target_snapshot,
+            repository=repository,
+            captured_at=_CAPTURED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+        )
 
         assert calculation_key == "303:2025:4T"
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
@@ -1563,7 +1573,12 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
         target_snapshot = _registry_snapshot("303", 2026, "2T")
 
         with pytest.raises(RegistryValidationError, match=r"iva\.compensacion-disponible-fin-periodo"):
-            resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT, iva_history_repository=IvaCompensationHistoryRepository())
+            resolve_bindings_from_local_store(
+                target_snapshot,
+                repository=repository,
+                captured_at=_CAPTURED_AT,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+            )
 
 
 def _filed_130_observation(

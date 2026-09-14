@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -11,6 +9,8 @@ from types import SimpleNamespace
 from typing import cast
 
 import pytest
+
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from ....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory

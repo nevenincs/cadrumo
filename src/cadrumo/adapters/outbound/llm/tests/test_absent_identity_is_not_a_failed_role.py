@@ -11,7 +11,10 @@ import json
 
 import pytest
 
-from cadrumo.adapters.outbound.llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
+from cadrumo.adapters.outbound.llm.invoice_field_grounding import (
+    ground_extracted_fields,
+    parse_invoice_extraction_response,
+)
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
 
@@ -81,4 +84,3 @@ def test_the_reading_stage_records_nothing_for_an_identifier_that_verifies() -> 
 
     assert draft.supplier_tax_id == _COUNTERPARTY_CIF
     assert draft.discrepancies == ()
-

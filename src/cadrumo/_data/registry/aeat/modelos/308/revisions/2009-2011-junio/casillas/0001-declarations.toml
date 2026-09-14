@@ -1,0 +1,23 @@
+# Historical declaration headers only.  The complete official record geometry
+# remains a static-layout anchor until an independent casilla-to-wire mapping is
+# authored; this revision does not backdate the 2019 export layout.
+
+[[revisions.2009-2011-junio.casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+data_type = "year"
+semantic_role = "filing_year"
+continuidad_id = "filing-year"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+
+[[revisions.2009-2011-junio.casillas]]
+id = "decl.periodo"
+continuidad_id = "filing-period"
+number = "periodo"
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+section = ["declarante"]

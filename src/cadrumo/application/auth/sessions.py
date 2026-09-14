@@ -597,15 +597,12 @@ def _resolve_provider_kind(
     if kind is not None:
         return kind
     fallback = (settings.cadrumo_auth_provider or AuthProviderKind.CERTIFICATE).value
-    return (
-        resolve_active_provider_kind(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            settings=settings,
-            fallback_provider=fallback,
-            operator_scope_ports=operator_scope_ports,
-        )
-        or (AuthProviderKind.CERTIFICATE)
-    )
+    return resolve_active_provider_kind(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        settings=settings,
+        fallback_provider=fallback,
+        operator_scope_ports=operator_scope_ports,
+    ) or (AuthProviderKind.CERTIFICATE)
 
 
 def _normalise_tax_identity(value: object) -> str:
@@ -714,11 +711,7 @@ def _resolve_clave_credentials(
     return resolve_clave_credentials(
         provider_kind,
         settings=settings,
-        facts=(
-            facts
-            if facts is not None
-            else _active_profile_auth_facts(operator_scope_ports=operator_scope_ports)
-        ),
+        facts=(facts if facts is not None else _active_profile_auth_facts(operator_scope_ports=operator_scope_ports)),
     )
 
 

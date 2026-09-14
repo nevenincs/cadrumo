@@ -280,13 +280,9 @@ def orden_anual_iva_authority_units(authority: OrdenAnualIvaAuthority) -> tuple[
         reduction = authority.lorca_2022_reduction
         units.append(
             OrdenAnualIvaAuthorityUnit(
-                anchor=(
-                    f"#m303-annual-reduction-{_semantic_slug(reduction.municipality)}-{reduction.ejercicio}"
-                ),
+                anchor=(f"#m303-annual-reduction-{_semantic_slug(reduction.municipality)}-{reduction.ejercicio}"),
                 title=f"Reducción {reduction.municipality} {reduction.ejercicio} de cuota devengada IVA",
-                section=(
-                    f"{reduction.required_text[0].split('Reducción', maxsplit=1)[0].rstrip('. ')} · IVA"
-                ),
+                section=(f"{reduction.required_text[0].split('Reducción', maxsplit=1)[0].rstrip('. ')} · IVA"),
                 text="\n".join(reduction.required_text),
             ),
         )

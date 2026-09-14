@@ -235,7 +235,7 @@ _OPERATOR_GAP = re.compile(r"^\s*[-+x*/=]\s*$")
 # ("# Pag. 3", "# Pág. 6"); every campo row below it belongs to that record.
 _RECORD_HEADING = re.compile(r"^#+\s+(\S.*)$")
 _CASILLA_HEADER = re.compile(r'^\[\[revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))\.casillas\]\]\s*$')
-_ID_LINE = re.compile(r'''^id\s*=\s*(?:"([^"]+)"|'([^']+)')\s*$''')
+_ID_LINE = re.compile(r"""^id\s*=\s*(?:"([^"]+)"|'([^']+)')\s*$""")
 _CONTINUIDAD_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*[a-z0-9]$|^[a-z0-9]$")
 _EVIDENCE_ADVISORY = 512
 _RECORDED_REASON_LIMIT = 512

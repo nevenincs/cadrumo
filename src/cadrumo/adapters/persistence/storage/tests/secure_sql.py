@@ -20,7 +20,6 @@ from .....core.config import Settings, load_settings, override_settings
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.errors.hierarchy import CadrumoError
 from .....core.storage_taxonomy import StorageCategory
-from .ephemeral_master_key import EphemeralMasterKeyProvider
 from .....tests.storage_scope import storage_overrides
 from ..bucket.directory_layout import BucketPaths
 from ..crypto.encrypted_columns import (
@@ -39,6 +38,7 @@ from ..sql.orm import Base, SecureObjectRow
 from ..sql.secure_objects import SecureObjectRepository
 from ..sql.session import session_scope
 from ..storage_path_definitions import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
+from .ephemeral_master_key import EphemeralMasterKeyProvider
 from .profile_capsule_runtime import provision_test_profile_bucket_session
 
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"

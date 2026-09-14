@@ -8,8 +8,6 @@ from pathlib import Path
 
 import pytest
 
-
-
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.i18n.translatable import Translatable as tr
@@ -200,26 +198,6 @@ def _invoice(
     )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
     mixed = _transaction(
         "row-mixed",
@@ -349,10 +327,6 @@ def test_linked_invoice_issue_date_controls_period_filtering() -> None:
     assert result.observations == ()
     assert result.issues[0].reason is RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD
     assert result.issues[0].transaction_id == linked.transaction_id
-
-
-
-
 
 
 def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:

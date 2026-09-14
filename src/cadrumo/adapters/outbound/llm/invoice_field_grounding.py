@@ -56,8 +56,8 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.parsing.codes import normalise_iso_4217_currency
 from ....core.parsing.dates import parse_date
-from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ....domain.calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
+from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ....domain.iva.establishment import country_code_for_printed_country_name
 from .invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,

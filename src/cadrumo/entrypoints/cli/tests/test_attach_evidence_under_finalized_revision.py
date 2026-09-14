@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support import seed_revision_citing_transaction
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -40,7 +42,6 @@ from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
-from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support import seed_revision_citing_transaction
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError

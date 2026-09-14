@@ -125,7 +125,7 @@ class TestLimitationsAreDeclaredAndReachable:
         build_report(tmp_path)
         recorded = list(module._LIMITATIONS)
         assert recorded, "the run recorded none, so this proves nothing"
-        undeclared = [text for text in recorded if not text.split(":", 1)[0] in module.LIMITATIONS]
+        undeclared = [text for text in recorded if text.split(":", 1)[0] not in module.LIMITATIONS]
         assert not undeclared, f"emitted but not declared: {undeclared}"
 
     def test_the_emit_site_check_can_fail(self) -> None:

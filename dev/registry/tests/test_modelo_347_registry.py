@@ -9,8 +9,8 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo

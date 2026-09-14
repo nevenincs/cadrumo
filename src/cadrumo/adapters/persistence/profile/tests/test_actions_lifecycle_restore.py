@@ -8,11 +8,16 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
-from cadrumo.application.ledger.actions_lifecycle import archive_manual_transaction, restore_manual_transaction, stash_manual_transaction
+from cadrumo.application.ledger.actions_lifecycle import (
+    archive_manual_transaction,
+    restore_manual_transaction,
+    stash_manual_transaction,
+)
 from cadrumo.application.ledger.actions_manual import create_manual_transaction, summarize_manual_transactions
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
+from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
+
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,

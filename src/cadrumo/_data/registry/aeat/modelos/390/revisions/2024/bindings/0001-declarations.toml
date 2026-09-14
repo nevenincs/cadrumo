@@ -1,0 +1,5689 @@
+# Annual IVA soportado deducible en importaciones — mirrors the M303
+# import-deducible cuota onto the annual resumen so the deducible total includes
+# imports. Selects import_third_country soportado lines across the rate tiers.
+# The annual devengada must carry the SAME intracomunitaria cuota the four
+# M303 quarters carry, or the M390<->M303 reconciliation diverges. Both the
+# goods leg (LIVA arts. 13/15) and the services leg (art. 69.Uno.1, read
+# subject to art. 70) self-assess under art. 84.Uno.2.a), and the quarterly
+# line combines them because the official M303 boxes 10/11 and 36/37 are
+# titled "de bienes y servicios"; the annual aggregate therefore selects both
+# categories too.
+# Recargo de equivalencia cuota devengada — annual, mirrors the M303
+# casillas 21/24/158 (LIVA art. 161) so the ledger-derived annual devengada
+# total includes the recargo cuota a supplier charges a recargo-de-equivalencia
+# retailer. Without these, iva.anual.cuota-devengada-total silently excludes
+# recargo (grounded against the AEAT Manual practico IVA 2024 Cap. 9 annual
+# worked example — see the formula's comment for the cross-quarter figures).
+# The super-reduced 1.0pct tier (M303 casilla 18) has no ledger binding on
+# M303 either (manual input there); it stays out of scope of this fix. The
+# super-reducido 0.5pct recargo tier (M303 casilla 158, domestic_super_reduced
+# / rate_kind "super_reduced") mirrors the general/reducido tiers above and
+# closes the residual gap left after the general/reducido wiring: without it,
+# any recargo-de-equivalencia filer whose supplier charges the 4pct
+# super-reducido rate (and therefore the 0.5pct recargo, LIVA art. 161) had
+# that tier's annual cuota silently excluded from
+# iva.anual.cuota-devengada-total, symmetrically breaking the
+# modelo-390-cuota-devengada-total-equals-reconciliacion-303 BLOCKING_RULE for
+# that filer (the reconciled-against figure sums the four filed Modelo 303
+# quarters' casilla 27, which includes recargo casilla 158 per the M303
+# 2023-y-siguientes and 2009-y-siguientes fixes).
+# -----------------------------------------------------------------------------
+# Cross-modelo previous_filing bindings — aggregate the four 303 quarterly
+# autoliquidaciones into the annual resumen totals. Implements the canonical
+# 390 <- 303 dependency where the resumen anual reconciles against the four
+# trimestrales filed during the ejercicio.
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Bound casillas surfacing the 5 ledger_iva_aggregation bindings + the 3
+# previous_filing bindings as casilla values. Annual resumen mirrors the 303
+# result-casilla shape (devengada / deducible / resultado) plus reconciliation
+# casillas pulling each total from the four 303 quarters.
+# -----------------------------------------------------------------------------
+# Annual régimen-general base-imponible aggregation bindings. The resumen anual
+# already aggregated the CUOTA of these rows (the sibling *-cuota bindings,
+# fact = iva_amount_sum) but drew no base imponible at all: every IVA observation
+# carries a base_amount that reached no binding on the annual return, while the
+# quarterly Modelo 303 draws its base through the matching
+# modelo-303-iva-*-base bindings. The AEAT Diseño de Registros pairs a "Base
+# imponible" box with every "Cuota" box of the Reg. ordinario block (2024 design,
+# apartado 5: 21% base [05] / cuota [06], 10% base [03] / cuota [04], 4% base
+# [01] / cuota [02]) and pairs the deducible total likewise ("Total oper. inter.
+# corrientes bienes y servic." base [48] / cuota [49]), so the annual form does
+# ask for these amounts — the omission was ours, not the form's.
+#
+# Each selector mirrors its sibling cuota binding EXACTLY (same categories, same
+# rate_kinds, same flow_direction) and differs only in fact = base_amount_sum, so
+# the base and the cuota of one tier are drawn from the same observation set and
+# cannot select divergent rows.
+#
+# These bindings feed casillas that participate in NO formula: the annual
+# devengada/deducible totals sum cuotas, never bases. Adding them therefore
+# cannot move iva.anual.resultado-regimen-general — the base boxes are declared
+# alongside the cuota boxes on the official form, not summed into it.
+#
+# legal_refs are kept a subset of each target casilla's sibling cuota refs (and
+# therefore of the enclosing construct's refs) so the bound-casilla coverage
+# check holds without authoring a new legal-catalogue entry; LIVA art. 78 (base
+# imponible, regla general) is not currently in the bundled catalogue and
+# fabricating an entry for it would breach the bundled-corpus grounding rule.
+# The rate-blind total for the zero tier. Its three sibling tiers each carry
+# one, so a row whose applied_rate was never recorded still reaches that tier's
+# total and only the RATE box goes unclaimed. The zero tier had no blind layer
+# at all: its only two bindings both pin applied_rates = 0.00, so a zero-rated
+# row with no recorded rate reached NOTHING and its base imponible left the
+# return silently. No cuota is lost -- a zero-rated supply's cuota is zero --
+# but the base is a declared figure AEAT reconciles.
+#
+# Declares no export_refs, exactly like its three siblings: this is the internal
+# total layer, and box [700] is the rate layer that writes to the record. That
+# split is what lets the rate-box coverage gate read a shortfall here, which is
+# the whole point of adding it.
+# Rate-specific box-layer bindings for the Reg. ordinario block of the annual
+# resumen. Each admits exactly ONE applied_rate, so it draws only from rows whose
+# rate the ledger actually recorded, and a row whose rate is unknown reaches none
+# of them. That is the deliberate behaviour documented on the applied_rates
+# selector: an unmeasured line must not land in a box asserting a specific rate.
+#
+# These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# tier bindings keep feeding the annual devengada total and therefore keep every
+# row, including rate-unrecorded ones; these feed the per-rate boxes. Narrowing
+# a tier binding instead of adding these would delete the rate-unrecorded rows
+# from the total outright.
+#
+# All seven rates resolve inside an annual (0A) aggregation for 2024, though
+# three of them only inside part of the year: 5 % applies 1 Jul - 30 Sep and
+# 7,5 % and 2 % from 1 Oct (RDL 4/2024 art. 1), each coexisting with its tier's
+# ordinary rate. An annual return spans all of those windows, which is why a
+# per-rate box is needed at all -- the tier alone cannot separate them.
+# Rate-specific box-layer bindings for the Reg. ordinario block of the annual
+# resumen. Each admits exactly ONE applied_rate, so it draws only from rows whose
+# rate the ledger actually recorded, and a row whose rate is unknown reaches none
+# of them. That is the deliberate behaviour documented on the applied_rates
+# selector: an unmeasured line must not land in a box asserting a specific rate.
+#
+# These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# tier bindings keep feeding the annual devengada total and therefore keep every
+# row, including rate-unrecorded ones; these feed the per-rate boxes. Narrowing
+# a tier binding instead of adding these would delete the rate-unrecorded rows
+# from the total outright.
+#
+# All seven rates resolve inside an annual (0A) aggregation for 2024, though
+# three of them only inside part of the year: 5 % applies 1 Jul - 30 Sep and
+# 7,5 % and 2 % from 1 Oct (RDL 4/2024 art. 1), each coexisting with its tier's
+# ordinary rate. An annual return spans all of those windows, which is why a
+# per-rate box is needed at all -- the tier alone cannot separate them.
+# Rate-specific box-layer bindings for the Recargo de equivalencia block of the
+# annual resumen, the recargo counterpart of the Reg. ordinario layer beside it.
+#
+# The three rate-blind recargo bindings in 0001 select recargo_amount_sum routed
+# by the line's IVA rate TIER, and the official design keys its recargo boxes by
+# the recargo RATE. Those are not the same axis: one reducido tier carries the
+# 1,4 %, 1 % and 0,62 % recargo rates, so all three merged into box [600] and
+# [694] and [666] stayed empty. Each binding here admits exactly one IVA rate and
+# therefore exactly one recargo rate, so each official box draws only its own.
+#
+# These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# tier bindings keep feeding modelo-390-iva-anual-cuota-devengada-total and
+# therefore keep every row, including one whose IVA rate the ledger never
+# recorded; these feed the per-rate boxes and admit no such row. Narrowing a tier
+# binding instead of adding these would delete the rate-unrecorded recargo from
+# the declared annual total outright.
+#
+# The recargo rate is not chosen here -- it follows the IVA rate by statute:
+#
+#   IVA 21 %  -> recargo 5,2 %   LIVA art. 161.1
+#   IVA 10 %  -> recargo 1,4 %   LIVA art. 161.2 (via art. 91.uno)
+#   IVA  4 %  -> recargo 0,5 %   LIVA art. 161.3 (via art. 91.dos)
+#   IVA 7,5 % -> recargo 1 %     RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+#   IVA  5 %  -> recargo 0,62 %  RDL 4/2024 art. 1.Uno, 1 Jul - 30 Sep 2024
+#   IVA  2 %  -> recargo 0,26 %  RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+#
+# The tabaco rung (recargo 1,75 %, LIVA art. 161.4, boxes [41]/[42]) is absent
+# because the IVA category it depends on is not modelled at all; that is a
+# separate omission from this merge and is not repaired by adding a rung here.
+#
+# The 0 % rung (boxes [663]/[664]) is likewise absent, and for a different
+# reason: the recargo block has no rate-blind ZERO tier binding, so adding a
+# rate-specific 0 % recargo box would create the one shape that loses money
+# silently -- a rate-specific rung with no total layer behind it. Giving it one
+# means adding a term to the annual devengada total formula, which is a change
+# to a money-bearing total and a decision of its own.
+# Rate-specific box-layer bindings for the Recargo de equivalencia block of the
+# annual resumen, the recargo counterpart of the Reg. ordinario layer beside it.
+#
+# The three rate-blind recargo bindings in 0001 select recargo_amount_sum routed
+# by the line's IVA rate TIER, and the official design keys its recargo boxes by
+# the recargo RATE. Those are not the same axis: one reducido tier carries the
+# 1,4 %, 1 % and 0,62 % recargo rates, so all three merged into box [600] and
+# [694] and [666] stayed empty. Each binding here admits exactly one IVA rate and
+# therefore exactly one recargo rate, so each official box draws only its own.
+#
+# These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# tier bindings keep feeding modelo-390-iva-anual-cuota-devengada-total and
+# therefore keep every row, including one whose IVA rate the ledger never
+# recorded; these feed the per-rate boxes and admit no such row. Narrowing a tier
+# binding instead of adding these would delete the rate-unrecorded recargo from
+# the declared annual total outright.
+#
+# The recargo rate is not chosen here -- it follows the IVA rate by statute:
+#
+#   IVA 21 %  -> recargo 5,2 %   LIVA art. 161.1
+#   IVA 10 %  -> recargo 1,4 %   LIVA art. 161.2 (via art. 91.uno)
+#   IVA  4 %  -> recargo 0,5 %   LIVA art. 161.3 (via art. 91.dos)
+#   IVA 7,5 % -> recargo 1 %     RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+#   IVA  5 %  -> recargo 0,62 %  RDL 4/2024 art. 1.Uno, 1 Jul - 30 Sep 2024
+#   IVA  2 %  -> recargo 0,26 %  RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+#
+# The tabaco rung (recargo 1,75 %, LIVA art. 161.4, boxes [41]/[42]) is absent
+# because the IVA category it depends on is not modelled at all; that is a
+# separate omission from this merge and is not repaired by adding a rung here.
+#
+# The 0 % rung (boxes [663]/[664]) is likewise absent, and for a different
+# reason: the recargo block has no rate-blind ZERO tier binding, so adding a
+# rate-specific 0 % recargo box would create the one shape that loses money
+# silently -- a rate-specific rung with no total layer behind it. Giving it one
+# means adding a term to the annual devengada total formula, which is a change
+# to a money-bearing total and a decision of its own.
+# Volumen de operaciones (LIVA art. 121) ledger draws for apartado 10 boxes
+# [103] and [104]. Both are base-only, zero-cuota disclosure aggregations: the
+# ledger_iva_aggregation resolver sums the base_amount of the matching exempt
+# repercutido observations. They mirror the M303 casilla-59 and casilla-60
+# selectors exactly, which is what lets the annual return and the summed
+# quarters state the same population.
+#
+# Box [103] admits ONLY intra_community_supply, and the official box title is
+# NOT authority to widen it. The ejercicio-2021 design widened the printed
+# label to "Entregas intracomunitarias de bienes y servicios", which reads as
+# an invitation to add a services category; it is not one. A plain B2B service
+# supplied to an EU-established taxable person is located outside the TAI by
+# LIVA art. 69.Uno.1, so it is not subject in Spain and belongs in the
+# no-sujetas box, never here. Only a supply with a Spanish fiscal adjustment
+# point under art. 25 belongs in [103], and the operator declares that by
+# tagging intra_community_supply explicitly. This is the same ruling the M303
+# casilla-59 binding records, applied to the same population on the annual
+# return; widening one side alone would also break their agreement.
+#
+# Box [104] is "Exportaciones y otras operaciones exentas con derecho a
+# deduccion", so its selector accepts both zero-rated export members: art. 21
+# grounds the exportaciones de bienes leg and art. 22 the operations assimilated
+# to exports.
+#
+# The flow direction is repercutido on both, which is the whole reason these
+# two boxes are modellable and the sibling inversion-del-sujeto-pasivo volumen
+# box is not: art. 121 counts only supplies "efectuadas por el sujeto pasivo",
+# and a reverse-charge category collapses the supplier and recipient sides onto
+# one flow, so no selector can restrict it to the taxpayer's own supplies.
+# Rate-specific bindings for the adquisiciones intracomunitarias (AIC) box
+# layer. See the sibling casillas file
+# (civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml)
+# for the full account of the defect this closes and the epoch scoping.
+# Selector rate_kind convention matches the M390 recargo rate-box layer and
+# the M303 transitional-rate rungs already in this tree: 21% -> general;
+# 5%/7,5%/10% -> reduced; 2%/4% -> super_reduced; 0% -> zero.
+# Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2)
+# bindings feeding boxes [27]/[28]. Rate-blind by design -- see the casillas
+# file header -- mirroring Modelo 303's own domestic_reverse_charge binding,
+# which likewise sums general/reduced/super_reduced together.
+# Per-tier rate-blind AIC bindings backing the casillas above. Fact scoped to
+# base_amount_sum only, matching the established precedent
+# (test_every_rate_split_base_tier_carries_exactly_one_rate_blind_binding);
+# the cuota counterpart is a separate, deliberately deferred decision (see
+# that domestic gate's own zero-tier docstring).
+# Modelo 390 2022, página 1, casillas 74--83.  One source family consumes the
+# immutable filed/current Modelo 303 4T calculation revision; endpoint bindings
+# merely name arrival slots and never replay a scalar relation or observation.
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_general"]
+rate_kinds = ["general"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-soportado-interiores-cuota"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "soportado"
+fact = "iva_amount_sum"
+categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-soportado-importaciones-cuota"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "soportado"
+fact = "iva_amount_sum"
+categories = ["import_third_country"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-prorrata-regularizacion-anual"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "prorrata_regularizacion"
+source_modelo = "303"
+regularizacion_output = "modelo_390_regularizacion_anual"
+source_casilla_ids = ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"]
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-bienes-inversion-regularizacion-casilla-63"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "bienes_inversion_regularizacion"
+source_modelo = "303"
+regularizacion_output = "modelo_390_casilla_63"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-general-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_general"]
+rate_kinds = ["general"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-reducido-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-prev-303-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "303"
+source_casilla_id = "iva.cuota-devengada-total"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-prev-303-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "303"
+source_casilla_id = "iva.cuota-deducible-total"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-prev-303-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "relation_prefill"
+relation_kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
+source_modelo = "303"
+source_casilla_id = "iva.resultado-regimen-general"
+
+[revisions.2024.bindings.provider.temporal]
+kind = "same_filing_year_periods"
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.applicability]
+kind = "target_periods"
+periods = ["0A"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-prev-303-compensacion-ultimo-periodo"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "iva_compensation_annual_partition"
+source_modelo = "303"
+partition_output = "last_period_amount"
+source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"]
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "iva_compensation_annual_partition"
+source_modelo = "303"
+partition_output = "generated_not_in_last_amount"
+source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"]
+source_periods = ["1T", "2T", "3T", "4T"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-general-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_general"]
+rate_kinds = ["general"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-reducido-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-super-reducido-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-zero-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_zero"]
+rate_kinds = ["zero"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-soportado-interiores-base"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "soportado"
+fact = "base_amount_sum"
+categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-21-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_general"]
+rate_kinds = ["general"]
+applied_rates = ["0.21"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-21-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_general"]
+rate_kinds = ["general"]
+applied_rates = ["0.21"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-10-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.10"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-10-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.10"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-7-5-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.075"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-7-5-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.075"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-5-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-5-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-4-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.04"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-4-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.04"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-2-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-2-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-0-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["domestic_zero"]
+rate_kinds = ["zero"]
+applied_rates = ["0.00"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-repercutido-tipo-0-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_zero"]
+rate_kinds = ["zero"]
+applied_rates = ["0.00"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-5-2-cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_general"]
+rate_kinds = ["general"]
+applied_rates = ["0.21"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.10"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-1-cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.075"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-0-5-cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.04"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-volumen-entregas-intracomunitarias-base"
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["intra_community_supply"]
+rate_kinds = ["zero"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-volumen-exportaciones-exentas-base"
+legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+categories = ["export_third_country_zero_rated", "export_assimilated_zero_rated"]
+rate_kinds = ["zero"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-0-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["zero"]
+applied_rates = ["0.00"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-0-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["zero"]
+applied_rates = ["0.00"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-2-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-2-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-4-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.04"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-4-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.04"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-5-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-5-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-7-5-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.075"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-7-5-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.075"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-10-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.10"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-10-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.10"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-21-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["general"]
+applied_rates = ["0.21"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-tipo-21-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["general"]
+applied_rates = ["0.21"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-0-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["zero"]
+applied_rates = ["0.00"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-0-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["zero"]
+applied_rates = ["0.00"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-2-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-2-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-4-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.04"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-4-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.04"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-5-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-5-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-7-5-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.075"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-7-5-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.075"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-10-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.10"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-10-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.10"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-21-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["general"]
+applied_rates = ["0.21"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-tipo-21-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["general"]
+applied_rates = ["0.21"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-autorepercutido-interior-base"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["domestic_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-autorepercutido-interior-cuota"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["domestic_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-zero-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["zero"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-super-reduced-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-reduced-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-bienes-general-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["general"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-zero-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["zero"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-super-reduced-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-reduced-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-iva-aic-servicios-general-blind-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "base_amount_sum"
+categories = ["intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["general"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2024.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-74-cuota-resultante-no-agricola"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-no-agricola"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-75-cuota-resultante-agricola"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-agricola"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-76-aic"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-77-inversion-sujeto-pasivo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.inversion-sujeto-pasivo"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-78-entregas-activos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.entrega-activos-fijos"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-79-total-cuota-resultante"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-80-activos-fijos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.iva-soportado-activos-fijos"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-81-regularizacion-inversion"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.regularizacion-bienes-inversion"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-82-suma-deducciones"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.suma-deducciones"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390-m303-simplificado-83-resultado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions.2024.bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[revisions.2024.bindings.provider]
+kind = "m303_regimen_simplificado_annual_summary"
+source_modelo = "303"
+summary_casilla_id = "iva.anual.regimen-simplificado.resultado"
+source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"]
+
+[revisions.2024.bindings.provider.temporal]
+kind = "filed_current_period"
+source_period = "4T"
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.indicador-de-pagina-complementaria"
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "indicador-de-pagina-complementaria"
+offset = 12
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-1-actividad-desarrollada"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-1-actividad-desarrollada"
+offset = 200
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-1-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-1-codigo-cnae"
+offset = 240
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-1-importe-de-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-1-importe-de-operaciones"
+offset = 243
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-1-importe-de-operaciones-con-derecho-a-deduccion"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-1-importe-de-operaciones-con-derecho-a-deduccion"
+offset = 260
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-1-tipo-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-1-tipo-de-prorrata"
+offset = 277
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-1-porcentaje-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-1-porcentaje-de-prorrata"
+offset = 278
+length = 5
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-2-actividad-desarrollada"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-2-actividad-desarrollada"
+offset = 283
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-2-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-2-codigo-cnae"
+offset = 323
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-2-importe-de-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-2-importe-de-operaciones"
+offset = 326
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-2-importe-de-operaciones-con-derecho-a-deduccion"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-2-importe-de-operaciones-con-derecho-a-deduccion"
+offset = 343
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-2-tipo-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-2-tipo-de-prorrata"
+offset = 360
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-2-porcentaje-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-2-porcentaje-de-prorrata"
+offset = 361
+length = 5
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-3-actividad-desarrollada"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-3-actividad-desarrollada"
+offset = 366
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-3-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-3-codigo-cnae"
+offset = 406
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-3-importe-de-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-3-importe-de-operaciones"
+offset = 409
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-3-importe-de-operaciones-con-derecho-a-deduccion"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-3-importe-de-operaciones-con-derecho-a-deduccion"
+offset = 426
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-3-tipo-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-3-tipo-de-prorrata"
+offset = 443
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-3-porcentaje-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-3-porcentaje-de-prorrata"
+offset = 444
+length = 5
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-4-actividad-desarrollada"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-4-actividad-desarrollada"
+offset = 449
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-4-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-4-codigo-cnae"
+offset = 489
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-4-importe-de-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-4-importe-de-operaciones"
+offset = 492
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-4-importe-de-operaciones-con-derecho-a-deduccion"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-4-importe-de-operaciones-con-derecho-a-deduccion"
+offset = 509
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-4-tipo-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-4-tipo-de-prorrata"
+offset = 526
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-4-porcentaje-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-4-porcentaje-de-prorrata"
+offset = 527
+length = 5
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-5-actividad-desarrollada"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-5-actividad-desarrollada"
+offset = 532
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-5-codigo-cnae"
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-5-codigo-cnae"
+offset = 572
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-5-importe-de-operaciones"
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-5-importe-de-operaciones"
+offset = 575
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-5-importe-de-operaciones-con-derecho-a-deduccion"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-5-importe-de-operaciones-con-derecho-a-deduccion"
+offset = 592
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-5-tipo-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-5-tipo-de-prorrata"
+offset = 609
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_7.prorratas-5-porcentaje-de-prorrata"
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_7"
+field = "prorratas-5-porcentaje-de-prorrata"
+offset = 610
+length = 5
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.indicador-de-pagina-complementaria"
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "indicador-de-pagina-complementaria"
+offset = 12
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-epigrafe-i-a-e"
+legal_refs = ["ley-37-1992:art-122", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-epigrafe-i-a-e"
+offset = 13
+length = 4
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-1"
+offset = 17
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-1"
+offset = 27
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-2"
+offset = 44
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-2"
+offset = 54
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-3"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-3"
+offset = 71
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-3"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-3"
+offset = 81
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-4"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-4"
+offset = 98
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-4"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-4"
+offset = 108
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-5"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-5"
+offset = 125
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-5"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-5"
+offset = 135
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-6"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-6"
+offset = 152
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-6"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-6"
+offset = 162
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-7"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-7"
+offset = 179
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-7"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-7"
+offset = 189
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-c-cuota-devengada-operaciones-corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-c-cuota-devengada-operaciones-corrientes"
+offset = 206
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termin"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termino-municipal-de-lorca"
+offset = 223
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-d-cuota-soportadas-operaciones-corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-d-cuota-soportadas-operaciones-corrientes"
+offset = 240
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-e-indice-corrector"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-e-indice-corrector"
+offset = 257
+length = 3
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-f-resultado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-f-resultado"
+offset = 260
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-g-porcentaje-cuota-minima"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-g-porcentaje-cuota-minima"
+offset = 277
+length = 5
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-h-devolucion-cuotas-soportadas-otros-paises"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-h-devolucion-cuotas-soportadas-otros-paises"
+offset = 282
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-i-cuota-minima"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-i-cuota-minima"
+offset = 299
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-cuota-derivada-regimen-simplificado-j1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-cuota-derivada-regimen-simplificado-j1"
+offset = 316
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-epigrafe-i-a-e"
+legal_refs = ["ley-37-1992:art-122", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-epigrafe-i-a-e"
+offset = 333
+length = 4
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-1"
+offset = 337
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-1"
+offset = 347
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-2"
+offset = 364
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-2"
+offset = 374
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-3"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-3"
+offset = 391
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-3"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-3"
+offset = 401
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-4"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-4"
+offset = 418
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-4"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-4"
+offset = 428
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-5"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-5"
+offset = 445
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-5"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-5"
+offset = 455
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-6"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-6"
+offset = 472
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-6"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-6"
+offset = 482
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-7"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-7"
+offset = 499
+length = 10
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-7"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-7"
+offset = 509
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-c-cuota-devengada-operaciones-corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-c-cuota-devengada-operaciones-corrientes"
+offset = 526
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-el-termin"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-el-termino-municipal-de-lorca"
+offset = 543
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-d-cuota-soportadas-operaciones-corrientes"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-d-cuota-soportadas-operaciones-corrientes"
+offset = 560
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-e-indice-corrector"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-e-indice-corrector"
+offset = 577
+length = 3
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-f-resultado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-f-resultado"
+offset = 580
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-g-porcentaje-cuota-minima"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-g-porcentaje-cuota-minima"
+offset = 597
+length = 5
+data_type = "decimal"
+decimals = 2
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-h-devolucion-cuotas-soportadas-otros-paises"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-h-devolucion-cuotas-soportadas-otros-paises"
+offset = 602
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-i-cuota-minima"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-i-cuota-minima"
+offset = 619
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-cuota-derivada-regimen-simplificado-j2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-cuota-derivada-regimen-simplificado-j2"
+offset = 636
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-codigo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-codigo"
+offset = 653
+length = 2
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-volumen-ingresos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-volumen-ingresos"
+offset = 655
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-indice-cuota"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-indice-cuota"
+offset = 672
+length = 6
+data_type = "decimal"
+decimals = 5
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-devengada"
+offset = 678
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-soportada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-soportada"
+offset = 695
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-derivada-regimen-simplif"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-derivada-regimen-simplificado-k1"
+offset = 712
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-codigo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-codigo"
+offset = 729
+length = 2
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-volumen-ingresos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-volumen-ingresos"
+offset = 731
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-indice-cuota"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-indice-cuota"
+offset = 748
+length = 6
+data_type = "decimal"
+decimals = 5
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-devengada"
+offset = 754
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-soportada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-soportada"
+offset = 771
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-derivada-regimen-simplif"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-derivada-regimen-simplificado-k2"
+offset = 788
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-codigo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-codigo"
+offset = 805
+length = 2
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-volumen-ingresos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-volumen-ingresos"
+offset = 807
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-indice-cuota"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-indice-cuota"
+offset = 824
+length = 6
+data_type = "decimal"
+decimals = 5
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-devengada"
+offset = 830
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-soportada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-soportada"
+offset = 847
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-derivada-regimen-simplif"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-derivada-regimen-simplificado-k3"
+offset = 864
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-codigo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-codigo"
+offset = 881
+length = 2
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-volumen-ingresos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-volumen-ingresos"
+offset = 883
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-indice-cuota"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-indice-cuota"
+offset = 900
+length = 6
+data_type = "decimal"
+decimals = 5
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-devengada"
+offset = 906
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-soportada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-soportada"
+offset = 923
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-derivada-regimen-simplif"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-derivada-regimen-simplificado-k4"
+offset = 940
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-codigo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-codigo"
+offset = 957
+length = 2
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-volumen-ingresos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-volumen-ingresos"
+offset = 959
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-indice-cuota"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-indice-cuota"
+offset = 976
+length = 6
+data_type = "decimal"
+decimals = 5
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-devengada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-devengada"
+offset = 982
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-soportada"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-soportada"
+offset = 999
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-derivada-regimen-simpl"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-derivada-regimen-simplificado-k5"
+offset = 1016
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest"
+offset = 1033
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest"
+offset = 1050
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias"
+offset = 1067
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo"
+offset = 1084
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos"
+offset = 1101
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos"
+offset = 1135
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion"
+offset = 1152
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-suma-de-deducciones"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-deducciones-suma-de-deducciones"
+offset = 1169
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-resultado-regimen-simplificado"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-resultado-regimen-simplificado"
+offset = 1186
+length = 17
+data_type = "money"
+signed = true
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-cas"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-caso-de-1203"
+offset = 1203
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-cas"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-caso-de-1204"
+offset = 1204
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municip"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municipios-afectados-por-la-dana"
+offset = 1205
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reducciones-total"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-1-reducciones-total"
+offset = 1222
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municip"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municipios-afectados-por-la-dana"
+offset = 1239
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-actividad-2-reducciones-total"
+offset = 1256
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273"
+offset = 1273
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290"
+offset = 1290
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307"
+offset = 1307
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324"
+offset = 1324
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_5"
+field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341"
+offset = 1341
+length = 17
+data_type = "money"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.sujeto-pasivo-registro-de-devolucion-mensual"
+legal_refs = ["ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "sujeto-pasivo-registro-de-devolucion-mensual"
+offset = 109
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.sujeto-pasivo-regimen-especial-del-grupo-de-entidades"
+legal_refs = ["ley-37-1992:art-163-quinquies", "ley-37-1992:art-163-sexies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "sujeto-pasivo-regimen-especial-del-grupo-de-entidades"
+offset = 110
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.sujeto-pasivo-numero-de-grupo"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-quinquies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "sujeto-pasivo-numero-de-grupo"
+offset = 111
+length = 7
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.sujeto-pasivo-dominante"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-quinquies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "sujeto-pasivo-dominante"
+offset = 118
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.sujeto-pasivo-dependiente"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-quinquies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "sujeto-pasivo-dependiente"
+offset = 119
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.sujeto-pasivo-tipo-regimen-especial-aplicable-art-163-sexies-cinco-si-o-no"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "sujeto-pasivo-tipo-regimen-especial-aplicable-art-163-sexies-cinco-si-o-no"
+offset = 120
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.sujeto-pasivo-nif-entidad-dominante"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-quinquies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "sujeto-pasivo-nif-entidad-dominante"
+offset = 121
+length = 9
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.devengo-sustitutiva"
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "devengo-sustitutiva"
+offset = 133
+length = 1
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.devengo-sustitutiva-por-rectificacion-de-cuotas"
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "devengo-sustitutiva-por-rectificacion-de-cuotas"
+offset = 134
+length = 1
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-a-actividades-principal"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-a-actividades-principal"
+offset = 148
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-principal"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-b-codigo-de-actividad-principal"
+offset = 188
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-principal"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-c-epigrafe-i-a-e-principal"
+offset = 191
+length = 4
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-1a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-a-actividades-otras-1a"
+offset = 195
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-1a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-b-codigo-de-actividad-otras-1a"
+offset = 235
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-1o"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-c-epigrafe-i-a-e-otras-1o"
+offset = 238
+length = 4
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-2a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-a-actividades-otras-2a"
+offset = 242
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-2a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-b-codigo-de-actividad-otras-2a"
+offset = 282
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-2o"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-c-epigrafe-i-a-e-otras-2o"
+offset = 285
+length = 4
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-3a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-a-actividades-otras-3a"
+offset = 289
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-3a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-b-codigo-de-actividad-otras-3a"
+offset = 329
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-3o"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-c-epigrafe-i-a-e-otras-3o"
+offset = 332
+length = 4
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-4a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-a-actividades-otras-4a"
+offset = 336
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-4a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-b-codigo-de-actividad-otras-4a"
+offset = 376
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-4o"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-c-epigrafe-i-a-e-otras-4o"
+offset = 379
+length = 4
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-5a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-a-actividades-otras-5a"
+offset = 383
+length = 40
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-5a"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-b-codigo-de-actividad-otras-5a"
+offset = 423
+length = 3
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-5o"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-c-epigrafe-i-a-e-otras-5o"
+offset = 426
+length = 4
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-d-declaracion-anual-operac-con-terceras-personas"
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1065-2007:art-31", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-d-declaracion-anual-operac-con-terceras-personas"
+offset = 430
+length = 1
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-declaracion-conjunta-nif"
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1065-2007:art-31", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-declaracion-conjunta-nif"
+offset = 431
+length = 9
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.datos-estadisticos-declaracion-conjunta-razon-social"
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1065-2007:art-31", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "datos-estadisticos-declaracion-conjunta-razon-social"
+offset = 440
+length = 37
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-nif"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-nif"
+offset = 477
+length = 9
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-apellidos-y-nombre-razon-social"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-apellidos-y-nombre-razon-social"
+offset = 486
+length = 80
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-calle-pza-avda"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-calle-pza-avda"
+offset = 566
+length = 2
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-nombre-de-la-via-publica"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-nombre-de-la-via-publica"
+offset = 568
+length = 17
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-numero"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-numero"
+offset = 585
+length = 5
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-esc"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-esc"
+offset = 590
+length = 2
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-piso"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-piso"
+offset = 592
+length = 2
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-prta"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-prta"
+offset = 594
+length = 2
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-telefono"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-telefono"
+offset = 596
+length = 9
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-municipio"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-municipio"
+offset = 605
+length = 20
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-provincia"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-provincia"
+offset = 625
+length = 15
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-codigo-postal"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-fisicas-comunid-bienes-represent-codigo-postal"
+offset = 640
+length = 5
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-1-nombre-y-apellidos"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-1-nombre-y-apellidos"
+offset = 645
+length = 80
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-1-nif"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-1-nif"
+offset = 725
+length = 9
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-1-fecha-poder-ddmmaaaa"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-1-fecha-poder-ddmmaaaa"
+offset = 734
+length = 8
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-1-notaria"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-1-notaria"
+offset = 742
+length = 12
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-2-nombre-y-apellidos"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-2-nombre-y-apellidos"
+offset = 754
+length = 80
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-2-nif"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-2-nif"
+offset = 834
+length = 9
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-2-fecha-poder-ddmmaaaa"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-2-fecha-poder-ddmmaaaa"
+offset = 843
+length = 8
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-2-notaria"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-2-notaria"
+offset = 851
+length = 12
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-3-nombre-y-apellidos"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-3-nombre-y-apellidos"
+offset = 863
+length = 80
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-3-nif"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-3-nif"
+offset = 943
+length = 9
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-3-fecha-poder-ddmmaaaa"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-3-fecha-poder-ddmmaaaa"
+offset = 952
+length = 8
+data_type = "integer"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "integer"
+channel = "integer"
+
+[[revisions.2024.bindings]]
+id = "modelo-390.page_1.representante-personas-juridicas-represent-3-notaria"
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+[revisions.2024.bindings.provider]
+kind = "manual_input"
+record = "page_1"
+field = "representante-personas-juridicas-represent-3-notaria"
+offset = 960
+length = 12
+data_type = "text"
+signed = false
+
+[revisions.2024.bindings.value]
+data_type = "text"
+channel = "text"

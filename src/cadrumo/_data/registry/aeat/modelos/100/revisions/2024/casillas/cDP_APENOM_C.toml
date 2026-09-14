@@ -1,9 +1,0 @@
-[[revisions."2024".casillas]]
-id = "DP_APENOM_C"
-number = "*14"
-section = ["datos_identificativos", "conyuge"]
-data_type = "text"
-semantic_role = "spouse_name"
-input_kind = "bound"
-binding = "renta-profile-spouse-display-name"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]

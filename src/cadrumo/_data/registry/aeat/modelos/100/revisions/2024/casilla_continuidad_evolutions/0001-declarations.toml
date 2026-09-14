@@ -1,0 +1,2384 @@
+# Grounding: RC, referencia catastral de la relación general de inmuebles. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASARR, días arrendados en los datos generales del arrendamiento, distintos del cómputo para amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASARR, días arrendados en los datos generales del arrendamiento, distintos del cómputo para amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASARR, días arrendados en los datos generales del arrendamiento, distintos del cómputo para amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_ONEROSA, adquisición onerosa del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_ONEROSA, adquisición onerosa del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_ONEROSA, adquisición onerosa del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_LUCRATIVA, adquisición lucrativa del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_LUCRATIVA, adquisición lucrativa del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_LUCRATIVA, adquisición lucrativa del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_FADQ, fecha de adquisición del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_FADQ, fecha de adquisición del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_FADQ, fecha de adquisición del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASARRAM, días arrendados del inmueble principal para el cálculo de su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASARRAM, días arrendados del inmueble principal para el cálculo de su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASARRAM, días arrendados del inmueble principal para el cálculo de su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_VCC, valor catastral de la construcción del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_VCC, valor catastral de la construcción del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_VCC, valor catastral de la construcción del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_PORVCC, porcentaje del valor catastral de construcción sobre el total del inmueble principal. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_PORVCC, porcentaje del valor catastral de construcción sobre el total del inmueble principal. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_PORVCC, porcentaje del valor catastral de construcción sobre el total del inmueble principal. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_COSTEAD, importe de adquisición del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_COSTEAD, importe de adquisición del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_COSTEAD, importe de adquisición del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_TRIBUAD, gastos y tributos inherentes a la adquisición del inmueble principal para su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_TRIBUAD, gastos y tributos inherentes a la adquisición del inmueble principal para su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_TRIBUAD, gastos y tributos inherentes a la adquisición del inmueble principal para su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_IMPMJEA, mejoras de años anteriores en el inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_IMPMJEA, mejoras de años anteriores en el inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_IMPMJEA, mejoras de años anteriores en el inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_BASEAMOR, base de amortización del inmueble principal. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_BASEAMOR, base de amortización del inmueble principal. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_BASEAMOR, base de amortización del inmueble principal. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_ONERACC, adquisición onerosa del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_ONERACC, adquisición onerosa del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_ONERACC, adquisición onerosa del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_FADQACC, fecha de adquisición del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_FADQACC, fecha de adquisición del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_FADQACC, fecha de adquisición del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASACC, días arrendados del inmueble accesorio para el cálculo de su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASACC, días arrendados del inmueble accesorio para el cálculo de su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_DIASACC, días arrendados del inmueble accesorio para el cálculo de su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_VCCACC, valor catastral de la construcción del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_VCCACC, valor catastral de la construcción del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_VCCACC, valor catastral de la construcción del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_PORVCCACC, porcentaje del valor catastral de construcción sobre el total del inmueble accesorio. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_PORVCCACC, porcentaje del valor catastral de construcción sobre el total del inmueble accesorio. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_PORVCCACC, porcentaje del valor catastral de construcción sobre el total del inmueble accesorio. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_COSTEADACC, importe de adquisición del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_COSTEADACC, importe de adquisición del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_COSTEADACC, importe de adquisición del inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_TRIBUADACC, gastos y tributos inherentes a la adquisición del inmueble accesorio para su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_TRIBUADACC, gastos y tributos inherentes a la adquisición del inmueble accesorio para su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_TRIBUADACC, gastos y tributos inherentes a la adquisición del inmueble accesorio para su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_IMPMJEAACC, mejoras de años anteriores en el inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_IMPMJEAACC, mejoras de años anteriores en el inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_IMPMJEAACC, mejoras de años anteriores en el inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_BASEAMORACC, base de amortización del inmueble accesorio. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_BASEAMORACC, base de amortización del inmueble accesorio. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C_BASEAMORACC, base de amortización del inmueble accesorio. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: DED11E, parte estatal de la deducción por dotaciones a la Reserva para Inversiones en las Illes Balears. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED11A, parte autonómica de la deducción por dotaciones a la Reserva para Inversiones en las Illes Balears. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DEDAUTIB22, incremento de cuota autonómica por reintegro del abono anticipado de la deducción por nacimiento de las Illes Balears. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED12E, parte estatal de la deducción por rendimientos de bienes corporales producidos en las Illes Balears. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED12A, parte autonómica de la deducción por rendimientos de bienes corporales producidos en las Illes Balears. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CEXGE1, escala estatal aplicada a la base liquidable general. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CEXGA1, escala autonómica aplicada a la base liquidable general. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CEXGE2, escala estatal sobre el mínimo personal y familiar aplicable a la base general. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CIGEST, cuota estatal correspondiente a la base liquidable general. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CIGAUT, cuota autonómica correspondiente a la base liquidable general. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: TME, tipo medio estatal de gravamen de la base liquidable general. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: TMA, tipo medio autonómico de gravamen de la base liquidable general. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CIEST1, escala estatal aplicada a la base liquidable del ahorro. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CIEAUT1, escala autonómica aplicada a la base liquidable del ahorro. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CIEST2, escala estatal sobre el mínimo personal y familiar aplicable a la base del ahorro. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CIEEST, cuota estatal correspondiente a la base liquidable del ahorro. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: CIEAUT, cuota autonómica correspondiente a la base liquidable del ahorro. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: TMEAH, tipo medio estatal de gravamen de la base liquidable del ahorro. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: TMAAH, tipo medio autonómico de gravamen de la base liquidable del ahorro. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED5E, parte estatal de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED5E, parte estatal de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED5E, parte estatal de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED5E, parte estatal de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED5A, parte autonómica de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED5A, parte autonómica de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED5A, parte autonómica de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED5A, parte autonómica de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED6E, parte estatal de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED6E, parte estatal de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED6E, parte estatal de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED6E, parte estatal de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED6A, parte autonómica de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED6A, parte autonómica de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED6A, parte autonómica de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DED6A, parte autonómica de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: SUMADEDAUT, total de deducciones autonómicas trasladado desde el anexo de la comunidad aplicable. Se actualiza la referencia de traslado a anexos o el rótulo de la parte autonómica, sin cambiar la magnitud fiscal.
+# Grounding: SUMADEDAUT, total de deducciones autonómicas trasladado desde el anexo de la comunidad aplicable. Se actualiza la referencia de traslado a anexos o el rótulo de la parte autonómica, sin cambiar la magnitud fiscal.
+# Grounding: SUMADEDAUT, total de deducciones autonómicas trasladado desde el anexo de la comunidad aplicable. Se actualiza la referencia de traslado a anexos o el rótulo de la parte autonómica, sin cambiar la magnitud fiscal.
+# Grounding: SUMADEDAUT, total de deducciones autonómicas trasladado desde el anexo de la comunidad aplicable. Se actualiza la referencia de traslado a anexos o el rótulo de la parte autonómica, sin cambiar la magnitud fiscal.
+# Grounding: INT33A, intereses de demora autonómicos por pérdida del incentivo fiscal del art. 33.3.c LIRPF. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: INT33A, intereses de demora autonómicos por pérdida del incentivo fiscal del art. 33.3.c LIRPF. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: aeat-dr-100-2023-dictionary:1264 y aeat-dr-100-2024-dictionary:1248; Andalucía Valderrama Masters 2022/2024, columna Aplicado, M21AVAA.
+# Grounding: aeat-dr-100-2023-dictionary:1327 y aeat-dr-100-2024-dictionary:1263; Bicentenario de la Policia Nacional, columna Aplicado, M21BPNA.
+# Grounding: DEDAL, importe total de la deducción transitoria por alquiler de vivienda habitual. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DEDAL, importe total de la deducción transitoria por alquiler de vivienda habitual. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DEDAL, importe total de la deducción transitoria por alquiler de vivienda habitual. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: DEDAL, importe total de la deducción transitoria por alquiler de vivienda habitual. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+# Grounding: aeat-dr-100-2023-dictionary:1249, M21GPFA; Gran Premio de España de Fórmula 1 deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1330, M21FAFA; Centenario Federación Aragonesa de Fútbol deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1333 y aeat-dr-100-2024-dictionary:1266; Plan 2030 de Apoyo al Deporte de Base, columna Aplicado, M21ADBA.
+# Grounding: aeat-dr-100-2023-dictionary:1336 y aeat-dr-100-2024-dictionary:1269; Universo Mujer III, columna Aplicado, M21UNIA.
+# Grounding: aeat-dr-100-2023-dictionary:1246, M21CTLA; 175 Aniversario de la construcción del Gran Teatre del Liceu deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1339 y aeat-dr-100-2024-dictionary:1272; Programa de preparación de los deportistas españoles de los Juegos de París 2024, columna Aplicado, M21JPAA.
+# Grounding: aeat-dr-100-2023-dictionary:1231, M21BWRA; 4ª Edición de la Barcelona World Race deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1342 y aeat-dr-100-2024-dictionary:1275; 100 años del fallecimiento de Joaquín Sorolla, columna Aplicado, M21FJSA.
+# Grounding: aeat-dr-100-2023-dictionary:1345 y aeat-dr-100-2024-dictionary:1278; 20 Aniversario de Primavera Sound, columna Aplicado, M21APSA.
+# Grounding: aeat-dr-100-2023-dictionary:1348 y aeat-dr-100-2024-dictionary:1281; Centenario del nacimiento de Victoria de los Ángeles, columna Aplicado, M21VANA.
+# Grounding: aeat-dr-100-2023-dictionary:1234, M21PDMA; Plan Decenio Milliarium Montserrat 1025-2025 deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1351 y aeat-dr-100-2024-dictionary:1284; Conmemoración del 50 aniversario de la muerte del artista español Pablo Picasso, columna Aplicado, M21MPPA.
+# Grounding: aeat-dr-100-2023-dictionary:1354 y aeat-dr-100-2024-dictionary:1287; Todos contra el cáncer, columna Aplicado, M21TCCA.
+# Grounding: aeat-dr-100-2023-dictionary:1357 y aeat-dr-100-2024-dictionary:1290; Año de Investigación Santiago Ramón y Cajal 2022, columna Aplicado, M21SRCA.
+# Grounding: aeat-dr-100-2023-dictionary:1360 y aeat-dr-100-2024-dictionary:1293; Año Jubilar Lebaniego 2023-2024, columna Aplicado, M21AJLA.
+# Grounding: aeat-dr-100-2023-dictionary:1363, M21PVEA; Mundo Voluntario 2030/35º Aniversario Plataforma del Voluntariado de España deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1366 y aeat-dr-100-2024-dictionary:1296; 7ª Conferencia Mundial sobre Turismo Enológico de la OMT 2023, columna Aplicado, M21CTEA.
+# Grounding: aeat-dr-100-2023-dictionary:1369 y aeat-dr-100-2024-dictionary:1299; Caravaca de la Cruz 2024. Año Jubilar, columna Aplicado, M21CAJA.
+# Grounding: aeat-dr-100-2023-dictionary:1372 y aeat-dr-100-2024-dictionary:1302; Bicentenario del Ateneo de Madrid, columna Aplicado, M21BAMA.
+# Grounding: aeat-dr-100-2023-dictionary:1375 y aeat-dr-100-2024-dictionary:1305; Barcelona Equestrian Challenge (4ª Edición), columna Aplicado, M21BECA.
+# Grounding: aeat-dr-100-2023-dictionary:1378 y aeat-dr-100-2024-dictionary:1308; 200 ANIVERSARIO DEL PASSEIG DE GRÁCIA, columna Aplicado, M21APCA.
+# Grounding: aeat-dr-100-2023-dictionary:1381 y aeat-dr-100-2024-dictionary:1311; Reconstucción de la Piscina Histórica cubierta de saltos del Club Natació Barcelona (CNB), columna Aplicado, M21RPHA.
+# Grounding: aeat-dr-100-2023-dictionary:1384 y aeat-dr-100-2024-dictionary:1314; ALIMENTARIA 2022, columna Aplicado, M21ALMA.
+# Grounding: aeat-dr-100-2023-dictionary:1237, M21PBEA; Plan Berlanga deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1243 y aeat-dr-100-2024-dictionary:1245; Plan de Fomento de la ópera en la Calle del Teatro Real, columna Aplicado, M21PFOA.
+# Grounding: C1ICT, titular del inmueble en el seguimiento de intereses y gastos de reparación pendientes de deducir. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C1ICT, titular del inmueble en el seguimiento de intereses y gastos de reparación pendientes de deducir. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C1ICT, titular del inmueble en el seguimiento de intereses y gastos de reparación pendientes de deducir. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C1ICRC, referencia catastral del inmueble con intereses y gastos de reparación pendientes de deducir. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C1ICRC, referencia catastral del inmueble con intereses y gastos de reparación pendientes de deducir. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C1ICRC, referencia catastral del inmueble con intereses y gastos de reparación pendientes de deducir. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: C1ICRC, referencia catastral del inmueble con intereses y gastos de reparación pendientes de deducir. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: DICT, titular del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: DICT, titular del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: DICT, titular del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: DICRC, referencia catastral del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: DICRC, referencia catastral del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: DICRC, referencia catastral del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: DICRC, referencia catastral del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+# Grounding: aeat-dr-100-2023-dictionary:1387 y aeat-dr-100-2024-dictionary:1317; HOSTELCO 2022, columna Aplicado, M21HOSA.
+# Grounding: aeat-dr-100-2023-dictionary:1393 y aeat-dr-100-2024-dictionary:1323; South Summit 2022-2024, columna Aplicado, M21SSUA.
+# Grounding: aeat-dr-100-2023-dictionary:1396, M21SILA; Año Santo Jubilar San Isidro Labrador deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1240 y aeat-dr-100-2024-dictionary:1242; Alicante 2021. Salida Vuelta al Mundo a Vela, columna Aplicado, M21ALIA.
+# Grounding: aeat-dr-100-2023-dictionary:1252, M21BIRA; Bicentenarios de la independencia de las Republicas lberoamericanas deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1255, M21AERA; 150 Aniversario de creación de la Academia de España en Roma deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1267, M21DCMA; Torneo Davis Cup Madrid deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1258, M21SUMA; Celebración del Summit "MADBLUE" deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1261, M21ESMA; 30 Aniversario de la Escuela Superior de Música Reina Sofía deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1270, M21MHWA; MADRID HORSE WEEK 21/23 deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1273, M21CREA; Centenario del Rugby en España y de la Unió Esportiva Santboiana deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1276, M21SCUA; Solheim Cup 2023 deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1279 y aeat-dr-100-2024-dictionary:1251; IX Centenario de la Reconquista de Sigüenza, columna Aplicado, M21CRSA.
+# Grounding: aeat-dr-100-2023-dictionary:1282, M21MWCA; Barcelona Mobile World Capital deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1285, M21VCMA; Valencia, Capital Mundial del Diseño 2022 / Valencia World Design Capital 2022 deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1288, M21CROA; Centenario de Revista de Occidente deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1291 y aeat-dr-100-2024-dictionary:1254; 50 aniversario del fallecimiento de Clara Campoamor. 90 años del inicio de una democracia plena, columna Aplicado, M21FCCA.
+# Grounding: aeat-dr-100-2023-dictionary:1294, M21FANA; V Centenario del fallecimiento de Elio Antonio de Nebrija deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1297 y aeat-dr-100-2024-dictionary:1257; Nuevas Metas II, columna Aplicado, M21NMEA.
+# Grounding: aeat-dr-100-2023-dictionary:1300, M21ARDA; Andalucía Región Europea del Deporte 2021 deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1303, M21AOOA; 75 aniversario de la Ópera en Oviedo deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1306, M21HRCA; Hábitos Saludables para el control del riesgo Cardiovascular "Aprender a cuidarnos" deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1309, M21MBEA; Mundiales Bádminton España deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1312, M21CBCA; Centenario de la Batalla de Covadonga-Cuadonga deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1315, M21CCPA; VII Centenario de la Catedral de Palencia 2021-2022 deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1318, M21RTUA; FITUR especial: recuperación turismo deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1321 y aeat-dr-100-2024-dictionary:1260; Programa Deporte lnclusivo II, columna Aplicado, M21PDIA.
+# Grounding: aeat-dr-100-2023-dictionary:1324, M21SJDA; 50 aniversario del Hospital Sant Joan de Deu deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+# Grounding: aeat-dr-100-2023-dictionary:1399 y aeat-dr-100-2024-dictionary:1326; Inauguración de la Galería de las Colecciones Reales, columna Aplicado, M21GCRA.
+# Grounding: aeat-dr-100-2023-dictionary:1402 y aeat-dr-100-2024-dictionary:1329; Centenario del Hockey 1923-2023, columna Aplicado, M21HOKA.
+# Grounding: aeat-dr-100-2023-dictionary:1408 y aeat-dr-100-2024-dictionary:1332; 60 aniversario del Festival Porta Ferrada, columna Aplicado, M21FPFA.
+# Grounding: aeat-dr-100-2023-dictionary:1411 y aeat-dr-100-2024-dictionary:1335; Programa EN PLAN BIEN, columna Aplicado, M21BIENA.
+# Grounding: aeat-dr-100-2023-dictionary:1417 y aeat-dr-100-2024-dictionary:1338; Ryder Cup 2031, columna Aplicado, M21RYCA.
+# Grounding: aeat-dr-100-2023-dictionary:1420 y aeat-dr-100-2024-dictionary:1341; Open Barcelona-Trofeo Conde de Godó, columna Aplicado, M21GODOA.
+# Grounding: aeat-dr-100-2023-dictionary:1423 y aeat-dr-100-2024-dictionary:1344; 125 aniversario del Real Club de Tenis Barcelona, columna Aplicado, M21RTBA.
+# Grounding: aeat-dr-100-2023-dictionary:1426 y aeat-dr-100-2024-dictionary:1347; 750 aniversario del Consolat del Mar, columna Aplicado, M21CONMA.
+# Grounding: aeat-dr-100-2023-dictionary:1429 y aeat-dr-100-2024-dictionary:1350; Congreso de la Unión Internacional de Arquitectos, columna Aplicado, M21VIAA.
+# Grounding: aeat-dr-100-2023-dictionary:1432 y aeat-dr-100-2024-dictionary:1353; Festival Internacional Sónar de Música, Creativitat i Tecnologia, columna Aplicado, M21SONA.
+# Grounding: aeat-dr-100-2023-dictionary:1435 y aeat-dr-100-2024-dictionary:1356; XXXVII Copa América Barcelona, columna Aplicado, M21CABA.
+# Grounding: aeat-dr-100-2023-dictionary:1438 y aeat-dr-100-2024-dictionary:1359; Programa deportivo 'RETO DE', columna Aplicado, M21RETOA.
+# Grounding: aeat-dr-100-2023-dictionary:1441 y aeat-dr-100-2024-dictionary:1362; Celebración de la Bienal Manifesta 15 Barcelona, columna Aplicado, M21BMBA.
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0063-2023-2024-unchanged"
+continuidad_id = "irpf-inmueble-porcentaje-propiedad"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0066-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-referencia-catastral"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0070-2023-2024-label-evolved"
+continuidad_id = "irpf-inmueble-vivienda-habitual-flag"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0076-2023-2024-label-evolved"
+continuidad_id = "irpf-inmueble-dias-vivienda-habitual"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0100-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-arrendamiento-reduccion-flag"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0101-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-arrendamiento-dias"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0101-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-arrendamiento-dias"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0101-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-arrendamiento-dias"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0103-2023-2024-label-evolved"
+continuidad_id = "irpf-inmueble-gastos-financiacion-pendientes-previos"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0106-2023-2024-label-evolved"
+continuidad_id = "irpf-inmueble-gastos-reparacion-conservacion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0108-2023-2024-label-evolved"
+continuidad_id = "irpf-inmueble-gastos-financiacion-pendientes-futuros"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0118-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-adquisicion-onerosa"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0118-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-adquisicion-onerosa"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0118-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-adquisicion-onerosa"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0119-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-adquisicion-lucrativa"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0119-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-adquisicion-lucrativa"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0119-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-adquisicion-lucrativa"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0120-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-fecha-adquisicion"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0120-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-fecha-adquisicion"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0120-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-fecha-adquisicion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0122-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-dias-arrendado"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0122-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-dias-arrendado"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0122-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-dias-arrendado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0123-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-2-valor-catastral"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0124-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-valor-catastral-construccion"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0124-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-valor-catastral-construccion"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0124-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-valor-catastral-construccion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0125-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-porcentaje-construccion-catastral"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0125-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-porcentaje-construccion-catastral"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0125-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-porcentaje-construccion-catastral"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0126-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-importe-adquisicion"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0126-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-importe-adquisicion"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0126-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-importe-adquisicion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0127-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-gastos-tributos-adquisicion"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0127-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-gastos-tributos-adquisicion"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0127-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-gastos-tributos-adquisicion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0128-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-mejoras-previas"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0128-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-mejoras-previas"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0128-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-mejoras-previas"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0130-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-base"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0130-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-base"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0130-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-base"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0133-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-adquisicion-onerosa"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0133-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-adquisicion-onerosa"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0133-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-adquisicion-onerosa"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0135-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-fecha-adquisicion"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0135-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-fecha-adquisicion"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0135-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-fecha-adquisicion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0137-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-dias-arrendado"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0137-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-dias-arrendado"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0137-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-dias-arrendado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0138-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-3-valor-catastral"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0139-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-valor-catastral-construccion"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0139-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-valor-catastral-construccion"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0139-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-valor-catastral-construccion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0140-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-porcentaje-construccion-catastral"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0140-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-porcentaje-construccion-catastral"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0140-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-porcentaje-construccion-catastral"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0141-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-importe-adquisicion"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0141-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-importe-adquisicion"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0141-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-importe-adquisicion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0142-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-gastos-tributos-adquisicion"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0142-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-gastos-tributos-adquisicion"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0142-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-gastos-tributos-adquisicion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0143-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-mejoras-previas"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0143-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-mejoras-previas"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0143-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-mejoras-previas"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0145-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-base"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0145-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-base"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0145-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-base"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0302-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-premios-aprovechamiento-forestal"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0304-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-premios-otras-ganancias"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0312-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-fondos-valor-transmision-global"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0322-2023-2024-label-evolved"
+continuidad_id = "irpf-perdida-fondos-importe-computable"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0328-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-acciones-valor-transmision-global"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0392-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-otras-ejer-ant-ganancia-imputable"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0395-2023-2024-label-evolved"
+continuidad_id = "irpf-perdida-otras-ejer-ant-imputable"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0399-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-reinversion-imputable"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0429-2023-2024-label-evolved"
+continuidad_id = "irpf-saldo-neto-rdto-capital-mobiliario-ahorro"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0430-2023-2024-label-evolved"
+continuidad_id = "irpf-saldo-neto-rdto-capital-mobiliario-ahorro-imputado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0474-2023-2024-label-evolved"
+continuidad_id = "irpf-red-discapacidad-aportaciones-propias"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-53"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0475-2023-2024-label-evolved"
+continuidad_id = "irpf-red-discapacidad-aportaciones-parientes"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-53"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0480-2023-2024-label-evolved"
+continuidad_id = "irpf-red-patrimonio-protegido-discapacidad-aportaciones"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-54"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0489-2023-2024-label-evolved"
+continuidad_id = "irpf-red-deportistas-aportaciones-contribuciones"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:da-11"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0502-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-rib-illes-balears-estatal"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0503-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-rib-illes-balears-autonomica"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0504-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-incremento-cuota-autonomica-perdida-nacimiento"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0508-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-illes-balears-estatal"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0509-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-illes-balears-autonomica"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0528-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-escala-sobre-base-general-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0529-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-escala-sobre-base-general-autonomico"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0530-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-escala-sobre-minimo-general-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0532-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-cuota-base-liquidable-general-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0533-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-cuota-base-liquidable-general-autonomico"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0534-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-tipo-medio-gravamen-base-liquidable-general-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0535-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-tipo-medio-gravamen-general-autonomico"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0536-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-escala-sobre-base-ahorro-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0537-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-escala-general-resultado-autonomico"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0538-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-escala-sobre-minimo-ahorro-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0540-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-cuota-base-liquidable-ahorro-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0541-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-cuota-base-liquidable-ahorro-autonomico"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0542-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-tipo-medio-gravamen-ahorro-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0543-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-tipo-medio-gravamen-ahorro-autonomico"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0556-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0556-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-estatal"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0556-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-estatal"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0556-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-estatal"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0557-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-autonomica"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0557-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-autonomica"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0557-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-autonomica"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0557-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-autonomica"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0558-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-estatal"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0558-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-estatal"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0558-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-estatal"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0558-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-estatal"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0559-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-autonomica"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0559-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-autonomica"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0559-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-autonomica"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0559-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-autonomica"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0564-2020-2024-label-evolved"
+continuidad_id = "irpf-deducciones-autonomicas-suma"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0564-2021-2024-label-evolved"
+continuidad_id = "irpf-deducciones-autonomicas-suma"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0564-2022-2024-label-evolved"
+continuidad_id = "irpf-deducciones-autonomicas-suma"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0564-2023-2024-label-evolved"
+continuidad_id = "irpf-deducciones-autonomicas-suma"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0582-2023-2024-unchanged"
+continuidad_id = "irpf-intereses-demora-regularizacion-estatal"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0583-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-intereses-demora-regularizacion-autonomico"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-58-2003:art-26"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0583-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-intereses-demora-regularizacion-autonomico"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-58-2003:art-26"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0680-2023-2024-retired"
+continuidad_id = "irpf-regularizacion-complementaria-resultado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0681-2023-2024-retired"
+continuidad_id = "irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0682-2023-2024-retired"
+continuidad_id = "irpf-regularizacion-devoluciones-solicitadas-ejercicio"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0686-2023-2024-retired"
+continuidad_id = "irpf-regularizacion-numero-justificante-rectificacion"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0706-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-andalucia-valderrama-masters-2022-2024-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0707-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-bicentenario-de-la-policia-nacional-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0721-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-cuota-general-importe"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0721-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-cuota-general-importe"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0721-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-cuota-general-importe"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0721-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-cuota-general-importe"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0729-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-a-residente-ue-cuota-irnr"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:da-48"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0757-2023-2024-retired"
+continuidad_id = "irpf-aeip-gran-premio-de-espana-de-formula-1-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0760-2023-2024-retired"
+continuidad_id = "irpf-aeip-centenario-federacion-aragonesa-de-futbol-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0761-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-plan-2030-de-apoyo-al-deporte-de-base-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0762-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-universo-mujer-iii-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0765-2023-2024-retired"
+continuidad_id = "irpf-aeip-175-aniversario-de-la-construccion-del-gran-teatre-del-liceu-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0766-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-programa-de-preparacion-de-los-deportistas-espanoles-de-los-juegos-de-paris-2024-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0767-2023-2024-retired"
+continuidad_id = "irpf-aeip-4a-edicion-de-la-barcelona-world-race-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0768-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-100-anos-del-fallecimiento-de-joaquin-sorolla-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0773-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-20-aniversario-de-primavera-sound-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0779-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-centenario-del-nacimiento-de-victoria-de-los-angeles-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0780-2023-2024-retired"
+continuidad_id = "irpf-aeip-plan-decenio-milliarium-montserrat-1025-2025-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0781-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-conmemoracion-del-50-aniversario-de-la-muerte-del-artista-espanol-pablo-picasso-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0782-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-todos-contra-el-cancer-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0783-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-ano-de-investigacion-santiago-ramon-y-cajal-2022-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0784-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-ano-jubilar-lebaniego-2023-2024-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0785-2023-2024-retired"
+continuidad_id = "irpf-aeip-mundo-voluntario-2030-35o-aniversario-plataforma-del-voluntariado-de-espana-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0786-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-7a-conferencia-mundial-sobre-turismo-enologico-de-la-omt-2023-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0787-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-caravaca-de-la-cruz-2024-ano-jubilar-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0788-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-bicentenario-del-ateneo-de-madrid-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0791-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-barcelona-equestrian-challenge-4a-edicion-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0793-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-200-aniversario-del-passeig-de-gracia-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0796-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-reconstuccion-de-la-piscina-historica-cubierta-de-saltos-del-club-natacio-barcelona-cnb-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0797-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-alimentaria-2022-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0815-2023-2024-retired"
+continuidad_id = "irpf-aeip-plan-berlanga-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-0817-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-plan-de-fomento-de-la-opera-en-la-calle-del-teatro-real-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1038-2023-2024-unchanged"
+continuidad_id = "irpf-deduccion-galicia-otras"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1211-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-gastos-pendientes-titular"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1211-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-gastos-pendientes-titular"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1211-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-gastos-pendientes-titular"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1212-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-gastos-pendientes-referencia-catastral"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1212-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-gastos-pendientes-referencia-catastral"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1212-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-gastos-pendientes-referencia-catastral"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1212-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-gastos-pendientes-referencia-catastral"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1231-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-exencion-reinversion-nuevas-empresas-contribuyente-titular"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1234-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-exencion-reinversion-importe-reinvertido"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1235-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-exencion-reinversion-importe-comprometido"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1237-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-exencion-reinversion-rentas-vitalicias-contribuyente-titular"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1240-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-exencion-rv-importe-reinvertido"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1241-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-exencion-rv-importe-comprometido"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1242-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-exencion-rv-retencion-comprometida"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1245-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-compensacion-saldos-ganancias-perdidas-general-contribuyente-titular"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-48"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1258-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-compensacion-saldos-ganancias-perdidas-ahorro-contribuyente-titular"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1271-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-compensacion-saldos-capital-mobiliario-contribuyente-titular"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1362-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-exceso-patrim-protegido-ejercicio-actual"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-54"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1378-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-exceso-deportistas-generado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:da-11"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1379-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-compensacion-bases-liquidables-negativas-contribuyente-titular"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1391-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-base-liq-neg-generado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1393-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-desglose-gastos-titular"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1393-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-desglose-gastos-titular"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1393-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-desglose-gastos-titular"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1394-2020-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-desglose-gastos-referencia-catastral"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1394-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-desglose-gastos-referencia-catastral"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1394-2022-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-desglose-gastos-referencia-catastral"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1394-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-desglose-gastos-referencia-catastral"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1595-2023-2024-label-evolved"
+continuidad_id = "irpf-re-atrib-gp-reducidas-no-exentas-imputables"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1600-2023-2024-label-evolved"
+continuidad_id = "irpf-re-atrib-retenciones-ganancias"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1623-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-hostelco-2022-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1627-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-barcelona-music-lab-el-futuro-de-la-musica-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1629-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-south-summit-2022-2024-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1630-2023-2024-retired"
+continuidad_id = "irpf-aeip-ano-santo-jubilar-san-isidro-labrador-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1639-2023-2024-label-evolved"
+continuidad_id = "irpf-perdida-otros-imputable-ejercicio"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1650-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-otros-reducida-no-exenta-imputable-dt9"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1654-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-otros-reducida-imputable-da7"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1689-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-alicante-2021-salida-vuelta-al-mundo-a-vela-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1690-2023-2024-retired"
+continuidad_id = "irpf-aeip-bicentenarios-de-la-independencia-de-las-republicas-lberoamericanas-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1691-2023-2024-retired"
+continuidad_id = "irpf-aeip-150-aniversario-de-creacion-de-la-academia-de-espana-en-roma-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1692-2023-2024-retired"
+continuidad_id = "irpf-aeip-torneo-davis-cup-madrid-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1693-2023-2024-retired"
+continuidad_id = "irpf-aeip-celebracion-del-summit-madblue-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1694-2023-2024-retired"
+continuidad_id = "irpf-aeip-30-aniversario-de-la-escuela-superior-de-musica-reina-sofia-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1698-2023-2024-retired"
+continuidad_id = "irpf-aeip-madrid-horse-week-21-23-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1699-2023-2024-retired"
+continuidad_id = "irpf-aeip-centenario-del-rugby-en-espana-y-de-la-unio-esportiva-santboiana-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1700-2023-2024-retired"
+continuidad_id = "irpf-aeip-solheim-cup-2023-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1701-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-ix-centenario-de-la-reconquista-de-siguenza-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1702-2023-2024-retired"
+continuidad_id = "irpf-aeip-barcelona-mobile-world-capital-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1703-2023-2024-retired"
+continuidad_id = "irpf-aeip-valencia-capital-mundial-del-diseno-2022-valencia-world-design-capital-2022-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1705-2023-2024-retired"
+continuidad_id = "irpf-aeip-centenario-de-revista-de-occidente-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1706-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-50-aniversario-del-fallecimiento-de-clara-campoamor-90-anos-del-inicio-de-una-democracia-plena-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1707-2023-2024-retired"
+continuidad_id = "irpf-aeip-v-centenario-del-fallecimiento-de-elio-antonio-de-nebrija-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1708-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-nuevas-metas-ii-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1710-2023-2024-retired"
+continuidad_id = "irpf-aeip-andalucia-region-europea-del-deporte-2021-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1711-2023-2024-retired"
+continuidad_id = "irpf-aeip-75-aniversario-de-la-opera-en-oviedo-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1712-2023-2024-retired"
+continuidad_id = "irpf-aeip-habitos-saludables-para-el-control-del-riesgo-cardiovascular-aprender-a-cuidarnos-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1713-2023-2024-retired"
+continuidad_id = "irpf-aeip-mundiales-badminton-espana-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1714-2023-2024-retired"
+continuidad_id = "irpf-aeip-centenario-de-la-batalla-de-covadonga-cuadonga-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1715-2023-2024-retired"
+continuidad_id = "irpf-aeip-vii-centenario-de-la-catedral-de-palencia-2021-2022-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1716-2023-2024-retired"
+continuidad_id = "irpf-aeip-fitur-especial-recuperacion-turismo-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1717-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-programa-deporte-lnclusivo-ii-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1720-2023-2024-retired"
+continuidad_id = "irpf-aeip-50-aniversario-del-hospital-sant-joan-de-deu-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1808-2023-2024-label-evolved"
+continuidad_id = "irpf-perdida-cripto-imputable-ejercicio"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1832-2023-2024-label-evolved"
+continuidad_id = "irpf-perdida-inmueble-imputable-ejercicio"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1843-2023-2024-label-evolved"
+continuidad_id = "irpf-ganancia-inmueble-no-exenta-imputable"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1857-2023-2024-label-evolved"
+continuidad_id = "irpf-anexo-c-exceso-eficiencia-energetica-generado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:da-50"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1944-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-inauguracion-de-la-galeria-de-las-colecciones-reales-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1945-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-centenario-del-hockey-1923-2023-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1947-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-60-aniversario-del-festival-porta-ferrada-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1948-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-programa-en-plan-bien-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1950-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-ryder-cup-2031-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1951-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-open-barcelona-trofeo-conde-de-godo-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1952-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-125-aniversario-del-real-club-de-tenis-barcelona-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1953-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-750-aniversario-del-consolat-del-mar-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1954-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-congreso-de-la-union-internacional-de-arquitectos-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1955-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-festival-internacional-sonar-de-musica-creativitat-i-tecnologia-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1956-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-xxxvii-copa-america-barcelona-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1957-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-programa-deportivo-reto-de-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1958-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-celebracion-de-la-bienal-manifesta-15-barcelona-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1963-2023-2024-label-evolved"
+continuidad_id = "irpf-deduccion-c-valenciana-autoconsumo-generado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]
+
+[[revisions.2024.casilla_continuidad_evolutions]]
+id = "m100-1964-2023-2024-label-evolved"
+continuidad_id = "irpf-deduccion-c-valenciana-acciones-participaciones-pendiente"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "aeat-renta-2024-manual-deducciones-autonomicas", "boe-modelo-100-2024-form"]

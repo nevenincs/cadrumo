@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -19,8 +17,8 @@ from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .. import workbench_generation as generation_module
-from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
+from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..ledger.workspace import (
     LedgerWorkspaceArea,
     LedgerWorkspaceAreaStateV1,
@@ -56,6 +54,7 @@ from ..workbench_generation import (
     assemble_workbench_generation,
     assemble_workbench_generation_from,
 )
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

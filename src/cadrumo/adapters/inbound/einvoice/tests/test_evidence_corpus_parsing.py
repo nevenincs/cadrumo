@@ -418,5 +418,3 @@ def test_the_facturae_reader_carries_both_parties_tax_ids_not_only_the_supplier(
     assert parsed.supplier_tax_id == "45821337R"
     assert parsed.customer_tax_id == "A82645177"
     assert parsed.supplier_tax_id != parsed.customer_tax_id
-
-

@@ -48,6 +48,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
 from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
 from cadrumo.adapters.persistence.profile.review_package_signing import ReviewPackageSigningKeypairAdapter
+from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_bytes
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.review_package_collab_audit import (
     emit_collab_package_counter_signed_event,
@@ -56,6 +57,7 @@ from cadrumo.application.modelo.review_package_collab_audit import (
     emit_collab_recipient_registered_event,
     emit_collab_recipient_removed_event,
 )
+from cadrumo.application.modelo.review_package_counter_sign import counter_sign_review_package
 from cadrumo.application.modelo.review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,
@@ -68,7 +70,6 @@ from cadrumo.application.modelo.review_package_recipient_registry import (
 )
 from cadrumo.application.modelo.review_package_recipient_registry_ports import RecipientFingerprintRegistryPorts
 from cadrumo.application.modelo.review_package_signing import sign_review_package
-from cadrumo.application.modelo.review_package_counter_sign import counter_sign_review_package
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -81,7 +82,6 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import build_package_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

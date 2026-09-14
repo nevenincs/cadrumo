@@ -1,0 +1,317 @@
+# Official Modelo 130 form arithmetic: casilla 17 = casilla 14 - casilla 15 - casilla 16.
+# Art. 109 RIRPF is an applicability/profile exemption, not a zero branch here.
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-saldo-negativo-fin-periodo"
+target_casilla_id = "saldo-negativo-fin-periodo"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Resultados negativos"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "max"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+literal = "0"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+op = "negate"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "17"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-rendimiento-neto"
+target_casilla_id = "03"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Rendimiento neto", "Casilla 03"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "01"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "02"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-pago-fraccionado-directa"
+target_casilla_id = "04"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 04.", "20 por 100", "casilla 03 sea negativo", "cero"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "max"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+literal = "0"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+op = "percent"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "03"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+parameter = "irpf.direct_estimation_fractional_payment_rate"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-resultado-apartado-i"
+target_casilla_id = "07"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 07.", "restar el importe de la casilla 05 y 06 al importe de la casilla 04"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+op = "subtract"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "04"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "05"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "06"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-pago-fraccionado-agrario"
+target_casilla_id = "09"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 09.", "2 por 100", "casilla 08"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "percent"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "08"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+parameter = "irpf.agriculture_fractional_payment_rate"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-resultado-apartado-ii"
+target_casilla_id = "11"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 11.", "restar el importe de la casilla 10 al importe de la casilla 09"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "09"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "10"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-suma-parciales"
+target_casilla_id = "12"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 12.", "sumar, teniendo en cuenta sus respectivos signos", "casillas 07 y 11"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "max"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+literal = "0"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+op = "add"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "07"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "11"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-neto-tras-minoracion"
+target_casilla_id = "14"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["casilla 14", "Casilla 12", "Casilla 13"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "12"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "13"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-resultados-negativos-anteriores-cap"
+target_casilla_id = "15"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["importe (sin signo) de los resultados negativos", "en ningún caso podrá figurar en la casilla 15 un importe superior"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "min"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+binding = "modelo-130-resultados-negativos-anteriores"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+op = "max"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+literal = "0"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "14"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-diferencia"
+target_casilla_id = "17"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 17.", "restar el importe de las casillas 15 y 16 del importe de la casilla 14"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+op = "subtract"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "14"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+casilla_id = "15"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "16"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-resultado-final"
+target_casilla_id = "19"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 19.", "casilla 19 es positiva", "apartado \"Ingreso\""]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "17"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+casilla_id = "18"
+
+[[revisions.2019-y-siguientes.formulas]]
+id = "modelo-130-minoracion-rendimientos-netos"
+target_casilla_id = "13"
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+
+[[revisions.2019-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 13.", "igual o inferior a 12.000 euros", "Importe de la minoración"]
+
+[revisions.2019-y-siguientes.formulas.expression]
+op = "if_then_else"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+op = "less_equal"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+binding = "irpf.previous_year_economic_activity_net_income"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+literal = "9000"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+literal = "100"
+
+[[revisions.2019-y-siguientes.formulas.expression.args]]
+op = "if_then_else"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+op = "less_equal"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args]]
+binding = "irpf.previous_year_economic_activity_net_income"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args]]
+literal = "10000"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+literal = "75"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args]]
+op = "if_then_else"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args]]
+op = "less_equal"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args.args]]
+binding = "irpf.previous_year_economic_activity_net_income"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args.args]]
+literal = "11000"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args]]
+literal = "50"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args]]
+op = "if_then_else"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args.args]]
+op = "less_equal"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args.args.args]]
+binding = "irpf.previous_year_economic_activity_net_income"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args.args.args]]
+literal = "12000"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args.args]]
+literal = "25"
+
+[[revisions.2019-y-siguientes.formulas.expression.args.args.args.args]]
+literal = "0"

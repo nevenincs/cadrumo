@@ -30,12 +30,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core.renta_declaracion_type import RentaDeclaracionType
-from ...domain.contribuyente.renta_codes import SituacionFamiliar
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.situacion_familiar_catalogue import (
     require_situacion_familiar,
     situacion_familiar_monoparental_required,
 )
+from ...domain.contribuyente.renta_codes import SituacionFamiliar
 from ..flows.definition import FlowDefinition, FlowSection
 from ..flows.validators import ValidationVerdict, register_cross_field_validator
 from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID

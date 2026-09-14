@@ -58,13 +58,21 @@ def _registry_tranches(snapshot: RegistrySnapshot, *, ccaa_infix: str | None = N
 
 
 def _binding_id_for_estatal(snapshot: RegistrySnapshot) -> str:
-    matches = [binding.id for binding in snapshot.revision.bindings if binding.id.endswith("profile-minimo-descendientes-estatal")]
+    matches = [
+        binding.id
+        for binding in snapshot.revision.bindings
+        if binding.id.endswith("profile-minimo-descendientes-estatal")
+    ]
     assert len(matches) == 1
     return matches[0]
 
 
 def _binding_id_for_autonomico(snapshot: RegistrySnapshot) -> str:
-    matches = [binding.id for binding in snapshot.revision.bindings if binding.id.endswith("profile-minimo-descendientes-autonomico")]
+    matches = [
+        binding.id
+        for binding in snapshot.revision.bindings
+        if binding.id.endswith("profile-minimo-descendientes-autonomico")
+    ]
     assert len(matches) == 1
     return matches[0]
 
@@ -147,9 +155,15 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
 
     assert resolution.binding_values["renta-profile-minimo-descendientes-estatal"] == Decimal("7900.00")
     assert resolution.binding_values["renta-profile-minimo-descendientes-autonomico"] == Decimal("7900.00")
-    assert result.values[validated_casilla_id("0513", surface="test_minimo_descendientes_engine.casilla")] == Decimal("7900.00")
-    assert result.values[validated_casilla_id("0514", surface="test_minimo_descendientes_engine.casilla")] == Decimal("7900.00")
-    assert result.values[validated_casilla_id("0545", surface="test_minimo_descendientes_engine.casilla")] == Decimal("3097.00")
+    assert result.values[validated_casilla_id("0513", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
+        "7900.00"
+    )
+    assert result.values[validated_casilla_id("0514", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
+        "7900.00"
+    )
+    assert result.values[validated_casilla_id("0545", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
+        "3097.00"
+    )
 
 
 def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channel(tmp_path: Path) -> None:

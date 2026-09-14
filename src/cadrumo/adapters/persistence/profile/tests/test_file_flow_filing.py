@@ -2,24 +2,11 @@
 
 from __future__ import annotations
 
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.period import Period
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
-from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.workflow.abort import WorkflowAbortReason
-from cadrumo.application.workflow.persistence import WorkflowRunRepository
-from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
-from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloRecordNotFoundError, ModeloWorkflowGateError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
-from cadrumo.application.modelo.filing_actions import file_modelo_revision, get_filing_record, list_filing_records
-from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -37,6 +24,22 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     verify_revision,
     workflow_profile,
 )
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from cadrumo.application.modelo.action_errors import (
+    CalculationRevisionStateError,
+    ModeloRecordNotFoundError,
+    ModeloWorkflowGateError,
+)
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
+from cadrumo.application.modelo.filing_actions import file_modelo_revision, get_filing_record, list_filing_records
+from cadrumo.application.modelo.work_lifecycle import get_work_unit
+from cadrumo.application.workflow.abort import WorkflowAbortReason
+from cadrumo.application.workflow.persistence import WorkflowRunRepository
+from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
+from cadrumo.core.period import Period
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

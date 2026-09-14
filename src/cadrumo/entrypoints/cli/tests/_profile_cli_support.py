@@ -10,6 +10,7 @@ from contextlib import suppress
 from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from .cli_runner import invoke_cached_cli
 
 

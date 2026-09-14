@@ -23,13 +23,13 @@ from sqlalchemy import Engine, text
 
 from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
-from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
 from ...runtime_readiness import StorageRuntimeReadinessCode
 from ...sql.secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ...sql.secure_objects import SecureObjectRepository
 from ...sql.session import session_scope
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ..contract import Envelope
 from ..secure_bound_repository import SecureBoundRepository
 

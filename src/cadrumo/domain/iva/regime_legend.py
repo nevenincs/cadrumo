@@ -50,9 +50,9 @@ from pydantic import BaseModel, Field
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from .schema import IvaCategory
 
 __all__ = [

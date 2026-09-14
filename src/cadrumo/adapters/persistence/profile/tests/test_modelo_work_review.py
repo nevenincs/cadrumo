@@ -8,6 +8,28 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
+    DEFAULT_130_BASELINE_INPUTS,
+    DEFAULT_130_BINDING_VALUES,
+    M130_CARRY_FORWARD_CASILLA,
+    M130_INCOME_CASILLA,
+    M130_NET_RESULT_CASILLA,
+    T0,
+    Repos,
+    verify_revision,
+)
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    load_test_profile_record,
+    replace_test_profile_record,
+)
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.work_review import (
+    ModeloWorkOriginAnomaly,
+    ModeloWorkProgress,
+    ModeloWorkProgressDenominator,
+    ModeloWorkReview,
+    build_modelo_work_review,
+)
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.period import Period
@@ -19,7 +41,10 @@ from cadrumo.domain.calculations.registry.schema_references import RegistrySnaps
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.row_source_identity import RowSourceIdentity
 from cadrumo.domain.filing.schema import ModeloValueKind
-from cadrumo.domain.modelos.calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_repository import (
+    CalculationRevisionPersistenceError,
+    upsert_calculation_revision,
+)
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -39,25 +64,6 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.work_review import (
-    ModeloWorkOriginAnomaly,
-    ModeloWorkProgress,
-    ModeloWorkProgressDenominator,
-    ModeloWorkReview,
-    build_modelo_work_review,
-)
-from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
-    DEFAULT_130_BASELINE_INPUTS,
-    DEFAULT_130_BINDING_VALUES,
-    M130_CARRY_FORWARD_CASILLA,
-    M130_INCOME_CASILLA,
-    M130_NET_RESULT_CASILLA,
-    T0,
-    Repos,
-    verify_revision,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"

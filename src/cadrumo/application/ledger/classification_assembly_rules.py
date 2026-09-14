@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.iva.classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -14,7 +15,6 @@ from ...domain.iva.classification import (
     domestic_rate_tier_is_required,
     resolve_transaction_kind_catalogue,
 )
-from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 
@@ -28,6 +28,7 @@ __all__ = [
     "transaction_kind_for_nature",
     "transaction_kind_indifferent",
 ]
+
 
 def transaction_kind_for_nature(nature: SupplyNature, *, effective_date: date) -> TransactionKind:
     """Project a printed supply nature through the registry kind catalogue."""

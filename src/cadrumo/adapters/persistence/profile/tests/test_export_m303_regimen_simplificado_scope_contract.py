@@ -7,15 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.period import Period
-from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
-from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
-    BienesInversionParameterProvenance,
-    BienesInversionRegularizacionParameters,
-)
-from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
-from cadrumo.domain.deadlines.models import M303RegimeComposition
-from cadrumo.domain.prorrata_register.register import ProrrataRegister
+from cadrumo.adapters.persistence.profile.tests._export_test_support import _general_m303_filing_evidence, _profile
 from cadrumo.application.aggregation.iva_ledger import (
     IvaLedgerAggregation,
 )
@@ -25,7 +17,15 @@ from cadrumo.application.aggregation.m303_arrivals import (
 )
 from cadrumo.application.filing.producer_snapshot import resolve_m303_filing_facts
 from cadrumo.application.modelo.m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
-from cadrumo.adapters.persistence.profile.tests._export_test_support import _general_m303_filing_evidence, _profile
+from cadrumo.core.period import Period
+from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
+from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
+    BienesInversionParameterProvenance,
+    BienesInversionRegularizacionParameters,
+)
+from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
+from cadrumo.domain.deadlines.models import M303RegimeComposition
+from cadrumo.domain.prorrata_register.register import ProrrataRegister
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

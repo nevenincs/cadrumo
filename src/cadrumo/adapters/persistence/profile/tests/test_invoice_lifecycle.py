@@ -20,16 +20,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.catalogue_creation import (
     build_catalogue_creation_ports,
     build_catalogue_lifecycle_ports,
 )
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from cadrumo.application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
@@ -38,6 +34,10 @@ from cadrumo.application.invoices.catalogue_lifecycle import (
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
+from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
+from cadrumo.domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
+from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.iva.classification import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

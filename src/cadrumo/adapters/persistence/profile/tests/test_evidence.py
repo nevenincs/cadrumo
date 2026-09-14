@@ -8,14 +8,14 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.core.config import Settings
-from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.application.ledger.evidence import (
     PurchaseInvoiceEvidencePatch,
 )
-from ._evidence_test_support import _BUCKET_ID, _event_repo, _make_svc
+from cadrumo.core.config import Settings
+from cadrumo.domain.buckets.event import BucketEventType
+
+from ._evidence_test_support import _BUCKET_ID, _event_repo, _make_svc, isolated_settings, pdf_file, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
-from ._evidence_test_support import isolated_settings, pdf_file, secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "pdf_file", "runtime_profile", "secure_objects"]

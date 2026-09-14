@@ -43,8 +43,8 @@ from ...core.amendment_kind_regime import (
 )
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
-from ...domain.calculations.registry.amendment_regime_policy import resolve_amendment_kind_regime_for_period
 from ...core.result_disposition import result_disposition_casilla_ids
+from ...domain.calculations.registry.amendment_regime_policy import resolve_amendment_kind_regime_for_period
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from .action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
 

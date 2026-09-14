@@ -202,8 +202,8 @@ def config_profile_delete(
     yes: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    from ._profile_support import resolve_profile_by_label
     from ..state_projection_support import bucket_storage
+    from ._profile_support import resolve_profile_by_label
 
     """Destroy one named profile capsule, after a preflight the operator confirms."""
     _activate_subcommand_output_language(ctx, output_language)

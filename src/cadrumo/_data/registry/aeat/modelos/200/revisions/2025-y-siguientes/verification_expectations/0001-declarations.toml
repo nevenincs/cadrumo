@@ -1,0 +1,56 @@
+# Calculation verification for Modelo 200 (Impuesto sobre Sociedades,
+# Ley 27/2014). Enrolls the always-present liquidation-chain finals as the
+# reconciliation contract: cuota integra (DP200014:00562, art. 29/30), cuota
+# liquida (DP200014B:00592, art. 41), and cuota diferencial (DP200014B:00611,
+# art. 124) are the formula-derived money finals reported in every filed
+# declaration, so min_coverage = 1 holds without flipping a legitimate filing to
+# NEEDS_REVIEW. Situational computed casillas (BIN compensation
+# `bin-aplicada-maxima`, doble-imposicion `00582`) and the rate `00558` are
+# deliberately NOT enrolled. Complements the existing base-determination
+# soundness predicate (00501 -> 00552). Grounded in the modelo's own AEAT DR /
+# manual source_refs.
+# This revision declares NO externally grounded casillas, deliberately.
+#
+# The predecessor revision grounds 00562, 00592 and 00611 on the AEAT Manual
+# practico de Sociedades 2024, Cap. 6 "Ejemplo 1", bundled as
+# corpus/manual_oracles/modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json.
+# That oracle carries ejercicio 2024 figures and applies to the 2024 filing
+# year alone, so it cannot ground the same casillas here. Nothing bundled
+# carries them for an applicable filing year yet.
+#
+# Enrollment in this expectation is NOT grounding: it reconciles filed against
+# engine, while grounding is the stronger claim that an independent AEAT
+# authority confirms the engine figure. Declaring the ids without a bundled
+# oracle would assert the stronger claim with nothing behind it. The
+# declaration returns when a Manual practico de Sociedades worked example for
+# an applicable ejercicio is bundled -- the oracle follows the evidence, never
+# the other way round.
+# Exhaustive reconcile-when-present verification for Modelo 200
+# revision 2025-y-siguientes: every computed casilla not enrolled in the
+# coverage-gated contract is value-reconciled against the engine WHEN
+# the filing prints it (a filed-vs-computed divergence surfaces a
+# discrepancy), but is EXCLUDED from the coverage denominator, so
+# enrolling a situational casilla never lowers coverage or flips a
+# legitimate filing's verdict (min_coverage = 0). Grounded in the
+# revision's AEAT DR / framework-law refs (reused from modelo-200-cuota-chain-verification).
+
+[[revisions.2025-y-siguientes.verification_expectations]]
+id = "modelo-200-cuota-chain-verification"
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+computed_casilla_ids = ["DP200014:00562", "DP200014B:00592", "DP200014B:00599", "DP200014B:00611"]
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41", "ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
+
+[[revisions.2025-y-siguientes.verification_expectations]]
+id = "modelo-200-reconcile-when-present"
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["DP200014:00550", "DP200014:00552", "DP200014:00558", "DP200014:00582", "DP200014:01330", "DP200014:bin-aplicada-maxima"]
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

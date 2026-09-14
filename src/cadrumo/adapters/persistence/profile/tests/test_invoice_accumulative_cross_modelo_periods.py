@@ -44,7 +44,6 @@ invoice/transaction link. No mocks, stubs, skips, or xfail.
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -52,11 +51,27 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
+from cadrumo.application.invoices.transaction_linking import link_invoice_transaction_catalogues
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
+from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
+from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -72,16 +87,6 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
-from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
-from cadrumo.application.invoices.transaction_linking import link_invoice_transaction_catalogues
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
-from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
-from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

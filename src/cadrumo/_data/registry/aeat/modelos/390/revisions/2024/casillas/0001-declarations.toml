@@ -1,0 +1,1230 @@
+# Rate-specific box-layer casillas for the adquisiciones intracomunitarias
+# (AIC) block of the regimen general devengado section -- "bienes" (page 02,
+# offsets 999-1220) and "servicios" (page 02, offsets 1237-1458) rows of the
+# bundled 2025 Diseno de Registros apartado 5. Segment- and record-resolved
+# against the design's own "Adquis. intracomunit. bienes/servicios - Tipo N%"
+# row text, never against a bare offset or box number alone -- several of the
+# low box numbers here ([21]/[22], [23]/[24], [25]/[26]) also occur elsewhere
+# on the same page naming unrelated Reg. ordinario boxes.
+#
+# THE DEFECT THIS CLOSES: M390 previously routed ALL adquisiciones
+# intracomunitarias money (both bienes and servicios, every rate) into the
+# ISP (inversion del sujeto pasivo) export slot at page-02 offset 1492 --
+# box [28] -- via the single rate-blind casilla
+# iva.anual.autorepercutido.intracomunitaria. M303 files the identical
+# ledger categories on its OWN AIC-labelled boxes (11/13), so the two modelos
+# disagreed about where the same money goes. The design itself states the
+# boxes are distinct: [27]/[28] read "IVA deveng. invers. sujeto pasivo",
+# never "Adquis. intracomunit.". LIVA art. 13.1 makes AIC of goods its own
+# hecho imponible, with art. 85 the taxable-person chapter for it -- distinct
+# from art. 84 (entregas y prestaciones interiores, the domestic ISP rule
+# behind boxes [27]/[28] in the sibling casillas file).
+#
+# THE RATE-BLIND iva.anual.autorepercutido.intracomunitaria CASILLA REMAINS
+# THE TOTAL-FEEDING AGGREGATE, unchanged in the annual devengada total
+# formula (civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml).
+# Its precondition for the two-layer shape
+# holds: that total sums the rate-blind category casilla directly, never the
+# sum of these rate-specific boxes, so adding this box layer cannot double
+# count. Its export_refs move OFF the ISP slot in that same sibling file, in
+# this same change, so the ISP box no longer receives AIC money at all.
+#
+# EPOCH SCOPING FOR THE PENDING PER-YEAR SPLIT: AIC rung count has exactly
+# THREE states across the 9 bundled designs (2016-2021: 3 rungs, UNLABELLED
+# by rate in the design text -- "Base imponible [21]" with no "Tipo N%"
+# prefix at all; 2022-2023: 5 rungs, 0/4/5/10/21%; 2024-2025: 7 rungs,
+# 0/2/4/5/7,5/10/21%), read directly from the source .xlsx designs. Box
+# identity is STABLE across the widening -- a new rung gets a NEW box number
+# rather than renumbering an existing one -- so no cross-epoch translation is
+# needed for the boxes below; only the 2016-2021 non-existence of a rate
+# label is a real constraint. A rate-specific binding asserting a rate the
+# design never printed would repeat exactly the fabrication this module's own
+# governing ADR forbids, so **these bindings are authored for the 2022-2025
+# design-year range only** -- each casilla below carries its own precise
+# design-year comment, and the pending per-epoch split should drop this
+# fragment from any pre-2022 revision it produces rather than carry it
+# forward unmodified.
+# Box [683]/[684] - "Adquis. intracomunit. bienes - Tipo 2%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
+# Box [685]/[686] - "Adquis. intracomunit. bienes - Tipo 7,5%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
+# Box [687]/[688] - "Adquis. intracomunit. servicios - Tipo 2%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
+# Box [689]/[690] - "Adquis. intracomunit. servicios - Tipo 7,5%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
+# Modelo 390 revision 2024, pagina 4: the Real Decreto-ley 4/2024
+# temporary 2 % and 7,5 % rungs of the apartado 5 IVA deducible block for
+# adquisiciones intracomunitarias (bienes de inversion and servicios).
+#
+# These rungs do not exist on the 2022 design, so they are genuinely new
+# boxes rather than a cross-year reuse. Naming, section, cardinality and LIVA
+# grounding follow the sibling rate rungs of this same block already
+# registered in revision 2024; real-decreto-ley-4-2024:art-1 is added
+# because it is the instrument that establishes these two rates, and it is
+# the reference this registry already cites for its 2 % and 7,5 % repercutido
+# boxes.
+#
+# Offsets, lengths and box numbers transcribed from aeat-dr-390-2024
+# (sha256 8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0), pagina 4.
+# Box [769] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 2% - Base imponible [769]' (offset 13, length 17).
+# Box [770] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 2% - Cuota [770]' (offset 30, length 17).
+# Box [771] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 7,5% - Base imponible [771]' (offset 115, length 17).
+# Box [772] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 7,5% - Cuota [772]' (offset 132, length 17).
+# Box [773] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 2% - Base imponible [773]' (offset 251, length 17).
+# Box [774] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 2% - Cuota [774]' (offset 268, length 17).
+# Box [775] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 7,5% - Base imponible [775]' (offset 353, length 17).
+# Box [776] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 7,5% - Cuota [776]' (offset 370, length 17).
+# Modelo 390 revision 2024: the Real Decreto-ley 4/2024 temporary 2 % and
+# 7,5 % rate rungs of apartado 5 (paginas 2 and 3).
+#
+# These rates do not exist on the 2022 design, so each rung is a genuinely
+# new box rather than a cross-year reuse. Every one derives its section,
+# cardinality and LIVA grounding from the EXISTING sibling rung of the same
+# family in this same revision, plus real-decreto-ley-4-2024:art-1 -- the
+# instrument this registry already cites for its 2 % and 7,5 % boxes.
+#
+# The family, rate and base/cuota split are read from the design's own
+# description. The base/cuota split is taken from the TRAILING segment:
+# pagina 2's apartado is itself titled "Base imponible y cuota", so a
+# whole-string test marks every row on that page a base and would write each
+# cuota figure into its sibling base box.
+#
+# Offsets, lengths and box numbers transcribed from aeat-dr-390-2024
+# (sha256 8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0).
+# Box [671] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 2% - Base imponible [671]' (offset 285, length 17).
+# Box [672] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 2% - Cuota [672]' (offset 302, length 17).
+# Box [673] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 7,5% - Base imponible [673]' (offset 387, length 17).
+# Box [674] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 7,5% - Cuota [674]' (offset 404, length 17).
+# Box [675] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 2% - Base imponible [675]' (offset 523, length 17).
+# Box [676] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 2% - Cuota [676]' (offset 540, length 17).
+# Box [677] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 7,5% - Base imponible [677]' (offset 625, length 17).
+# Box [678] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 7,5% - Cuota [678]' (offset 642, length 17).
+# Box [679] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 2% - Base imponible [679]' (offset 761, length 17).
+# Box [680] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 2% - Cuota [680]' (offset 778, length 17).
+# Box [681] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 7,5% - Base imponible [681]' (offset 863, length 17).
+# Box [682] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 7,5% - Cuota [682]' (offset 880, length 17).
+# Box [695] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 2% - Base imponible [695]' (offset 13, length 17).
+# Box [696] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 2% - Cuota [696]' (offset 30, length 17).
+# Box [697] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 7,5% - Base imponible [697]' (offset 115, length 17).
+# Box [698] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 7,5% - Cuota [698]' (offset 132, length 17).
+# Box [745] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 2% - Base imponible [745]' (offset 251, length 17).
+# Box [746] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 2% - Cuota [746]' (offset 268, length 17).
+# Box [747] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 7,5% - Base imponible [747]' (offset 353, length 17).
+# Box [748] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 7,5% - Cuota [748]' (offset 370, length 17).
+# Box [749] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 2% - Base imponible [749]' (offset 489, length 17).
+# Box [750] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 2% - Cuota [750]' (offset 506, length 17).
+# Box [751] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 7,5% - Base imponible [751]' (offset 591, length 17).
+# Box [752] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 7,5% - Cuota [752]' (offset 608, length 17).
+# Box [753] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 2% - Base imponible [753]' (offset 727, length 17).
+# Box [754] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 2% - Cuota [754]' (offset 744, length 17).
+# Box [755] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 7,5% - Base imponible [755]' (offset 829, length 17).
+# Box [756] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 7,5% - Cuota [756]' (offset 846, length 17).
+# Box [757] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 2% - Base imponible [757]' (offset 965, length 17).
+# Box [758] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 2% - Cuota [758]' (offset 982, length 17).
+# Box [759] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 7,5% - Base imponible [759]' (offset 1067, length 17).
+# Box [760] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 7,5% - Cuota [760]' (offset 1084, length 17).
+# Box [761] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 2% - Base imponible [761]' (offset 1203, length 17).
+# Box [762] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 2% - Cuota [762]' (offset 1220, length 17).
+# Box [763] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 7,5% - Base imponible [763]' (offset 1305, length 17).
+# Box [764] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 7,5% - Cuota [764]' (offset 1322, length 17).
+# Box [765] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 2% - Base imponible [765]' (offset 1441, length 17).
+# Box [766] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 2% - Cuota [766]' (offset 1458, length 17).
+# Box [767] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 7,5% - Base imponible [767]' (offset 1543, length 17).
+# Box [768] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 7,5% - Cuota [768]' (offset 1560, length 17).
+# Rate-specific box-layer casillas for the Recargo de equivalencia block. Each
+# carries the official AEAT box number read off the bundled 2024 Diseno de
+# Registros, apartado 5, "Operaciones Reg. Gral. - Base Imponible y cuota -
+# Recargo de equivalencia" rows, stated explicitly rather than left implied by an
+# export position. Every position in that apartado appears twice, once under Reg.
+# ordinario and once under Recargo de equivalencia, so a number matched on offset
+# alone would be ambiguous; these are segment-resolved.
+#
+# The casilla is named for its RECARGO rate, matching the official box label,
+# while its binding narrows on the IVA rate that statute pairs with it. The three
+# rate-blind recargo tier casillas remain the TOTAL layer: they keep their
+# bindings, keep feeding the annual devengada total, and keep every row including
+# one whose IVA rate was never recorded. That layer therefore sums to MORE than
+# this one by exactly the rate-unrecorded amount.
+#
+# These carry no export_refs yet. The record decomposition for this block is
+# being established separately, and writing a rate box into the record before the
+# shortfall refusal covers it would render an unpopulated money field as 0,00 --
+# turning a silence into a false nil.
+# Box [694] - "Recargo de equivalencia - Tipo 1% - Cuota". RDL 4/2024 art. 1.Dos
+# pairs it with the temporary 7,5 % rate. Vigencia: 1 oct - 31 dic 2024.
+# Box [666] - "Recargo de equivalencia - Tipo 0,62% - Cuota". RDL 4/2024 art.
+# 1.Uno pairs it with the temporary 5 % rate. Vigencia: 1 jul - 30 sep 2024.
+# Box [692] - "Recargo de equivalencia - Tipo 0,26% - Cuota". RDL 4/2024 art.
+# 1.Dos pairs it with the temporary 2 % rate. Vigencia: 1 oct - 31 dic 2024.
+# Rate-specific box-layer casillas for the Reg. ordinario block. Each carries the
+# official AEAT box number read off the bundled 2024 Diseno de Registros
+# (apartado 5, "Operaciones Reg. Gral. - Base Imponible y cuota - Reg. ordin."),
+# stated explicitly rather than left implied by an export position, so the
+# casilla-to-box correspondence is readable without re-deriving it from offsets
+# and disambiguating the regimen segment.
+#
+# Each casilla owns its official box in the record: the fourteen consecutive
+# money fields at offsets 13-250 of page 2, base preceding cuota within each
+# rate. The rate-blind tier casillas that previously wrote 98/200/234 no longer
+# export, so no casilla both totals and asserts a rate.
+#
+# The tier casillas remain the TOTAL layer: rate-blind, feeding the annual
+# devengada total, keeping every row including those whose rate is unrecorded.
+# That layer sums to MORE than this one by exactly the rate-unrecorded amount,
+# which is why the export refuses on the difference rather than hiding it.
+# Box [669] - "Tipo 7,5 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
+# Box [670] - "Tipo 7,5 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
+# Box [702] - "Tipo 5 % - Base imponible". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
+# Box [703] - "Tipo 5 % - Cuota". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
+# Box [667] - "Tipo 2 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
+# Box [668] - "Tipo 2 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
+
+[[revisions.2024.casillas]]
+id = "iva.anual.aic.bienes.tipo-2.base"
+number = "683"
+data_type = "money"
+semantic_role = "iva_aic_bienes_tipo_2_base"
+continuidad_id = "iva-aic-bienes-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:195 (sha256 8be79bacc860) prints box [683]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [683] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 2 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-tipo-2-base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.aic.bienes.tipo-2.cuota"
+number = "684"
+data_type = "money"
+semantic_role = "iva_aic_bienes_tipo_2_cuota"
+continuidad_id = "iva-aic-bienes-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:196 (sha256 8be79bacc860) prints box [684]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [684] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 2 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-tipo-2-cuota"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.aic.bienes.tipo-7-5.base"
+number = "685"
+data_type = "money"
+semantic_role = "iva_aic_bienes_tipo_7_5_base"
+continuidad_id = "iva-aic-bienes-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:201 (sha256 8be79bacc860) prints box [685]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [685] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 7,5 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-tipo-7-5-base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.aic.bienes.tipo-7-5.cuota"
+number = "686"
+data_type = "money"
+semantic_role = "iva_aic_bienes_tipo_7_5_cuota"
+continuidad_id = "iva-aic-bienes-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:202 (sha256 8be79bacc860) prints box [686]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [686] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 7,5 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-tipo-7-5-cuota"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.aic.servicios.tipo-2.base"
+number = "687"
+data_type = "money"
+semantic_role = "iva_aic_servicios_tipo_2_base"
+continuidad_id = "iva-aic-servicios-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:209 (sha256 8be79bacc860) prints box [687]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [687] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC servicios rate; the 2 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-tipo-2-base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.aic.servicios.tipo-2.cuota"
+number = "688"
+data_type = "money"
+semantic_role = "iva_aic_servicios_tipo_2_cuota"
+continuidad_id = "iva-aic-servicios-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:210 (sha256 8be79bacc860) prints box [688]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [688] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC servicios rate; the 2 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-tipo-2-cuota"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.aic.servicios.tipo-7-5.base"
+number = "689"
+data_type = "money"
+semantic_role = "iva_aic_servicios_tipo_7_5_base"
+continuidad_id = "iva-aic-servicios-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:215 (sha256 8be79bacc860) prints box [689]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [689] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC servicios rate; the 7,5 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-tipo-7-5-base"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.aic.servicios.tipo-7-5.cuota"
+number = "690"
+data_type = "money"
+semantic_role = "iva_aic_servicios_tipo_7_5_cuota"
+continuidad_id = "iva-aic-servicios-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:216 (sha256 8be79bacc860) prints box [690]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [690] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC servicios rate; the 7,5 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-tipo-7-5-cuota"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-inversion.tipo-2.base"
+number = "769"
+data_type = "money"
+semantic_role = "iva_deducible_aic_inversion_tipo_2_base"
+continuidad_id = "iva-deducible-aic-inversion-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:413 (sha256 8be79bacc860) prints box [769]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [769] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-inversion.tipo-2.cuota"
+number = "770"
+data_type = "money"
+semantic_role = "iva_deducible_aic_inversion_tipo_2_cuota"
+continuidad_id = "iva-deducible-aic-inversion-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:414 (sha256 8be79bacc860) prints box [770]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [770] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-inversion.tipo-7-5.base"
+number = "771"
+data_type = "money"
+semantic_role = "iva_deducible_aic_inversion_tipo_7_5_base"
+continuidad_id = "iva-deducible-aic-inversion-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:419 (sha256 8be79bacc860) prints box [771]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [771] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota"
+number = "772"
+data_type = "money"
+semantic_role = "iva_deducible_aic_inversion_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-aic-inversion-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:420 (sha256 8be79bacc860) prints box [772]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [772] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-servicios.tipo-2.base"
+number = "773"
+data_type = "money"
+semantic_role = "iva_deducible_aic_servicios_tipo_2_base"
+continuidad_id = "iva-deducible-aic-servicios-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:427 (sha256 8be79bacc860) prints box [773]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [773] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-servicios.tipo-2.cuota"
+number = "774"
+data_type = "money"
+semantic_role = "iva_deducible_aic_servicios_tipo_2_cuota"
+continuidad_id = "iva-deducible-aic-servicios-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:428 (sha256 8be79bacc860) prints box [774]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [774] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-servicios.tipo-7-5.base"
+number = "775"
+data_type = "money"
+semantic_role = "iva_deducible_aic_servicios_tipo_7_5_base"
+continuidad_id = "iva-deducible-aic-servicios-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:433 (sha256 8be79bacc860) prints box [775]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [775] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota"
+number = "776"
+data_type = "money"
+semantic_role = "iva_deducible_aic_servicios_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-aic-servicios-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:434 (sha256 8be79bacc860) prints box [776]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [776] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.intragrupo.tipo-2.base"
+number = "671"
+data_type = "money"
+semantic_role = "iva_repercutido_intragrupo_tipo_2_base"
+continuidad_id = "iva-repercutido-intragrupo-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:151 (sha256 8be79bacc860) prints box [671]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [671] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.intragrupo.tipo-2.cuota"
+number = "672"
+data_type = "money"
+semantic_role = "iva_repercutido_intragrupo_tipo_2_cuota"
+continuidad_id = "iva-repercutido-intragrupo-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:152 (sha256 8be79bacc860) prints box [672]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [672] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.intragrupo.tipo-7-5.base"
+number = "673"
+data_type = "money"
+semantic_role = "iva_repercutido_intragrupo_tipo_7_5_base"
+continuidad_id = "iva-repercutido-intragrupo-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:157 (sha256 8be79bacc860) prints box [673]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [673] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota"
+number = "674"
+data_type = "money"
+semantic_role = "iva_repercutido_intragrupo_tipo_7_5_cuota"
+continuidad_id = "iva-repercutido-intragrupo-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:158 (sha256 8be79bacc860) prints box [674]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [674] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.criterio-caja.tipo-2.base"
+number = "675"
+data_type = "money"
+semantic_role = "iva_repercutido_criterio_caja_tipo_2_base"
+continuidad_id = "iva-repercutido-criterio-caja-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:165 (sha256 8be79bacc860) prints box [675]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [675] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota"
+number = "676"
+data_type = "money"
+semantic_role = "iva_repercutido_criterio_caja_tipo_2_cuota"
+continuidad_id = "iva-repercutido-criterio-caja-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:166 (sha256 8be79bacc860) prints box [676]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [676] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base"
+number = "677"
+data_type = "money"
+semantic_role = "iva_repercutido_criterio_caja_tipo_7_5_base"
+continuidad_id = "iva-repercutido-criterio-caja-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:171 (sha256 8be79bacc860) prints box [677]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [677] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota"
+number = "678"
+data_type = "money"
+semantic_role = "iva_repercutido_criterio_caja_tipo_7_5_cuota"
+continuidad_id = "iva-repercutido-criterio-caja-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:172 (sha256 8be79bacc860) prints box [678]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [678] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.bienes-usados.tipo-2.base"
+number = "679"
+data_type = "money"
+semantic_role = "iva_repercutido_bienes_usados_tipo_2_base"
+continuidad_id = "iva-repercutido-bienes-usados-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:179 (sha256 8be79bacc860) prints box [679]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [679] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial de bienes usados is a distinct declared block; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota"
+number = "680"
+data_type = "money"
+semantic_role = "iva_repercutido_bienes_usados_tipo_2_cuota"
+continuidad_id = "iva-repercutido-bienes-usados-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:180 (sha256 8be79bacc860) prints box [680]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [680] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial de bienes usados is a distinct declared block; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base"
+number = "681"
+data_type = "money"
+semantic_role = "iva_repercutido_bienes_usados_tipo_7_5_base"
+continuidad_id = "iva-repercutido-bienes-usados-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:185 (sha256 8be79bacc860) prints box [681]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [681] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial de bienes usados is a distinct declared block; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota"
+number = "682"
+data_type = "money"
+semantic_role = "iva_repercutido_bienes_usados_tipo_7_5_cuota"
+continuidad_id = "iva-repercutido-bienes-usados-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:186 (sha256 8be79bacc860) prints box [682]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [682] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial de bienes usados is a distinct declared block; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.interiores-corrientes.tipo-2.base"
+number = "695"
+data_type = "money"
+semantic_role = "iva_deducible_interiores_corrientes_tipo_2_base"
+continuidad_id = "iva-deducible-interiores-corrientes-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:294 (sha256 8be79bacc860) prints box [695]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [695] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.interiores-corrientes.tipo-2.cuota"
+number = "696"
+data_type = "money"
+semantic_role = "iva_deducible_interiores_corrientes_tipo_2_cuota"
+continuidad_id = "iva-deducible-interiores-corrientes-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:295 (sha256 8be79bacc860) prints box [696]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [696] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.base"
+number = "697"
+data_type = "money"
+semantic_role = "iva_deducible_interiores_corrientes_tipo_7_5_base"
+continuidad_id = "iva-deducible-interiores-corrientes-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:300 (sha256 8be79bacc860) prints box [697]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [697] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.cuota"
+number = "698"
+data_type = "money"
+semantic_role = "iva_deducible_interiores_corrientes_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-interiores-corrientes-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:301 (sha256 8be79bacc860) prints box [698]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [698] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.base"
+number = "745"
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_corrientes_tipo_2_base"
+continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:308 (sha256 8be79bacc860) prints box [745]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [745] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.cuota"
+number = "746"
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_corrientes_tipo_2_cuota"
+continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:309 (sha256 8be79bacc860) prints box [746]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [746] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.base"
+number = "747"
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_corrientes_tipo_7_5_base"
+continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:314 (sha256 8be79bacc860) prints box [747]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [747] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.cuota"
+number = "748"
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_corrientes_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:315 (sha256 8be79bacc860) prints box [748]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [748] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.interiores-inversion.tipo-2.base"
+number = "749"
+data_type = "money"
+semantic_role = "iva_deducible_interiores_inversion_tipo_2_base"
+continuidad_id = "iva-deducible-interiores-inversion-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:322 (sha256 8be79bacc860) prints box [749]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [749] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.interiores-inversion.tipo-2.cuota"
+number = "750"
+data_type = "money"
+semantic_role = "iva_deducible_interiores_inversion_tipo_2_cuota"
+continuidad_id = "iva-deducible-interiores-inversion-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:323 (sha256 8be79bacc860) prints box [750]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [750] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.interiores-inversion.tipo-7-5.base"
+number = "751"
+data_type = "money"
+semantic_role = "iva_deducible_interiores_inversion_tipo_7_5_base"
+continuidad_id = "iva-deducible-interiores-inversion-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:328 (sha256 8be79bacc860) prints box [751]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [751] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.interiores-inversion.tipo-7-5.cuota"
+number = "752"
+data_type = "money"
+semantic_role = "iva_deducible_interiores_inversion_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-interiores-inversion-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:329 (sha256 8be79bacc860) prints box [752]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [752] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.intragrupo-inversion.tipo-2.base"
+number = "753"
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_inversion_tipo_2_base"
+continuidad_id = "iva-deducible-intragrupo-inversion-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:336 (sha256 8be79bacc860) prints box [753]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [753] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.intragrupo-inversion.tipo-2.cuota"
+number = "754"
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_inversion_tipo_2_cuota"
+continuidad_id = "iva-deducible-intragrupo-inversion-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:337 (sha256 8be79bacc860) prints box [754]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [754] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.base"
+number = "755"
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_inversion_tipo_7_5_base"
+continuidad_id = "iva-deducible-intragrupo-inversion-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:342 (sha256 8be79bacc860) prints box [755]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [755] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.cuota"
+number = "756"
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_inversion_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-intragrupo-inversion-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:343 (sha256 8be79bacc860) prints box [756]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [756] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.importaciones-corrientes.tipo-2.base"
+number = "757"
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_corrientes_tipo_2_base"
+continuidad_id = "iva-deducible-importaciones-corrientes-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:350 (sha256 8be79bacc860) prints box [757]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [757] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.importaciones-corrientes.tipo-2.cuota"
+number = "758"
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_corrientes_tipo_2_cuota"
+continuidad_id = "iva-deducible-importaciones-corrientes-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:351 (sha256 8be79bacc860) prints box [758]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [758] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.base"
+number = "759"
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_corrientes_tipo_7_5_base"
+continuidad_id = "iva-deducible-importaciones-corrientes-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:356 (sha256 8be79bacc860) prints box [759]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [759] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.cuota"
+number = "760"
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_corrientes_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-importaciones-corrientes-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:357 (sha256 8be79bacc860) prints box [760]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [760] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.importaciones-inversion.tipo-2.base"
+number = "761"
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_inversion_tipo_2_base"
+continuidad_id = "iva-deducible-importaciones-inversion-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:364 (sha256 8be79bacc860) prints box [761]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [761] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.importaciones-inversion.tipo-2.cuota"
+number = "762"
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_inversion_tipo_2_cuota"
+continuidad_id = "iva-deducible-importaciones-inversion-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:365 (sha256 8be79bacc860) prints box [762]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [762] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.base"
+number = "763"
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_inversion_tipo_7_5_base"
+continuidad_id = "iva-deducible-importaciones-inversion-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:370 (sha256 8be79bacc860) prints box [763]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [763] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.cuota"
+number = "764"
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_inversion_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-importaciones-inversion-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:371 (sha256 8be79bacc860) prints box [764]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [764] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-corrientes.tipo-2.base"
+number = "765"
+data_type = "money"
+semantic_role = "iva_deducible_aic_corrientes_tipo_2_base"
+continuidad_id = "iva-deducible-aic-corrientes-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:378 (sha256 8be79bacc860) prints box [765]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [765] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota"
+number = "766"
+data_type = "money"
+semantic_role = "iva_deducible_aic_corrientes_tipo_2_cuota"
+continuidad_id = "iva-deducible-aic-corrientes-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:379 (sha256 8be79bacc860) prints box [766]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [766] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base"
+number = "767"
+data_type = "money"
+semantic_role = "iva_deducible_aic_corrientes_tipo_7_5_base"
+continuidad_id = "iva-deducible-aic-corrientes-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:384 (sha256 8be79bacc860) prints box [767]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [767] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota"
+number = "768"
+data_type = "money"
+semantic_role = "iva_deducible_aic_corrientes_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-aic-corrientes-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:385 (sha256 8be79bacc860) prints box [768]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [768] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+section = ["iva", "anual", "deducible"]
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.recargo.tipo-0-26.base"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-26-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:254 (sha256 8be79bacc860) prints box [691]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [691] and retires none"
+number = "691"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["operaciones_regimen_general", "recargo_equivalencia"]
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.recargo.tipo-0-62.base"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-62-base"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:211 (sha256 179c02eddc8b) box [665] (82 1305 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:258 (sha256 8be79bacc860) box [665] (12 115 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...)."
+number = "665"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["operaciones_regimen_general", "recargo_equivalencia"]
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.recargo.tipo-0.base"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-base"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:207 (sha256 179c02eddc8b) box [663] (78 1237 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:252 (sha256 8be79bacc860) box [663] (6 13 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
+number = "663"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["operaciones_regimen_general", "recargo_equivalencia"]
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.recargo.tipo-0.cuota"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:208 (sha256 179c02eddc8b) box [664] (79 1254 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:253 (sha256 8be79bacc860) box [664] (7 30 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
+number = "664"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["operaciones_regimen_general", "recargo_equivalencia"]
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.recargo.tipo-1.base"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-1-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:260 (sha256 8be79bacc860) prints box [693]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [693] and retires none"
+number = "693"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["operaciones_regimen_general", "recargo_equivalencia"]
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.recargo.tipo-1.cuota"
+number = "694"
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_tipo_1"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-1"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:261 (sha256 8be79bacc860) prints box [694]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [694] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 1 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-tipo-1-cuota"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.recargo.tipo-0-62.cuota"
+number = "666"
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_tipo_0_62"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-62"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 0,62 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.recargo.tipo-0-26.cuota"
+number = "692"
+data_type = "money"
+semantic_role = "iva_cuota_recargo_equivalencia_tipo_0_26"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-26"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:255 (sha256 8be79bacc860) prints box [692]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [692] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per recargo rate; the 0,26 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.tipo-7-5.base"
+number = "669"
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_tipo_7_5"
+continuidad_id = "iva-base-imponible-repercutida-tipo-7-5"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:143 (sha256 8be79bacc860) prints box [669]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [669] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 7,5 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-7-5-base"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.tipo-7-5.cuota"
+number = "670"
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_tipo_7_5"
+continuidad_id = "iva-cuota-repercutida-tipo-7-5"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:144 (sha256 8be79bacc860) prints box [670]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [670] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 7,5 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-7-5-cuota"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.tipo-5.base"
+number = "702"
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_tipo_5"
+continuidad_id = "iva-base-imponible-repercutida-tipo-5"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 5 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-5-base"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.tipo-5.cuota"
+number = "703"
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_tipo_5"
+continuidad_id = "iva-cuota-repercutida-tipo-5"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 5 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-5-cuota"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.tipo-2.base"
+number = "667"
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_tipo_2"
+continuidad_id = "iva-base-imponible-repercutida-tipo-2"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:137 (sha256 8be79bacc860) prints box [667]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [667] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 2 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-2-base"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+[[revisions.2024.casillas]]
+id = "iva.anual.repercutido.tipo-2.cuota"
+number = "668"
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_tipo_2"
+continuidad_id = "iva-cuota-repercutida-tipo-2"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:138 (sha256 8be79bacc860) prints box [668]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [668] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 2 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-2-cuota"
+section = ["iva", "anual", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]

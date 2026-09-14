@@ -20,17 +20,13 @@ class TestObligationGroupMapping:
 
     def test_account_maps_to_cuentas(self) -> None:
         assert (
-            resolve_foreign_asset_obligation_catalogue()
-            .group_for_asset_class(ForeignAssetClass.ACCOUNT)
-            .value
+            resolve_foreign_asset_obligation_catalogue().group_for_asset_class(ForeignAssetClass.ACCOUNT).value
             == "cuentas"
         )
 
     def test_real_estate_maps_to_inmuebles(self) -> None:
         assert (
-            resolve_foreign_asset_obligation_catalogue()
-            .group_for_asset_class(ForeignAssetClass.REAL_ESTATE)
-            .value
+            resolve_foreign_asset_obligation_catalogue().group_for_asset_class(ForeignAssetClass.REAL_ESTATE).value
             == "inmuebles"
         )
 
@@ -44,18 +40,14 @@ class TestObligationGroupMapping:
 
     def test_virtual_currency_maps_to_monedas_virtuales(self) -> None:
         assert (
-            resolve_foreign_asset_obligation_catalogue()
-            .group_for_asset_class(ForeignAssetClass.VIRTUAL_CURRENCY)
-            .value
+            resolve_foreign_asset_obligation_catalogue().group_for_asset_class(ForeignAssetClass.VIRTUAL_CURRENCY).value
             == "monedas_virtuales"
         )
 
     def test_security_and_insurance_share_the_valores_bloque(self) -> None:
         """RD 1065/2007 art. 42 ter is one bloque covering valores AND seguros."""
         assert (
-            resolve_foreign_asset_obligation_catalogue()
-            .group_for_asset_class(ForeignAssetClass.SECURITY)
-            .value
+            resolve_foreign_asset_obligation_catalogue().group_for_asset_class(ForeignAssetClass.SECURITY).value
             == "valores_derechos_seguros"
         )
         assert (
@@ -65,9 +57,7 @@ class TestObligationGroupMapping:
             == "valores_derechos_seguros"
         )
         assert (
-            resolve_foreign_asset_obligation_catalogue()
-            .group_for_asset_class(ForeignAssetClass.INSURANCE)
-            .value
+            resolve_foreign_asset_obligation_catalogue().group_for_asset_class(ForeignAssetClass.INSURANCE).value
             == "valores_derechos_seguros"
         )
 

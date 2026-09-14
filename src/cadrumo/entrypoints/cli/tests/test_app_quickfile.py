@@ -29,11 +29,15 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
 )
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....application.state_projection import ProjectionModeloReadiness
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -54,9 +58,6 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -258,8 +259,9 @@ def _m303_transaction(
 
 
 def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
-    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+
+    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ....application.invoices.catalogue_creation import build_catalogue_invoice
     from ....domain.invoices.models import InvoiceCatalogue
     from ....domain.invoices.service import link_transaction

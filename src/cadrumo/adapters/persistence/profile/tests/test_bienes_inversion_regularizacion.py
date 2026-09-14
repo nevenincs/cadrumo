@@ -12,7 +12,14 @@ from typing import Any, cast, override
 import pytest
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.calculations.bienes_inversion_regularizacion import (
+    BienesInversionRegularizacionSourceResolver,
+    build_bienes_inversion_regularizacion_advisory,
+    build_bienes_inversion_transmision_advisory,
+)
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.period import Period
@@ -21,11 +28,11 @@ from cadrumo.domain.bienes_inversion.register import (
     BienInversionDisposal,
     BienInversionIvaRecord,
 )
-from cadrumo.domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
+from cadrumo.domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bienes_inversion_regularizacion_bindings import (
     BienesInversionRegularizacionOutput,
@@ -38,13 +45,6 @@ from cadrumo.domain.calculations.registry.bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.calculations.bienes_inversion_regularizacion import (
-    BienesInversionRegularizacionSourceResolver,
-    build_bienes_inversion_regularizacion_advisory,
-    build_bienes_inversion_transmision_advisory,
-)
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

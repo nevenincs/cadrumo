@@ -40,9 +40,11 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....core.telemetry.schema import TelemetryEventPayload
 from ....core.telemetry.tier import TelemetryTier
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from .._diagnostics_payloads import TelemetryFlushResult

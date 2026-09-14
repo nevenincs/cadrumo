@@ -39,4 +39,6 @@ def test_application_classifier_consumes_the_inward_failure_contract(
 
 def test_unclassified_failure_stays_unknown() -> None:
     """Failures that do not implement the contract stay explicitly unknown."""
-    assert classify_live_iva_acquisition_failure(RuntimeError("not classified")) is LiveIvaAcquisitionFailureMode.UNKNOWN
+    assert (
+        classify_live_iva_acquisition_failure(RuntimeError("not classified")) is LiveIvaAcquisitionFailureMode.UNKNOWN
+    )

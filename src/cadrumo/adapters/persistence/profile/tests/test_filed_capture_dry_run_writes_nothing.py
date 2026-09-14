@@ -22,10 +22,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator, recapture_divergence_notices
 from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import _prior_303_observation
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator, recapture_divergence_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

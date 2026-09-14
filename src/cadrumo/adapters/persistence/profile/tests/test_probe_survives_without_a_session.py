@@ -32,10 +32,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.operator_probe_ports import (
     CertificateHealthBand,
     CertificateHealthObservation,
@@ -102,13 +102,12 @@ def test_the_fixture_leaves_a_readable_profile_and_no_session() -> None:
 
     assert _LOCKED_OPERATOR_PROBE_PORTS.active_profile_session.is_bound() is False
 
-    with open_test_profile_session(_BUCKET_ID):
-        with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-            profile_present, provider_present, alignment = live_auth_identity_state(
-                AuthProviderKind.CLAVE_MOVIL,
-                settings=settings,
-                operator_probe_ports=_BOUND_OPERATOR_PROBE_PORTS,
-            )
+    with open_test_profile_session(_BUCKET_ID), override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
+        profile_present, provider_present, alignment = live_auth_identity_state(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+            operator_probe_ports=_BOUND_OPERATOR_PROBE_PORTS,
+        )
 
     assert profile_present is True
     assert provider_present is True

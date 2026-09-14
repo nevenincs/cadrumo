@@ -34,9 +34,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session, set_active_test_profile_facts
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    open_test_profile_session,
+    set_active_test_profile_facts,
+)
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.draft_review import (
     ModeloApprovalStaleReason,

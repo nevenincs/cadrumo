@@ -1,0 +1,124 @@
+# The official line combines "bienes y servicios", so this selector carries the
+# goods category (LIVA arts. 13/15) and the services one (art. 69.Uno.1, read
+# subject to art. 70) and sums them; art. 84.Uno.2.a) makes the recipient the
+# sujeto pasivo on both legs.
+
+[[revisions.2026-y-siguientes.bindings]]
+id = "modelo-322-iva-repercutido-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions.2026-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-322-procedure"
+required_text = ["modelo 322"]
+
+[revisions.2026-y-siguientes.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_general"]
+rate_kinds = ["general"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2026-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2026-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2026-y-siguientes.bindings]]
+id = "modelo-322-iva-repercutido-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions.2026-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-322-procedure"
+required_text = ["modelo 322"]
+
+[revisions.2026-y-siguientes.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2026-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2026-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2026-y-siguientes.bindings]]
+id = "modelo-322-iva-repercutido-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions.2026-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-322-procedure"
+required_text = ["modelo 322"]
+
+[revisions.2026-y-siguientes.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2026-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2026-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2026-y-siguientes.bindings]]
+id = "modelo-322-iva-soportado-interiores-cuota"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions.2026-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-322-procedure"
+required_text = ["modelo 322"]
+
+[revisions.2026-y-siguientes.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "soportado"
+fact = "iva_amount_sum"
+categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2026-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2026-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2026-y-siguientes.bindings]]
+id = "modelo-322-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+[[revisions.2026-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-322-procedure"
+required_text = ["modelo 322"]
+
+[revisions.2026-y-siguientes.bindings.provider]
+kind = "ledger_iva_aggregation"
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+
+[revisions.2026-y-siguientes.bindings.value]
+data_type = "money"
+channel = "decimal"
+
+[revisions.2026-y-siguientes.bindings.aggregation]
+op = "sum"

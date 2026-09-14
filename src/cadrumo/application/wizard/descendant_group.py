@@ -184,9 +184,7 @@ _INSCRIPCION_RELACIONES: frozenset[str] = frozenset({_ADOPTION_TOKEN.value})
 #: model validator cannot disagree about which placements the
 #: statute entitles — a temporal acogimiento is excluded from both by
 #: construction rather than by two hand-maintained lists agreeing today.
-_ACOGIMIENTO_RELACIONES: frozenset[str] = frozenset(
-    member.value for member in descendant_relacion_entitling_tokens()
-)
+_ACOGIMIENTO_RELACIONES: frozenset[str] = frozenset(member.value for member in descendant_relacion_entitling_tokens())
 
 # --- copy references (new wizard.setup.descendientes.* locale keys) ---------
 

@@ -41,9 +41,9 @@ from typing import Self
 from pydantic import BaseModel, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.calculations.registry.irpf_regimes import irpf_special_regime_impatriado_token
 from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
+from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines.models import IrpfSpecialRegime
 
 __all__ = [

@@ -36,7 +36,10 @@ from .....application.aggregation.percepciones_observations_repository import (
 from .....core.aggregation import AggregationCaptureKind, RetencionClave
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.period import Period
-from .....domain.calculations.registry.withholding_bindings import WithholdingObservation, aggregate_withholding_by_clave
+from .....domain.calculations.registry.withholding_bindings import (
+    WithholdingObservation,
+    aggregate_withholding_by_clave,
+)
 from ..percepciones_observations import (
     PercepcionObservationRepositoryAdapter,
 )

@@ -8,10 +8,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.config import override_settings
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

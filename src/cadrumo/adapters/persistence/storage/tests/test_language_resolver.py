@@ -13,13 +13,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import output_language
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

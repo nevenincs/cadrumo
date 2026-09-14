@@ -39,6 +39,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime
+
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 from pydantic import BaseModel, Field, model_validator
 

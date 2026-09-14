@@ -120,8 +120,9 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
 
 def _register_profile_for_cold_run(storage_root: Path, label: str, **facts: str) -> str:
     """Register one profile in-process against ``storage_root``, and return its id."""
-    from ....core.config import load_settings, override_settings
     from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
+    from ....core.config import load_settings, override_settings
 
     with override_settings(
         cadrumo_local_storage_root=storage_root,

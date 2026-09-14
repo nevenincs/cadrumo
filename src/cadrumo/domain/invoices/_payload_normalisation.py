@@ -201,9 +201,7 @@ def _coerce_travel_agency_mediation(payload: dict[str, object]) -> None:
     if raw is None:
         return
     if not isinstance(raw, (str, TravelAgencyMediationType)):
-        raise InvoiceValidationError(
-            "travel_agency_mediation must be a TravelAgencyMediationType or its value"
-        )
+        raise InvoiceValidationError("travel_agency_mediation must be a TravelAgencyMediationType or its value")
     effective_date = payload.get("issued_at")
     if not isinstance(effective_date, date):
         raise InvoiceValidationError("travel_agency_mediation requires a normalized issued_at date")
@@ -213,9 +211,7 @@ def _coerce_travel_agency_mediation(payload: dict[str, object]) -> None:
             effective_date=effective_date,
         )
     except (RegistryValidationError, TypeError, ValueError) as exc:
-        raise InvoiceValidationError(
-            "travel_agency_mediation must be declared by the facts registry"
-        ) from exc
+        raise InvoiceValidationError("travel_agency_mediation must be declared by the facts registry") from exc
 
 
 def normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, object]:

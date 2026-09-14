@@ -63,7 +63,6 @@ from .models import (
     CertificateSecretMutationIntent,
 )
 from .operator_probe_ports import OperatorProbePorts
-from .operator_scope_ports import OperatorScopePorts
 from .operator_probes import probe_certificate_bundle
 from .operator_results import (
     AuthConfigureDanglingActiveProfileError,
@@ -83,6 +82,7 @@ from .operator_scope import (
     assert_certificate_secret_mutation_not_in_progress,
     auth_mutation_span,
 )
+from .operator_scope_ports import OperatorScopePorts
 from .probes import PROBE_RESULTS_NEEDING_ATTENTION
 
 if TYPE_CHECKING:

@@ -212,10 +212,14 @@ def situacion_familiar_monoparental_required(
     authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return the registry-declared Art. 82.1.2ª mapping for one token."""
-    return resolve_situacion_familiar_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).definition(value).monoparental_required
+    return (
+        resolve_situacion_familiar_catalogue(
+            effective_date=effective_date,
+            authority=authority,
+        )
+        .definition(value)
+        .monoparental_required
+    )
 
 
 __all__ = [

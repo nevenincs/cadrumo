@@ -48,7 +48,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.retenciones import (
+    RetencionObservation,
+    aggregate_retenciones_111,
+)
+from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.aggregation import (
     BindingSourceKind,
     RetencionClave,
@@ -73,12 +79,6 @@ from cadrumo.domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
-from cadrumo.application.aggregation.retenciones import (
-    RetencionObservation,
-    aggregate_retenciones_111,
-)
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

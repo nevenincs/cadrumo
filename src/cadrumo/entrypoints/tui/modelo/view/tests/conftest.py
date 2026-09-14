@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......application.modelo.work_addressing import ModeloVisibleFilingTarget
@@ -24,7 +26,6 @@ from ......core.external_constants import OutputLanguage
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
 _REVISION = "2019-y-siguientes"

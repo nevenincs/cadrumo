@@ -11,9 +11,16 @@ from pathlib import Path
 
 from cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, load_external_constants
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
@@ -26,7 +33,8 @@ from cadrumo.domain.calculations.registry.schema_references import RegistrySnaps
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from cadrumo.domain.modelos.calculation_revision import (    CalculationRevision,
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
@@ -34,10 +42,7 @@ from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInsta
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
+
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 

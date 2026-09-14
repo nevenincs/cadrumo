@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import date
 
 from ....application.invoices.catalogue_reads_ports import (
+    InvoiceCatalogueReader,
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
-    InvoiceCatalogueReader,
     TransactionCatalogueReader,
 )
 from ....domain.invoices.errors import InvoicePersistenceError

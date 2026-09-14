@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...core.result_disposition import ResultDisposition
-from .errors import DeadlineValidationError
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
+from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate

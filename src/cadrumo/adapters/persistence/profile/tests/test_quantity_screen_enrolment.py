@@ -31,6 +31,12 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_transaction_catalogue_fixture,
 )
+from cadrumo.application.aggregation.modelo_bindings import (
+    LedgerIvaAggregationSourceResolver,
+    LedgerRentaIncomeAggregationSourceResolver,
+)
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import bundled_authority
@@ -47,12 +53,6 @@ from cadrumo.domain.transactions.models import (
     TransactionCatalogue,
 )
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.application.aggregation.modelo_bindings import (
-    LedgerIvaAggregationSourceResolver,
-    LedgerRentaIncomeAggregationSourceResolver,
-)
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
-from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 
 
 class _InvoiceCatalogueReader:
@@ -96,7 +96,9 @@ class _TransactionCatalogueReader:
         )
 
 
-def _catalogue_read_ports(*, invoices: InvoiceCatalogue, transactions: TransactionCatalogue) -> InvoiceCatalogueReadPorts:
+def _catalogue_read_ports(
+    *, invoices: InvoiceCatalogue, transactions: TransactionCatalogue
+) -> InvoiceCatalogueReadPorts:
     return InvoiceCatalogueReadPorts(
         invoice_reader=_InvoiceCatalogueReader(invoices),
         transaction_reader=_TransactionCatalogueReader(transactions),
@@ -151,6 +153,7 @@ def _actividad_transaction(
             "classified_by": "manual",
         },
     )
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

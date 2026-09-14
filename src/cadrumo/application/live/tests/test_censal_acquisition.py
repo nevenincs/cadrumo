@@ -14,20 +14,19 @@ to :mod:`user_profile` and are proven in theirs.
 
 from __future__ import annotations
 
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
-
 import ast
 import asyncio
 import inspect
 
 import pytest
 
-from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ....core.access_gate.errors import AeatLiveReadNotEnabledError
+from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..censo import (
     LIVE_CENSAL_READ_OPERATION,
     pull_censal_datos,
 )
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
@@ -41,6 +40,7 @@ async def _unused_browser_session_factory(settings: object) -> object:
 async def _unused_censal_fetch(session: object, *, taxpayer_nif: str, settings: object) -> object:
     del session, taxpayer_nif, settings
     raise AssertionError("the live-read gate must refuse before fetching censo data")
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

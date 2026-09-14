@@ -58,8 +58,8 @@ class DraftReviewPortsFactory(Protocol):
 
 
 __all__ = [
+    "DraftReviewDraftRepositoryProtocol",
     "DraftReviewPorts",
     "DraftReviewPortsFactory",
-    "DraftReviewDraftRepositoryProtocol",
     "DraftReviewProfileRepositoryProtocol",
 ]

@@ -16,7 +16,6 @@ must keep refusing, while the empty repository exercises genuine absence.
 """
 
 from __future__ import annotations
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 
 from datetime import date
 from decimal import Decimal
@@ -24,7 +23,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
@@ -33,8 +35,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -108,7 +108,9 @@ def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(t
             ),
         )
 
-        report = resolve_bindings_from_local_store(snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
+        report = resolve_bindings_from_local_store(
+            snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
+        )
 
     assert report.binding_values[_BINDING_ID] == Decimal("1")
 
@@ -133,7 +135,9 @@ def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses
         )
 
         with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
-            resolve_bindings_from_local_store(snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository())
+            resolve_bindings_from_local_store(
+                snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
+            )
 
 
 def test_an_ambiguous_multiple_observed_filing_match_still_refuses() -> None:

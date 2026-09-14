@@ -89,8 +89,8 @@ from .period_parsing import _canonical_period
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from ...application.overview.calendar_models import CalendarWarning
     from ...application.live.expedientes_ports import ExpedientesPortsFactory
+    from ...application.overview.calendar_models import CalendarWarning
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ...application.workflow.state_models import WorkflowState
@@ -803,8 +803,8 @@ def overview_prepare(
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
     from ...application.modelo.registry_discovery import registry_describe_modelo_for_scope
     from ...application.overview.data_prep import build_data_prep_walkthrough
-    from ..ledger_action_composition import compose_ledger_action_ports
     from ...domain.calculations.registry.errors import RegistrySnapshotError
+    from ..ledger_action_composition import compose_ledger_action_ports
     from .state_projection_support import ledger_evidence_ports_factory
 
     current = current_workflow_state()

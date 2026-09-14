@@ -6,14 +6,15 @@ import json
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
 )
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ._modelo_work_ux_support import (
     _PROFILE_ID,
     _create_attribution_entity_intracom_profile,
@@ -34,8 +35,12 @@ _REPRESENTANTE_PROFILE_PATHS = frozenset(
 
 
 def _remove_representante_fields_from_operator_profile() -> None:
+    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+        load_test_profile_record,
+        replace_test_profile_record,
+    )
+
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record, replace_test_profile_record
 
     pointer = read_profile_bucket(_PROFILE_ID)
     assert pointer is not None

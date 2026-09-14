@@ -29,8 +29,8 @@ from typing import override
 
 from pydantic import ValidationError
 
-from ....application.modelo.edit_receipt_ports import ModeloEditReceiptPersistenceError
 from ....application.modelo.edit_contract import ModeloEditMutationResultReceiptV1
+from ....application.modelo.edit_receipt_ports import ModeloEditReceiptPersistenceError
 from ....core.secure_object_write import SecureObjectWrite
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.errors import StorageError

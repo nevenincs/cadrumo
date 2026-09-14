@@ -53,11 +53,26 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
+from cadrumo.application.aggregation.retenciones import RetencionObservation
+from cadrumo.application.aggregation.source_mesh import (
+    CallerOverrideDisposition,
+    precedence_ladder_sources,
+)
+from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from cadrumo.application.modelo.calculation_actions import (
+    BucketAggregationCalculationResult,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,
@@ -73,21 +88,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
-from cadrumo.application.aggregation.retenciones import RetencionObservation
-from cadrumo.application.aggregation.source_mesh import (
-    CallerOverrideDisposition,
-    precedence_ladder_sources,
-)
-from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo.calculation_actions import (
-    BucketAggregationCalculationResult,
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-)
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

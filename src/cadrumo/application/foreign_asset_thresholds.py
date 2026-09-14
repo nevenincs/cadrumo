@@ -13,10 +13,10 @@ from ..core.modelo import Modelo
 from ..core.revision_review import RevisionReviewStatus
 from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.errors import RegistryValidationError
-from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ..domain.calculations.registry.foreign_asset_obligation_catalogue import (
     resolve_foreign_asset_obligation_catalogue,
 )
+from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ..domain.calculations.registry.schema import ModeloRevision
 from ..domain.calculations.registry.schema_formula import ParameterDefinition
 from ..domain.calculations.registry.temporal import select_revision

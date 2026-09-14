@@ -37,12 +37,30 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.errors import (
+    AggregationValidationError,
+)
+from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
+from cadrumo.application.aggregation.retenciones import RetencionObservation
+from cadrumo.application.aggregation.source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceResolution,
+)
+from cadrumo.application.aggregation.source_resolution_operations import merge_source_resolutions
+from cadrumo.application.calculations.relation_prefill import RelationPrefillSourceResolver
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,
@@ -63,22 +81,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import rev
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.aggregation.errors import (
-    AggregationValidationError,
-)
-from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
-from cadrumo.application.aggregation.retenciones import RetencionObservation
-from cadrumo.application.aggregation.source_mesh import (
-    CalculationSourceContext,
-    CalculationSourceResolution,
-)
-from cadrumo.application.aggregation.source_resolution_operations import merge_source_resolutions
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import RelationPrefillSourceResolver
-from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

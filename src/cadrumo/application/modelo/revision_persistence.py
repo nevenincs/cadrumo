@@ -58,11 +58,11 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     general_prorrata_register_regime,
     ninguna_prorrata_register_regime,
 )
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
@@ -99,11 +99,11 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     PriorDomiciliationElectionProjection,
 )
-from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..filing.retention import try_record_filing_retention_snapshot
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .action_errors import M303FilingEvidenceError
@@ -882,7 +882,9 @@ def _settled_prorrata_register_entry(
             }
         )
 
-    regime = general_prorrata_register_regime() if volumen_sin_derecho > Decimal("0") else ninguna_prorrata_register_regime()
+    regime = (
+        general_prorrata_register_regime() if volumen_sin_derecho > Decimal("0") else ninguna_prorrata_register_regime()
+    )
     return ProrrataRegisterEntry(
         ejercicio=work_unit.filing_year,
         regime=regime,

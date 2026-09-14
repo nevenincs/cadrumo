@@ -49,7 +49,9 @@ def justificante_pull(
     from ._app_live_justificante_payloads import JustificanteCaptureResult
 
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    emit_live_auth_preflight(
+        certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx)
+    )
     outcome = asyncio.run(
         capture_justificante_snapshot_outcome(
             bucket_id=bucket_id,

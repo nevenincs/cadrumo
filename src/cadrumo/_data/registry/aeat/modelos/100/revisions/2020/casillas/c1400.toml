@@ -1,7 +1,0 @@
-[[revisions."2020".casillas]]
-id = "1400"
-number = "1400"
-section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-data_type = "money"
-semantic_role = "irpf_inmueble_gasto_reparacion_importe"
-legal_refs = ["ley-35-2006:art-23"]

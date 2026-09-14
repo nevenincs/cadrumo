@@ -24,15 +24,15 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
 )
+from ....domain.calculations.registry.iva_schema_vocabulary import (
+    iva_regime_simplificado_token,
+    require_iva_regime,
+)
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.calculations.registry.iva_schema_vocabulary import (
-    iva_regime_simplificado_token,
-    require_iva_regime,
-)
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import (
@@ -44,7 +44,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...workflow.errors import WorkflowInputMismatchError
-from ..revision_replay_inputs import _informational_casilla_replay_inputs
 from ..action_errors import ModeloAggregationBindingError
 from ..art20_advisory import art20_reduccion_advisory_finding
 from ..art52_advisory import art52_reduccion_advisory_finding
@@ -53,6 +52,7 @@ from ..dt12_advisory import dt12_reduccion_advisory_finding
 from ..dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
+from ..revision_replay_inputs import _informational_casilla_replay_inputs
 from ..verification_actions import (
     _collect_revision_verification_findings,
     _iva_wallet_error_verification_finding,

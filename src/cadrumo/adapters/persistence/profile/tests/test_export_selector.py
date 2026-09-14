@@ -13,6 +13,9 @@ __all__ = ["isolated_backend"]
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._export_test_support import _M130_INPUT_CASILLA, _seed_profile
+from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
+from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -23,9 +26,6 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.adapters.persistence.profile.tests._export_test_support import _M130_INPUT_CASILLA, _seed_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

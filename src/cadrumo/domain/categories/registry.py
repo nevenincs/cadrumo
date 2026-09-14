@@ -145,12 +145,7 @@ def _profile_from_authority_fact(
     variants = _cap_variants_from_entries(values, category=category)
     cap = values.get("statutory_cap_eur")
     schedule: tuple[StatutoryCapAmount, ...] = ()
-    if (
-        projected_kind.is_statutory_cap
-        and not variants
-        and cap is None
-        and "statutory_cap_eur_per_day" not in values
-    ):
+    if projected_kind.is_statutory_cap and not variants and cap is None and "statutory_cap_eur_per_day" not in values:
         # The profile carries no amount of its own, so the cap is year-referenced
         # and its amounts live only in the dated cap fact.
         try:

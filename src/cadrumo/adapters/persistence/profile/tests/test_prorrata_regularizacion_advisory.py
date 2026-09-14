@@ -33,9 +33,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.modelo import Modelo
@@ -57,8 +59,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

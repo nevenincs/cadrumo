@@ -3,13 +3,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...core.config import reset_settings_cache
 from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from ...core.i18n.render import clear_output_language_cache
 from ...tests.env import temporary_env
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 
 @pytest.fixture

@@ -39,12 +39,13 @@ from typing import Final
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+
 from ....application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import UserProfileFact
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from .ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

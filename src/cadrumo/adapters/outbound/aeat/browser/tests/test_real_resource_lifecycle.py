@@ -37,18 +37,6 @@ from cadrumo.adapters.persistence.operations.secure_references import (
 )
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.config import Settings
-from cadrumo.core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
-from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationLifecycle,
-    OperationTerminalCondition,
-)
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -72,6 +60,18 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.core.config import Settings
+from cadrumo.core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

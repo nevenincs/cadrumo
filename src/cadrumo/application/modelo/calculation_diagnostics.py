@@ -56,13 +56,13 @@ from ._minimo_descendientes_advisory import (
     collect_minimo_descendientes_undeclared_diagnostics,
 )
 from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
+from ._rate_box_advisory import collect_rate_box_coverage_diagnostics
+from ._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 from .prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
     collect_prior_payment_not_deducted_diagnostics,
 )
 from .prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
-from ._rate_box_advisory import collect_rate_box_coverage_diagnostics
-from ._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 
 __all__ = ["collect_bucket_aggregation_advisory_diagnostics"]
 

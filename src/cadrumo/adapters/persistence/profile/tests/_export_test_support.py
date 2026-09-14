@@ -12,6 +12,8 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.workflow.persistence import workflow_state_repository
@@ -39,8 +41,6 @@ from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInsta
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False

@@ -1,0 +1,1546 @@
+# Modelo 490 form casillas for the 2021 era, transcribed position-by-position
+# from aeat-dr-490-2021. This era's casillas are declared separately from every other
+# era's because casillas are per-revision and the designs differ; nothing is
+# shared across eras by reference.
+#
+# Ley 4/2020 (IDSD) is NOT cited: it is absent from this registry's legal
+# catalogue and no article is invented here, even though the design's own prose
+# references its art. 10.3.
+# Modelo 490 declaration-header casillas, grounded in orden-hac-590-2021 art 1.
+# No numbered form casilla is declared for this era: its diseno de registro
+# for this era is bundled but not a registered source (review_status), so no
+# numbered form casilla is declared. Nothing is fabricated here.
+
+[[revisions.2021.casillas]]
+id = "490-01-indicador-pagina-complementaria-12"
+continuidad_id = "pagina-complementaria-liquidacion"
+number = "490-01-indicador-pagina-complementaria"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-tipo-declaracion-13"
+continuidad_id = "tipo-de-declaracion"
+number = "490-01-tipo-declaracion"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-identificacion-email-154"
+continuidad_id = "declarante-correo-electronico"
+number = "490-01-identificacion-email"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-identificacion-nif-representante-254"
+continuidad_id = "representante-nif"
+number = "490-01-identificacion-nif-representante"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-identificacion-nombre-representante-263"
+continuidad_id = "representante-nombre-razon-social"
+number = "490-01-identificacion-nombre-representante"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-grupo-denominacion-388"
+continuidad_id = "grupo-denominacion"
+number = "490-01-grupo-denominacion"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-grupo-pais-dominante-513"
+continuidad_id = "grupo-dominante-pais-residencia"
+number = "490-01-grupo-pais-dominante"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-grupo-dominante-515"
+continuidad_id = "grupo-entidad-dominante"
+number = "490-01-grupo-dominante"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-indicador-regularizacion-A"
+continuidad_id = "regularizacion-base-imponible-indicador"
+number = "A"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-publi-ing-01"
+continuidad_id = "publicidad-en-linea-ingresos-totales"
+number = "01"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-publi-base-02"
+continuidad_id = "publicidad-en-linea-base-imponible"
+number = "02"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-publi-reg-base-03"
+continuidad_id = "publicidad-en-linea-regularizacion-base-imponible"
+number = "03"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-interm-a-ing-04"
+continuidad_id = "intermediacion-subyacente-ingresos-totales"
+number = "04"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-interm-a-base-05"
+continuidad_id = "intermediacion-subyacente-base-imponible"
+number = "05"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-interm-a-reg-base-06"
+continuidad_id = "intermediacion-subyacente-regularizacion-base-imponible"
+number = "06"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-interm-b-ing-07"
+continuidad_id = "demas-intermediacion-ingresos-totales"
+number = "07"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-interm-b-base-08"
+continuidad_id = "demas-intermediacion-base-imponible"
+number = "08"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-interm-b-reg-base-09"
+continuidad_id = "demas-intermediacion-regularizacion-base-imponible"
+number = "09"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-datos-ing-10"
+continuidad_id = "transmision-datos-ingresos-totales"
+number = "10"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-datos-base-11"
+continuidad_id = "transmision-datos-base-imponible"
+number = "11"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-datos-reg-base-12"
+continuidad_id = "transmision-datos-regularizacion-base-imponible"
+number = "12"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-base-imponible-total-13"
+continuidad_id = "base-imponible-total-periodo"
+number = "13"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-reg-periodos-anteriores-14"
+continuidad_id = "regularizacion-base-imponible-periodos-anteriores"
+number = "14"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-tipo-15"
+continuidad_id = "tipo-impositivo"
+number = "15"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq-cuota-integra-16"
+continuidad_id = "cuota-integra"
+number = "16"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq21-ajuste-cuota-integra-17"
+continuidad_id = "liq21-ajuste-cuota-integra-17"
+number = "17"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "resultado-a-deducir-18"
+continuidad_id = "resultado-anteriores-declaraciones"
+number = "18"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "liq21-resultado-19"
+continuidad_id = "resultado-liquidacion"
+number = "19"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-ingreso-bic-swift-950"
+continuidad_id = "ingreso-devolucion-bic-swift"
+number = "490-01-ingreso-bic-swift"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-ingreso-iban-961"
+continuidad_id = "ingreso-devolucion-iban"
+number = "490-01-ingreso-iban"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-declaracion-complementaria-995"
+continuidad_id = "declaracion-complementaria"
+number = "490-01-declaracion-complementaria"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-justificante-anterior-996"
+continuidad_id = "justificante-declaracion-anterior"
+number = "490-01-justificante-anterior"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-01-declaracion-negativa-1009"
+continuidad_id = "declaracion-negativa"
+number = "490-01-declaracion-negativa"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_01"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-02-indicador-pagina-complementaria-12"
+continuidad_id = "490-02-indicador-pagina-complementaria-12"
+number = "490-02-indicador-pagina-complementaria"
+data_type = "text"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-02-regularizacion-ejercicio-13"
+continuidad_id = "490-02-regularizacion-ejercicio-13"
+number = "490-02-regularizacion-ejercicio"
+data_type = "year"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-1"
+continuidad_id = "reg21-base-positiva-1"
+number = "1"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-8"
+continuidad_id = "reg21-base-positiva-8"
+number = "8"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-14"
+continuidad_id = "reg21-base-positiva-14"
+number = "14-51"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-20"
+continuidad_id = "reg21-base-positiva-20"
+number = "20"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-2"
+continuidad_id = "reg21-base-negativa-2"
+number = "2"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-9"
+continuidad_id = "reg21-base-negativa-9"
+number = "9"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-15"
+continuidad_id = "reg21-base-negativa-15"
+number = "15-119"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-21"
+continuidad_id = "reg21-base-negativa-21"
+number = "21"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-3"
+continuidad_id = "reg21-base-total-3"
+number = "3"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-10"
+continuidad_id = "reg21-base-total-10"
+number = "10-170"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-16"
+continuidad_id = "reg21-base-total-16"
+number = "16-187"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-22"
+continuidad_id = "reg21-base-total-22"
+number = "22"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-4-221"
+continuidad_id = "reg21-tipo-4-221"
+number = "4"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-4-224"
+continuidad_id = "reg21-tipo-4-224"
+number = "4-224"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-4-227"
+continuidad_id = "reg21-tipo-4-227"
+number = "4-227"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-4-230"
+continuidad_id = "reg21-tipo-4-230"
+number = "4-230"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-5"
+continuidad_id = "reg21-cuota-positiva-5"
+number = "5"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-11"
+continuidad_id = "reg21-cuota-positiva-11"
+number = "11-250"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-17"
+continuidad_id = "reg21-cuota-positiva-17"
+number = "17-267"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-23"
+continuidad_id = "reg21-cuota-positiva-23"
+number = "23"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-6"
+continuidad_id = "reg21-cuota-negativa-6"
+number = "6"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-12"
+continuidad_id = "reg21-cuota-negativa-12"
+number = "12-318"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-18"
+continuidad_id = "reg21-cuota-negativa-18"
+number = "18-335"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-24"
+continuidad_id = "reg21-cuota-negativa-24"
+number = "24"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-7"
+continuidad_id = "reg21-cuota-total-7"
+number = "7"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-13"
+continuidad_id = "reg21-cuota-total-13"
+number = "13-386"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-19"
+continuidad_id = "reg21-cuota-total-19"
+number = "19-403"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-25"
+continuidad_id = "reg21-cuota-total-25"
+number = "25"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-02-regularizacion-ejercicio-437"
+continuidad_id = "490-02-regularizacion-ejercicio-437"
+number = "490-02-regularizacion-ejercicio-437"
+data_type = "year"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-26"
+continuidad_id = "reg21-base-positiva-26"
+number = "26"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-33"
+continuidad_id = "reg21-base-positiva-33"
+number = "33"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-39"
+continuidad_id = "reg21-base-positiva-39"
+number = "39"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-45"
+continuidad_id = "reg21-base-positiva-45"
+number = "45"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-27"
+continuidad_id = "reg21-base-negativa-27"
+number = "27"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-34"
+continuidad_id = "reg21-base-negativa-34"
+number = "34"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-40"
+continuidad_id = "reg21-base-negativa-40"
+number = "40"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-46"
+continuidad_id = "reg21-base-negativa-46"
+number = "46"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-28"
+continuidad_id = "reg21-base-total-28"
+number = "28"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-35"
+continuidad_id = "reg21-base-total-35"
+number = "35"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-41"
+continuidad_id = "reg21-base-total-41"
+number = "41"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-47"
+continuidad_id = "reg21-base-total-47"
+number = "47"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-29-645"
+continuidad_id = "reg21-tipo-29-645"
+number = "29"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-29-648"
+continuidad_id = "reg21-tipo-29-648"
+number = "29-648"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-29-651"
+continuidad_id = "reg21-tipo-29-651"
+number = "29-651"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-29-654"
+continuidad_id = "reg21-tipo-29-654"
+number = "29-654"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-30"
+continuidad_id = "reg21-cuota-positiva-30"
+number = "30"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-36"
+continuidad_id = "reg21-cuota-positiva-36"
+number = "36"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-42"
+continuidad_id = "reg21-cuota-positiva-42"
+number = "42"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-48"
+continuidad_id = "reg21-cuota-positiva-48"
+number = "48"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-31"
+continuidad_id = "reg21-cuota-negativa-31"
+number = "31"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-37"
+continuidad_id = "reg21-cuota-negativa-37"
+number = "37"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-43"
+continuidad_id = "reg21-cuota-negativa-43"
+number = "43"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-49"
+continuidad_id = "reg21-cuota-negativa-49"
+number = "49"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-32"
+continuidad_id = "reg21-cuota-total-32"
+number = "32"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-38"
+continuidad_id = "reg21-cuota-total-38"
+number = "38"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-44"
+continuidad_id = "reg21-cuota-total-44"
+number = "44"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-50"
+continuidad_id = "reg21-cuota-total-50"
+number = "50"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-02-regularizacion-ejercicio-861"
+continuidad_id = "490-02-regularizacion-ejercicio-861"
+number = "490-02-regularizacion-ejercicio-861"
+data_type = "year"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-51"
+continuidad_id = "reg21-base-positiva-51"
+number = "51"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-58"
+continuidad_id = "reg21-base-positiva-58"
+number = "58"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-64"
+continuidad_id = "reg21-base-positiva-64"
+number = "64"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-70"
+continuidad_id = "reg21-base-positiva-70"
+number = "70"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-52"
+continuidad_id = "reg21-base-negativa-52"
+number = "52"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-59"
+continuidad_id = "reg21-base-negativa-59"
+number = "59"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-65"
+continuidad_id = "reg21-base-negativa-65"
+number = "65"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-71"
+continuidad_id = "reg21-base-negativa-71"
+number = "71"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-53"
+continuidad_id = "reg21-base-total-53"
+number = "53"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-60"
+continuidad_id = "reg21-base-total-60"
+number = "60"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-66"
+continuidad_id = "reg21-base-total-66"
+number = "66"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-72"
+continuidad_id = "reg21-base-total-72"
+number = "72"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-54-1069"
+continuidad_id = "reg21-tipo-54-1069"
+number = "54"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-54-1072"
+continuidad_id = "reg21-tipo-54-1072"
+number = "54-1072"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-54-1075"
+continuidad_id = "reg21-tipo-54-1075"
+number = "54-1075"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-54-1078"
+continuidad_id = "reg21-tipo-54-1078"
+number = "54-1078"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-55"
+continuidad_id = "reg21-cuota-positiva-55"
+number = "55"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-61"
+continuidad_id = "reg21-cuota-positiva-61"
+number = "61"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-67"
+continuidad_id = "reg21-cuota-positiva-67"
+number = "67"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-73"
+continuidad_id = "reg21-cuota-positiva-73"
+number = "73"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-56"
+continuidad_id = "reg21-cuota-negativa-56"
+number = "56"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-62"
+continuidad_id = "reg21-cuota-negativa-62"
+number = "62"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-68"
+continuidad_id = "reg21-cuota-negativa-68"
+number = "68"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-74"
+continuidad_id = "reg21-cuota-negativa-74"
+number = "74"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-57"
+continuidad_id = "reg21-cuota-total-57"
+number = "57"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-63"
+continuidad_id = "reg21-cuota-total-63"
+number = "63"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-69"
+continuidad_id = "reg21-cuota-total-69"
+number = "69"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-75"
+continuidad_id = "reg21-cuota-total-75"
+number = "75"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "490-02-regularizacion-ejercicio-1285"
+continuidad_id = "490-02-regularizacion-ejercicio-1285"
+number = "490-02-regularizacion-ejercicio-1285"
+data_type = "year"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-76"
+continuidad_id = "reg21-base-positiva-76"
+number = "76"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-83"
+continuidad_id = "reg21-base-positiva-83"
+number = "83"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-89"
+continuidad_id = "reg21-base-positiva-89"
+number = "89"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-positiva-95"
+continuidad_id = "reg21-base-positiva-95"
+number = "95"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "decl.ejercicio"
+continuidad_id = "filing-year"
+number = "ejercicio"
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions.2021.casillas]]
+id = "decl.periodo"
+continuidad_id = "filing-period"
+number = "periodo"
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+section = ["declarante"]
+legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-77"
+continuidad_id = "reg21-base-negativa-77"
+number = "77"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-84"
+continuidad_id = "reg21-base-negativa-84"
+number = "84"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-90"
+continuidad_id = "reg21-base-negativa-90"
+number = "90"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-negativa-96"
+continuidad_id = "reg21-base-negativa-96"
+number = "96"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-78"
+continuidad_id = "reg21-base-total-78"
+number = "78"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-85"
+continuidad_id = "reg21-base-total-85"
+number = "85"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-91"
+continuidad_id = "reg21-base-total-91"
+number = "91"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-base-total-97"
+continuidad_id = "reg21-base-total-97"
+number = "97"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-79-1493"
+continuidad_id = "reg21-tipo-79-1493"
+number = "79"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-79-1496"
+continuidad_id = "reg21-tipo-79-1496"
+number = "79-1496"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-79-1499"
+continuidad_id = "reg21-tipo-79-1499"
+number = "79-1499"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-tipo-79-1502"
+continuidad_id = "reg21-tipo-79-1502"
+number = "79-1502"
+data_type = "ratio"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-80"
+continuidad_id = "reg21-cuota-positiva-80"
+number = "80"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-86"
+continuidad_id = "reg21-cuota-positiva-86"
+number = "86"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-92"
+continuidad_id = "reg21-cuota-positiva-92"
+number = "92"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-positiva-98"
+continuidad_id = "reg21-cuota-positiva-98"
+number = "98"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-81"
+continuidad_id = "reg21-cuota-negativa-81"
+number = "81"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-87"
+continuidad_id = "reg21-cuota-negativa-87"
+number = "87"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-93"
+continuidad_id = "reg21-cuota-negativa-93"
+number = "93"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-negativa-99"
+continuidad_id = "reg21-cuota-negativa-99"
+number = "99"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-82"
+continuidad_id = "reg21-cuota-total-82"
+number = "82"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-88"
+continuidad_id = "reg21-cuota-total-88"
+number = "88"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-94"
+continuidad_id = "reg21-cuota-total-94"
+number = "94"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg21-cuota-total-100"
+continuidad_id = "reg21-cuota-total-100"
+number = "100"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions.2021.casillas]]
+id = "reg-total-cuota-101"
+continuidad_id = "total-regularizacion-cuota"
+number = "101"
+data_type = "money"
+required = false
+input_kind = "manual"
+section = ["490_02"]
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]

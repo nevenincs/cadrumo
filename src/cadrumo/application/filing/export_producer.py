@@ -8,7 +8,6 @@ from datetime import date
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...domain.deadlines.models import ModeloIVAProfile
 from ...domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_export_code,
     m303_tax_territory_exclusively_foral_mark,
@@ -18,6 +17,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     opcion_prorrata_transition,
     revocacion_prorrata_transition,
 )
+from ...domain.deadlines.models import ModeloIVAProfile
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -1160,9 +1160,7 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
             yes_no(transition.transition == opcion_prorrata_transition()) if transition_applicable else None
         ),
         prorrata_special_revocation=(
-            yes_no(transition.transition == revocacion_prorrata_transition())
-            if transition_applicable
-            else None
+            yes_no(transition.transition == revocacion_prorrata_transition()) if transition_applicable else None
         ),
         insolvency_declared="1" if insolvency is not None else "2",
         insolvency_judicial_order_date=(

@@ -38,13 +38,13 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from ...domain.calculations.registry.detail_record_bindings import ForeignAssetProvider
+from ...domain.calculations.registry.foreign_asset_obligation_catalogue import (
+    resolve_foreign_asset_obligation_catalogue,
+)
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloCasillasReport, ModeloDescribeReport
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import CasillaDataType
-from ...domain.calculations.registry.foreign_asset_obligation_catalogue import (
-    resolve_foreign_asset_obligation_catalogue,
-)
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,

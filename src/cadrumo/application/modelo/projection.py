@@ -58,8 +58,8 @@ from ...domain.modelos.work_unit import WorkUnit
 from .calculate_input import ModeloCalculateBindingInputError
 from .calculate_input import decimal_binding_value as _decimal_binding_value
 from .calculate_input import validated_binding_input_channel as _validated_binding_input_channel
-from .calculation_actions import list_calculation_revisions
 from .calculation_action_ports import CalculationActionPorts
+from .calculation_actions import list_calculation_revisions
 from .profile_binding import resolve_profile_sourced_bindings
 from .work_lifecycle import list_work_units
 

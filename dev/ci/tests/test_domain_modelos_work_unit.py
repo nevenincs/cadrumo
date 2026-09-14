@@ -23,6 +23,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import (
     WorkUnitAlreadyDiscardedError,
@@ -49,7 +50,6 @@ from cadrumo.domain.modelos.work_unit import (
     derive_work_unit_id,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

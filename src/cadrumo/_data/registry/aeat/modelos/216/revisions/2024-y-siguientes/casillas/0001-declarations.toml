@@ -1,0 +1,247 @@
+# Modelo 216 record-design closure, transcribed from the bundled diseño de
+# registro `aeat-dr-216-2024` (Pág. 1). Orden HAC/56/2024 restructured this
+# modelo's liquidación into two blocks, each broken down by dividendos vs
+# resto de rentas, and each carrying a rentas count beside its base:
+#
+#   I  Rentas SOMETIDAS a retención o ingreso a cuenta
+#        número de rentas [05][06][07], base [08][09][10], retenciones [11][12][13]
+#   II Rentas NO SOMETIDAS a retención o ingreso a cuenta
+#        número de rentas [14][15][16], base [17][18][19]
+#
+# The bases and retenciones of block I ([08]-[13]) and the resultado rows
+# ([20][21]) were already declared; this fragment adds the nine boxes the
+# official record requires and the prior declaration did not carry — the six
+# rentas counts and block II's three bases.
+#
+# The desglose is the orden's own: "En el modelo 216 [...] también se realiza
+# un desglose del importe total de retenciones e ingresos a cuenta en el
+# correspondiente a dividendos y otras rentas de participación en fondos
+# propios de entidades y el correspondiente a otras rentas."
+# Modelo 216 record design — money closure grounded in the AEAT instructions
+# (aeat-modelo-216-procedure) and the Orden HAC/56/2024 form layout
+# (boe-modelo-216-form-layout). Block I, rentas SOMETIDAS a retención o ingreso
+# a cuenta: base (08/09) and retenciones (11/12) each broken down into
+# dividendos y otras rentas de participación en fondos propios de entidades and
+# resto de rentas, their totals (10/13), prior-declaration results (20), and the
+# resultado a ingresar (21).
+#
+# The breakdown axis is dividendos-vs-resto, NOT dinerarias-vs-especie. Orden
+# HAC/56/2024 replaced the Orden EHA/3290/2008 breakdown: "En el modelo 216
+# [...] también se realiza un desglose del importe total de retenciones e
+# ingresos a cuenta en el correspondiente a dividendos y otras rentas de
+# participación en fondos propios de entidades y el correspondiente a otras
+# rentas." The bundled diseño `aeat-dr-216-2024` names each box the same way,
+# and the word "dinerarias" does not occur anywhere in the establishing orden.
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "05"
+number = "05"
+data_type = "integer"
+semantic_role = "irnr_retencion_numero_rentas_dividendos"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas dividendos twice: block I rentas sometidas [05] @109, block II no sometidas [14] @262. One casilla each; singleton by construction, not a typo of irnr_no_retencion_numero_rentas_dividendos."
+required = false
+input_kind = "manual"
+section = ["rentas_sometidas", "numero_rentas"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "06"
+number = "06"
+data_type = "integer"
+semantic_role = "irnr_retencion_numero_rentas_resto"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas resto twice: block I rentas sometidas [06] @126, block II no sometidas [15] @279. One casilla each; singleton by construction, not a typo of irnr_no_retencion_numero_rentas_resto."
+required = false
+input_kind = "manual"
+section = ["rentas_sometidas", "numero_rentas"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "07"
+number = "07"
+data_type = "integer"
+semantic_role = "irnr_retencion_numero_rentas_total"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas total twice: block I rentas sometidas [07] @143, block II no sometidas [16] @296. One casilla each; singleton by construction, not a typo of irnr_no_retencion_numero_rentas_total."
+required = false
+input_kind = "computed"
+formula = "modelo-216-numero-rentas-sometidas-total"
+section = ["rentas_sometidas", "numero_rentas"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "14"
+number = "14"
+data_type = "integer"
+semantic_role = "irnr_no_retencion_numero_rentas_dividendos"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas dividendos twice: block I rentas sometidas [05] @109, block II no sometidas [14] @262. One casilla each; singleton by construction, not a typo of irnr_retencion_numero_rentas_dividendos."
+required = false
+input_kind = "manual"
+section = ["rentas_no_sometidas", "numero_rentas"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "15"
+number = "15"
+data_type = "integer"
+semantic_role = "irnr_no_retencion_numero_rentas_resto"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas resto twice: block I rentas sometidas [06] @126, block II no sometidas [15] @279. One casilla each; singleton by construction, not a typo of irnr_retencion_numero_rentas_resto."
+required = false
+input_kind = "manual"
+section = ["rentas_no_sometidas", "numero_rentas"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "16"
+number = "16"
+data_type = "integer"
+semantic_role = "irnr_no_retencion_numero_rentas_total"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares numero de rentas total twice: block I rentas sometidas [07] @143, block II no sometidas [16] @296. One casilla each; singleton by construction, not a typo of irnr_retencion_numero_rentas_total."
+required = false
+input_kind = "computed"
+formula = "modelo-216-numero-rentas-no-sometidas-total"
+section = ["rentas_no_sometidas", "numero_rentas"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "17"
+number = "17"
+data_type = "money"
+semantic_role = "irnr_no_retencion_base_dividendos"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base dividendos twice: block I rentas sometidas [08] @160, block II no sometidas [17] @313. One casilla each; singleton by construction, not a typo of irnr_retencion_base_dividendos."
+required = false
+input_kind = "manual"
+section = ["rentas_no_sometidas", "base"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "18"
+number = "18"
+data_type = "money"
+semantic_role = "irnr_no_retencion_base_resto"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base resto twice: block I rentas sometidas [09] @177, block II no sometidas [18] @330. One casilla each; singleton by construction, not a typo of irnr_retencion_base_resto."
+required = false
+input_kind = "manual"
+section = ["rentas_no_sometidas", "base"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "19"
+number = "19"
+data_type = "money"
+semantic_role = "irnr_no_retencion_base_total"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base total twice: block I rentas sometidas [10] @194, block II no sometidas [19] @347. One casilla each; singleton by construction, not a typo of irnr_retencion_base_total."
+required = false
+input_kind = "computed"
+formula = "modelo-216-base-no-sometidas-total"
+section = ["rentas_no_sometidas", "base"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+additional_source_refs = ["aeat-dr-216-2024"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "08"
+number = "08"
+data_type = "money"
+semantic_role = "irnr_retencion_base_dividendos"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base dividendos twice: block I rentas sometidas [08] @160, block II no sometidas [17] @313. One casilla each; singleton by construction, not a typo of irnr_no_retencion_base_dividendos."
+required = false
+input_kind = "manual"
+section = ["rentas_sometidas", "base"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "09"
+number = "09"
+data_type = "money"
+semantic_role = "irnr_retencion_base_resto"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base resto twice: block I rentas sometidas [09] @177, block II no sometidas [18] @330. One casilla each; singleton by construction, not a typo of irnr_no_retencion_base_resto."
+required = false
+input_kind = "manual"
+section = ["rentas_sometidas", "base"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "10"
+number = "10"
+data_type = "money"
+semantic_role = "irnr_retencion_base_total"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base total twice: block I rentas sometidas [10] @194, block II no sometidas [19] @347. One casilla each; singleton by construction, not a typo of irnr_no_retencion_base_total."
+required = false
+input_kind = "computed"
+formula = "modelo-216-base-total"
+section = ["rentas_sometidas", "base"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "11"
+number = "11"
+data_type = "money"
+semantic_role = "irnr_retencion_cuota_dividendos"
+required = false
+input_kind = "manual"
+section = ["rentas_sometidas", "retenciones"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "12"
+number = "12"
+data_type = "money"
+semantic_role = "irnr_retencion_cuota_resto"
+required = false
+input_kind = "manual"
+section = ["rentas_sometidas", "retenciones"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "13"
+number = "13"
+data_type = "money"
+semantic_role = "irnr_retencion_cuota_total"
+required = false
+input_kind = "computed"
+formula = "modelo-216-retenciones-total"
+section = ["rentas_sometidas", "retenciones"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "20"
+number = "20"
+data_type = "money"
+semantic_role = "irnr_retencion_resultados_anteriores"
+required = false
+input_kind = "manual"
+section = ["totales"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[[revisions.2024-y-siguientes.casillas]]
+id = "21"
+number = "21"
+data_type = "money"
+semantic_role = "cuota_a_ingresar"
+required = false
+input_kind = "computed"
+formula = "modelo-216-resultado"
+section = ["totales"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+
+[revisions.2024-y-siguientes.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]

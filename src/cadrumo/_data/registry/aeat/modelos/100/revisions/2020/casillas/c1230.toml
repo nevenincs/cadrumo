@@ -1,6 +1,0 @@
-[[revisions."2020".casillas]]
-id = "1230"
-number = "1230"
-section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
-semantic_role = "irpf_ganancia_inmueble_exenta_reinversion_vh"
-legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]

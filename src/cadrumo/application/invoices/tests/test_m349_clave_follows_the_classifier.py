@@ -22,6 +22,7 @@ from datetime import date
 import pytest
 
 from ....core.aggregation import IntracomOperationType
+from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ....domain.iva.classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -31,7 +32,6 @@ from ....domain.iva.classification import (
     classify_iva,
 )
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
-from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

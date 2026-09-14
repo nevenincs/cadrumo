@@ -49,7 +49,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.calculations.iva_compensation_annual_partition import (
+    IvaCompensationAnnualPartitionSourceResolver,
+)
+from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
+from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -69,11 +76,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import rev
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

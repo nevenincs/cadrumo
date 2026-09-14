@@ -34,12 +34,12 @@ from pathlib import Path
 import pytest
 from textual.widget import Widget
 
-from .modelo_workspace_session import real_workspace_inspection_result
 from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ..components.host import ScreenHostApp
 from ..modelo.routes import MODELO_WORKSPACE_DESTINATIONS
 from ..modelo.view.controller import ModeloWorkspaceReadSession, open_workspace_read_session
 from ..modelo.view.models import ModeloWorkspaceDestinationIdV1
+from .modelo_workspace_session import real_workspace_inspection_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

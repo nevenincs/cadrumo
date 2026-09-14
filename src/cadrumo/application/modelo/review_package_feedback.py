@@ -53,6 +53,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from pathlib import Path
+
 from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
@@ -62,12 +63,12 @@ from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
-from .review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
 from .recipient_encryption import (
     RecipientDecryptedPackage,
     RecipientEncryptedPackage,
     RecipientEncryptionCapability,
 )
+from .review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
 from .review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,

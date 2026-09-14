@@ -33,8 +33,8 @@ from cadrumo.application.live.justificante import (
     JustificanteCaptureSnapshotRepository,
     JustificanteCaptureSnapshotService,
     derive_justificante_capture_snapshot_id,
+    justificante_capture_snapshot_object_key,
 )
-from cadrumo.application.live.justificante import justificante_capture_snapshot_object_key
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period

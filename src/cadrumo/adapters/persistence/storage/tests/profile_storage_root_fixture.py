@@ -6,10 +6,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
+from .....core.config import override_settings
 from ..sql.engine import dispose_engine
 from .secure_sql import isolated_profile_storage_root
-from .....core.config import override_settings
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 
 @pytest.fixture(name="profile_storage_root")

@@ -42,16 +42,23 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.core.config import Settings
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
-from ._invoice_confirmation_test_support import _BUCKET_ID, _make_svc, invoice_confirmation_kwargs, seed_filer_profile
+from cadrumo.core.config import Settings
+from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+
+from ._invoice_confirmation_test_support import (
+    _BUCKET_ID,
+    _make_svc,
+    invoice_confirmation_kwargs,
+    isolated_settings,
+    secure_objects,
+    seed_filer_profile,
+    serving_a_loopback_reader,
+)
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import isolated_settings, secure_objects
-from ._invoice_confirmation_test_support import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]

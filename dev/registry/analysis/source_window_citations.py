@@ -178,9 +178,7 @@ def has_current_sibling(source_id: str, covering: set[str]) -> bool:
     # the calendario of each filing year's PRESENTATION year, so the newest of
     # the three sits outside the revision's span on purpose.
     return any(
-        other != source_id
-        and family_stem(other) == stem
-        and (mine is None or (trailing_year(other) or 0) > mine)
+        other != source_id and family_stem(other) == stem and (mine is None or (trailing_year(other) or 0) > mine)
         for other in covering
     )
 
@@ -191,9 +189,7 @@ def trailing_year(source_id: str) -> int | None:
     return int(tail) if len(tail) == 4 and tail.isdigit() else None
 
 
-def classify(
-    cited_in: list[str], *, superseded: bool = False, calendar_evidence: bool = False
-) -> str:
+def classify(cited_in: list[str], *, superseded: bool = False, calendar_evidence: bool = False) -> str:
     if superseded:
         return "superseded_alongside_current"
     roles = set()
@@ -243,14 +239,11 @@ def tally(findings: list[dict[str, object]]) -> dict[str, int]:
     return {role: sum(1 for f in findings if f["role"] == role) for role in ROLES}
 
 
-def screen_line(
-    findings: list[dict[str, object]], revisions: int, citations: int
-) -> str:
+def screen_line(findings: list[dict[str, object]], revisions: int, citations: int) -> str:
     """One grepable line in the grammar the other registry screens use."""
     counts = tally(findings)
     return "source_windows " + " ".join(
-        [f"{role}={counts[role]}" for role in ROLES]
-        + [f"revisions={revisions}", f"citations={citations}"]
+        [f"{role}={counts[role]}" for role in ROLES] + [f"revisions={revisions}", f"citations={citations}"]
     )
 
 
@@ -300,9 +293,7 @@ def scan(
             }
             for source_id, where in cited.items():
                 is_legal = source_id in legal
-                applies_from, applies_to, catalogue = (
-                    legal[source_id] if is_legal else windows[source_id]
-                )
+                applies_from, applies_to, catalogue = legal[source_id] if is_legal else windows[source_id]
                 if applies_from is None and applies_to is None:
                     continue  # an undeclared window makes no claim to contradict
                 citations_checked += 1
@@ -313,34 +304,35 @@ def scan(
                     span_to=span_to,
                 ):
                     continue
-                findings.append({
-                    "modelo": modelo_dir.name,
-                    "revision": revision_dir.name,
-                    "revision_span": [
-                        span_from.isoformat(),
-                        span_to.isoformat() if span_to else None,
-                    ],
-                    "source": source_id,
-                    "source_window": [
-                        applies_from.isoformat() if applies_from else None,
-                        applies_to.isoformat() if applies_to else None,
-                    ],
-                    "catalogue": catalogue,
-                    "cited_in": where,
-                    "role": (
-                        "legal_window_non_overlap"
-                        if is_legal
-                        else classify(
-                            where,
-                            superseded=has_current_sibling(source_id, covering),
-                            calendar_evidence=any(
-                                entry.split("#")[0].split("/")[0]
-                                in {"deadline_windows", "filing_schedules"}
-                                for entry in where
-                            ),
-                        )
-                    ),
-                })
+                findings.append(
+                    {
+                        "modelo": modelo_dir.name,
+                        "revision": revision_dir.name,
+                        "revision_span": [
+                            span_from.isoformat(),
+                            span_to.isoformat() if span_to else None,
+                        ],
+                        "source": source_id,
+                        "source_window": [
+                            applies_from.isoformat() if applies_from else None,
+                            applies_to.isoformat() if applies_to else None,
+                        ],
+                        "catalogue": catalogue,
+                        "cited_in": where,
+                        "role": (
+                            "legal_window_non_overlap"
+                            if is_legal
+                            else classify(
+                                where,
+                                superseded=has_current_sibling(source_id, covering),
+                                calendar_evidence=any(
+                                    entry.split("#")[0].split("/")[0] in {"deadline_windows", "filing_schedules"}
+                                    for entry in where
+                                ),
+                            )
+                        ),
+                    }
+                )
     return findings, revisions_checked, citations_checked
 
 
@@ -357,14 +349,19 @@ def main() -> int:
         print(screen_line(findings, revisions_checked, citations_checked))
         return 0
     if arguments.json:
-        print(json.dumps({
-            "revisions_checked": revisions_checked,
-            "citations_checked": citations_checked,
-            "non_overlapping": len(findings),
-            "by_role": tally(findings),
-            "screen": screen_line(findings, revisions_checked, citations_checked),
-            "findings": findings,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "revisions_checked": revisions_checked,
+                    "citations_checked": citations_checked,
+                    "non_overlapping": len(findings),
+                    "by_role": tally(findings),
+                    "screen": screen_line(findings, revisions_checked, citations_checked),
+                    "findings": findings,
+                },
+                indent=2,
+            )
+        )
         return 0
 
     governing = [f for f in findings if f["role"] == "governing_non_overlap"]
@@ -382,8 +379,7 @@ def main() -> int:
         if extra > 0:
             print(f"              and {extra} more file(s)")
     print(
-        f"\nrevisions_checked={revisions_checked} citations_checked={citations_checked} "
-        f"non_overlapping={len(findings)}"
+        f"\nrevisions_checked={revisions_checked} citations_checked={citations_checked} non_overlapping={len(findings)}"
     )
     return 0
 

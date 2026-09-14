@@ -1,0 +1,299 @@
+# Modelo 714 withdrew these fields in the 2022 record design. Each row
+# below names a field the 2021 design declared and the 2022 design does
+# not: either the address now reads RESERVADO PARA LA A.E.A.T., or the field's own
+# label is gone from that record entirely. A field that merely MOVED is not here --
+# it is still declared. The identifier is not inherited into 2022; it ends
+# here, and saying so is what absence alone could not.
+# 714-05 offset 959: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 960: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 965: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 978: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 998: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1018: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1019: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1081: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1166: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1301: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1436: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1571: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1706: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1841: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 1976: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 2052: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 2053: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 2058: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 2071: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 2091: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 2111: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 2112: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# 714-05 offset 2174: the field is no longer declared anywhere in record 714-05 of the 2022 diseno.
+# Modelo 714: these fields kept their meaning and changed address between the
+# 2021 and 2022 record designs. Where the corpus names a slot by the
+# design's own row ordinal, that ordinal is edition-scoped -- the design renumbers its
+# rows when a field is inserted -- so the same field legitimately carries a different
+# identifier in the two editions. Each row below names the pair: the design label and
+# the declared width are identical on both sides, which is what makes it one field.
+# 714-06: % participación individual 1 moves to offset 135 in the 2022 diseno.
+# 714-06: % participación individual 2 moves to offset 279 in the 2022 diseno.
+# 714-06: % participación familiar 2 moves to offset 284 in the 2022 diseno.
+# 714-06: % participación individual 3 moves to offset 423 in the 2022 diseno.
+# 714-06: % participación familiar 3 moves to offset 428 in the 2022 diseno.
+# 714-06: % participación individual 1 moves to offset 557 in the 2022 diseno.
+# 714-06: % participación individual 2 moves to offset 678 in the 2022 diseno.
+# 714-06: % participación individual 3 moves to offset 799 in the 2022 diseno.
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-valor-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pasis-1"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pasis-2"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pasis-3"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pasis-4"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pasis-5"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pasis-6"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pasis-7"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-porcentaje-titularidad-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-isin-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pasis-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-descripcion-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-valor-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-13"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-14"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-22"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-24"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-23"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-25"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-31"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-34"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-32"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-35"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-40"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-43"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-48"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-51"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+[[revisions.2022.identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-56"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-59"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]

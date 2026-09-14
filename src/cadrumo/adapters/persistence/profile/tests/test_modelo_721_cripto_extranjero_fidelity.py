@@ -67,7 +67,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
+from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
+from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
@@ -77,11 +82,6 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
-from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

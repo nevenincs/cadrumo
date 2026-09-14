@@ -252,7 +252,8 @@ def test_add_then_remove_then_list_reflects_removal(tmp_path: Path) -> None:
 def test_two_buckets_maintain_independent_registers(tmp_path: Path) -> None:
     """Two profiles' recipient registries never collide -- per-bucket scoping."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="7e263462-fbaf-4c50-8b20-c4b5c84a7e15") as profile_one:
-        _add(_ports(profile_one),
+        _add(
+            _ports(profile_one),
             recipient_id="only-in-one",
             public_key_hex=_fresh_public_key_hex(),
             added_at=_NOW,

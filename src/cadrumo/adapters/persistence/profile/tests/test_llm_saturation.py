@@ -21,11 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.ledger.llm_classification_ports import LLMSaturatedSuggestion
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.application.ledger.llm_classification import saturate_llm_classification
 from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
     _BUCKET,
     _saturating_subprocess_classifier,
@@ -34,6 +30,10 @@ from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
 from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
     repositories as repositories,
 )
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.application.ledger.llm_classification import saturate_llm_classification
+from cadrumo.application.ledger.llm_classification_ports import LLMSaturatedSuggestion
+from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

@@ -10,7 +10,23 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
+from cadrumo.application.calculations.binding_prefill import (
+    extract_modelo_303_local_iva_compensation_recurrence,
+    iva_compensation_history_observation,
+    observation_from_iva_compensation_history,
+    resolve_bindings_from_local_store,
+)
+from cadrumo.application.calculations.errors import BindingPrefillTypeError
+from cadrumo.application.calculations.iva_compensation_annual_partition import (
+    IvaCompensationAnnualPartitionSourceResolver,
+)
+from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
+from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -36,20 +52,6 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
-from cadrumo.application.calculations.binding_prefill import (
-    iva_compensation_history_observation,
-    observation_from_iva_compensation_history,
-    extract_modelo_303_local_iva_compensation_recurrence,
-    resolve_bindings_from_local_store,
-)
-from cadrumo.application.calculations.errors import BindingPrefillTypeError
-from cadrumo.application.calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

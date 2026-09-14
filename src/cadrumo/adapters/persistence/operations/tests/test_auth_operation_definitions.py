@@ -16,19 +16,10 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.operations import (
-    OperationEffect,
-    OperationLifecycle,
-    OperationTerminalCondition,
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    isolated_profile_storage_root,
+    isolated_runtime_profile,
 )
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
-from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -43,6 +34,18 @@ from cadrumo.application.auth.operation_definitions import (
     ProfileLoginOperationRequest,
     ProfilePassphraseRotationOperationRequest,
     build_auth_operation_registrations,
+)
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
+from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.core.auth_provider import AuthProviderKind
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

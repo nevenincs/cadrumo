@@ -33,8 +33,8 @@ from ....domain.transactions.models import (
     Transaction,
     TransactionCatalogue,
 )
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..m210_classification import resolve_m210_income_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -111,9 +111,7 @@ class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
         requested = frozenset(transaction_ids)
         return TransactionCatalogue.from_transactions(
-            transaction
-            for transaction in self._catalogue
-            if transaction.transaction_id in requested
+            transaction for transaction in self._catalogue if transaction.transaction_id in requested
         )
 
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:

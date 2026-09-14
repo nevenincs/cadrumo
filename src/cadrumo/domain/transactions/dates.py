@@ -24,7 +24,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ..iva.schema import IvaCashAccountingTreatment, is_iva_cash_accounting_none
+from ..iva.schema import is_iva_cash_accounting_none
 
 if TYPE_CHECKING:  # pragma: no cover — typing-only import
     from .models import Transaction

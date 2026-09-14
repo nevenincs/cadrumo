@@ -26,18 +26,18 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.core.config import override_settings
-from cadrumo.core.errors.error_codes import resolve_error_message
-from cadrumo.core.period import Period
-from cadrumo.domain.modelos.work_unit import derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.work_addressing import (
     ModeloWorkRegistryYearMismatchError,
     law_selected_revision_for_work_target,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.core.config import override_settings
+from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.core.period import Period
+from cadrumo.domain.modelos.work_unit import derive_work_unit_id
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

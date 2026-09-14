@@ -29,9 +29,9 @@ from ._subtree_move import (
     normalise_key_prefix,
     plan_locale_subtree_move,
 )
-from .write_guard import CatalogueWriteGuard, catalogue_write_guard
 from .errors import LocaleError
 from .wizard_translation_audit import wizard_descriptor_keys
+from .write_guard import CatalogueWriteGuard, catalogue_write_guard
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
 type LocaleNode = str | dict[str, "LocaleNode"] | None

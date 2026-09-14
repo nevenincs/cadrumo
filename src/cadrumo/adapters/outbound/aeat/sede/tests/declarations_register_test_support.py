@@ -10,10 +10,10 @@ from datetime import UTC, datetime, timedelta
 
 from playwright.async_api import Route, async_playwright
 
-from ..declarations import DeclaracionesRegisterSession
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......core.config import override_settings
 from ......tests.inventory import FIXTURES_DIR
+from ..declarations import DeclaracionesRegisterSession
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _TOTAL_REGISTROS_RE = re.compile(r"de (\d+) en total")
@@ -142,8 +142,8 @@ class _RoutedFiledDataRegister:
 
 
 __all__ = [
-    "RoutedRegisterDocuments",
     "RoutedFiledDataCapturePort",
+    "RoutedRegisterDocuments",
     "aeat_sede_fixture",
     "declared_register_total",
     "offline_aeat_session",

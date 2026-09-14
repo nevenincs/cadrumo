@@ -18,7 +18,9 @@ import pytest
 from click.testing import Result
 
 from ....adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from .cli_runner import invoke_cached_cli
 

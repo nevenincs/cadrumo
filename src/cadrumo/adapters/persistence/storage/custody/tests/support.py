@@ -43,11 +43,12 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
     This is a custody corruption fixture, so it belongs beside the custody
     label-file mutation primitive rather than in shared test support.
     """
+    from cadrumo.core.config import load_settings
+    from cadrumo.core.hashing import prefixed_digest
+
     from ..capsule import load_committed_profile_custody_label_record
     from ..capsule_records import ProfileCustodyCapsuleLabel
     from ..label_head_repository import ProfileLabelHeadRepository
-    from cadrumo.core.config import load_settings
-    from cadrumo.core.hashing import prefixed_digest
 
     resolved_root = root if root is not None else load_settings().cadrumo_local_storage_root
     if resolved_root is None:

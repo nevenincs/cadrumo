@@ -30,6 +30,9 @@ from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401
 )
@@ -44,8 +47,6 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from .. import _modelo_work_wizard_cli
 from .._modelo_behavior_support import resolve_work_unit_for_cli
 from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload

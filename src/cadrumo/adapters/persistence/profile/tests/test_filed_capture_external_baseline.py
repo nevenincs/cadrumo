@@ -13,15 +13,6 @@ from cadrumo.adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator
-from cadrumo.application.modelo.action_errors import ExternalModeloImportError
-from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
-from cadrumo.application.modelo.calculation_actions import get_calculation_revision
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.casilla_value_kind import CasillaValueKind
-from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from cadrumo.adapters.persistence.profile.tests.import_flow_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import (
     _CAPTURED_AT,
     _M303_RESULTADO_CASILLA,
@@ -30,6 +21,15 @@ from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support i
     _stored_130_justificante_observation,
     _stored_303_justificante_observation,
 )
+from cadrumo.adapters.persistence.profile.tests.import_flow_support import seed_ready_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator
+from cadrumo.application.modelo.action_errors import ExternalModeloImportError
+from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
+from cadrumo.application.modelo.calculation_actions import get_calculation_revision
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.casilla_value_kind import CasillaValueKind
+from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

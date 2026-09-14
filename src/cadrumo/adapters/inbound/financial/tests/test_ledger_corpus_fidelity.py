@@ -39,6 +39,13 @@ import pytest
 
 from cadrumo.adapters.inbound.financial.providers.csv import CsvProvider
 from cadrumo.adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
+from cadrumo.application.aggregation.iva_ledger import (
+    IvaLedgerAggregationIssueReason,
+    aggregate_iva_ledger_observations,
+)
+from cadrumo.application.aggregation.renta_income_ledger import (
+    aggregate_renta_income_ledger,
+)
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
@@ -49,13 +56,6 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.tests.ecb_stub import ecb_csv_fetch
 from cadrumo.tests.inventory import FIXTURES_DIR
-from cadrumo.application.aggregation.iva_ledger import (
-    IvaLedgerAggregationIssueReason,
-    aggregate_iva_ledger_observations,
-)
-from cadrumo.application.aggregation.renta_income_ledger import (
-    aggregate_renta_income_ledger,
-)
 
 pytestmark = [
     pytest.mark.integration,
@@ -337,5 +337,3 @@ def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
         )
         soportado = {o.ledger_id for o in result.observations if o.flow_direction is IvaFlowDirection.SOPORTADO}
         assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"
-
-

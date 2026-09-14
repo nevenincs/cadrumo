@@ -83,6 +83,7 @@ def _transaction(
         },
     )
 
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 

@@ -1,0 +1,203 @@
+[[revisions.2019-2023.casillas]]
+id = "01"
+number = "01"
+data_type = "money"
+semantic_role = "irpf_pf_modulos_suma_rendimientos"
+continuidad_id = "irpf-pf-modulos-suma-rendimientos"
+required = false
+input_kind = "manual"
+section = ["actividades_economicas_estimacion_objetiva"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "02"
+number = "02"
+data_type = "money"
+semantic_role = "pago_fraccionado_previo_datos_base"
+continuidad_id = "pago-fraccionado-previo-datos-base"
+required = false
+input_kind = "manual"
+section = ["actividades_economicas_estimacion_objetiva"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "03"
+number = "03"
+data_type = "money"
+semantic_role = "irpf_pf_modulos_volumen_sin_datos_base"
+continuidad_id = "irpf-pf-modulos-volumen-sin-datos-base"
+required = false
+input_kind = "manual"
+section = ["actividades_sin_datos_base"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "04"
+number = "04"
+data_type = "money"
+semantic_role = "pago_fraccionado_previo_sin_datos_base"
+continuidad_id = "pago-fraccionado-previo-sin-datos-base"
+required = false
+input_kind = "computed"
+formula = "modelo-131-pago-fraccionado-sin-datos-base"
+section = ["actividades_sin_datos_base"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "05"
+number = "05"
+data_type = "money"
+semantic_role = "irpf_pf_modulos_volumen_agrario"
+continuidad_id = "irpf-pf-modulos-volumen-agrario"
+required = false
+input_kind = "bound"
+binding = "modelo-131-volumen-ingresos-agrario"
+section = ["actividades_agricolas_ganaderas_forestales"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "06"
+number = "06"
+data_type = "money"
+semantic_role = "pago_fraccionado_previo_agrario"
+continuidad_id = "pago-fraccionado-previo-agrario"
+required = false
+input_kind = "computed"
+formula = "modelo-131-pago-fraccionado-agrario"
+section = ["actividades_agricolas_ganaderas_forestales"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "07"
+number = "07"
+data_type = "money"
+semantic_role = "pago_fraccionado_previo"
+continuidad_id = "pago-fraccionado-previo"
+required = false
+input_kind = "computed"
+formula = "modelo-131-suma-pagos-previos"
+section = ["total_liquidacion"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "08"
+number = "08"
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+required = false
+input_kind = "manual"
+section = ["total_liquidacion"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "09"
+number = "09"
+data_type = "money"
+semantic_role = "minoracion_rendimientos_actividades_economicas"
+continuidad_id = "minoracion-rendimientos-actividades-economicas"
+required = false
+input_kind = "manual"
+section = ["total_liquidacion"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "10"
+number = "10"
+data_type = "money"
+semantic_role = "irpf_pf_modulos_diferencia"
+continuidad_id = "irpf-pf-modulos-diferencia"
+required = false
+input_kind = "computed"
+formula = "modelo-131-diferencia"
+section = ["total_liquidacion"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "11"
+number = "11"
+data_type = "money"
+semantic_role = "irpf_pf_modulos_resultados_negativos_anteriores"
+continuidad_id = "irpf-pf-modulos-resultados-negativos-anteriores"
+required = false
+input_kind = "bound"
+binding = "modelo-131-resultados-negativos-anteriores"
+section = ["total_liquidacion"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions.2019-2023.casillas]]
+id = "12"
+number = "12"
+data_type = "money"
+semantic_role = "prestamo_vivienda_habitual"
+continuidad_id = "prestamo-vivienda-habitual"
+required = false
+input_kind = "manual"
+section = ["total_liquidacion"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "13"
+number = "13"
+data_type = "money"
+semantic_role = "irpf_pf_modulos_total"
+continuidad_id = "irpf-pf-modulos-total"
+required = false
+input_kind = "computed"
+formula = "modelo-131-total"
+section = ["total_liquidacion"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "14"
+number = "14"
+data_type = "money"
+semantic_role = "resultado_anteriores_autoliquidaciones"
+continuidad_id = "resultado-anteriores-autoliquidaciones"
+required = false
+input_kind = "manual"
+section = ["complementaria"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "15"
+number = "15"
+data_type = "money"
+semantic_role = "irpf_pf_modulos_resultado_declaracion"
+continuidad_id = "irpf-pf-modulos-resultado-declaracion"
+required = false
+input_kind = "computed"
+formula = "modelo-131-resultado"
+section = ["resultado"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[[revisions.2019-2023.casillas]]
+id = "saldo-negativo-fin-periodo"
+number = "saldo-negativo-fin-periodo"
+data_type = "money"
+semantic_role = "irpf_pf_saldo_negativo_fin_periodo"
+continuidad_id = "irpf-pf-saldo-negativo-fin-periodo"
+required = false
+input_kind = "computed"
+formula = "modelo-131-saldo-negativo-fin-periodo"
+export_exemption_reason = "not_in_record_design"
+section = ["computed_carry_forward"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+
+[revisions.2019-2023.casillas.constraints]
+sign = "non_negative"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]

@@ -13,6 +13,10 @@ from dataclasses import replace
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -21,7 +25,6 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.workflow.persistence import workflow_state_repository
 
@@ -99,9 +102,7 @@ def modelo_export_ports_for_test(
         bucket_event=bucket_event if bucket_event is not None else composed.bucket_event,
         observation=observation if observation is not None else composed.observation,
         iva_compensation_decision=(
-            iva_compensation_decision
-            if iva_compensation_decision is not None
-            else composed.iva_compensation_decision
+            iva_compensation_decision if iva_compensation_decision is not None else composed.iva_compensation_decision
         ),
         justificante=justificante if justificante is not None else composed.justificante,
         prorrata_register=prorrata_register if prorrata_register is not None else composed.prorrata_register,

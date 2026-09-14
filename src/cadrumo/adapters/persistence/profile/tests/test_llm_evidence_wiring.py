@@ -16,17 +16,17 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import SubprocessLLMClassifier
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
+from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from cadrumo.application.ledger.llm_classification import resolve_llm_evidence, suggest_llm_classification
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
-from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
-from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
-from cadrumo.application.ledger.llm_classification import resolve_llm_evidence, suggest_llm_classification
-from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import SubprocessLLMClassifier
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

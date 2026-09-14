@@ -16,11 +16,6 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
-from cadrumo.domain.invoices.errors import InvoiceLinkError
-from cadrumo.domain.invoices.models import InvoiceCatalogue
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
     create_manual_transaction,
@@ -29,6 +24,12 @@ from cadrumo.application.ledger.actions_manual import (
     update_manual_transaction_fields,
 )
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.invoices.errors import InvoiceLinkError
+from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
+from cadrumo.domain.transactions.errors import TransactionValidationError
+
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,

@@ -27,7 +27,7 @@ _REVISIONS = _ROOT / "src/cadrumo/_data/registry/aeat/modelos/220/revisions"
 DECLARED_SHA256 = "69c3a234e96eb4485a31c65209348bbcede0a49a8c143223c952000784f3f2df"
 
 HEADERS = {
-    'T22007000': """# Modelo 220 RECORD T22007000 -- liquidacion (I): from the base imponible previa of
+    "T22007000": """# Modelo 220 RECORD T22007000 -- liquidacion (I): from the base imponible previa of
 # the group through the compensacion of bases imponibles negativas to the base
 # imponible and the cuota integra del grupo.
 #
@@ -62,7 +62,7 @@ HEADERS = {
 # NOT CLAIMED: these casillas DECLARE the liquidacion; none of them computes it. No
 # formula, construct or binding is attached, and the tramo rate slots are declared as
 # slots, not as rates -- the design states no scale's values.""",
-    'T22009000': """# Modelo 220 RECORD T22009000 -- liquidacion (II): from the cuota integra through the
+    "T22009000": """# Modelo 220 RECORD T22009000 -- liquidacion (II): from the cuota integra through the
 # bonificaciones, the deducciones por doble imposicion and the otras deducciones to the
 # cuota liquida, the cuota diferencial and the resultado de la autoliquidacion.
 #
@@ -86,7 +86,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the liquidacion; none of them computes it. The
 # record is a settlement chain and NOT ONE of those relations is modelled here.""",
-    'T22009001': """# Modelo 220 RECORD T22009001 -- liquidacion (III): the liquido a ingresar o a devolver,
+    "T22009001": """# Modelo 220 RECORD T22009001 -- liquidacion (III): the liquido a ingresar o a devolver,
 # the complementaria adjustments, the art. 19.1 LIS fraccionamiento option and the
 # conversion of activos por impuesto diferido.
 #
@@ -115,7 +115,7 @@ HEADERS = {
 #
 # NOT CLAIMED: no formula, construct or binding is attached, and no jurisdiction is
 # asserted on 02796/02797.""",
-    'T22016000': """# Modelo 220 RECORD T22016000 -- tributacion conjunta al Estado y a las administraciones
+    "T22016000": """# Modelo 220 RECORD T22016000 -- tributacion conjunta al Estado y a las administraciones
 # forales del Pais Vasco y Navarra: the foral split of the group's liquidacion.
 #
 # 110 casillas, every one carrying a real AEAT box number. A regular 28-concept by
@@ -140,7 +140,7 @@ HEADERS = {
 #
 # NOT CLAIMED: these casillas DECLARE the foral split; none of them computes it. No
 # percentage, apportionment rule or formula is modelled here.""",
-    'T22016001': """# Modelo 220 RECORD T22016001 -- continuation of the foral split, carrying the closing
+    "T22016001": """# Modelo 220 RECORD T22016001 -- continuation of the foral split, carrying the closing
 # concepts of the tributacion conjunta grid through to [02813].
 #
 # 30 casillas, every one carrying a real AEAT box number.
@@ -153,7 +153,7 @@ HEADERS = {
 # NOT MODELLED: the identifier envelope, the reservado run and the end-of-record marker.
 #
 # NOT CLAIMED: these casillas DECLARE the foral split; none of them computes it.""",
-    'T220DID00': """# Modelo 220 RECORD T220DID00 -- documento de ingreso o devolucion.
+    "T220DID00": """# Modelo 220 RECORD T220DID00 -- documento de ingreso o devolucion.
 #
 # 31 casillas. This record is HETEROGENEOUS where the liquidacion records are uniform:
 # alongside money it carries the devengo dates, the period code, the NIF and name of the
