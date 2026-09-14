@@ -40,7 +40,13 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.authority_artifact import GovernedFactComponentQuery
+from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
+from ...categories.proportionality import ProportionalityKind
+from ...categories.proportionality_catalogue import require_proportionality_kind
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory
 from ..ledger_expenses import (
@@ -54,18 +60,30 @@ from ..ledger_expenses import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _YEAR = 2025
-_USAGE_RATIO_KINDS = frozenset(
-    {require_proportionality_kind("usage_ratio_home_area"), require_proportionality_kind("usage_ratio_personal")},
-)
+_USAGE_RATIO_KIND_TOKENS = ("usage_ratio_home_area", "usage_ratio_personal")
 
 
-def _usage_ratio_categories() -> list[SpendingCategory]:
+@pytest.fixture(scope="session")
+def operation() -> PinnedAuthorityOperation:
+    """Expose canonical authored facts through one generation-pinned operation."""
+    authority = compiled_bundled_authority()
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
+    )
+    return PinnedAuthorityOperation(reader, reader.pin())
+
+
+def _usage_ratio_kinds(operation: PinnedAuthorityOperation) -> frozenset[ProportionalityKind]:
+    return frozenset(require_proportionality_kind(token, authority=operation) for token in _USAGE_RATIO_KIND_TOKENS)
+
+
+def _usage_ratio_categories(operation: PinnedAuthorityOperation) -> list[SpendingCategory]:
     """Return every shipped category whose deduction is a proportion of use."""
-    profiles = resolve_category_profiles(_YEAR)
+    profiles = resolve_category_profiles(_YEAR, operation=operation)
     return [
         category
         for category, profile in profiles.items()
-        if profile.proportionality is not None and profile.proportionality.kind in _USAGE_RATIO_KINDS
+        if profile.proportionality is not None and profile.proportionality.kind in _usage_ratio_kinds(operation)
     ]
 
 
@@ -84,22 +102,22 @@ def _fact(category: SpendingCategory) -> RentaDeductibleExpenseFact:
     )
 
 
-def test_the_family_is_not_empty() -> None:
+def test_the_family_is_not_empty(operation: PinnedAuthorityOperation) -> None:
     """SUPPORTING. Without this the assertions below would pass vacuously."""
-    assert _usage_ratio_categories()
+    assert _usage_ratio_categories(operation)
 
 
-def test_no_usage_ratio_rule_ships_a_stand_in_proportion() -> None:
+def test_no_usage_ratio_rule_ships_a_stand_in_proportion(operation: PinnedAuthorityOperation) -> None:
     """DISCRIMINATING. The defect in its data shape.
 
     Asserted as a property of every usage-ratio rule rather than as a list of the
     five that carried it: a sixth category added tomorrow with the same stand-in
     is the same defect, and a pinned list would not see it.
     """
-    profiles = resolve_category_profiles(_YEAR)
+    profiles = resolve_category_profiles(_YEAR, operation=operation)
     with_default = [
         category
-        for category in _usage_ratio_categories()
+        for category in _usage_ratio_categories(operation)
         if profiles[category].proportionality.default_ratio is not None
     ]
 
@@ -110,15 +128,17 @@ def test_no_usage_ratio_rule_ships_a_stand_in_proportion() -> None:
     )
 
 
-def test_every_usage_ratio_category_is_ineligible_until_the_operator_declares() -> None:
+def test_every_usage_ratio_category_is_ineligible_until_the_operator_declares(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """DISCRIMINATING, and the behavioural half.
 
     The data property above could be satisfied while some other fallback supplied a
     ratio downstream, so this asserts the outcome the taxpayer actually gets.
     """
-    profiles = resolve_category_profiles(_YEAR)
+    profiles = resolve_category_profiles(_YEAR, operation=operation)
     deducted_anyway: list[tuple[str, Decimal]] = []
-    for category in _usage_ratio_categories():
+    for category in _usage_ratio_categories(operation):
         result = evaluate_renta_deductibility(
             _fact(category),
             profiles[category],
@@ -132,15 +152,15 @@ def test_every_usage_ratio_category_is_ineligible_until_the_operator_declares() 
     )
 
 
-def test_a_declared_proportion_is_still_deducted() -> None:
+def test_a_declared_proportion_is_still_deducted(operation: PinnedAuthorityOperation) -> None:
     """SUPPORTING, and the anti-overreach half.
 
     Refusing without operator input must not become refusing full stop. A category
     that reports INELIGIBLE for every input would satisfy the test above while
     denying every legitimate deduction, which is the opposite error and just as wrong.
     """
-    profiles = resolve_category_profiles(_YEAR)
-    for category in _usage_ratio_categories():
+    profiles = resolve_category_profiles(_YEAR, operation=operation)
+    for category in _usage_ratio_categories(operation):
         result = evaluate_renta_deductibility(
             _fact(category),
             profiles[category],
@@ -158,7 +178,7 @@ def test_a_declared_proportion_is_still_deducted() -> None:
         )
 
 
-def test_the_statutory_multiplier_survives_on_the_suministros_family() -> None:
+def test_the_statutory_multiplier_survives_on_the_suministros_family(operation: PinnedAuthorityOperation) -> None:
     """DISCRIMINATING. Removing the stand-in must not remove the real factor.
 
     The 30 per cent IS statutory for suministros, and the censo derivation applies
@@ -166,10 +186,10 @@ def test_the_statutory_multiplier_survives_on_the_suministros_family() -> None:
     it alongside the fabricated default would swing the error the other way, so the
     two are asserted apart.
     """
-    profiles = resolve_category_profiles(_YEAR)
+    profiles = resolve_category_profiles(_YEAR, operation=operation)
     suministros = [
         category
-        for category in _usage_ratio_categories()
+        for category in _usage_ratio_categories(operation)
         if profiles[category].proportionality.statutory_multiplier is not None
     ]
 
