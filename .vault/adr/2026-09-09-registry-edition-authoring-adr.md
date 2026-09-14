@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:d74089bd3e20eec0e03315129a5a76c4b9eb721a5755aed1fa180df4d6136dda'
+body_hash: 'sha256:a0a2184e58aa0cb1e43032bafa2f0f1f0b3897428226ce3477aa2255993c5519'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -467,6 +467,20 @@ missing reference. Remove the schema field and corpus tables together. Review, l
 lineage evidence and support grades are not discarded as part of this mechanical retirement.
 Typed delta and field-default reductions still require complete materialised equality; raw packing
 alone does not establish delta minimality or authorize a filing-grade snapshot.
+
+An omission on an already-declared predecessor graph is an authoring-source transformation,
+not a filing operation. It may be applied after every semantic typed field, member order and
+resolved label in every supported language remains equal. Compare all model fields, including
+those excluded from ordinary serialization. Only the compiler-derived `inherited_from` location
+and same-casilla ancestor occurrence fallback keys are representation-local; primary locale keys,
+other fallbacks, aliases and resolved text remain checked. Preserve source commentary with its
+member identity. A candidate needing lineage-evidence relocation is not a pure omission.
+
+Keep actual rendered-export comparison and full authority conformance separate from this source
+proof, report them explicitly as unchecked or refused when they cannot run, and never promote
+source equivalence into filing capability. This distinction permits lossless authoring cleanup
+while a separate filing fixture or upstream authority is being repaired; no new predecessor,
+continuity claim, legal exception or review stamp is inferred.
 
 ### Proof obligations
 

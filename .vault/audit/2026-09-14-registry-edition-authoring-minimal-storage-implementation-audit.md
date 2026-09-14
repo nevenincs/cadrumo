@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:8a1b270d496da0cc36d2c95942060a819f62e761055c8c4a67642c77da736c9b'
+body_hash: 'sha256:65883c222ad12316c18d494f72dc4f646300e4dd629882029710a967d8efec3e'
 related:
   - "[[2026-09-09-registry-edition-authoring-adr]]"
   - "[[2026-09-09-registry-edition-authoring-plan]]"
@@ -70,6 +70,10 @@ The forward path uses same-directory atomic replacement, but recovery restores a
 ### rollback-publication-resolution | low | Capture-before-compare publication preserves racing bytes and continues recovery
 
 Resolved on final bounded re-review. `replace_if_unchanged` now stages replacement bytes beside the target, renames an existing destination to a private displaced path before comparing its digest, and installs with non-overwriting `os.link` (`compact.py:112-155`). A destination created during the gap makes installation fail rather than overwrite it; changed captured bytes are either restored to their name or retained at the reported displaced path. Forward publication and rollback share this helper, journal entries are recorded before mutation, and `publish_staged_tree` catches each ordinary recovery refusal independently so remaining entries are still attempted (`compact.py:169-195`). `test_compact.py:150-171` injects racing bytes immediately before capture and proves they survive at the target. No concrete remaining data-loss path was found in this bounded check.
+
+### delta-help-localization | high | Fallback-key movement can change help text while the proof reports equality
+
+`semantic_value` removes sibling occurrence keys from `localization_keys` and compensates only by resolving labels in every supported language (`delta_compact.py:32-50`). A casilla's public `get_help` behavior derives a parallel `.help` key chain from those same localization keys (`schema_surfaces.py:434-437`). Two occurrence keys can therefore resolve the same label but different help text; dropping the successor row moves the fallback source, the normalized localization-key comparison ignores that movement, and `resolved_labels` remains equal, so `differences` accepts a user-visible help change. The three focused delta tests contain bindings only and never exercise casilla fallback movement. Compare resolved help as well as labels for every supported language, and add a real-loader casilla fixture whose predecessor and successor labels match while their help strings differ; the drop must be refused.
 
 ## Recommendations
 
