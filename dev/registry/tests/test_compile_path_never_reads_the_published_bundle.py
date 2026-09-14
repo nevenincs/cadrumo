@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import Final, NamedTuple
+from typing import Final, NamedTuple, override
 
 import pytest
 
@@ -66,6 +66,7 @@ class _Read(NamedTuple):
     path: Path
     line: int
 
+    @override
     def __str__(self) -> str:
         return f"{self.path.relative_to(_REPO_ROOT).as_posix()}:{self.line}"
 

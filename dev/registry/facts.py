@@ -28,7 +28,7 @@ import tokenize
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, override
 
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
@@ -1316,49 +1316,62 @@ class _ScopeWriteCollector(ast.NodeVisitor):
         self.counts: Counter[str] = Counter()
         self.assignments: list[ast.Assign | ast.AnnAssign] = []
 
+    @override
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, ast.Store):
             self.counts[node.id] += 1
 
+    @override
     def visit_Assign(self, node: ast.Assign) -> None:
         self.assignments.append(node)
         self.generic_visit(node)
 
+    @override
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         self.assignments.append(node)
         self.generic_visit(node)
 
+    @override
     def visit_arg(self, node: ast.arg) -> None:
         self.counts[node.arg] += 1
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self.counts[node.name] += 1
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self.counts[node.name] += 1
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self.counts[node.name] += 1
 
+    @override
     def visit_Lambda(self, node: ast.Lambda) -> None:
         # Lambda arguments/body belong to a nested scope.  A named expression
         # in a lambda is intentionally not used as a static binding here.
         return
 
+    @override
     def visit_comprehension(self, node: ast.comprehension) -> None:
         # Comprehension targets have their own Python 3 scope.  The consumer
         # visitor handles them separately as finite loop domains.
         return
 
+    @override
     def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
         return
 
+    @override
     def visit_ListComp(self, node: ast.ListComp) -> None:
         return
 
+    @override
     def visit_SetComp(self, node: ast.SetComp) -> None:
         return
 
+    @override
     def visit_DictComp(self, node: ast.DictComp) -> None:
         return
 
@@ -1785,6 +1798,7 @@ class _ClosedWorldFlowVisitor(ast.NodeVisitor):
             values[keyword.arg] = self._expression_values(keyword.value)
         return values
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
             callee = self.functions[node.func.id]
@@ -1807,12 +1821,15 @@ class _ClosedWorldFlowVisitor(ast.NodeVisitor):
             self.visit(statement)
         self.environment = saved
 
+    @override
     def visit_For(self, node: ast.For) -> None:
         self._visit_loop(node)
 
+    @override
     def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
         self._visit_loop(node)
 
+    @override
     def visit_Assign(self, node: ast.Assign) -> None:
         values = self._expression_values(node.value)
         target_names = _target_names(node.targets[0]) if node.targets else []
@@ -1822,6 +1839,7 @@ class _ClosedWorldFlowVisitor(ast.NodeVisitor):
             self._assign(name, values)
         self.visit(node.value)
 
+    @override
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         values = self._expression_values(node.value)
         for name in _target_names(node.target):
@@ -1829,20 +1847,25 @@ class _ClosedWorldFlowVisitor(ast.NodeVisitor):
         if node.value is not None:
             self.visit(node.value)
 
+    @override
     def visit_AugAssign(self, node: ast.AugAssign) -> None:
         for name in _target_names(node.target):
             self._assign(name, None)
         self.visit(node.value)
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         return
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         return
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         return
 
+    @override
     def visit_Lambda(self, node: ast.Lambda) -> None:
         return
 
@@ -3162,6 +3185,7 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
     def _resolve_fact_ids(self, node: ast.AST | None) -> tuple[str, ...] | None:
         return self._fact_id_resolution(node).get("ids")
 
+    @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Recognize aliases of every governed-fact query family."""
         for imported in node.names:
@@ -3171,6 +3195,7 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
                 self.query_family_by_symbol[symbol] = QUERY_FAMILY_BY_SYMBOL[imported.name]
         self.generic_visit(node)
 
+    @override
     def visit_Import(self, node: ast.Import) -> None:
         """Retain module imports for attribute-shaped query calls."""
         self.generic_visit(node)
@@ -3201,15 +3226,19 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
             self.function_node_stack.pop()
             self.symbol_stack.pop()
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._visit_symbol(node, node.name, body=node.body, arguments=node.args)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_symbol(node, node.name, body=node.body, arguments=node.args)
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._visit_symbol(node, node.name, body=node.body)
 
+    @override
     def visit_Lambda(self, node: ast.Lambda) -> None:
         self._visit_symbol(node, "<lambda>", body=[], arguments=node.args)
 
@@ -3238,15 +3267,19 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
         finally:
             self.loop_bindings.pop()
 
+    @override
     def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
         self._visit_comprehension_expression(node)
 
+    @override
     def visit_ListComp(self, node: ast.ListComp) -> None:
         self._visit_comprehension_expression(node)
 
+    @override
     def visit_SetComp(self, node: ast.SetComp) -> None:
         self._visit_comprehension_expression(node)
 
+    @override
     def visit_DictComp(self, node: ast.DictComp) -> None:
         self._visit_comprehension_expression(node)
 
@@ -3267,12 +3300,15 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
         finally:
             self.loop_bindings.pop()
 
+    @override
     def visit_For(self, node: ast.For) -> None:
         self._visit_loop(node)
 
+    @override
     def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
         self._visit_loop(node)
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         query_kind = _call_symbol(node.func)
         if query_kind in self.query_symbols:

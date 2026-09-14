@@ -39,3 +39,14 @@ supported_filing_years_floor = 2022
 revision_last_filing_year = 2017
 reason = '''Every filing year this revision declares (2016 and 2017) lies below the registry-wide supported-filing-years floor of 2022 declared in the legal tree's supported-filing-years declaration, so revision selection admits no coordinate for it: the publisher refuses with "modelo 232: no revision for year=... period='0A' revision='2016-2017'" before it renders or compares anything. Its shipped records still quote binding identifier spellings that were re-spelled to drop record-design span and offset segments - the identifiers are semantic and the record layout, offsets and widths are unchanged - but that difference cannot be regenerated away while the revision is unreachable, so it is a listed non-issue rather than an unexplained one.'''
 reconsideration_condition = 'The supported-filing-years floor is lowered to admit this revision, or the revision is retired.'
+
+[[dispositions]]
+kind = 'record_drift'
+modelo = '296'
+revision = '2024-y-siguientes'
+source_ref = 'aeat-dr-296-2024'
+source_sha256 = 'abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378'
+remedy = 'republish'
+differing_records = 1
+reason = '''The pinned official PDF parser anchor at source row 177 states one leading sign byte at position 145, blank for non-negative values and N for negative values, followed by a 12+2 digit unsigned monetary magnitude at positions 146-159. The accepted reviewed signed-composite profile now verifies that complete source grammar and emits casilla 02 through the existing money codec with blank_or_n signing. The published declarante record predates that reviewed profile and renders the same field as ordinary alphanumeric text; a fresh validated candidate changes exactly that one record, so the generated inputs are correct and the published record is stale.'''
+reconsideration_condition = 'The published tree is republished from this reviewed profile, or the pinned official source or signed-composite profile policy changes and requires a fresh source-agreement adjudication.'

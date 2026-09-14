@@ -22,7 +22,7 @@ import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from cadrumo.tests.module_target_inventory import MetadataTargetSetError, load_all_target_sets, load_target_set
 from dev._paths import REPO_ROOT, UTF_8
@@ -610,6 +610,7 @@ class _OccurrenceVisitor(ast.NodeVisitor):
         self.scopes: list[str] = []
         self.type_checking_depth = 0
 
+    @override
     def visit_If(self, node: ast.If) -> None:
         is_type_checking = _is_type_checking_guard(node.test)
         self.visit(node.test)
@@ -622,12 +623,15 @@ class _OccurrenceVisitor(ast.NodeVisitor):
         for statement in node.orelse:
             self.visit(statement)
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._visit_scope(node)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_scope(node)
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._visit_scope(node)
 
@@ -637,11 +641,13 @@ class _OccurrenceVisitor(ast.NodeVisitor):
             self.visit(statement)
         self.scopes.pop()
 
+    @override
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
             if _is_first_party(alias.name, self.authority.root_names):
                 self._record(alias.name, (), node.lineno, self._static_form())
 
+    @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         target = _resolve_from(self.module.name, self.module.is_package, node.level, node.module)
         if target is None or not _is_first_party(target, self.authority.root_names):
@@ -657,6 +663,7 @@ class _OccurrenceVisitor(ast.NodeVisitor):
             else:
                 self._record(target, (alias.name,), node.lineno, self._static_form())
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         qualified = _qualified_name(node.func)
         is_import_module = qualified in self.import_module_names or (
