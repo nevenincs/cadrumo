@@ -3014,7 +3014,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-41-1994-art-78.html#segundo"
+corpus_ref = "corpus/normatives/xml/ley-41-1994-art-78.xml#segundo"
 document_id = "BOE-A-1994-28967"
 article = "78.Segundo"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-28967"

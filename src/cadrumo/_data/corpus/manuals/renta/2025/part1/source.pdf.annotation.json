@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "source_sha256": "02c6e8300a7f56c8c24aa947d4c39c5657c9a9eda6f5d727d44b4112d7de15d4",
+  "selections": [
+    {"anchor": "andalucia-minimo-contribuyente", "pages": [1084]},
+    {"anchor": "asturias-minimo-contribuyente", "pages": [1085]},
+    {"anchor": "baleares-minimo-contribuyente", "pages": [1086]},
+    {"anchor": "canarias-minimo-contribuyente", "pages": [1087, 1088]},
+    {"anchor": "galicia-minimo-contribuyente", "pages": [1089]},
+    {"anchor": "madrid-minimo-descendientes", "pages": [1090, 1091]},
+    {"anchor": "valenciana-minimo-contribuyente", "pages": [1092]}
+  ]
+}

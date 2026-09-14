@@ -15,7 +15,7 @@
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-58-2003-art-94.html#a94"
+corpus_ref = "corpus/normatives/xml/ley-58-2003-art-94.xml#a94"
 document_id = "BOE-A-2003-23186"
 article = "94"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a94"

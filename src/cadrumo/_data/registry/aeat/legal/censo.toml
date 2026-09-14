@@ -312,7 +312,7 @@ resuelve nada por diseno. Se cita porque el resto de prefijos del vocabulario se
 el cuerpo contra el patron que su prefijo declara, mientras que los identificadores espanoles \
 validan por la letra de control de la AEAT: ES no podia entrar como entraron sus hermanos, y la \
 asimetria resultante dejaba la identificacion del propio declarante solo asertable. CAMBIO DE \
-DOCUMENTO CITADO, 2026-08-13. La entrada citaba rd-1065-2007-art-25.html, una captura del endpoint \
+DOCUMENTO CITADO, 2026-08-13. La entrada citaba rd-1065-2007-art-25.xml, una captura del endpoint \
 de articulo que concatena DOS redacciones fechadas (fecha_vigencia 20080101 de BOE-A-2007-15984 y \
 20100303 de BOE-A-2010-3370) en una sola unidad extraida de 8873 caracteres, de modo que la \
 comprobacion de required_text se ejecutaba contra texto derogado y texto vigente fundidos. Se \

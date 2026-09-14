@@ -237,10 +237,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 only-include = [
   "src/cadrumo",
-  # The source archive must retain the release authority so rebuilding the
-  # product does not silently turn an artifact-only distribution into one that
-  # can only fail at first use.
-  "src/cadrumo/_data/registry/authority/authority.json",
+  # The source archive retains only the release authority selector and its
+  # content-addressed SQLite payload.  The selector is the sole mutable
+  # publication edge; its database member names the exact bytes the runtime
+  # admits.  The legacy eager JSON frame is deliberately excluded below.
+  "src/cadrumo/_data/registry/authority/authority.current.json",
+  "src/cadrumo/_data/registry/authority/authority-*.sqlite3",
   "src/cadrumo_harness",
   "pyproject.toml",
   "README.md",
@@ -286,6 +288,13 @@ exclude = [
   # release actually promoted.
   "src/cadrumo/_data/registry/aeat-registry-identity.json",
   "src/cadrumo/_data/registry/aeat-validation-verdict.json",
+  # Runtime authoring inputs are development-only.  The profile schema is a
+  # captured compiler input and is represented in the SQLite component store,
+  # not shipped as a second loader-readable TOML source.
+  "src/cadrumo/_data/registry/cadrumo",
+  "src/cadrumo/_data/registry/cadrumo/**",
+  "src/cadrumo/_data/registry/authority/authority.json",
+  "src/cadrumo/_data/registry/authority/authority.json.lock",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -315,6 +324,12 @@ exclude = [
   # a release promoted -- which is exactly what an acquisition proof compares.
   "src/cadrumo/_data/registry/aeat-registry-identity.json",
   "src/cadrumo/_data/registry/aeat-validation-verdict.json",
+  # Captured profile declarations and the legacy eager frame are authoring
+  # inputs/fallbacks, never installed runtime resources.
+  "src/cadrumo/_data/registry/cadrumo",
+  "src/cadrumo/_data/registry/cadrumo/**",
+  "src/cadrumo/_data/registry/authority/authority.json",
+  "src/cadrumo/_data/registry/authority/authority.json.lock",
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain at runtime.
@@ -340,9 +355,12 @@ exclude = [
 # wheels; `py.typed` marks the package PEP 561 typed so consumers read the
 # inline types; `external_constants.toml` carries the curated leaf constants.
 include = [
-  # Release tooling creates this only after the full development compiler has
+  # Release tooling creates these only after the full development compiler has
   # validated the authored registry and published the resulting authority.
-  "src/cadrumo/_data/registry/authority/authority.json",
+  # The wildcard is intentionally bounded to content-addressed SQLite files;
+  # no development source or legacy JSON fallback is package data.
+  "src/cadrumo/_data/registry/authority/authority.current.json",
+  "src/cadrumo/_data/registry/authority/authority-*.sqlite3",
   "src/cadrumo/py.typed",
   "src/cadrumo/adapters/persistence/storage/_bip39_wordlist.txt",
   "src/cadrumo/core/external_constants.toml",
@@ -801,8 +819,7 @@ convention = "google"
 # Modelo 720 fichero-BOE roundtrip fixture pins fixed-width AEAT envelope rows
 # (key + 18-char numeric value) that exceed 120 columns and cannot be split.
 "src/cadrumo/application/calculations/tests/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]
-# Bundled `git ls-files` invocation reads from PATH; the explicit command list
-# is reviewed and audited rather than a partial path risk.
+# The packaging gate invokes only the trusted `uv` build driver from PATH.
 "src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
 # Same rationale: the content-boundary gate builds the project's own wheel with
 # the trusted `uv` build driver (partial path resolved from PATH by design).
@@ -846,9 +863,8 @@ convention = "google"
 # subprocess, exactly as the docs build gate above.
 "dev/docs/tests/test_built_site_resolvability_sweep.py" = ["S603"]
 # The cadrumo-data distribution gate builds the two companion wheels with the
-# trusted `uv` build driver and enumerates corpus binaries via `git ls-files`
-# (partial paths resolved from PATH by design), mirroring the src/cadrumo
-# wheel-build gates.
+# trusted `uv` build driver (resolved from PATH by design), mirroring the
+# src/cadrumo wheel-build gates. Corpus membership is enumerated in-process.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
 "src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
