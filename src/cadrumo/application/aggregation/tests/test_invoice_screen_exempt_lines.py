@@ -35,6 +35,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.invoices.enums import IvaRate, resolve_iva_rate_token
+from cadrumo.domain.iva.schema import IvaCategory
+
 from ....domain.invoices.enums import IvaRate
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import category_components
@@ -47,8 +50,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 @pytest.mark.parametrize(
     ("category", "rate"),
     [
-        (IvaCategory.DOMESTIC_EXEMPT, IvaRate.EXEMPT),
-        (IvaCategory.INTRA_COMMUNITY_SUPPLY, IvaRate.EXEMPT),
+        (IvaCategory("domestic_exempt"), resolve_iva_rate_token("exempt", date.today())),
+        (IvaCategory("intra_community_supply"), resolve_iva_rate_token("exempt", date.today())),
     ],
 )
 def test_a_zero_cuota_category_still_requires_its_base(category: IvaCategory, rate: IvaRate) -> None:
@@ -77,7 +80,7 @@ def test_an_exempt_line_builds_a_declarable_observation() -> None:
         invoice_id="invoice:exempt-line-proof:0",
         issued_at=date(2026, 2, 10),
         invoice_kind=InvoiceKind.ISSUED,
-        iva_rate=IvaRate.EXEMPT,
+        iva_rate=resolve_iva_rate_token("exempt", date.today()),
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("0"),
         deduction_fact_kind=None,
@@ -85,7 +88,7 @@ def test_an_exempt_line_builds_a_declarable_observation() -> None:
         recargo_amount=Decimal("0"),
     )
 
-    assert observation.category is IvaCategory.DOMESTIC_EXEMPT
+    assert observation.category == IvaCategory("domestic_exempt")
     assert observation.base_amount == Decimal("1000.00")
     assert observation.iva_amount == Decimal("0")
 

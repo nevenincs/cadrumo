@@ -192,7 +192,7 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
             operaciones_sin_derecho_deduccion=_PRIOR_YEAR_SIN_DERECHO,
         ),
         year=payload.filing_year - 1,
-        kind=ProrrataKind.PROVISIONAL,
+        kind=ProrrataKind._from_registry("provisional"),
         period="Q4",
     )
     assert provisional.percentage == _MANUAL_PROVISIONAL_PERCENTAGE

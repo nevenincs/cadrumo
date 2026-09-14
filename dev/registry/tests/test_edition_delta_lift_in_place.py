@@ -193,7 +193,7 @@ def _materialised_formula_ids(modelo_dir: Path, revision_id: str) -> tuple[str, 
 
 def _stage_lift(reference_dir: Path, staged_root: Path) -> Path:
     """Plan the delta-authored modelo and write the lift into a copy of its tree."""
-    _plan_result, works = _plan(reference_dir, _definition(reference_dir), declare_blocked_roots=False)
+    _plan_result, works = _plan(reference_dir, _definition(reference_dir))
     staged_dir = shutil.copytree(reference_dir, staged_root / _MODELO_ID)
     for work in works:
         _write_edition(staged_dir / "revisions" / work.plan.revision_id, work)
@@ -218,7 +218,7 @@ def test_a_lift_in_place_keeps_every_stated_member_in_its_authored_order(tmp_pat
     modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
     assert _materialised_ids(modelo_dir, _SUCCESSOR) == _MATERIALISED_ORDER
 
-    plan, works = _plan(modelo_dir, _definition(modelo_dir), declare_blocked_roots=False)
+    plan, works = _plan(modelo_dir, _definition(modelo_dir))
 
     assert plan.already_delta_authored
     assert [edition.basis for edition in plan.editions] == [PredecessorBasis.LIFT_ONLY] * 2
@@ -264,7 +264,7 @@ def test_a_written_lift_proves_identical_and_a_rerun_changes_nothing(tmp_path: P
     assert _prove(reference_dir, staged_dir) == _CLEAN_REPORT
     assert _materialised_ids(staged_dir, _SUCCESSOR) == _MATERIALISED_ORDER
 
-    plan, works = _plan(staged_dir, _definition(staged_dir), declare_blocked_roots=False)
+    plan, works = _plan(staged_dir, _definition(staged_dir))
 
     assert plan.already_delta_authored
     assert [edition.stated_ids for edition in plan.editions] == [("0001", "0002", "0003"), _AUTHORED_ORDER]

@@ -12,14 +12,16 @@ from typing import Literal
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, BaseModel, TypeAdapter
 
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.engine import DeadlineEngine
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
@@ -278,10 +280,10 @@ def profile() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_professionals_with_retencion=False,
         professional_income_withholding_ge_70pct=False,

@@ -216,9 +216,10 @@ def test_the_cited_article_excludes_exactly_the_territories_the_table_enumerates
 
     scopes = {IvaTerritorialScope(str(record["scope"])) for record in _territory_records()}
 
-    assert scopes == {IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA}, (
-        "the table excludes a territory the cited article does not, or drops one it does"
-    )
+    assert scopes == {
+        IvaTerritorialScope._from_registry("es_canarias"),
+        IvaTerritorialScope._from_registry("es_ceuta_melilla"),
+    }, "the table excludes a territory the cited article does not, or drops one it does"
 
 
 def test_the_balears_are_inside_by_non_exclusion_and_the_statute_never_names_them() -> None:

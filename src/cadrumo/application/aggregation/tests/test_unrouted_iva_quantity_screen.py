@@ -25,7 +25,9 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaRateKind
+
 from ....core.period import Period
 from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -36,7 +38,7 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import derive_flow_for_classification
-from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -85,34 +87,34 @@ def _row(category: IvaCategory) -> IvaLedgerObservation:
         ledger_id=f"residue-{category.value}",
         transaction_date=date(2024, 6, 1),
         category=category,
-        rate_kind=IvaRateKind.GENERAL,
+        rate_kind=IvaRateKind("general"),
         flow_direction=derive_flow_for_classification(category=category, invoice_direction=InvoiceKind.RECEIVED),
-        cash_accounting_treatment=IvaCashAccountingTreatment.NONE,
+        cash_accounting_treatment=IvaCashAccountingTreatment("none"),
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
         recargo_amount=Decimal("0"),
         deduction_fact_kind=(
-            IvaDeductionFactKind.IMPORT_CURRENT
-            if category is IvaCategory.IMPORT_THIRD_COUNTRY
-            else IvaDeductionFactKind.INTRA_EU_CURRENT
+            IvaDeductionFactKind._from_registry("import_current")
+            if category == IvaCategory("import_third_country")
+            else IvaDeductionFactKind._from_registry("intra_eu_current")
             if category
             in {
-                IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-                IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+                IvaCategory("intra_community_acquisition_reverse_charge"),
+                IvaCategory("intra_community_service_acquisition_reverse_charge"),
             }
-            else IvaDeductionFactKind.DOMESTIC_CURRENT
+            else IvaDeductionFactKind._from_registry("domestic_current")
         ),
         deduction_provenance=IvaDeductionClassificationProvenance(
             authority=(
-                IvaDeductionEvidenceAuthority.CUSTOMS_DECLARATION
-                if category is IvaCategory.IMPORT_THIRD_COUNTRY
-                else IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT
+                IvaDeductionEvidenceAuthority._from_registry("customs_declaration")
+                if category == IvaCategory("import_third_country")
+                else IvaDeductionEvidenceAuthority._from_registry("intra_eu_self_assessment")
                 if category
                 in {
-                    IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-                    IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+                    IvaCategory("intra_community_acquisition_reverse_charge"),
+                    IvaCategory("intra_community_service_acquisition_reverse_charge"),
                 }
-                else IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE
+                else IvaDeductionEvidenceAuthority._from_registry("invoice_evidence")
             ),
             source_locator=f"fixture:{category.value}",
             evidence_digest="d" * 64,
@@ -160,7 +162,7 @@ def _sale(
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal(iva),
             "recargo_amount": recargo_amount,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
+            "iva_category": IvaCategory("domestic_general"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
@@ -332,7 +334,7 @@ def _reverse_charge_purchase() -> Transaction:
             "taxable_base": Decimal("1000.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
-            "iva_category": IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            "iva_category": IvaCategory("intra_community_acquisition_reverse_charge"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",
@@ -380,10 +382,10 @@ def _third_country_import() -> Transaction:
             "taxable_base": Decimal("1000.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
-            "iva_category": IvaCategory.IMPORT_THIRD_COUNTRY,
-            "deduction_fact_kind": IvaDeductionFactKind.IMPORT_CURRENT,
+            "iva_category": IvaCategory("import_third_country"),
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("import_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.CUSTOMS_DECLARATION,
+                authority=IvaDeductionEvidenceAuthority._from_registry("customs_declaration"),
                 source_locator="customs:import-1",
                 evidence_digest="e" * 64,
             ),
@@ -470,18 +472,21 @@ def test_the_import_base_residue_is_reported_on_both_modelos(modelo_id: str) -> 
 
     reported = {
         category: [entry.fact for entry in unrouted_ledger_iva_quantities(revision, [_row(category)])]
-        for category in (IvaCategory.IMPORT_THIRD_COUNTRY,)
+        for category in (IvaCategory("import_third_country"),)
     }
 
     assert all(facts == ["base_amount_sum"] for facts in reported.values()), reported
     # The domestic tiers and the (now closed) reverse-charge pair ARE covered
     # on both modelos, so the screen must be silent there. Without this the
     # test would pass on a screen that reports every row of every category.
-    assert unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.DOMESTIC_GENERAL)]) == ()
+    assert unrouted_ledger_iva_quantities(revision, [_row(IvaCategory("domestic_general"))]) == ()
     assert (
-        unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)]) == ()
+        unrouted_ledger_iva_quantities(revision, [_row(IvaCategory("intra_community_acquisition_reverse_charge"))])
+        == ()
     )
     assert (
-        unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE)])
+        unrouted_ledger_iva_quantities(
+            revision, [_row(IvaCategory("intra_community_service_acquisition_reverse_charge"))]
+        )
         == ()
     )

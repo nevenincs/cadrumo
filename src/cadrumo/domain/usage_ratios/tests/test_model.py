@@ -39,10 +39,12 @@ def test_empty_profile_round_trips_json() -> None:
 
 def test_single_ratio_round_trips() -> None:
     """A profile with one ratio survives JSON round-trip byte-for-byte."""
-    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+    profile = UsageRatioProfile(
+        ratios={SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.21")}
+    )
     reloaded = UsageRatioProfile.model_validate_json(profile.model_dump_json())
     assert reloaded == profile
-    assert reloaded.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.21")
+    assert reloaded.ratios[SpendingCategory._from_registry("suministros_home_office_luz")] == Decimal("0.21")
 
 
 @pytest.mark.parametrize(
@@ -57,7 +59,7 @@ def test_single_ratio_round_trips() -> None:
 )
 def test_invalid_ratio_values_rejected(ratio: Decimal, message: str) -> None:
     with pytest.raises(ValidationError, match=message):
-        UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: ratio})
+        UsageRatioProfile(ratios={SpendingCategory._from_registry("suministros_home_office_luz"): ratio})
 
 
 def test_unknown_category_key_rejected_from_json() -> None:
@@ -69,7 +71,7 @@ def test_unknown_category_key_rejected_from_json() -> None:
 def test_ineligible_category_rejected() -> None:
     """Categories without a USAGE_RATIO_* kind cannot be persisted."""
     with pytest.raises(ValidationError, match=r"material_oficina|ineligible|USAGE_RATIO") as excinfo:
-        UsageRatioProfile(ratios={SpendingCategory.MATERIAL_OFICINA: Decimal("0.5")})
+        UsageRatioProfile(ratios={SpendingCategory._from_registry("material_oficina"): Decimal("0.5")})
     assert "material_oficina" in str(excinfo.value)
 
 
@@ -77,37 +79,45 @@ def test_frozen_attribute_reassignment_rejected() -> None:
     """``frozen=True`` blocks attribute rebinding on the profile."""
     profile = UsageRatioProfile()
     with pytest.raises(ValidationError, match=r"frozen"):
-        profile.ratios = {SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.5")}
+        profile.ratios = {SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.5")}
 
 
 def test_ratios_mapping_item_assignment_rejected() -> None:
-    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+    profile = UsageRatioProfile(
+        ratios={SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.21")}
+    )
     ratios = cast(Any, profile.ratios)
     with pytest.raises(TypeError):
-        ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] = Decimal("0.50")
+        ratios[SpendingCategory._from_registry("suministros_home_office_luz")] = Decimal("0.50")
 
 
 def test_with_ratio_returns_new_profile() -> None:
     """``with_ratio`` is non-mutating."""
     original = UsageRatioProfile()
-    updated = original.with_ratio(SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ, Decimal("0.21"))
+    updated = original.with_ratio(SpendingCategory._from_registry("suministros_home_office_luz"), Decimal("0.21"))
     assert original.ratios == {}
-    assert updated.ratios == {SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")}
+    assert updated.ratios == {SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.21")}
     assert updated is not original
 
 
 def test_without_ratio_is_noop_on_unset() -> None:
     """Removing an unset category is a no-op."""
-    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
-    result = profile.without_ratio(SpendingCategory.TELEFONIA_MOVIL)
+    profile = UsageRatioProfile(
+        ratios={SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.21")}
+    )
+    result = profile.without_ratio(SpendingCategory._from_registry("telefonia_movil"))
     assert result == profile
 
 
 def test_resolve_user_ratio_returns_set_or_none() -> None:
     """``resolve_user_ratio`` returns a ``Decimal`` for set keys, ``None`` otherwise."""
-    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
-    assert resolve_user_ratio(profile, SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ) == Decimal("0.21")
-    assert resolve_user_ratio(profile, SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA) is None
+    profile = UsageRatioProfile(
+        ratios={SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.21")}
+    )
+    assert resolve_user_ratio(profile, SpendingCategory._from_registry("suministros_home_office_luz")) == Decimal(
+        "0.21"
+    )
+    assert resolve_user_ratio(profile, SpendingCategory._from_registry("suministros_home_office_agua")) is None
 
 
 def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
@@ -124,7 +134,26 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
         category
         for category, profile in resolve_category_profiles(2025).items()
         if profile.proportionality.kind
-        in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}
+        in {
+            ProportionalityKind._from_registry(
+                "usage_ratio_home_area",
+                is_usage_ratio=True,
+                is_full_deductible=False,
+                is_statutory_cap=False,
+                requires_fixed_pct=False,
+                is_non_deductible=False,
+                requires_exclusive_use=False,
+            ),
+            ProportionalityKind._from_registry(
+                "usage_ratio_personal",
+                is_usage_ratio=True,
+                is_full_deductible=False,
+                is_statutory_cap=False,
+                requires_fixed_pct=False,
+                is_non_deductible=False,
+                requires_exclusive_use=True,
+            ),
+        }
     )
     assert derived_from_registry == ELIGIBLE_USAGE_RATIO_CATEGORIES
     assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 15
@@ -150,7 +179,9 @@ def test_an_undeclared_usage_ratio_has_no_registry_fallback() -> None:
     that an undeclared proportion resolves to nothing and the deduction is
     ineligible until the operator declares one.
     """
-    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+    profile = UsageRatioProfile(
+        ratios={SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.21")}
+    )
 
     def resolve_for_compute(category: SpendingCategory) -> Decimal | None:
         user_value = resolve_user_ratio(profile, category)
@@ -158,9 +189,9 @@ def test_an_undeclared_usage_ratio_has_no_registry_fallback() -> None:
             return user_value
         return resolve_category_profiles(2025)[category].proportionality.default_ratio
 
-    assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ) == Decimal("0.21")
-    assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA) is None
-    assert resolve_for_compute(SpendingCategory.TELEFONIA_MOVIL) is None
+    assert resolve_for_compute(SpendingCategory._from_registry("suministros_home_office_luz")) == Decimal("0.21")
+    assert resolve_for_compute(SpendingCategory._from_registry("suministros_home_office_agua")) is None
+    assert resolve_for_compute(SpendingCategory._from_registry("telefonia_movil")) is None
 
 
 def test_resolve_user_ratio_on_ineligible_category_returns_none() -> None:
@@ -169,7 +200,7 @@ def test_resolve_user_ratio_on_ineligible_category_returns_none() -> None:
     statutory default or non-``USAGE_RATIO`` semantics without special-casing.
     """
     profile = UsageRatioProfile()
-    assert resolve_user_ratio(profile, SpendingCategory.MATERIAL_OFICINA) is None
+    assert resolve_user_ratio(profile, SpendingCategory._from_registry("material_oficina")) is None
 
 
 def test_saved_profile_has_canonical_key_order() -> None:
@@ -178,16 +209,16 @@ def test_saved_profile_has_canonical_key_order() -> None:
     persisted usage-ratio envelope is git-tracked."""
     forward = UsageRatioProfile(
         ratios={
-            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),
-            SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA: Decimal("0.21"),
-            SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
+            SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.21"),
+            SpendingCategory._from_registry("suministros_home_office_agua"): Decimal("0.21"),
+            SpendingCategory._from_registry("telefonia_movil"): Decimal("0.6"),
         },
     )
     reverse = UsageRatioProfile(
         ratios={
-            SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6"),
-            SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA: Decimal("0.21"),
-            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),
+            SpendingCategory._from_registry("telefonia_movil"): Decimal("0.6"),
+            SpendingCategory._from_registry("suministros_home_office_agua"): Decimal("0.21"),
+            SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.21"),
         },
     )
     assert forward.model_dump_json() == reverse.model_dump_json()
@@ -197,17 +228,17 @@ def test_saved_profile_has_canonical_key_order() -> None:
 
 
 def test_validate_usage_ratio_reference_accepts_configured_category_key() -> None:
-    profile = UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")})
+    profile = UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("0.60")})
 
     reference = validate_usage_ratio_reference(
         profile,
-        category_id=SpendingCategory.TELEFONIA_MOVIL.value,
-        usage_ratio_id=SpendingCategory.TELEFONIA_MOVIL.value,
+        category_id=SpendingCategory._from_registry("telefonia_movil").value,
+        usage_ratio_id=SpendingCategory._from_registry("telefonia_movil").value,
         business_pct=Decimal("0.60"),
     )
 
     assert isinstance(reference, UsageRatioReference)
-    assert reference.category is SpendingCategory.TELEFONIA_MOVIL
+    assert reference.category is SpendingCategory._from_registry("telefonia_movil")
     assert reference.ratio == Decimal("0.60")
 
 
@@ -217,7 +248,7 @@ def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key() -> None:
     with pytest.raises(UsageRatioValidationError, match="concrete eligible spending category"):
         validate_usage_ratio_reference(
             profile,
-            category_id=SpendingCategory.TELEFONIA_MOVIL.value,
+            category_id=SpendingCategory._from_registry("telefonia_movil").value,
             usage_ratio_id="home_office_area",
         )
 
@@ -225,16 +256,16 @@ def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key() -> None:
 def test_validate_usage_ratio_reference_rejects_category_mismatch() -> None:
     profile = UsageRatioProfile(
         ratios={
-            SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60"),
-            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.30"),
+            SpendingCategory._from_registry("telefonia_movil"): Decimal("0.60"),
+            SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.30"),
         },
     )
 
     with pytest.raises(UsageRatioValidationError, match="must match"):
         validate_usage_ratio_reference(
             profile,
-            category_id=SpendingCategory.TELEFONIA_MOVIL.value,
-            usage_ratio_id=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ.value,
+            category_id=SpendingCategory._from_registry("telefonia_movil").value,
+            usage_ratio_id=SpendingCategory._from_registry("suministros_home_office_luz").value,
         )
 
 
@@ -244,18 +275,18 @@ def test_validate_usage_ratio_reference_rejects_unconfigured_active_bucket_entry
     with pytest.raises(UsageRatioValidationError, match="not configured"):
         validate_usage_ratio_reference(
             profile,
-            category_id=SpendingCategory.TELEFONIA_MOVIL.value,
-            usage_ratio_id=SpendingCategory.TELEFONIA_MOVIL.value,
+            category_id=SpendingCategory._from_registry("telefonia_movil").value,
+            usage_ratio_id=SpendingCategory._from_registry("telefonia_movil").value,
         )
 
 
 def test_validate_usage_ratio_reference_rejects_business_pct_drift() -> None:
-    profile = UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")})
+    profile = UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("0.60")})
 
     with pytest.raises(UsageRatioValidationError, match="does not match"):
         validate_usage_ratio_reference(
             profile,
-            category_id=SpendingCategory.TELEFONIA_MOVIL.value,
-            usage_ratio_id=SpendingCategory.TELEFONIA_MOVIL.value,
+            category_id=SpendingCategory._from_registry("telefonia_movil").value,
+            usage_ratio_id=SpendingCategory._from_registry("telefonia_movil").value,
             business_pct=Decimal("0.50"),
         )

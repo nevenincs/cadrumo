@@ -385,7 +385,6 @@ def _configure_isolated_sync_check(
         "_load_historical_exclusions",
         lambda: {
             "schema_version": 1,
-            "support_years": [2023, 2024, 2025, 2026],
             "disposition": "outside-supported-window-or-superseded",
             "source_pages": [record_design_sync._PAGES[key] for key in record_design_sync._HISTORICAL_PAGE_KEYS],
             "urls": [],

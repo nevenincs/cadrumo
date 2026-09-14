@@ -72,7 +72,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory.TELEFONIA_MOVIL
+    category = SpendingCategory._from_registry("telefonia_movil")
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=_BUCKET_ID,

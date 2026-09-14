@@ -33,6 +33,9 @@ from collections.abc import Callable
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -41,11 +44,7 @@ from ....domain.calculations.registry.applicability import (
     taxpayer_model_is_declared,
 )
 from ....domain.calculations.registry.applicability_routes import TaxRoute
-from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
     TaxpayerProfile,
 )
 from .calendar_test_support import profile as _autonomo
@@ -65,9 +64,9 @@ def _landlord() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.CAPITAL_INMOBILIARIO}),
-        iva_regime=IVARegime.EXENTO,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("capital_inmobiliario")}),
+        iva_regime=IVARegime("EXENTO"),
     )
 
 
@@ -76,9 +75,9 @@ def _salaried_only() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="Y2345678Z",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.EXENTO,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
+        iva_regime=IVARegime("EXENTO"),
     )
 
 
@@ -87,9 +86,9 @@ def _pensioner() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="Z3456789D",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.PENSION}),
-        iva_regime=IVARegime.EXENTO,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("pension")}),
+        iva_regime=IVARegime("EXENTO"),
     )
 
 
@@ -98,16 +97,16 @@ def _sociedad_limitada() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
 def _undeclared() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="C5678901I", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="C5678901I", iva_regime=IVARegime("GENERAL"))
 
 
 def _attribution_entity() -> TaxpayerProfile:
@@ -119,8 +118,8 @@ def _attribution_entity() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="E12345674",
-        entity_type=EntityType.ATTRIBUTION_ENTITY,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("attribution_entity"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -204,8 +203,8 @@ def test_natural_person_without_income_categories_is_incomplete() -> None:
 
     profile = TaxpayerProfile(
         tax_id="D6789012I",
-        entity_type=EntityType.NATURAL_PERSON,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        iva_regime=IVARegime("GENERAL"),
     )
     assert taxpayer_model_is_declared(profile) is False
     result = derive_modelo_applicability(profile, "130")
@@ -292,8 +291,8 @@ def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
 
     profile = TaxpayerProfile(
         tax_id="F6789012I",
-        entity_type=EntityType.NATURAL_PERSON,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        iva_regime=IVARegime("GENERAL"),
     )
     result = derive_modelo_applicability(profile, "130")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
@@ -409,10 +408,10 @@ def _autonomo_objetiva() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
-        iva_regime=IVARegime.SIMPLIFICADO,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("objetiva"),
+        iva_regime=IVARegime("SIMPLIFICADO"),
     )
 
 
@@ -421,10 +420,10 @@ def _autonomo_simplificada() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_simplificada"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -433,19 +432,19 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
 
     default_directa_profile = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        iva_regime=IVARegime("GENERAL"),
     )
     modulos_general_profile = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        iva_regime=IVARegime.GENERAL,
-        irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        iva_regime=IVARegime("GENERAL"),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("objetiva"),
     )
     assert default_directa_profile.irpf_estimation_regime is None
-    assert modulos_general_profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+    assert modulos_general_profile.irpf_estimation_regime == IrpfEstimationRegime._from_registry("objetiva")
 
     cases = (
         ("objetiva-m130", _autonomo_objetiva(), "130", ApplicabilityVerdict.NOT_APPLICABLE, False),
@@ -521,47 +520,47 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
     )
     autonomo_pays_salaries = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=True,
     )
     autonomo_pays_rent = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("GENERAL"),
         pays_rent_with_retencion=True,
     )
     autonomo_above_347_threshold = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("GENERAL"),
         third_party_transactions_above_347_threshold=True,
     )
     legal_entity_pays_professionals = TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("GENERAL"),
         pays_professionals_with_retencion=True,
     )
     legal_entity_pays_capital_income = TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("GENERAL"),
         pays_capital_income_with_retencion=True,
     )
     legal_entity_intracommunity = TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("GENERAL"),
         does_intracomunitario=True,
     )
     cases = (
@@ -600,10 +599,10 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
 
     paying = TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=True,
     )
     attribution_paying = _attribution_entity().model_copy(update={"has_employees": True})
@@ -627,9 +626,9 @@ def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
 
     paying = TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("GENERAL"),
         pays_rent_with_retencion=True,
     )
     assert derive_modelo_applicability(paying, "180").verdict is (ApplicabilityVerdict.APPLICABLE)

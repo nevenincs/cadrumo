@@ -38,6 +38,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
@@ -228,7 +229,9 @@ def _calculate_m130_draft(objects: SecureObjectRepository) -> CalculationRevisio
         filing_year=2026,
         period=_Q1_2026,
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
+        ),
         clock=_T0,
     )
     revision = calculate_modelo_revision(

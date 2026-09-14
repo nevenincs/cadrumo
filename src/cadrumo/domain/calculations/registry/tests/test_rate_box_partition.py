@@ -58,17 +58,17 @@ def _binding(
     *,
     applied_rates: tuple[Decimal, ...] | None,
     fact: str = "iva_amount_sum",
-    rate_kind: IvaRateKind = IvaRateKind.SUPER_REDUCED,
+    rate_kind: IvaRateKind = IvaRateKind("super_reduced"),
 ) -> BindingDefinition:
     selector: dict[str, object] = {
-        "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
+        "categories": (IvaCategory("domestic_super_reduced"),),
         "rate_kinds": (rate_kind,),
-        "flow_direction": IvaFlowDirection.REPERCUTIDO,
+        "flow_direction": IvaFlowDirection._from_registry("repercutido"),
         "fact": fact,
         "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
         "cash_accounting_treatments": (
-            IvaCashAccountingTreatment.NONE,
-            IvaCashAccountingTreatment.SUPPLIER_REGIME,
+            IvaCashAccountingTreatment("none"),
+            IvaCashAccountingTreatment("supplier_regime"),
         ),
     }
     if applied_rates is not None:
@@ -143,7 +143,7 @@ def test_the_two_layers_are_recognised_as_one_partition() -> None:
     partition = partitions[0]
     assert partition.total_casilla_id == _TOTAL_CASILLA
     assert partition.box_casilla_ids == tuple(sorted((_BOX_4PCT, _BOX_2PCT)))
-    assert partition.rate_kinds == (IvaRateKind.SUPER_REDUCED.value,)
+    assert partition.rate_kinds == (IvaRateKind("super_reduced").value,)
     assert partition.fact == "iva_amount_sum"
 
 

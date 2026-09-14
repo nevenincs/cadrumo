@@ -63,14 +63,14 @@ _BOX_4PCT: CasillaId = validated_casilla_id("02", surface="test.rate_box.box")
 
 def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> BindingDefinition:
     selector: dict[str, object] = {
-        "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
-        "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
-        "flow_direction": IvaFlowDirection.REPERCUTIDO,
+        "categories": (IvaCategory("domestic_super_reduced"),),
+        "rate_kinds": (IvaRateKind("super_reduced"),),
+        "flow_direction": IvaFlowDirection._from_registry("repercutido"),
         "fact": "iva_amount_sum",
         "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
         "cash_accounting_treatments": (
-            IvaCashAccountingTreatment.NONE,
-            IvaCashAccountingTreatment.SUPPLIER_REGIME,
+            IvaCashAccountingTreatment("none"),
+            IvaCashAccountingTreatment("supplier_regime"),
         ),
     }
     if applied_rates is not None:
@@ -151,7 +151,7 @@ def test_the_advisory_names_the_unaccounted_amount_and_its_tier() -> None:
     diagnostic = diagnostics[0]
     assert diagnostic.reason == _REASON
     assert "120.00" in diagnostic.message
-    assert IvaRateKind.SUPER_REDUCED.value in diagnostic.message
+    assert IvaRateKind("super_reduced").value in diagnostic.message
     assert diagnostic.remedy is not None
 
 

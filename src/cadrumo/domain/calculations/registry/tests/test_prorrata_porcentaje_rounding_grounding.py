@@ -45,8 +45,10 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.iva.prorrata import ProrrataKind
+
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ....iva.prorrata import ProrrataInputs, ProrrataKind, compute_prorrata_general
+from ....iva.prorrata import ProrrataInputs, compute_prorrata_general
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import apply_rounding
@@ -108,7 +110,7 @@ def _domain_percentage(con_derecho: Decimal, total: Decimal) -> Decimal:
             operaciones_sin_derecho_deduccion=total - con_derecho,
         ),
         year=2024,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=ProrrataKind._from_registry("definitiva"),
     ).percentage
 
 

@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -135,19 +134,53 @@ def test_equivalence_surcharge_rates_resolve_from_their_exact_boe_legal_window(
 
 
 @pytest.mark.parametrize(
-    ("fact_id", "before_first_window"),
+    ("fact_id", "before_first_window", "first_authored_date", "value", "source_ref"),
     (
-        ("liva-art-161:recargo-rate-general", date(1992, 12, 31)),
-        ("liva-art-161:recargo-rate-reducido", date(1992, 12, 31)),
-        ("liva-art-161:recargo-rate-super-reducido", date(1992, 12, 31)),
-        ("liva-art-161:recargo-rate-tabaco", date(1996, 12, 31)),
+        (
+            "liva-art-161:recargo-rate-general",
+            date(1992, 12, 31),
+            date(1993, 1, 1),
+            Decimal("0.04"),
+            "boe-liva-art-161-1993-01-01",
+        ),
+        (
+            "liva-art-161:recargo-rate-reducido",
+            date(1992, 12, 31),
+            date(1993, 1, 1),
+            Decimal("0.01"),
+            "boe-liva-art-161-1993-01-01",
+        ),
+        (
+            "liva-art-161:recargo-rate-super-reducido",
+            date(1992, 12, 31),
+            date(1993, 1, 1),
+            Decimal("0.005"),
+            "boe-liva-art-161-1993-01-01",
+        ),
+        (
+            "liva-art-161:recargo-rate-tabaco",
+            date(1996, 12, 31),
+            date(1997, 1, 1),
+            Decimal("0.0175"),
+            "boe-liva-art-161-1997-01-01",
+        ),
     ),
 )
-def test_equivalence_surcharge_rates_refuse_before_their_first_citable_window(
-    fact_id: str, before_first_window: date
+def test_equivalence_surcharge_rates_back_project_before_their_first_citable_window(
+    fact_id: str,
+    before_first_window: date,
+    first_authored_date: date,
+    value: Decimal,
+    source_ref: str,
 ) -> None:
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve(fact_id, before_first_window)
+    resolved = _resolve(fact_id, before_first_window)
+
+    assert resolved.projection_direction == "backward"
+    assert resolved.projected_from_date == first_authored_date
+    assert resolved.variant_id.endswith(first_authored_date.isoformat())
+    assert resolved.payload.value == value
+    assert resolved.payload.unit == "fraction"
+    assert resolved.source_refs == (source_ref,)
 
 
 def test_equivalence_surcharge_rates_are_authored() -> None:

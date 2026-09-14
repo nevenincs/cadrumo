@@ -95,11 +95,15 @@ _CONTEXT_LABEL = "720-bienes-extranjero-prior-year-asset-baseline-two-annual-cyc
 #: Initial declaration threshold per RD 1065/2007 art. 2.1 (registry parameter
 #: ``modelo-720-asset-declaration-threshold-eur`` = €50,000).
 _M720_THRESHOLDS = foreign_asset_declaration_thresholds(modelo=_MODELO, filing_year=_YEAR_N_PLUS_1)
-_INITIAL_THRESHOLD_EUR = _M720_THRESHOLDS[ForeignAssetObligationGroup.CUENTAS].initial_declaration_floor_eur
+_INITIAL_THRESHOLD_EUR = _M720_THRESHOLDS[
+    ForeignAssetObligationGroup._from_registry("cuentas")
+].initial_declaration_floor_eur
 
 #: Re-declaration delta threshold per arts. 42-bis.5 / 42-ter.5 / 54-bis.7
 #: (€20,000 increment over last-declared baseline triggers re-declaration obligation).
-_REDECLARATION_DELTA_EUR = _M720_THRESHOLDS[ForeignAssetObligationGroup.CUENTAS].redeclaration_increase_delta_eur
+_REDECLARATION_DELTA_EUR = _M720_THRESHOLDS[
+    ForeignAssetObligationGroup._from_registry("cuentas")
+].redeclaration_increase_delta_eur
 
 # Year-N asset valuations (both above €50k initial threshold).
 _CUENTAS_N = Decimal("60000.00")  # cuentas (C-class: bank accounts)
@@ -144,9 +148,11 @@ _BASELINE_BINDINGS = frozenset(
 
 _M720_SOURCE_REFS = ("aeat-modelo-720-procedure",)
 _M720_HEADER_LEGAL_REFS = ("ley-58-2003:da-18",)
-_M720_CUENTAS_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup.CUENTAS].legal_refs
-_M720_VALORES_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS].legal_refs
-_M720_INMUEBLES_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup.INMUEBLES].legal_refs
+_M720_CUENTAS_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup._from_registry("cuentas")].legal_refs
+_M720_VALORES_LEGAL_REFS = _M720_THRESHOLDS[
+    ForeignAssetObligationGroup._from_registry("valores_derechos_seguros")
+].legal_refs
+_M720_INMUEBLES_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup._from_registry("inmuebles")].legal_refs
 _M720_CASILLA_LEGAL_REFS = {
     _CUENTAS_CODIGO_DE_CUENTA_CASILLA: _M720_CUENTAS_LEGAL_REFS,
     _CUENTAS_VALORACION_CASILLA: _M720_CUENTAS_LEGAL_REFS,
@@ -606,8 +612,8 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     assert dict(finding.message_facts) == {
         "modelo_code": _MODELO,
         "filing_year": _YEAR_N_PLUS_1,
-        "position_key": ForeignAssetObligationGroup.CUENTAS.value,
-        "group_code": ForeignAssetObligationGroup.CUENTAS.value,
+        "position_key": ForeignAssetObligationGroup._from_registry("cuentas").value,
+        "group_code": ForeignAssetObligationGroup._from_registry("cuentas").value,
         "prior_value_eur": _CUENTAS_N,
         "current_value_eur": _CUENTAS_N1,
         "delta_value_eur": _CUENTAS_N1 - _CUENTAS_N,

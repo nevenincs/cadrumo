@@ -32,10 +32,10 @@ def authority() -> ValidatedRegistryAuthority:
     ("concepto", "counts"),
     [
         (None, True),
-        (ConceptoIngreso.ORDINARIO, True),
-        (ConceptoIngreso.SUBVENCION_CORRIENTE, True),
-        (ConceptoIngreso.SUBVENCION_CAPITAL, False),
-        (ConceptoIngreso.INDEMNIZACION, False),
+        (ConceptoIngreso._from_registry("ordinario"), True),
+        (ConceptoIngreso._from_registry("subvencion_corriente"), True),
+        (ConceptoIngreso._from_registry("subvencion_capital"), False),
+        (ConceptoIngreso._from_registry("indemnizacion"), False),
     ],
 )
 def test_the_predicate_splits_where_the_instrucciones_split(
@@ -64,10 +64,10 @@ def test_the_two_subvencion_members_land_on_opposite_sides(authority: ValidatedR
     volume. Stated as its own test so the failure names the reason.
     """
     assert counts_toward_volumen_de_ingresos(
-        ConceptoIngreso.SUBVENCION_CORRIENTE, effective_date=date(2026, 4, 1), authority=authority
+        ConceptoIngreso._from_registry("subvencion_corriente"), effective_date=date(2026, 4, 1), authority=authority
     )
     assert not counts_toward_volumen_de_ingresos(
-        ConceptoIngreso.SUBVENCION_CAPITAL, effective_date=date(2026, 4, 1), authority=authority
+        ConceptoIngreso._from_registry("subvencion_capital"), effective_date=date(2026, 4, 1), authority=authority
     )
 
 
@@ -90,7 +90,10 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     fact = compiled_bundled_authority().catalogues.facts.facts[_EXCLUDED_FACT]
     declared = frozenset(ConceptoIngreso(token) for token in fact.variants[0].payload.entities)
 
-    assert declared == {ConceptoIngreso.SUBVENCION_CAPITAL, ConceptoIngreso.INDEMNIZACION}
+    assert declared == {
+        ConceptoIngreso._from_registry("subvencion_capital"),
+        ConceptoIngreso._from_registry("indemnizacion"),
+    }
 
 
 def test_the_modelo_131_activity_selector_is_not_the_art_95_one(authority: ValidatedRegistryAuthority) -> None:

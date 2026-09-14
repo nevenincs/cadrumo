@@ -127,16 +127,18 @@ def test_the_two_provisions_disagree_on_exactly_one_concept() -> None:
     art110 = _declared_concepts(_ART_110_CONCEPTS)
 
     assert art109 > art110
-    assert art109 - art110 == {ConceptoIngreso.SUBVENCION_CORRIENTE}
+    assert art109 - art110 == {ConceptoIngreso._from_registry("subvencion_corriente")}
 
 
 @pytest.mark.parametrize(
     ("concepto", "art109", "art110"),
     [
-        pytest.param(ConceptoIngreso.ORDINARIO, True, True, id="ordinario-in-both"),
-        pytest.param(ConceptoIngreso.SUBVENCION_CORRIENTE, False, True, id="corriente-is-the-divergence"),
-        pytest.param(ConceptoIngreso.SUBVENCION_CAPITAL, False, False, id="capital-out-of-both"),
-        pytest.param(ConceptoIngreso.INDEMNIZACION, False, False, id="indemnizacion-out-of-both"),
+        pytest.param(ConceptoIngreso._from_registry("ordinario"), True, True, id="ordinario-in-both"),
+        pytest.param(
+            ConceptoIngreso._from_registry("subvencion_corriente"), False, True, id="corriente-is-the-divergence"
+        ),
+        pytest.param(ConceptoIngreso._from_registry("subvencion_capital"), False, False, id="capital-out-of-both"),
+        pytest.param(ConceptoIngreso._from_registry("indemnizacion"), False, False, id="indemnizacion-out-of-both"),
         pytest.param(None, True, True, id="undeclared-stays-in-both"),
     ],
 )
@@ -159,9 +161,9 @@ def test_each_concept_lands_where_its_provision_puts_it(
 def test_the_registry_declares_the_set_the_predicate_applies() -> None:
     """Parity anchor: the exclusion is registry data, not a list living only in Python."""
     assert _declared_concepts(_ART_109_CONCEPTS) == {
-        ConceptoIngreso.SUBVENCION_CORRIENTE,
-        ConceptoIngreso.SUBVENCION_CAPITAL,
-        ConceptoIngreso.INDEMNIZACION,
+        ConceptoIngreso._from_registry("subvencion_corriente"),
+        ConceptoIngreso._from_registry("subvencion_capital"),
+        ConceptoIngreso._from_registry("indemnizacion"),
     }
 
 
@@ -204,12 +206,17 @@ def test_a_subsidy_no_longer_depresses_the_ratio_for_an_agrarian_filer() -> None
     statute does not use.
     """
     coverage = _coverage(
-        _row("sales", amount=Decimal("7000.00"), withheld=True, concepto_ingreso=ConceptoIngreso.ORDINARIO),
+        _row(
+            "sales",
+            amount=Decimal("7000.00"),
+            withheld=True,
+            concepto_ingreso=ConceptoIngreso._from_registry("ordinario"),
+        ),
         _row(
             "pac",
             amount=Decimal("3000.00"),
             withheld=False,
-            concepto_ingreso=ConceptoIngreso.SUBVENCION_CORRIENTE,
+            concepto_ingreso=ConceptoIngreso._from_registry("subvencion_corriente"),
         ),
     )
 

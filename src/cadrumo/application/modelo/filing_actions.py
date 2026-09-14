@@ -49,6 +49,7 @@ from ...core.result_disposition import ResultDisposition
 from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.codes import ModeloCode
@@ -124,6 +125,7 @@ def file_modelo_revision(
     ports: FilingActionPorts,
     actor: str,
     workflow_profile: TaxpayerProfile,
+    operation: PinnedAuthorityOperation,
     notes: str | None = None,
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
@@ -226,7 +228,6 @@ def file_modelo_revision(
     wu_repo = ports.work_unit_repository
     cr_repo = ports.calculation_repository
     fr_repo = ports.filing_repository
-    vr_repo = ports.verification_repository
     obs_repo = ports.observation_repository
     bv_repo = ports.bucket_event_repository
     if not isinstance(prior_domiciliation_election, PriorDomiciliationElection):
@@ -269,6 +270,7 @@ def file_modelo_revision(
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+        operation=operation,
     )
     if target.state is CalculationRevisionState.PRESENTADO:
         # Idempotent re-file: this revision is already the current filed answer.
@@ -310,6 +312,7 @@ def file_modelo_revision(
         workflow_profile=workflow_profile,
         ports=ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
+        operation=operation,
     )
 
     now = clock or _utc_now()
@@ -363,6 +366,7 @@ def file_modelo_revision(
         calculation_observation_repository=obs_repo,
         participation_index_repository=ports.participation_index_repository,
         prorrata_register_repository=ports.prorrata_register_repository,
+        operation=operation,
         iva_compensation_history_repository=ports.iva_compensation_history_repository,
         result_disposition=result_disposition,
         prior_domiciliation_election=prior_domiciliation_provenance,
@@ -396,6 +400,7 @@ def _require_filing_preconditions(
     workflow_profile: TaxpayerProfile,
     ports: FilingActionPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
@@ -403,7 +408,11 @@ def _require_filing_preconditions(
         target,
         error_type=ModeloFilingEvidenceMissingError,
     )
-    require_profile_ready_for_work_unit(work_unit)
+    require_profile_ready_for_work_unit(
+        work_unit,
+        profile_decode_context=operation.profile_decode_context(),
+        operation=operation,
+    )
     _require_persisted_required_bindings_resolved(
         work_unit=work_unit,
         revision=target,
@@ -414,6 +423,7 @@ def _require_filing_preconditions(
         target,
         repository=ports.iva_compensation_decision_repository,
         subject_leaf_key="modelo.work.file",
+        operation=operation,
     )
     require_cross_period_clean_state(
         work_unit,
@@ -489,6 +499,7 @@ def list_verification_reports(
     *,
     ports: FilingActionPorts,
     calculation_revision_id: CalculationRevisionId | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[VerificationReport, ...]:
     """List :class:`VerificationReport` records.
 
@@ -498,7 +509,10 @@ def list_verification_reports(
     supplies the persisted report catalogue. Results are sorted by
     ``(calculation_revision_id, run_at)``.
     """
-    catalogue = require_verification_report_coordinates_current(ports.verification_repository.load())
+    catalogue = require_verification_report_coordinates_current(
+        ports.verification_repository.load(),
+        operation=operation,
+    )
     reports = tuple(
         r
         for r in catalogue.reports.values()
@@ -511,6 +525,7 @@ def get_verification_report(
     verification_report_id: str,
     *,
     ports: FilingActionPorts,
+    operation: PinnedAuthorityOperation,
 ) -> VerificationReport:
     """Return one :class:`VerificationReport` by id, or raise.
 
@@ -519,7 +534,10 @@ def get_verification_report(
     supplies the persisted report catalogue for tests or alternate storage
     boundaries.
     """
-    catalogue = require_verification_report_coordinates_current(ports.verification_repository.load())
+    catalogue = require_verification_report_coordinates_current(
+        ports.verification_repository.load(),
+        operation=operation,
+    )
     report = catalogue.get(verification_report_id)
     if report is None:
         raise VerificationReportNotFoundError(

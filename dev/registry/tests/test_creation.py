@@ -13,9 +13,11 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_devengo import (
@@ -35,12 +37,19 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.invoices.decomposition import decompose_invoice
 from cadrumo.domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
 from cadrumo.domain.invoices.errors import InvoiceValidationError
-from cadrumo.domain.invoices.models import InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 
 from ..maintenance_support import load_modelo_path
+
+
+def _build_catalogue_invoice(**kwargs: Any) -> Invoice:
+    """Compose the canonical rate capability for invoice test builders."""
+    kwargs.setdefault("rate_provider", build_catalogue_creation_ports(bucket_id=_BUCKET_ID).rate_provider)
+    return build_catalogue_invoice(**kwargs)
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -74,7 +83,7 @@ def test_build_catalogue_invoice_derives_grounded_totals() -> None:
     equal the line sums. The derived ``invoice_id`` is the hex-64 hash that
     ``link --invoice-id`` resolves.
     """
-    invoice = build_catalogue_invoice(
+    invoice = _build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
@@ -99,7 +108,7 @@ def test_build_catalogue_invoice_derives_grounded_totals() -> None:
 
 def test_build_catalogue_invoice_exempt_carries_zero_cuota() -> None:
     """An invoice with no IVA rate is EXEMPT and carries a zero cuota."""
-    invoice = build_catalogue_invoice(
+    invoice = _build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Cliente SA",
@@ -119,7 +128,7 @@ def test_build_catalogue_invoice_refuses_unsupported_rate() -> None:
     """A percentage outside the closed IVA slot taxonomy is refused, with the
     accepted set named — never a bare value-invalid."""
     with pytest.raises(InvoiceValidationError) as exc:
-        build_catalogue_invoice(
+        _build_catalogue_invoice(
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Papeleria Sol SL",
@@ -149,7 +158,8 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path: Path)
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         result = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 counterparty_name="Papeleria Sol SL",
@@ -168,7 +178,8 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path: Path)
 
         with pytest.raises(InvoiceValidationError):
             create_catalogue_invoice(
-                invoice=build_catalogue_invoice(
+                ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+                invoice=_build_catalogue_invoice(
                     bucket_id=_BUCKET_ID,
                     kind=InvoiceKind.RECEIVED,
                     counterparty_name="Papeleria Sol SL",
@@ -190,7 +201,7 @@ def test_build_catalogue_invoice_carries_intra_community_category() -> None:
     transaction's clave; without it the catalogue invoice defaults to a
     domestic operation (``None``) that never reaches M349.
     """
-    intra = build_catalogue_invoice(
+    intra = _build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Kunde GmbH",
@@ -201,14 +212,14 @@ def test_build_catalogue_invoice_carries_intra_community_category() -> None:
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("0"),
         currency="EUR",
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         # An entrega intracomunitaria must now state its clave: the category
         # alone cannot separate an ordinary E from a post-importation M or H.
         operation_type=IntracomOperationType.E,
     )
-    assert intra.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert intra.iva_category == IvaCategory("intra_community_supply")
 
-    domestic = build_catalogue_invoice(
+    domestic = _build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Cliente SL",
@@ -234,7 +245,8 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Kunde GmbH",
@@ -245,10 +257,9 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path: Pat
                 taxable_base=Decimal("2000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
-                iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+                iva_category=IvaCategory("intra_community_supply"),
                 operation_type=IntracomOperationType.E,
             ),
-            repository=repository,
         )
         resolution = InvoiceCatalogueSourceResolver(
             ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
@@ -270,7 +281,8 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         issued = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Service SARL",
@@ -283,10 +295,10 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
                 currency="EUR",
                 operation_type=IntracomOperationType.S,
             ),
-            repository=repository,
         ).invoice
         received = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 counterparty_name="Servizi SRL",
@@ -299,7 +311,6 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
                 currency="EUR",
                 operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
             ),
-            repository=repository,
         ).invoice
         resolution = InvoiceCatalogueSourceResolver(
             ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
@@ -335,7 +346,7 @@ def test_build_catalogue_invoice_normalises_currency_before_fx_lookup(raw_curren
     """A padded/lowercase foreign currency must resolve the SAME FX rate as its
     canonical form: the provider is queried with the normalised token, not the
     raw operator input."""
-    invoice = build_catalogue_invoice(
+    invoice = _build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Acme Ltd",
@@ -363,7 +374,7 @@ def test_build_catalogue_invoice_rounds_half_cent_cuota_away_from_zero() -> None
     banker's rounding (``ROUND_HALF_EVEN``) keeps the even cent and gives
     2.20 — a filed cuota one cent short of the AEAT figure.
     """
-    invoice = build_catalogue_invoice(
+    invoice = _build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Ferreteria Norte SL",
@@ -394,7 +405,8 @@ def test_an_operator_supplied_operation_date_survives_to_a_declared_devengo_rank
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         recorded = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Cliente Norte SL",
@@ -411,7 +423,7 @@ def test_an_operator_supplied_operation_date_survives_to_a_declared_devengo_rank
         reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(recorded.invoice.invoice_id)
         assert reloaded is not None
         assert reloaded.operation_date == date(2026, 3, 28)
-        assert reloaded.operation_date_role is InvoiceOperationDateRole.OPERATION_PERFORMED
+        assert reloaded.operation_date_role is InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED")
 
         devengo = resolve_invoice_devengo(reloaded)
         assert devengo.devengo_date == date(2026, 3, 28)
@@ -429,7 +441,8 @@ def test_omitting_the_operation_date_leaves_the_record_on_the_issue_date_proxy(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         recorded = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Cliente Norte SL",
@@ -464,7 +477,8 @@ def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         contradictory = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Waren GmbH",
@@ -478,10 +492,9 @@ def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) 
                 # The CLI derives the category from the operation type before
                 # calling this service; the service itself does not, so the test
                 # supplies the pair the operator's path would have produced.
-                iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+                iva_category=IvaCategory("intra_community_supply"),
                 operation_type=IntracomOperationType.E,
             ),
-            repository=repository,
         ).invoice
         resolution = InvoiceCatalogueSourceResolver(
             ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
@@ -495,7 +508,7 @@ def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) 
             ),
         )
 
-    assert contradictory.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert contradictory.iva_category == IvaCategory("intra_community_supply")
     assert contradictory.iva_total == Decimal("1050.00")
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
     assert resolution.detail_rows == ()
@@ -515,7 +528,8 @@ def test_m349_declares_a_coherent_exempt_supply_with_no_diagnostic(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Waren GmbH",
@@ -526,10 +540,9 @@ def test_m349_declares_a_coherent_exempt_supply_with_no_diagnostic(tmp_path: Pat
                 taxable_base=Decimal("5000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
-                iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+                iva_category=IvaCategory("intra_community_supply"),
                 operation_type=IntracomOperationType.E,
             ),
-            repository=repository,
         )
         resolution = InvoiceCatalogueSourceResolver(
             ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
@@ -565,7 +578,8 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         issued = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Service SARL",
@@ -576,13 +590,13 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
                 taxable_base=Decimal("4000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
-                iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+                iva_category=IvaCategory("intra_community_service_supply"),
                 operation_type=IntracomOperationType.S,
             ),
-            repository=repository,
         ).invoice
         received = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 counterparty_name="Servizi SRL",
@@ -593,10 +607,9 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
                 taxable_base=Decimal("3000.00"),
                 iva_rate=Decimal("0"),
                 currency="EUR",
-                iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+                iva_category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
                 operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
             ),
-            repository=repository,
         ).invoice
         resolution = InvoiceCatalogueSourceResolver(
             ports=InvoiceSourceResolverPorts(catalogue_reader=repository),
@@ -638,7 +651,7 @@ def _mixed_rate_lines() -> tuple[InvoiceLine, ...]:
             quantity=Decimal("1"),
             unit_price=Decimal("1000.00"),
             subtotal=Decimal("1000.00"),
-            iva_rate=IvaRate.RATE_21,
+            iva_rate=IvaRate._from_registry("RATE_21"),
             iva_amount=Decimal("210.00"),
         ),
         InvoiceLine(
@@ -646,7 +659,7 @@ def _mixed_rate_lines() -> tuple[InvoiceLine, ...]:
             quantity=Decimal("1"),
             unit_price=Decimal("500.00"),
             subtotal=Decimal("500.00"),
-            iva_rate=IvaRate.RATE_10,
+            iva_rate=IvaRate._from_registry("RATE_10"),
             iva_amount=Decimal("50.00"),
         ),
     )
@@ -671,7 +684,8 @@ def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         result = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=profile.bucket_id),
+            invoice=_build_catalogue_invoice(
                 bucket_id=profile.bucket_id,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Cliente Mixto SL",
@@ -684,13 +698,15 @@ def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line
                 currency="EUR",
                 lines=_mixed_rate_lines(),
             ),
-            repository=InvoiceCatalogueRepository(objects=profile.repository),
         )
         restored = InvoiceCatalogueRepository(objects=profile.repository).load().get(result.invoice.invoice_id)
 
     assert restored is not None
     assert len(restored.lines) == 2
-    assert [line.iva_rate for line in restored.lines] == [IvaRate.RATE_21, IvaRate.RATE_10]
+    assert [line.iva_rate for line in restored.lines] == [
+        IvaRate._from_registry("RATE_21"),
+        IvaRate._from_registry("RATE_10"),
+    ]
     # Per-rate cuota, not one blended figure: 210 belongs to the 21% base and
     # 50 to the 10% base, and a collapse would put all 260 on a single rate.
     assert [line.iva_amount for line in restored.lines] == [Decimal("210.00"), Decimal("50.00")]
@@ -708,7 +724,7 @@ def test_a_supplied_line_set_refuses_a_taxable_base_that_disagrees_with_it() -> 
     means declaring a base the operator never entered.
     """
     with pytest.raises(InvoiceValidationError, match="summed line subtotals"):
-        build_catalogue_invoice(
+        _build_catalogue_invoice(
             bucket_id=None,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Cliente Mixto SL",
@@ -730,7 +746,7 @@ def test_omitting_the_line_set_still_synthesises_the_single_line() -> None:
     caller omits the line set. If this regressed, the mixed-rate proof above
     would still pass while the common path broke.
     """
-    invoice = build_catalogue_invoice(
+    invoice = _build_catalogue_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Cliente Simple SL",
@@ -744,7 +760,7 @@ def test_omitting_the_line_set_still_synthesises_the_single_line() -> None:
     )
 
     assert len(invoice.lines) == 1
-    assert invoice.lines[0].iva_rate is IvaRate.RATE_21
+    assert invoice.lines[0].iva_rate is IvaRate._from_registry("RATE_21")
     assert invoice.iva_total == Decimal("210.00")
     assert invoice.grand_total == Decimal("1210.00")
 
@@ -765,7 +781,8 @@ def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_pa
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         result = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.ISSUED,
                 counterparty_name="Minorista Recargo SL",
@@ -776,7 +793,7 @@ def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_pa
                 taxable_base=Decimal("1000.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
-                invoice_class=InvoiceClass.RECTIFICATIVA,
+                invoice_class=InvoiceClass._from_registry("RECTIFICATIVA"),
                 series="R",
                 rectifies_invoice_number="F-2026-0044",
                 recargo_amount=Decimal("52.00"),
@@ -785,7 +802,7 @@ def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_pa
         restored = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
 
     assert restored is not None
-    assert restored.invoice_class is InvoiceClass.RECTIFICATIVA
+    assert restored.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
     assert restored.series == "R"
     assert restored.rectifies_invoice_number == "F-2026-0044"
     assert restored.recargo_amount == Decimal("52.00")
@@ -809,7 +826,7 @@ def test_a_recargo_on_an_exempt_supply_refuses() -> None:
     from pydantic import ValidationError
 
     with pytest.raises(ValidationError, match="recargo_amount must be zero"):
-        build_catalogue_invoice(
+        _build_catalogue_invoice(
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Minorista Recargo SL",
@@ -830,7 +847,7 @@ def test_the_default_invoice_class_is_still_ordinaria() -> None:
     Every existing caller omits all four axes, so a regression here would break
     the common case while the rectificativa proof above still passed.
     """
-    invoice = build_catalogue_invoice(
+    invoice = _build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Cliente Ordinario SL",
@@ -843,7 +860,7 @@ def test_the_default_invoice_class_is_still_ordinaria() -> None:
         currency="EUR",
     )
 
-    assert invoice.invoice_class is InvoiceClass.ORDINARIA
+    assert invoice.invoice_class is InvoiceClass._from_registry("ORDINARIA")
     assert invoice.series is None
     assert invoice.recargo_amount is None
     assert invoice.grand_total == Decimal("1210.00")
@@ -879,7 +896,8 @@ def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         result = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+            ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
+            invoice=_build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=kind,
                 counterparty_name="Papeleria Sol SL",
@@ -916,7 +934,7 @@ def test_an_entrega_intracomunitaria_must_state_its_modelo_349_clave() -> None:
     genuine last resort rather than the normal path.
     """
     with pytest.raises(InvoiceValidationError, match="must state its Modelo 349 operation type"):
-        build_catalogue_invoice(
+        _build_catalogue_invoice(
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Kunde GmbH",
@@ -927,7 +945,7 @@ def test_an_entrega_intracomunitaria_must_state_its_modelo_349_clave() -> None:
             taxable_base=Decimal("2000.00"),
             iva_rate=Decimal("0"),
             currency="EUR",
-            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            iva_category=IvaCategory("intra_community_supply"),
         )
 
 
@@ -944,11 +962,11 @@ def test_the_clave_requirement_is_scoped_to_the_one_ambiguous_category() -> None
     invoice creation entirely.
     """
     for category in (
-        IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-        IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
-        IvaCategory.DOMESTIC_EXEMPT,
+        IvaCategory("intra_community_service_supply"),
+        IvaCategory("intra_community_triangulation"),
+        IvaCategory("domestic_exempt"),
     ):
-        invoice = build_catalogue_invoice(
+        invoice = _build_catalogue_invoice(
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Kunde GmbH",
@@ -961,4 +979,4 @@ def test_the_clave_requirement_is_scoped_to_the_one_ambiguous_category() -> None
             currency="EUR",
             iva_category=category,
         )
-        assert invoice.iva_category is category
+        assert invoice.iva_category == category

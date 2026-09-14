@@ -33,7 +33,7 @@ import pytest
 
 from cadrumo.adapters.inbound.einvoice.parsers import FacturaeInvoiceClass, ParsedEInvoice, parse_einvoice_document
 from cadrumo.core.directory_scan import iter_directory
-from cadrumo.domain.invoices.enums import InvoiceClass
+from cadrumo.domain.calculations.registry.invoice_legal_classification import require_invoice_class
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -110,7 +110,7 @@ def test_the_class_follows_the_reference_in_both_directions() -> None:
     """
     parsed = _parsed()
 
-    assert InvoiceClass.ORDINARIA is not InvoiceClass.RECTIFICATIVA
+    assert require_invoice_class("ordinaria") != require_invoice_class("rectificativa")
     assert parsed.facturae_invoice_class is FacturaeInvoiceClass.ORIGINAL_CORRECTIVE
     assert parsed.rectifies_invoice_number is not None
 

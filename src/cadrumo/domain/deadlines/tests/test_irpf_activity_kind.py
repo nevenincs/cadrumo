@@ -44,11 +44,11 @@ def test_an_undeclared_activity_kind_is_neither_arm() -> None:
     the two arms differ by 15 % against 2 % -- so a consumer reading a defaulted
     value would silently pick a rate the taxpayer never declared.
     """
-    profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
+    profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
 
     assert profile.irpf_activity_kind is None
-    assert profile.irpf_activity_kind is not IrpfActivityKind.PROFESIONAL
-    assert profile.irpf_activity_kind is not IrpfActivityKind.SECTORIAL
+    assert profile.irpf_activity_kind is not IrpfActivityKind._from_registry("profesional")
+    assert profile.irpf_activity_kind is not IrpfActivityKind._from_registry("sectorial")
 
 
 @pytest.mark.parametrize("declared", list(IrpfActivityKind))
@@ -78,10 +78,10 @@ def test_the_activity_axis_is_independent_of_the_estimation_regime() -> None:
     """
     profile = TaxpayerProfile(
         tax_id="12345678Z",
-        iva_regime=IVARegime.GENERAL,
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
-        irpf_activity_kind=IrpfActivityKind.SECTORIAL,
+        iva_regime=IVARegime("GENERAL"),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_simplificada"),
+        irpf_activity_kind=IrpfActivityKind._from_registry("sectorial"),
     )
 
-    assert profile.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_SIMPLIFICADA
-    assert profile.irpf_activity_kind is IrpfActivityKind.SECTORIAL
+    assert profile.irpf_estimation_regime is IrpfEstimationRegime._from_registry("directa_simplificada")
+    assert profile.irpf_activity_kind is IrpfActivityKind._from_registry("sectorial")

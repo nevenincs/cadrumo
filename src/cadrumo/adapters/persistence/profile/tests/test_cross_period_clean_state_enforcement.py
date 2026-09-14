@@ -123,14 +123,14 @@ _DECLARED_CROSS_PERIOD_PROFILE_IDS = {
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.COMMON_REGIME,
-            regime_composition=M303RegimeComposition.GENERAL,
+            tax_territory=M303TaxTerritory._from_registry("common_regime"),
+            regime_composition=M303RegimeComposition._from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
@@ -500,8 +500,8 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
         )
         salaried = workflow_profile().model_copy(
             update={
-                "entity_type": EntityType.NATURAL_PERSON,
-                "irpf_income_categories": frozenset({IrpfIncomeCategory.TRABAJO}),
+                "entity_type": EntityType._from_registry("natural_person"),
+                "irpf_income_categories": frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
             },
         )
         report = verify_modelo_revision(
@@ -567,8 +567,8 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
         revision_id = revision.calculation_revision_id
         salaried = workflow_profile().model_copy(
             update={
-                "entity_type": EntityType.NATURAL_PERSON,
-                "irpf_income_categories": frozenset({IrpfIncomeCategory.TRABAJO}),
+                "entity_type": EntityType._from_registry("natural_person"),
+                "irpf_income_categories": frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
             },
         )
         report = verify_modelo_revision(

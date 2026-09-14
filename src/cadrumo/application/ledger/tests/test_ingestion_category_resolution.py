@@ -48,7 +48,7 @@ from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ES = IvaTerritorialScope.ES_MAINLAND
+_ES = IvaTerritorialScope._from_registry("es_mainland")
 _WHEN = date(2026, 3, 1)
 
 
@@ -71,7 +71,7 @@ def _facts(*, established: bool, stated: IvaCategory | None = None) -> DeclaredF
     return DeclaredFacts(
         issuer_scope=_fact(_ES),
         customer_scope=_fact(_ES),
-        customer_tax_status=_fact(CustomerTaxStatus.B2B_IVA_REGISTERED),
+        customer_tax_status=_fact(CustomerTaxStatus._from_registry("b2b_iva_registered")),
         supply_nature=_fact(SupplyNature.GOODS),
         stated_category=stated_fact,
     )
@@ -112,10 +112,10 @@ def test_a_declared_code_is_read_into_a_fact_carrying_its_attribution() -> None:
     classification resting on the document's own record must be distinguishable
     later from one resting on an operator's assertion.
     """
-    fact = declared_category_from_document_record(IvaCategory.DOMESTIC_REVERSE_CHARGE.value)
+    fact = declared_category_from_document_record(IvaCategory("domestic_reverse_charge").value)
 
     assert fact is not None
-    assert fact.value is IvaCategory.DOMESTIC_REVERSE_CHARGE
+    assert fact.value is IvaCategory("domestic_reverse_charge")
     assert fact.source is ClassifierInputSource.DOCUMENT_EVIDENCE
 
 
@@ -155,10 +155,10 @@ def test_a_declared_code_survives_an_operation_the_table_cannot_place() -> None:
     a domestic reverse charge, an exempt supply and a zero-rated supply
     indistinguishable.
     """
-    resolution = _resolve(established=False, stated=IvaCategory.DOMESTIC_REVERSE_CHARGE)
+    resolution = _resolve(established=False, stated=IvaCategory("domestic_reverse_charge"))
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is IvaCategory.DOMESTIC_REVERSE_CHARGE
+    assert resolution.category is IvaCategory("domestic_reverse_charge")
     assert resolution.declared is not None
 
 
@@ -170,7 +170,7 @@ def test_the_rule_table_decides_when_it_can_place_the_operation() -> None:
     against a synthetic operation would be a number derived from the table under
     test.
     """
-    resolution = _resolve(established=True, rate_tier=IvaRateKind.GENERAL)
+    resolution = _resolve(established=True, rate_tier=IvaRateKind("general"))
 
     assert resolution.outcome is IvaCategoryOutcome.CLASSIFIED
     assert resolution.category is not None
@@ -184,10 +184,10 @@ def test_the_table_and_an_agreeing_code_corroborate() -> None:
     so the two genuinely agree; what is asserted is that agreement is RECORDED
     as such rather than silently collapsing into the single-source outcome.
     """
-    verdict = _resolve(established=True, rate_tier=IvaRateKind.GENERAL).category
+    verdict = _resolve(established=True, rate_tier=IvaRateKind("general")).category
     assert verdict is not None
 
-    resolution = _resolve(established=True, stated=verdict, rate_tier=IvaRateKind.GENERAL)
+    resolution = _resolve(established=True, stated=verdict, rate_tier=IvaRateKind("general"))
 
     assert resolution.outcome is IvaCategoryOutcome.CORROBORATED
     assert resolution.category is verdict
@@ -203,11 +203,13 @@ def test_a_code_disagreeing_with_the_table_takes_neither_side() -> None:
     withholds one: a caller holding the value would use it while ignoring the
     conflict.
     """
-    verdict = _resolve(established=True, rate_tier=IvaRateKind.GENERAL).category
+    verdict = _resolve(established=True, rate_tier=IvaRateKind("general")).category
     assert verdict is not None
-    rival = next(c for c in (IvaCategory.DOMESTIC_REVERSE_CHARGE, IvaCategory.DOMESTIC_EXEMPT) if c is not verdict)
+    rival = next(
+        c for c in (IvaCategory("domestic_reverse_charge"), IvaCategory("domestic_exempt")) if c is not verdict
+    )
 
-    resolution = _resolve(established=True, stated=rival, rate_tier=IvaRateKind.GENERAL)
+    resolution = _resolve(established=True, stated=rival, rate_tier=IvaRateKind("general"))
 
     assert resolution.outcome is IvaCategoryOutcome.CONTRADICTED
     assert resolution.category is None, "a contradicted document must not hand a caller either side"
@@ -225,8 +227,8 @@ def test_a_declared_domestic_code_disagreeing_with_the_tier_charged_contradicts(
     """
     resolution = _resolve(
         established=False,
-        stated=IvaCategory.DOMESTIC_SUPER_REDUCED,
-        rate_tier=IvaRateKind.GENERAL,
+        stated=IvaCategory("domestic_super_reduced"),
+        rate_tier=IvaRateKind("general"),
     )
 
     assert resolution.outcome is IvaCategoryOutcome.CONTRADICTED
@@ -245,12 +247,12 @@ def test_the_tier_corroboration_is_silent_on_a_category_carrying_no_tier() -> No
     """
     resolution = _resolve(
         established=False,
-        stated=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        rate_tier=IvaRateKind.GENERAL,
+        stated=IvaCategory("domestic_reverse_charge"),
+        rate_tier=IvaRateKind("general"),
     )
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is IvaCategory.DOMESTIC_REVERSE_CHARGE
+    assert resolution.category is IvaCategory("domestic_reverse_charge")
 
 
 def test_an_unplaceable_operation_charging_a_registered_tier_stays_declarable() -> None:
@@ -265,10 +267,10 @@ def test_an_unplaceable_operation_charging_a_registered_tier_stays_declarable() 
     The outcome is named rather than folded into ``CLASSIFIED`` precisely so a
     later reader can enumerate the records resting on the inference.
     """
-    resolution = _resolve(established=False, rate_tier=IvaRateKind.GENERAL)
+    resolution = _resolve(established=False, rate_tier=IvaRateKind("general"))
 
     assert resolution.outcome is IvaCategoryOutcome.RATE_INFERRED
-    assert resolution.category is IvaCategory.DOMESTIC_GENERAL
+    assert resolution.category is IvaCategory("domestic_general")
     assert resolution.classified is None, "nothing was classified; the tier alone carried this"
 
 
@@ -294,9 +296,9 @@ def test_a_domestic_case_derives_with_the_supply_nature_unknown_and_asks_nothing
         direction=InvoiceKind.RECEIVED,
         inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
         declared=declared,
-        rate_tier=IvaRateKind.GENERAL,
+        rate_tier=IvaRateKind("general"),
     )
-    resolution = resolve_ingestion_iva_category(assembly, declared=declared, rate_tier=IvaRateKind.GENERAL)
+    resolution = resolve_ingestion_iva_category(assembly, declared=declared, rate_tier=IvaRateKind("general"))
 
     assert [gap.field for gap in assembly.missing] == [], (
         "a domestic operation asked the operator for an axis its treatment cannot turn on"
@@ -316,16 +318,16 @@ def test_the_inference_never_displaces_a_verdict_or_a_declaration() -> None:
     exists to end rather than to relocate. Both stronger inputs are checked
     against the SAME tier that would otherwise have inferred a category.
     """
-    with_verdict = _resolve(established=True, rate_tier=IvaRateKind.GENERAL)
+    with_verdict = _resolve(established=True, rate_tier=IvaRateKind("general"))
     with_declaration = _resolve(
         established=False,
-        stated=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        rate_tier=IvaRateKind.GENERAL,
+        stated=IvaCategory("domestic_reverse_charge"),
+        rate_tier=IvaRateKind("general"),
     )
 
     assert with_verdict.outcome is IvaCategoryOutcome.CLASSIFIED
     assert with_declaration.outcome is IvaCategoryOutcome.DECLARED
-    assert with_declaration.category is IvaCategory.DOMESTIC_REVERSE_CHARGE, (
+    assert with_declaration.category is IvaCategory("domestic_reverse_charge"), (
         "the tier inference displaced the document's own declaration, which is the "
         "signal only a structured reader recovers"
     )
@@ -369,7 +371,7 @@ def _relief(
 
 @pytest.mark.parametrize(
     "stated",
-    [IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, IvaCategory.INTRA_COMMUNITY_SUPPLY],
+    [IvaCategory("export_third_country_zero_rated"), IvaCategory("intra_community_supply")],
 )
 def test_a_declared_relief_is_withheld_when_no_establishment_was_reached(stated: IvaCategory) -> None:
     """The gap the DECLARED branch left open, closed for both relieving codes.
@@ -397,7 +399,7 @@ def test_the_withheld_relief_is_not_reported_as_a_contradiction() -> None:
     to re-read a page that was never the problem -- the document may be entirely
     correct and the evidence simply does not reach its claim.
     """
-    resolution = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED)
+    resolution = _relief(IvaCategory("export_third_country_zero_rated"))
 
     assert resolution.outcome is not IvaCategoryOutcome.CONTRADICTED
     assert "not established by this document" in resolution.note
@@ -413,8 +415,8 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
     """
     declared = DeclaredFacts(
         issuer_scope=_fact(_ES),
-        customer_scope=_fact(IvaTerritorialScope.THIRD_COUNTRY),
-        stated_category=_fact(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED),
+        customer_scope=_fact(IvaTerritorialScope._from_registry("third_country")),
+        stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
     )
     assembly = assemble_classification_criteria(
         transaction_date=_WHEN,
@@ -429,7 +431,7 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
     )
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert resolution.category is IvaCategory("export_third_country_zero_rated")
 
 
 def test_a_country_our_vocabulary_does_not_carry_forgives_that_partys_slot() -> None:
@@ -460,13 +462,13 @@ def test_a_country_our_vocabulary_does_not_carry_forgives_that_partys_slot() -> 
     guard that had simply stopped naming the counterparty: with no country
     printed, both slots are named.
     """
-    forgiven = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=an_uncatalogued_alpha2())
+    forgiven = _relief(IvaCategory("export_third_country_zero_rated"), country_code=an_uncatalogued_alpha2())
 
     assert forgiven.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
     assert "issuer_residency" in forgiven.note
     assert "customer_residency" not in forgiven.note
 
-    refused = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=None)
+    refused = _relief(IvaCategory("export_third_country_zero_rated"), country_code=None)
     assert refused.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF, (
         "positive control: with no country printed the same claim must still be refused, "
         "or the narrowing above proves nothing about the status axis"
@@ -486,14 +488,14 @@ def test_a_code_naming_no_country_does_not_spare_the_claim(country_code: str) ->
     jurisdiction our vocabulary merely lacks, so neither is our data gap and
     neither establishes anything about where the party is.
     """
-    resolution = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=country_code)
+    resolution = _relief(IvaCategory("export_third_country_zero_rated"), country_code=country_code)
 
     assert resolution.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
 
 
 @pytest.mark.parametrize(
     "stated",
-    [IvaCategory.DOMESTIC_REVERSE_CHARGE, IvaCategory.DOMESTIC_EXEMPT, IvaCategory.OPERACION_NO_SUJETA],
+    [IvaCategory("domestic_reverse_charge"), IvaCategory("domestic_exempt"), IvaCategory("operacion_no_sujeta")],
 )
 def test_a_declared_code_that_rests_on_no_establishment_is_untouched(stated: IvaCategory) -> None:
     """The guard is scoped to the two relieving categories and nothing else.
@@ -553,7 +555,7 @@ def _record_relief(
 @pytest.mark.parametrize("reserved", ["ZZZ", "QMA", "XAA"])
 @pytest.mark.parametrize(
     "stated",
-    [IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, IvaCategory.INTRA_COMMUNITY_SUPPLY],
+    [IvaCategory("export_third_country_zero_rated"), IvaCategory("intra_community_supply")],
 )
 def test_a_reserved_alpha3_does_not_spare_a_declared_relief(stated: IvaCategory, reserved: str) -> None:
     """The alpha-2 half of this rule was gated; the alpha-3 half was not.
@@ -589,7 +591,7 @@ def test_the_alpha3_sparing_boundary_runs_where_the_vocabulary_does() -> None:
     jurisdiction the bundled vocabulary has not enrolled.
     """
     spared = _record_relief(
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory("export_third_country_zero_rated"),
         country_token=an_uncatalogued_alpha3(),
     )
 
@@ -597,7 +599,7 @@ def test_the_alpha3_sparing_boundary_runs_where_the_vocabulary_does() -> None:
         "an alpha-3 naming a country our vocabulary omits is OUR gap and must be spared; "
         "if this refuses, the reserved-code assertions above are vacuous"
     )
-    assert spared.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert spared.category is IvaCategory("export_third_country_zero_rated")
 
 
 def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
@@ -610,8 +612,8 @@ def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
     """
     declared = DeclaredFacts(
         issuer_scope=_fact(_ES),
-        customer_scope=_fact(IvaTerritorialScope.THIRD_COUNTRY),
-        stated_category=_fact(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED),
+        customer_scope=_fact(IvaTerritorialScope._from_registry("third_country")),
+        stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
     )
     assembly = assemble_classification_criteria(
         transaction_date=_WHEN,
@@ -627,7 +629,7 @@ def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
     )
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
-    assert resolution.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert resolution.category is IvaCategory("export_third_country_zero_rated")
 
 
 def _counterparty_only_relief(
@@ -656,9 +658,9 @@ def _counterparty_only_relief(
     """
     declared = DeclaredFacts(
         issuer_scope=_fact(_ES),
-        customer_tax_status=_fact(CustomerTaxStatus.B2B_IVA_REGISTERED),
+        customer_tax_status=_fact(CustomerTaxStatus._from_registry("b2b_iva_registered")),
         supply_nature=_fact(SupplyNature.GOODS),
-        stated_category=_fact(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED),
+        stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
     )
     assembly = assemble_classification_criteria(
         transaction_date=_WHEN,

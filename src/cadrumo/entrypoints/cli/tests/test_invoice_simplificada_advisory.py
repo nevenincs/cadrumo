@@ -37,7 +37,7 @@ def _invoice(**overrides: Any) -> Invoice:
     """Build the case 3.º shape: a domestic ISSUED simplificada with no tax id."""
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
-        "invoice_class": InvoiceClass.SIMPLIFICADA,
+        "invoice_class": InvoiceClass._from_registry("SIMPLIFICADA"),
         "invoice_number": "T-2026-001",
         "issued_at": date(2026, 5, 3),
         "counterparty_name": "Cliente de mostrador",
@@ -53,7 +53,7 @@ def _invoice(**overrides: Any) -> Invoice:
                 quantity=Decimal("1"),
                 unit_price=_BASE,
                 subtotal=_BASE,
-                iva_rate=IvaRate.RATE_21,
+                iva_rate=IvaRate._from_registry("RATE_21"),
                 iva_amount=_CUOTA,
             ),
         ),

@@ -13,21 +13,32 @@ otherwise land silently.
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.errors.error_codes import resolve_error_message
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
     RegistrySnapshotError,
 )
 from cadrumo.domain.calculations.registry.relations import relation_source_requirements
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.revision_contracts import NoPredecessor
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
-from cadrumo.domain.calculations.registry.temporal import select_revision, select_revision_for_year
+from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.calculations.registry.temporal import (
+    ModeloRevisionDirectory,
+    select_revision,
+    select_revision_for_year,
+    select_revision_metadata,
+)
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.loader import load_modelo_directory, load_shared_catalogues
 
 from ..compiler.validate_revision_rules import validate_revision_windows
 from ..conformance.registry_schema_support import (
@@ -44,8 +55,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _committed_modelo_100() -> ModeloDefinition:
-    modelo, _catalogues = _committed_modelo("100")
-    return modelo
+    return load_modelo_directory(
+        Path(__file__).parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "100"
+    )
+
+
+def _modelo_100_source_root() -> Path:
+    return Path(__file__).parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat"
 
 
 def test_select_revision_returns_the_matching_year_revision() -> None:
@@ -54,6 +70,83 @@ def test_select_revision_returns_the_matching_year_revision() -> None:
     revision = select_revision(modelo, filing_year=2025, period="0A")
 
     assert revision.id == "2025"
+
+
+def _support() -> SupportedFilingYearsCatalogue:
+    return SupportedFilingYearsCatalogue(floor=2022, horizon=2026)
+
+
+def test_nearest_authored_projection_works_backward_forward_and_across_gaps() -> None:
+    modelo = _committed_modelo_100()
+    only_2025 = modelo.model_copy(update={"revisions": {"2025": modelo.revisions["2025"]}})
+    assert select_revision(only_2025, filing_year=2022, period="0A", support=_support()).id == "2025"
+    assert select_revision(only_2025, filing_year=2026, period="0A", support=_support()).id == "2025"
+
+    gap = modelo.model_copy(
+        update={"revisions": {key: value for key, value in modelo.revisions.items() if key not in {"2023", "2024"}}}
+    )
+    assert select_revision(gap, filing_year=2024, period="0A", support=_support()).id == "2025"
+
+
+def test_equal_distance_projection_uses_the_earlier_authored_anchor() -> None:
+    modelo = _committed_modelo_100()
+    gap = modelo.model_copy(update={"revisions": {key: modelo.revisions[key] for key in ("2023", "2025")}})
+
+    selected = select_revision(gap, filing_year=2024, period="0A", support=_support())
+
+    assert selected.id == "2023"
+
+
+def test_projection_obeys_global_boundaries_and_reports_actual_no_source() -> None:
+    modelo = _committed_modelo_100()
+    support = _support()
+
+    assert select_revision(modelo, filing_year=support.floor, period="0A", support=support).id == "2022"
+    assert select_revision(modelo, filing_year=support.horizon, period="0A", support=support).id == "2025"
+    for outside in (support.floor - 1, support.horizon + 1):
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=outside, period="0A", support=support)
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2024, period="3T", support=support)
+
+
+def test_technical_root_does_not_disable_projection_or_invent_continuity() -> None:
+    modelo = _committed_modelo_100()
+    source = modelo.revisions["2025"]
+    assert isinstance(source.predecessor, NoPredecessor)
+    isolated = modelo.model_copy(update={"revisions": {"2025": source}})
+
+    projected = select_revision(isolated, filing_year=2026, period="0A", support=_support())
+
+    assert projected is source
+    assert projected.model_dump() == source.model_dump()
+
+
+def test_source_and_indexed_directory_select_the_same_authored_anchor() -> None:
+    modelo = _committed_modelo_100()
+    support = _support()
+    directory = ModeloRevisionDirectory.from_modelo(modelo, support=support)
+
+    source = select_revision(modelo, filing_year=2026, period="0A", support=support)
+    indexed = select_revision_metadata(directory, filing_year=2026, period="0A")
+
+    assert indexed.id == source.id == "2025"
+
+
+def test_snapshot_exposes_requested_identity_and_authored_provenance() -> None:
+    snapshot = build_snapshot(
+        _committed_modelo_100(),
+        load_shared_catalogues(_modelo_100_source_root()),
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
+
+    assert snapshot.filing_year == 2026
+    assert snapshot.revision.id == "2025"
+    assert snapshot.authored_filing_year == 2025
+    assert snapshot.revision_projection_direction is TemporalProjectionDirection.FORWARD
 
 
 def test_snapshot_normalises_a_case_variant_period_to_the_declared_token() -> None:

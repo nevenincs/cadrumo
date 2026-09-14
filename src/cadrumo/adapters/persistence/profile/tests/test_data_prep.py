@@ -126,7 +126,7 @@ def _invoice(*, issued_at: date = date(2026, 2, 5)) -> Invoice:
                         "quantity": Decimal("1"),
                         "unit_price": Decimal("100.00"),
                         "subtotal": Decimal("100.00"),
-                        "iva_rate": IvaRate.RATE_21,
+                        "iva_rate": IvaRate._from_registry("RATE_21"),
                         "iva_amount": Decimal("21.00"),
                     },
                 ),

@@ -20,6 +20,7 @@ from ...calculations.registry.schema_base import DateAxis
 from ..errors import CategoryValidationError
 from ..registry import CATEGORY_PROFILE_FACT_ID, _profile_from_authority_fact, resolve_category_profiles
 from ..spending_category import SpendingCategory
+from ..spending_category_catalogue import require_spending_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,7 +49,7 @@ def _with_entries(fact: ResolvedMappingFact, entries: tuple[MappingFactEntry, ..
 def test_2026_national_diet_cap_carries_both_daily_variants(operation: PinnedAuthorityOperation) -> None:
     """RIRPF art. 9.A.3.a: 26,67 EUR/day without an overnight stay, 53,34 EUR/day with one."""
     rule = resolve_category_profiles(2026, operation=operation)[
-        SpendingCategory.MANUTENCION_DIETAS_NACIONAL
+        require_spending_category("manutencion_dietas_nacional")
     ].proportionality
 
     assert rule.statutory_cap_eur is None
@@ -61,14 +62,14 @@ def test_2026_national_diet_cap_carries_both_daily_variants(operation: PinnedAut
 
 
 def test_year_referenced_cap_outside_its_schedule_is_refused(operation: PinnedAuthorityOperation) -> None:
-    fact = _resolved_profile_fact(SpendingCategory.MUTUALIDAD_ALTERNATIVA, 2026, operation)
+    fact = _resolved_profile_fact(require_spending_category("mutualidad_alternativa"), 2026, operation)
 
     with pytest.raises(CategoryValidationError, match="no dated statutory cap for mutualidad_alternativa/2099"):
         _profile_from_authority_fact(fact, operation=operation, year=2099)
 
 
 def test_unknown_cap_variant_field_is_refused_not_dropped(operation: PinnedAuthorityOperation) -> None:
-    fact = _resolved_profile_fact(SpendingCategory.MANUTENCION_DIETAS_NACIONAL, 2026, operation)
+    fact = _resolved_profile_fact(require_spending_category("manutencion_dietas_nacional"), 2026, operation)
     tampered = _with_entries(
         fact,
         (*fact.payload.entries, MappingFactEntry(key="statutory_cap_variant.sin-pernocta.eur_per_week", value="1")),
@@ -79,7 +80,7 @@ def test_unknown_cap_variant_field_is_refused_not_dropped(operation: PinnedAutho
 
 
 def test_cap_variant_without_an_amount_is_refused(operation: PinnedAuthorityOperation) -> None:
-    fact = _resolved_profile_fact(SpendingCategory.MANUTENCION_DIETAS_NACIONAL, 2026, operation)
+    fact = _resolved_profile_fact(require_spending_category("manutencion_dietas_nacional"), 2026, operation)
     stripped = _with_entries(
         fact,
         tuple(e for e in fact.payload.entries if e.key != "statutory_cap_variant.con-pernocta.eur_per_day"),

@@ -62,13 +62,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # a Q1 date now refuses at the bridge. That refusal is the CORRECT behaviour and
 # this fixture follows the law rather than pinning the date it used to accept.
 _LINES = (
-    (IvaRate.RATE_21, date(2024, 3, 10), "21", "4000.00", "817.00"),
-    (IvaRate.RATE_10, date(2024, 3, 11), "10", "2500.00", "241.00"),
-    (IvaRate.RATE_7_5, date(2024, 11, 12), "7-5", "1600.00", "127.00"),
-    (IvaRate.RATE_5, date(2024, 8, 13), "5", "1400.00", "73.00"),
-    (IvaRate.RATE_4, date(2024, 3, 14), "4", "1200.00", "51.00"),
-    (IvaRate.RATE_2, date(2024, 11, 15), "2", "900.00", "19.00"),
-    (IvaRate.RATE_0, date(2024, 8, 16), "0", "700.00", "0.00"),
+    (IvaRate._from_registry("RATE_21"), date(2024, 3, 10), "21", "4000.00", "817.00"),
+    (IvaRate._from_registry("RATE_10"), date(2024, 3, 11), "10", "2500.00", "241.00"),
+    (IvaRate._from_registry("RATE_7.5"), date(2024, 11, 12), "7-5", "1600.00", "127.00"),
+    (IvaRate._from_registry("RATE_5"), date(2024, 8, 13), "5", "1400.00", "73.00"),
+    (IvaRate._from_registry("RATE_4"), date(2024, 3, 14), "4", "1200.00", "51.00"),
+    (IvaRate._from_registry("RATE_2"), date(2024, 11, 15), "2", "900.00", "19.00"),
+    (IvaRate._from_registry("RATE_0"), date(2024, 8, 16), "0", "700.00", "0.00"),
 )
 
 # The rate each slot must resolve to, and the tier the classifier must pick. The
@@ -76,20 +76,20 @@ _LINES = (
 # REDUCED and 4/2 both classify SUPER_REDUCED, which is precisely why a per-tier
 # casilla cannot serve a per-rate box.
 _EXPECTED_CLASSIFICATION = {
-    "21": (Decimal("0.21"), IvaRateKind.GENERAL, IvaCategory.DOMESTIC_GENERAL),
-    "10": (Decimal("0.10"), IvaRateKind.REDUCED, IvaCategory.DOMESTIC_REDUCED),
-    "7-5": (Decimal("0.075"), IvaRateKind.REDUCED, IvaCategory.DOMESTIC_REDUCED),
-    "5": (Decimal("0.05"), IvaRateKind.REDUCED, IvaCategory.DOMESTIC_REDUCED),
-    "4": (Decimal("0.04"), IvaRateKind.SUPER_REDUCED, IvaCategory.DOMESTIC_SUPER_REDUCED),
-    "2": (Decimal("0.02"), IvaRateKind.SUPER_REDUCED, IvaCategory.DOMESTIC_SUPER_REDUCED),
-    "0": (Decimal("0"), IvaRateKind.ZERO, IvaCategory.DOMESTIC_ZERO),
+    "21": (Decimal("0.21"), IvaRateKind("general"), IvaCategory("domestic_general")),
+    "10": (Decimal("0.10"), IvaRateKind("reduced"), IvaCategory("domestic_reduced")),
+    "7-5": (Decimal("0.075"), IvaRateKind("reduced"), IvaCategory("domestic_reduced")),
+    "5": (Decimal("0.05"), IvaRateKind("reduced"), IvaCategory("domestic_reduced")),
+    "4": (Decimal("0.04"), IvaRateKind("super_reduced"), IvaCategory("domestic_super_reduced")),
+    "2": (Decimal("0.02"), IvaRateKind("super_reduced"), IvaCategory("domestic_super_reduced")),
+    "0": (Decimal("0"), IvaRateKind("zero"), IvaCategory("domestic_zero")),
 }
 
 # A transitional slot paired with a date OUTSIDE its statutory window.
 _OUT_OF_WINDOW = (
-    (IvaRate.RATE_7_5, date(2024, 3, 10)),
-    (IvaRate.RATE_5, date(2024, 11, 12)),
-    (IvaRate.RATE_2, date(2024, 8, 13)),
+    (IvaRate._from_registry("RATE_7.5"), date(2024, 3, 10)),
+    (IvaRate._from_registry("RATE_5"), date(2024, 11, 12)),
+    (IvaRate._from_registry("RATE_2"), date(2024, 8, 13)),
 )
 
 # RATE_0 is deliberately ABSENT from the set above, and must stay absent. It is
@@ -174,7 +174,7 @@ def test_the_bridge_decides_the_classification_the_selectors_match_on(
     )
     assert observation.applied_rate == expected_rate
     assert observation.rate_kind is expected_tier
-    assert observation.category is expected_category
+    assert observation.category == expected_category
 
 
 @pytest.mark.parametrize(("slot", "on"), _OUT_OF_WINDOW)

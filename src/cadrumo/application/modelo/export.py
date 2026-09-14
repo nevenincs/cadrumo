@@ -76,7 +76,7 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
@@ -654,6 +654,7 @@ def _resolve_m303_export_arrivals(
     prorrata_register: ProrrataRegister,
     iva_aggregation: IvaLedgerAggregation,
     bienes_register: BienesInversionIvaRegister,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[
     tuple[IvaDifferentiatedDeductionContribution, ...],
     BienesInversionIvaRegister,
@@ -661,12 +662,11 @@ def _resolve_m303_export_arrivals(
     BienesInversionRegularizacionParameters,
 ]:
     """Assemble current canonical register arrivals from the work-unit-bound register."""
-    with bundled_indexed_authority().operation() as operation:
-        snapshot = operation.snapshot(
-            Modelo("303").value,
-            filing_year=period.filing_year,
-            period=period.registry_token,
-        )
+    snapshot = operation.snapshot(
+        Modelo("303").value,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
     if prorrata_register.is_sectorized:
         apportionment = iva_aggregation.prorrata_apportionment
         if apportionment is None or not apportionment.sector_apportionments:
@@ -750,6 +750,7 @@ def _build_export_producer_snapshot(
             workflow_profile=workflow_profile,
             iva_profile=iva_profile,
             export_ports=export_ports,
+            operation=operation,
         )
         return build_filing_producer_snapshot(
             modelo=modelo,
@@ -832,6 +833,7 @@ def _resolve_export_model_profile(
     workflow_profile: TaxpayerProfile,
     iva_profile: ModeloIVAProfile | None,
     export_ports: ModeloExportPorts,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
     if modelo == Modelo("303"):
         if iva_profile is None:
@@ -841,6 +843,7 @@ def _resolve_export_model_profile(
             revision=revision,
             workflow_profile=workflow_profile,
             export_ports=export_ports,
+            operation=operation,
         )
     if modelo == Modelo("202"):
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
@@ -855,6 +858,7 @@ def _resolve_m303_filing_facts_for_export(
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
     export_ports: ModeloExportPorts,
+    operation: PinnedAuthorityOperation,
 ) -> M303FilingFacts:
     filing_instance_evidence = require_filing_instance_evidence_for_work_unit(
         work_unit=work_unit,
@@ -865,7 +869,10 @@ def _resolve_m303_filing_facts_for_export(
             f"work unit {work_unit.work_unit_id!r} carries no filing-instance evidence valid for its revision",
         )
     prorrata_register_repository = export_ports.prorrata_register
-    prorrata_register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())
+    prorrata_register = require_prorrata_register_coordinates_current(
+        prorrata_register_repository.load(),
+        operation=operation,
+    )
     bienes_register = export_ports.bienes_inversion.load()
     iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=work_unit.bucket_id,
@@ -874,6 +881,7 @@ def _resolve_m303_filing_facts_for_export(
         transaction_repository=export_ports.transaction,
         investment_asset_register=bienes_register,
         investment_asset_profile_id=str(work_unit.bucket_id),
+        operation=operation,
     )
     (
         differentiated_contributions,
@@ -885,16 +893,19 @@ def _resolve_m303_filing_facts_for_export(
         prorrata_register=prorrata_register,
         iva_aggregation=iva_aggregation,
         bienes_register=bienes_register,
+        operation=operation,
     )
     filing_facts = resolve_m303_filing_facts(
         evidence=filing_instance_evidence,
         supplier_regime=resolve_m303_supplier_regime_arrival(
             period=work_unit.period,
             iva_aggregation=iva_aggregation,
+            operation=operation,
         ),
         prorrata_transition=resolve_m303_prorrata_transition_arrival(
             period=work_unit.period,
             prorrata_register=prorrata_register,
+            operation=operation,
         ),
         prorrata_register=prorrata_register,
         differentiated_contributions=differentiated_contributions,

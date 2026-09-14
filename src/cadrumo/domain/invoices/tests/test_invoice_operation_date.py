@@ -35,7 +35,7 @@ def _line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=_CUOTA,
     )
 
@@ -63,11 +63,11 @@ def test_an_invoice_can_state_its_operation_date_distinct_from_the_issue_date() 
     """The fecha de operación is representable, naming which art. 6.1.i clause it answers."""
     invoice = _invoice(
         operation_date=date(2026, 3, 28),
-        operation_date_role=InvoiceOperationDateRole.OPERATION_PERFORMED,
+        operation_date_role=InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED"),
     )
 
     assert invoice.operation_date == date(2026, 3, 28)
-    assert invoice.operation_date_role is InvoiceOperationDateRole.OPERATION_PERFORMED
+    assert invoice.operation_date_role is InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED")
     assert invoice.operation_date != invoice.issued_at
 
 
@@ -88,7 +88,7 @@ def test_a_date_without_a_role_is_refused() -> None:
 def test_a_role_without_a_date_is_refused() -> None:
     """A role with nothing to date states nothing."""
     with pytest.raises(ValidationError, match="operation_date and operation_date_role must be set together"):
-        _invoice(operation_date_role=InvoiceOperationDateRole.OPERATION_PERFORMED)
+        _invoice(operation_date_role=InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED"))
 
 
 def test_the_role_is_one_field_not_a_second_date() -> None:

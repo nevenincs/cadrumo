@@ -8,8 +8,9 @@ from decimal import Decimal
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from ...errors import RegistryValidationError
 from ...schema_base import DateAxis, SourceCitation
-from ..resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
+from ..resolution import GovernedFactQuery, ResolvedGovernedFact, ScalarFactQuery, resolve_governed_fact
 from ..schema import (
     FactOwnership,
     FactSelector,
@@ -182,7 +183,7 @@ def test_authority_resolver_refuses_an_unregistered_fact() -> None:
         },
     )
 
-    with pytest.raises(ValueError, match="is not registered"):
+    with pytest.raises(RegistryValidationError, match="is not registered"):
         resolve_governed_fact(GovernedFactCatalogue(), query, authority_digest="b" * 64)
 
 
@@ -213,6 +214,160 @@ def _temporally_supported_scalar_fact(
                 },
             ),
         }
+    )
+
+
+def _supportless_scalar_fact(
+    *rows: tuple[str, date, date, Decimal],
+) -> GovernedFact:
+    return GovernedFact.model_validate(
+        {
+            "fact_id": "iva.supportless.temporal.rate",
+            "family": "scalar",
+            "variants": tuple(
+                {
+                    "variant_id": variant_id,
+                    "selectors": ({"name": "territory", "value": "peninsula"},),
+                    "date_axis": "transaction_date",
+                    "valid_from": valid_from,
+                    "valid_to": valid_to,
+                    "payload": {"kind": "scalar", "value": value, "unit": "ratio"},
+                    "legal_refs": ("test-law",),
+                    "source_refs": (source_ref := f"test-source-{variant_id.rsplit('.', 1)[-1]}",),
+                    "source_citations": ({"source_ref": source_ref, "required_text": ("test source",)},),
+                    "review_status": "pending_review",
+                    "ownership": "authored",
+                }
+                for variant_id, valid_from, valid_to, value in rows
+            ),
+        },
+    )
+
+
+def _supportless_scalar_query(fact: GovernedFact, effective_date: date) -> GovernedFactQuery:
+    return TypeAdapter(ScalarFactQuery).validate_python(
+        {
+            "family": "scalar",
+            "fact_id": fact.fact_id,
+            "date_axis": "transaction_date",
+            "effective_date": effective_date,
+            "selectors": ({"name": "territory", "value": "peninsula"},),
+        },
+    )
+
+
+def _assert_projected_authored_context(
+    resolved: ResolvedGovernedFact,
+    *,
+    variant_id: str,
+    valid_from: date,
+    valid_to: date,
+    value: Decimal,
+) -> None:
+    assert resolved.variant_id == variant_id
+    assert resolved.valid_from == valid_from
+    assert resolved.valid_to == valid_to
+    assert resolved.authored_valid_from == valid_from
+    assert resolved.authored_valid_to == valid_to
+    assert resolved.payload == ScalarFactPayload(value=value, unit="ratio")
+    assert resolved.legal_refs == ("test-law",)
+    source_ref = f"test-source-{variant_id.rsplit('.', 1)[-1]}"
+    assert resolved.source_refs == (source_ref,)
+    assert resolved.source_citations == (SourceCitation(source_ref=source_ref, required_text=("test source",)),)
+    assert resolved.ownership == FactOwnership.AUTHORED
+    assert resolved.source_variant_id == variant_id
+    assert resolved.source_revision_ids == (variant_id,)
+
+
+def test_supportless_fact_projects_forward_from_the_nearest_authored_window() -> None:
+    fact = _supportless_scalar_fact(
+        ("iva.supportless.temporal.rate.early", date(2022, 1, 1), date(2022, 12, 31), Decimal("0.21")),
+    )
+
+    resolved = resolve_governed_fact(
+        GovernedFactCatalogue(facts={fact.fact_id: fact}),
+        _supportless_scalar_query(fact, date(2023, 6, 1)),
+        authority_digest="d" * 64,
+    )
+
+    assert resolved.projection_direction == "forward"
+    assert resolved.projected_from_date == date(2022, 12, 31)
+    assert resolved.authority_digest == "d" * 64
+    _assert_projected_authored_context(
+        resolved,
+        variant_id="iva.supportless.temporal.rate.early",
+        valid_from=date(2022, 1, 1),
+        valid_to=date(2022, 12, 31),
+        value=Decimal("0.21"),
+    )
+
+
+def test_supportless_fact_propagates_backward_from_the_nearest_authored_window() -> None:
+    fact = _supportless_scalar_fact(
+        ("iva.supportless.temporal.rate.late", date(2024, 1, 1), date(2024, 12, 31), Decimal("0.23")),
+    )
+
+    resolved = resolve_governed_fact(
+        GovernedFactCatalogue(facts={fact.fact_id: fact}),
+        _supportless_scalar_query(fact, date(2023, 6, 1)),
+        authority_digest="e" * 64,
+    )
+
+    assert resolved.projection_direction == "backward"
+    assert resolved.projected_from_date == date(2024, 1, 1)
+    assert resolved.authority_digest == "e" * 64
+    _assert_projected_authored_context(
+        resolved,
+        variant_id="iva.supportless.temporal.rate.late",
+        valid_from=date(2024, 1, 1),
+        valid_to=date(2024, 12, 31),
+        value=Decimal("0.23"),
+    )
+
+
+def test_supportless_fact_internal_gap_uses_the_nearest_authored_side() -> None:
+    fact = _supportless_scalar_fact(
+        ("iva.supportless.temporal.rate.early", date(2022, 1, 1), date(2022, 6, 30), Decimal("0.21")),
+        ("iva.supportless.temporal.rate.late", date(2022, 7, 11), date(2022, 12, 31), Decimal("0.23")),
+    )
+
+    resolved = resolve_governed_fact(
+        GovernedFactCatalogue(facts={fact.fact_id: fact}),
+        _supportless_scalar_query(fact, date(2022, 7, 8)),
+        authority_digest="f" * 64,
+    )
+
+    assert resolved.projection_direction == "backward"
+    assert resolved.projected_from_date == date(2022, 7, 11)
+    _assert_projected_authored_context(
+        resolved,
+        variant_id="iva.supportless.temporal.rate.late",
+        valid_from=date(2022, 7, 11),
+        valid_to=date(2022, 12, 31),
+        value=Decimal("0.23"),
+    )
+
+
+def test_supportless_fact_equal_distance_prefers_the_earlier_authored_source() -> None:
+    fact = _supportless_scalar_fact(
+        ("iva.supportless.temporal.rate.early", date(2022, 1, 1), date(2022, 6, 30), Decimal("0.21")),
+        ("iva.supportless.temporal.rate.late", date(2022, 7, 4), date(2022, 12, 31), Decimal("0.23")),
+    )
+
+    resolved = resolve_governed_fact(
+        GovernedFactCatalogue(facts={fact.fact_id: fact}),
+        _supportless_scalar_query(fact, date(2022, 7, 2)),
+        authority_digest="a" * 64,
+    )
+
+    assert resolved.projection_direction == "forward"
+    assert resolved.projected_from_date == date(2022, 6, 30)
+    _assert_projected_authored_context(
+        resolved,
+        variant_id="iva.supportless.temporal.rate.early",
+        valid_from=date(2022, 1, 1),
+        valid_to=date(2022, 6, 30),
+        value=Decimal("0.21"),
     )
 
 
@@ -263,7 +418,7 @@ def test_fact_support_refuses_queries_outside_its_hard_boundaries(effective_date
         }
     )
 
-    with pytest.raises(ValueError, match="outside its hard support boundaries"):
+    with pytest.raises(RegistryValidationError, match="outside its hard support boundaries"):
         resolve_governed_fact(
             GovernedFactCatalogue(facts={fact.fact_id: fact}),
             query,

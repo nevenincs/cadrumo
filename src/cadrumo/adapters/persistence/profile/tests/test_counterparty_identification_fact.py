@@ -36,9 +36,9 @@ def _confirm(repository: CounterpartyEstablishmentRepositoryProtocol) -> Confirm
     return record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_CIF,
-        territorial_scope=IvaTerritorialScope.ES_MAINLAND,
+        territorial_scope=IvaTerritorialScope._from_registry("es_mainland"),
         asserted_by="operator@example.test",
-        identification_state=EUMemberState.DE,
+        identification_state=EUMemberState._from_registry("de"),
         note="",
         asserted_at=_ASSERTED_AT,
         repository=repository,
@@ -67,7 +67,7 @@ def test_a_dropped_identification_on_disk_does_not_reload_as_an_answer(tmp_path:
         )
         assert record is not None
         envelope = json.loads(record.payload.decode("utf-8"))
-        assert envelope["payload"]["identification_state"] == EUMemberState.DE.value, (
+        assert envelope["payload"]["identification_state"] == EUMemberState._from_registry("de").value, (
             "fixture must actually persist the identification for this proof to mean anything"
         )
 

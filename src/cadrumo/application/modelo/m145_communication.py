@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 
 M145_COMMUNICATION_SERVICE_OWNER = "cadrumo.application.modelo"
@@ -85,7 +85,7 @@ class M145CommunicationServiceContract(BaseModel):
 
 
 def build_m145_communication_service_contract(
-    *, filing_year: int | None = None, operation: PinnedAuthorityOperation | None = None
+    *, filing_year: int | None = None, operation: PinnedAuthorityOperation
 ) -> M145CommunicationServiceContract:
     """Return the registry-backed Modelo 145 local communication contract.
 
@@ -97,12 +97,6 @@ def build_m145_communication_service_contract(
     through a filing-grade snapshot.
     """
     selected_filing_year = date.today().year if filing_year is None else filing_year
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return build_m145_communication_service_contract(
-                filing_year=filing_year,
-                operation=indexed_operation,
-            )
     directory = operation.modelo_directory(Modelo("145").value)
     year_revision = max(
         (

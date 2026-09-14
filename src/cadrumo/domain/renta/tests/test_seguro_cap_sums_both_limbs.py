@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _rule():
-    return load_category_profiles()[SpendingCategory.SEGUROS_SALUD_AUTONOMO].proportionality
+    return load_category_profiles()[SpendingCategory._from_registry("seguros_salud_autonomo")].proportionality
 
 
 def _cap(**counts: int) -> Decimal | None:

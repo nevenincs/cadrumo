@@ -27,6 +27,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.categories.spending_category import SpendingCategory
+
 from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...categories.profile import CategoryProfile
@@ -37,13 +39,12 @@ from ...categories.proportionality import (
     ProportionalityRule,
     parse_http_url,
 )
-from ...categories.spending_category import SpendingCategory
 from ...contribuyente.ccaa import CCAA
 from ..ledger_expenses import RentaDeductibilityContext, resolve_region_category_profiles, select_deductibility_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CATEGORY = SpendingCategory.MATERIAL_OFICINA
+_CATEGORY = SpendingCategory._from_registry("material_oficina")
 
 
 def _citation() -> CategoryCitation:
@@ -72,8 +73,8 @@ def _profile(kind: ProportionalityKind, *, fixed_pct: str | None = None) -> Cate
     )
 
 
-_STATE_PROFILE = _profile(ProportionalityKind.FULL_DEDUCTIBLE)
-_OVERRIDE_PROFILE = _profile(ProportionalityKind.FIXED_PERCENTAGE, fixed_pct="0.50")
+_STATE_PROFILE = _profile(ProportionalityKind._from_registry("full_deductible"))
+_OVERRIDE_PROFILE = _profile(ProportionalityKind._from_registry("fixed_percentage"), fixed_pct="0.50")
 
 
 def _context(residence_ccaa: CCAA | None) -> RentaDeductibilityContext:

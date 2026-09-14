@@ -109,8 +109,8 @@ def _issued_goods_to(customer_country_code: str):
     return assemble_classification_criteria(
         declared=DeclaredFacts(
             supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-            customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2C_CONSUMER, source=_ASSERTED),
-            issuer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
+            customer_tax_status=DeclaredFact(value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED),
+            issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
             customer_scope=None,
             customer_identification_state=None,
         ),
@@ -181,7 +181,7 @@ def test_a_genuine_third_country_still_classifies_as_the_export() -> None:
     assert assembly.assembled
     classification = classify_from_assembled_criteria(assembly)
     assert classification is not None
-    assert classification.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert classification.category == IvaCategory("export_third_country_zero_rated")
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)

@@ -37,8 +37,10 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
+
 from ....core.period import Period
-from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import EUMemberState, IvaCategory
@@ -144,7 +146,7 @@ def _as_invoice(*, category: IvaCategory, country: str, tax_id: str) -> Invoice:
                     "quantity": "1",
                     "unit_price": format(_BASE, "f"),
                     "subtotal": format(_BASE, "f"),
-                    "iva_rate": IvaRate.EXEMPT.value,
+                    "iva_rate": resolve_iva_rate_token("exempt", date.today()).value,
                     "iva_amount": "0.00",
                 },
             ],
@@ -191,9 +193,11 @@ def test_both_feeds_declare_an_intra_community_supply_into_casilla_59() -> None:
     match a regression. The shared figure is then checked against the base the
     operation actually carries, so the two agreeing on a wrong number fails too.
     """
-    bank = _resolved(_bank_side(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, member_state=EUMemberState.DE))
+    bank = _resolved(
+        _bank_side(category=IvaCategory("intra_community_supply"), member_state=require_eu_member_state("DE"))
+    )
     invoice = _resolved(
-        _invoice_side(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, country="DE", tax_id="DE811907980"),
+        _invoice_side(category=IvaCategory("intra_community_supply"), country="DE", tax_id="DE811907980"),
     )
 
     assert invoice.get(_CASILLA_59) == bank.get(_CASILLA_59), (
@@ -209,10 +213,10 @@ def test_both_feeds_declare_an_export_into_casilla_60() -> None:
     intra-community comparison above on its own.
     """
     bank = _resolved(
-        _bank_side(category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, member_state=None, country="US"),
+        _bank_side(category=IvaCategory("export_third_country_zero_rated"), member_state=None, country="US"),
     )
     invoice = _resolved(
-        _invoice_side(category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country="US", tax_id="US987654321"),
+        _invoice_side(category=IvaCategory("export_third_country_zero_rated"), country="US", tax_id="US987654321"),
     )
 
     assert invoice.get(_CASILLA_60) == bank.get(_CASILLA_60), (
@@ -231,10 +235,10 @@ def test_the_two_feeds_classify_the_operation_identically() -> None:
     the casilla would miss a category that drifted while still resolving;
     asserting only the category would miss a selector that stopped matching.
     """
-    (bank,) = _bank_side(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, member_state=EUMemberState.DE)
-    (invoice,) = _invoice_side(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, country="DE", tax_id="DE811907980")
+    (bank,) = _bank_side(category=IvaCategory("intra_community_supply"), member_state=require_eu_member_state("DE"))
+    (invoice,) = _invoice_side(category=IvaCategory("intra_community_supply"), country="DE", tax_id="DE811907980")
 
-    assert invoice.category is bank.category
+    assert invoice.category == bank.category
     assert invoice.rate_kind is bank.rate_kind
     assert invoice.flow_direction is bank.flow_direction
     assert invoice.base_amount == bank.base_amount

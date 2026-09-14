@@ -87,7 +87,7 @@ def _recargo_invoice(invoice_number: str, *, issued_at: date, taxable_base: Deci
         quantity=Decimal("1"),
         unit_price=taxable_base,
         subtotal=taxable_base,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=iva_amount,
     )
     return Invoice.model_validate(

@@ -26,6 +26,8 @@ from datetime import date
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.schema_base import DateAxis
@@ -226,7 +228,8 @@ def test_a_domestic_rule_is_silent_on_the_nature(rule_id: str) -> None:
     the axis eager and refuse invoices for a distinction their own treatment
     ignores.
     """
-    assert place_of_supply_rule(rule_id, on=_ON).supply_nature is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert place_of_supply_rule(rule_id, on=_ON, operation=_authority_operation_for_test).supply_nature is None
 
 
 def test_the_cross_border_branches_are_where_the_fork_appears() -> None:
@@ -341,10 +344,13 @@ def test_the_enum_prose_does_not_attribute_a_nature_to_the_union_scheme_article(
 
 def test_an_ungrounded_rule_refuses_rather_than_returning_a_default() -> None:
     """Refusal is the contract: a placement with no provision is not answerable."""
-    from ..errors import IvaCatalogueError
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..errors import IvaCatalogueError
 
-    with pytest.raises(IvaCatalogueError, match="not grounded"):
-        place_of_supply_rule("RZZ_no_such_rule", on=_ON)
+        with pytest.raises(IvaCatalogueError, match="not grounded"):
+            place_of_supply_rule("RZZ_no_such_rule", on=_ON, operation=_authority_operation_for_test)
 
-    with pytest.raises(IvaCatalogueError, match="no place-of-supply grounding for year"):
-        place_of_supply_rule("R05_domestic_at_rate_tier", on=date(1990, 1, 1))
+        with pytest.raises(IvaCatalogueError, match="no place-of-supply grounding for year"):
+            place_of_supply_rule(
+                "R05_domestic_at_rate_tier", on=date(1990, 1, 1), operation=_authority_operation_for_test
+            )

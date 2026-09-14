@@ -53,6 +53,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -195,7 +196,7 @@ def _calculate_quarter(
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         revision_id=_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_CLOCK,
     )
     return calculate_modelo_revision(

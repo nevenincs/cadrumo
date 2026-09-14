@@ -101,7 +101,7 @@ _CONTEXT_LABEL = "721-monedas-virtuales-extranjero-prior-year-baseline-two-annua
 _MONEDAS_VIRTUALES_THRESHOLD = foreign_asset_declaration_thresholds(
     modelo=_MODELO,
     filing_year=_YEAR_N_PLUS_1,
-)[ForeignAssetObligationGroup.MONEDAS_VIRTUALES]
+)[ForeignAssetObligationGroup._from_registry("monedas_virtuales")]
 _INITIAL_THRESHOLD_EUR = _MONEDAS_VIRTUALES_THRESHOLD.initial_declaration_floor_eur
 
 #: Re-declaration increment threshold per art. 42-quater: if 31-December aggregate
@@ -580,7 +580,7 @@ def test_redeclaration_advisory_fires_when_grown_btc_token_is_absent_from_curren
         "modelo_code": _MODELO,
         "filing_year": _YEAR_N_PLUS_1,
         "position_key": "monedas_virtuales|1|840|1",
-        "group_code": ForeignAssetObligationGroup.MONEDAS_VIRTUALES.value,
+        "group_code": ForeignAssetObligationGroup._from_registry("monedas_virtuales").value,
         "prior_value_eur": _BTC_N,
         "current_value_eur": _BTC_N1,
         "delta_value_eur": _BTC_N1 - _BTC_N,

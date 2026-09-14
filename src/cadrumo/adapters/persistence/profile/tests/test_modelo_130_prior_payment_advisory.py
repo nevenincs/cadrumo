@@ -41,6 +41,7 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -59,6 +60,7 @@ from cadrumo.application.modelo.prior_payment_advisory import (
     collect_prior_payment_not_deducted_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -352,7 +354,9 @@ def _calculate(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

@@ -17,7 +17,6 @@ from typing import Final, cast
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from cadrumo.core.directory_scan import (
     DirectoryEntryKind,
     scan_directory,
@@ -65,6 +64,9 @@ from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS as _REVISION_MANIFEST_ONLY_FIELDS,
 )
 from cadrumo.domain.calculations.registry.schema import (
+    CasillaFieldOverride,
+    CasillaMemberPosition,
+    CasillaMemberRemoval,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -103,7 +105,7 @@ from .loader_grammar import revision_section_fragment_paths
 from .loader_semantics import compile_export_semantic_field, compile_projection_endpoint_declaration
 
 _PREDECESSOR_FIELD: Final = "predecessor"
-_AUTHORITY_GRADE_FIELD: Final = "authority_grade"
+_CASILLA_STORAGE_BASELINE_FIELD: Final = "casilla_storage_baseline"
 _RESTATED_FAMILIES_FIELD: Final = "restated_families"
 _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
@@ -796,8 +798,8 @@ def _materialise_revisions(
 
     The predecessor graph is checked as a forest first, so the recursion walks
     a tree and a chain resolves its predecessor before the successor. Every
-    edge is then refused where the successor declares a lower authority grade
-    than its predecessor, before anything is inherited.
+    edge is a storage relationship only; it neither changes nor constrains the
+    successor's independently declared capability.
 
     Where it stops: an inherited row keeps the formula and binding references
     its stating edition authored; the label origins returned beside the rows
@@ -810,26 +812,38 @@ def _materialise_revisions(
     back as a full copy states nothing the loader would refuse.
     """
     declarations = _raw_predecessor_declarations(raw_revisions)
-    if declarations is None or not declarations.named:
+    storage_named: dict[str, str] = {}
+    for revision_id, raw_revision in raw_revisions.items():
+        table = _as_toml_table(raw_revision)
+        baseline = None if table is None else table.get(_CASILLA_STORAGE_BASELINE_FIELD)
+        if isinstance(baseline, str):
+            if baseline == revision_id or baseline not in raw_revisions:
+                raise RegistryLoadError(
+                    f"{source_path}: revision {revision_id!r} has invalid casilla storage baseline {baseline!r}"
+                )
+            storage_named[revision_id] = baseline
+    if (declarations is None or not declarations.named) and not storage_named:
         return _MaterialisedRevisions(revisions=raw_revisions, label_origins={})
-    try:
-        validate_predecessor_forest(
-            modelo_id,
-            named=declarations.named,
-            declared_roots=declarations.declared_roots,
-            keyless=declarations.keyless,
-        )
-    except RegistryValidationError as exc:
-        raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
-    _refuse_predecessor_above_successor_grade(source_path, raw_revisions, declarations.named)
+    if declarations is not None and declarations.named:
+        try:
+            validate_predecessor_forest(
+                modelo_id,
+                named=declarations.named,
+                declared_roots=declarations.declared_roots,
+                keyless=declarations.keyless,
+            )
+        except RegistryValidationError as exc:
+            raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
+    semantic_named = {} if declarations is None else declarations.named
     resolved: dict[str, _MaterialisedRevision] = {}
     materialised: dict[str, object] = dict(raw_revisions)
     label_origins: dict[str, _LabelOrigins] = {}
-    for revision_id in declarations.named:
+    for revision_id in dict.fromkeys((*semantic_named, *storage_named)):
         revision = _materialise_revision(
             source_path,
             raw_revisions,
-            declarations.named,
+            semantic_named,
+            storage_named,
             revision_id,
             resolved,
         )
@@ -839,65 +853,11 @@ def _materialise_revisions(
     return _MaterialisedRevisions(revisions=materialised, label_origins=label_origins)
 
 
-def _refuse_predecessor_above_successor_grade(
-    source_path: Path,
-    raw_revisions: Mapping[str, object],
-    named: Mapping[str, str],
-) -> None:
-    """Refuse a declared predecessor whose authority grade outranks its successor's.
-
-    A successor declaring a lower grade than its predecessor withholds by
-    design: it deliberately claims less than the edition before it. Inheriting
-    there would carry the predecessor's rows into an edition that chose not to
-    state them, turning an honest deferral into a complete-looking edition, so
-    such a successor must stay full-copy. The minimality screen cannot see this,
-    because a sparse successor's stated rows match nothing inherited.
-
-    The comparison reads the declared ``authority_grade`` of both editions, never
-    their row counts. An undeclared grade reads as
-    :data:`~cadrumo.core.authority_grade.UNDECLARED_REGISTRY_AUTHORITY_GRADE`, the
-    floor, so an ungraded successor of a graded predecessor above that floor is
-    refused. A token that names no grade is left to typed construction, which
-    refuses the edition with the grade field's own error.
-
-    Where it stops: an edition declaring only a header while refusing to state
-    figures it cannot ground is refused only when that refusal also lowers its
-    declared grade. Nothing in the schema declares header-only withholding at an
-    equal grade, and this check does not infer it from how many rows an edition
-    carries.
-    """
-    ladder = tuple(RegistryAuthorityGrade)
-    for successor_id, predecessor_id in named.items():
-        successor_grade = _declared_authority_grade(raw_revisions.get(successor_id))
-        predecessor_grade = _declared_authority_grade(raw_revisions.get(predecessor_id))
-        if successor_grade is None or predecessor_grade is None:
-            continue
-        if ladder.index(successor_grade) >= ladder.index(predecessor_grade):
-            continue
-        raise RegistryLoadError(
-            f"{source_path}: revision {successor_id!r} declares predecessor {predecessor_id!r}, but its authority "
-            f"grade {successor_grade.value!r} is lower than the predecessor's {predecessor_grade.value!r}; an "
-            "edition withholding by design must state every row itself, so remove the predecessor declaration"
-        )
-
-
-def _declared_authority_grade(raw_revision: object) -> RegistryAuthorityGrade | None:
-    """Return the edition's authority grade, the floor when undeclared, ``None`` when unreadable."""
-    table = _as_toml_table(raw_revision)
-    if table is None:
-        return None
-    token = table.get(_AUTHORITY_GRADE_FIELD)
-    if token is None:
-        return UNDECLARED_REGISTRY_AUTHORITY_GRADE
-    if not isinstance(token, str) or token not in RegistryAuthorityGrade:
-        return None
-    return RegistryAuthorityGrade(token)
-
-
 def _materialise_revision(
     source_path: Path,
     raw_revisions: Mapping[str, object],
     named: Mapping[str, str],
+    storage_named: Mapping[str, str],
     revision_id: str,
     resolved: dict[str, _MaterialisedRevision],
 ) -> _MaterialisedRevision:
@@ -909,20 +869,22 @@ def _materialise_revision(
     if table is None:
         raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
     predecessor_id = named.get(revision_id)
+    storage_baseline_id = storage_named.get(revision_id)
+    baseline_id = predecessor_id or storage_baseline_id
     result = _MaterialisedRevision(table=table, label_origins=None)
-    if predecessor_id is not None:
-        predecessor = _materialise_revision(source_path, raw_revisions, named, predecessor_id, resolved)
+    if baseline_id is not None:
+        predecessor = _materialise_revision(source_path, raw_revisions, named, storage_named, baseline_id, resolved)
         rows, label_origins = _inherit_casillas(
-            f"{source_path}: revision {revision_id!r} inheriting from {predecessor_id!r}",
+            f"{source_path}: revision {revision_id!r} hydrating casillas from {baseline_id!r}",
             revision_id=revision_id,
-            predecessor_id=predecessor_id,
-            inherited=_raw_casilla_rows(source_path, predecessor_id, predecessor.table),
+            predecessor_id=baseline_id,
+            inherited=_raw_casilla_rows(source_path, baseline_id, predecessor.table),
             inherited_label_origins=predecessor.label_origins,
             successor=table,
         )
         merged: dict[str, object] = {**table, _INHERITED_SECTION: rows}
         restated = _restated_families(table)
-        for family in _KEYED_FAMILIES:
+        for family in _KEYED_FAMILIES if predecessor_id is not None else ():
             if family.section in restated:
                 continue
             merged[family.section] = _inherit_keyed_family(
@@ -971,6 +933,13 @@ def _inherit_casillas(
     stated = as_toml_array(successor.get(_INHERITED_SECTION, ()))
     if stated is None:
         raise RegistryLoadError(f"{context}: casillas must be an array")
+    inherited, inherited_label_origins, storage_overridden = _apply_casilla_storage_delta(
+        context,
+        predecessor_id=predecessor_id,
+        inherited=inherited,
+        inherited_label_origins=inherited_label_origins,
+        successor=successor,
+    )
     retired = _retired_lineages(successor, revision_id)
     superseders = _stated_rows_by_lineage(context, stated, retired)
     inherited_lineage_counts = Counter(lineage for row in inherited if (lineage := _row_lineage(row)) is not None)
@@ -993,9 +962,11 @@ def _inherit_casillas(
             label_origins.append(None)
             superseded.add(lineage)
             continue
-        rows.append(_without_lineage_claims(row))
+        rows.append(row if _row_id(row) in storage_overridden else _without_lineage_claims(row))
         carried_origin = None if inherited_label_origins is None else inherited_label_origins[index]
-        label_origins.append(carried_origin if carried_origin is not None else predecessor_id)
+        label_origins.append(
+            None if _row_id(row) in storage_overridden else carried_origin if carried_origin is not None else predecessor_id
+        )
         row_id = _row_id(row)
         if row_id is not None:
             kept_lineage_by_id[row_id] = lineage
@@ -1012,7 +983,103 @@ def _inherit_casillas(
         if lineage is None or lineage not in superseded:
             rows.append(row)
             label_origins.append(None)
+    rows, label_origins = _apply_casilla_positions(context, rows, label_origins, successor)
     return tuple(rows), tuple(label_origins)
+
+
+def _apply_casilla_storage_delta(
+    context: str,
+    *,
+    predecessor_id: str,
+    inherited: tuple[object, ...],
+    inherited_label_origins: _LabelOrigins | None,
+    successor: Mapping[str, object],
+) -> tuple[tuple[object, ...], _LabelOrigins | None, frozenset[str]]:
+    """Apply storage-only patches without deriving a continuity relationship."""
+    raw_overrides = as_toml_array(successor.get("casilla_overrides", ())) or ()
+    raw_removals = as_toml_array(successor.get("casilla_removals", ())) or ()
+    try:
+        overrides = tuple(CasillaFieldOverride.model_validate(value) for value in raw_overrides)
+        removals = tuple(CasillaMemberRemoval.model_validate(value) for value in raw_removals)
+    except ValidationError as exc:
+        raise RegistryLoadError(f"{context}: invalid casilla storage delta: {exc}") from exc
+    by_id: dict[str, int] = {}
+    for index, row in enumerate(inherited):
+        row_id = _row_id(row)
+        if row_id is None:
+            continue
+        if row_id in by_id:
+            raise RegistryLoadError(f"{context}: predecessor has duplicate casilla storage id {row_id!r}")
+        by_id[row_id] = index
+    seen: set[str] = set()
+    removed: set[str] = set()
+    result = list(inherited)
+    origins = None if inherited_label_origins is None else list(inherited_label_origins)
+    for declaration in removals:
+        selector = declaration.selector
+        if str(selector.revision) != predecessor_id:
+            raise RegistryLoadError(
+                f"{context}: casilla removal baseline {selector.revision!s} is not predecessor {predecessor_id!r}"
+            )
+        identity = str(selector.id)
+        if identity not in by_id or identity in seen:
+            raise RegistryLoadError(f"{context}: casilla removal selector {identity!r} is missing or repeated")
+        seen.add(identity)
+        removed.add(identity)
+    for declaration in overrides:
+        selector = declaration.selector
+        if str(selector.revision) != predecessor_id:
+            raise RegistryLoadError(
+                f"{context}: casilla override baseline {selector.revision!s} is not predecessor {predecessor_id!r}"
+            )
+        identity = str(selector.id)
+        if identity not in by_id or identity in seen:
+            raise RegistryLoadError(f"{context}: casilla override selector {identity!r} is missing or repeated")
+        seen.add(identity)
+        table = _as_toml_table(result[by_id[identity]])
+        if table is None:
+            raise RegistryLoadError(f"{context}: selected casilla {identity!r} is not a table")
+        patched = dict(_without_lineage_claims(table))
+        for field in declaration.removed_fields:
+            if field not in patched:
+                raise RegistryLoadError(f"{context}: casilla {identity!r} cannot remove absent field {field!r}")
+            del patched[field]
+        if _ROW_SOURCE_FIELD in declaration.fields:
+            patched.pop(_ROW_SOURCE_ADDITIONS_FIELD, None)
+        patched.update(declaration.fields)
+        result[by_id[identity]] = patched
+        if origins is not None:
+            origins[by_id[identity]] = None
+    kept_indexes = [index for index, row in enumerate(result) if (_row_id(row) or "") not in removed]
+    kept_rows = tuple(result[index] for index in kept_indexes)
+    kept_origins = None if origins is None else tuple(origins[index] for index in kept_indexes)
+    return kept_rows, kept_origins, frozenset(str(declaration.selector.id) for declaration in overrides)
+
+
+def _apply_casilla_positions(
+    context: str,
+    rows: list[object],
+    origins: list[str | None],
+    successor: Mapping[str, object],
+) -> tuple[list[object], list[str | None]]:
+    raw = as_toml_array(successor.get("casilla_positions", ())) or ()
+    try:
+        positions = tuple(CasillaMemberPosition.model_validate(value) for value in raw)
+    except ValidationError as exc:
+        raise RegistryLoadError(f"{context}: invalid casilla positions: {exc}") from exc
+    seen: set[str] = set()
+    for declaration in positions:
+        identity = str(declaration.id)
+        if identity in seen:
+            raise RegistryLoadError(f"{context}: duplicate casilla position for {identity!r}")
+        seen.add(identity)
+        index = next((i for i, row in enumerate(rows) if _row_id(row) == identity), None)
+        if index is None or declaration.position >= len(rows):
+            raise RegistryLoadError(f"{context}: casilla position for {identity!r} is outside the effective member set")
+        row, origin = rows.pop(index), origins.pop(index)
+        rows.insert(declaration.position, row)
+        origins.insert(declaration.position, origin)
+    return rows, origins
 
 
 def _without_lineage_claims(row: object) -> object:

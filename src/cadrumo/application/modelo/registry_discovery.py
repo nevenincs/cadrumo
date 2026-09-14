@@ -16,7 +16,7 @@ from datetime import date
 
 from ...core.period import Period
 from ...core.tax_domain import TaxDomain
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.queries import PinnedRegistryQueryService
 from ...domain.calculations.registry.query_reports import (
@@ -32,14 +32,11 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 
 
 def _with_service[DiscoveryResult](
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
     callback: Callable[[PinnedRegistryQueryService], DiscoveryResult],
 ) -> DiscoveryResult:
-    """Run one discovery query inside the caller's or bundled pinned operation."""
-    if operation is not None:
-        return callback(PinnedRegistryQueryService(operation))
-    with bundled_indexed_authority().operation() as indexed_operation:
-        return callback(PinnedRegistryQueryService(indexed_operation))
+    """Run one discovery query inside the caller-owned pinned operation."""
+    return callback(PinnedRegistryQueryService(operation))
 
 
 def _refuse_unscoped_as_of(*, as_of: date | None, scoped_form: str) -> None:
@@ -62,7 +59,7 @@ def _refuse_unscoped_as_of(*, as_of: date | None, scoped_form: str) -> None:
 def declared_modelo_period_tokens(
     modelo: str | None,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     """Return every period token declared by any revision of one modelo."""
     if not modelo or not modelo.strip():
@@ -81,12 +78,12 @@ def declared_modelo_period_tokens(
     )
 
 
-def registry_modelo_codes(*, operation: PinnedAuthorityOperation | None = None) -> tuple[str, ...]:
+def registry_modelo_codes(*, operation: PinnedAuthorityOperation) -> tuple[str, ...]:
     """Return registry-backed modelo codes in authority order."""
     return _with_service(operation, lambda service: tuple(row.code for row in service.list_modelos().modelos))
 
 
-def registry_support_matrix(*, operation: PinnedAuthorityOperation | None = None) -> ModeloSupportMatrixReport:
+def registry_support_matrix(*, operation: PinnedAuthorityOperation) -> ModeloSupportMatrixReport:
     """Return the registry-wide per-modelo support/capability matrix.
 
     Every :class:`~domain.calculations.registry.ModeloEntry` is derived
@@ -102,7 +99,7 @@ def registry_list_modelos(
     *,
     year: int | None = None,
     domain: TaxDomain | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloListReport:
     """Return the registry modelo list report, optionally filtered by tax family."""
     return _with_service(operation, lambda service: service.list_modelos(year=year, domain=domain))
@@ -113,7 +110,7 @@ def registry_describe_modelo(
     *,
     period: str | None = None,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloDescribeReport:
     """Return the registry modelo description report."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_describe_modelo_for_scope")
@@ -125,7 +122,7 @@ def registry_describe_modelo_for_scope(
     *,
     period: Period,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloDescribeReport:
     """Return the registry modelo description report for an exact :class:`Period`."""
     return _with_service(
@@ -145,7 +142,7 @@ def registry_describe_modelo_for_registry_scope(
     filing_year: int,
     period: str,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloDescribeReport:
     """Return a modelo description for an explicit filing-year registry scope."""
     return _with_service(
@@ -167,7 +164,7 @@ def registry_casillas(
     input_kind: InputKind | None = None,
     required: bool | None = None,
     form_number: str | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCasillasReport:
     """Return the registry casilla report."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_casillas_for_scope")
@@ -192,7 +189,7 @@ def registry_casillas_for_scope(
     input_kind: InputKind | None = None,
     required: bool | None = None,
     form_number: str | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCasillasReport:
     """Return the registry casilla report for an exact :class:`Period`."""
     return _with_service(
@@ -218,7 +215,7 @@ def registry_casillas_for_registry_scope(
     input_kind: InputKind | None = None,
     required: bool | None = None,
     form_number: str | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCasillasReport:
     """Return casillas for an explicit filing-year registry scope."""
     return _with_service(
@@ -241,7 +238,7 @@ def registry_casilla(
     *,
     period: str | None = None,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCasillaDetailReport:
     """Return the single-casilla semantic detail report."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_casilla_for_registry_scope")
@@ -258,7 +255,7 @@ def registry_casilla_for_registry_scope(
     filing_year: int,
     period: str,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCasillaDetailReport:
     """Return one casilla detail for an explicit filing-year registry scope."""
     return _with_service(
@@ -278,7 +275,7 @@ def registry_bindings(
     *,
     period: str | None = None,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloBindingsReport:
     """Return the registry bindings report for a modelo and optional period."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_bindings_for_year")
@@ -290,7 +287,7 @@ def registry_bindings_for_year(
     *,
     filing_year: int,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloBindingsReport:
     """Return the registry bindings report for a filing year."""
     return _with_service(
@@ -304,7 +301,7 @@ def registry_bindings_for_scope(
     *,
     period: Period,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloBindingsReport:
     """Return the registry bindings report for an exact :class:`Period`."""
     return _with_service(
@@ -323,7 +320,7 @@ def registry_formulas(
     *,
     period: str | None = None,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloFormulasReport:
     """Return the registry formulas report."""
     _refuse_unscoped_as_of(as_of=as_of, scoped_form="registry_formulas_for_scope")
@@ -335,7 +332,7 @@ def registry_formulas_for_scope(
     *,
     period: Period,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloFormulasReport:
     """Return the registry formulas report for an exact :class:`Period`."""
     return _with_service(
@@ -355,7 +352,7 @@ def registry_formulas_for_registry_scope(
     filing_year: int,
     period: str,
     as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloFormulasReport:
     """Return formulas for an explicit filing-year registry scope."""
     return _with_service(

@@ -6,9 +6,11 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IVARegime
+
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.deadlines.models import IrpfEstimationRegime, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -51,8 +53,8 @@ def _work_unit(*, modelo: str = "131", filing_year: int = 2024) -> WorkUnit:
 def _objective_profile(**overrides: Any) -> TaxpayerProfile:
     base_data: dict[str, Any] = {
         "tax_id": "X1234567L",
-        "iva_regime": IVARegime.GENERAL,
-        "irpf_estimation_regime": IrpfEstimationRegime.OBJETIVA,
+        "iva_regime": IVARegime("GENERAL"),
+        "irpf_estimation_regime": IrpfEstimationRegime._from_registry("objetiva"),
     }
     base_data.update(overrides)
     return TaxpayerProfile(**base_data)
@@ -205,8 +207,8 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
 def test_objective_estimation_exclusion_advisory_does_not_apply_direct_estimation_profile() -> None:
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime("GENERAL"),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
         objective_estimation_prior_year_gross_income_eur=Decimal("999999.00"),
     )
 

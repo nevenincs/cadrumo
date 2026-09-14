@@ -21,9 +21,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
 from ....core.identity.documents import IdentityError
 from ...iva.classification import InvoiceKind
-from ..enums import IvaRate, PaymentStatus
+from ..enums import PaymentStatus
 from ..errors import InvoiceValidationError
 from ..models import Invoice, InvoiceLine
 from ..normalization import normalise_invoice_counterparty
@@ -39,7 +41,7 @@ def _valid_payload() -> dict[str, object]:
             "quantity": Decimal("1"),
             "unit_price": Decimal("100.00"),
             "subtotal": Decimal("100.00"),
-            "iva_rate": IvaRate.RATE_21,
+            "iva_rate": resolve_iva_rate_token("rate_21", date.today()),
             "iva_amount": Decimal("21.00"),
         },
     )

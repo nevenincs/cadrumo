@@ -14,7 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.iva.schema import IvaCategory
+
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -63,15 +65,15 @@ def _tx(provider_id: str, *, iva_category: IvaCategory) -> Transaction:
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
             "iva_category": iva_category,
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT
-            if iva_category is IvaCategory.DOMESTIC_GENERAL
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current")
+            if iva_category == IvaCategory("domestic_general")
             else None,
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="b" * 64,
             )
-            if iva_category is IvaCategory.DOMESTIC_GENERAL
+            if iva_category == IvaCategory("domestic_general")
             else None,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
@@ -82,7 +84,7 @@ def _tx(provider_id: str, *, iva_category: IvaCategory) -> Transaction:
 
 @pytest.mark.parametrize(
     "category",
-    [IvaCategory.RECARGO_EQUIVALENCIA, IvaCategory.UNKNOWN, IvaCategory.ERRONEOUS_INVOICE],
+    [IvaCategory("recargo_equivalencia"), IvaCategory("unknown"), IvaCategory("erroneous_invoice")],
 )
 def test_non_declarable_category_is_gated_not_emitted(category: IvaCategory) -> None:
     tx = _tx("re-1", iva_category=category)
@@ -93,7 +95,7 @@ def test_non_declarable_category_is_gated_not_emitted(category: IvaCategory) -> 
 
 
 def test_normal_domestic_category_still_emits() -> None:
-    tx = _tx("ok-1", iva_category=IvaCategory.DOMESTIC_GENERAL)
+    tx = _tx("ok-1", iva_category=IvaCategory("domestic_general"))
     result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((tx,)), period=_Q2_2026)
     assert len(result.observations) == 1
-    assert result.observations[0].category is IvaCategory.DOMESTIC_GENERAL
+    assert result.observations[0].category == IvaCategory("domestic_general")

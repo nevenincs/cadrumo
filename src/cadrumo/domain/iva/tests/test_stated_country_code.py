@@ -31,6 +31,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha3
 from ..establishment import country_code_for_stated_country_code
 
@@ -58,12 +60,17 @@ class TestTheLookup:
         column that resolved it to the prefix would put two answers into the tree
         for one country.
         """
-        assert country_code_for_stated_country_code(stated) == expected
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert country_code_for_stated_country_code(stated, operation=_authority_operation_for_test) == expected
 
     @pytest.mark.parametrize("stated", ["ES", "es", " es ", "De"])
     def test_an_alpha2_code_passes_through_normalised(self, stated: str) -> None:
         """The already-correct system is normalised and handed on, never re-decided."""
-        assert country_code_for_stated_country_code(stated) == stated.strip().upper()
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert (
+                country_code_for_stated_country_code(stated, operation=_authority_operation_for_test)
+                == stated.strip().upper()
+            )
 
     @pytest.mark.parametrize("stated", [None, "", "  ", "E", "ESPA", "E5P", "12"])
     def test_an_unreadable_code_establishes_nothing(self, stated: str | None) -> None:
@@ -74,7 +81,8 @@ class TestTheLookup:
         testing while placing foreign parties inside the territorio de aplicación
         del impuesto.
         """
-        assert country_code_for_stated_country_code(stated) is None
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert country_code_for_stated_country_code(stated, operation=_authority_operation_for_test) is None
 
     def test_an_alpha3_outside_the_vocabulary_establishes_nothing(self) -> None:
         """The table is bounded, so an unlisted country degrades safely.
@@ -90,7 +98,11 @@ class TestTheLookup:
         behaviour was fine and only the pin had gone stale, which is the argument
         for deriving it.
         """
-        assert country_code_for_stated_country_code(an_uncatalogued_alpha3()) is None
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            assert (
+                country_code_for_stated_country_code(an_uncatalogued_alpha3(), operation=_authority_operation_for_test)
+                is None
+            )
 
     def test_no_stated_code_resolves_to_spain_by_accident(self) -> None:
         """Only Spain's own codes name Spain, which is the rung's whole trigger.
@@ -99,9 +111,10 @@ class TestTheLookup:
         other code resolving to ``ES`` would open the Spanish province lookup for
         a foreign party and answer it with a well-formed wrong territory.
         """
-        spanish = {
-            code
-            for code in ("ESP", "ES", "PRT", "PT", "FRA", "FR", "AND", "AD", "MAR", "MA")
-            if country_code_for_stated_country_code(code) == "ES"
-        }
-        assert spanish == {"ESP", "ES"}
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            spanish = {
+                code
+                for code in ("ESP", "ES", "PRT", "PT", "FRA", "FR", "AND", "AD", "MAR", "MA")
+                if country_code_for_stated_country_code(code, operation=_authority_operation_for_test) == "ES"
+            }
+            assert spanish == {"ESP", "ES"}

@@ -113,7 +113,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
+            "iva_category": IvaCategory("domestic_general"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",

@@ -113,8 +113,8 @@ def _cash_accounting_transaction(
             "taxable_base": Decimal("1000.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
-            "cash_accounting_treatment": IvaCashAccountingTreatment.SUPPLIER_REGIME,
+            "iva_category": IvaCategory("domestic_general"),
+            "cash_accounting_treatment": IvaCashAccountingTreatment("supplier_regime"),
             "operation_date": operation_date,
             "cash_accounting_payment_evidence": (
                 IvaCashAccountingPaymentEvidence(

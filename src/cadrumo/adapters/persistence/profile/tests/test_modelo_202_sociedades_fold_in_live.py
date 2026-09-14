@@ -86,6 +86,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 
@@ -314,7 +316,9 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -463,7 +467,9 @@ def _calculate_m202(secure_objects: SecureObjectRepository, *, period: str) -> B
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, period),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -572,7 +578,9 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, "2P"),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
 

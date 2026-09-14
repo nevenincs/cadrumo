@@ -268,11 +268,13 @@ def test_iva_observations_match_oracle_category_and_flow() -> None:
                 f"{rule['match']}: {obs.category} != {rule['iva_category']}"
             )
             expected_flow = (
-                IvaFlowDirection.REPERCUTIDO if rule["direction"] == "INCOMING" else IvaFlowDirection.SOPORTADO
+                IvaFlowDirection._from_registry("repercutido")
+                if rule["direction"] == "INCOMING"
+                else IvaFlowDirection._from_registry("soportado")
             )
             # Reverse-charge / intra-community acquisition / import self-assess
             # as inversion sujeto pasivo; allow either the directional flow or ISP.
-            assert obs.flow_direction in {expected_flow, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+            assert obs.flow_direction in {expected_flow, IvaFlowDirection._from_registry("inversion_sujeto_pasivo")}
             seen += 1
     assert seen > 0
 
@@ -295,13 +297,13 @@ def test_iva_pipeline_refuses_input_categories_without_authoritative_deduction_e
             issue.reason is IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION for issue in result.issues
         )
     for required in (
-        IvaCategory.DOMESTIC_GENERAL,
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory("domestic_general"),
+        IvaCategory("intra_community_supply"),
+        IvaCategory("export_third_country_zero_rated"),
     ):
         assert required in categories, f"{required} never reached M303"
-    assert IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE not in categories
-    assert IvaCategory.IMPORT_THIRD_COUNTRY not in categories
+    assert IvaCategory("intra_community_acquisition_reverse_charge") not in categories
+    assert IvaCategory("import_third_country") not in categories
     assert refusal_count > 0
 
 
@@ -323,7 +325,7 @@ def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
     re_ids = {
         tx.transaction_id
         for tx, rule, _ in _BUILT
-        if rule.get("iva_category") == IvaCategory.RECARGO_EQUIVALENCIA.value
+        if rule.get("iva_category") == IvaCategory("recargo_equivalencia").value
     }
     assert re_ids, "corpus must contain the recargo-equivalencia anomaly row"
     catalogue = _catalogue()
@@ -335,5 +337,7 @@ def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id="corpus-test",
         )
-        soportado = {o.ledger_id for o in result.observations if o.flow_direction is IvaFlowDirection.SOPORTADO}
+        soportado = {
+            o.ledger_id for o in result.observations if o.flow_direction is IvaFlowDirection._from_registry("soportado")
+        }
         assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"

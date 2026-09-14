@@ -167,17 +167,21 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     )
     register = ProrrataRegister(
         sector_definitions=(
-            SectorDefinition(sector_id="a", letra=SectorDiferenciadoLetra.A, member_activity_codes=("4711",)),
-            SectorDefinition(sector_id="b", letra=SectorDiferenciadoLetra.B, member_activity_codes=("6820",)),
+            SectorDefinition(
+                sector_id="a", letra=SectorDiferenciadoLetra._from_registry("a"), member_activity_codes=("4711",)
+            ),
+            SectorDefinition(
+                sector_id="b", letra=SectorDiferenciadoLetra._from_registry("b"), member_activity_codes=("6820",)
+            ),
         ),
         entries=tuple(
             ProrrataRegisterEntry(
                 ejercicio=filing_year,
                 sector_id=sector_id,
-                regime=ProrrataRegisterRegime.GENERAL,
+                regime=ProrrataRegisterRegime._from_registry("general"),
                 especial_transition=None,
                 provisional_percentage=Decimal("50"),
-                provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
                 source_registry_snapshot_refs=(prior_snapshot_ref,),
             )
             for sector_id in (None, "a", "b")
@@ -198,7 +202,9 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
         ),
     )
     contribution_kinds = tuple(
-        kind for kind in IvaDeductionFactKind if kind is not IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
+        kind
+        for kind in IvaDeductionFactKind
+        if kind is not IvaDeductionFactKind._from_registry("investment_goods_regularisation")
     )
     contributions = tuple(
         IvaDifferentiatedDeductionContribution(

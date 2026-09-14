@@ -81,7 +81,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
             output_path=output_path,
             actor="operator",
         ),
-        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
         export_ports=modelo_export_ports_for_test(
             bucket_id=bucket_id,
             taxpayer_tax_id=taxpayer_nif,
@@ -139,10 +139,10 @@ def _typed_profile_with_charge_account(*, taxpayer_nif: str, charge_iban: str | 
     """
     return TaxpayerProfile(
         tax_id=taxpayer_nif,
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.COMMON_REGIME,
-            regime_composition=M303RegimeComposition.GENERAL,
+            tax_territory=M303TaxTerritory._from_registry("common_regime"),
+            regime_composition=M303RegimeComposition._from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
@@ -238,10 +238,10 @@ def _rectificativa_with_nota_three(verified):
 def _nota_three_profile(*, taxpayer_nif: str, refund_account: RefundAccount | None) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=taxpayer_nif,
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.COMMON_REGIME,
-            regime_composition=M303RegimeComposition.GENERAL,
+            tax_territory=M303TaxTerritory._from_registry("common_regime"),
+            regime_composition=M303RegimeComposition._from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
@@ -464,7 +464,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
             actor="operator",
             prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
         ),
-        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
         export_ports=modelo_export_ports_for_test(
             taxpayer_tax_id=taxpayer_nif,
             work_unit=work_repo,
@@ -599,7 +599,7 @@ def test_public_ingreso_export_omits_did_page(
         ),
         workflow_profile=TaxpayerProfile(
             tax_id=taxpayer_nif,
-            iva_regime=IVARegime.GENERAL,
+            iva_regime=IVARegime("GENERAL"),
         ),
         export_ports=modelo_export_ports_for_test(
             taxpayer_tax_id=taxpayer_nif,
@@ -639,7 +639,7 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
                 output_path=existing_dir,
                 actor="operator",
             ),
-            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
             export_ports=modelo_export_ports_for_test(
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -670,7 +670,7 @@ def test_export_refuses_empty_output_path(
                 output_path=Path(""),
                 actor="operator",
             ),
-            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
             export_ports=modelo_export_ports_for_test(
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -689,7 +689,7 @@ def test_export_success_path_is_idempotent_overwrite(
     """A valid file destination still exports, and a second export overwrites it cleanly."""
     taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision()
     output_path = tmp_path / "modelo-303.txt"
-    profile = TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL)
+    profile = TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL"))
 
     first = export_modelo_revision(
         ModeloExportCommand(

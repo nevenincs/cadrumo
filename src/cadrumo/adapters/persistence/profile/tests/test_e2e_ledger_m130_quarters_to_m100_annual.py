@@ -81,6 +81,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -195,10 +196,15 @@ _AUTONOMA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
 _AUTONOMA_SALARY_GROSS = Decimal("30000.00")
 _AUTONOMA_SALARY_WITHHOLDING = Decimal("4500.00")
 _EXPENSE_ROWS: tuple[tuple[str, date, SpendingCategory, Decimal], ...] = (
-    ("expense-office", date(_YEAR, 2, 20), SpendingCategory.MATERIAL_OFICINA, Decimal("500.00")),
-    ("expense-software", date(_YEAR, 5, 22), SpendingCategory.SOFTWARE_SUSCRIPCION, Decimal("700.00")),
-    ("expense-phone", date(_YEAR, 8, 12), SpendingCategory.TELEFONIA_MOVIL, Decimal("300.00")),
-    ("expense-advisory", date(_YEAR, 11, 8), SpendingCategory.ASESORIA_FISCAL, Decimal("900.00")),
+    ("expense-office", date(_YEAR, 2, 20), SpendingCategory._from_registry("material_oficina"), Decimal("500.00")),
+    (
+        "expense-software",
+        date(_YEAR, 5, 22),
+        SpendingCategory._from_registry("software_suscripcion"),
+        Decimal("700.00"),
+    ),
+    ("expense-phone", date(_YEAR, 8, 12), SpendingCategory._from_registry("telefonia_movil"), Decimal("300.00")),
+    ("expense-advisory", date(_YEAR, 11, 8), SpendingCategory._from_registry("asesoria_fiscal"), Decimal("900.00")),
 )
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
@@ -315,7 +321,7 @@ def _persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> No
     )
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("1")}),
+        UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("1")}),
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
@@ -345,7 +351,9 @@ def _calculate_and_file_m130_quarter(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=_M130_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -386,7 +394,9 @@ def _import_official_m130_result_observation(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_FILE_AT,
     )
     casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
@@ -542,10 +552,10 @@ def _seed_taxpayer_profile() -> None:
 def _autonomaworkflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_professionals_with_retencion=False,
         pays_rent_with_retencion=False,
@@ -589,7 +599,9 @@ def _calculate_m100_annual(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _M100_ANNUAL_PERIOD),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -785,7 +797,7 @@ def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
         _expense_transaction(
             "expense-missing-base",
             value_date=date(_YEAR, 2, 20),
-            category=SpendingCategory.MATERIAL_OFICINA,
+            category=SpendingCategory._from_registry("material_oficina"),
             taxable_base=Decimal("500.00"),
         ).model_copy(update={"taxable_base": None}),
     )
@@ -833,7 +845,7 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
         actor="system",
-        workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL),
+        workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL")),
         settings=ready_clave_settings("X1234567L"),
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )

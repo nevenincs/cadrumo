@@ -84,24 +84,24 @@ _ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
 # is a transitional food rate, not a permanent tier, and a Q1 0 % sale is now
 # correctly refused by the aggregator.
 _LEDGER_ROWS = (
-    ("21", IvaCategory.DOMESTIC_GENERAL, "0.21", date(2024, 3, 10), "4000.00", "817.00"),
-    ("10", IvaCategory.DOMESTIC_REDUCED, "0.10", date(2024, 3, 11), "2500.00", "241.00"),
-    ("7-5", IvaCategory.DOMESTIC_REDUCED, "0.075", date(2024, 11, 12), "1600.00", "127.00"),
-    ("5", IvaCategory.DOMESTIC_REDUCED, "0.05", date(2024, 8, 13), "1400.00", "73.00"),
-    ("4", IvaCategory.DOMESTIC_SUPER_REDUCED, "0.04", date(2024, 3, 14), "1200.00", "51.00"),
-    ("2", IvaCategory.DOMESTIC_SUPER_REDUCED, "0.02", date(2024, 11, 15), "900.00", "19.00"),
-    ("0", IvaCategory.DOMESTIC_ZERO, "0.00", date(2024, 8, 16), "700.00", "0.00"),
+    ("21", IvaCategory("domestic_general"), "0.21", date(2024, 3, 10), "4000.00", "817.00"),
+    ("10", IvaCategory("domestic_reduced"), "0.10", date(2024, 3, 11), "2500.00", "241.00"),
+    ("7-5", IvaCategory("domestic_reduced"), "0.075", date(2024, 11, 12), "1600.00", "127.00"),
+    ("5", IvaCategory("domestic_reduced"), "0.05", date(2024, 8, 13), "1400.00", "73.00"),
+    ("4", IvaCategory("domestic_super_reduced"), "0.04", date(2024, 3, 14), "1200.00", "51.00"),
+    ("2", IvaCategory("domestic_super_reduced"), "0.02", date(2024, 11, 15), "900.00", "19.00"),
+    ("0", IvaCategory("domestic_zero"), "0.00", date(2024, 8, 16), "700.00", "0.00"),
 )
 
 # The tier the aggregator must DERIVE for each rate. Many-to-one on purpose.
 _EXPECTED_TIER = {
-    "21": IvaRateKind.GENERAL,
-    "10": IvaRateKind.REDUCED,
-    "7-5": IvaRateKind.REDUCED,
-    "5": IvaRateKind.REDUCED,
-    "4": IvaRateKind.SUPER_REDUCED,
-    "2": IvaRateKind.SUPER_REDUCED,
-    "0": IvaRateKind.ZERO,
+    "21": IvaRateKind("general"),
+    "10": IvaRateKind("reduced"),
+    "7-5": IvaRateKind("reduced"),
+    "5": IvaRateKind("reduced"),
+    "4": IvaRateKind("super_reduced"),
+    "2": IvaRateKind("super_reduced"),
+    "0": IvaRateKind("zero"),
 }
 
 

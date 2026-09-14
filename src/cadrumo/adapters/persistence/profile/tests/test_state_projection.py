@@ -538,7 +538,7 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
             direction=TransactionDirection.OUTGOING,
             description="office supplies with input IVA",
             business_classification=BusinessClassification.BUSINESS,
-            category_id=SpendingCategory.MATERIAL_OFICINA.value,
+            category_id=SpendingCategory._from_registry("material_oficina").value,
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("0.21"),
             iva_amount=Decimal("21.00"),

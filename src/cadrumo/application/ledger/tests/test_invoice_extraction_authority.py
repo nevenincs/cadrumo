@@ -53,7 +53,7 @@ def _fabricated_values() -> InvoiceExtractionAuthorityValues:
         period=_ANNUAL_2026,
         iva_rate_pcts=(_FABRICATED_PCT,),
         retencion_rate_pcts=(_FABRICATED_RETENCION_PCT,),
-        no_printed_tax_categories=(IvaCategory.DOMESTIC_EXEMPT,),
+        no_printed_tax_categories=(IvaCategory("domestic_exempt"),),
         regime_legend_phrases=("regimen inventado a efectos de prueba",),
     )
 
@@ -76,7 +76,7 @@ class TestTheResolverFollowsTheRateAuthority:
 
         def _planted_lookup_rate(member_state: EUMemberState, kind: IvaRateKind, on_date):
             resolved = real_lookup_rate(member_state, kind, on_date)
-            if member_state is EUMemberState.ES and kind is IvaRateKind.GENERAL:
+            if member_state is EUMemberState._from_registry("es") and kind is IvaRateKind("general"):
                 return resolved.model_copy(update={"pct": _FABRICATED_PCT})
             return resolved
 

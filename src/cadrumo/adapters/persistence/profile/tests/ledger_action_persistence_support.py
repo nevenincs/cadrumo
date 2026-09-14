@@ -108,7 +108,7 @@ def _purchase_invoice() -> Invoice:
         quantity=_Decimal("1"),
         unit_price=_Decimal("100.00"),
         subtotal=_Decimal("100.00"),
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=_Decimal("21.00"),
     )
     return Invoice.model_validate(

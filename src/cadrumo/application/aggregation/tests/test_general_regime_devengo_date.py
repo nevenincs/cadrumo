@@ -69,7 +69,7 @@ def _transaction(provider_id: str, **overrides: Any) -> Transaction:
         "raw": _raw(provider_id),
         "direction": TransactionDirection.INCOMING,
         "business_classification": BusinessClassification.BUSINESS,
-        "iva_category": IvaCategory.DOMESTIC_GENERAL,
+        "iva_category": IvaCategory("domestic_general"),
         "taxable_base": Decimal("1000.00"),
         "iva_amount": _CUOTA,
         "iva_rate": Decimal("0.21"),
@@ -139,7 +139,7 @@ def test_the_general_regime_may_record_an_operation_date() -> None:
     """
     transaction = _transaction("tx-allowed", operation_date=_OPERATION)
 
-    assert transaction.cash_accounting_treatment is IvaCashAccountingTreatment.NONE
+    assert transaction.cash_accounting_treatment is IvaCashAccountingTreatment("none")
     assert transaction.operation_date == _OPERATION
 
 

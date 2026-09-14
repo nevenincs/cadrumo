@@ -37,7 +37,7 @@ _P_2026_1T = Period.from_year_and_code(2026, "1T")
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("general"),
         has_employees=True,
         pays_professionals_with_retencion=False,
         professional_income_withholding_ge_70pct=False,
@@ -114,8 +114,8 @@ class TestTaxpayerProfile:
         with pytest.raises(ValidationError, match="redeme_enrolled"):
             ModeloIVAProfile.model_validate(
                 {
-                    "tax_territory": M303TaxTerritory.COMMON_REGIME,
-                    "regime_composition": M303RegimeComposition.GENERAL,
+                    "tax_territory": M303TaxTerritory._from_registry("common_regime"),
+                    "regime_composition": M303RegimeComposition._from_registry("general"),
                     "cash_accounting_regime_enrolled": False,
                     "voluntary_sii_enrolled": False,
                     "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
@@ -150,14 +150,14 @@ class TestTaxpayerProfile:
         )
 
         assert profile.tax_id == "12345678Z"
-        assert profile.iva_regime is IVARegime.SIMPLIFICADO
+        assert profile.iva_regime is IVARegime("simplificado")
         assert profile.has_employees is True
         assert profile.art109_activity_income_withholding_ge_70pct is True
         assert profile.pays_rent_with_retencion is True
         assert profile.does_intracomunitario is True
         assert profile.iva == ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.COMMON_REGIME,
-            regime_composition=M303RegimeComposition.SIMPLIFIED,
+            tax_territory=M303TaxTerritory._from_registry("common_regime"),
+            regime_composition=M303RegimeComposition._from_registry("simplified"),
             roi_enrolled=True,
             oss_enrolled=False,
             group_member_enrolled=True,

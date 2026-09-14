@@ -26,14 +26,13 @@ from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
-    ProportionalityKind,
     ProportionalityRule,
     StatutoryCapAmount,
-    StatutoryCapPeriod,
     parse_http_url,
 )
+from ..proportionality_catalogue import require_proportionality_kind, require_statutory_cap_period
 from ..registry import category_profile_years, load_category_profiles, resolve_category_profiles
-from ..spending_category import SpendingCategory
+from ..spending_category_catalogue import require_spending_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,8 +63,8 @@ def _citation() -> CategoryCitation:
 
 def _rule(schedule: tuple[StatutoryCapAmount, ...], **overrides: object) -> ProportionalityRule:
     payload: dict[str, object] = {
-        "kind": ProportionalityKind.STATUTORY_CAP,
-        "statutory_cap_period": StatutoryCapPeriod.YEAR_PER_PERSON,
+        "kind": require_proportionality_kind("statutory_cap"),
+        "statutory_cap_period": require_statutory_cap_period("year_per_person"),
         "statutory_cap_schedule": schedule,
         "citations": (_citation(),),
         "notes": tr("Regla de prueba."),
@@ -118,7 +117,7 @@ def test_a_scheduled_cap_requires_the_period_it_applies_over() -> None:
     with pytest.raises(ValidationError, match="statutory_cap_schedule requires statutory_cap_period"):
         ProportionalityRule.model_validate(
             {
-                "kind": ProportionalityKind.STATUTORY_CAP,
+                "kind": require_proportionality_kind("statutory_cap"),
                 "statutory_cap_schedule": (_amount("16672.66", 2025),),
                 "citations": (_citation(),),
                 "notes": tr("Regla de prueba."),
@@ -130,7 +129,7 @@ def test_a_schedule_is_refused_outside_a_statutory_cap_rule() -> None:
     with pytest.raises(ValidationError, match="only valid for statutory_cap rules"):
         ProportionalityRule.model_validate(
             {
-                "kind": ProportionalityKind.FULL_DEDUCTIBLE,
+                "kind": require_proportionality_kind("full_deductible"),
                 "statutory_cap_schedule": (_amount("16672.66", 2025),),
                 "citations": (_citation(),),
                 "notes": tr("Regla de prueba."),
@@ -147,7 +146,9 @@ def test_the_shipped_mutualidad_cap_matches_the_figures_aeat_publishes(
     for that ejercicio (2026 derived from the cotizacion orden by AEAT's own
     method). If the registry drifts from what AEAT publishes, this reds.
     """
-    rule = load_category_profiles(operation=operation)[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
+    rule = load_category_profiles(operation=operation)[
+        require_spending_category("mutualidad_alternativa")
+    ].proportionality
 
     assert rule.statutory_cap_schedule, "the shipped mutualidad cap carries no schedule; it regressed to a constant"
     assert rule.statutory_cap_eur is None, "a year-referenced cap must not also carry a flat amount"
@@ -166,7 +167,9 @@ def test_the_retired_flat_fifteen_thousand_is_not_the_figure_for_any_ejercicio(
     """
     assert Decimal("15000") not in set(_AEAT_PUBLISHED_CUOTA_MAXIMA.values())
 
-    rule = load_category_profiles(operation=operation)[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
+    rule = load_category_profiles(operation=operation)[
+        require_spending_category("mutualidad_alternativa")
+    ].proportionality
     shipped = {amount.value for amount in rule.statutory_cap_schedule}
 
     assert Decimal("15000") not in shipped
@@ -178,7 +181,7 @@ def test_resolving_a_year_materialises_that_years_cap_and_drops_the_schedule(
     """Consumers read one cap and cannot reach past the resolver for another year's."""
     for year in sorted(category_profile_years(operation=operation)):
         rule = resolve_category_profiles(year, operation=operation)[
-            SpendingCategory.MUTUALIDAD_ALTERNATIVA
+            require_spending_category("mutualidad_alternativa")
         ].proportionality
 
         assert rule.statutory_cap_schedule == ()
@@ -195,7 +198,9 @@ def test_a_year_without_a_cap_amount_is_not_reported_as_covered(
     with no cap at all.
     """
     grounded = category_profile_years(operation=operation)
-    rule = load_category_profiles(operation=operation)[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
+    rule = load_category_profiles(operation=operation)[
+        require_spending_category("mutualidad_alternativa")
+    ].proportionality
 
     for year in grounded:
         assert rule.cap_amount_for_year(year) is not None, (

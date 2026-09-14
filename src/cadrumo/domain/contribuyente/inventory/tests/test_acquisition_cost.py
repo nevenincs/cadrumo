@@ -8,9 +8,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
+
 from ....filing_evidence import FilingEvidenceReference
 from ....iva.lookup import lookup_rate
-from ....iva.schema import EUMemberState, IvaRateKind
 from ..records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -114,7 +115,7 @@ def test_omitted_inventory_rate_resolves_general_iva_on_movement_devengo() -> No
         quantity=Decimal("1"),
     )
 
-    assert movement.iva_rate == lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, movement_date).pct
+    assert movement.iva_rate == lookup_rate(require_eu_member_state("ES"), IvaRateKind("general"), movement_date).pct
 
 
 def test_complete_acquisition_is_the_sole_fifo_and_pmp_cost_authority() -> None:

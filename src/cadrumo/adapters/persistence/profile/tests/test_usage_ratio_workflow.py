@@ -32,6 +32,8 @@ from cadrumo.application.ledger.ratios import (
 )
 from cadrumo.application.ledger.usage_ratio_repository import load_usage_ratio_profile
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
+from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.errors import UsageRatioValidationError
 
@@ -58,10 +60,14 @@ def _eligible_category() -> SpendingCategory:
 @contextmanager
 def _profile() -> Iterator[PinnedAuthorityOperation]:
     """Real encrypted storage: the write, the lock and the event all need it."""
+    authority = compiled_bundled_authority()
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
+    )
+    operation = PinnedAuthorityOperation(reader, reader.pin())
     with (
         TemporaryDirectory() as tmp,
         isolated_runtime_profile(tmp_path=Path(tmp), bucket_id=_BUCKET),
-        compiled_bundled_authority().operation() as operation,
     ):
         yield operation
 

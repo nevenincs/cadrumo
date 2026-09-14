@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -31,6 +32,7 @@ from cadrumo.application.modelo.profile_readiness_gate import (
 )
 from cadrumo.application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
@@ -303,7 +305,10 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
                 revision_id=_M130_REVISION,
-                repository=repository,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                ),
                 clock=_NOW,
             )
 
@@ -345,7 +350,10 @@ def test_create_work_unit_service_refuses_profile_declaring_no_facts_whatsoever(
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
                 revision_id=_M130_REVISION,
-                repository=repository,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                ),
                 clock=_NOW,
             )
 
@@ -364,7 +372,10 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
                 filing_year=2025,
                 period=Period.from_year_and_code(2026, "1T"),
                 revision_id=_M303_2025_REVISION,
-                repository=repository,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                ),
                 clock=_NOW,
             )
 
@@ -401,7 +412,10 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "0A"),
                 revision_id=_M200_REVISION,
-                repository=repository,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                ),
                 clock=_NOW,
             )
 
@@ -647,7 +661,10 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
                 revision_id=_M303_2026_REVISION,
-                repository=repository,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                ),
                 clock=_NOW,
             )
 
@@ -675,7 +692,10 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "2T"),
                 revision_id=_M130_REVISION,
-                repository=repository,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                ),
                 clock=_NOW,
             )
 
@@ -765,7 +785,10 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
             filing_year=2026,
             period=period,
             revision_id=_M303_2026_REVISION,
-            repository=work_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repository,
+                bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+            ),
             clock=_NOW,
         )
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

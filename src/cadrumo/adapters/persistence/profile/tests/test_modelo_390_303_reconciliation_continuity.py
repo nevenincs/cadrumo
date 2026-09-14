@@ -141,20 +141,23 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
     annual return reconciles against the summed quarters and an input row with
     invented authority would reconcile just as cleanly as a real one.
     """
-    is_input_flow = flow in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+    is_input_flow = flow in {
+        IvaFlowDirection._from_registry("soportado"),
+        IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+    }
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
         flow_direction=flow,
         base_amount=Decimal("100.00"),
         iva_amount=iva,
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
-        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT if is_input_flow else None,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current") if is_input_flow else None,
         deduction_provenance=(
             IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{ledger_id}",
                 evidence_digest="d" * 64,
             )
@@ -171,13 +174,13 @@ def _quarter_ledger(filing_year: int, period: str) -> tuple[IvaLedgerObservation
         _ledger_line(
             ledger_id=f"{filing_year}-{period}-out",
             txn_date=date(filing_year, month, 10),
-            flow=IvaFlowDirection.REPERCUTIDO,
+            flow=IvaFlowDirection._from_registry("repercutido"),
             iva=repercutido,
         ),
         _ledger_line(
             ledger_id=f"{filing_year}-{period}-in",
             txn_date=date(filing_year, month, 20),
-            flow=IvaFlowDirection.SOPORTADO,
+            flow=IvaFlowDirection._from_registry("soportado"),
             iva=soportado,
         ),
     )

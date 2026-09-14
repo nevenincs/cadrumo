@@ -44,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _COVERED = date(2024, 6, 1)
 #: The tiers bearing a positive ordinary rate, spelled out rather than imported
 #: so an edit to the predicate's own tuple cannot move this in step with it.
-_POSITIVE_TIERS = (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
+_POSITIVE_TIERS = (IvaRateKind("general"), IvaRateKind("reduced"), IvaRateKind("super_reduced"))
 #: The coverage-limit refusal's key, spelled out here so the legality test can
 #: assert it is NOT the key raised, which is the whole point of the module.
 _COVERAGE_GAP_KEY = "errors.iva.rate_registry_coverage_gap"
@@ -62,13 +62,13 @@ def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
     that anchored them) should be restored against the date that reopens.
     """
     for kind in _POSITIVE_TIERS:
-        assert rate_table_covers(EUMemberState.ES, date(2012, 9, 1), kind), (
+        assert rate_table_covers(EUMemberState._from_registry("es"), date(2012, 9, 1), kind), (
             f"{kind.value} no longer covers 2012-09-01 -- a per-tier coverage gap may have "
             "reopened; restore a refusal test pinned to the date that exposes it"
         )
 
 
-@pytest.mark.parametrize("rate", (IvaRate.RATE_21, IvaRate.RATE_10))
+@pytest.mark.parametrize("rate", (IvaRate._from_registry("RATE_21"), IvaRate._from_registry("RATE_10")))
 def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) -> None:
     """These two once refused on 2023 and must not again.
 
@@ -80,8 +80,8 @@ def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) 
     """
     on_date = date(2023, 6, 1)
     assert iva_rate_percentage(rate, on_date) is not None
-    assert rate_table_covers(EUMemberState.ES, on_date, IvaRateKind.GENERAL)
-    assert rate_table_covers(EUMemberState.ES, on_date, IvaRateKind.REDUCED)
+    assert rate_table_covers(EUMemberState._from_registry("es"), on_date, IvaRateKind("general"))
+    assert rate_table_covers(EUMemberState._from_registry("es"), on_date, IvaRateKind("reduced"))
 
 
 def test_a_covered_date_still_refuses_a_rate_that_truly_was_not_in_force() -> None:
@@ -95,7 +95,7 @@ def test_a_covered_date_still_refuses_a_rate_that_truly_was_not_in_force() -> No
     this module exists to prevent.
     """
     with pytest.raises(IvaRateNotFoundError) as caught:
-        iva_rate_percentage(IvaRate.RATE_2, _COVERED)
+        iva_rate_percentage(IvaRate._from_registry("RATE_2"), _COVERED)
 
     assert caught.value.translated_message == "errors.iva.rate_slot_not_in_force"
     assert caught.value.translated_message != _COVERAGE_GAP_KEY, (
@@ -106,14 +106,14 @@ def test_a_covered_date_still_refuses_a_rate_that_truly_was_not_in_force() -> No
     context = caught.value.context or {}
     assert context["rate_registry_covers_date"] is True
     assert context["rate_in_force"] is False
-    assert context["iva_rate_slot"] == IvaRate.RATE_2.name
+    assert context["iva_rate_slot"] == IvaRate._from_registry("RATE_2").name
     assert context["on_date"] == _COVERED.isoformat()
 
 
 def test_a_covered_date_resolves_normally() -> None:
     """Guards against a refusal that fires for every date and looks like a fix."""
-    assert iva_rate_percentage(IvaRate.RATE_21, _COVERED) == Decimal("0.21")
-    assert iva_rate_percentage(IvaRate.RATE_2, date(2024, 11, 1)) == Decimal("0.02")
+    assert iva_rate_percentage(IvaRate._from_registry("RATE_21"), _COVERED) == Decimal("0.21")
+    assert iva_rate_percentage(IvaRate._from_registry("RATE_2"), date(2024, 11, 1)) == Decimal("0.02")
 
 
 def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None:
@@ -131,8 +131,10 @@ def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None
     for year in (2011, 2012, 2013, 2023, 2024, 2025, 2026):
         for month in (1, 6, 12):
             probe = date(year, month, 1)
-            expected = any(rate_table_covers(EUMemberState.ES, probe, kind) for kind in _POSITIVE_TIERS)
-            assert rate_table_covers_any_positive_tier(EUMemberState.ES, probe) == expected, (
+            expected = any(
+                rate_table_covers(EUMemberState._from_registry("es"), probe, kind) for kind in _POSITIVE_TIERS
+            )
+            assert rate_table_covers_any_positive_tier(EUMemberState._from_registry("es"), probe) == expected, (
                 f"the positive-tier coverage answer is not the three positive tiers on {probe.isoformat()}"
             )
 
@@ -154,7 +156,9 @@ def test_the_zero_tier_currently_hides_inside_the_positive_tiers() -> None:
     day = date(2010, 1, 1)
     separating: list[date] = []
     while day < date(2027, 1, 1):
-        if rate_table_covers(EUMemberState.ES, day) != rate_table_covers_any_positive_tier(EUMemberState.ES, day):
+        if rate_table_covers(EUMemberState._from_registry("es"), day) != rate_table_covers_any_positive_tier(
+            EUMemberState._from_registry("es"), day
+        ):
             separating.append(day)
         day += timedelta(days=1)
 

@@ -435,7 +435,7 @@ class TestArt811EntryWindowDivergesFromArt582:
     #: Art. 81.1 runs from November 2021 to October 2024 inclusive.
     _ADOPTADO = DescendantInfo(
         birth_date=date(2016, 3, 2),
-        relacion=DescendantRelacion.ADOPTADO,
+        relacion=DescendantRelacion._from_registry("adoptado"),
         inscripcion_registro_civil_date=date(2021, 11, 15),
         meses_madre_trabajo=tuple(range(1, 13)),
     )
@@ -464,7 +464,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         """A temporal acogimiento carer takes the tranches and not this limb."""
         temporal = DescendantInfo(
             birth_date=date(2016, 3, 2),
-            relacion=DescendantRelacion.ACOGIMIENTO_TEMPORAL,
+            relacion=DescendantRelacion._from_registry("acogimiento_temporal"),
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
@@ -474,7 +474,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         """The window has nothing to measure from, so it withholds rather than guesses."""
         undated = DescendantInfo(
             birth_date=date(2016, 3, 2),
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
@@ -484,7 +484,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         """The cap: anchoring on the later event would grant six years, not three."""
         fostered_then_adopted = DescendantInfo(
             birth_date=date(2016, 3, 2),
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             acogimiento_resolucion_date=date(2021, 11, 15),
             inscripcion_registro_civil_date=date(2023, 6, 1),
             meses_madre_trabajo=tuple(range(1, 13)),
@@ -504,7 +504,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         """
         infant = DescendantInfo(
             birth_date=date(2024, 1, 10),
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             inscripcion_registro_civil_date=date(2024, 10, 5),
             meses_madre_trabajo=tuple(range(1, 13)),
         )
@@ -526,7 +526,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         """
         child = DescendantInfo(
             birth_date=date(2021, 4, 15),
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             inscripcion_registro_civil_date=date(2024, 2, 10),
             meses_madre_trabajo=tuple(range(1, 13)),
         )
@@ -638,7 +638,7 @@ class TestArt811PopulationGate:
 
     def test_a_temporal_acogimiento_carer_contributes_nothing(self) -> None:
         """The over-grant this gate removes: twelve months where none are due."""
-        carer = self._under_three(DescendantRelacion.ACOGIMIENTO_TEMPORAL)
+        carer = self._under_three(DescendantRelacion._from_registry("acogimiento_temporal"))
 
         assert carer.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is True
         assert carer.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
@@ -649,10 +649,10 @@ class TestArt811PopulationGate:
         The temporal carer above passes the Art. 58.1 test and fails this one.
         Were the two ever merged, that carer would collect again.
         """
-        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in _ART_81_1_MATERNITY_RELATIONS
-        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in descendant_relacion_entitling_tokens()
-        assert DescendantRelacion.TUTELA in _ART_81_1_MATERNITY_RELATIONS
-        assert DescendantRelacion.TUTELA not in descendant_relacion_entitling_tokens()
+        assert DescendantRelacion._from_registry("acogimiento_temporal") not in _ART_81_1_MATERNITY_RELATIONS
+        assert DescendantRelacion._from_registry("acogimiento_temporal") not in descendant_relacion_entitling_tokens()
+        assert DescendantRelacion._from_registry("tutela") in _ART_81_1_MATERNITY_RELATIONS
+        assert DescendantRelacion._from_registry("tutela") not in descendant_relacion_entitling_tokens()
 
     def test_every_admitted_relacion_still_contributes(self) -> None:
         """The gate must exclude one member, not narrow the population generally.

@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...iva.schema import IvaCategory
 from ..enums import TransactionDirection
 from ..errors import LLMClassifierError
@@ -40,7 +41,7 @@ _VALID_SPLIT_JSON = (
 
 
 def _child(proportion: str) -> LLMSplitChild:
-    return LLMSplitChild(proportion=Decimal(proportion), iva_category=IvaCategory.DOMESTIC_GENERAL)
+    return LLMSplitChild(proportion=Decimal(proportion), iva_category=IvaCategory("domestic_general"))
 
 
 def _assert_validation_error(case_id: str, build: Callable[[], object], match: str) -> None:
@@ -116,17 +117,22 @@ def test_invalid_split_schema_payloads_are_rejected() -> None:
         _assert_validation_error(case_id, build, match)
 
 
-def test_parse_split_extracts_nested_json_amid_prose() -> None:
+def test_parse_split_extracts_nested_json_amid_prose(operation: PinnedAuthorityOperation) -> None:
     noisy = "Here is the split:\n" + _VALID_SPLIT_JSON + "\nHope that helps!"
-    response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields(year=2025))
+    response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields(year=2025, operation=operation))
     assert len(response.children) == 2
-    assert response.children[0].iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert response.children[0].iva_category == IvaCategory("domestic_general")
 
 
-def test_parse_split_rejects_invalid_outputs() -> None:
+def test_parse_split_rejects_invalid_outputs(operation: PinnedAuthorityOperation) -> None:
     rejection_cases = (
         ("disallowed-iva-category", lambda: parse_split_response(_VALID_SPLIT_JSON)),
-        ("no-json", lambda: parse_split_response("no json here", spec=prompt_spec_with_saturation_fields(year=2025))),
+        (
+            "no-json",
+            lambda: parse_split_response(
+                "no json here", spec=prompt_spec_with_saturation_fields(year=2025, operation=operation)
+            ),
+        ),
     )
     for case_id, parse in rejection_cases:
         try:
@@ -136,7 +142,7 @@ def test_parse_split_rejects_invalid_outputs() -> None:
         pytest.fail(f"{case_id} split output was accepted")
 
 
-def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
+def test_build_split_prompt_includes_evidence_and_no_numbers_guard(operation: PinnedAuthorityOperation) -> None:
     raw = RawTransaction(
         provider_transaction_id="row-split",
         booked_date=date(2025, 3, 1),
@@ -159,7 +165,9 @@ def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
         {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
     )
     prompt = build_split_prompt(
-        txn, spec=prompt_spec_with_saturation_fields(year=2025), evidence_text="line 1 ... line 2 ..."
+        txn,
+        spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
+        evidence_text="line 1 ... line 2 ...",
     )
     assert "begin evidence" in prompt
     assert "EXACTLY ONE child with proportion 1.0" in prompt

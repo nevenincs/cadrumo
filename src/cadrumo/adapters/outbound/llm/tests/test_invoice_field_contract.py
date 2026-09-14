@@ -28,12 +28,14 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.iva.schema import IvaCategory, require_eu_member_state
+
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
 from .....domain.iva import rates as _iva_rates_module
 from .....domain.iva.components import registry_category_projection
 from .....domain.iva.rates import load_iva_rate_table
-from .....domain.iva.schema import EUMemberState, IvaCategory
+from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from .....tests.attribute_scope import scoped_attribute
 from ..invoice_extraction_prompt import (
@@ -78,7 +80,7 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         expected = sorted(
             {
                 record.pct
-                for record in load_iva_rate_table()[EUMemberState.ES]
+                for record in load_iva_rate_table()[require_eu_member_state("ES")]
                 if record.effective_from <= period.end_date
                 and (record.effective_until is None or record.effective_until >= period.start_date)
             },
@@ -151,7 +153,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
         assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
 
         real_table = load_iva_rate_table()
-        spain = real_table[EUMemberState.ES]
+        spain = real_table[require_eu_member_state("ES")]
         extra = spain[0].model_copy(
             update={
                 "pct": planted,
@@ -159,7 +161,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
                 "effective_until": None,
             },
         )
-        mutated = dict(real_table) | {EUMemberState.ES: (*spain, extra)}
+        mutated = dict(real_table) | {require_eu_member_state("ES"): (*spain, extra)}
         # Patch the defining module used by the prompt builder.
         with scoped_attribute(_iva_rates_module, "load_iva_rate_table", lambda: mutated):
             after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
@@ -184,9 +186,9 @@ class TestTheNoPrintedTaxLineAsksThePaperQuestion:
     @pytest.mark.parametrize(
         "category",
         [
-            IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+            IvaCategory("domestic_reverse_charge"),
+            IvaCategory("intra_community_acquisition_reverse_charge"),
+            IvaCategory("intra_community_service_acquisition_reverse_charge"),
         ],
     )
     def test_the_reverse_charge_family_is_named_as_a_tax_free_invoice(self, category: IvaCategory) -> None:

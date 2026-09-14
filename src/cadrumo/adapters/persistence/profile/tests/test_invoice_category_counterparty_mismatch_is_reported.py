@@ -90,7 +90,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
         taxable_base=_BASE,
         iva_rate=Decimal("0"),
         currency="EUR",
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         # Clave E: an ordinary entrega intracomunitaria. Stated because the
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,
@@ -191,7 +191,7 @@ def test_a_supportable_supply_produces_no_advisory(secure_objects: SecureObjectR
         taxable_base=_BASE,
         iva_rate=Decimal("0"),
         currency="EUR",
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         # Clave E: an ordinary entrega intracomunitaria. Stated because the
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,

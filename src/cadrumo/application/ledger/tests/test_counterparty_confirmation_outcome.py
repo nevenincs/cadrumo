@@ -41,12 +41,12 @@ def test_a_first_confirmation_reports_that_it_recorded(
         bucket_id=_BUCKET,
         tax_identifier=_IDENTIFIER,
         asserted_by="operator-a",
-        territorial_scope=IvaTerritorialScope.ES_MAINLAND,
+        territorial_scope=IvaTerritorialScope._from_registry("es_mainland"),
         repository=repository,
     )
 
     assert outcome.recorded is True
-    assert outcome.facts.territorial_scope is IvaTerritorialScope.ES_MAINLAND
+    assert outcome.facts.territorial_scope is IvaTerritorialScope._from_registry("es_mainland")
     assert outcome.facts.asserted_by == "operator-a"
 
 
@@ -63,14 +63,14 @@ def test_a_repeat_of_the_same_answer_reports_that_it_did_not_record(
         bucket_id=_BUCKET,
         tax_identifier=_IDENTIFIER,
         asserted_by="operator-a",
-        territorial_scope=IvaTerritorialScope.ES_MAINLAND,
+        territorial_scope=IvaTerritorialScope._from_registry("es_mainland"),
         repository=repository,
     )
     second = confirm_counterparty_establishment(
         bucket_id=_BUCKET,
         tax_identifier=_IDENTIFIER,
         asserted_by="operator-b",
-        territorial_scope=IvaTerritorialScope.ES_MAINLAND,
+        territorial_scope=IvaTerritorialScope._from_registry("es_mainland"),
         repository=repository,
     )
 
@@ -88,12 +88,12 @@ def test_an_identification_only_confirmation_is_accepted(
         bucket_id=_BUCKET,
         tax_identifier=_IDENTIFIER,
         asserted_by="operator-a",
-        identification_state=EUMemberState.ES,
+        identification_state=EUMemberState._from_registry("es"),
         repository=repository,
     )
 
     assert outcome.recorded is True
-    assert outcome.facts.identification_state is EUMemberState.ES
+    assert outcome.facts.identification_state is EUMemberState._from_registry("es")
     assert outcome.facts.territorial_scope is None
 
 
@@ -126,7 +126,7 @@ def test_a_refused_confirmation_writes_nothing(
         bucket_id=_BUCKET,
         tax_identifier=_IDENTIFIER,
         asserted_by="operator-a",
-        territorial_scope=IvaTerritorialScope.ES_MAINLAND,
+        territorial_scope=IvaTerritorialScope._from_registry("es_mainland"),
         repository=repository,
     )
 

@@ -16,11 +16,13 @@ from datetime import date
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.deadlines.models import IVARegime
+
 from ....application.state_projection import build_pending_obligations
 from ....core.errors.error_codes import ErrorCategory, build_error_envelope
 from ....domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ....domain.deadlines.errors import ScheduleComputationError
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from .. import _deadline_stage as deadline_stage_module
 from .. import engine as engine_module
 from .. import engine_recording as engine_recording_module
@@ -164,7 +166,7 @@ def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -
     """Both consumers expose every supported year's exact authority schedule."""
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
@@ -193,7 +195,7 @@ def test_workflow_target_selection_refuses_duplicate_canonical_schedule_rows() -
     """A consumer must not hide an upstream duplicate by choosing its first row."""
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

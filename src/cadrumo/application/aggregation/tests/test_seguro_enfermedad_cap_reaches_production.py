@@ -77,7 +77,7 @@ def _seguro_transaction() -> Transaction:
             "business_classification": BusinessClassification.BUSINESS,
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
-            "category_id": SpendingCategory.SEGUROS_SALUD_AUTONOMO.value,
+            "category_id": SpendingCategory._from_registry("seguros_salud_autonomo").value,
             "taxable_base": _PREMIUM,
             "iva_rate": None,
             "iva_amount": None,
@@ -181,7 +181,7 @@ def test_the_wired_variant_ids_are_the_ones_the_shipped_rule_declares() -> None:
     the two names agree is what makes that loud.
     """
     profiles = resources().category_profiles.get(_FILING_YEAR)
-    rule = profiles[SpendingCategory.SEGUROS_SALUD_AUTONOMO].proportionality
+    rule = profiles[SpendingCategory._from_registry("seguros_salud_autonomo")].proportionality
     declared = {variant.id for variant in rule.statutory_cap_variants}
 
     assert declared == {"general", "discapacidad"}

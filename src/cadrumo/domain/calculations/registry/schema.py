@@ -66,7 +66,12 @@ from .schema_governance import (
     validate_reviewed_at_within_horizon,
 )
 from .schema_input_kind import InputKind
-from .schema_references import RegistryExternalLink, RegistrySnapshotRef, TemporalSupportEnvelope
+from .schema_references import (
+    RegistryExternalLink,
+    RegistrySnapshotRef,
+    TemporalProjectionDirection,
+    TemporalSupportEnvelope,
+)
 from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
@@ -587,6 +592,54 @@ class SchemaFamilyDispositionDeclaration(RegistryModel):
     source_refs: SourceRefs
 
 
+class CasillaStorageSelector(RegistryModel):
+    """Unambiguous address of one effective casilla in a declared predecessor.
+
+    This selector is storage identity only.  It neither declares nor implies
+    legal continuity between the selected member and the successor edition.
+    """
+
+    revision: RevisionId
+    id: CasillaId
+
+
+class CasillaFieldOverride(RegistryModel):
+    """Typed declaration of fields changed from one predecessor casilla."""
+
+    selector: CasillaStorageSelector
+    fields: Annotated[Mapping[str, object], FROZEN_MAPPING] = Field(default_factory=dict)
+    removed_fields: tuple[str, ...] = ()
+    restate_provenance: bool = False
+
+    @model_validator(mode="after")
+    def _validate_patch(self) -> CasillaFieldOverride:
+        patchable = set(CasillaDefinition.model_fields) | {"additional_source_refs"}
+        unknown = sorted((set(self.fields) | set(self.removed_fields)) - patchable)
+        if unknown:
+            raise RegistryValidationError(f"casilla field override names unknown fields {unknown!r}")
+        overlap = sorted(set(self.fields) & set(self.removed_fields))
+        if overlap:
+            raise RegistryValidationError(f"casilla field override both sets and removes fields {overlap!r}")
+        if not self.fields and not self.removed_fields and not self.restate_provenance:
+            raise RegistryValidationError("casilla field override must set or remove at least one field")
+        if "inherited_from" in self.fields or "inherited_from" in self.removed_fields:
+            raise RegistryValidationError("inherited_from is loader-owned and cannot be overridden")
+        return self
+
+
+class CasillaMemberRemoval(RegistryModel):
+    """Explicitly remove one member inherited from the declared predecessor."""
+
+    selector: CasillaStorageSelector
+
+
+class CasillaMemberPosition(RegistryModel):
+    """Place an effective casilla without restating its payload."""
+
+    id: CasillaId
+    position: int = Field(ge=0)
+
+
 class ModeloRevision(RegistryRevisionDeclaration):
     """A single versioned form layout and calculation ruleset for one modelo.
 
@@ -761,6 +814,23 @@ class ModeloRevision(RegistryRevisionDeclaration):
     )
     parameters: Annotated[tuple[ParameterDefinition, ...], SCHEMA_FAMILY] = ()
     casillas: Annotated[tuple[CasillaDefinition, ...], SCHEMA_FAMILY] = ()
+    casilla_storage_baseline: Annotated[RevisionId | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Immediate revision whose effective casillas supply storage defaults. "
+            "This is not a legal-continuity declaration."
+        ),
+    )
+    casilla_overrides: Annotated[tuple[CasillaFieldOverride, ...], MANIFEST_ONLY] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
+    casilla_removals: Annotated[tuple[CasillaMemberRemoval, ...], MANIFEST_ONLY] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
+    casilla_positions: Annotated[tuple[CasillaMemberPosition, ...], MANIFEST_ONLY] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
     bindings: Annotated[tuple[BindingDefinition, ...], SCHEMA_FAMILY] = ()
     projection_endpoints: Annotated[tuple[ProjectionEndpointDeclaration, ...], SCHEMA_FAMILY] = ()
@@ -1200,7 +1270,15 @@ class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):
         the newest revision carries forward, so the year is answerable even
         though no revision names it. Below :attr:`floor` is never admitted.
         """
-        return self.admits_coordinate(filing_year)
+        return self.floor <= filing_year <= self.horizon
+
+    def admits_coordinate(self, coordinate: int) -> bool:
+        """Admit only coordinates inside the registry's declared support range."""
+        return self.floor <= coordinate <= self.horizon
+
+    def projection_coordinate(self, coordinate: int) -> int | None:
+        """Return an admitted registry coordinate without inventing another bound."""
+        return coordinate if self.admits_coordinate(coordinate) else None
 
 
 class SociedadesAnnualManualCoverageStatus(StrEnum):
@@ -1318,6 +1396,8 @@ class RegistrySnapshot(RegistryModel):
     revision: ModeloRevision
     filing_period: Period | None = None
     filing_year: FilingYear
+    authored_filing_year: FilingYear | None = None
+    revision_projection_direction: TemporalProjectionDirection = TemporalProjectionDirection.AUTHORED
     # Accepts normal period codes and declared event-period names; upstream
     # PeriodSelector + ModeloScheduleDefinition constrain the token set.
     period: RegistrySelectorPeriodCode

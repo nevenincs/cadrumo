@@ -26,6 +26,8 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -41,17 +43,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: The three territories art. 3 places outside the Comunidad, which is the reach
 #: the goods export row needs and the B2B services row shares.
 OUTSIDE_THE_COMUNIDAD = (
-    IvaTerritorialScope.THIRD_COUNTRY,
-    IvaTerritorialScope.ES_CANARIAS,
-    IvaTerritorialScope.ES_CEUTA_MELILLA,
+    IvaTerritorialScope._from_registry("third_country"),
+    IvaTerritorialScope._from_registry("es_canarias"),
+    IvaTerritorialScope._from_registry("es_ceuta_melilla"),
 )
 
 #: Categories that leave the operation inside Spanish IVA at a rate.
 _SUBJECT_AT_A_SPANISH_RATE = frozenset(
     {
-        IvaCategory.DOMESTIC_GENERAL,
-        IvaCategory.DOMESTIC_REDUCED,
-        IvaCategory.DOMESTIC_SUPER_REDUCED,
+        IvaCategory("domestic_general"),
+        IvaCategory("domestic_reduced"),
+        IvaCategory("domestic_super_reduced"),
     },
 )
 
@@ -60,17 +62,17 @@ def _outbound_service(
     *,
     customer_residency: IvaTerritorialScope,
     customer_tax_status: CustomerTaxStatus,
-    rate_tier: IvaRateKind | None = IvaRateKind.GENERAL,
+    rate_tier: IvaRateKind | None = IvaRateKind("general"),
     art_69_dos_service: IvaArt69DosService | None = None,
 ) -> IvaInvoiceClassificationCriteria:
     """A mainland issuer's general service, billed outward."""
     return IvaInvoiceClassificationCriteria.model_validate(
         {
             "transaction_date": date(2025, 6, 15),
-            "issuer_residency": IvaTerritorialScope.ES_MAINLAND,
+            "issuer_residency": IvaTerritorialScope._from_registry("es_mainland"),
             "customer_residency": customer_residency,
             "customer_tax_status": customer_tax_status,
-            "kind": TransactionKind.SERVICES_GENERAL,
+            "kind": TransactionKind("services_general"),
             "direction": InvoiceKind.ISSUED,
             "rate_tier": rate_tier,
             "art_69_dos_service": art_69_dos_service,
@@ -87,9 +89,9 @@ def _establishment_only_would_have_matched(criteria: IvaInvoiceClassificationCri
     cannot drift out of sight of what it is proving.
     """
     return (
-        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        criteria.issuer_residency is IvaTerritorialScope._from_registry("es_mainland")
         and criteria.customer_residency in OUTSIDE_THE_COMUNIDAD
-        and criteria.kind is TransactionKind.SERVICES_GENERAL
+        and criteria.kind is TransactionKind("services_general")
         and criteria.direction is InvoiceKind.ISSUED
     )
 
@@ -110,13 +112,18 @@ def test_a_b2c_service_outside_the_comunidad_stays_taxed_here(
     it not-subject relieved a taxable supply on the strength of the customer's
     address alone.
     """
-    result = classify_iva(
-        _outbound_service(customer_residency=customer_residency, customer_tax_status=CustomerTaxStatus.B2C_CONSUMER)
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(
+            _outbound_service(
+                customer_residency=customer_residency,
+                customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            ),
+            operation=_authority_operation_for_test,
+        )
 
-    assert result.category is not IvaCategory.OPERACION_NO_SUJETA
-    assert result.category in _SUBJECT_AT_A_SPANISH_RATE
-    assert result.matched_rule_id == "R24_services_outbound_b2c_at_rate_tier"
+        assert result.category != IvaCategory("operacion_no_sujeta")
+        assert result.category in _SUBJECT_AT_A_SPANISH_RATE
+        assert result.matched_rule_id == "R24_services_outbound_b2c_at_rate_tier"
 
 
 @pytest.mark.parametrize("customer_residency", OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
@@ -130,15 +137,18 @@ def test_the_pre_change_row_would_have_booked_each_of_them_not_subject(
     every one of them, which is exactly the population it was sending to
     not-subject.
     """
-    criteria = _outbound_service(
-        customer_residency=customer_residency,
-        customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        criteria = _outbound_service(
+            customer_residency=customer_residency,
+            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+        )
 
-    assert _establishment_only_would_have_matched(criteria), (
-        "the former predicate no longer matches this case, so it proves nothing about the change"
-    )
-    assert classify_iva(criteria).category is not IvaCategory.OPERACION_NO_SUJETA
+        assert _establishment_only_would_have_matched(criteria), (
+            "the former predicate no longer matches this case, so it proves nothing about the change"
+        )
+        assert classify_iva(criteria, operation=_authority_operation_for_test).category != IvaCategory(
+            "operacion_no_sujeta"
+        )
 
 
 def test_the_spanish_territories_are_the_ones_art_69_dos_names_back_in() -> None:
@@ -151,16 +161,21 @@ def test_the_spanish_territories_are_the_ones_art_69_dos_names_back_in() -> None
     Melilla". So even a service ON that list stays taxed here for those
     recipients, and no reading of the exception can reach them.
     """
-    for customer_residency in (IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA):
-        result = classify_iva(
-            _outbound_service(
-                customer_residency=customer_residency,
-                customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-            ),
-        )
-        assert result.category in _SUBJECT_AT_A_SPANISH_RATE, (
-            f"a B2C service to {customer_residency.value} is inside the TAI by art. 69.Dos's own carve-back"
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for customer_residency in (
+            IvaTerritorialScope._from_registry("es_canarias"),
+            IvaTerritorialScope._from_registry("es_ceuta_melilla"),
+        ):
+            result = classify_iva(
+                _outbound_service(
+                    customer_residency=customer_residency,
+                    customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+                ),
+                operation=_authority_operation_for_test,
+            )
+            assert result.category in _SUBJECT_AT_A_SPANISH_RATE, (
+                f"a B2C service to {customer_residency.value} is inside the TAI by art. 69.Dos's own carve-back"
+            )
 
 
 def test_the_b2c_branch_demands_the_tier_that_selects_its_category() -> None:
@@ -174,8 +189,8 @@ def test_the_b2c_branch_demands_the_tier_that_selects_its_category() -> None:
     # the surfaced type is its own; the message is the domain's.
     with pytest.raises(ValidationError, match="rate_tier is required"):
         _outbound_service(
-            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
+            customer_residency=IvaTerritorialScope._from_registry("third_country"),
+            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
             rate_tier=None,
         )
 
@@ -195,21 +210,23 @@ def test_every_listed_service_to_a_third_country_consumer_leaves_the_tai(
     file -- and so a member added WITHOUT the row reading it fails here instead
     of quietly staying taxed.
     """
-    result = classify_iva(
-        _outbound_service(
-            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-            art_69_dos_service=service,
-        ),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(
+            _outbound_service(
+                customer_residency=IvaTerritorialScope._from_registry("third_country"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+                art_69_dos_service=service,
+            ),
+            operation=_authority_operation_for_test,
+        )
 
-    assert result.category is IvaCategory.OPERACION_NO_SUJETA
-    assert result.matched_rule_id == "R25_services_outbound_b2c_art_69_dos"
+        assert result.category == IvaCategory("operacion_no_sujeta")
+        assert result.matched_rule_id == "R25_services_outbound_b2c_art_69_dos"
 
 
 @pytest.mark.parametrize(
     "customer_residency",
-    [IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA],
+    [IvaTerritorialScope._from_registry("es_canarias"), IvaTerritorialScope._from_registry("es_ceuta_melilla")],
     ids=lambda scope: scope.value,
 )
 @pytest.mark.parametrize("service", list(IvaArt69DosService), ids=lambda item: item.value)
@@ -224,16 +241,18 @@ def test_the_same_listed_service_stays_taxed_for_the_spanish_territories(
     back out in the same sentence, so every listed service stays realizada en el
     TAI for those recipients. Same items as the case above, opposite answer.
     """
-    result = classify_iva(
-        _outbound_service(
-            customer_residency=customer_residency,
-            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-            art_69_dos_service=service,
-        ),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(
+            _outbound_service(
+                customer_residency=customer_residency,
+                customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+                art_69_dos_service=service,
+            ),
+            operation=_authority_operation_for_test,
+        )
 
-    assert result.category in _SUBJECT_AT_A_SPANISH_RATE
-    assert result.category is not IvaCategory.OPERACION_NO_SUJETA
+        assert result.category in _SUBJECT_AT_A_SPANISH_RATE
+        assert result.category != IvaCategory("operacion_no_sujeta")
 
 
 def test_an_unstated_item_does_not_lift_the_supply_out_of_the_tai() -> None:
@@ -243,16 +262,18 @@ def test_an_unstated_item_does_not_lift_the_supply_out_of_the_tai() -> None:
     does. Treating the empty field as "not on the list" would be the correct
     answer often and a silent relief the rest of the time.
     """
-    result = classify_iva(
-        _outbound_service(
-            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-            art_69_dos_service=None,
-        ),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(
+            _outbound_service(
+                customer_residency=IvaTerritorialScope._from_registry("third_country"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+                art_69_dos_service=None,
+            ),
+            operation=_authority_operation_for_test,
+        )
 
-    assert result.category is not IvaCategory.OPERACION_NO_SUJETA
-    assert result.category in _SUBJECT_AT_A_SPANISH_RATE
+        assert result.category != IvaCategory("operacion_no_sujeta")
+        assert result.category in _SUBJECT_AT_A_SPANISH_RATE
 
 
 def test_the_excepted_branch_is_not_asked_for_a_tier_it_never_uses() -> None:
@@ -261,16 +282,18 @@ def test_the_excepted_branch_is_not_asked_for_a_tier_it_never_uses() -> None:
     The sibling B2C branch refuses without one. Demanding it here too would ask
     the operator for a fact the branch they landed on does not read.
     """
-    result = classify_iva(
-        _outbound_service(
-            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-            art_69_dos_service=IvaArt69DosService.ART_69_DOS_C,
-            rate_tier=None,
-        ),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(
+            _outbound_service(
+                customer_residency=IvaTerritorialScope._from_registry("third_country"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+                art_69_dos_service=IvaArt69DosService("art_69_dos_c"),
+                rate_tier=None,
+            ),
+            operation=_authority_operation_for_test,
+        )
 
-    assert result.category is IvaCategory.OPERACION_NO_SUJETA
+        assert result.category == IvaCategory("operacion_no_sujeta")
 
 
 @pytest.mark.parametrize("customer_residency", OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
@@ -283,22 +306,25 @@ def test_a_stated_item_moves_nothing_on_the_b2b_limb(
     nothing to except it from. This is where a fix reaching one row too far
     would show: the B2B answer must be identical with and without the item.
     """
-    stated = classify_iva(
-        _outbound_service(
-            customer_residency=customer_residency,
-            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-            art_69_dos_service=IvaArt69DosService.ART_69_DOS_D,
-        ),
-    )
-    unstated = classify_iva(
-        _outbound_service(
-            customer_residency=customer_residency,
-            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-        ),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        stated = classify_iva(
+            _outbound_service(
+                customer_residency=customer_residency,
+                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                art_69_dos_service=IvaArt69DosService("art_69_dos_d"),
+            ),
+            operation=_authority_operation_for_test,
+        )
+        unstated = classify_iva(
+            _outbound_service(
+                customer_residency=customer_residency,
+                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            ),
+            operation=_authority_operation_for_test,
+        )
 
-    assert stated.category is unstated.category
-    assert stated.matched_rule_id == unstated.matched_rule_id == "R22_services_outbound_b2b"
+        assert stated.category == unstated.category
+        assert stated.matched_rule_id == unstated.matched_rule_id == "R22_services_outbound_b2b"
 
 
 # --------------------------------------------------------------------------
@@ -309,7 +335,7 @@ def test_a_stated_item_moves_nothing_on_the_b2b_limb(
 @pytest.mark.parametrize("customer_residency", OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
 @pytest.mark.parametrize(
     "customer_tax_status",
-    [CustomerTaxStatus.B2B_IVA_REGISTERED, CustomerTaxStatus.B2B_NOT_REGISTERED],
+    [CustomerTaxStatus._from_registry("b2b_iva_registered"), CustomerTaxStatus._from_registry("b2b_not_registered")],
     ids=["registered", "not-registered"],
 )
 def test_a_b2b_service_outside_the_comunidad_is_still_not_subject(
@@ -323,12 +349,14 @@ def test_a_b2b_service_outside_the_comunidad_is_still_not_subject(
     the limb on a valid IVA number would drop every unregistered business into
     the taxed branch, which is the mirror error of the one this change fixes.
     """
-    result = classify_iva(
-        _outbound_service(customer_residency=customer_residency, customer_tax_status=customer_tax_status),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(
+            _outbound_service(customer_residency=customer_residency, customer_tax_status=customer_tax_status),
+            operation=_authority_operation_for_test,
+        )
 
-    assert result.category is IvaCategory.OPERACION_NO_SUJETA
-    assert result.matched_rule_id == "R22_services_outbound_b2b"
+        assert result.category == IvaCategory("operacion_no_sujeta")
+        assert result.matched_rule_id == "R22_services_outbound_b2b"
 
 
 # --------------------------------------------------------------------------
@@ -338,7 +366,7 @@ def test_a_b2b_service_outside_the_comunidad_is_still_not_subject(
 
 @pytest.mark.parametrize(
     "customer_tax_status",
-    [CustomerTaxStatus.UNKNOWN, CustomerTaxStatus.PUBLIC_ADMINISTRATION],
+    [CustomerTaxStatus._from_registry("unknown"), CustomerTaxStatus._from_registry("public_administration")],
     ids=["unknown", "public-administration"],
 )
 def test_a_condition_the_article_does_not_settle_reaches_neither_limb(
@@ -353,12 +381,14 @@ def test_a_condition_the_article_does_not_settle_reaches_neither_limb(
     identification as an empresario for these rules even when it does not act as
     one, and that needs its own grounding.
     """
-    result = classify_iva(
-        _outbound_service(
-            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-            customer_tax_status=customer_tax_status,
-        ),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(
+            _outbound_service(
+                customer_residency=IvaTerritorialScope._from_registry("third_country"),
+                customer_tax_status=customer_tax_status,
+            ),
+            operation=_authority_operation_for_test,
+        )
 
-    assert result.category is IvaCategory.UNKNOWN
-    assert result.category is not IvaCategory.OPERACION_NO_SUJETA
+        assert result.category == IvaCategory("unknown")
+        assert result.category != IvaCategory("operacion_no_sujeta")

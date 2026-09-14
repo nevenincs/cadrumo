@@ -499,3 +499,9 @@ dev/registry/scratch*/
 # Regenerated on demand and never durable. Matched by the /.tmp-*/ rule above
 # as well; named explicitly so a reader greps the directory and finds why.
 /.tmp-tui-visual-inventory/
+
+# Ad-hoc local analysis/remediation scratch output (e.g. ty static-analysis
+# runs, remediation scripts and intermediate results). Regenerated per run
+# and never durable; promote a specific snapshot into .vault/ evidence
+# deliberately instead of tracking the whole scratch tree.
+/.artifacts/

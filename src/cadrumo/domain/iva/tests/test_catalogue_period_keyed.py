@@ -6,6 +6,8 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ...calculations.registry.errors import RegistrySnapshotError
 from ..catalogue import bundled_iva_catalogue, iva_catalogue_years, resolve_catalogue
 
@@ -19,46 +21,57 @@ def test_the_grounded_years_are_derived_from_the_citation_windows() -> None:
     that the set is non-empty, so adding a year's citations widens it without
     editing this test.
     """
-    grounded = iva_catalogue_years()
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        grounded = iva_catalogue_years(operation=_authority_operation_for_test)
 
-    assert grounded, "the catalogue grounds no year at all; every assertion below would be vacuous"
-    for year in sorted(grounded):
-        assert resolve_catalogue(on=date(year, 6, 15)) is not None
+        assert grounded, "the catalogue grounds no year at all; every assertion below would be vacuous"
+        for year in sorted(grounded):
+            assert resolve_catalogue(on=date(year, 6, 15), operation=_authority_operation_for_test) is not None
 
 
 def test_a_resolved_catalogue_carries_only_citations_asserted_over_that_year() -> None:
     """Projection is the point: a year gets the evidence that speaks to it."""
-    year = min(iva_catalogue_years())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        year = min(iva_catalogue_years(operation=_authority_operation_for_test))
 
-    catalogue = resolve_catalogue(on=date(year, 6, 15))
+        catalogue = resolve_catalogue(on=date(year, 6, 15), operation=_authority_operation_for_test)
 
-    citations = [citation for regulation in catalogue for citation in regulation.citations]
-    assert citations, "the resolved catalogue carries no citations; the projection dropped everything"
-    assert all(citation.window.covers_year(year) for citation in citations)
+        citations = [citation for regulation in catalogue for citation in regulation.citations]
+        assert citations, "the resolved catalogue carries no citations; the projection dropped everything"
+        assert all(citation.window.covers_year(year) for citation in citations)
 
 
 def test_resolving_the_same_year_twice_uses_one_authority_without_a_projection_cache() -> None:
-    first = resolve_catalogue(on=date(2025, 6, 15))
-    second = resolve_catalogue(on=date(2025, 1, 1))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        first = resolve_catalogue(on=date(2025, 6, 15), operation=_authority_operation_for_test)
+        second = resolve_catalogue(on=date(2025, 1, 1), operation=_authority_operation_for_test)
 
-    assert first == second
-    assert first is not second
+        assert first == second
+        assert first is not second
 
 
 def test_the_undated_corpus_carries_every_citation_regardless_of_span() -> None:
     """The loaded corpus is the whole record; only resolution narrows it."""
-    whole = sum(len(regulation.citations) for regulation in bundled_iva_catalogue())
-    resolved = sum(
-        len(regulation.citations) for regulation in resolve_catalogue(on=date(max(iva_catalogue_years()), 1, 1))
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        whole = sum(
+            len(regulation.citations) for regulation in bundled_iva_catalogue(operation=_authority_operation_for_test)
+        )
+        resolved = sum(
+            len(regulation.citations)
+            for regulation in resolve_catalogue(
+                on=date(max(iva_catalogue_years(operation=_authority_operation_for_test)), 1, 1),
+                operation=_authority_operation_for_test,
+            )
+        )
 
-    assert whole >= resolved > 0
+        assert whole >= resolved > 0
 
 
 def test_resolve_catalogue_requires_a_grounded_year() -> None:
-    # The witness year is deliberately OUTSIDE the registry's supported filing
-    # window. A supported year used here would assert that a year the product
-    # claims to file is permanently ungrounded, pinning today's coverage gap as
-    # the contract and reddening the moment that year is correctly added.
-    with pytest.raises(RegistrySnapshotError, match="filing year 1990"):
-        resolve_catalogue(on=date(1990, 6, 15))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        # The witness year is deliberately OUTSIDE the registry's supported filing
+        # window. A supported year used here would assert that a year the product
+        # claims to file is permanently ungrounded, pinning today's coverage gap as
+        # the contract and reddening the moment that year is correctly added.
+        with pytest.raises(RegistrySnapshotError, match="filing year 1990"):
+            resolve_catalogue(on=date(1990, 6, 15), operation=_authority_operation_for_test)

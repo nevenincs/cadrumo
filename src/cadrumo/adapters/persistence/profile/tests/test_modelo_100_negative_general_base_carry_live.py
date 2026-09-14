@@ -36,6 +36,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -191,7 +192,9 @@ def _calculate_m100(
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, _PERIOD),
         revision_id=snapshot.revision.id,
-        repository=work_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_CLOCK,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

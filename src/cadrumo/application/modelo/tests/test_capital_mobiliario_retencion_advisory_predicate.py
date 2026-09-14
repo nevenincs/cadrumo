@@ -33,9 +33,11 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.deadlines.models import IVARegime
+
 from ....core.casilla_id import validated_casilla_id
-from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ..verification_predicates import evaluate_predicate_expression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -62,8 +64,8 @@ _RETENCION_CAPITAL_MOBILIARIO = validated_casilla_id("0597", surface="capital-mo
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType.NATURAL_PERSON,
-        iva_regime=IVARegime.EXENTO,
+        entity_type=EntityType._from_registry("natural_person"),
+        iva_regime=IVARegime("EXENTO"),
     )
 
 

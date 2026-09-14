@@ -24,8 +24,9 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+
 from ....core.modelo import Modelo
-from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ..sector_lifecycle import seed_sector_carried_definitive_from_register, settle_sector_definitive
@@ -40,11 +41,11 @@ def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
 def _provisional_entry(*, ejercicio: int, sector_id: str, percentage: Decimal) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=ejercicio,
-        regime=ProrrataRegisterRegime.GENERAL,
+        regime=ProrrataRegisterRegime._from_registry("general"),
         especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=percentage,
-        provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
         source_observation_ref=f"prorrata-register:{ejercicio - 1}:{sector_id}",
         source_registry_snapshot_refs=(),
     )
@@ -78,7 +79,7 @@ def test_sector_provisional_carries_its_own_prior_definitive() -> None:
     assert seed is not None
     assert seed.ejercicio == 2026
     assert seed.sector_id == "comercio"
-    assert seed.provisional_provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    assert seed.provisional_provenance == ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
     # The 2026 provisional equals the 2025 sector definitive (90%), not the 85% provisional.
     assert seed.provisional_percentage == Decimal("90")
 
@@ -147,10 +148,10 @@ def test_sector_seed_does_not_read_whole_entity_definitive() -> None:
     whole_entity_2025 = settle_sector_definitive(
         ProrrataRegisterEntry(
             ejercicio=2025,
-            regime=ProrrataRegisterRegime.GENERAL,
+            regime=ProrrataRegisterRegime._from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("70"),
-            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
             source_observation_ref="303:2024:4T",
             source_registry_snapshot_refs=(_m303_snapshot_ref(2024),),
         ),

@@ -22,9 +22,10 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.core.prorrata_register import ProrrataRegisterRegime
+
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
-from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
@@ -77,7 +78,7 @@ def test_missing_provisional_advisory_names_inicio_action_for_first_ejercicio() 
         register_entries=(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime.GENERAL,
+                regime=ProrrataRegisterRegime._from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -100,7 +101,7 @@ def test_missing_provisional_advisory_is_silent_when_prorrata_does_not_apply() -
         register_entries=(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime.NINGUNA,
+                regime=ProrrataRegisterRegime._from_registry("ninguna"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),

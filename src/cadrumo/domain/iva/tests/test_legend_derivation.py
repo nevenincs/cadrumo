@@ -50,7 +50,7 @@ def test_the_table_still_has_exactly_one_declaring_mention() -> None:
     """
     assert len(_DECLARING) == 1
     assert len(_SILENT) == 6
-    assert _DECLARING[0].declares is IvaCategory.DOMESTIC_REVERSE_CHARGE
+    assert _DECLARING[0].declares == IvaCategory("domestic_reverse_charge")
     assert _DECLARING[0].expects_repercutido_line is False
 
 
@@ -64,7 +64,7 @@ def test_the_reverse_charge_mention_derives_the_category_the_regulation_fixes() 
     )
 
     assert derivation.outcome is LegendDerivationOutcome.DERIVED
-    assert derivation.category is IvaCategory.DOMESTIC_REVERSE_CHARGE
+    assert derivation.category == IvaCategory("domestic_reverse_charge")
     assert derivation.legend is not None
     assert derivation.legend.provision == "art-6.1.m"
     assert derivation.derived_from
@@ -139,7 +139,7 @@ def test_the_match_is_case_folded_and_survives_surrounding_text(printed: str) ->
     matched = match_regime_legend(printed)
 
     assert matched is not None
-    assert matched.declares is IvaCategory.DOMESTIC_REVERSE_CHARGE
+    assert matched.declares == IvaCategory("domestic_reverse_charge")
 
 
 def test_a_paraphrase_is_not_a_mandated_mention() -> None:
@@ -164,7 +164,7 @@ class TestTheRecordCannotMisreportItsOwnState:
             LegendDerivation(
                 outcome=LegendDerivationOutcome.CONTRADICTED,
                 legend=_DECLARING[0],
-                category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+                category=IvaCategory("domestic_reverse_charge"),
             )
 
     def test_an_absent_outcome_carrying_a_legend_is_refused(self) -> None:

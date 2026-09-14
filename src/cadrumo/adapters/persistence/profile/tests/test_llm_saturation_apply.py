@@ -36,7 +36,7 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
         transaction_repository=repository,
     )
 
@@ -53,7 +53,7 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
     persisted = result.transaction
     assert persisted.business_classification is BusinessClassification.BUSINESS
     assert persisted.classified_by == "llm:claude:test-model"
-    assert persisted.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert persisted.iva_category == IvaCategory("domestic_general")
     assert persisted.taxable_base == Decimal("100.00")
     assert persisted.iva_rate == Decimal("0.21")
     assert persisted.iva_amount == Decimal("21.00")
@@ -71,7 +71,7 @@ def test_apply_non_derivable_persists_category_without_numbers(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("intra_community_supply")),
         transaction_repository=repository,
     )
 
@@ -86,7 +86,7 @@ def test_apply_non_derivable_persists_category_without_numbers(
     )
 
     persisted = result.transaction
-    assert persisted.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert persisted.iva_category == IvaCategory("intra_community_supply")
     assert persisted.taxable_base is None
     assert persisted.iva_amount is None
     assert persisted.classified_by == "llm:claude:test-model"
@@ -102,7 +102,7 @@ def test_apply_mixed_without_business_pct_refuses(
         transaction_id=tx_id,
         classifier=_saturating_subprocess_classifier(
             classification=BusinessClassification.MIXED,
-            iva_category=IvaCategory.DOMESTIC_GENERAL,
+            iva_category=IvaCategory("domestic_general"),
             business_pct=None,
         ),
         transaction_repository=repository,
@@ -130,7 +130,7 @@ def test_apply_mixed_uses_proposed_business_pct(
         transaction_id=tx_id,
         classifier=_saturating_subprocess_classifier(
             classification=BusinessClassification.MIXED,
-            iva_category=IvaCategory.DOMESTIC_GENERAL,
+            iva_category=IvaCategory("domestic_general"),
             business_pct=Decimal("0.6"),
         ),
         transaction_repository=repository,

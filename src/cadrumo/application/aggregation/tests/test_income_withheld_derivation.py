@@ -104,7 +104,7 @@ def test_exempt_professional_invoice_recovers_its_retencion() -> None:
         "exempt-professional",
         cash="1700.00",
         taxable_base="2000.00",
-        iva_category=IvaCategory.DOMESTIC_EXEMPT,
+        iva_category=IvaCategory("domestic_exempt"),
     )
 
     inference = income_withheld_amount(row)
@@ -124,7 +124,7 @@ def test_declared_cuota_row_still_derives_and_says_so() -> None:
         taxable_base="2000.00",
         iva_amount="420.00",
         iva_rate="0.21",
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
 
     inference = income_withheld_amount(row)
@@ -156,7 +156,7 @@ def test_row_without_a_base_derives_nothing_rather_than_inverting_a_rate() -> No
     which is a per-row legal fact this application cannot determine. The row
     therefore reports no substrate instead of a plausible figure.
     """
-    row = _income_row("cash-only", cash="1700.00", iva_category=IvaCategory.DOMESTIC_EXEMPT)
+    row = _income_row("cash-only", cash="1700.00", iva_category=IvaCategory("domestic_exempt"))
 
     inference = income_withheld_amount(row)
 
@@ -179,7 +179,7 @@ def test_inference_above_the_supported_rate_is_refused_not_capped() -> None:
         "over-bound",
         cash="1000.00",
         taxable_base="2000.00",
-        iva_category=IvaCategory.DOMESTIC_EXEMPT,
+        iva_category=IvaCategory("domestic_exempt"),
     )
 
     inference = income_withheld_amount(row)
@@ -199,7 +199,7 @@ def test_the_refusal_boundary_is_the_registry_rate_not_a_local_literal() -> None
             "at-bound",
             cash=str(base - at_bound),
             taxable_base=str(base),
-            iva_category=IvaCategory.DOMESTIC_EXEMPT,
+            iva_category=IvaCategory("domestic_exempt"),
         ),
     )
     refused = income_withheld_amount(
@@ -207,7 +207,7 @@ def test_the_refusal_boundary_is_the_registry_rate_not_a_local_literal() -> None
             "over-bound-by-a-cent",
             cash=str(base - at_bound - Decimal("0.01")),
             taxable_base=str(base),
-            iva_category=IvaCategory.DOMESTIC_EXEMPT,
+            iva_category=IvaCategory("domestic_exempt"),
         ),
     )
 
@@ -223,7 +223,7 @@ def test_cash_covering_the_invoice_withheld_nothing() -> None:
         "paid-in-full",
         cash="2000.00",
         taxable_base="2000.00",
-        iva_category=IvaCategory.DOMESTIC_EXEMPT,
+        iva_category=IvaCategory("domestic_exempt"),
     )
 
     inference = income_withheld_amount(row)
@@ -250,7 +250,7 @@ def test_the_exempt_recovery_reaches_the_aggregated_observation() -> None:
                 "exempt-aggregated",
                 cash="1700.00",
                 taxable_base="2000.00",
-                iva_category=IvaCategory.DOMESTIC_EXEMPT,
+                iva_category=IvaCategory("domestic_exempt"),
             ),
         ),
     )
@@ -314,7 +314,7 @@ def test_the_builder_never_emits_an_unmarked_withholding() -> None:
             "builder-exempt",
             cash="1700.00",
             taxable_base="2000.00",
-            iva_category=IvaCategory.DOMESTIC_EXEMPT,
+            iva_category=IvaCategory("domestic_exempt"),
         ),
         _income_row(
             "builder-rated",
@@ -322,7 +322,7 @@ def test_the_builder_never_emits_an_unmarked_withholding() -> None:
             taxable_base="2000.00",
             iva_amount="420.00",
             iva_rate="0.21",
-            iva_category=IvaCategory.DOMESTIC_GENERAL,
+            iva_category=IvaCategory("domestic_general"),
         ),
     )
     catalogue = TransactionCatalogue.from_transactions(rows)

@@ -90,8 +90,8 @@ def _iva_binding(
                 "flow_direction": flow_direction,
                 "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
                 "cash_accounting_treatments": (
-                    IvaCashAccountingTreatment.NONE,
-                    IvaCashAccountingTreatment.SUPPLIER_REGIME,
+                    IvaCashAccountingTreatment("none"),
+                    IvaCashAccountingTreatment("supplier_regime"),
                 ),
                 "fact": "iva_amount_sum",
             },
@@ -120,19 +120,19 @@ def _modelo_303_iva_revision() -> ModeloRevision:
         "2022",
         _iva_binding(
             "modelo-303-iva-repercutido-general-cuota",
-            categories=(IvaCategory.DOMESTIC_GENERAL,),
-            rate_kinds=(IvaRateKind.GENERAL,),
-            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            categories=(IvaCategory("domestic_general"),),
+            rate_kinds=(IvaRateKind("general"),),
+            flow_direction=IvaFlowDirection._from_registry("repercutido"),
         ),
         _iva_binding(
             "modelo-303-iva-soportado-interiores-cuota",
             categories=(
-                IvaCategory.DOMESTIC_GENERAL,
-                IvaCategory.DOMESTIC_REDUCED,
-                IvaCategory.DOMESTIC_SUPER_REDUCED,
+                IvaCategory("domestic_general"),
+                IvaCategory("domestic_reduced"),
+                IvaCategory("domestic_super_reduced"),
             ),
-            rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
-            flow_direction=IvaFlowDirection.SOPORTADO,
+            rate_kinds=(IvaRateKind("general"), IvaRateKind("reduced"), IvaRateKind("super_reduced")),
+            flow_direction=IvaFlowDirection._from_registry("soportado"),
         ),
     )
 
@@ -237,10 +237,12 @@ def _transaction(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "iva_category": iva_category,
-            "deduction_fact_kind": (IvaDeductionFactKind.DOMESTIC_CURRENT if carries_input_iva else None),
+            "deduction_fact_kind": (
+                IvaDeductionFactKind._from_registry("domestic_current") if carries_input_iva else None
+            ),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                     source_locator=f"test-invoice:{provider_id}",
                     evidence_digest="a" * 64,
                 )

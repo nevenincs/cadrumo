@@ -41,6 +41,7 @@ from cadrumo.application.modelo.calculation_actions import (
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.irnr import M210GrossIncomeSourceMode
 from cadrumo.core.period import Period
@@ -195,7 +196,10 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
                 filing_year=2025,
                 period=_PERIOD,
                 revision_id=snapshot.revision.id,
-                repository=work_repository,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=work_repository,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
+                ),
                 clock=_CLOCK,
             )
 

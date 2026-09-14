@@ -66,7 +66,7 @@ if TYPE_CHECKING:
 #: Sentinel categories that declare no IVA treatment at all. They are the only
 #: rows permitted to answer ``UNKNOWN``; every other category must commit.
 _SENTINEL_CATEGORIES: frozenset[IvaCategory] = frozenset(
-    {IvaCategory.UNKNOWN, IvaCategory.ERRONEOUS_INVOICE},
+    {IvaCategory("unknown"), IvaCategory("erroneous_invoice")},
 )
 COMPONENT_CATALOGUE = registry_component_catalogue()
 
@@ -130,7 +130,7 @@ def test_table_declares_no_category_outside_the_enum() -> None:
     for (category, kind), row in COMPONENT_CATALOGUE.items():
         assert isinstance(category, IvaCategory)
         assert isinstance(kind, InvoiceKind)
-        assert row.category is category, f"row keyed {category.value!r} declares {row.category.value!r}"
+        assert row.category == category, f"row keyed {category.value!r} declares {row.category.value!r}"
         assert row.kind is kind, f"row keyed {kind.value!r} declares {row.kind.value!r}"
 
 
@@ -169,7 +169,7 @@ def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCatego
         row
         for kind in InvoiceKind
         for row in (COMPONENT_CATALOGUE[(category, kind)],)
-        if row.applicability is IvaKindApplicability.ARISES
+        if row.applicability is IvaKindApplicability._from_registry("arises")
     ]
     assert arising, f"{category.value} declares no arising kind at all"
     # Mirrors the derivation's quantifier: a category is cuota-less only when
@@ -177,7 +177,8 @@ def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCatego
     # fixed kind here would disagree with the derivation for a category whose
     # sides differ, and DOMESTIC_REVERSE_CHARGE is exactly that category.
     declared_cuota_less = all(
-        row.cuota is IvaComponentPresence.ZERO_BY_LAW or row.cuota_settlement is IvaCuotaSettlement.REGIMEN_ESPECIAL
+        row.cuota is IvaComponentPresence._from_registry("zero_by_law")
+        or row.cuota_settlement is IvaCuotaSettlement("regimen_especial")
         for row in arising
     )
     cuota_less = registry_category_projection("cuota_less_m303")
@@ -206,9 +207,9 @@ def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> 
     assert (
         frozenset(
             {
-                IvaCategory.RECARGO_EQUIVALENCIA,
-                IvaCategory.ERRONEOUS_INVOICE,
-                IvaCategory.UNKNOWN,
+                IvaCategory("recargo_equivalencia"),
+                IvaCategory("erroneous_invoice"),
+                IvaCategory("unknown"),
             },
         )
         == evidence_exempt - cuota_less
@@ -234,7 +235,7 @@ def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategor
     """
     for kind in InvoiceKind:
         row = COMPONENT_CATALOGUE[(category, kind)]
-        if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
+        if row.applicability is IvaKindApplicability._from_registry("does_not_arise"):
             continue
         assert category_bears_taxable_base(category, kind), (
             f"{category.value}/{kind.value} is cuota-less but must still carry a taxable base"
@@ -244,13 +245,13 @@ def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategor
 def test_only_sentinel_categories_answer_unknown() -> None:
     """Every real category commits to an expectation; only sentinels may abstain."""
     for (category, kind), row in COMPONENT_CATALOGUE.items():
-        if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
+        if row.applicability is IvaKindApplicability._from_registry("does_not_arise"):
             continue
         del kind
         abstains = (
-            row.base is IvaComponentPresence.UNKNOWN
-            or row.cuota is IvaComponentPresence.UNKNOWN
-            or row.retencion is IvaRetencionExpectation.UNKNOWN
+            row.base is IvaComponentPresence._from_registry("unknown")
+            or row.cuota is IvaComponentPresence._from_registry("unknown")
+            or row.retencion is IvaRetencionExpectation._from_registry("unknown")
         )
         if category in _SENTINEL_CATEGORIES:
             assert abstains, f"{category.value} is a sentinel and must declare UNKNOWN components"
@@ -266,7 +267,9 @@ def test_zero_by_law_cuota_is_exactly_the_determinable_zero_predicate() -> None:
     recorded" so a declared-exempt invoice can recover its retención.
     """
     for (category, kind), row in COMPONENT_CATALOGUE.items():
-        assert category_cuota_is_zero_by_law(category, kind) is (row.cuota is IvaComponentPresence.ZERO_BY_LAW)
+        assert category_cuota_is_zero_by_law(category, kind) is (
+            row.cuota is IvaComponentPresence._from_registry("zero_by_law")
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -379,19 +382,19 @@ def test_no_row_cites_the_same_ref_as_both_bundled_and_pending() -> None:
 
 def _valid_row_kwargs() -> dict[str, Any]:
     return {
-        "category": IvaCategory.DOMESTIC_EXEMPT,
+        "category": IvaCategory("domestic_exempt"),
         "kind": InvoiceKind.ISSUED,
-        "applicability": IvaKindApplicability.ARISES,
+        "applicability": IvaKindApplicability._from_registry("arises"),
         # POSSIBLE retención on an ISSUED invoice: withheld from the taxpayer,
         # so a credit. The role validator is exercised directly below.
-        "retencion_role": IvaRetencionRole.TAXPAYER_CREDIT,
-        "base": IvaComponentPresence.REQUIRED,
-        "cuota": IvaComponentPresence.ZERO_BY_LAW,
-        "cuota_settlement": IvaCuotaSettlement.NONE,
+        "retencion_role": IvaRetencionRole._from_registry("taxpayer_credit"),
+        "base": IvaComponentPresence._from_registry("required"),
+        "cuota": IvaComponentPresence._from_registry("zero_by_law"),
+        "cuota_settlement": IvaCuotaSettlement("none"),
         "cuota_grounding": IvaGroundingConfidence.BUNDLED_CORPUS,
-        "recargo": IvaComponentPresence.ZERO_BY_LAW,
+        "recargo": IvaComponentPresence._from_registry("zero_by_law"),
         "recargo_grounding": IvaGroundingConfidence.REASONED,
-        "retencion": IvaRetencionExpectation.POSSIBLE,
+        "retencion": IvaRetencionExpectation._from_registry("possible"),
         "retencion_grounding": IvaGroundingConfidence.BUNDLED_CORPUS,
         "retencion_note": "",
         "legal_refs": ("ley-37-1992:art-20",),
@@ -401,12 +404,12 @@ def _valid_row_kwargs() -> dict[str, Any]:
 
 def test_the_reference_row_kwargs_build_a_valid_row() -> None:
     """Positive control: the refusal cases below differ from this by one field only."""
-    assert IvaCategoryComponents(**_valid_row_kwargs()).category is IvaCategory.DOMESTIC_EXEMPT
+    assert IvaCategoryComponents(**_valid_row_kwargs()).category == IvaCategory("domestic_exempt")
 
 
 def test_zero_by_law_cuota_must_declare_no_settlement() -> None:
     """A structurally-zero cuota cannot also name someone who settles it."""
-    kwargs: dict[str, Any] = _valid_row_kwargs() | {"cuota_settlement": IvaCuotaSettlement.REPERCUTIDA}
+    kwargs: dict[str, Any] = _valid_row_kwargs() | {"cuota_settlement": IvaCuotaSettlement("repercutida")}
     with pytest.raises(ValidationError, match="zero-by-law cuota"):
         IvaCategoryComponents(**kwargs)
 
@@ -414,8 +417,8 @@ def test_zero_by_law_cuota_must_declare_no_settlement() -> None:
 def test_a_settled_cuota_cannot_be_declared_zero_by_law() -> None:
     """The coherence check binds in both directions."""
     kwargs: dict[str, Any] = _valid_row_kwargs() | {
-        "cuota": IvaComponentPresence.REQUIRED,
-        "cuota_settlement": IvaCuotaSettlement.NONE,
+        "cuota": IvaComponentPresence._from_registry("required"),
+        "cuota_settlement": IvaCuotaSettlement("none"),
     }
     with pytest.raises(ValidationError, match="zero-by-law cuota"):
         IvaCategoryComponents(**kwargs)
@@ -466,10 +469,10 @@ def test_not_expected_retencion_without_a_note_is_refused_even_when_bundled() ->
     IvaCategoryComponents(**accepted)
 
     refused = accepted | {
-        "retencion": IvaRetencionExpectation.NOT_EXPECTED,
+        "retencion": IvaRetencionExpectation._from_registry("not_expected"),
         # NOT_EXPECTED forces role NONE; without this the role validator fires
         # first and the note check under test would never be reached.
-        "retencion_role": IvaRetencionRole.NONE,
+        "retencion_role": IvaRetencionRole._from_registry("none"),
     }
     with pytest.raises(ValidationError, match="not-expected retención requires a retencion_note"):
         IvaCategoryComponents(**refused)
@@ -554,14 +557,14 @@ def test_retencion_role_is_the_credit_liability_inversion_the_kind_dictates() ->
     """
     for (category, kind), row in COMPONENT_CATALOGUE.items():
         label = f"{category.value}/{kind.value}"
-        if row.retencion is IvaRetencionExpectation.UNKNOWN:
-            assert row.retencion_role is IvaRetencionRole.UNKNOWN, label
-        elif row.retencion is IvaRetencionExpectation.NOT_EXPECTED:
-            assert row.retencion_role is IvaRetencionRole.NONE, label
+        if row.retencion is IvaRetencionExpectation._from_registry("unknown"):
+            assert row.retencion_role is IvaRetencionRole._from_registry("unknown"), label
+        elif row.retencion is IvaRetencionExpectation._from_registry("not_expected"):
+            assert row.retencion_role is IvaRetencionRole._from_registry("none"), label
         elif kind is InvoiceKind.ISSUED:
-            assert row.retencion_role is IvaRetencionRole.TAXPAYER_CREDIT, label
+            assert row.retencion_role is IvaRetencionRole._from_registry("taxpayer_credit"), label
         else:
-            assert row.retencion_role is IvaRetencionRole.TAXPAYER_LIABILITY, label
+            assert row.retencion_role is IvaRetencionRole._from_registry("taxpayer_liability"), label
 
 
 def test_both_retencion_roles_are_actually_used() -> None:
@@ -571,8 +574,8 @@ def test_both_retencion_roles_are_actually_used() -> None:
     above trivially — that gate checks agreement, not that both branches occur.
     """
     roles = {row.retencion_role for row in COMPONENT_CATALOGUE.values()}
-    assert IvaRetencionRole.TAXPAYER_CREDIT in roles
-    assert IvaRetencionRole.TAXPAYER_LIABILITY in roles
+    assert IvaRetencionRole._from_registry("taxpayer_credit") in roles
+    assert IvaRetencionRole._from_registry("taxpayer_liability") in roles
 
 
 def test_non_arising_pairs_are_a_strict_nonempty_subset() -> None:
@@ -586,7 +589,7 @@ def test_non_arising_pairs_are_a_strict_nonempty_subset() -> None:
     non_arising = {
         (category.value, kind.value)
         for (category, kind), row in COMPONENT_CATALOGUE.items()
-        if row.applicability is IvaKindApplicability.DOES_NOT_ARISE
+        if row.applicability is IvaKindApplicability._from_registry("does_not_arise")
     }
     assert non_arising, "no pair is declared non-arising, so no category is treated as directional"
     assert len(non_arising) < len(COMPONENT_CATALOGUE), "every pair is non-arising; the table describes nothing"
@@ -596,7 +599,7 @@ def test_a_role_contradicting_its_kind_is_refused() -> None:
     """The role is validated, not trusted — a received credit cannot be authored."""
     kwargs = _valid_row_kwargs()
     kwargs["kind"] = InvoiceKind.RECEIVED
-    kwargs["retencion_role"] = IvaRetencionRole.TAXPAYER_CREDIT
+    kwargs["retencion_role"] = IvaRetencionRole._from_registry("taxpayer_credit")
     with pytest.raises(ValidationError, match="requires role"):
         IvaCategoryComponents(**kwargs)
 
@@ -604,9 +607,9 @@ def test_a_role_contradicting_its_kind_is_refused() -> None:
 def test_a_non_arising_pair_asserting_components_is_refused() -> None:
     """A pair that cannot occur cannot also claim a required base."""
     kwargs = _valid_row_kwargs()
-    kwargs["applicability"] = IvaKindApplicability.DOES_NOT_ARISE
-    kwargs["retencion"] = IvaRetencionExpectation.UNKNOWN
-    kwargs["retencion_role"] = IvaRetencionRole.UNKNOWN
+    kwargs["applicability"] = IvaKindApplicability._from_registry("does_not_arise")
+    kwargs["retencion"] = IvaRetencionExpectation._from_registry("unknown")
+    kwargs["retencion_role"] = IvaRetencionRole._from_registry("unknown")
     kwargs["retencion_note"] = "counterpart named here"
     with pytest.raises(ValidationError, match="cannot assert"):
         IvaCategoryComponents(**kwargs)
@@ -615,16 +618,16 @@ def test_a_non_arising_pair_asserting_components_is_refused() -> None:
 def test_a_non_arising_pair_without_a_counterpart_note_is_refused() -> None:
     """The only useful thing a non-arising row carries is which category IS this side."""
     kwargs = _valid_row_kwargs()
-    kwargs["applicability"] = IvaKindApplicability.DOES_NOT_ARISE
-    kwargs["base"] = IvaComponentPresence.UNKNOWN
-    kwargs["cuota"] = IvaComponentPresence.UNKNOWN
-    kwargs["cuota_settlement"] = IvaCuotaSettlement.UNKNOWN
+    kwargs["applicability"] = IvaKindApplicability._from_registry("does_not_arise")
+    kwargs["base"] = IvaComponentPresence._from_registry("unknown")
+    kwargs["cuota"] = IvaComponentPresence._from_registry("unknown")
+    kwargs["cuota_settlement"] = IvaCuotaSettlement("unknown")
     kwargs["cuota_grounding"] = IvaGroundingConfidence.UNGROUNDED
-    kwargs["recargo"] = IvaComponentPresence.UNKNOWN
+    kwargs["recargo"] = IvaComponentPresence._from_registry("unknown")
     kwargs["recargo_grounding"] = IvaGroundingConfidence.UNGROUNDED
-    kwargs["retencion"] = IvaRetencionExpectation.UNKNOWN
+    kwargs["retencion"] = IvaRetencionExpectation._from_registry("unknown")
     kwargs["retencion_grounding"] = IvaGroundingConfidence.UNGROUNDED
-    kwargs["retencion_role"] = IvaRetencionRole.UNKNOWN
+    kwargs["retencion_role"] = IvaRetencionRole._from_registry("unknown")
     kwargs["retencion_note"] = "   "
     kwargs["legal_refs"] = ()
     with pytest.raises(ValidationError, match="counterpart"):

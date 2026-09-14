@@ -69,9 +69,9 @@ def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> D
 
 
 _PERIOD = _period(2026, "2T")
-_DE = EUMemberState.DE
-_ES = EUMemberState.ES
-_XI = EUMemberState.XI
+_DE = EUMemberState._from_registry("de")
+_ES = EUMemberState._from_registry("es")
+_XI = EUMemberState._from_registry("xi")
 
 
 def _raw(provider_id: str, *, amount: Decimal, direction: TransactionDirection) -> RawTransaction:
@@ -131,7 +131,7 @@ def test_intracom_goods_supply_populates_casilla_59() -> None:
         "goods-de-01",
         amount=Decimal("5000.00"),
         taxable_base=Decimal("5000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         counterparty_country="DE",
         counterparty_identification_state=_DE,
     )
@@ -141,7 +141,7 @@ def test_intracom_goods_supply_populates_casilla_59() -> None:
     assert len(aggregation.issues) == 0, f"unexpected issues: {aggregation.issues}"
     assert len(aggregation.observations) == 1
     obs = aggregation.observations[0]
-    assert obs.category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert obs.category == IvaCategory("intra_community_supply")
     assert _casilla_base(aggregation, "59") == Decimal("5000.00")
     assert _casilla_base(aggregation, "60") == Decimal("0")
 
@@ -152,7 +152,7 @@ def test_northern_ireland_xi_goods_supply_populates_casilla_59() -> None:
         "goods-xi-01",
         amount=Decimal("3000.00"),
         taxable_base=Decimal("3000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         counterparty_country="XI",
         counterparty_identification_state=_XI,
     )
@@ -177,7 +177,7 @@ def test_domestic_not_subject_services_do_not_populate_casilla_59() -> None:
         "services-r12-01",
         amount=Decimal("2000.00"),
         taxable_base=Decimal("2000.00"),
-        iva_category=IvaCategory.DOMESTIC_NOT_SUBJECT,
+        iva_category=IvaCategory("domestic_not_subject"),
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -185,7 +185,7 @@ def test_domestic_not_subject_services_do_not_populate_casilla_59() -> None:
     assert len(aggregation.issues) == 0, f"unexpected issues: {aggregation.issues}"
     assert len(aggregation.observations) == 1
     obs = aggregation.observations[0]
-    assert obs.category is IvaCategory.DOMESTIC_NOT_SUBJECT
+    assert obs.category == IvaCategory("domestic_not_subject")
     assert _casilla_base(aggregation, "59") == Decimal("0")
 
 
@@ -201,7 +201,7 @@ def test_export_third_country_populates_casilla_60() -> None:
         "export-us-01",
         amount=Decimal("3000.00"),
         taxable_base=Decimal("3000.00"),
-        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        iva_category=IvaCategory("export_third_country_zero_rated"),
         counterparty_country="US",
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
@@ -218,7 +218,7 @@ def test_export_assimilated_operation_populates_casilla_60() -> None:
         "export-assimilated-ship-01",
         amount=Decimal("1750.00"),
         taxable_base=Decimal("1750.00"),
-        iva_category=IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+        iva_category=IvaCategory("export_assimilated_zero_rated"),
         counterparty_country="US",
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
@@ -240,7 +240,7 @@ def test_d5_intracom_with_es_identified_counterparty_is_rejected() -> None:
         "intracom-es-01",
         amount=Decimal("1000.00"),
         taxable_base=Decimal("1000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         counterparty_country="DE",
         counterparty_identification_state=_ES,
     )
@@ -259,7 +259,7 @@ def test_d5_intracom_without_identification_is_rejected() -> None:
         "intracom-no-state-01",
         amount=Decimal("1000.00"),
         taxable_base=Decimal("1000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         counterparty_country=None,
         counterparty_identification_state=None,
     )
@@ -277,7 +277,7 @@ def test_d5_export_with_eu_member_state_is_rejected() -> None:
         "export-with-eu-01",
         amount=Decimal("800.00"),
         taxable_base=Decimal("800.00"),
-        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        iva_category=IvaCategory("export_third_country_zero_rated"),
         counterparty_country="DE",
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
@@ -294,7 +294,7 @@ def test_d5_export_assimilated_with_eu_member_state_is_rejected() -> None:
         "export-assimilated-with-eu-01",
         amount=Decimal("800.00"),
         taxable_base=Decimal("800.00"),
-        iva_category=IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+        iva_category=IvaCategory("export_assimilated_zero_rated"),
         counterparty_country="DE",
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
@@ -311,7 +311,7 @@ def test_marc_combined_scenario() -> None:
         "marc-goods-de",
         amount=Decimal("5000.00"),
         taxable_base=Decimal("5000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         counterparty_country="DE",
         counterparty_identification_state=_DE,
     )
@@ -319,7 +319,7 @@ def test_marc_combined_scenario() -> None:
         "marc-services-r12",
         amount=Decimal("2000.00"),
         taxable_base=Decimal("2000.00"),
-        iva_category=IvaCategory.DOMESTIC_NOT_SUBJECT,
+        iva_category=IvaCategory("domestic_not_subject"),
     )
     catalogue = TransactionCatalogue.from_transactions([goods_tx, services_tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -327,8 +327,8 @@ def test_marc_combined_scenario() -> None:
     assert len(aggregation.issues) == 0, f"unexpected issues: {aggregation.issues}"
     assert len(aggregation.observations) == 2
     categories = {obs.category for obs in aggregation.observations}
-    assert IvaCategory.INTRA_COMMUNITY_SUPPLY in categories
-    assert IvaCategory.DOMESTIC_NOT_SUBJECT in categories
+    assert IvaCategory("intra_community_supply") in categories
+    assert IvaCategory("domestic_not_subject") in categories
     # Only the goods invoice feeds casilla 59
     assert _casilla_base(aggregation, "59") == Decimal("5000.00")
     assert _casilla_base(aggregation, "60") == Decimal("0")

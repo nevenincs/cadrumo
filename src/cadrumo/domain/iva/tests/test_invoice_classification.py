@@ -29,26 +29,32 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido() -> None:
     cases: tuple[tuple[IvaRate, IvaCategory, IvaRateKind], ...] = (
-        (IvaRate.RATE_0, IvaCategory.DOMESTIC_ZERO, IvaRateKind.ZERO),
-        (IvaRate.RATE_4, IvaCategory.DOMESTIC_SUPER_REDUCED, IvaRateKind.SUPER_REDUCED),
-        (IvaRate.RATE_10, IvaCategory.DOMESTIC_REDUCED, IvaRateKind.REDUCED),
-        (IvaRate.RATE_21, IvaCategory.DOMESTIC_GENERAL, IvaRateKind.GENERAL),
-        (IvaRate.EXEMPT, IvaCategory.DOMESTIC_EXEMPT, IvaRateKind.EXEMPT),
+        (IvaRate._from_registry("RATE_0"), IvaCategory("domestic_zero"), IvaRateKind("zero")),
+        (IvaRate._from_registry("RATE_4"), IvaCategory("domestic_super_reduced"), IvaRateKind("super_reduced")),
+        (IvaRate._from_registry("RATE_10"), IvaCategory("domestic_reduced"), IvaRateKind("reduced")),
+        (IvaRate._from_registry("RATE_21"), IvaCategory("domestic_general"), IvaRateKind("general")),
+        (IvaRate._from_registry("EXEMPT"), IvaCategory("domestic_exempt"), IvaRateKind("exempt")),
     )
 
     for iva_rate, expected_category, expected_kind in cases:
         classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED)
-        assert classification.category is expected_category, iva_rate
+        assert classification.category == expected_category, iva_rate
         assert classification.rate_kind is expected_kind, iva_rate
-        assert classification.flow_direction is IvaFlowDirection.REPERCUTIDO, iva_rate
-        assert classification.settlement_sides == frozenset({IvaSettlementSide.DEVENGADA}), iva_rate
+        assert classification.flow_direction is IvaFlowDirection._from_registry("repercutido"), iva_rate
+        assert classification.settlement_sides == frozenset({IvaSettlementSide._from_registry("devengada")}), iva_rate
 
 
 def test_classify_received_invoice_resolves_to_soportado() -> None:
-    for iva_rate in (IvaRate.RATE_0, IvaRate.RATE_4, IvaRate.RATE_10, IvaRate.RATE_21, IvaRate.EXEMPT):
+    for iva_rate in (
+        IvaRate._from_registry("RATE_0"),
+        IvaRate._from_registry("RATE_4"),
+        IvaRate._from_registry("RATE_10"),
+        IvaRate._from_registry("RATE_21"),
+        IvaRate._from_registry("EXEMPT"),
+    ):
         classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.RECEIVED)
-        assert classification.flow_direction is IvaFlowDirection.SOPORTADO, iva_rate
-        assert classification.settlement_sides == frozenset({IvaSettlementSide.DEDUCIBLE}), iva_rate
+        assert classification.flow_direction is IvaFlowDirection._from_registry("soportado"), iva_rate
+        assert classification.settlement_sides == frozenset({IvaSettlementSide._from_registry("deducible")}), iva_rate
 
 
 def test_classify_invoice_rejects_not_subject_rate() -> None:
@@ -56,18 +62,22 @@ def test_classify_invoice_rejects_not_subject_rate() -> None:
     helper rejects them so callers explicitly handle them via
     IvaCategory.OPERACION_NO_SUJETA."""
     with pytest.raises(ValueError, match="NOT_SUBJECT"):
-        classify_invoice_line_for_iva(iva_rate=IvaRate.NOT_SUBJECT, invoice_kind=InvoiceKind.ISSUED)
+        classify_invoice_line_for_iva(iva_rate=IvaRate._from_registry("NOT_SUBJECT"), invoice_kind=InvoiceKind.ISSUED)
 
 
 def test_classification_record_contributes_to_devengada_for_repercutido() -> None:
-    classification = classify_invoice_line_for_iva(iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.ISSUED)
+    classification = classify_invoice_line_for_iva(
+        iva_rate=IvaRate._from_registry("RATE_21"), invoice_kind=InvoiceKind.ISSUED
+    )
     assert classification.contributes_to_devengada is True
     assert classification.contributes_to_deducible is False
     assert classification.is_reverse_charge is False
 
 
 def test_classification_record_contributes_to_deducible_for_soportado() -> None:
-    classification = classify_invoice_line_for_iva(iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.RECEIVED)
+    classification = classify_invoice_line_for_iva(
+        iva_rate=IvaRate._from_registry("RATE_21"), invoice_kind=InvoiceKind.RECEIVED
+    )
     assert classification.contributes_to_devengada is False
     assert classification.contributes_to_deducible is True
     assert classification.is_reverse_charge is False
@@ -78,10 +88,12 @@ def test_classification_record_contributes_to_both_sides_for_autorepercutido() -
     same operation (LIVA art 84.Uno.2). Callers construct the record
     directly for these cases."""
     classification = IvaInvoiceClassification(
-        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        rate_kind=IvaRateKind.GENERAL,
-        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-        settlement_sides=frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}),
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        rate_kind=IvaRateKind("general"),
+        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+        settlement_sides=frozenset(
+            {IvaSettlementSide._from_registry("devengada"), IvaSettlementSide._from_registry("deducible")}
+        ),
     )
     assert classification.contributes_to_devengada is True
     assert classification.contributes_to_deducible is True
@@ -94,19 +106,21 @@ def test_classification_record_validates_settlement_sides_against_flow() -> None
     fields."""
     with pytest.raises(ValueError, match="does not match flow_direction"):
         IvaInvoiceClassification(
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection._from_registry("repercutido"),
             settlement_sides=frozenset(
-                {IvaSettlementSide.DEDUCIBLE},  # ← doesn't match REPERCUTIDO
+                {IvaSettlementSide._from_registry("deducible")},  # ← doesn't match REPERCUTIDO
             ),
         )
 
 
 def test_classification_record_is_frozen() -> None:
-    classification = classify_invoice_line_for_iva(iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.ISSUED)
+    classification = classify_invoice_line_for_iva(
+        iva_rate=IvaRate._from_registry("RATE_21"), invoice_kind=InvoiceKind.ISSUED
+    )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        classification.flow_direction = IvaFlowDirection.SOPORTADO
+        classification.flow_direction = IvaFlowDirection._from_registry("soportado")
 
 
 def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejected() -> None:
@@ -115,10 +129,10 @@ def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejec
     cross-check is on (flow, sides), not on category."""
     with pytest.raises(ValueError, match="does not match flow_direction"):
         IvaInvoiceClassification(
-            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-            settlement_sides=frozenset({IvaSettlementSide.DEVENGADA}),  # missing deducible
+            category=IvaCategory("domestic_reverse_charge"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+            settlement_sides=frozenset({IvaSettlementSide._from_registry("devengada")}),  # missing deducible
         )
 
 
@@ -137,7 +151,7 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
         invoice_id="inv-001",
         issued_at=date(2025, 6, 15),
         invoice_kind=InvoiceKind.ISSUED,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         base_amount=Decimal("1000"),
         iva_amount=Decimal("210"),
         deduction_fact_kind=None,
@@ -146,9 +160,9 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
     assert isinstance(obs, IvaLedgerObservation)
     assert obs.ledger_id == "inv-001"
     assert obs.transaction_date == date(2025, 6, 15)
-    assert obs.category is IvaCategory.DOMESTIC_GENERAL
-    assert obs.rate_kind is IvaRateKind.GENERAL
-    assert obs.flow_direction is IvaFlowDirection.REPERCUTIDO
+    assert obs.category == IvaCategory("domestic_general")
+    assert obs.rate_kind is IvaRateKind("general")
+    assert obs.flow_direction is IvaFlowDirection._from_registry("repercutido")
     assert obs.base_amount == Decimal("1000")
     assert obs.iva_amount == Decimal("210")
 
@@ -177,7 +191,7 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
         invoice_id="inv-2pct",
         issued_at=in_window,
         invoice_kind=InvoiceKind.ISSUED,
-        iva_rate=IvaRate.RATE_2,
+        iva_rate=IvaRate._from_registry("RATE_2"),
         base_amount=Decimal("100"),
         iva_amount=Decimal("2"),
         deduction_fact_kind=None,
@@ -187,7 +201,7 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
         invoice_id="inv-4pct",
         issued_at=in_window,
         invoice_kind=InvoiceKind.ISSUED,
-        iva_rate=IvaRate.RATE_4,
+        iva_rate=IvaRate._from_registry("RATE_4"),
         base_amount=Decimal("100"),
         iva_amount=Decimal("4"),
         deduction_fact_kind=None,
@@ -196,7 +210,7 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
 
     assert two_percent.applied_rate == Decimal("0.02")
     assert four_percent.applied_rate == Decimal("0.04")
-    assert two_percent.rate_kind is four_percent.rate_kind is IvaRateKind.SUPER_REDUCED
+    assert two_percent.rate_kind is four_percent.rate_kind is IvaRateKind("super_reduced")
     assert two_percent.applied_rate != four_percent.applied_rate, (
         "both slots share the super-reducido tier, so a tier-resolved applied_rate would collapse them "
         "and the 2 % line would be indistinguishable from a 4 % one at the annual return"
@@ -231,13 +245,13 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
             id=binding_id,
             source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
             selector={
-                "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
-                "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
-                "flow_direction": IvaFlowDirection.REPERCUTIDO,
+                "categories": (IvaCategory("domestic_super_reduced"),),
+                "rate_kinds": (IvaRateKind("super_reduced"),),
+                "flow_direction": IvaFlowDirection._from_registry("repercutido"),
                 "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
                 "cash_accounting_treatments": (
-                    IvaCashAccountingTreatment.NONE,
-                    IvaCashAccountingTreatment.SUPPLIER_REGIME,
+                    IvaCashAccountingTreatment("none"),
+                    IvaCashAccountingTreatment("supplier_regime"),
                 ),
                 "applied_rates": (rate,),
                 "fact": "base_amount_sum",
@@ -259,7 +273,10 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
             deduction_fact_kind=None,
             deduction_provenance=None,
         )
-        for slot, base in ((IvaRate.RATE_2, Decimal("100.00")), (IvaRate.RATE_4, Decimal("250.00")))
+        for slot, base in (
+            (IvaRate._from_registry("RATE_2"), Decimal("100.00")),
+            (IvaRate._from_registry("RATE_4"), Decimal("250.00")),
+        )
     )
     revision = ModeloRevision(
         id="2010-y-siguientes",
@@ -302,20 +319,20 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
         invoice_id="bill-77",
         issued_at=date(2025, 7, 1),
         invoice_kind=InvoiceKind.RECEIVED,
-        iva_rate=IvaRate.RATE_10,
+        iva_rate=IvaRate._from_registry("RATE_10"),
         base_amount=Decimal("500"),
         iva_amount=Decimal("50"),
-        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
         deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
             source_locator="invoice:bill-77",
             evidence_digest="a" * 64,
         ),
     )
-    assert obs.flow_direction is IvaFlowDirection.SOPORTADO
-    assert obs.category is IvaCategory.DOMESTIC_REDUCED
-    assert obs.rate_kind is IvaRateKind.REDUCED
-    assert obs.deduction_fact_kind is IvaDeductionFactKind.DOMESTIC_CURRENT
+    assert obs.flow_direction is IvaFlowDirection._from_registry("soportado")
+    assert obs.category == IvaCategory("domestic_reduced")
+    assert obs.rate_kind is IvaRateKind("reduced")
+    assert obs.deduction_fact_kind is IvaDeductionFactKind._from_registry("domestic_current")
 
 
 def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_authority() -> None:
@@ -329,7 +346,7 @@ def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_au
             invoice_id="bill-without-authority",
             issued_at=date(2025, 7, 1),
             invoice_kind=InvoiceKind.RECEIVED,
-            iva_rate=IvaRate.RATE_10,
+            iva_rate=IvaRate._from_registry("RATE_10"),
             base_amount=Decimal("500"),
             iva_amount=Decimal("50"),
         )
@@ -338,7 +355,7 @@ def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_au
             invoice_id="bill-explicitly-unclassified",
             issued_at=date(2025, 7, 1),
             invoice_kind=InvoiceKind.RECEIVED,
-            iva_rate=IvaRate.RATE_10,
+            iva_rate=IvaRate._from_registry("RATE_10"),
             base_amount=Decimal("500"),
             iva_amount=Decimal("50"),
             deduction_fact_kind=None,
@@ -356,7 +373,7 @@ def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
             invoice_id="inv-bad",
             issued_at=date(2025, 6, 15),
             invoice_kind=InvoiceKind.ISSUED,
-            iva_rate=IvaRate.RATE_21,
+            iva_rate=IvaRate._from_registry("RATE_21"),
             base_amount=cast(Decimal, "1000"),
             iva_amount=cast(Decimal, "210"),
             deduction_fact_kind=None,
@@ -384,7 +401,7 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
             invoice_id="inv-1",
             issued_at=date(2025, 1, 15),
             invoice_kind=InvoiceKind.ISSUED,
-            iva_rate=IvaRate.RATE_21,
+            iva_rate=IvaRate._from_registry("RATE_21"),
             base_amount=Decimal("1000"),
             iva_amount=Decimal("210"),
             deduction_fact_kind=None,
@@ -394,7 +411,7 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
             invoice_id="inv-2",
             issued_at=date(2025, 1, 20),
             invoice_kind=InvoiceKind.ISSUED,
-            iva_rate=IvaRate.RATE_10,
+            iva_rate=IvaRate._from_registry("RATE_10"),
             base_amount=Decimal("500"),
             iva_amount=Decimal("50"),
             deduction_fact_kind=None,
@@ -404,12 +421,12 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
             invoice_id="bill-1",
             issued_at=date(2025, 2, 10),
             invoice_kind=InvoiceKind.RECEIVED,
-            iva_rate=IvaRate.RATE_21,
+            iva_rate=IvaRate._from_registry("RATE_21"),
             base_amount=Decimal("400"),
             iva_amount=Decimal("84"),
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
             deduction_provenance=IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator="invoice:bill-1",
                 evidence_digest="b" * 64,
             ),

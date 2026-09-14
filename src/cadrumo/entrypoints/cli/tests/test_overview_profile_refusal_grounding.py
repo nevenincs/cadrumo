@@ -185,7 +185,7 @@ def _label_for(selector: str) -> str:
 def _profile(**kwargs):
     from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 
-    return TaxpayerProfile(tax_id="00000000T", iva_regime=IVARegime.GENERAL, **kwargs)
+    return TaxpayerProfile(tax_id="00000000T", iva_regime=IVARegime("GENERAL"), **kwargs)
 
 
 def test_the_taxpayer_model_fields_have_labels_that_differ_from_their_tokens() -> None:
@@ -214,7 +214,7 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
     """
     from ....domain.contribuyente.entity_type import EntityType
 
-    refusal = _undeclared_taxpayer_model_refusal(_profile(entity_type=EntityType.NATURAL_PERSON))
+    refusal = _undeclared_taxpayer_model_refusal(_profile(entity_type=EntityType._from_registry("natural_person")))
 
     context = refusal.context
     assert context is not None

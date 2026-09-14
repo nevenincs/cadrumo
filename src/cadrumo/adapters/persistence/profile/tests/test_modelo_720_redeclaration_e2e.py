@@ -51,6 +51,8 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
 )
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.deadlines.models import IVARegime
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -72,8 +74,7 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import selector
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -153,8 +154,8 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
 def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.RESIDENT_IRPF,
+        iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 

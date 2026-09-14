@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
+
 from ....core.period import Period
 from ...calculations.registry.schema_verification import ProfilePredicateDefinition
 from .. import engine as _engine_module
@@ -26,7 +28,7 @@ from ..engine import (
     DeadlineEngine,
 )
 from ..errors import NoDeadlineWindowsError, ScheduleComputationError
-from ..models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ..models import ModeloIVAProfile, TaxpayerProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -55,10 +57,10 @@ def _profile() -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
             "tax_id": "X1234567L",
-            "iva_regime": IVARegime.GENERAL,
+            "iva_regime": IVARegime("GENERAL"),
             "iva": ModeloIVAProfile(
-                tax_territory=M303TaxTerritory.COMMON_REGIME,
-                regime_composition=M303RegimeComposition.GENERAL,
+                tax_territory=M303TaxTerritory._from_registry("common_regime"),
+                regime_composition=M303RegimeComposition._from_registry("general"),
                 redeme_enrolled=False,
                 cash_accounting_regime_enrolled=False,
                 voluntary_sii_enrolled=False,

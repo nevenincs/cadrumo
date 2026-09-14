@@ -60,7 +60,7 @@ def _unconverted_gbp_invoice(*, line_count: int = 1) -> Invoice:
             quantity=Decimal("1"),
             unit_price=base_per_line,
             subtotal=base_per_line,
-            iva_rate=IvaRate.RATE_21,
+            iva_rate=IvaRate._from_registry("RATE_21"),
             iva_amount=iva_per_line,
         )
         for index in range(line_count)
@@ -105,7 +105,7 @@ def test_modelo_bindings_does_not_refuse_a_converted_invoice() -> None:
         quantity=Decimal("1"),
         unit_price=Decimal("500.00"),
         subtotal=Decimal("500.00"),
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=Decimal("105.00"),
     )
     invoice = Invoice.model_validate(
@@ -137,9 +137,9 @@ def _unconverted_pln_oss_line() -> tuple[Invoice, InvoiceLine]:
         quantity=Decimal("1"),
         unit_price=base_total,
         subtotal=base_total,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=iva_total,
-        oss_rate_kind=IvaRateKind.GENERAL,
+        oss_rate_kind=IvaRateKind("general"),
     )
     invoice = Invoice.model_validate(
         {
@@ -156,8 +156,8 @@ def _unconverted_pln_oss_line() -> tuple[Invoice, InvoiceLine]:
             "currency": "PLN",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
-            "oss_ioss_regime": OssIossRegime.UNION_SCHEME,
-            "oss_transaction_kind": TransactionKind.OSS_UNION_SERVICES,
+            "oss_ioss_regime": OssIossRegime("union_scheme"),
+            "oss_transaction_kind": TransactionKind("oss_union_services"),
         },
     )
     return invoice, line
@@ -203,8 +203,8 @@ def test_oss_ioss_does_not_refuse_a_converted_invoice() -> None:
             "currency": "PLN",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
-            "oss_ioss_regime": OssIossRegime.UNION_SCHEME,
-            "oss_transaction_kind": TransactionKind.OSS_UNION_SERVICES,
+            "oss_ioss_regime": OssIossRegime("union_scheme"),
+            "oss_transaction_kind": TransactionKind("oss_union_services"),
             "fx_rate": Decimal("0.23"),
             "fx_rate_date": _DEVENGO,
             "fx_rate_source": "ecb_reference",
@@ -219,7 +219,7 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
     """FIXED: a real OSS-eligible line whose IVA rate cannot be tiered REFUSES.
 
     ``NOT_SUBJECT`` is the one :class:`IvaRate` slot ``iva_rate_kind`` maps to
-    ``None`` -- ``EXEMPT`` has its own real :class:`IvaRateKind.EXEMPT` tier
+    ``None`` -- ``EXEMPT`` has its own real :class:`IvaRateKind("exempt")` tier
     and would not trip this guard, confirmed by reading
     ``_IVA_RATE_TO_IVA_KIND`` in ``domain/invoices/enums.py`` rather than
     assumed.
@@ -233,7 +233,7 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
         quantity=Decimal("1"),
         unit_price=Decimal("500.00"),
         subtotal=Decimal("500.00"),
-        iva_rate=IvaRate.NOT_SUBJECT,
+        iva_rate=IvaRate._from_registry("NOT_SUBJECT"),
         iva_amount=Decimal("0.00"),
     )
     invoice = Invoice.model_validate(
@@ -251,8 +251,8 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
             "currency": "EUR",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
-            "oss_ioss_regime": OssIossRegime.UNION_SCHEME,
-            "oss_transaction_kind": TransactionKind.OSS_UNION_SERVICES,
+            "oss_ioss_regime": OssIossRegime("union_scheme"),
+            "oss_transaction_kind": TransactionKind("oss_union_services"),
         },
     )
     with pytest.raises(AggregationValidationError) as exc_info:
@@ -279,7 +279,7 @@ def test_oss_ioss_does_not_refuse_an_invoice_never_tagged_as_oss() -> None:
         quantity=Decimal("1"),
         unit_price=Decimal("500.00"),
         subtotal=Decimal("500.00"),
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=Decimal("105.00"),
     )
     invoice = Invoice.model_validate(

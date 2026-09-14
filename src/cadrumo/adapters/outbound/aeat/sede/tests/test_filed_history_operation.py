@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.domain.deadlines.models import IVARegime
 
 from ......application.live.filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
@@ -65,7 +66,7 @@ from ......core.operations import (
     OperationTerminalCondition,
 )
 from ......core.register_scoping_signal import RegisterScopingSignal
-from ......domain.deadlines.models import IVARegime, TaxpayerProfile
+from ......domain.deadlines.models import TaxpayerProfile
 from .....persistence.operations.journal import OperationJournalRepository
 from .....persistence.operations.lease import OperationLeaseFilesystemRepository
 from .....persistence.operations.secure_references import operation_secure_reference_repository
@@ -320,7 +321,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             entered=discovery_entered,
             release=release_discovery,
         )
-        taxpayer = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+        taxpayer = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
         pull = _local_pull(discovery)
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,

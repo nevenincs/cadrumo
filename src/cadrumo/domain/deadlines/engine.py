@@ -521,6 +521,7 @@ def _overdue_recovery_or_none(
             modelo=modelo,
             period=window.period,
             bands=load_recargo_bands(operation=operation),
+            operation=operation,
         )
     except (FileNotFoundError, ValueError) as exc:
         _logger.debug(

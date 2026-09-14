@@ -20,9 +20,11 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.deadlines.models import IVARegime
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
@@ -39,7 +41,7 @@ _COMPUTED: CasillaId = validated_casilla_id(
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -29,6 +30,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -172,7 +174,7 @@ def _seed_sofia_ledger(objects: SecureObjectRepository) -> tuple[Transaction, ..
     transactions = (
         _expense_transaction(
             "sofia-autonomos-ss",
-            category=SpendingCategory.CUOTAS_AUTONOMOS_SS,
+            category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
             value_date=date(_YEAR, 2, 15),
             gross_amount=Decimal("340.00"),
             taxable_base=Decimal("340.00"),
@@ -181,7 +183,7 @@ def _seed_sofia_ledger(objects: SecureObjectRepository) -> tuple[Transaction, ..
         ),
         _expense_transaction(
             "sofia-advisory-taxable-base",
-            category=SpendingCategory.ASESORIA_FISCAL,
+            category=SpendingCategory._from_registry("asesoria_fiscal"),
             value_date=date(_YEAR, 2, 20),
             gross_amount=Decimal("6776.00"),
             taxable_base=Decimal("5600.00"),
@@ -261,7 +263,9 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
         revision_id=_REVISION_ID,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
 

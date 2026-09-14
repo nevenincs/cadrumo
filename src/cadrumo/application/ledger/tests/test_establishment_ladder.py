@@ -136,11 +136,11 @@ def _resolve(
 # what an address block carries. The last two rows are the ones a default would
 # quietly fill in.
 _MEASURED_CASES: tuple[tuple[str | None, str | None, EstablishmentRung | None, IvaTerritorialScope | None], ...] = (
-    ("España", _LAS_PALMAS, EstablishmentRung.SPANISH_POSTAL_CODE, IvaTerritorialScope.ES_CANARIAS),
-    ("España", _MADRID, EstablishmentRung.SPANISH_POSTAL_CODE, IvaTerritorialScope.ES_MAINLAND),
+    ("España", _LAS_PALMAS, EstablishmentRung.SPANISH_POSTAL_CODE, IvaTerritorialScope._from_registry("es_canarias")),
+    ("España", _MADRID, EstablishmentRung.SPANISH_POSTAL_CODE, IvaTerritorialScope._from_registry("es_mainland")),
     ("España", None, None, None),
-    ("France", _PARIS, EstablishmentRung.ADDRESS_COUNTRY, IvaTerritorialScope.EU_MEMBER),
-    ("Alemania", _BERLIN, EstablishmentRung.ADDRESS_COUNTRY, IvaTerritorialScope.EU_MEMBER),
+    ("France", _PARIS, EstablishmentRung.ADDRESS_COUNTRY, IvaTerritorialScope._from_registry("eu_member")),
+    ("Alemania", _BERLIN, EstablishmentRung.ADDRESS_COUNTRY, IvaTerritorialScope._from_registry("eu_member")),
     (None, _MADRID, None, None),
 )
 
@@ -177,7 +177,7 @@ def test_spain_named_is_the_postal_trigger_not_an_exhausted_rung(
     resolved = _resolve(repository, country_name="España", postal_code=_MADRID)
 
     assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
-    assert resolved.scope is IvaTerritorialScope.ES_MAINLAND
+    assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
 
 
 def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
@@ -191,11 +191,11 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
     """
     resolved = _resolve(repository, country_name="France", postal_code=_PARIS)
 
-    assert resolved.scope is IvaTerritorialScope.EU_MEMBER
+    assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
     assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     skipped_rung_answer = territorial_scope_for_spanish_postal_code(_PARIS)
-    assert skipped_rung_answer is IvaTerritorialScope.ES_MAINLAND
+    assert skipped_rung_answer is IvaTerritorialScope._from_registry("es_mainland")
     assert skipped_rung_answer is not resolved.scope
 
 
@@ -211,8 +211,8 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
     """
     resolved = _resolve(repository, country_name="France", postal_code=_CEUTA)
 
-    assert resolved.scope is IvaTerritorialScope.EU_MEMBER
-    assert territorial_scope_for_spanish_postal_code(_CEUTA) is IvaTerritorialScope.ES_CEUTA_MELILLA
+    assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
+    assert territorial_scope_for_spanish_postal_code(_CEUTA) is IvaTerritorialScope._from_registry("es_ceuta_melilla")
 
 
 def test_a_registration_disagreeing_with_the_address_settles_neither(
@@ -243,9 +243,9 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
     assert resolved.rung is None
 
     lower_rung_answer = territorial_scope_for_spanish_postal_code(_LAS_PALMAS)
-    assert lower_rung_answer is IvaTerritorialScope.ES_CANARIAS
+    assert lower_rung_answer is IvaTerritorialScope._from_registry("es_canarias")
     assert resolved.scope is not lower_rung_answer
-    assert resolved.scope is not IvaTerritorialScope.EU_MEMBER
+    assert resolved.scope is not IvaTerritorialScope._from_registry("eu_member")
 
 
 def test_a_greek_iva_prefix_resolves_through_its_iso_code(
@@ -263,13 +263,13 @@ def test_a_greek_iva_prefix_resolves_through_its_iso_code(
     # The divergence now bites on the fact a registration actually settles. Left
     # untranslated the number names no Member State at all, so the party's
     # identification would read as unestablished rather than as Greek.
-    assert resolved.identification_state is EUMemberState.GR
+    assert resolved.identification_state is EUMemberState._from_registry("gr")
 
     # And it carries through to the territory once something corroborates it,
     # which is where a mistranslation would have reclassified an intra-community
     # acquisition as an import.
     corroborated = _resolve(repository, tax_identifier=_GREEK_IVA, country_name="Grecia")
-    assert corroborated.scope is IvaTerritorialScope.EU_MEMBER
+    assert corroborated.scope is IvaTerritorialScope._from_registry("eu_member")
 
 
 def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
@@ -291,7 +291,7 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
     absence as Spanish would manufacture the fact from silence.
     """
     assert identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
-    assert identification_state_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is EUMemberState.ES
+    assert identification_state_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is EUMemberState._from_registry("es")
     # The rung this test is named for is the ESTABLISHMENT one, and neither
     # spelling opens it.
     assert country_code_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is None
@@ -370,7 +370,7 @@ def test_the_printed_evidence_rungs_are_backed_by_the_document(
     assert resolved.source is ClassifierInputSource.DOCUMENT_EVIDENCE
     declared = resolved.declared_fact
     assert declared is not None
-    assert declared.value is IvaTerritorialScope.ES_CANARIAS
+    assert declared.value is IvaTerritorialScope._from_registry("es_canarias")
     assert declared.source is ClassifierInputSource.DOCUMENT_EVIDENCE
 
 
@@ -386,7 +386,7 @@ def test_a_confirmed_fact_answers_only_once_the_paper_has_settled_nothing(
     record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SPANISH_CIF,
-        territorial_scope=IvaTerritorialScope.ES_CANARIAS,
+        territorial_scope=IvaTerritorialScope._from_registry("es_canarias"),
         asserted_by="operator",
         asserted_at=_ASSERTED_AT,
         repository=repository,
@@ -394,7 +394,7 @@ def test_a_confirmed_fact_answers_only_once_the_paper_has_settled_nothing(
 
     resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
 
-    assert resolved.scope is IvaTerritorialScope.ES_CANARIAS
+    assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
     assert resolved.rung is EstablishmentRung.CONFIRMED_COUNTERPARTY_FACT
     assert resolved.source is ClassifierInputSource.OPERATOR_ASSERTION
 
@@ -411,7 +411,7 @@ def test_decisive_paper_disagreeing_with_a_confirmed_fact_settles_nothing(
     record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SPANISH_CIF,
-        territorial_scope=IvaTerritorialScope.ES_CANARIAS,
+        territorial_scope=IvaTerritorialScope._from_registry("es_canarias"),
         asserted_by="operator",
         asserted_at=_ASSERTED_AT,
         repository=repository,
@@ -425,8 +425,8 @@ def test_decisive_paper_disagreeing_with_a_confirmed_fact_settles_nothing(
     assert resolved.declared_fact is None
     contradiction = resolved.contradiction
     assert contradiction is not None
-    assert contradiction.confirmed_scope is IvaTerritorialScope.ES_CANARIAS
-    assert contradiction.evidenced_scope is IvaTerritorialScope.ES_MAINLAND
+    assert contradiction.confirmed_scope is IvaTerritorialScope._from_registry("es_canarias")
+    assert contradiction.evidenced_scope is IvaTerritorialScope._from_registry("es_mainland")
 
 
 def test_agreeing_paper_leaves_the_evidence_rung_as_the_answer(
@@ -436,7 +436,7 @@ def test_agreeing_paper_leaves_the_evidence_rung_as_the_answer(
     record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SPANISH_CIF,
-        territorial_scope=IvaTerritorialScope.ES_CANARIAS,
+        territorial_scope=IvaTerritorialScope._from_registry("es_canarias"),
         asserted_by="operator",
         asserted_at=_ASSERTED_AT,
         repository=repository,
@@ -444,7 +444,7 @@ def test_agreeing_paper_leaves_the_evidence_rung_as_the_answer(
 
     resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_LAS_PALMAS)
 
-    assert resolved.scope is IvaTerritorialScope.ES_CANARIAS
+    assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
     assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
     assert not resolved.contradicted
 
@@ -620,7 +620,9 @@ class TestDraftRouting:
 
         assert resolved.scope is None
         assert resolved.identification_state is None
-        assert identification_state_for_printed_tax_identifier(draft.supplier_tax_id) is EUMemberState.DE
+        assert identification_state_for_printed_tax_identifier(draft.supplier_tax_id) is EUMemberState._from_registry(
+            "de"
+        )
 
     def test_a_received_document_takes_the_issuing_party(
         self,
@@ -644,7 +646,7 @@ class TestDraftRouting:
         # can only have come from the supplier's number. The territory is
         # deliberately unsettled on this page — neither party printed an address —
         # which is now the honest answer rather than a routing failure.
-        assert resolved.identification_state is EUMemberState.DE
+        assert resolved.identification_state is EUMemberState._from_registry("de")
         assert resolved.scope is None
 
     def test_the_selection_never_falls_back_to_the_other_side(
@@ -717,7 +719,7 @@ class TestRungReachabilityFromADraft:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.EU_MEMBER
+        assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     def test_a_printed_spanish_country_name_reaches_the_postal_rung(
@@ -743,7 +745,7 @@ class TestRungReachabilityFromADraft:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.ES_CANARIAS
+        assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_the_side_selector_carries_each_party_country_to_its_own_rung(self) -> None:
@@ -775,7 +777,9 @@ class TestRungReachabilityFromADraft:
 
         assert resolved.scope is None
         assert resolved.rung is None
-        assert territorial_scope_for_spanish_postal_code(_LAS_PALMAS) is IvaTerritorialScope.ES_CANARIAS
+        assert territorial_scope_for_spanish_postal_code(_LAS_PALMAS) is IvaTerritorialScope._from_registry(
+            "es_canarias"
+        )
 
 
 # -- the rate walk must see every carrier a reader can fill -----------------

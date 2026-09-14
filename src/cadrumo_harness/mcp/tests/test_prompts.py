@@ -15,7 +15,7 @@ instead - never a skip.
 from __future__ import annotations
 
 import importlib.util
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import anyio
 import pytest
@@ -32,11 +32,21 @@ from .._prompts import (
 )
 from .session import connected_server_and_client_session as connect
 
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _UTF_8 = "utf-8"
 _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 _PERIOD_COMPLETIONS = tuple(str(value) for value in accepted_filing_period_codes())
+
+
+def _bundled_registry_authority() -> ValidatedRegistryAuthority:
+    """Load the validated catalogue used as the completion test authority."""
+    from dev.registry.compiler.authority import compiled_bundled_authority
+
+    return compiled_bundled_authority()
 
 
 def _shipped_skill_texts() -> dict[str, str]:
@@ -102,7 +112,10 @@ def test_server_lists_and_serves_every_prompt() -> None:
 
     # An empty descriptor set exercises the prompt handlers without building the
     # CLI tool descriptors (the prompt channel is independent of the tool surface).
-    server = cast("Any", build_server(()))
+    authority = _bundled_registry_authority()
+    support = authority.catalogues.supported_filing_years
+    assert support is not None
+    server = cast("Any", build_server((), supported_filing_years=support))
     skill_texts = _shipped_skill_texts()
 
     async def _drive() -> None:
@@ -122,6 +135,14 @@ def test_server_lists_and_serves_every_prompt() -> None:
                 )
             ).completion
             assert tuple(completion.values) == _PERIOD_COMPLETIONS
+
+            year_completion = (
+                await session.complete(
+                    ref=PromptReference(type="ref/prompt", name=workflow.name),
+                    argument={"name": "filing_year", "value": ""},
+                )
+            ).completion
+            assert tuple(year_completion.values) == tuple(str(year) for year in support.years)
 
             result = await session.get_prompt("cadrumo-preparar-modelo-130")
         assert result.messages[0].content.type == "text"
@@ -213,14 +234,31 @@ def test_prompt_get_substitutes_the_supplied_scope_into_the_brief() -> None:
 
 
 def test_completions_serve_period_and_year_values_by_prefix() -> None:
+    authority = _bundled_registry_authority()
+    support = authority.catalogues.supported_filing_years
+    assert support is not None
+    authored_year_values = tuple(str(year) for year in support.years)
+
     assert complete_prompt_argument("period", "") == _PERIOD_COMPLETIONS
     assert complete_prompt_argument("period", "3") == ("3P", "3T")
     zero_prefix = complete_prompt_argument("period", "0")
     assert "0A" in zero_prefix
     assert all(value.startswith("0") for value in zero_prefix)
     assert complete_prompt_argument("period", "an") == ()
-    years = complete_prompt_argument("filing_year", "202")
-    assert "2026" in years
+    years = complete_prompt_argument("filing_year", "202", supported_filing_years=support)
+    assert years == tuple(value for value in authored_year_values if value.startswith("202"))
+    assert str(support.horizon) in years
     assert all(value.startswith("202") for value in years)
+    assert (
+        complete_prompt_argument(
+            "filing_year",
+            str(support.floor - 1),
+            supported_filing_years=support,
+        )
+        == ()
+    )
+    # The finite completion list represents authored coverage; an open
+    # authority horizon is not a hard ceiling or a second support declaration.
+    assert complete_prompt_argument("filing_year", "", supported_filing_years=support) == authored_year_values
     # An unknown argument yields no candidates.
     assert complete_prompt_argument("nonsense", "x") == ()

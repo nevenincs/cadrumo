@@ -31,14 +31,16 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.deadlines.models import IVARegime
+
 from ._m210_snapshot_fixture import m210_snapshot
 
 __all__ = ["m210_snapshot"]
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.contribuyente.renta_codes import FiscalResidency
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -69,8 +71,8 @@ def _m210_convenio_lob_advisory_finding(
 def _irnr_profile(country_code: str) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
         representante_fiscal_nif="12345678Z",
         representante_fiscal_nombre="Test Representative",
@@ -80,8 +82,8 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
 def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.RESIDENT_IRPF,
+        iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 

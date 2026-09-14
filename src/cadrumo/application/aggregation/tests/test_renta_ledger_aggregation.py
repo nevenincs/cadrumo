@@ -102,7 +102,9 @@ def test_casilla_aggregation_empty_observations_yields_empty_totals_and_provenan
 
 def test_casilla_aggregation_modelo_propagates_to_output() -> None:
     """The modelo passed to the aggregator is reflected in the output."""
-    obs = _observation("tx-1", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
+    obs = _observation(
+        "tx-1", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+    )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
@@ -110,7 +112,9 @@ def test_casilla_aggregation_modelo_propagates_to_output() -> None:
 
 
 def test_casilla_aggregation_preserves_period_argument() -> None:
-    obs = _observation("tx-1", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
+    obs = _observation(
+        "tx-1", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+    )
 
     other_period = _period(2024, "0A")
     result = _casilla_aggregation(other_period, [obs], modelo="100")
@@ -124,22 +128,28 @@ def test_casilla_aggregation_preserves_period_argument() -> None:
 
 
 def test_casilla_aggregation_single_observation_produces_one_total_and_one_provenance_row() -> None:
-    obs = _observation("tx-1", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
+    obs = _observation(
+        "tx-1", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+    )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
     assert set(result.casilla_values.keys()) == {_M100_AUTONOMOS_SS_CASILLA}
     assert len(result.provenance) == 1
     assert result.provenance[0].casilla_id == _M100_AUTONOMOS_SS_CASILLA
-    assert result.provenance[0].category_id == SpendingCategory.CUOTAS_AUTONOMOS_SS.value
+    assert result.provenance[0].category_id == SpendingCategory._from_registry("cuotas_autonomos_ss").value
     assert result.provenance[0].transaction_ids == (_tx_id("tx-1"),)
 
 
 def test_casilla_aggregation_groups_observations_same_casilla_same_category_into_one_row() -> None:
     """Two observations from the same (casilla, category) collapse into
     a single provenance row that lists both transaction_ids."""
-    obs_a = _observation("tx-a", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
-    obs_b = _observation("tx-b", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("200.00"))
+    obs_a = _observation(
+        "tx-a", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+    )
+    obs_b = _observation(
+        "tx-b", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("200.00")
+    )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
 
@@ -155,10 +165,12 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
     rows so the audit trail preserves per-category attribution."""
     obs_contable = _observation(
         "tx-contable",
-        category=SpendingCategory.ASESORIA_CONTABLE,
+        category=SpendingCategory._from_registry("asesoria_contable"),
         gross_amount=Decimal("121.00"),
     )
-    obs_fiscal = _observation("tx-fiscal", category=SpendingCategory.ASESORIA_FISCAL, gross_amount=Decimal("79.00"))
+    obs_fiscal = _observation(
+        "tx-fiscal", category=SpendingCategory._from_registry("asesoria_fiscal"), gross_amount=Decimal("79.00")
+    )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
 
@@ -167,8 +179,8 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
     # But provenance preserves the per-category split.
     provenance_categories = {row.category_id for row in result.provenance if row.casilla_id == _M100_ASESORIA_CASILLA}
     assert provenance_categories == {
-        SpendingCategory.ASESORIA_CONTABLE.value,
-        SpendingCategory.ASESORIA_FISCAL.value,
+        SpendingCategory._from_registry("asesoria_contable").value,
+        SpendingCategory._from_registry("asesoria_fiscal").value,
     }
 
 
@@ -180,9 +192,15 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
 def test_casilla_aggregation_provenance_rows_are_sorted_by_casilla_then_category() -> None:
     """Provenance rows iterate in lexicographic (casilla, category)
     order so audit-diff output is stable regardless of input ordering."""
-    obs_186 = _observation("tx-186", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
-    obs_192 = _observation("tx-192", category=SpendingCategory.ARRENDAMIENTO_LOCAL, gross_amount=Decimal("500.00"))
-    obs_199 = _observation("tx-199", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00"))
+    obs_186 = _observation(
+        "tx-186", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+    )
+    obs_192 = _observation(
+        "tx-192", category=SpendingCategory._from_registry("arrendamiento_local"), gross_amount=Decimal("500.00")
+    )
+    obs_199 = _observation(
+        "tx-199", category=SpendingCategory._from_registry("asesoria_contable"), gross_amount=Decimal("121.00")
+    )
 
     # Feed observations in random-ish order.
     result = _casilla_aggregation(_PERIOD_2025, [obs_192, obs_199, obs_186], modelo="100")
@@ -195,9 +213,15 @@ def test_casilla_aggregation_transaction_ids_within_one_row_are_sorted() -> None
     """transaction_ids on each provenance row are lexicographically
     sorted; the aggregator never preserves input ordering for the
     transaction sequence."""
-    obs_z = _observation("tx-z", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("100.00"))
-    obs_a = _observation("tx-a", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("200.00"))
-    obs_m = _observation("tx-m", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
+    obs_z = _observation(
+        "tx-z", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("100.00")
+    )
+    obs_a = _observation(
+        "tx-a", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("200.00")
+    )
+    obs_m = _observation(
+        "tx-m", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+    )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_z, obs_a, obs_m], modelo="100")
 
@@ -222,8 +246,12 @@ def test_casilla_aggregation_subtotal_equals_sum_of_member_observations() -> Non
     test does NOT hand-compute the deductible_amount of each
     observation; it asserts the aggregator's internal sum matches
     Python's built-in sum() over the same inputs."""
-    obs_a = _observation("tx-a", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
-    obs_b = _observation("tx-b", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("200.00"))
+    obs_a = _observation(
+        "tx-a", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+    )
+    obs_b = _observation(
+        "tx-b", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("200.00")
+    )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
 
@@ -238,10 +266,12 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
     casilla_values entry matches Python's sum() over the same inputs."""
     obs_contable = _observation(
         "tx-contable",
-        category=SpendingCategory.ASESORIA_CONTABLE,
+        category=SpendingCategory._from_registry("asesoria_contable"),
         gross_amount=Decimal("121.00"),
     )
-    obs_fiscal = _observation("tx-fiscal", category=SpendingCategory.ASESORIA_FISCAL, gross_amount=Decimal("79.00"))
+    obs_fiscal = _observation(
+        "tx-fiscal", category=SpendingCategory._from_registry("asesoria_fiscal"), gross_amount=Decimal("79.00")
+    )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
 
@@ -272,7 +302,9 @@ def test_casilla_aggregation_category_id_is_typed_spending_category_instance() -
     reverts ``category_id`` to ``str | None``.
     """
 
-    obs = _observation("tx-typed", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
+    obs = _observation(
+        "tx-typed", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+    )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
@@ -284,4 +316,4 @@ def test_casilla_aggregation_category_id_is_typed_spending_category_instance() -
         f"but got {type(row.category_id).__name__!r}; the typed provenance "
         "was lost at the ledger→renta handoff"
     )
-    assert row.category_id is SpendingCategory.CUOTAS_AUTONOMOS_SS
+    assert row.category_id is SpendingCategory._from_registry("cuotas_autonomos_ss")

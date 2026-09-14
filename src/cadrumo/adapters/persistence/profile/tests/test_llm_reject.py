@@ -90,7 +90,7 @@ def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
         transaction_id=tx_id,
         provenance="llm:claude:test-model",
         classification=BusinessClassification.BUSINESS,
-        category=SpendingCategory.MATERIAL_OFICINA,
+        category=SpendingCategory._from_registry("material_oficina"),
         confidence=Decimal("0.9"),
         reason="looks like office supplies",
     )
@@ -135,7 +135,7 @@ def test_reject_records_event_and_does_not_mutate(
     payload = recorded[0].payload
     assert payload["suggestion_kind"] == "classification"
     assert payload["classification"] == BusinessClassification.BUSINESS.value
-    assert payload["category"] == SpendingCategory.MATERIAL_OFICINA.value
+    assert payload["category"] == SpendingCategory._from_registry("material_oficina").value
     assert payload["operator_reason"] == "wrong category, this is personal"
     assert payload["mutation_kind"] == "llm_suggestion_rejected"
 
@@ -149,10 +149,10 @@ def test_reject_saturated_suggestion_captures_iva_category(
         transaction_id=tx_id,
         provenance="llm:claude:test-model",
         classification=BusinessClassification.BUSINESS,
-        category=SpendingCategory.MATERIAL_OFICINA,
+        category=SpendingCategory._from_registry("material_oficina"),
         confidence=Decimal("0.8"),
         reason="domestic purchase",
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
 
     reject_llm_suggestion(
@@ -166,7 +166,7 @@ def test_reject_saturated_suggestion_captures_iva_category(
     )
 
     payload = _rejection_events(events)[0].payload
-    assert payload["iva_category"] == IvaCategory.DOMESTIC_GENERAL.value
+    assert payload["iva_category"] == IvaCategory("domestic_general").value
 
 
 def test_reject_unknown_transaction_raises(

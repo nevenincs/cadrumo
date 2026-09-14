@@ -6,8 +6,10 @@ from datetime import date
 
 import pytest
 
-from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory
+
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 
@@ -17,9 +19,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _autonomo(*, iva_regime: IVARegime) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
         iva_regime=iva_regime,
         has_employees=False,
         pays_professionals_with_retencion=False,
@@ -35,7 +37,7 @@ def test_calendar_warns_when_m303_simplificado_forfait_engine_is_unavailable() -
     """A SIMPLIFICADO profile must not receive a silent general-regime M303 row."""
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
 
-    cal = build_overview_calendar(_autonomo(iva_regime=IVARegime.SIMPLIFICADO), rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_autonomo(iva_regime=IVARegime("SIMPLIFICADO")), rng, today=date(2026, 4, 1))
 
     assert any(entry.modelo == "303" for entry in cal.entries)
     warnings = [w for w in cal.warnings if w.code == "iva.regime.m303_simplificado_forfait_unavailable"]
@@ -52,7 +54,7 @@ def test_calendar_does_not_emit_simplificado_forfait_warning_for_general_regime(
     """GENERAL-regime M303 rows do not carry the SIMPLIFICADO forfait warning."""
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
 
-    cal = build_overview_calendar(_autonomo(iva_regime=IVARegime.GENERAL), rng, today=date(2026, 4, 1))
+    cal = build_overview_calendar(_autonomo(iva_regime=IVARegime("GENERAL")), rng, today=date(2026, 4, 1))
 
     assert any(entry.modelo == "303" for entry in cal.entries)
     assert "iva.regime.m303_simplificado_forfait_unavailable" not in {w.code for w in cal.warnings}

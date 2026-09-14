@@ -60,6 +60,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -264,7 +265,9 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period).revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     decision = _wallet_decision(period=period)

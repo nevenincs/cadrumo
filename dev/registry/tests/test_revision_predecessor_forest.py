@@ -140,8 +140,9 @@ def test_parallel_editions_each_declaring_no_predecessor_load_without_an_order(t
     assert load_modelo_directory(modelo_dir).revisions["esquema-c"].predecessor is None
 
     _write_edition(modelo_dir, _Edition("esquema-b", 2025))
-    with pytest.raises(RegistryLoadError, match=re.escape("'esquema-b' and 'esquema-c'")):
-        load_modelo_directory(modelo_dir)
+    keyless = load_modelo_directory(modelo_dir)
+    assert keyless.revisions["esquema-b"].predecessor is None
+    assert keyless.revisions["esquema-c"].predecessor is None
 
     _write_edition(modelo_dir, _Edition("esquema-b", 2025, manifest_extra=_NONE))
     assert isinstance(load_modelo_directory(modelo_dir).revisions["esquema-b"].predecessor, NoPredecessor)

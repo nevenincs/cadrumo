@@ -67,6 +67,11 @@ class KeyedFamilySpec:
 
     section: str
     identity: str | None
+    #: Edition-local key used only to address a member in the immediately
+    #: declared predecessor for lossless storage patches.  This is deliberately
+    #: separate from semantic continuity: for casillas it is ``id``, not
+    #: ``continuidad_id``.
+    storage_identity: str = "id"
     identity_fields: tuple[str, ...] = ()
     #: Identity fields that name edition-local casillas; compare their declared
     #: continuity rather than mistaking a printed-number change for repurposing.
@@ -91,6 +96,8 @@ class KeyedFamilySpec:
         """Reject an internally contradictory policy at import time."""
         if not self.section:
             raise ValueError("a family specification needs a section")
+        if not self.storage_identity:
+            raise ValueError(f"family {self.section!r} needs a storage identity")
         if not set(self.casilla_identity_fields).issubset(self.identity_fields):
             raise ValueError(f"casilla identity fields must be identity fields: {self.section!r}")
         if self.inheritance in {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED} and not self.identity:

@@ -118,9 +118,9 @@ def _calculate() -> object:
         IvaLedgerObservation(
             ledger_id="grupo-devengado-general",
             transaction_date=date(2024, 3, 15),
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection._from_registry("repercutido"),
             base_amount=Decimal("0"),
             # OMEGA 6.000 + DELTA 1.000 (manual's own printed per-member
             # "IVA devengado" figures, pag. 199).
@@ -130,16 +130,16 @@ def _calculate() -> object:
         IvaLedgerObservation(
             ledger_id="grupo-deducible-general",
             transaction_date=date(2024, 3, 15),
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.SOPORTADO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection._from_registry("soportado"),
             base_amount=Decimal("0"),
             # OMEGA 2.000 + DELTA 2.000 (manual's own printed per-member
             # "IVA deducible" figures, pag. 199).
             iva_amount=Decimal("4000.00"),
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
             deduction_provenance=_deduction_provenance(
-                IvaDeductionFactKind.DOMESTIC_CURRENT,
+                IvaDeductionFactKind._from_registry("domestic_current"),
                 source_locator="invoice:grupo-deducible-general",
             ),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,

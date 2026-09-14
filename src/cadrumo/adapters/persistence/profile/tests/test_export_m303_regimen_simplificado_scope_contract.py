@@ -107,7 +107,11 @@ def test_export_scope_mapper_rejects_general_evidence_for_a_simplified_profile()
     workflow_profile = _profile()
     assert workflow_profile.iva is not None
     simplified_profile = workflow_profile.model_copy(
-        update={"iva": workflow_profile.iva.model_copy(update={"regime_composition": M303RegimeComposition.SIMPLIFIED})}
+        update={
+            "iva": workflow_profile.iva.model_copy(
+                update={"regime_composition": M303RegimeComposition._from_registry("simplified")}
+            )
+        }
     )
 
     expected_scope = m303_regimen_simplificado_scope_for_profile(simplified_profile)

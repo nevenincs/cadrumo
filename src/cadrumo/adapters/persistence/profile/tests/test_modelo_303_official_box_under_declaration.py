@@ -151,7 +151,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("general"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
@@ -229,11 +229,13 @@ def _iva_transaction(
             # leave the deducible boxes at zero and make every box-equals-source
             # assertion below pass vacuously against two zeroes.
             "deduction_fact_kind": (
-                IvaDeductionFactKind.DOMESTIC_CURRENT if direction is TransactionDirection.OUTGOING else None
+                IvaDeductionFactKind._from_registry("domestic_current")
+                if direction is TransactionDirection.OUTGOING
+                else None
             ),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                     source_locator=f"test-invoice:{provider_id}",
                     evidence_digest="a" * 64,
                 )

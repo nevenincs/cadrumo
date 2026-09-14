@@ -92,7 +92,7 @@ class NoPredecessorCause(StrEnum):
     """The governing norm approves this edition independently, so no earlier edition is its authored basis."""
 
     lower_grade = "lower_grade"
-    """The candidate earlier edition carries a lower authority grade than this one, so it cannot ground it."""
+    """Existing authored root pending source-data replanning; never inferred by migration or loading."""
 
     unretired_withdrawal = "unretired_withdrawal"
     """The earlier edition withdraws content without retiring it, so inheritance would carry withdrawn rows."""
@@ -300,13 +300,9 @@ def validate_predecessor_forest(
         )
     if not named and not declared_roots:
         return
-    if len(keyless) > 1:
-        omitting = " and ".join(repr(edition) for edition in sorted(keyless))
-        raise RegistryValidationError(
-            f"{subject_kind} {subject_id!r} has {len(keyless)} editions omitting the predecessor key: "
-            f"{omitting}; absence identifies a first edition only while one edition omits it, so every "
-            "other edition must name its predecessor or declare that none exists",
-        )
+    # Keyless revisions are authored full copies: roots of the storage
+    # dependency forest, not claims that they are chronologically first. More
+    # than one is valid when independent branches are compacted separately.
     editions = frozenset(named) | declared_roots | keyless
     for edition, target in sorted(named.items()):
         if target == edition:

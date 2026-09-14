@@ -220,7 +220,7 @@ def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 1, payload
     assert payload["failures"] == [], payload
-    assert _stored_transaction(tx1).iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert _stored_transaction(tx1).iva_category == IvaCategory("domestic_general")
 
 
 def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:

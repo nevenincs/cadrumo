@@ -134,10 +134,10 @@ def _register_with_carried_prior(
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=_FILING_YEAR,
-                regime=ProrrataRegisterRegime.GENERAL,
+                regime=ProrrataRegisterRegime._from_registry("general"),
                 especial_transition=None,
                 provisional_percentage=provisional_percentage,
-                provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
                 source_observation_ref=f"{Modelo('303').value}:{_PRIOR_YEAR}:4T",
                 source_registry_snapshot_refs=(
                     compiled_bundled_authority().snapshot("303", filing_year=_PRIOR_YEAR, period="4T").snapshot_ref,

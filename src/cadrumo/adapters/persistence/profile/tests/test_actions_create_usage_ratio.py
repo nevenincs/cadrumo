@@ -29,7 +29,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory.TELEFONIA_MOVIL
+    category = SpendingCategory._from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     result = create_manual_transaction(
@@ -65,7 +65,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory.TELEFONIA_MOVIL
+    category = SpendingCategory._from_registry("telefonia_movil")
 
     with pytest.raises(TransactionValidationError, match="not configured"):
         create_manual_transaction(
@@ -94,7 +94,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory.TELEFONIA_MOVIL
+    category = SpendingCategory._from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with pytest.raises(TransactionValidationError, match="concrete eligible spending category"):
@@ -126,7 +126,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
                 description="telefono movil",
                 business_classification=BusinessClassification.MIXED,
                 business_pct=Decimal("0.60"),
-                category_id=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ.value,
+                category_id=SpendingCategory._from_registry("suministros_home_office_luz").value,
                 usage_ratio_id=category.value,
             ),
             transaction_repository=transaction_repository,
@@ -143,7 +143,7 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory.TELEFONIA_MOVIL
+    category = SpendingCategory._from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with pytest.raises(TransactionValidationError, match="does not match"):

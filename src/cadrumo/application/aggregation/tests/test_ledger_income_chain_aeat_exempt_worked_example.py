@@ -80,6 +80,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.iva.schema import IvaCategory
+
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -279,7 +281,7 @@ def _income_row(
             "taxable_base": amount if declares_substrate else None,
             "iva_amount": None,
             "iva_rate": None,
-            "iva_category": IvaCategory.DOMESTIC_EXEMPT if declares_substrate else None,
+            "iva_category": IvaCategory("domestic_exempt") if declares_substrate else None,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(_FILING_YEAR, 12, 31, 10, 0, tzinfo=UTC),
@@ -393,8 +395,8 @@ def test_the_manual_states_the_activity_is_iva_exempt() -> None:
     operation has no cuota" from "nobody recorded one", and the whole exempt
     case rests on that distinction.
     """
-    assert category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_EXEMPT, InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL, InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED)
+    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
 
 
 def test_the_two_printed_income_lines_fold_into_the_bound_casilla() -> None:

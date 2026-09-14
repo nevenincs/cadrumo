@@ -58,6 +58,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -195,14 +196,14 @@ def _seed_ready_profile(*, profile_id: str) -> None:
 def _workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("general"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.COMMON_REGIME,
-            regime_composition=M303RegimeComposition.GENERAL,
+            tax_territory=M303TaxTerritory._from_registry("common_regime"),
+            regime_composition=M303RegimeComposition._from_registry("general"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
@@ -225,7 +226,7 @@ def _calculate_quarter(
         filing_year=2026,
         period=Period.from_year_and_code(2026, period),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_CLOCK,
     )
     return calculate_modelo_revision(
@@ -266,7 +267,7 @@ def _import_official_filing_evidence(
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         revision_id=source_snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_CLOCK,
     )
     evidence_reference_id = f"JUST{modelo}{filing_year}{period}"

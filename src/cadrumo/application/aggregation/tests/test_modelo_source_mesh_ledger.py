@@ -259,9 +259,9 @@ def _iva_transaction(
     if counterparty_country is not None:
         fields["counterparty_country"] = counterparty_country
     if direction is TransactionDirection.OUTGOING:
-        fields["deduction_fact_kind"] = IvaDeductionFactKind.DOMESTIC_CURRENT
+        fields["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("domestic_current")
         fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
             source_locator=f"invoice:{provider_id}",
             evidence_digest="a" * 64,
         )
@@ -285,7 +285,7 @@ def _renta_transaction(
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
-            "category_id": SpendingCategory.ASESORIA_FISCAL.value,
+            "category_id": SpendingCategory._from_registry("asesoria_fiscal").value,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -298,7 +298,7 @@ def _invoice(tx_id: str, *, bucket_id: str = _BUCKET_ID) -> Invoice:
         quantity=Decimal("1"),
         unit_price=Decimal("100.00"),
         subtotal=Decimal("100.00"),
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=Decimal("21.00"),
     )
     return Invoice.model_validate(
@@ -339,7 +339,7 @@ def _domestic_iva_invoice(
         quantity=Decimal("1"),
         unit_price=taxable_base,
         subtotal=taxable_base,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=IvaRate._from_registry("RATE_21"),
         iva_amount=iva_amount,
     )
     return Invoice.model_validate(
@@ -363,7 +363,7 @@ def _domestic_iva_invoice(
                 if operation_date is None
                 else {
                     "operation_date": operation_date,
-                    "operation_date_role": InvoiceOperationDateRole.OPERATION_PERFORMED,
+                    "operation_date_role": InvoiceOperationDateRole._from_registry("OPERATION_PERFORMED"),
                 }
             ),
         },
@@ -383,7 +383,7 @@ def _exempt_intracommunity_invoice(
         quantity=Decimal("1"),
         unit_price=taxable_base,
         subtotal=taxable_base,
-        iva_rate=IvaRate.RATE_0,
+        iva_rate=IvaRate._from_registry("RATE_0"),
         iva_amount=Decimal("0"),
     )
     return Invoice.model_validate(
@@ -469,10 +469,10 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
             entries=(
                 ProrrataRegisterEntry(
                     ejercicio=2026,
-                    regime=ProrrataRegisterRegime.GENERAL,
+                    regime=ProrrataRegisterRegime._from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=Decimal("80"),
-                    provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
                     source_observation_ref="303:2025:4T",
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
@@ -782,7 +782,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
         amount=Decimal("200.00"),
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
-        iva_category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        iva_category=IvaCategory("domestic_reverse_charge"),
     )
     tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, reverse_charge)))
 
@@ -848,7 +848,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation() 
         amount=Decimal("242.00"),
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         counterparty_country="DE",
     )
     tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, exempt_supply)))
@@ -1036,11 +1036,11 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
         OssIossLedgerCandidate(
             ledger_id="oss-ledger-1",
             transaction_date=date(2025, 7, 15),
-            regime=OssIossRegime.UNION_SCHEME,
-            destination_member_state=EUMemberState.DE,
-            rate_kind=IvaRateKind.GENERAL,
+            regime=OssIossRegime("union_scheme"),
+            destination_member_state=EUMemberState._from_registry("de"),
+            rate_kind=IvaRateKind("general"),
             invoice_direction=IvaInvoiceKind.ISSUED,
-            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            transaction_kind=TransactionKind("oss_union_services"),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("19.00"),
         ),
@@ -1080,11 +1080,11 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
         OssIossLedgerCandidate(
             ledger_id="oss-it-unrouted",
             transaction_date=date(2025, 7, 15),
-            regime=OssIossRegime.UNION_SCHEME,
-            destination_member_state=EUMemberState.IT,
-            rate_kind=IvaRateKind.GENERAL,
+            regime=OssIossRegime("union_scheme"),
+            destination_member_state=EUMemberState._from_registry("it"),
+            rate_kind=IvaRateKind("general"),
             invoice_direction=IvaInvoiceKind.ISSUED,
-            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            transaction_kind=TransactionKind("oss_union_services"),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("22.00"),
         ),

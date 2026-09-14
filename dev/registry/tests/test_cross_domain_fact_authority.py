@@ -81,10 +81,10 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
 
     income_exclusion = registry_authority.resolve_governed_fact(_probe("modelo-131-income-exclusion").query)
     assert counts_toward_volumen_de_ingresos(
-        ConceptoIngreso.SUBVENCION_CAPITAL,
+        ConceptoIngreso._from_registry("subvencion_capital"),
         effective_date=date(2018, 12, 23),
         authority=registry_authority,
-    ) is (ConceptoIngreso.SUBVENCION_CAPITAL.value not in income_exclusion.payload.entities)
+    ) is (ConceptoIngreso._from_registry("subvencion_capital").value not in income_exclusion.payload.entities)
 
     projected_convenio = convenio_authority_from_facts(
         registry_authority.catalogues.facts,

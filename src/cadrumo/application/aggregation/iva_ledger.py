@@ -1423,7 +1423,10 @@ def _active_prorrata_apportionment(
     inputs (absent it, no apportionment applies, exactly as for any register
     with no whole-entity entry).
     """
-    register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())
+    register = require_prorrata_register_coordinates_current(
+        prorrata_register_repository.load(),
+        operation=operation,
+    )
     base = _sector_scoped_apportionment(register, ejercicio, sector_id=None, operation=operation)
     if base is None:
         return None

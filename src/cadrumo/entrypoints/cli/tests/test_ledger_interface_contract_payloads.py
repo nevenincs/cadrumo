@@ -16,7 +16,6 @@ from pydantic import ValidationError
 
 from ....application.export.tabular import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
-from ....domain.categories.proportionality import ProportionalityKind
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
 from .._ledger_catalogue_invoice_payloads import (
@@ -395,8 +394,8 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "bucket_id": "default",
             "rows": [
                 {
-                    "category": SpendingCategory.VEHICULO_COMBUSTIBLE,
-                    "proportionality_kind": ProportionalityKind.USAGE_RATIO_PERSONAL,
+                    "category": SpendingCategory._from_registry("vehiculo_combustible"),
+                    "proportionality_kind": require_proportionality_kind("usage_ratio_personal"),
                     "default_ratio": None,
                     "override_present": False,
                 },
@@ -412,10 +411,10 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "profile_present": True,
             "eligible_count": 1,
             "overrides_count": 1,
-            "missing_overrides": [SpendingCategory.VEHICULO_COMBUSTIBLE],
+            "missing_overrides": [SpendingCategory._from_registry("vehiculo_combustible")],
             "findings": [
                 {
-                    "category": SpendingCategory.VEHICULO_COMBUSTIBLE,
+                    "category": SpendingCategory._from_registry("vehiculo_combustible"),
                     "kind": "missing_override",
                     "detail": "required",
                 },

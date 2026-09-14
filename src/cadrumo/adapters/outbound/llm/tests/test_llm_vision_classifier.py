@@ -62,8 +62,8 @@ def test_vision_classifier_classifies_from_images() -> None:
             "classification": "BUSINESS",
             "confidence": 0.9,
             "reason": "office hardware invoice read from the attached image",
-            "category": SpendingCategory.HARDWARE_AMORTIZABLE.value,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL.value,
+            "category": SpendingCategory._from_registry("hardware_amortizable").value,
+            "iva_category": IvaCategory("domestic_general").value,
             "business_pct": None,
         },
     )
@@ -75,8 +75,8 @@ def test_vision_classifier_classifies_from_images() -> None:
 
     observed, response = run_against_loopback_ollama(classification_json, _call)
     assert response.classification is BusinessClassification.BUSINESS
-    assert response.category is SpendingCategory.HARDWARE_AMORTIZABLE
-    assert response.iva_category is IvaCategory.DOMESTIC_GENERAL
+    assert response.category is SpendingCategory._from_registry("hardware_amortizable")
+    assert response.iva_category is IvaCategory("domestic_general")
 
     body = json_object(observed["body"])
     messages = json_array(body["messages"])
@@ -91,8 +91,8 @@ def test_image_evidence_classifies_with_no_provider() -> None:
             "classification": "BUSINESS",
             "confidence": 0.88,
             "reason": "scanned office-supplies invoice read on-host",
-            "category": SpendingCategory.HARDWARE_AMORTIZABLE.value,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL.value,
+            "category": SpendingCategory._from_registry("hardware_amortizable").value,
+            "iva_category": IvaCategory("domestic_general").value,
             "business_pct": None,
         },
     )
@@ -190,8 +190,8 @@ def test_vision_model_override_selects_the_named_model() -> None:
             "classification": "BUSINESS",
             "confidence": 0.8,
             "reason": "office invoice",
-            "category": SpendingCategory.HARDWARE_AMORTIZABLE.value,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL.value,
+            "category": SpendingCategory._from_registry("hardware_amortizable").value,
+            "iva_category": IvaCategory("domestic_general").value,
         },
     )
     evidence = ResolvedEvidence(

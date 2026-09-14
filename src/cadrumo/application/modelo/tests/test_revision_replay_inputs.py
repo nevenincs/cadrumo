@@ -5,6 +5,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -13,8 +16,7 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -176,9 +178,9 @@ def test_revision_replay_inputs_zero_not_applicable_m100_pagos_relations_for_sal
     )
     profile = TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
+        iva_regime=IVARegime("GENERAL"),
     )
 
     replay_inputs = revision_filing_replay_inputs(
@@ -196,10 +198,10 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
     revision = _revision(work_unit)
     profile = TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("GENERAL"),
     )
 
     replay_inputs = revision_filing_replay_inputs(

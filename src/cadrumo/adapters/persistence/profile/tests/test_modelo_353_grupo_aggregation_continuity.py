@@ -116,19 +116,19 @@ _MEMBER_DEC_IVA: dict[str, tuple[Decimal, Decimal]] = {
 
 
 def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva: Decimal) -> IvaLedgerObservation:
-    is_input = flow is IvaFlowDirection.SOPORTADO
+    is_input = flow is IvaFlowDirection._from_registry("soportado")
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
         flow_direction=flow,
         base_amount=Decimal("1000.00"),
         iva_amount=iva,
-        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT if is_input else None,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current") if is_input else None,
         deduction_provenance=(
             IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{ledger_id}",
                 evidence_digest="a" * 64,
             )
@@ -146,13 +146,13 @@ def _member_ledger(*, member_nif: str, filing_year: int, period: str) -> tuple[I
         _ledger_line(
             ledger_id=f"{member_nif}-{filing_year}-{period}-out",
             txn_date=date(filing_year, month, 10),
-            flow=IvaFlowDirection.REPERCUTIDO,
+            flow=IvaFlowDirection._from_registry("repercutido"),
             iva=repercutido,
         ),
         _ledger_line(
             ledger_id=f"{member_nif}-{filing_year}-{period}-in",
             txn_date=date(filing_year, month, 20),
-            flow=IvaFlowDirection.SOPORTADO,
+            flow=IvaFlowDirection._from_registry("soportado"),
             iva=soportado,
         ),
     )

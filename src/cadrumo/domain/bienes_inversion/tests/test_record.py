@@ -79,7 +79,7 @@ def _record(identifier: str = "bi-2022-furgoneta", **overrides: object) -> BienI
         "acquisition_year": 2022,
         "cuota_soportada": Decimal("4200.00"),
         "prorrata_inicial_pct": Decimal("80"),
-        "kind": BienInversionKind.MUEBLE,
+        "kind": BienInversionKind._from_registry("mueble"),
         "acquisition_ledger_id": f"ledger-{identifier}",
     }
     base.update(overrides)
@@ -94,7 +94,7 @@ def test_deduccion_efectuada_is_cuota_times_initial_prorrata() -> None:
 
 def test_movable_window_spans_four_following_years() -> None:
     """A mueble acquired in 2022 regularises 2023-2026, not 2022 or 2027."""
-    record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
+    record = _record(acquisition_year=2022, kind=BienInversionKind._from_registry("mueble"))
     assert record.is_within_regularization_window(2022, parameters=_PARAMS) is False  # acquisition year excluded
     assert record.is_within_regularization_window(2023, parameters=_PARAMS) is True
     assert record.is_within_regularization_window(2026, parameters=_PARAMS) is True
@@ -103,7 +103,7 @@ def test_movable_window_spans_four_following_years() -> None:
 
 def test_real_estate_window_spans_nine_following_years() -> None:
     """An inmueble acquired in 2022 regularises 2023-2031, not 2032."""
-    record = _record(acquisition_year=2022, kind=BienInversionKind.INMUEBLE)
+    record = _record(acquisition_year=2022, kind=BienInversionKind._from_registry("inmueble"))
     assert record.is_within_regularization_window(2031, parameters=_PARAMS) is True
     assert record.is_within_regularization_window(2032, parameters=_PARAMS) is False
 
@@ -113,31 +113,33 @@ def test_disposal_before_acquisition_is_refused() -> None:
     with pytest.raises(pydantic.ValidationError, match="disposal year"):
         _record(
             acquisition_year=2022,
-            disposal=BienInversionDisposal(year=2021, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+            disposal=BienInversionDisposal(
+                year=2021, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+            ),
         )
 
 
 def test_remaining_regularization_years_mid_window_disposal() -> None:
     """A mueble (2022, window 2023-2026) disposed of in 2024 has 3 years left (2024-2026)."""
-    record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
+    record = _record(acquisition_year=2022, kind=BienInversionKind._from_registry("mueble"))
     assert record.remaining_regularization_years(2024, parameters=_PARAMS) == 3
 
 
 def test_remaining_regularization_years_disposal_in_acquisition_year_counts_full_window() -> None:
     """A disposal in the acquisition year itself still owes the full following window."""
-    record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
+    record = _record(acquisition_year=2022, kind=BienInversionKind._from_registry("mueble"))
     assert record.remaining_regularization_years(2022, parameters=_PARAMS) == 4
 
 
 def test_remaining_regularization_years_disposal_in_last_window_year() -> None:
     """A disposal in the final window year leaves exactly that one year."""
-    record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
+    record = _record(acquisition_year=2022, kind=BienInversionKind._from_registry("mueble"))
     assert record.remaining_regularization_years(2026, parameters=_PARAMS) == 1
 
 
 def test_remaining_regularization_years_disposal_outside_window_is_zero() -> None:
     """A disposal after window expiry leaves nothing to regularise."""
-    record = _record(acquisition_year=2022, kind=BienInversionKind.MUEBLE)
+    record = _record(acquisition_year=2022, kind=BienInversionKind._from_registry("mueble"))
     assert record.remaining_regularization_years(2027, parameters=_PARAMS) == 0
 
 
@@ -160,8 +162,8 @@ def test_register_rejects_duplicate_acquisition_ledger_ids() -> None:
 
 def test_in_window_records_filters_by_eligibility_and_window() -> None:
     """``in_window_records`` returns only art-108-eligible, in-window goods."""
-    in_window = _record("in-window", acquisition_year=2022, kind=BienInversionKind.MUEBLE)
-    out_of_window = _record("old", acquisition_year=2015, kind=BienInversionKind.MUEBLE)
+    in_window = _record("in-window", acquisition_year=2022, kind=BienInversionKind._from_registry("mueble"))
+    out_of_window = _record("old", acquisition_year=2015, kind=BienInversionKind._from_registry("mueble"))
     ineligible = _record("cheap", acquisition_year=2022, art108_elegible=False)
     register = BienesInversionIvaRegister(records=(in_window, out_of_window, ineligible))
     result = register.in_window_records(2024, parameters=_PARAMS)
@@ -182,7 +184,7 @@ def test_registro_projection_folds_computed_importes_and_reports_pending() -> No
         acquisition_year=2022,
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("80"),
-        kind=BienInversionKind.MUEBLE,
+        kind=BienInversionKind._from_registry("mueble"),
         prorrata_sector_id="sector-services",
     )
     pending = _record(
@@ -190,7 +192,7 @@ def test_registro_projection_folds_computed_importes_and_reports_pending() -> No
         acquisition_year=2023,
         cuota_soportada=Decimal("9000.00"),
         prorrata_inicial_pct=Decimal("50"),
-        kind=BienInversionKind.MUEBLE,
+        kind=BienInversionKind._from_registry("mueble"),
         prorrata_sector_id="sector-rentals",
     )
     register = BienesInversionIvaRegister(records=(computed, pending))
@@ -227,17 +229,23 @@ def test_in_window_records_excludes_a_good_disposed_at_or_before_the_year() -> N
     disposed_same_year = _record(
         "disposed-same-year",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        disposal=BienInversionDisposal(
+            year=2024, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        ),
     )
     disposed_earlier_year = _record(
         "disposed-earlier-year",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(year=2023, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        disposal=BienInversionDisposal(
+            year=2023, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        ),
     )
     disposed_later_year = _record(
         "disposed-later-year",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(year=2025, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        disposal=BienInversionDisposal(
+            year=2025, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        ),
     )
     never_disposed = _record("never-disposed", acquisition_year=2022)
     register = BienesInversionIvaRegister(
@@ -252,12 +260,16 @@ def test_disposed_records_filters_by_disposal_year_and_remaining_window() -> Non
     in_scope = _record(
         "in-scope",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        disposal=BienInversionDisposal(
+            year=2024, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        ),
     )
     different_year = _record(
         "different-year",
         acquisition_year=2022,
-        disposal=BienInversionDisposal(year=2023, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        disposal=BienInversionDisposal(
+            year=2023, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        ),
     )
     no_disposal = _record("no-disposal", acquisition_year=2022)
     register = BienesInversionIvaRegister(records=(in_scope, different_year, no_disposal))
@@ -280,18 +292,22 @@ def test_registro_transmisiones_folds_disposed_goods_into_casilla_43() -> None:
         acquisition_year=2022,
         cuota_soportada=Decimal("10000.00"),
         prorrata_inicial_pct=Decimal("60"),
-        kind=BienInversionKind.MUEBLE,
+        kind=BienInversionKind._from_registry("mueble"),
         prorrata_sector_id="sector-muebles",
-        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        disposal=BienInversionDisposal(
+            year=2024, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        ),
     )
     regla_segunda = _record(
         "bi-regla-2",
         acquisition_year=2021,
         cuota_soportada=Decimal("31500.00"),
         prorrata_inicial_pct=Decimal("65"),
-        kind=BienInversionKind.INMUEBLE,
+        kind=BienInversionKind._from_registry("inmueble"),
         prorrata_sector_id="sector-inmuebles",
-        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA),
+        disposal=BienInversionDisposal(
+            year=2024, regime=BienInversionDisposalRegime._from_registry("exenta_o_no_sujeta")
+        ),
     )
     register = BienesInversionIvaRegister(records=(regla_primera, regla_segunda))
     projection = compute_registro_transmisiones(register, disposal_year=2024, parameters=_params_for(2024))
@@ -324,8 +340,10 @@ def test_registro_transmisiones_applies_the_supplied_cap_per_identifier() -> Non
         acquisition_year=2022,
         cuota_soportada=Decimal("10000.00"),
         prorrata_inicial_pct=Decimal("60"),
-        kind=BienInversionKind.MUEBLE,
-        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        kind=BienInversionKind._from_registry("mueble"),
+        disposal=BienInversionDisposal(
+            year=2024, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        ),
     )
     register = BienesInversionIvaRegister(records=(regla_primera,))
     projection = compute_registro_transmisiones(
@@ -345,7 +363,9 @@ def test_registro_transmisiones_excludes_a_disposal_with_no_window_time_remainin
     out_of_window_disposal = _record(
         "no-window-left",
         acquisition_year=2018,
-        disposal=BienInversionDisposal(year=2027, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        disposal=BienInversionDisposal(
+            year=2027, regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
+        ),
     )
     register = BienesInversionIvaRegister(records=(out_of_window_disposal,))
     projection = compute_registro_transmisiones(register, disposal_year=2027, parameters=_params_for(2027))
@@ -364,16 +384,16 @@ def _investment_observation(
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=transaction_date,
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
-        flow_direction=IvaFlowDirection.SOPORTADO,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
+        flow_direction=IvaFlowDirection._from_registry("soportado"),
         base_amount=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
         applied_rate=Decimal("0.21"),
         prorrata_sector_id=prorrata_sector_id,
-        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_INVESTMENT,
+        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_investment"),
         deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
             source_locator="invoice:asset-machine",
             evidence_digest="a" * 64,
         ),

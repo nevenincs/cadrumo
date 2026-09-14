@@ -774,7 +774,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
         record = state.active_profile_record()
         assert record is not None
         profile = projection_for_taxpayer(record, tax_id_default="00000000T")
-    assert profile.iva_regime is IVARegime.GENERAL
+    assert profile.iva_regime is IVARegime("general")
 
 
 def test_config_profile_create_persists_situacion_familiar(

@@ -138,10 +138,10 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
     if kind == "redeme":
         return TaxpayerProfile(
             tax_id="B66012345",
-            iva_regime=IVARegime.GENERAL,
+            iva_regime=IVARegime("GENERAL"),
             iva=ModeloIVAProfile(
-                tax_territory=M303TaxTerritory.COMMON_REGIME,
-                regime_composition=M303RegimeComposition.GENERAL,
+                tax_territory=M303TaxTerritory._from_registry("common_regime"),
+                regime_composition=M303RegimeComposition._from_registry("general"),
                 redeme_enrolled=True,
                 cash_accounting_regime_enrolled=False,
                 voluntary_sii_enrolled=False,
@@ -151,10 +151,10 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
     if kind == "ordinary":
         return TaxpayerProfile(
             tax_id="B66012345",
-            iva_regime=IVARegime.GENERAL,
+            iva_regime=IVARegime("GENERAL"),
             iva=ModeloIVAProfile(
-                tax_territory=M303TaxTerritory.COMMON_REGIME,
-                regime_composition=M303RegimeComposition.GENERAL,
+                tax_territory=M303TaxTerritory._from_registry("common_regime"),
+                regime_composition=M303RegimeComposition._from_registry("general"),
                 cash_accounting_regime_enrolled=False,
                 voluntary_sii_enrolled=False,
                 hydrocarbon_deposit_advance_payment_deduction_entitled=False,

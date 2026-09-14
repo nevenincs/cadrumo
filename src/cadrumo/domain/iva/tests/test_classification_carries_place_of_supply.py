@@ -28,6 +28,8 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -56,11 +58,11 @@ def _services_b2b_eu_outbound(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassifi
     """A B2B service supplied from the peninsula to a German-identified acquirer (``R12``)."""
     return IvaInvoiceClassificationCriteria(
         transaction_date=on,
-        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-        customer_residency=IvaTerritorialScope.EU_MEMBER,
-        customer_identification_state=EUMemberState.DE,
-        customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-        kind=TransactionKind.SERVICES_GENERAL,
+        issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+        customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+        customer_identification_state=EUMemberState._from_registry("de"),
+        customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        kind=TransactionKind("services_general"),
         direction=InvoiceKind.ISSUED,
     )
 
@@ -69,10 +71,10 @@ def _distance_sale_b2c(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassificationC
     """A B2C goods distance sale from the peninsula into the Union (``R15``)."""
     return IvaInvoiceClassificationCriteria(
         transaction_date=on,
-        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-        customer_residency=IvaTerritorialScope.EU_MEMBER,
-        customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-        kind=TransactionKind.GOODS,
+        issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+        customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+        customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+        kind=TransactionKind("goods"),
         direction=InvoiceKind.ISSUED,
     )
 
@@ -81,54 +83,55 @@ def _domestic_at_general_rate(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassifi
     """An ES-to-ES supply settled by its rate tier (``R05``)."""
     return IvaInvoiceClassificationCriteria(
         transaction_date=on,
-        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-        customer_residency=IvaTerritorialScope.ES_MAINLAND,
-        customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-        kind=TransactionKind.SERVICES_GENERAL,
+        issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+        customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+        customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        kind=TransactionKind("services_general"),
         direction=InvoiceKind.ISSUED,
-        rate_tier=IvaRateKind.GENERAL,
+        rate_tier=IvaRateKind("general"),
     )
 
 
 def test_cross_border_result_carries_its_governing_article_and_nature() -> None:
     """``R12`` arrives with art. 69 as its establishing provision and the services nature."""
-    result = classify_iva(_services_b2b_eu_outbound())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
 
-    assert result.matched_rule_id == "R12_services_b2b_eu_outbound"
-    grounding = result.place_of_supply
-    assert grounding is not None
-    assert grounding.rule_id == result.matched_rule_id
-    assert grounding.establishing_reference == "ley-37-1992:art-69"
-    assert grounding.establishing_reference in grounding.legal_references
-    assert grounding.supply_nature is SupplyNature.SERVICES
-    # The stamped nature is the table's, not a second opinion assembled in the
-    # classifier: it must equal what the owning module answers for the same
-    # rule on the same day.
-    assert (
-        grounding.supply_nature
-        == place_of_supply_rule(
-            result.matched_rule_id,
-            on=_GROUNDED_DAY,
-        ).supply_nature
-    )
+        assert result.matched_rule_id == "R12_services_b2b_eu_outbound"
+        grounding = result.place_of_supply
+        assert grounding is not None
+        assert grounding.rule_id == result.matched_rule_id
+        assert grounding.establishing_reference == "ley-37-1992:art-69"
+        assert grounding.establishing_reference in grounding.legal_references
+        assert grounding.supply_nature is SupplyNature.SERVICES
+        # The stamped nature is the table's, not a second opinion assembled in the
+        # classifier: it must equal what the owning module answers for the same
+        # rule on the same day.
+        assert (
+            grounding.supply_nature
+            == place_of_supply_rule(
+                result.matched_rule_id, on=_GROUNDED_DAY, operation=_authority_operation_for_test
+            ).supply_nature
+        )
 
 
 def test_a_silent_nature_is_present_and_grounded_rather_than_missing() -> None:
     """``R05`` carries a grounded row whose articles say nothing about the nature."""
-    result = classify_iva(_domestic_at_general_rate())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = classify_iva(_domestic_at_general_rate(), operation=_authority_operation_for_test)
 
-    assert result.matched_rule_id == "R05_domestic_at_rate_tier"
-    grounding = result.place_of_supply
-    # Present: something was resolved.
-    assert grounding is not None
-    # Grounded: it cites articles and names the one that decides, so the
-    # silence below is not an unfinished row.
-    assert not grounding.legal_basis_exempt
-    assert grounding.legal_references
-    assert grounding.establishing_reference == "ley-37-1992:art-68"
-    # Silent: both placement rules put the operation in the same territory, so
-    # the articles fix no nature and the rate tier settles the treatment.
-    assert grounding.supply_nature is None
+        assert result.matched_rule_id == "R05_domestic_at_rate_tier"
+        grounding = result.place_of_supply
+        # Present: something was resolved.
+        assert grounding is not None
+        # Grounded: it cites articles and names the one that decides, so the
+        # silence below is not an unfinished row.
+        assert not grounding.legal_basis_exempt
+        assert grounding.legal_references
+        assert grounding.establishing_reference == "ley-37-1992:art-68"
+        # Silent: both placement rules put the operation in the same territory, so
+        # the articles fix no nature and the rate tier settles the treatment.
+        assert grounding.supply_nature is None
 
 
 def test_a_resolution_that_cannot_be_performed_raises_instead_of_arriving_absent() -> None:
@@ -140,8 +143,9 @@ def test_a_resolution_that_cannot_be_performed_raises_instead_of_arriving_absent
     state can be mistaken for the other, and neither is the ``None`` field a
     hand-assembled result carries.
     """
-    with pytest.raises(IvaCatalogueError, match=r"place-of-supply|grounding"):
-        classify_iva(_domestic_at_general_rate(on=_AFTER_GROUNDING))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(IvaCatalogueError, match=r"place-of-supply|grounding"):
+            classify_iva(_domestic_at_general_rate(on=_AFTER_GROUNDING), operation=_authority_operation_for_test)
 
 
 def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> None:
@@ -152,21 +156,22 @@ def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> 
     on different provisions: art. 69 locates the service, art. 68 locates the
     goods. A grounding derived from the category could not tell them apart.
     """
-    services = classify_iva(_services_b2b_eu_outbound())
-    goods = classify_iva(_distance_sale_b2c())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        services = classify_iva(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
+        goods = classify_iva(_distance_sale_b2c(), operation=_authority_operation_for_test)
 
-    assert services.category is goods.category is IvaCategory.DOMESTIC_NOT_SUBJECT
-    assert services.matched_rule_id != goods.matched_rule_id
+        assert services.category is goods.category is IvaCategory("domestic_not_subject")
+        assert services.matched_rule_id != goods.matched_rule_id
 
-    services_grounding = services.place_of_supply
-    goods_grounding = goods.place_of_supply
-    assert services_grounding is not None
-    assert goods_grounding is not None
-    assert services_grounding.establishing_reference == "ley-37-1992:art-69"
-    assert goods_grounding.establishing_reference == "ley-37-1992:art-68"
-    assert services_grounding.establishing_reference != goods_grounding.establishing_reference
-    assert services_grounding.supply_nature is SupplyNature.SERVICES
-    assert goods_grounding.supply_nature is SupplyNature.GOODS
+        services_grounding = services.place_of_supply
+        goods_grounding = goods.place_of_supply
+        assert services_grounding is not None
+        assert goods_grounding is not None
+        assert services_grounding.establishing_reference == "ley-37-1992:art-69"
+        assert goods_grounding.establishing_reference == "ley-37-1992:art-68"
+        assert services_grounding.establishing_reference != goods_grounding.establishing_reference
+        assert services_grounding.supply_nature is SupplyNature.SERVICES
+        assert goods_grounding.supply_nature is SupplyNature.GOODS
 
 
 def test_the_grounding_is_resolved_against_the_transaction_date() -> None:
@@ -180,16 +185,19 @@ def test_the_grounding_is_resolved_against_the_transaction_date() -> None:
     stop answering for it here rather than answering from a rule that no longer
     applies.
     """
-    for day in (_FIRST_GROUNDED_DAY, _LAST_GROUNDED_DAY):
-        grounding = classify_iva(_services_b2b_eu_outbound(on=day)).place_of_supply
-        assert grounding is not None
-        assert grounding.establishing_reference == "ley-37-1992:art-69"
-        assert grounding.window is not None
-        assert grounding.window.covers_year(day.year)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for day in (_FIRST_GROUNDED_DAY, _LAST_GROUNDED_DAY):
+            grounding = classify_iva(
+                _services_b2b_eu_outbound(on=day), operation=_authority_operation_for_test
+            ).place_of_supply
+            assert grounding is not None
+            assert grounding.establishing_reference == "ley-37-1992:art-69"
+            assert grounding.window is not None
+            assert grounding.window.covers_year(day.year)
 
-    for day in (_BEFORE_GROUNDING, _AFTER_GROUNDING):
-        with pytest.raises(IvaCatalogueError, match=str(day.year)):
-            classify_iva(_services_b2b_eu_outbound(on=day))
+        for day in (_BEFORE_GROUNDING, _AFTER_GROUNDING):
+            with pytest.raises(IvaCatalogueError, match=str(day.year)):
+                classify_iva(_services_b2b_eu_outbound(on=day), operation=_authority_operation_for_test)
 
 
 def test_the_fallthrough_carries_the_row_that_says_it_grounds_nothing() -> None:
@@ -200,20 +208,21 @@ def test_the_fallthrough_carries_the_row_that_says_it_grounds_nothing() -> None:
     "the table says there is nothing to cite here" instead of guessing at an
     empty field.
     """
-    unclassifiable = IvaInvoiceClassificationCriteria(
-        transaction_date=_GROUNDED_DAY,
-        issuer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-        customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
-        customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
-        kind=TransactionKind.SERVICES_GENERAL,
-        direction=InvoiceKind.ISSUED,
-    )
-    result = classify_iva(unclassifiable)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        unclassifiable = IvaInvoiceClassificationCriteria(
+            transaction_date=_GROUNDED_DAY,
+            issuer_residency=IvaTerritorialScope._from_registry("third_country"),
+            customer_residency=IvaTerritorialScope._from_registry("third_country"),
+            customer_tax_status=CustomerTaxStatus._from_registry("b2c_consumer"),
+            kind=TransactionKind("services_general"),
+            direction=InvoiceKind.ISSUED,
+        )
+        result = classify_iva(unclassifiable, operation=_authority_operation_for_test)
 
-    assert result.category is IvaCategory.UNKNOWN
-    grounding = result.place_of_supply
-    assert grounding is not None
-    assert grounding.rule_id == "R99_fallthrough"
-    assert grounding.legal_basis_exempt
-    assert grounding.legal_references == ()
-    assert grounding.supply_nature is None
+        assert result.category == IvaCategory("unknown")
+        grounding = result.place_of_supply
+        assert grounding is not None
+        assert grounding.rule_id == "R99_fallthrough"
+        assert grounding.legal_basis_exempt
+        assert grounding.legal_references == ()
+        assert grounding.supply_nature is None

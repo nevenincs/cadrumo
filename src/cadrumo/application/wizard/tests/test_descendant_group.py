@@ -17,7 +17,6 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from ....core.descendant_relacion import DescendantRelacion
 from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
@@ -26,7 +25,11 @@ from ....core.flows import (
 )
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.contribuyente.entity_type import EntityType
+from ....domain.calculations.registry.descendant_relacion_catalogue import require_descendant_relacion
+from ....domain.calculations.registry.entity_type import (
+    entity_type_legal_entity_token,
+    entity_type_natural_person_token,
+)
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
 from ...flows.validators import resolve_cross_field_validator
@@ -71,8 +74,8 @@ def _entity_type_page() -> FlowPage:
         widget=FlowWidgetKind.SELECT,
         prompt=_ref("wizard.setup.taxpayer-type.entity-type.prompt"),
         choices=(
-            FlowChoice(value=EntityType.NATURAL_PERSON.value, label=_ref("probe.natural.label")),
-            FlowChoice(value=EntityType.LEGAL_ENTITY.value, label=_ref("probe.legal.label")),
+            FlowChoice(value=entity_type_natural_person_token().value, label=_ref("probe.natural.label")),
+            FlowChoice(value=entity_type_legal_entity_token().value, label=_ref("probe.legal.label")),
         ),
         required=False,
         answer_type=str,
@@ -131,7 +134,7 @@ def _visible_keys(definition: FlowDefinition, state: FlowState) -> set[str]:
 def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     definition = _probe_definition()
     state = start_flow(definition, mode=FlowMode.CREATE)
-    state = answer(definition, state, "entity-type", EntityType.NATURAL_PERSON.value)
+    state = answer(definition, state, "entity-type", entity_type_natural_person_token().value)
     state = answer(definition, state, "descendientes-count", "3")
 
     # Instance 0: menor de tres years old in 2024, disabled, guardería spend.
@@ -153,7 +156,7 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     # The inscription page is GATED on this instance's relación, so the answer
     # has to precede it -- answering it first is not test convenience, it is the
     # gate being real: without it the engine refuses the target as not visible.
-    state = answer(definition, state, "descendientes#1.relacion", DescendantRelacion.ADOPTADO.value)
+    state = answer(definition, state, "descendientes#1.relacion", require_descendant_relacion("adoptado").value)
     state = answer(definition, state, "descendientes#1.inscripcion-registro-civil", "2016-06-01")
     state = answer(definition, state, "descendientes#1.fallecimiento", "2024-06-15")
     state = answer(definition, state, "descendientes#1.convivencia", "true")
@@ -316,7 +319,7 @@ def test_the_guarderia_spend_validator_is_named_on_the_attached_definition() -> 
 def test_invalid_descendant_nif_refuses_and_valid_commits() -> None:
     definition = _probe_definition()
     state = start_flow(definition, mode=FlowMode.CREATE)
-    state = answer(definition, state, "entity-type", EntityType.NATURAL_PERSON.value)
+    state = answer(definition, state, "entity-type", entity_type_natural_person_token().value)
     state = answer(definition, state, "descendientes-count", "1")
     state = answer(definition, state, "descendientes#0.birth-date", "2020-01-01")
 
@@ -333,7 +336,7 @@ def test_invalid_descendant_nif_refuses_and_valid_commits() -> None:
 def test_count_zero_hides_the_group_entirely() -> None:
     definition = _probe_definition()
     state = start_flow(definition, mode=FlowMode.CREATE)
-    state = answer(definition, state, "entity-type", EntityType.NATURAL_PERSON.value)
+    state = answer(definition, state, "entity-type", entity_type_natural_person_token().value)
     state = answer(definition, state, "descendientes-count", "0")
 
     visible = _visible_keys(definition, state)
@@ -345,7 +348,7 @@ def test_count_zero_hides_the_group_entirely() -> None:
 def test_count_page_hidden_for_a_legal_entity() -> None:
     definition = _probe_definition()
     state = start_flow(definition, mode=FlowMode.CREATE)
-    state = answer(definition, state, "entity-type", EntityType.LEGAL_ENTITY.value)
+    state = answer(definition, state, "entity-type", entity_type_legal_entity_token().value)
 
     visible = _visible_keys(definition, state)
     assert "descendientes-count" not in visible
@@ -378,7 +381,7 @@ def test_attach_descendant_group_splices_count_then_group_into_familia() -> None
 
 def _one_descendant_state(definition: FlowDefinition):
     state = start_flow(definition, mode=FlowMode.CREATE)
-    state = answer(definition, state, "entity-type", EntityType.NATURAL_PERSON.value)
+    state = answer(definition, state, "entity-type", entity_type_natural_person_token().value)
     state = answer(definition, state, "descendientes-count", "1")
     return answer(definition, state, "descendientes#0.birth-date", "2022-01-01")
 

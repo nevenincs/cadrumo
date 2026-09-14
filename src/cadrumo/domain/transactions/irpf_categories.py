@@ -56,7 +56,7 @@ def _split_declaration(declarations: Mapping[str, str], key: str) -> tuple[str, 
 def _descriptor_from_registry(category_id: str, declarations: Mapping[str, str]) -> LedgerIrpfCategoryDescriptor:
     prefix = f"category.{category_id}"
     directions = tuple(
-        TransactionDirection(value) for value in _split_declaration(declarations, f"{prefix}.directions")
+        TransactionDirection(value.upper()) for value in _split_declaration(declarations, f"{prefix}.directions")
     )
     net_paid_field = "_".join(("net", "paid", "invoice"))
     related_field = "_".join(("related", "category", "ids"))

@@ -180,7 +180,7 @@ def _invoice(
                 # Spain has no standing zero tier, so RATE_0 here asserted a
                 # rate that was not in force and refused every fixture dated
                 # outside the 2024 temporary food window.
-                iva_rate=IvaRate.EXEMPT,
+                iva_rate=IvaRate._from_registry("EXEMPT"),
                 iva_amount=Decimal("0"),
             ),
         ),
@@ -240,7 +240,7 @@ def _domestic_invoice(
                 quantity=Decimal("1"),
                 unit_price=base_total,
                 subtotal=base_total,
-                iva_rate=IvaRate.RATE_21,
+                iva_rate=IvaRate._from_registry("RATE_21"),
                 iva_amount=iva_total,
             ),
         ),
@@ -258,7 +258,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
     other_bucket = _invoice(
         bucket_id=_OTHER_BUCKET_ID,
@@ -266,7 +266,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         issued_at=date(2026, 1, 16),
         counterparty_tax_id="DE987654321",
         base_total=Decimal("500.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
     domestic = _invoice(
         bucket_id=_BUCKET_ID,
@@ -274,7 +274,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         issued_at=date(2026, 1, 17),
         counterparty_tax_id="DE111111125",
         base_total=Decimal("250.00"),
-        iva_category=IvaCategory.DOMESTIC_ZERO,
+        iva_category=IvaCategory("domestic_zero"),
     )
     repository.save(InvoiceCatalogue.from_invoices((declarable, other_bucket, domestic)))
     _modelos, _catalogues = bundled_registry_tree()
@@ -317,7 +317,7 @@ def test_invoice_catalogue_source_resolver_folds_received_acquisition_for_m349(
         counterparty_name="EU Supplier GmbH",
         counterparty_tax_id="DE222222222",
         base_total=Decimal("1200.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        iva_category=IvaCategory("intra_community_acquisition_reverse_charge"),
         linked_transaction_ids=("2" * 64,),
     )
     repository.save(InvoiceCatalogue.from_invoices((acquisition,)))
@@ -444,7 +444,7 @@ def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_
                     counterparty_name="Supplier GmbH",
                     counterparty_country="DE",
                     base_total=Decimal("100.00"),
-                    iva_category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                    iva_category=IvaCategory("intra_community_acquisition_reverse_charge"),
                     operation_type=IntracomOperationType.R,
                 ),
             ),
@@ -477,7 +477,7 @@ def test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349(
         counterparty_tax_id="XI123456789",
         counterparty_country="XI",
         base_total=Decimal("3000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(InvoiceCatalogue.from_invoices((declarable,)))
     _modelos, _catalogues = bundled_registry_tree()
@@ -510,7 +510,7 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
         counterparty_tax_id="GB123456789",
         counterparty_country="GB",
         base_total=Decimal("3000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(InvoiceCatalogue.from_invoices((declarable,)))
     _modelos, _catalogues = bundled_registry_tree()
@@ -573,7 +573,7 @@ def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         currency="GBP",
         fx_rate=gbp_rate,
         fx_rate_date=date(2026, 1, 15),
@@ -616,7 +616,7 @@ def test_unconverted_foreign_invoice_is_withheld_from_projection(
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         currency="GBP",
     )
     repository.save(InvoiceCatalogue.from_invoices((unconverted,)))
@@ -652,10 +652,10 @@ def test_a_service_category_alone_resolves_its_m349_clave() -> None:
     Asserted on both directions and against the goods claves, because filing a
     service as E or A would report it as an entrega/adquisición de bienes.
     """
-    issued = _clave_probe_invoice(InvoiceKind.ISSUED, IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY)
+    issued = _clave_probe_invoice(InvoiceKind.ISSUED, IvaCategory("intra_community_service_supply"))
     received = _clave_probe_invoice(
         InvoiceKind.RECEIVED,
-        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
     assert issued.operation_type is None
@@ -672,11 +672,11 @@ def test_a_service_category_on_its_impossible_side_resolves_no_clave() -> None:
     """
     wrong_way_supply = _clave_probe_invoice(
         InvoiceKind.RECEIVED,
-        IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+        IvaCategory("intra_community_service_supply"),
     )
     wrong_way_acquisition = _clave_probe_invoice(
         InvoiceKind.ISSUED,
-        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
     assert _public_m349_claves((wrong_way_supply, wrong_way_acquisition)) == ()
@@ -690,7 +690,7 @@ def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
         quantity=Decimal("1"),
         unit_price=base,
         subtotal=base,
-        iva_rate=IvaRate.EXEMPT,
+        iva_rate=IvaRate._from_registry("EXEMPT"),
         iva_amount=Decimal("0.00"),
     )
     # invoice_id is omitted deliberately: a before-validator on the model derives
@@ -731,7 +731,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
             counterparty_name="Cliente Domestico SL",
             counterparty_country="ES",
             base_total=Decimal("4000.00"),
-            iva_category=IvaCategory.DOMESTIC_ZERO,
+            iva_category=IvaCategory("domestic_zero"),
         ),
         # Intra-community supply of goods -> M349 clave E.
         _invoice(
@@ -743,7 +743,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
             counterparty_name="Kunde GmbH",
             counterparty_country="DE",
             base_total=Decimal("1500.00"),
-            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            iva_category=IvaCategory("intra_community_supply"),
         ),
         # Intra-community acquisition of SERVICES -> M349 clave I. This is the
         # class the resolver docstring once claimed no IVA category could
@@ -757,7 +757,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
             counterparty_name="Servizi SRL",
             counterparty_country="IT",
             base_total=Decimal("800.00"),
-            iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+            iva_category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
         ),
     )
 
@@ -859,7 +859,7 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
         counterparty_name="Acme Imports Inc",
         counterparty_country="US",
         base_total=Decimal("4000.00"),
-        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        iva_category=IvaCategory("export_third_country_zero_rated"),
     )
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(InvoiceCatalogue.from_invoices((export_sale,)))
@@ -906,10 +906,10 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
         counterparty_name="Cliente Agencia SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     mediated_sale = mediated_sale.model_copy(
-        update={"travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE},
+        update={"travel_agency_mediation": TravelAgencyMediationType._from_registry("mediated_service")},
     )
     ordinary_sale = _invoice(
         bucket_id=None,
@@ -920,7 +920,7 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
         counterparty_name="Cliente Agencia SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     assert ordinary_sale.travel_agency_mediation is None
 
@@ -958,10 +958,10 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         counterparty_name="Agencia de Viajes SA",
         counterparty_country="ES",
         base_total=Decimal("1200.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     air_transport_purchase = air_transport_purchase.model_copy(
-        update={"travel_agency_mediation": TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT},
+        update={"travel_agency_mediation": TravelAgencyMediationType._from_registry("air_passenger_transport")},
     )
     non_air_mediated_purchase = _invoice(
         bucket_id=None,
@@ -972,10 +972,10 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         counterparty_name="Agencia de Viajes SA",
         counterparty_country="ES",
         base_total=Decimal("1200.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     non_air_mediated_purchase = non_air_mediated_purchase.model_copy(
-        update={"travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE},
+        update={"travel_agency_mediation": TravelAgencyMediationType._from_registry("mediated_service")},
     )
 
     resolution = _public_resolution((air_transport_purchase, non_air_mediated_purchase), context=context)
@@ -1006,7 +1006,7 @@ def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent
         counterparty_name="Proveedor SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     resolution = _public_resolution(
         (purchase,),
@@ -1046,7 +1046,7 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(
             path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR.value,
+            value=ThirdPartyDeclarationRole._from_registry("third_party_fee_collector").value,
         ),
     )
     seed_test_profile_record(
@@ -1066,7 +1066,7 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     ).model_copy(
         update={
             "collected_on_behalf_of_tax_id": "A87654321",
@@ -1082,7 +1082,7 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     resolution = _public_resolution(
         (collection, ordinary),
@@ -1110,7 +1110,7 @@ def _third_party_fee_collector_profile_facts() -> tuple[UserProfileFact, ...]:
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(
             path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR.value,
+            value=ThirdPartyDeclarationRole._from_registry("third_party_fee_collector").value,
         ),
     )
 
@@ -1152,7 +1152,7 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     collection_invoice = collection_invoice.model_copy(
         update={
@@ -1169,7 +1169,7 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     assert ordinary_invoice.collected_on_behalf_of_tax_id is None
 
@@ -1210,7 +1210,7 @@ def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_en
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     collection_shaped_invoice = collection_shaped_invoice.model_copy(
         update={
@@ -1228,7 +1228,7 @@ def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_en
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     resolution = _public_resolution((collection_shaped_invoice, ordinary_invoice), context=context)
 
@@ -1253,7 +1253,7 @@ def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(
             path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY.value,
+            value=ThirdPartyDeclarationRole._from_registry("public_administration_entity").value,
         ),
     )
 
@@ -1293,7 +1293,7 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
         counterparty_name="Beneficiario Subvencion SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     subvencion_invoice = subvencion_invoice.model_copy(update={"is_subvencion_ayuda": True})
     ordinary_invoice = _invoice(
@@ -1305,7 +1305,7 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
         counterparty_name="Beneficiario Subvencion SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     ordinary_invoice = ordinary_invoice.model_copy(update={"is_subvencion_ayuda": False})
     assert ordinary_invoice.is_subvencion_ayuda is False
@@ -1340,7 +1340,7 @@ def test_m347_clave_e_requires_the_public_administration_role_a_subvencion_fact_
         counterparty_name="Beneficiario Subvencion SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     subvencion_shaped_invoice = subvencion_shaped_invoice.model_copy(update={"is_subvencion_ayuda": True})
 
@@ -1364,7 +1364,7 @@ def _statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(
             path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole.STATUTORY_INFORMATION_DUTY_ENTITY.value,
+            value=ThirdPartyDeclarationRole._from_registry("statutory_information_duty_entity").value,
         ),
     )
 
@@ -1404,7 +1404,7 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
         counterparty_name="Proveedor Al Margen SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     outside_activity_purchase = outside_activity_purchase.model_copy(update={"outside_economic_activity": True})
     within_activity_purchase = _invoice(
@@ -1416,7 +1416,7 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
         counterparty_name="Proveedor Al Margen SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     within_activity_purchase = within_activity_purchase.model_copy(update={"outside_economic_activity": False})
 
@@ -1450,7 +1450,7 @@ def test_m347_clave_d_requires_the_filer_role_the_fact_alone_is_not_enough(
         counterparty_name="Proveedor Al Margen SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     outside_activity_shaped_purchase = outside_activity_shaped_purchase.model_copy(
         update={"outside_economic_activity": True},
@@ -1527,7 +1527,7 @@ def test_an_explicit_operation_type_resolves_a_clave_without_any_iva_category() 
         counterparty_tax_id="DE345678901",
         counterparty_country="DE",
         base_total=Decimal("100.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     ).model_copy(update={"iva_category": None, "operation_type": IntracomOperationType.E})
 
     assert invoice.iva_category is None
@@ -1550,7 +1550,7 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
         counterparty_tax_id="DE345678901",
         counterparty_country="DE",
         base_total=Decimal("100.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+        iva_category=IvaCategory("intra_community_service_supply"),
     )
     acquisition = _invoice(
         bucket_id=_BUCKET_ID,
@@ -1560,7 +1560,7 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
         counterparty_tax_id="DE345678901",
         counterparty_country="DE",
         base_total=Decimal("100.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        iva_category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
     assert set(_public_m349_claves((supply, acquisition))) == {"S", "I"}
@@ -1616,12 +1616,12 @@ def _same_facts_invoice(*, with_category: bool):
                 quantity=Decimal("1"),
                 unit_price=Decimal("4000.00"),
                 subtotal=Decimal("4000.00"),
-                iva_rate=IvaRate.RATE_21,
+                iva_rate=IvaRate._from_registry("RATE_21"),
                 iva_amount=Decimal("840.00"),
             ),
         ),
         payment_status=PaymentStatus.PENDING,
-        iva_category=IvaCategory.DOMESTIC_GENERAL if with_category else None,
+        iva_category=IvaCategory("domestic_general") if with_category else None,
     )
 
 
@@ -1728,7 +1728,7 @@ def _ic_supply_without_operation_type() -> Invoice:
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
 
 
@@ -1742,7 +1742,7 @@ def _third_country_import() -> Invoice:
         counterparty_tax_id="US99887766",
         counterparty_country="US",
         base_total=Decimal("800.00"),
-        iva_category=IvaCategory.IMPORT_THIRD_COUNTRY,
+        iva_category=IvaCategory("import_third_country"),
         linked_transaction_ids=("2" * 64,),
     )
 
@@ -1844,7 +1844,7 @@ def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
         currency="GBP",
     )
     repository.save(InvoiceCatalogue.from_invoices((unconverted,)))
@@ -1893,7 +1893,7 @@ def test_m347_role_fact_advisories_fires_only_for_a_role_carrying_filer_with_the
         counterparty_name="Proveedor SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
 
     diagnostics = _public_resolution((unrelated_purchase,), context=context).diagnostics
@@ -1928,7 +1928,7 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
         counterparty_name="Proveedor SL",
         counterparty_country="ES",
         base_total=Decimal("3500.00"),
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     declared_purchase = undeclared_purchase.model_copy(update={"outside_economic_activity": False})
 
@@ -2043,7 +2043,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         counterparty_name="Servizi SRL",
         counterparty_country="DE",
         base_total=Decimal("3000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        iva_category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
     resolution = _public_resolution((canonical,), context=context)
     rows = [row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)]
@@ -2096,7 +2096,7 @@ def test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits(
             counterparty_name="Servizi SRL",
             counterparty_country="DE",
             base_total=Decimal("3000.00"),
-            iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+            iva_category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
         )
 
 
@@ -2162,7 +2162,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
                 quantity=Decimal("1"),
                 unit_price=Decimal("1500.00"),
                 subtotal=Decimal("1500.00"),
-                iva_rate=IvaRate.RATE_21,
+                iva_rate=IvaRate._from_registry("RATE_21"),
                 iva_amount=Decimal("315.00"),
             ),
         ),
@@ -2213,7 +2213,7 @@ def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(InvoiceCatalogue.from_invoices((unattributed,)))
     _modelos, _catalogues = bundled_registry_tree()
@@ -2252,7 +2252,7 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
         issued_at=date(2026, 1, 16),
         counterparty_tax_id="DE987654321",
         base_total=Decimal("500.00"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(InvoiceCatalogue.from_invoices((foreign,)))
     _modelos, _catalogues = bundled_registry_tree()

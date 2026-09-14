@@ -18,12 +18,15 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from datetime import date
 
 import pytest
 
 from ....core.config import override_settings
 from ....core.i18n.render import clear_output_language_cache
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...categories.spending_category import SpendingCategory
+from ...categories.spending_category_catalogue import spending_category_tokens
 from ..llm import _category_hint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -41,22 +44,25 @@ def _output_language(language: str) -> Generator[None]:
     clear_output_language_cache()
 
 
-def _hints() -> dict[SpendingCategory, str]:
-    return {category: _category_hint(category, year=2025) for category in SpendingCategory}
+def _hints(operation: PinnedAuthorityOperation) -> dict[SpendingCategory, str]:
+    return {
+        category: _category_hint(category, year=2025, operation=operation)
+        for category in spending_category_tokens(effective_date=date(2025, 12, 31), authority=operation)
+    }
 
 
-def test_category_hints_do_not_follow_the_operator_language() -> None:
+def test_category_hints_do_not_follow_the_operator_language(operation: PinnedAuthorityOperation) -> None:
     """Rebuilding the hints under a different output language changes nothing.
 
     If any hint resolved through the operator's locale rather than the pin, the
     two mappings would diverge here.
     """
     with _output_language("es"):
-        under_spanish = _hints()
+        under_spanish = _hints(operation)
     with _output_language("hu"):
-        under_hungarian = _hints()
+        under_hungarian = _hints(operation)
     with _output_language("en"):
-        under_english = _hints()
+        under_english = _hints(operation)
 
     assert under_spanish == under_hungarian, (
         "category hints changed with the operator language; the prompt pin at "
@@ -66,7 +72,7 @@ def test_category_hints_do_not_follow_the_operator_language() -> None:
     assert under_spanish == under_english
 
 
-def test_category_hints_carry_resolved_translations_not_key_fallbacks() -> None:
+def test_category_hints_carry_resolved_translations_not_key_fallbacks(operation: PinnedAuthorityOperation) -> None:
     """Anti-tautology control for the equality assertion above.
 
     Two catalogues that both fail to resolve a key return the same humanised
@@ -75,7 +81,7 @@ def test_category_hints_carry_resolved_translations_not_key_fallbacks() -> None:
     hints actually resolve, without asserting what they say.
     """
     with _output_language("hu"):
-        hints = _hints()
+        hints = _hints(operation)
 
     assert hints, "no spending categories were enumerated"
     unresolved = sorted(category.value for category, hint in hints.items() if "categories.registry." in hint)

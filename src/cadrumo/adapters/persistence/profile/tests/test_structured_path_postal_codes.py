@@ -40,7 +40,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.core.config import Settings
-from cadrumo.domain.iva.classification import IvaTerritorialScope
+from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
 
 from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, secure_objects
@@ -209,10 +209,14 @@ def test_a_canarian_code_survives_the_document_as_canarias(
     draft = _draft(evidence_id, isolated_settings)
 
     assert draft.supplier_postal_code == _CANARIAS_CODE
-    assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) is IvaTerritorialScope.ES_CANARIAS
+    assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) == require_iva_territorial_scope(
+        "es_canarias"
+    )
     # The other party is untouched and must still read as the mainland, so the
     # case proves a territory was RESOLVED rather than that everything moved.
-    assert territorial_scope_for_spanish_postal_code(draft.customer_postal_code) is IvaTerritorialScope.ES_MAINLAND
+    assert territorial_scope_for_spanish_postal_code(draft.customer_postal_code) == require_iva_territorial_scope(
+        "es_mainland"
+    )
 
 
 def test_a_ubl_document_carries_the_postal_zone(
@@ -290,5 +294,9 @@ def test_a_cii_document_carries_the_postcode_code(
 
     assert draft.supplier_postal_code == "38001"
     assert draft.customer_postal_code == "51001"
-    assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) is IvaTerritorialScope.ES_CANARIAS
-    assert territorial_scope_for_spanish_postal_code(draft.customer_postal_code) is IvaTerritorialScope.ES_CEUTA_MELILLA
+    assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) == require_iva_territorial_scope(
+        "es_canarias"
+    )
+    assert territorial_scope_for_spanish_postal_code(draft.customer_postal_code) == require_iva_territorial_scope(
+        "es_ceuta_melilla"
+    )

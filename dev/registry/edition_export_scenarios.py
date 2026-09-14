@@ -462,8 +462,8 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         str(Modelo("303")), filing_year=period.filing_year, period=period.registry_token
     )
     profile = ModeloIVAProfile(
-        tax_territory=M303TaxTerritory.COMMON_REGIME,
-        regime_composition=M303RegimeComposition.GENERAL,
+        tax_territory=M303TaxTerritory._from_registry("common_regime"),
+        regime_composition=M303RegimeComposition._from_registry("general"),
         redeme_enrolled=False,
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
@@ -637,7 +637,9 @@ def _m303_prorrata_register(period: Period, *, authority: ValidatedRegistryAutho
 def _m303_differentiated_contributions() -> tuple[IvaDifferentiatedDeductionContribution, ...]:
     """One contribution per deduction kind the differentiated sectors declare, in each sector."""
     kinds = tuple(
-        kind for kind in IvaDeductionFactKind if kind is not IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
+        kind
+        for kind in IvaDeductionFactKind
+        if kind is not IvaDeductionFactKind._from_registry("investment_goods_regularisation")
     )
     return tuple(
         IvaDifferentiatedDeductionContribution(

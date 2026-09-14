@@ -172,6 +172,57 @@ def test_a_declared_predecessor_is_inherited_with_stated_rows_overriding_by_line
     ]
 
 
+def test_field_delta_distinguishes_inherit_delete_and_meaningful_empty_false_zero(tmp_path: Path) -> None:
+    modelo_dir = _modelo_root(tmp_path)
+    _write_edition(
+        modelo_dir,
+        "2024",
+        year=2024,
+        casillas=(
+            _casilla(
+                "2024",
+                "0001",
+                number="1",
+                lineage=None,
+                extra=(
+                    'segmento = "DP99901"\nrequired = true\n'
+                    f'constraints = {{ min_value = "1", legal_refs = ["{_LEGAL_REF}"], '
+                    'source_refs = ["aeat-manual"] }\n'
+                ),
+            )
+            + _casilla("2024", "0002", number="2", lineage=None)
+        ),
+    )
+    _write_edition(
+        modelo_dir,
+        "2025",
+        year=2025,
+        manifest_extra=(
+            'predecessor = "2024"\n'
+            '[[revisions."2025".casilla_overrides]]\n'
+            'selector = { revision = "2024", id = "0001" }\n'
+            'fields = { source_refs = ["aeat-form"], section = [], required = false, '
+            f'constraints = {{ min_value = "0", legal_refs = ["{_LEGAL_REF}"], '
+            'source_refs = ["aeat-manual"] } }\n'
+            'removed_fields = ["segmento"]\n'
+            '[[revisions."2025".casilla_removals]]\n'
+            'selector = { revision = "2024", id = "0002" }\n'
+        ),
+        casillas=_casilla("2025", "0003", number="3", lineage=None),
+    )
+
+    successor = load_modelo_directory(modelo_dir).revisions["2025"]
+
+    assert [casilla.id for casilla in successor.casillas] == ["0001", "0003"]
+    patched = successor.casillas[0]
+    assert patched.number == "1"  # omitted override inherits
+    assert patched.source_refs == ("aeat-form",)
+    assert patched.section == ()
+    assert patched.required is False
+    assert patched.constraints is not None and patched.constraints.min_value == 0
+    assert patched.segmento is None  # explicit field deletion reaches the schema default
+
+
 def test_an_inherited_row_takes_the_successor_editions_locale_key(tmp_path: Path) -> None:
     """Materialisation runs before enrolment, so no successor row carries a key naming its predecessor."""
     successor = load_modelo_directory(_delta_successor_modelo(tmp_path, declare_predecessor=True)).revisions["2025"]

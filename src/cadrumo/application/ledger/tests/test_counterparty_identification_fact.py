@@ -71,7 +71,7 @@ def repository() -> CounterpartyEstablishmentRepositoryProtocol:
 def _confirm(
     repository: CounterpartyEstablishmentRepositoryProtocol,
     *,
-    scope: IvaTerritorialScope = IvaTerritorialScope.ES_MAINLAND,
+    scope: IvaTerritorialScope = IvaTerritorialScope._from_registry("es_mainland"),
     identification_state: EUMemberState | None = None,
     note: str = "",
 ):
@@ -101,14 +101,18 @@ def test_one_answer_serves_every_later_read(repository: CounterpartyEstablishmen
     The establishment is Spanish and the identification German -- the divergent
     pair art. 25 turns on, and the case a single-axis row could not hold at all.
     """
-    _confirm(repository, scope=IvaTerritorialScope.ES_MAINLAND, identification_state=EUMemberState.DE)
+    _confirm(
+        repository,
+        scope=IvaTerritorialScope._from_registry("es_mainland"),
+        identification_state=EUMemberState._from_registry("de"),
+    )
 
     for _ in range(3):
         resolution = _resolve(repository)
         assert resolution.identification is not None
-        assert resolution.identification.value is EUMemberState.DE
+        assert resolution.identification.value is EUMemberState._from_registry("de")
         assert resolution.fact is not None
-        assert resolution.fact.value is IvaTerritorialScope.ES_MAINLAND
+        assert resolution.fact.value is IvaTerritorialScope._from_registry("es_mainland")
 
 
 def test_an_unanswered_identification_resolves_to_nothing(
@@ -120,7 +124,7 @@ def test_an_unanswered_identification_resolves_to_nothing(
     across would hand back an identification the operator never gave, which is
     the substitution the whole axis exists to prevent.
     """
-    _confirm(repository, scope=IvaTerritorialScope.EU_MEMBER)
+    _confirm(repository, scope=IvaTerritorialScope._from_registry("eu_member"))
 
     resolution = _resolve(repository)
     assert resolution.fact is not None
@@ -151,16 +155,16 @@ def test_answering_the_identification_later_is_an_addition_not_a_conflict(
     learns the registration afterwards. Refusing that would force a withdraw
     plus a re-confirm to record a fact that contradicts nothing.
     """
-    first = _confirm(repository, scope=IvaTerritorialScope.ES_MAINLAND)
+    first = _confirm(repository, scope=IvaTerritorialScope._from_registry("es_mainland"))
     assert first.identification_state is None
 
     second = _confirm(
         repository,
-        scope=IvaTerritorialScope.ES_MAINLAND,
-        identification_state=EUMemberState.DE,
+        scope=IvaTerritorialScope._from_registry("es_mainland"),
+        identification_state=EUMemberState._from_registry("de"),
     )
 
-    assert second.identification_state is EUMemberState.DE
+    assert second.identification_state is EUMemberState._from_registry("de")
     # The original attribution survives: answering a further question is not a
     # fresh confirmation of the first one.
     assert second.asserted_at == first.asserted_at
@@ -171,17 +175,17 @@ def test_a_different_identification_refuses_and_names_both_values(
     repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """Replacing a confirmed registration takes the withdraw path, like a territory."""
-    _confirm(repository, identification_state=EUMemberState.DE)
+    _confirm(repository, identification_state=EUMemberState._from_registry("de"))
 
     with pytest.raises(CounterpartyEstablishmentConflictError) as raised:
-        _confirm(repository, identification_state=EUMemberState.FR)
+        _confirm(repository, identification_state=EUMemberState._from_registry("fr"))
 
     message = str(raised.value)
     assert "de" in message and "fr" in message, message
     # The stored answer is untouched by the refused call.
     resolved = _resolve(repository).identification
     assert resolved is not None
-    assert resolved.value is EUMemberState.DE
+    assert resolved.value is EUMemberState._from_registry("de")
 
 
 def test_a_retry_omitting_the_identification_does_not_withdraw_it(
@@ -194,20 +198,20 @@ def test_a_retry_omitting_the_identification_does_not_withdraw_it(
     later intra-community supply for this counterparty into a refusal -- an
     over-declaration nobody asked for and nothing would report.
     """
-    _confirm(repository, identification_state=EUMemberState.DE)
+    _confirm(repository, identification_state=EUMemberState._from_registry("de"))
 
     _confirm(repository, note="corrected the reference on the confirmation call")
 
     resolved = _resolve(repository).identification
     assert resolved is not None
-    assert resolved.value is EUMemberState.DE
+    assert resolved.value is EUMemberState._from_registry("de")
 
 
 def test_withdrawing_removes_both_axes_together(
     repository: CounterpartyEstablishmentRepositoryProtocol,
 ) -> None:
     """Withdrawal is about the entity, so it cannot leave half a record standing."""
-    _confirm(repository, identification_state=EUMemberState.DE)
+    _confirm(repository, identification_state=EUMemberState._from_registry("de"))
 
     assert forget_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,

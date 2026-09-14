@@ -303,5 +303,5 @@ def test_the_same_document_at_a_known_rate_confirms(
         filename="factura_luz_21.pdf",
     )
 
-    assert [line.iva_rate for line in result.invoice.lines] == [IvaRate.RATE_21]
+    assert [line.iva_rate for line in result.invoice.lines] == [IvaRate._from_registry("RATE_21")]
     assert result.invoice.grand_total == Decimal("121.00")

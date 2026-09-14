@@ -69,7 +69,7 @@ def _txn() -> Transaction:
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
+            "iva_category": IvaCategory("domestic_general"),
             "category_id": "material_oficina",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,

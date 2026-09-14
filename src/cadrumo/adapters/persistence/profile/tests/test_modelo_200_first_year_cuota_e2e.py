@@ -47,6 +47,7 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -64,6 +65,7 @@ from cadrumo.application.modelo.calculation_actions import (
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -152,7 +154,9 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -210,7 +214,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
         actor="system",
-        workflow_profile=TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime.GENERAL),
+        workflow_profile=TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime("GENERAL")),
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     assert report.calculation_revision_id == result.revision.calculation_revision_id, (

@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -18,6 +17,7 @@ from ......core.casilla_id import CasillaId, validated_casilla_id, validated_cas
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ......domain.calculations.registry.ids import BindingId, RelationId
 from ......domain.calculations.registry.relations import (
@@ -90,11 +90,15 @@ def _resolve_previous_filing_from_observations(
     *,
     filing_year: int,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> dict[BindingId, Decimal]:
     """Exercise the domain resolver with normalized fixture observations."""
     return resolve_previous_filing_binding_values(
         revision,
-        map(registry_observation_from_filed_declaration, observations),
+        map(
+            lambda observation: registry_observation_from_filed_declaration(observation, operation=operation),
+            observations,
+        ),
         filing_year=filing_year,
         period=period.registry_token,
     )
@@ -106,11 +110,15 @@ def _resolve_relations_from_observations(
     *,
     filing_year: int,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> dict[RelationId, Decimal]:
     """Exercise the domain relation owner with normalized fixture observations."""
     return resolve_relation_values_from_observations(
         revision,
-        map(registry_observation_from_filed_declaration, observations),
+        map(
+            lambda observation: registry_observation_from_filed_declaration(observation, operation=operation),
+            observations,
+        ),
         filing_year=filing_year,
         period=period.registry_token,
     )
@@ -218,12 +226,18 @@ def _declaration_row(
     )
 
 
-def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return compiled_bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
+def _modelo_snapshot(
+    modelo_id: str,
+    *,
+    filing_year: int,
+    period: str,
+    operation: PinnedAuthorityOperation,
+):
+    return operation.snapshot(modelo_id, filing_year=filing_year, period=period)
 
 
-def _modelo_130_snapshot():
-    return _modelo_snapshot("130", filing_year=2026, period="1T")
+def _modelo_130_snapshot(operation: PinnedAuthorityOperation):
+    return _modelo_snapshot("130", filing_year=2026, period="1T", operation=operation)
 
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:

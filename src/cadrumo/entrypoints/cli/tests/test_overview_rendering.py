@@ -20,13 +20,15 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+
 from ....application.overview.calendar import build_overview_calendar
 from ....application.overview.calendar_models import OverviewCalendarRange, OverviewStatusReport
 from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ....application.overview.next_actions import OverviewStatusNextStepId
 from ....core.json_contract import Notice, ResolvedNoticeAction
-from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from .._overview_rendering import (
     overview_calendar_output,
     overview_coverage_notices,
@@ -344,10 +346,10 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap()
 
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.SIMPLIFICADO,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("SIMPLIFICADO"),
     )
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     calendar = build_overview_calendar(profile, rng, today=date(2026, 4, 1))

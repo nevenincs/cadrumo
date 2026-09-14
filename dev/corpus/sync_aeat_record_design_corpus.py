@@ -182,7 +182,6 @@ class _RootAggregate(TypedDict):
 
 class _HistoricalExclusions(TypedDict):
     schema_version: int
-    support_years: list[int]
     disposition: str
     source_pages: list[str]
     urls: list[str]
@@ -1535,15 +1534,12 @@ def unattested_corpus_files(corpus_root: Path) -> tuple[str, ...]:
 def _load_historical_exclusions() -> _HistoricalExclusions:
     """Read the classified historical-URL exclusions.
 
-    The file's ``support_years`` window does NOT describe what the corpus
-    actually ships, and the discrepancy is not theoretical: ``DR714_2022.xls``
-    is bundled and represented in ``modelo_714/manifest.json`` while sitting
-    outside the declared ``[2023, 2024, 2025, 2026]`` window, so the stated rule
-    already has a live counter-example. Reading the window as the reason a URL is
-    absent will therefore mislead: ``DR714_2021.xls`` was excluded under it, was
-    then found to be genuinely published and fit, and was bundled. Treat the
-    ``urls`` list as the authority for what is classified out, and the window as
-    prose that has drifted from it.
+    The exclusion ledger is intentionally URL-based.  A product support-year
+    declaration belongs to the validated registry authority, while this file
+    records the historical URLs that have been explicitly adjudicated as out of
+    the synchronizer's acquisition set.  Keeping a second year window here would
+    invite it to drift from the URL evidence (as the removed window did when
+    ``DR714_2022.xls`` was bundled despite being outside that window).
     """
     # `json.loads` is typed `Any`; the cast states the shape this endpoint
     # is documented to return, in one place instead of at every use.
@@ -1878,8 +1874,6 @@ def check() -> None:
     expected_historical_pages = [_PAGES[key] for key in _HISTORICAL_PAGE_KEYS]
     if historical_exclusions.get("schema_version") != 1:
         failures.append("historical exclusion schema_version is stale")
-    if historical_exclusions.get("support_years") != [2023, 2024, 2025, 2026]:
-        failures.append("historical exclusion support_years is stale")
     if historical_exclusions.get("disposition") != "outside-supported-window-or-superseded":
         failures.append("historical exclusion disposition is stale")
     if historical_exclusions.get("source_pages") != expected_historical_pages:

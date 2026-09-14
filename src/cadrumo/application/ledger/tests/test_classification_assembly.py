@@ -102,8 +102,8 @@ def _complete(**overrides: object):
         # to supply it.
         "customer_country_code": "FR",
         "customer_identifier": _FRENCH_IVA_NUMBER,
-        "asserted_customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
-        "asserted_issuer_scope": IvaTerritorialScope.ES_MAINLAND,
+        "asserted_customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        "asserted_issuer_scope": IvaTerritorialScope._from_registry("es_mainland"),
     }
     kwargs.update(overrides)
     return _assemble_with_declared(**kwargs)  # type: ignore[arg-type]
@@ -136,8 +136,8 @@ def test_the_registered_status_is_never_derived_from_the_envelope() -> None:
     from ....core.classifier_input_source import CounterpartyTaxablePersonStatus
 
     emitted = {fact.value for fact in _inputs().facts}
-    assert CustomerTaxStatus.B2B_IVA_REGISTERED.value not in emitted
-    assert CustomerTaxStatus.B2B_IVA_REGISTERED.value not in {
+    assert CustomerTaxStatus._from_registry("b2b_iva_registered").value not in emitted
+    assert CustomerTaxStatus._from_registry("b2b_iva_registered").value not in {
         member.value for member in CounterpartyTaxablePersonStatus
     }
 
@@ -156,7 +156,7 @@ def test_a_spanish_country_code_does_not_settle_the_territory() -> None:
         supply_nature=SupplyNature.GOODS,
         issuer_country_code="ES",
         customer_country_code="ES",
-        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
     )
 
     assert not assembly.assembled
@@ -180,12 +180,12 @@ def test_a_foreign_country_code_does_settle_the_territory() -> None:
         # printed number settles it, leaving the country resolver as the only
         # thing this case is testing.
         customer_identifier=_FRENCH_IVA_NUMBER,
-        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
     )
 
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
-    assert assembly.criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
+    assert assembly.criteria.issuer_residency is IvaTerritorialScope._from_registry("eu_member")
 
 
 def test_an_absent_supply_nature_refuses_on_a_branch_that_forks() -> None:
@@ -207,9 +207,9 @@ def test_a_domestic_operation_is_never_asked_for_the_supply_nature() -> None:
     assembly = _complete(
         supply_nature=None,
         customer_country_code=None,
-        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
-        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
-        rate_tier=IvaRateKind.GENERAL,
+        asserted_issuer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        asserted_customer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        rate_tier=IvaRateKind("general"),
     )
 
     assert "kind" not in {m.field for m in assembly.missing}
@@ -222,15 +222,15 @@ def test_a_domestic_operation_is_never_asked_for_the_supply_nature() -> None:
     with_nature = _complete(
         supply_nature=SupplyNature.SERVICES,
         customer_country_code=None,
-        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
-        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
-        rate_tier=IvaRateKind.GENERAL,
+        asserted_issuer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        asserted_customer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        rate_tier=IvaRateKind("general"),
     )
     without = classify_from_assembled_criteria(assembly)
     stated = classify_from_assembled_criteria(with_nature)
 
     assert without is not None and stated is not None
-    assert without.category is stated.category, (
+    assert without.category == stated.category, (
         f"the nature-indifferent placeholder changed the outcome: {without.category} vs {stated.category}"
     )
 
@@ -248,9 +248,9 @@ def test_the_domestic_branch_is_genuinely_indifferent_to_the_nature() -> None:
         assembly = _complete(
             supply_nature=nature,
             customer_country_code=None,
-            asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
-            asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
-            rate_tier=IvaRateKind.GENERAL,
+            asserted_issuer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+            asserted_customer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+            rate_tier=IvaRateKind("general"),
         )
         verdict = classify_from_assembled_criteria(assembly)
         assert verdict is not None
@@ -262,18 +262,18 @@ def test_the_domestic_branch_is_genuinely_indifferent_to_the_nature() -> None:
 def test_the_probe_forks_only_for_cross_territorial_scope() -> None:
     """The classification probe forks only when territorial scope makes nature material."""
     for scopes, expect_forks in (
-        ((IvaTerritorialScope.ES_MAINLAND, IvaTerritorialScope.ES_MAINLAND), False),
-        ((IvaTerritorialScope.ES_MAINLAND, IvaTerritorialScope.EU_MEMBER), True),
+        ((IvaTerritorialScope._from_registry("es_mainland"), IvaTerritorialScope._from_registry("es_mainland")), False),
+        ((IvaTerritorialScope._from_registry("es_mainland"), IvaTerritorialScope._from_registry("eu_member")), True),
     ):
         issuer, customer = scopes
         reached = set()
         for nature in (SupplyNature.GOODS, SupplyNature.SERVICES):
             assembly = _complete(
                 supply_nature=nature,
-                customer_country_code="FR" if customer is IvaTerritorialScope.EU_MEMBER else None,
+                customer_country_code="FR" if customer is IvaTerritorialScope._from_registry("eu_member") else None,
                 asserted_issuer_scope=issuer,
                 asserted_customer_scope=customer,
-                rate_tier=IvaRateKind.GENERAL,
+                rate_tier=IvaRateKind("general"),
             )
             verdict = classify_from_assembled_criteria(assembly)
             assert verdict is not None
@@ -347,7 +347,7 @@ def test_complete_evidence_assembles_and_reaches_the_rule_table() -> None:
     verdict = classify_from_assembled_criteria(assembly)
 
     assert verdict is not None
-    assert verdict.category is IvaCategory.INTRA_COMMUNITY_SUPPLY, verdict.category
+    assert verdict.category == IvaCategory("intra_community_supply"), verdict.category
 
 
 def test_an_unassembled_criteria_set_never_reaches_the_table() -> None:
@@ -367,7 +367,7 @@ def test_a_printed_nature_maps_only_to_the_general_service_kind() -> None:
     services = _complete(supply_nature=SupplyNature.SERVICES)
 
     assert services.criteria is not None
-    assert services.criteria.kind is TransactionKind.SERVICES_GENERAL
+    assert services.criteria.kind is TransactionKind("services_general")
 
 
 def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
@@ -394,7 +394,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         declared=DeclaredFacts(
             supply_nature=goods,
             customer_tax_status=DeclaredFact(
-                value=CustomerTaxStatus.B2C_CONSUMER,
+                value=CustomerTaxStatus._from_registry("b2c_consumer"),
                 source=ClassifierInputSource.OPERATOR_ASSERTION,
             ),
         ),
@@ -407,21 +407,21 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
     assert with_assertion.assembled
     assert with_assertion.criteria is not None
     assert with_assertion.criteria is not None
-    assert with_assertion.criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
+    assert with_assertion.criteria.customer_tax_status is CustomerTaxStatus._from_registry("b2c_consumer")
 
 
 def test_the_domestic_rate_tier_axis_is_carried_through() -> None:
     """ES-to-ES domestic operations need the tier, and the criteria model enforces it."""
     assembly = _complete(
         customer_country_code=None,
-        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
-        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
-        rate_tier=IvaRateKind.GENERAL,
+        asserted_issuer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        asserted_customer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        rate_tier=IvaRateKind("general"),
     )
 
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
-    assert assembly.criteria.rate_tier is IvaRateKind.GENERAL
+    assert assembly.criteria.rate_tier is IvaRateKind("general")
 
 
 def test_a_domestic_operation_with_no_tier_names_the_tier_and_not_another_axis() -> None:
@@ -442,8 +442,8 @@ def test_a_domestic_operation_with_no_tier_names_the_tier_and_not_another_axis()
     """
     assembly = _complete(
         customer_country_code=None,
-        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
-        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
+        asserted_issuer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        asserted_customer_scope=IvaTerritorialScope._from_registry("es_mainland"),
         rate_tier=None,
     )
 
@@ -464,9 +464,9 @@ def test_supplying_the_tier_is_what_actually_unblocks_it() -> None:
     """
     assembly = _complete(
         customer_country_code=None,
-        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
-        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
-        rate_tier=IvaRateKind.GENERAL,
+        asserted_issuer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        asserted_customer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        rate_tier=IvaRateKind("general"),
     )
 
     assert assembly.assembled, [gap.field for gap in assembly.missing]
@@ -495,25 +495,25 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
     does not make or a silence where it does.
     """
     for kind in (
-        TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
-        TransactionKind.WASTE_REVERSE_CHARGE,
-        TransactionKind.ELECTRONICS_REVERSE_CHARGE,
-        TransactionKind.IMMOVABLE_PROPERTY,
+        TransactionKind("construction_reverse_charge"),
+        TransactionKind("waste_reverse_charge"),
+        TransactionKind("electronics_reverse_charge"),
+        TransactionKind("immovable_property"),
     ):
         assert not domestic_rate_tier_is_required(
-            issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-            customer_residency=IvaTerritorialScope.ES_MAINLAND,
+            issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
             kind=kind,
         ), kind
     assert domestic_rate_tier_is_required(
-        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-        customer_residency=IvaTerritorialScope.ES_MAINLAND,
-        kind=TransactionKind.GOODS,
+        issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+        customer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+        kind=TransactionKind("goods"),
     )
     assert not domestic_rate_tier_is_required(
-        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
-        customer_residency=IvaTerritorialScope.EU_MEMBER,
-        kind=TransactionKind.GOODS,
+        issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
+        customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+        kind=TransactionKind("goods"),
     )
 
 
@@ -535,14 +535,14 @@ def test_a_spanish_postal_code_settles_the_territory_the_country_code_cannot() -
         issuer_postal_code="35001",
         customer_country_code="ES",
         customer_postal_code="28013",
-        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-        rate_tier=IvaRateKind.GENERAL,
+        asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+        rate_tier=IvaRateKind("general"),
     )
 
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
-    assert assembly.criteria.issuer_residency is IvaTerritorialScope.ES_CANARIAS
-    assert assembly.criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
+    assert assembly.criteria.issuer_residency is IvaTerritorialScope._from_registry("es_canarias")
+    assert assembly.criteria.customer_residency is IvaTerritorialScope._from_registry("es_mainland")
 
 
 def test_a_spanish_party_with_no_postal_code_refuses_rather_than_assuming_mainland() -> None:
@@ -564,7 +564,7 @@ def test_a_spanish_party_with_no_postal_code_refuses_rather_than_assuming_mainla
         issuer_postal_code=None,
         customer_country_code="ES",
         customer_postal_code="   ",
-        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
     )
 
     assert not assembly.assembled
@@ -591,7 +591,7 @@ def test_a_postal_code_alone_never_establishes_a_spanish_territory() -> None:
         issuer_postal_code="35001",
         customer_country_code=None,
         customer_postal_code="28013",
-        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
     )
 
     assert not assembly.assembled
@@ -638,7 +638,7 @@ def test_a_bare_spanish_company_identifier_never_reaches_the_peninsula() -> None
         issuer_postal_code=None,
         customer_country_code=None,
         customer_postal_code=None,
-        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
     )
 
     assert not assembly.assembled
@@ -670,7 +670,7 @@ def test_no_reachable_evidence_shape_ever_defaults_a_residency_to_the_peninsula(
                 issuer_country_code=None,
                 issuer_postal_code=postal,
                 customer_country_code="FR",
-                asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+                asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
             )
 
             assert assembly.criteria is None, (tax_id, postal)
@@ -709,7 +709,7 @@ def test_a_foreign_postal_code_never_resolves_to_a_spanish_territory(postal_code
         issuer_country_code=None,
         issuer_postal_code=postal_code,
         customer_country_code="FR",
-        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
     )
 
     assert not assembly.assembled, f"a {city} postal code was accepted as Spanish establishment evidence"
@@ -737,7 +737,7 @@ def test_a_malformed_country_code_is_not_reported_as_naming_spain() -> None:
         issuer_country_code="ESP",
         issuer_postal_code="28013",
         customer_country_code="FR",
-        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
     )
 
     assert not assembly.assembled
@@ -767,7 +767,7 @@ def test_each_refusal_distinguishes_why_the_country_evidence_failed() -> None:
             issuer_country_code=country,
             issuer_postal_code=postal,
             customer_country_code="FR",
-            asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+            asserted_customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
         )
         reasons[label] = next(m for m in assembly.missing if m.field == "issuer_residency").reason
 
@@ -779,9 +779,9 @@ def _domestic(**overrides: object):
     """An ES-to-ES operation, which is the shape the customer-status demand blocked."""
     kwargs: dict[str, object] = {
         "customer_country_code": None,
-        "asserted_issuer_scope": IvaTerritorialScope.ES_MAINLAND,
-        "asserted_customer_scope": IvaTerritorialScope.ES_MAINLAND,
-        "rate_tier": IvaRateKind.GENERAL,
+        "asserted_issuer_scope": IvaTerritorialScope._from_registry("es_mainland"),
+        "asserted_customer_scope": IvaTerritorialScope._from_registry("es_mainland"),
+        "rate_tier": IvaRateKind("general"),
     }
     kwargs.update(overrides)
     return _complete(**kwargs)
@@ -815,7 +815,7 @@ def test_an_unestablished_status_is_stamped_as_unresolved_not_as_a_business() ->
     assembly = _domestic(asserted_customer_tax_status=None, supply_nature=None)
 
     assert assembly.criteria is not None
-    assert assembly.criteria.customer_tax_status is CustomerTaxStatus.UNKNOWN, (
+    assert assembly.criteria.customer_tax_status is CustomerTaxStatus._from_registry("unknown"), (
         f"an unestablished status was stamped as {assembly.criteria.customer_tax_status}"
     )
 
@@ -831,11 +831,11 @@ def test_the_undetermined_status_placeholder_never_changes_the_outcome() -> None
 
     assert placeholder is not None
     for status in CustomerTaxStatus:
-        if status is CustomerTaxStatus.UNKNOWN:
+        if status is CustomerTaxStatus._from_registry("unknown"):
             continue
         stated = classify_from_assembled_criteria(_domestic(asserted_customer_tax_status=status, supply_nature=None))
         assert stated is not None
-        assert placeholder.category is stated.category, (
+        assert placeholder.category == stated.category, (
             f"the undetermined-status placeholder changed the outcome under {status}: "
             f"{placeholder.category} vs {stated.category}"
         )
@@ -911,7 +911,7 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
     from ....domain.iva.schema import EUMemberState
 
     fallthrough = "R99_fallthrough"
-    reachable_kinds = (TransactionKind.GOODS, TransactionKind.SERVICES_GENERAL)
+    reachable_kinds = (TransactionKind("goods"), TransactionKind("services_general"))
     ridden_without_reading_the_status: set[str] = set()
 
     def _rule(status: CustomerTaxStatus, issuer, customer, kind, direction) -> str:
@@ -923,9 +923,13 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
                 customer_tax_status=status,
                 kind=kind,
                 direction=direction,
-                issuer_identification_state=EUMemberState.DE if issuer is IvaTerritorialScope.EU_MEMBER else None,
-                customer_identification_state=EUMemberState.FR if customer is IvaTerritorialScope.EU_MEMBER else None,
-                rate_tier=IvaRateKind.GENERAL,
+                issuer_identification_state=EUMemberState._from_registry("de")
+                if issuer is IvaTerritorialScope._from_registry("eu_member")
+                else None,
+                customer_identification_state=EUMemberState._from_registry("fr")
+                if customer is IvaTerritorialScope._from_registry("eu_member")
+                else None,
+                rate_tier=IvaRateKind("general"),
             ),
         ).matched_rule_id
 
@@ -934,7 +938,7 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
             for kind in reachable_kinds:
                 for direction in InvoiceKind:
                     shape = (issuer, customer, kind, direction)
-                    matched = _rule(CustomerTaxStatus.UNKNOWN, *shape)
+                    matched = _rule(CustomerTaxStatus._from_registry("unknown"), *shape)
                     if matched == fallthrough:
                         continue
                     ridden_without_reading_the_status.add(matched)

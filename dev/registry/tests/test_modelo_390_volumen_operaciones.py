@@ -130,8 +130,8 @@ def _observation(
         transaction_date=date(2024, 5, 20),
         category=category,
         exemption_article=None,
-        rate_kind=IvaRateKind.ZERO,
-        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        rate_kind=IvaRateKind("zero"),
+        flow_direction=IvaFlowDirection._from_registry("repercutido"),
         base_amount=base,
         iva_amount=Decimal("0"),
         recargo_amount=Decimal("0"),
@@ -148,10 +148,10 @@ def _rows() -> tuple[IvaLedgerObservation, ...]:
     expected figure by coincidence.
     """
     return (
-        _observation(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, base=_ENTREGAS_BASE),
-        _observation(category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, base=_EXPORT_THIRD_COUNTRY_BASE),
-        _observation(category=IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED, base=_EXPORT_ASSIMILATED_BASE),
-        _observation(category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY, base=_SERVICE_SUPPLY_BASE),
+        _observation(category=IvaCategory("intra_community_supply"), base=_ENTREGAS_BASE),
+        _observation(category=IvaCategory("export_third_country_zero_rated"), base=_EXPORT_THIRD_COUNTRY_BASE),
+        _observation(category=IvaCategory("export_assimilated_zero_rated"), base=_EXPORT_ASSIMILATED_BASE),
+        _observation(category=IvaCategory("intra_community_service_supply"), base=_SERVICE_SUPPLY_BASE),
     )
 
 

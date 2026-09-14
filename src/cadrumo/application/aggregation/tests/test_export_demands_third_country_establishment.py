@@ -29,6 +29,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
+
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
@@ -43,8 +45,8 @@ from ..iva_ledger import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _EXPORT_FAMILIES = (
-    IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-    IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+    IvaCategory("export_third_country_zero_rated"),
+    IvaCategory("export_assimilated_zero_rated"),
 )
 
 
@@ -132,7 +134,7 @@ def test_an_eu_iva_number_does_not_disqualify_a_third_country_export(category: I
     identification-for-establishment substitution the intra-community branch
     exists to prevent, run in the opposite direction.
     """
-    row = _row(category=category, counterparty_country="US", identification_state=EUMemberState.IE)
+    row = _row(category=category, counterparty_country="US", identification_state=require_eu_member_state("IE"))
 
     assert validate_iva_ledger_counterparty_category(row) is None
 
@@ -176,16 +178,16 @@ def test_the_intra_community_branch_is_untouched_by_the_export_rule() -> None:
     State and says nothing about its sede, so recording a country must neither
     satisfy nor break that branch.
     """
-    unidentified = _row(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, counterparty_country="US")
+    unidentified = _row(category=IvaCategory("intra_community_supply"), counterparty_country="US")
     issue = validate_iva_ledger_counterparty_category(unidentified)
 
     assert issue is not None, "a country was accepted in place of an IVA identification"
     assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
 
     identified = _row(
-        category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        category=IvaCategory("intra_community_supply"),
         counterparty_country=None,
-        identification_state=EUMemberState.DE,
+        identification_state=require_eu_member_state("DE"),
     )
     assert validate_iva_ledger_counterparty_category(identified) is None
 
@@ -198,10 +200,10 @@ def test_the_declared_emission_set_matches_what_the_gate_actually_emits() -> Non
     """
     observed: set[IvaLedgerAggregationIssueReason] = set()
     probes = (
-        (IvaCategory.INTRA_COMMUNITY_SUPPLY, None, None),
-        (IvaCategory.INTRA_COMMUNITY_SUPPLY, None, EUMemberState.ES),
-        (IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, "DE", None),
-        (IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, None, None),
+        (IvaCategory("intra_community_supply"), None, None),
+        (IvaCategory("intra_community_supply"), None, require_eu_member_state("ES")),
+        (IvaCategory("export_third_country_zero_rated"), "DE", None),
+        (IvaCategory("export_third_country_zero_rated"), None, None),
     )
     for category, country, identification in probes:
         issue = validate_iva_ledger_counterparty_category(

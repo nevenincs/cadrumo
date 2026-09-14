@@ -27,7 +27,12 @@ from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, Regist
 from .schema_base import DateAxis, filing_period_from_scope
 from .schema_references import LegalReference, SourceReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
-from .temporal import ModeloRevisionDirectory, RevisionSelectionMetadata, select_revision
+from .temporal import (
+    ModeloRevisionDirectory,
+    RevisionSelectionMetadata,
+    revision_temporal_resolution,
+    select_revision,
+)
 from .validate_revision_identity import revision_reference_identity_failures
 
 
@@ -201,6 +206,12 @@ def build_validated_snapshot(
         revision_id=revision_id,
         support=catalogues.supported_filing_years,
     )
+    temporal_resolution = revision_temporal_resolution(
+        revision,
+        filing_year=filing_year,
+        period=period,
+        support=catalogues.supported_filing_years,
+    )
     endpoint_directory = revision_directory or ModeloRevisionDirectory.from_modelo(
         modelo,
         support=catalogues.supported_filing_years,
@@ -259,6 +270,8 @@ def build_validated_snapshot(
         revision=revision,
         filing_period=filing_period_from_scope(filing_year, period),
         filing_year=filing_year,
+        authored_filing_year=temporal_resolution.authored_filing_year,
+        revision_projection_direction=temporal_resolution.projection_direction,
         period=period,
         legal=_catalogue_slice(catalogues.legal, legal_ids),
         sources=_catalogue_slice(catalogues.sources, source_ids),
@@ -443,7 +456,7 @@ def check_snapshot_filing_review_tier(
 #: deduction limits, thresholds -- as opposed to procedural/administrative
 #: instruments. Substantive-law kinds are anchored to the tax period's own
 #: devengo date (``revision.valid_to``), never the presentation-extended
-#: window: see :func:`_legal_window_covers_devengo`.
+#: window: see :func:`legal_window_covers_devengo`.
 SUBSTANTIVE_LAW_KINDS = frozenset(
     {
         "ley",
@@ -511,7 +524,7 @@ def _check_revision_scoped_legal_windows(
     Modelo-level legal refs describe the modelo's cross-year authority corpus and
     remain exempt. A ref collected only because the selected revision or one of
     its nested records cites it is a filing-specific grounding claim, checked by
-    :func:`_legal_window_covers_devengo` -- devengo-anchored for substantive law,
+    :func:`legal_window_covers_devengo` -- devengo-anchored for substantive law,
     presentation-window-tolerant for procedural/administrative kinds.
     """
     revision_legal_ids, _revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
@@ -988,5 +1001,6 @@ __all__ = [
     "check_snapshot_filing_capability",
     "check_snapshot_filing_review_tier",
     "collect_snapshot_ref_ids",
+    "legal_window_covers_devengo",
     "validate_materialized_export_record_families",
 ]

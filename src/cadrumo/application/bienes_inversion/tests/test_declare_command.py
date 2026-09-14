@@ -14,8 +14,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.bienes_inversion.vocabulary import BienInversionDisposalRegime
+
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
-from ....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
+from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ..declare_command import (
     BienInversionDeclarationCommand,
     BienInversionDisposalIncompleteError,
@@ -80,7 +82,7 @@ def test_a_regime_without_a_year_is_refused() -> None:
     with pytest.raises(BienInversionDisposalIncompleteError) as excinfo:
         resolve_bien_inversion_disposal(
             disposal_year=None,
-            disposal_regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA,
+            disposal_regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta"),
         )
 
     assert excinfo.value.missing == "year"
@@ -90,12 +92,12 @@ def test_both_halves_together_build_the_disposal() -> None:
     """The supported path, so the refusals above are not vacuous."""
     disposal = resolve_bien_inversion_disposal(
         disposal_year=2026,
-        disposal_regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA,
+        disposal_regime=BienInversionDisposalRegime._from_registry("exenta_o_no_sujeta"),
     )
 
     assert disposal is not None
     assert disposal.year == 2026
-    assert disposal.regime is BienInversionDisposalRegime.EXENTA_O_NO_SUJETA
+    assert disposal.regime == BienInversionDisposalRegime._from_registry("exenta_o_no_sujeta")
 
 
 def test_the_declaration_reaches_the_register_intact() -> None:
@@ -122,13 +124,13 @@ def test_a_declared_disposal_is_carried_onto_the_record() -> None:
     """The pairing is not merely validated; it lands on the persisted record."""
     service = _register()
     outcome = declare_bien_inversion(
-        _command(disposal_year=2026, disposal_regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
+        _command(disposal_year=2026, disposal_regime=BienInversionDisposalRegime._from_registry("sujeta_no_exenta")),
         service=service,
     )
 
     assert outcome.record.disposal is not None
     assert outcome.record.disposal.year == 2026
-    assert outcome.record.disposal.regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA
+    assert outcome.record.disposal.regime == BienInversionDisposalRegime._from_registry("sujeta_no_exenta")
 
 
 def test_a_half_declared_disposal_never_reaches_the_register() -> None:

@@ -29,7 +29,7 @@ _BUCKET = "17171717-1717-4717-8717-171717171717"
 def _saturating_subprocess_classifier(
     *,
     classification: BusinessClassification = BusinessClassification.BUSINESS,
-    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
+    iva_category: IvaCategory | None = IvaCategory("domestic_general"),
     business_pct: Decimal | None = None,
     model: str = "test-model",
 ) -> SubprocessLLMClassifier:
@@ -98,7 +98,7 @@ def _seed_business(
     repository: TransactionCatalogueRepository,
     *,
     amount: Decimal = Decimal("121.00"),
-    category: SpendingCategory = SpendingCategory.ARRENDAMIENTO_LOCAL,
+    category: SpendingCategory = SpendingCategory._from_registry("arrendamiento_local"),
 ) -> str:
     """Persist one ACTIVE BUSINESS transaction with no IVA substrate and return its id."""
     raw = RawTransaction(

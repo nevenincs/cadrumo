@@ -15,9 +15,13 @@ from typing import Any
 
 import pytest
 
-from ....domain.contribuyente.renta_codes import FiscalResidency
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
+from cadrumo.domain.calculations.registry.invoice_legal_classification import require_invoice_class
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.deadlines.models import IVARegime
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
+from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ..issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
@@ -29,7 +33,7 @@ _CUOTA = Decimal("8.40")
 
 
 def _profile(**overrides: Any) -> TaxpayerProfile:
-    payload: dict[str, Any] = {"tax_id": "12345678Z", "iva_regime": IVARegime.GENERAL}
+    payload: dict[str, Any] = {"tax_id": "12345678Z", "iva_regime": IVARegime("GENERAL")}
     payload.update(overrides)
     return TaxpayerProfile(**payload)  # type: ignore[arg-type]
 
@@ -40,7 +44,7 @@ def _line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
         iva_amount=_CUOTA,
     )
 
@@ -48,7 +52,7 @@ def _line() -> InvoiceLine:
 def _invoice(**overrides: Any) -> Invoice:
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
-        "invoice_class": InvoiceClass.SIMPLIFICADA,
+        "invoice_class": require_invoice_class("simplificada"),
         "invoice_number": "T-2026-001",
         "issued_at": date(2026, 5, 3),
         "counterparty_name": "Cliente de mostrador",
@@ -67,7 +71,7 @@ def _invoice(**overrides: Any) -> Invoice:
 
 def test_a_resident_taxpayer_is_established_in_the_tai() -> None:
     """The common case: a Spanish-resident autónomo is established."""
-    assert issuer_established_in_tai(_profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)) is True
+    assert issuer_established_in_tai(_profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))) is True
 
 
 def test_undeclared_residency_defaults_to_established() -> None:
@@ -78,7 +82,7 @@ def test_undeclared_residency_defaults_to_established() -> None:
 def test_a_non_resident_taxpayer_is_not_established_in_the_tai() -> None:
     """The one negative case this predicate models."""
     profile = _profile(
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="FR",
     )
 
@@ -88,7 +92,7 @@ def test_a_non_resident_taxpayer_is_not_established_in_the_tai() -> None:
 def test_a_domestic_ticket_from_a_resident_issuer_needs_a_tax_id() -> None:
     """The truthful case 3.º scenario: domestic simplificada, established issuer."""
     invoice = _invoice()
-    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+    profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is True
 
@@ -96,15 +100,17 @@ def test_a_domestic_ticket_from_a_resident_issuer_needs_a_tax_id() -> None:
 def test_a_domestic_ticket_from_a_non_resident_issuer_does_not_trigger_case_3() -> None:
     """A non-established issuer's domestic-looking ticket does not fall under case 3.º."""
     invoice = _invoice()
-    profile = _profile(fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR, country_of_fiscal_residence="FR")
+    profile = _profile(
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"), country_of_fiscal_residence="FR"
+    )
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
 
 
 def test_an_ordinaria_is_not_evaluated_under_case_3() -> None:
     """Ordinaria/rectificativa already require the tax id unconditionally; this predicate is simplificada-only."""
-    invoice = _invoice(invoice_class=InvoiceClass.ORDINARIA, counterparty_tax_id="B12345674")
-    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+    invoice = _invoice(invoice_class=require_invoice_class("ordinaria"), counterparty_tax_id="B12345674")
+    profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
 
@@ -112,7 +118,7 @@ def test_an_ordinaria_is_not_evaluated_under_case_3() -> None:
 def test_a_simplificada_that_already_carries_a_tax_id_has_nothing_further_to_ask() -> None:
     """A present tax id already satisfies the law; the predicate has nothing to add."""
     invoice = _invoice(counterparty_tax_id="B12345674")
-    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+    profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
 
@@ -120,7 +126,7 @@ def test_a_simplificada_that_already_carries_a_tax_id_has_nothing_further_to_ask
 def test_a_foreign_simplificada_does_not_trigger_case_3() -> None:
     """Case 3.º is scoped to a domestic operation; a foreign counterparty is a different case."""
     invoice = _invoice(counterparty_country="DE")
-    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+    profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
 
@@ -128,7 +134,7 @@ def test_a_foreign_simplificada_does_not_trigger_case_3() -> None:
 def test_a_received_invoice_with_a_tax_id_does_not_trigger_case_3() -> None:
     """The reachable RECEIVED case: a present tax id already answers everything case 3.º could ask."""
     invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B12345674")
-    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+    profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
 
@@ -155,7 +161,7 @@ def test_the_kind_guard_holds_even_for_a_shape_invoice_itself_already_refuses() 
     invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B12345674").model_copy(
         update={"counterparty_tax_id": None},
     )
-    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+    profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
 
@@ -180,6 +186,6 @@ def test_a_canarias_or_ceuta_melilla_resident_is_a_pinned_known_limitation() -> 
     it for a genuinely Canarias/Ceuta/Melilla-flagged profile: that failure
     is the reminder pointing at exactly what to fix.
     """
-    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+    profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert issuer_established_in_tai(profile) is True  # wrong for a Canarias/Ceuta/Melilla resident; see docstring

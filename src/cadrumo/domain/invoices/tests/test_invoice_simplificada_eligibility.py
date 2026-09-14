@@ -13,7 +13,7 @@ operation the class itself was never permitted to name.
 
 Art. 4.4.a) is the one exclusion this record can enforce without inventing a
 fact it has no field for: an entrega intracomunitaria exenta (LIVA art. 25,
-``IvaCategory.INTRA_COMMUNITY_SUPPLY``) may never be documented as SIMPLIFICADA,
+``IvaCategory("intra_community_supply")``) may never be documented as SIMPLIFICADA,
 independent of amount, tax id, or anything else declared on the document.
 
 Art. 4 also carries amount-based eligibility (a 400 EUR general ceiling, a
@@ -36,9 +36,12 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.invoice_legal_classification import require_invoice_class
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ..enums import InvoiceClass, IvaRate, PaymentStatus
+from ..enums import PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -53,7 +56,7 @@ def _rated_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
         iva_amount=_CUOTA,
     )
 
@@ -64,7 +67,7 @@ def _exempt_line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.EXEMPT,
+        iva_rate=resolve_iva_rate_token("exempt", date.today()),
         iva_amount=Decimal("0"),
     )
 
@@ -83,7 +86,7 @@ def _invoice(**overrides: Any) -> Invoice:
         "currency": "EUR",
         "lines": (_exempt_line(),),
         "payment_status": PaymentStatus.PAID,
-        "iva_category": IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        "iva_category": IvaCategory("intra_community_supply"),
     }
     payload.update(overrides)
     return Invoice(**payload)  # type: ignore[arg-type]
@@ -98,27 +101,27 @@ def test_a_simplificada_entrega_intracomunitaria_is_refused_regardless_of_tax_id
     relief that would otherwise come with it.
     """
     with pytest.raises(ValidationError, match=r"RD 1619/2012 art. 4.4.a"):
-        _invoice(invoice_class=InvoiceClass.SIMPLIFICADA)
+        _invoice(invoice_class=require_invoice_class("simplificada"))
 
 
 def test_the_same_operation_is_representable_as_an_ordinaria() -> None:
     """The truthful companion: the identical entrega intracomunitaria, correctly classed."""
-    invoice = _invoice(invoice_class=InvoiceClass.ORDINARIA)
+    invoice = _invoice(invoice_class=require_invoice_class("ordinaria"))
 
-    assert invoice.invoice_class is InvoiceClass.ORDINARIA
-    assert invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert invoice.invoice_class == require_invoice_class("ordinaria")
+    assert invoice.iva_category == IvaCategory("intra_community_supply")
 
 
 def test_a_rectificativa_correcting_an_intracommunity_supply_is_unaffected() -> None:
     """Art. 4.4.a) names SIMPLIFICADA specifically; a rectificativa is a different class."""
     invoice = _invoice(
-        invoice_class=InvoiceClass.RECTIFICATIVA,
+        invoice_class=require_invoice_class("rectificativa"),
         series="R",
         rectifies_invoice_number="2026/EL-0",
     )
 
-    assert invoice.invoice_class is InvoiceClass.RECTIFICATIVA
-    assert invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert invoice.invoice_class == require_invoice_class("rectificativa")
+    assert invoice.iva_category == IvaCategory("intra_community_supply")
 
 
 def test_a_simplificada_for_a_different_category_is_unaffected() -> None:
@@ -128,23 +131,23 @@ def test_a_simplificada_for_a_different_category_is_unaffected() -> None:
     (RD 1619/2012 art. 6.1.d, outside its three mandatory cases).
     """
     invoice = _invoice(
-        invoice_class=InvoiceClass.SIMPLIFICADA,
+        invoice_class=require_invoice_class("simplificada"),
         counterparty_country="ES",
         counterparty_tax_id=None,
         lines=(_rated_line(),),
         iva_total=_CUOTA,
         grand_total=_BASE + _CUOTA,
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
 
-    assert invoice.invoice_class is InvoiceClass.SIMPLIFICADA
+    assert invoice.invoice_class == require_invoice_class("simplificada")
     assert invoice.counterparty_tax_id is None
 
 
 def test_a_simplificada_with_no_declared_category_is_unaffected() -> None:
     """An untagged category cannot trigger a category-specific exclusion."""
     invoice = _invoice(
-        invoice_class=InvoiceClass.SIMPLIFICADA,
+        invoice_class=require_invoice_class("simplificada"),
         counterparty_country="ES",
         counterparty_tax_id=None,
         lines=(_rated_line(),),
@@ -153,5 +156,5 @@ def test_a_simplificada_with_no_declared_category_is_unaffected() -> None:
         iva_category=None,
     )
 
-    assert invoice.invoice_class is InvoiceClass.SIMPLIFICADA
+    assert invoice.invoice_class == require_invoice_class("simplificada")
     assert invoice.iva_category is None

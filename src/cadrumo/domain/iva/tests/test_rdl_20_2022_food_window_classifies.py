@@ -26,6 +26,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..lookup import rate_kinds_for_declared_rate
 from ..schema import EUMemberState, IvaRateKind
 
@@ -47,10 +49,13 @@ _FIVE = Decimal("0.05")
 )
 def test_the_five_percent_food_rate_classifies_across_its_whole_grounded_span(on_date: date) -> None:
     """Every date the two bundled provisions jointly cover must classify 5 %."""
-    assert rate_kinds_for_declared_rate(EUMemberState.ES, _FIVE, on_date) == (IvaRateKind.REDUCED,), (
-        f"5 % is a lawful Spanish rate on {on_date.isoformat()} under the provisions this "
-        "registry already grounds, so a line declaring it must classify"
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert rate_kinds_for_declared_rate(
+            EUMemberState._from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
+        ) == (IvaRateKind("reduced"),), (
+            f"5 % is a lawful Spanish rate on {on_date.isoformat()} under the provisions this "
+            "registry already grounds, so a line declaring it must classify"
+        )
 
 
 @pytest.mark.parametrize(
@@ -69,17 +74,34 @@ def test_the_five_percent_rate_stays_refused_outside_its_statutory_span(on_date:
     admitting it would be an under-declaration -- the exact error the earlier
     tier-merge work closed.
     """
-    assert rate_kinds_for_declared_rate(EUMemberState.ES, _FIVE, on_date) == (), (
-        f"5 % was not a lawful Spanish rate on {on_date.isoformat()}; classifying it "
-        "would accept a rate the statute did not provide"
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            rate_kinds_for_declared_rate(
+                EUMemberState._from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
+            )
+            == ()
+        ), (
+            f"5 % was not a lawful Spanish rate on {on_date.isoformat()}; classifying it "
+            "would accept a rate the statute did not provide"
+        )
 
 
 def test_the_successor_rate_still_holds_its_own_window() -> None:
     """Second control: adding the earlier window must not disturb the later one."""
-    seven_five = Decimal("0.075")
-    assert rate_kinds_for_declared_rate(EUMemberState.ES, seven_five, date(2024, 8, 1)) == ()
-    assert rate_kinds_for_declared_rate(EUMemberState.ES, seven_five, date(2024, 11, 1)) == (IvaRateKind.REDUCED,)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        seven_five = Decimal("0.075")
+        assert (
+            rate_kinds_for_declared_rate(
+                EUMemberState._from_registry("es"),
+                seven_five,
+                date(2024, 8, 1),
+                operation=_authority_operation_for_test,
+            )
+            == ()
+        )
+        assert rate_kinds_for_declared_rate(
+            EUMemberState._from_registry("es"), seven_five, date(2024, 11, 1), operation=_authority_operation_for_test
+        ) == (IvaRateKind("reduced"),)
 
 
 def test_the_two_food_windows_abut_without_a_gap_or_an_overlap() -> None:
@@ -90,7 +112,8 @@ def test_the_two_food_windows_abut_without_a_gap_or_an_overlap() -> None:
     tier would red registry load through the no-overlap rule. Assert the join
     directly so neither is discovered by a downstream symptom.
     """
-    for on_date in (date(2024, 6, 29), date(2024, 6, 30), date(2024, 7, 1), date(2024, 7, 2)):
-        assert rate_kinds_for_declared_rate(EUMemberState.ES, _FIVE, on_date) == (IvaRateKind.REDUCED,), (
-            f"the join between the two food-rate provisions drops {on_date.isoformat()}"
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for on_date in (date(2024, 6, 29), date(2024, 6, 30), date(2024, 7, 1), date(2024, 7, 2)):
+            assert rate_kinds_for_declared_rate(
+                EUMemberState._from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
+            ) == (IvaRateKind("reduced"),), f"the join between the two food-rate provisions drops {on_date.isoformat()}"

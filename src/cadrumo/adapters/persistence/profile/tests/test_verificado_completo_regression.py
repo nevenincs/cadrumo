@@ -111,7 +111,7 @@ def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
@@ -297,7 +297,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
     )
 
@@ -355,7 +355,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
     )
 
@@ -444,7 +444,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
         filing_year=_M130_FILING_YEAR,
         period=Period.from_year_and_code(_M130_FILING_YEAR, _M130_PERIOD),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
     )
 

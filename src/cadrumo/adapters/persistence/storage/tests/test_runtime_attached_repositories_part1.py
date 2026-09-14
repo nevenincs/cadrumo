@@ -15,6 +15,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
 )
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
+from cadrumo.domain.categories.spending_category import SpendingCategory
 
 from .....adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -41,7 +42,6 @@ from .....core.period import Period
 from .....domain.attachments.errors import AttachmentNotFoundError
 from .....domain.buckets.event import BucketEventHistoryCatalogue
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
-from .....domain.categories.spending_category import SpendingCategory
 from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from .....domain.invoices.models import InvoiceCatalogue
 from .....domain.modelos.work_unit import WorkUnitCatalogue
@@ -480,8 +480,8 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
     history_b = _history(_BUCKET_B_ID)
     decision_a = _iva_wallet_decision(_BUCKET_A_ID, target_period="2T")
     decision_b = _iva_wallet_decision(_BUCKET_B_ID, target_period="3T")
-    usage_a = _usage_profile(SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ, "0.21")
-    usage_b = _usage_profile(SpendingCategory.TELEFONIA_MOVIL, "0.60")
+    usage_a = _usage_profile(SpendingCategory._from_registry("suministros_home_office_luz"), "0.21")
+    usage_b = _usage_profile(SpendingCategory._from_registry("telefonia_movil"), "0.60")
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         ModeloHistoryRepository(bucket_id=_BUCKET_A_ID).save(history_a)

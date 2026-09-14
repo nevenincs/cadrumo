@@ -62,10 +62,10 @@ def _paying_autonomo() -> TaxpayerProfile:
     """An autónomo who pays withholding-subject income (has employees)."""
     return TaxpayerProfile(
         tax_id="A45678901",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        iva_regime=IVARegime("general"),
         has_employees=True,
     )
 
@@ -73,18 +73,18 @@ def _paying_autonomo() -> TaxpayerProfile:
 def _landlord() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.CAPITAL_INMOBILIARIO}),
-        iva_regime=IVARegime.EXENTO,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("capital_inmobiliario")}),
+        iva_regime=IVARegime("exento"),
     )
 
 
 def _sociedad_limitada() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("general"),
     )
 
 

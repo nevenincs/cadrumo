@@ -69,7 +69,7 @@ def _transaction(
     booked_date: date,
     taxable_base: Decimal,
     iva_amount: Decimal,
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
+    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment("none"),
     operation_date: date | None = None,
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = (),
 ) -> Transaction:
@@ -83,12 +83,12 @@ def _transaction(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT
+            "iva_category": IvaCategory("domestic_general"),
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current")
             if direction is TransactionDirection.OUTGOING
             else None,
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="a" * 64,
             )
@@ -131,7 +131,7 @@ def test_cash_accounting_supply_reports_art75_information_before_collection_and_
         booked_date=date(2026, 4, 15),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
         operation_date=date(2026, 3, 20),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
@@ -169,7 +169,7 @@ def test_cash_accounting_purchase_reports_acquisition_information_without_admitt
         booked_date=date(2026, 4, 10),
         taxable_base=Decimal("300.00"),
         iva_amount=Decimal("63.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
         operation_date=date(2026, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
@@ -215,7 +215,7 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
         booked_date=date(2026, 4, 10),
         taxable_base=Decimal("300.00"),
         iva_amount=Decimal("63.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
         operation_date=date(2026, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
@@ -243,7 +243,7 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
         IvaLedgerObservationRole.SETTLEMENT,
     }
     assert all(
-        observation.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+        observation.cash_accounting_treatment is IvaCashAccountingTreatment("supplier_regime")
         for observation in q1.observations
     )
     assert sum(
@@ -275,7 +275,7 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
     assert q2.issues == ()
     assert len(q2.observations) == 1
     assert q2.observations[0].observation_role is IvaLedgerObservationRole.SETTLEMENT
-    assert q2.observations[0].cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+    assert q2.observations[0].cash_accounting_treatment is IvaCashAccountingTreatment("supplier_regime")
     assert q2.observations[0].base_amount == Decimal("150.00")
     assert resolve_m303_supplier_regime_arrival(period=_Q2_2026, iva_aggregation=q2).source_ledger_ids == (
         cash_purchase.transaction_id,
@@ -290,7 +290,7 @@ def test_supplier_regime_arrival_covers_the_statutory_fallback_and_leaves_empty_
         booked_date=date(2026, 3, 12),
         taxable_base=Decimal("300.00"),
         iva_amount=Decimal("63.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
         operation_date=date(2026, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
@@ -333,7 +333,7 @@ def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplie
         booked_date=date(2026, 3, 20),
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
         operation_date=date(2026, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
@@ -349,7 +349,7 @@ def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplie
         booked_date=date(2026, 3, 24),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
         operation_date=date(2026, 3, 14),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
@@ -399,7 +399,7 @@ def _not_subject_transaction(
             # NONE-treatment row carries none -- that pairing is the control for
             # the gate keying on the regime rather than on the category alone.
             "cash_accounting_payment_evidence": ()
-            if cash_accounting_treatment is IvaCashAccountingTreatment.NONE
+            if cash_accounting_treatment is IvaCashAccountingTreatment("none")
             else (
                 IvaCashAccountingPaymentEvidence(
                     payment_date=date(2026, 2, 20),
@@ -424,7 +424,7 @@ def _gate_reasons(transaction: Transaction) -> tuple[str, ...]:
 
 @pytest.mark.parametrize(
     "category",
-    [IvaCategory.OPERACION_NO_SUJETA, IvaCategory.DOMESTIC_NOT_SUBJECT],
+    [IvaCategory("operacion_no_sujeta"), IvaCategory("domestic_not_subject")],
 )
 def test_both_not_subject_categories_are_outside_the_cash_accounting_regime(
     category: IvaCategory,
@@ -440,7 +440,7 @@ def test_both_not_subject_categories_are_outside_the_cash_accounting_regime(
     transaction = _not_subject_transaction(
         f"not-subject-{category.value}",
         category=category,
-        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
     )
 
     assert _gate_reasons(transaction) == ("cash_accounting_excluded_category",)
@@ -455,8 +455,8 @@ def test_an_exempt_domestic_supply_still_enters_the_cash_accounting_regime() -> 
     """
     transaction = _not_subject_transaction(
         "exempt-inside-regime",
-        category=IvaCategory.DOMESTIC_EXEMPT,
-        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        category=IvaCategory("domestic_exempt"),
+        cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
     )
 
     aggregation = aggregate_iva_ledger_observations(
@@ -477,8 +477,8 @@ def test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate() -> N
     """
     transaction = _not_subject_transaction(
         "not-subject-ordinary",
-        category=IvaCategory.DOMESTIC_NOT_SUBJECT,
-        cash_accounting_treatment=IvaCashAccountingTreatment.NONE,
+        category=IvaCategory("domestic_not_subject"),
+        cash_accounting_treatment=IvaCashAccountingTreatment("none"),
     )
 
     assert "cash_accounting_excluded_category" not in _gate_reasons(transaction)
@@ -544,7 +544,7 @@ def test_cash_accounting_row_reaches_the_same_rate_boxes_as_an_ordinary_row() ->
     cash = _transaction(
         "cash-rate-box",
         booked_date=date(2025, 4, 15),
-        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
         operation_date=date(2025, 4, 10),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(

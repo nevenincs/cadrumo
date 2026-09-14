@@ -52,6 +52,9 @@ from typing import TYPE_CHECKING
 from cadrumo.adapters.persistence.storage.master_key.live_sessions import close_all_live_bucket_sessions
 from cadrumo.core.config_state_root import FormerProductStateError
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 
 from ._call_runtime import serving_capacity_limiter
 from ._completions import complete_prompt_argument
@@ -657,6 +660,7 @@ def build_server(
     persona: AgentPersona | None = None,
     telemetry: SessionTelemetryWriter | None = None,
     surface_mode: SurfaceMode = SurfaceMode.CORE,
+    supported_filing_years: SupportedFilingYearsCatalogue | None = None,
 ) -> Server:
     """Build the MCP ``Server`` with the tool, prompt, and resource handlers.
 
@@ -1246,7 +1250,11 @@ def build_server(
     async def _on_completion(_ctx: ServerRequestContext, params: CompleteRequestParams) -> CompleteResult:
         if not isinstance(params.ref, PromptReference):
             return CompleteResult(completion=Completion(values=[], total=0, has_more=False))
-        values = complete_prompt_argument(params.argument.name, params.argument.value)
+        values = complete_prompt_argument(
+            params.argument.name,
+            params.argument.value,
+            supported_filing_years=supported_filing_years,
+        )
         return CompleteResult(completion=Completion(values=list(values), total=len(values), has_more=False))
 
     return Server(
@@ -1302,7 +1310,18 @@ def _run_server(
     except FormerProductStateError as error:
         telemetry = None
         sys.stderr.write(f"cadrumo MCP serving without telemetry (storage root unavailable): {error}\n")
-    server: Server = build_server(descriptors, persona=persona, telemetry=telemetry, surface_mode=surface_mode)
+    with bundled_indexed_authority().operation() as authority_operation:
+        modelo_ids = authority_operation.modelo_ids()
+        if not modelo_ids:
+            raise RegistryValidationError("published registry authority declares no modelos")
+        supported_filing_years = authority_operation.modelo_directory(modelo_ids[0]).supported_filing_years
+    server: Server = build_server(
+        descriptors,
+        persona=persona,
+        telemetry=telemetry,
+        surface_mode=surface_mode,
+        supported_filing_years=supported_filing_years,
+    )
 
     # Anchor the server's lifetime to its client BEFORE the transport starts.
     # The stdio contract is "exit on stdin EOF", but on Windows an inherited

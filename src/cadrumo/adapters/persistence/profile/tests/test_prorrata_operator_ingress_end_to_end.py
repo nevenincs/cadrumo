@@ -112,9 +112,9 @@ def _purchase(
             "taxable_base": Decimal("50.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": _INPUT_CUOTA,
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="5" * 64,
             ),
@@ -161,9 +161,9 @@ def _active_service() -> ProrrataRegisterService:
 def test_elect_especial_via_service_makes_art106_apportionment_fire(tmp_path: Path) -> None:
     """Electing especial through the CLI's service routes the three art. 106 reglas."""
     txns = (
-        _purchase("buy-excl-ded", classification=InputClassification.EXCLUSIVELY_DEDUCTIBLE),
-        _purchase("buy-excl-non", classification=InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE),
-        _purchase("buy-common", classification=InputClassification.COMMON),
+        _purchase("buy-excl-ded", classification=InputClassification._from_registry("exclusively_deductible")),
+        _purchase("buy-excl-non", classification=InputClassification._from_registry("exclusively_non_deductible")),
+        _purchase("buy-common", classification=InputClassification._from_registry("common")),
     )
     general_percentage = Decimal("60")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -177,10 +177,10 @@ def test_elect_especial_via_service_makes_art106_apportionment_fire(tmp_path: Pa
         _active_service().declare(
             ProrrataRegisterEntry(
                 ejercicio=_EJERCICIO,
-                regime=ProrrataRegisterRegime.ESPECIAL,
+                regime=ProrrataRegisterRegime._from_registry("especial"),
                 especial_transition=None,
                 provisional_percentage=general_percentage,
-                provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
                 source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
             )
         )
@@ -216,10 +216,14 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(tmp_path
         service = _active_service()
         # Operator declares the art. 9.1.c partition (`declare-sector`) ...
         service.declare_sector(
-            SectorDefinition(sector_id="sector-a", letra=SectorDiferenciadoLetra.A, member_activity_codes=("4711",))
+            SectorDefinition(
+                sector_id="sector-a", letra=SectorDiferenciadoLetra._from_registry("a"), member_activity_codes=("4711",)
+            )
         )
         service.declare_sector(
-            SectorDefinition(sector_id="sector-b", letra=SectorDiferenciadoLetra.A, member_activity_codes=("6201",))
+            SectorDefinition(
+                sector_id="sector-b", letra=SectorDiferenciadoLetra._from_registry("a"), member_activity_codes=("6201",)
+            )
         )
         # ... a common (whole-entity) base entry and one entry per sector
         # (`elect-general --sector`), each at its own percentage.
@@ -227,11 +231,11 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(tmp_path
             service.declare(
                 ProrrataRegisterEntry(
                     ejercicio=_EJERCICIO,
-                    regime=ProrrataRegisterRegime.GENERAL,
+                    regime=ProrrataRegisterRegime._from_registry("general"),
                     especial_transition=None,
                     sector_id=sector_id,
                     provisional_percentage=pct,
-                    provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )

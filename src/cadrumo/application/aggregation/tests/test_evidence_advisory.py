@@ -69,7 +69,7 @@ def _tx(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
-    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
+    iva_category: IvaCategory | None = IvaCategory("domestic_general"),
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
     attachment_ids: tuple[str, ...] = (),
     purchase_invoice_evidence_id: str | None = None,
@@ -115,7 +115,7 @@ def test_advisory_fires_on_incoming_cuota_bearing_income_without_evidence() -> N
     tx = _tx(
         "income-no-evidence",
         direction=TransactionDirection.INCOMING,
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
+        iva_category=IvaCategory("domestic_general"),
     )
     diagnostics = missing_evidence_advisory_observations([tx])
     assert len(diagnostics) == 1
@@ -195,7 +195,7 @@ def test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set() -
 # --- False-positive guards ----------------------------------------------------------
 def test_advisory_silent_on_exempt_iva_category() -> None:
     """A cuota-less (exempt) OUTGOING row with no evidence does not fire."""
-    tx = _tx("exempt-expense", iva_category=IvaCategory.DOMESTIC_EXEMPT)
+    tx = _tx("exempt-expense", iva_category=IvaCategory("domestic_exempt"))
     assert missing_evidence_advisory_observations([tx]) == ()
 
 
@@ -247,7 +247,7 @@ def test_advisory_silent_on_incoming_exempt_category() -> None:
     tx = _tx(
         "exempt-income",
         direction=TransactionDirection.INCOMING,
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
     assert missing_evidence_advisory_observations([tx]) == ()
 
@@ -272,7 +272,7 @@ def test_advisory_fires_once_per_significant_row_in_a_mixed_batch() -> None:
         _tx("has-attachment", attachment_ids=("b" * 64,)),
         _tx("has-invoice", purchase_invoice_evidence_id="pinv-batch"),
         _tx("personal", business_classification=BusinessClassification.PERSONAL),
-        _tx("exempt", iva_category=IvaCategory.DOMESTIC_EXEMPT),
+        _tx("exempt", iva_category=IvaCategory("domestic_exempt")),
     ]
     diagnostics = missing_evidence_advisory_observations(rows)
     fired_ids = {diagnostic.binding_id for diagnostic in diagnostics}

@@ -113,10 +113,14 @@ _SUMINISTRO_ROWS: tuple[tuple[str, Decimal], ...] = (
 )
 
 _OTHER_ROWS: tuple[tuple[str, Decimal, SpendingCategory], ...] = (
-    ("reta-titular", _RETA, SpendingCategory.CUOTAS_AUTONOMOS_SS),
-    ("gastos-financieros", _GASTOS_FINANCIEROS, SpendingCategory.GASTOS_FINANCIEROS),
-    ("tributos-no-estatales", _TRIBUTOS_NO_ESTATALES, SpendingCategory.TRIBUTOS_FISCALMENTE_DEDUCIBLES),
-    ("reparaciones-conservacion", _REPARACIONES, SpendingCategory.REPARACIONES_CONSERVACION),
+    ("reta-titular", _RETA, SpendingCategory._from_registry("cuotas_autonomos_ss")),
+    ("gastos-financieros", _GASTOS_FINANCIEROS, SpendingCategory._from_registry("gastos_financieros")),
+    (
+        "tributos-no-estatales",
+        _TRIBUTOS_NO_ESTATALES,
+        SpendingCategory._from_registry("tributos_fiscalmente_deducibles"),
+    ),
+    ("reparaciones-conservacion", _REPARACIONES, SpendingCategory._from_registry("reparaciones_conservacion")),
 )
 
 
@@ -169,7 +173,9 @@ def _expense_row(reference: str, amount: Decimal, category: SpendingCategory) ->
     )
 
 
-def _aggregated(*, suministros_category: SpendingCategory = SpendingCategory.SUMINISTROS_LOCAL_AFECTO):
+def _aggregated(
+    *, suministros_category: SpendingCategory = SpendingCategory._from_registry("suministros_local_afecto")
+):
     """Drive the example's purchase facts through the production aggregation."""
     rows = [_expense_row(reference, amount, suministros_category) for reference, amount in _SUMINISTRO_ROWS]
     rows.extend(_expense_row(reference, amount, category) for reference, amount, category in _OTHER_ROWS)
@@ -219,7 +225,9 @@ def test_the_home_office_carve_out_is_not_applied_to_a_local() -> None:
     local case back through the dwelling rule.
     """
     local = _resolved()[_SUMINISTROS_BINDING]
-    home_office = _resolved(suministros_category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ)[_SUMINISTROS_BINDING]
+    home_office = _resolved(suministros_category=SpendingCategory._from_registry("suministros_home_office_luz"))[
+        _SUMINISTROS_BINDING
+    ]
 
     assert local == _SUMINISTROS_TOTAL
     assert home_office == (_SUMINISTROS_TOTAL * Decimal("0.30")).quantize(Decimal("0.01"))
@@ -285,10 +293,12 @@ def test_moving_one_bill_moves_the_published_subtotal() -> None:
 
     nudged_rows = [
         _expense_row(
-            "suministro-electrico", _SUMINISTRO_ELECTRICO + Decimal("1.00"), SpendingCategory.SUMINISTROS_LOCAL_AFECTO
+            "suministro-electrico",
+            _SUMINISTRO_ELECTRICO + Decimal("1.00"),
+            SpendingCategory._from_registry("suministros_local_afecto"),
         ),
         *(
-            _expense_row(reference, amount, SpendingCategory.SUMINISTROS_LOCAL_AFECTO)
+            _expense_row(reference, amount, SpendingCategory._from_registry("suministros_local_afecto"))
             for reference, amount in _SUMINISTRO_ROWS[1:]
         ),
     ]

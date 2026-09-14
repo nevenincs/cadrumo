@@ -15,6 +15,8 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -290,7 +292,7 @@ def _resident_profile() -> TaxpayerProfile:
     cap_le_when_positive, implies_nonzero) without exercising the
     profile_field_required branch.
     """
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
 
 
 def _minimal_work_unit(
@@ -862,7 +864,7 @@ class TestWorkflowInputMismatchError:
 
     def _resident_profile(self) -> TaxpayerProfile:
         """Return a minimal real profile (load_inputs discards it via ``del``)."""
-        return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+        return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
 
     def test_matching_request_does_not_raise(self) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""
@@ -1047,7 +1049,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
 def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> None:
     """The CLI accepts the wizard's operator-selectable IVA-regime choices.
 
-    ``IVARegime.NO_APLICA`` is an internal projection sentinel for profiles
+    ``IVARegime("NO_APLICA")`` is an internal projection sentinel for profiles
     that are not enrolled in IVA. It must not leak into the operator-facing
     ``--iva-regime`` choice set.
     """
@@ -1063,7 +1065,7 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> Non
     }
     choice_set = set(IVA_REGIME_CHOICE_VALUES)
     assert choice_set == wizard_values
-    assert IVARegime.NO_APLICA.value not in choice_set
+    assert IVARegime("NO_APLICA").value not in choice_set
 
 
 # ---------------------------------------------------------------------------

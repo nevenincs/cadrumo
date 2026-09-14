@@ -7,7 +7,6 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     EntitySetFactQuery,
     ResolvedEntitySetFact,
@@ -69,9 +68,14 @@ def test_article_95_activity_selectors_resolve_only_from_the_grounded_m036_table
     assert resolved.source_refs == (_M036_TABLE_SOURCE, _ARTICLE_95_SOURCE)
 
 
-def test_article_95_activity_selectors_refuse_before_the_first_citable_m036_table() -> None:
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve("rirpf-art-95:selector-m036-actividades-profesionales", date(2026, 3, 25))
+def test_article_95_activity_selectors_back_project_before_the_first_citable_m036_table() -> None:
+    resolved = _resolve("rirpf-art-95:selector-m036-actividades-profesionales", date(2026, 3, 25))
+
+    assert resolved.projection_direction == "backward"
+    assert resolved.projected_from_date == _FIRST_GROUNDED_DATE
+    assert resolved.variant_id.endswith(_FIRST_GROUNDED_DATE.isoformat())
+    assert resolved.payload.entities == frozenset({"A04", "A05"})
+    assert resolved.source_refs == (_M036_TABLE_SOURCE, _ARTICLE_95_SOURCE)
 
 
 def test_article_95_activity_selectors_cite_the_hash_pinned_table_and_boe_redaction() -> None:

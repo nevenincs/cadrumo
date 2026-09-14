@@ -74,11 +74,11 @@ class _FactQuery(RegistryModel):
     def _validate_selector_coordinates(self) -> _FactQuery:
         names = [selector.name for selector in self.selectors]
         if len(set(names)) != len(names):
-            raise RegistryValidationError("governed fact query selector names must be unique")
+            raise ValueError("governed fact query selector names must be unique")
         if (self.filing_year is None) != (self.period is None):
-            raise RegistryValidationError("governed fact query filing_year and period must be declared together")
+            raise ValueError("governed fact query filing_year and period must be declared together")
         if self.filing_year is not None and self.date_axis is not DateAxis.FILING_PERIOD:
-            raise RegistryValidationError("governed fact filing_year/period coordinates require the filing_period axis")
+            raise ValueError("governed fact filing_year/period coordinates require the filing_period axis")
         return self
 
 
@@ -163,28 +163,28 @@ class _ResolvedFact(RegistryModel):
     @model_validator(mode="after")
     def _validate_resolution_context(self) -> _ResolvedFact:
         if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError("resolved governed fact valid_to must be on or after valid_from")
+            raise ValueError("resolved governed fact valid_to must be on or after valid_from")
         inside_window = self.effective_date >= self.valid_from and (
             self.valid_to is None or self.effective_date <= self.valid_to
         )
         if self.projection_direction is TemporalProjectionDirection.AUTHORED:
             if not inside_window or self.projected_from_date is not None:
-                raise RegistryValidationError("authored governed fact resolution must fall within its validity window")
+                raise ValueError("authored governed fact resolution must fall within its validity window")
         elif self.projection_direction is TemporalProjectionDirection.BACKWARD:
             if self.projected_from_date is None or self.projected_from_date <= self.effective_date:
-                raise RegistryValidationError("backward fact projection must originate after the query coordinate")
+                raise ValueError("backward fact projection must originate after the query coordinate")
         elif self.projected_from_date is None or self.projected_from_date >= self.effective_date:
-            raise RegistryValidationError("forward fact projection must originate before the query coordinate")
+            raise ValueError("forward fact projection must originate before the query coordinate")
         if len(set(self.source_revision_ids)) != len(self.source_revision_ids):
-            raise RegistryValidationError("resolved governed fact source revision ids must be unique")
+            raise ValueError("resolved governed fact source revision ids must be unique")
         names = [selector.name for selector in self.matched_selectors]
         if len(set(names)) != len(names):
-            raise RegistryValidationError("resolved governed fact selector names must be unique")
+            raise ValueError("resolved governed fact selector names must be unique")
         cited = {citation.source_ref for citation in self.source_citations}
         if not cited.issubset(set(self.source_refs)):
-            raise RegistryValidationError("resolved governed fact citations must name a declared source_ref")
+            raise ValueError("resolved governed fact citations must name a declared source_ref")
         if not self.legal_refs and not self.source_refs:
-            raise RegistryValidationError("resolved governed fact must retain legal or source evidence")
+            raise ValueError("resolved governed fact must retain legal or source evidence")
         return self
 
 
@@ -257,7 +257,7 @@ def resolve_governed_fact(
     *,
     authority_digest: str,
 ) -> ResolvedGovernedFact:
-    """Resolve one exact query while retaining its complete authority context."""
+    """Resolve one query through its exact or nearest authored temporal window."""
     fact = catalogue.facts.get(query.fact_id)
     if fact is None:
         raise RegistryValidationError(f"governed fact {query.fact_id!r} is not registered")
@@ -369,14 +369,24 @@ def _projection_candidates(
     date | None,
 ]:
     support = fact.support
-    if support is None or not support.admits_coordinate(effective_date) or not track:
+    if (support is not None and not support.admits_coordinate(effective_date)) or not track:
         return (), TemporalProjectionDirection.AUTHORED, None
     before = tuple(item for item in track if item[1].valid_to is not None and item[1].valid_to < effective_date)
     after = tuple(item for item in track if item[1].valid_from > effective_date)
-    # A hole between two authored windows is missing authority, not permission
-    # to interpolate from either side.
     if before and after:
-        return (), TemporalProjectionDirection.AUTHORED, None
+        previous_boundary = max(valid_to for _, window in before if (valid_to := window.valid_to) is not None)
+        next_boundary = min(item[1].valid_from for item in after)
+        if effective_date - previous_boundary <= next_boundary - effective_date:
+            return (
+                tuple(item for item in before if item[1].valid_to == previous_boundary),
+                TemporalProjectionDirection.FORWARD,
+                previous_boundary,
+            )
+        return (
+            tuple(item for item in after if item[1].valid_from == next_boundary),
+            TemporalProjectionDirection.BACKWARD,
+            next_boundary,
+        )
     if before:
         boundary = max(valid_to for _, window in before if (valid_to := window.valid_to) is not None)
         return (

@@ -132,7 +132,7 @@ def test_taxpayer_profile_model_validates_incn_decimal_field() -> None:
 
     profile = TaxpayerProfile(
         tax_id="B66012345",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("6000000"),
     )
     assert profile.incn_prior_12_months == Decimal("6000000")
@@ -145,7 +145,7 @@ def test_taxpayer_profile_model_accepts_three_state_new_entity_field() -> None:
     for declared in (True, False, None):
         profile = TaxpayerProfile(
             tax_id="B66012345",
-            iva_regime=IVARegime.GENERAL,
+            iva_regime=IVARegime("GENERAL"),
             new_entity_first_two_profit_periods=declared,
         )
         assert profile.new_entity_first_two_profit_periods is declared
@@ -156,7 +156,7 @@ def test_taxpayer_profile_model_accepts_ley_49_2002_option_fields() -> None:
 
     profile = TaxpayerProfile(
         tax_id="B66012345",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         ley_49_2002_special_regime_option_declared=True,
         ley_49_2002_special_regime_option_date=date(2024, 2, 3),
         ley_49_2002_special_regime_renunciation_declared=False,

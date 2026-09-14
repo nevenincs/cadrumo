@@ -26,10 +26,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.iva.classification import require_iva_territorial_scope
+from cadrumo.domain.iva.schema import require_eu_member_state
+
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ...iva.classification import IvaTerritorialScope
 from ...iva.establishment import StatedCountryCodeStatus, stated_country_code_status, territorial_scope_for_country
-from ...iva.schema import EUMemberState
 from ..enums import TransactionDirection
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -75,7 +77,9 @@ def test_a_third_country_establishment_is_recordable_at_all() -> None:
     transaction = _transaction(counterparty_country="US")
 
     assert transaction.counterparty_country == "US"
-    assert territorial_scope_for_country(transaction.counterparty_country) is IvaTerritorialScope.THIRD_COUNTRY
+    assert territorial_scope_for_country(transaction.counterparty_country) == require_iva_territorial_scope(
+        "third_country"
+    )
 
 
 def test_the_member_state_is_derived_and_never_stored_twice() -> None:
@@ -85,7 +89,7 @@ def test_the_member_state_is_derived_and_never_stored_twice() -> None:
     ``counterparty_eu_member_state`` is therefore a read-only projection: this
     asserts it derives correctly AND that it cannot be set independently.
     """
-    assert _transaction(counterparty_country="DE").counterparty_eu_member_state is EUMemberState.DE
+    assert _transaction(counterparty_country="DE").counterparty_eu_member_state == require_eu_member_state("DE")
     assert _transaction(counterparty_country="US").counterparty_eu_member_state is None
 
     with pytest.raises(ValidationError):
@@ -100,8 +104,8 @@ def test_the_member_state_is_derived_and_never_stored_twice() -> None:
 @pytest.mark.parametrize(
     ("country", "scope", "status"),
     (
-        ("DE", IvaTerritorialScope.EU_MEMBER, StatedCountryCodeStatus.CATALOGUED),
-        ("US", IvaTerritorialScope.THIRD_COUNTRY, StatedCountryCodeStatus.CATALOGUED),
+        ("DE", IvaTerritorialScope._from_registry("eu_member"), StatedCountryCodeStatus.CATALOGUED),
+        ("US", IvaTerritorialScope._from_registry("third_country"), StatedCountryCodeStatus.CATALOGUED),
         ("XX", None, StatedCountryCodeStatus.UNASSIGNED),
         (an_uncatalogued_alpha2(), None, StatedCountryCodeStatus.UNCATALOGUED),
         (None, None, None),
@@ -154,4 +158,6 @@ def test_the_stored_country_survives_a_strict_json_round_trip() -> None:
 
     assert restored == original
     assert restored.counterparty_country == "US"
-    assert territorial_scope_for_country(restored.counterparty_country) is IvaTerritorialScope.THIRD_COUNTRY
+    assert territorial_scope_for_country(restored.counterparty_country) == require_iva_territorial_scope(
+        "third_country"
+    )

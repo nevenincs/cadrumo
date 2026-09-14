@@ -42,13 +42,13 @@ def _eu_inbound_b2b(*, kind: TransactionKind) -> IvaInvoiceClassificationCriteri
     return IvaInvoiceClassificationCriteria.model_validate(
         {
             "transaction_date": date(2026, 3, 1),
-            "issuer_residency": IvaTerritorialScope.EU_MEMBER,
-            "issuer_identification_state": EUMemberState.DE,
-            "customer_residency": IvaTerritorialScope.ES_MAINLAND,
-            "customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
+            "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
+            "issuer_identification_state": EUMemberState._from_registry("de"),
+            "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
+            "customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
             "kind": kind,
             "direction": InvoiceKind.RECEIVED,
-            "rate_tier": IvaRateKind.GENERAL,
+            "rate_tier": IvaRateKind("general"),
         },
     )
 
@@ -61,8 +61,8 @@ def test_an_acquired_service_files_under_a_different_clave_than_acquired_goods()
     be invisible to any test that starts from a category rather than from the
     facts the classifier reads.
     """
-    goods = classify_iva(_eu_inbound_b2b(kind=TransactionKind.GOODS))
-    services = classify_iva(_eu_inbound_b2b(kind=TransactionKind.SERVICES_GENERAL))
+    goods = classify_iva(_eu_inbound_b2b(kind=TransactionKind("goods")))
+    services = classify_iva(_eu_inbound_b2b(kind=TransactionKind("services_general")))
 
     assert goods.matched_rule_id == "R11_intra_community_acquisition"
     assert services.matched_rule_id == "R13_services_b2b_eu_inbound"
@@ -78,8 +78,8 @@ def test_an_acquired_service_files_under_a_different_clave_than_acquired_goods()
     assert goods_clave.value == "A"
     assert services_clave.value == "I"
     assert goods_clave is not services_clave
-    assert iva_category_for_operation_type(goods_clave) is goods.category
-    assert iva_category_for_operation_type(services_clave) is services.category
+    assert iva_category_for_operation_type(goods_clave) == goods.category
+    assert iva_category_for_operation_type(services_clave) == services.category
 
 
 def test_every_category_the_inbound_classifier_can_emit_for_the_eu_has_a_clave() -> None:
@@ -93,17 +93,17 @@ def test_every_category_the_inbound_classifier_can_emit_for_the_eu_has_a_clave()
     """
     catalogue = resolve_iva_category_catalogue()
     operation_by_category = {
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: IntracomOperationType(
+        IvaCategory("intra_community_acquisition_reverse_charge"): IntracomOperationType(
             catalogue.operation_type("received.intra_community_acquisition_reverse_charge"),
         ),
-        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: IntracomOperationType(
+        IvaCategory("intra_community_service_acquisition_reverse_charge"): IntracomOperationType(
             catalogue.operation_type("received.intra_community_service_acquisition_reverse_charge"),
         ),
     }
-    for kind in (TransactionKind.GOODS, TransactionKind.SERVICES_GENERAL):
+    for kind in (TransactionKind("goods"), TransactionKind("services_general")):
         verdict = classify_iva(_eu_inbound_b2b(kind=kind))
         clave = operation_by_category[verdict.category]
-        assert iva_category_for_operation_type(clave) is verdict.category
+        assert iva_category_for_operation_type(clave) == verdict.category
 
 
 def test_the_goods_and_services_acquisition_categories_are_distinct_members() -> None:
@@ -113,7 +113,6 @@ def test_the_goods_and_services_acquisition_categories_are_distinct_members() ->
     comparison would compare a value against itself and pass while the defect it
     guards was fully present. This makes that collapse fail here instead.
     """
-    assert (
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
-        is not IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
+    assert IvaCategory("intra_community_acquisition_reverse_charge") != IvaCategory(
+        "intra_community_service_acquisition_reverse_charge"
     )

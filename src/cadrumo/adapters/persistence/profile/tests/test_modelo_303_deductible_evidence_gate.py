@@ -151,7 +151,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
@@ -235,11 +235,13 @@ def iva_transaction(
             # evidence record is attached, so the verify gate still has nothing
             # to resolve and still blocks.
             "deduction_fact_kind": (
-                IvaDeductionFactKind.DOMESTIC_CURRENT if direction is TransactionDirection.OUTGOING else None
+                IvaDeductionFactKind._from_registry("domestic_current")
+                if direction is TransactionDirection.OUTGOING
+                else None
             ),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                     source_locator=f"test-invoice:{provider_id}",
                     evidence_digest="a" * 64,
                 )

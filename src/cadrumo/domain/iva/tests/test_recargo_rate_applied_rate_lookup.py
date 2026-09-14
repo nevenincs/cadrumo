@@ -19,6 +19,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ..recargo_equivalencia import (
     load_recargo_rate_table,
     recargo_rate_for_applied_rate,
@@ -39,34 +41,49 @@ def test_the_two_reduced_rates_resolve_distinctly_on_one_date() -> None:
     Both rates sit on the reducido tier on this date. A tier-keyed lookup
     returns one answer for both; this must return two.
     """
-    ordinary = recargo_rate_for_applied_rate(Decimal("0.10"), _COLLISION_DATE)
-    transitional = recargo_rate_for_applied_rate(Decimal("0.05"), _COLLISION_DATE)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        ordinary = recargo_rate_for_applied_rate(
+            Decimal("0.10"), _COLLISION_DATE, operation=_authority_operation_for_test
+        )
+        transitional = recargo_rate_for_applied_rate(
+            Decimal("0.05"), _COLLISION_DATE, operation=_authority_operation_for_test
+        )
 
-    assert ordinary == Decimal("0.014")
-    assert transitional == Decimal("0.0062")
-    assert ordinary != transitional
+        assert ordinary == Decimal("0.014")
+        assert transitional == Decimal("0.0062")
+        assert ordinary != transitional
 
 
 def test_recargo_lookup_retains_the_matched_authority_provenance() -> None:
     """The public rate projection has the exact applied-rate fact evidence."""
-    resolved = resolve_recargo_rate_for_applied_rate(Decimal("0.05"), _COLLISION_DATE)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        resolved = resolve_recargo_rate_for_applied_rate(
+            Decimal("0.05"), _COLLISION_DATE, operation=_authority_operation_for_test
+        )
 
-    assert resolved.fact_id == "iva-recargo-by-applied-rate"
-    assert resolved.date_axis.value == "devengo_date"
-    assert resolved.effective_date == _COLLISION_DATE
-    assert {selector.name: selector.value for selector in resolved.matched_selectors} == {
-        "applied_rate": Decimal("0.05"),
-    }
-    assert resolved.legal_refs
-    assert len(resolved.authority_digest) == 64
+        assert resolved.fact_id == "iva-recargo-by-applied-rate"
+        assert resolved.date_axis.value == "devengo_date"
+        assert resolved.effective_date == _COLLISION_DATE
+        assert {selector.name: selector.value for selector in resolved.matched_selectors} == {
+            "applied_rate": Decimal("0.05"),
+        }
+        assert resolved.legal_refs
+        assert len(resolved.authority_digest) == 64
 
 
 def test_the_quarter_four_step_moves_both_transitional_pairings() -> None:
     """RDL 4/2024 raised the food rates on 1 October 2024, recargos with them."""
-    assert recargo_rate_for_applied_rate(Decimal("0.075"), _STEP_DATE) == Decimal("0.01")
-    assert recargo_rate_for_applied_rate(Decimal("0.02"), _STEP_DATE) == Decimal("0.0026")
-    # And the earlier pairings are gone by then, rather than lingering.
-    assert recargo_rate_for_applied_rate(Decimal("0.05"), _STEP_DATE) is None
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert recargo_rate_for_applied_rate(
+            Decimal("0.075"), _STEP_DATE, operation=_authority_operation_for_test
+        ) == Decimal("0.01")
+        assert recargo_rate_for_applied_rate(
+            Decimal("0.02"), _STEP_DATE, operation=_authority_operation_for_test
+        ) == Decimal("0.0026")
+        # And the earlier pairings are gone by then, rather than lingering.
+        assert (
+            recargo_rate_for_applied_rate(Decimal("0.05"), _STEP_DATE, operation=_authority_operation_for_test) is None
+        )
 
 
 def test_a_zero_rated_pairing_is_a_rate_of_zero_not_an_absent_one() -> None:
@@ -77,10 +94,13 @@ def test_a_zero_rated_pairing_is_a_rate_of_zero_not_an_absent_one() -> None:
     carrying the obligation at zero, where an unmodelled one says only that this
     table cannot answer.
     """
-    inside = recargo_rate_for_applied_rate(Decimal("0.00"), _COLLISION_DATE)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        inside = recargo_rate_for_applied_rate(
+            Decimal("0.00"), _COLLISION_DATE, operation=_authority_operation_for_test
+        )
 
-    assert inside == Decimal("0")
-    assert inside is not None
+        assert inside == Decimal("0")
+        assert inside is not None
 
 
 @pytest.mark.parametrize(
@@ -97,7 +117,10 @@ def test_an_unmodelled_combination_returns_nothing_rather_than_a_near_match(
     why: str,
 ) -> None:
     """No nearest-match fallback: an unmodelled pairing must refuse to guess."""
-    assert recargo_rate_for_applied_rate(applied_rate, on_date) is None, why
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert recargo_rate_for_applied_rate(applied_rate, on_date, operation=_authority_operation_for_test) is None, (
+            why
+        )
 
 
 def test_the_committed_table_carries_grounding_on_every_record() -> None:
@@ -106,5 +129,6 @@ def test_the_committed_table_carries_grounding_on_every_record() -> None:
     A recargo rate is a regulatory value, so a record without a binding
     reference cannot ship whatever its number says.
     """
-    for record in load_recargo_rate_table():
-        assert record.legal_refs, f"recargo pairing for IVA rate {record.iva_rate} carries no legal_refs"
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for record in load_recargo_rate_table(operation=_authority_operation_for_test):
+            assert record.legal_refs, f"recargo pairing for IVA rate {record.iva_rate} carries no legal_refs"

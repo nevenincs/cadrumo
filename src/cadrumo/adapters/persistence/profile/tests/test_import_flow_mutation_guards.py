@@ -53,6 +53,7 @@ from cadrumo.application.modelo.work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -122,7 +123,7 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _R
         filing_year=2026,
         period=period,
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
     )
 
@@ -153,7 +154,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
     )
     revision = calculate_modelo_revision(

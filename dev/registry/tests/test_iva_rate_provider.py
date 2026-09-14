@@ -28,7 +28,7 @@ from cadrumo.domain.iva.rates import (
     IVA_RATE_FACT_ID,
     iva_rate_record_from_fact,
 )
-from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
+from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind, require_eu_member_state
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
@@ -89,9 +89,27 @@ def test_iva_rate_schedule_is_a_complete_authored_fact() -> None:
         )
 
     assert projected
-    assert (EUMemberState.ES, IvaRateKind.GENERAL, date(2012, 9, 1), Decimal("21"), False) in projected
-    assert (EUMemberState.ES, IvaRateKind.REDUCED, date(2024, 7, 1), Decimal("5"), True) in projected
-    assert (EUMemberState.DE, IvaRateKind.GENERAL, date(2025, 7, 1), Decimal("19"), False) in projected
+    assert (
+        require_eu_member_state("ES"),
+        IvaRateKind("general"),
+        date(2012, 9, 1),
+        Decimal("21"),
+        False,
+    ) in projected
+    assert (
+        require_eu_member_state("ES"),
+        IvaRateKind("reduced"),
+        date(2024, 7, 1),
+        Decimal("5"),
+        True,
+    ) in projected
+    assert (
+        require_eu_member_state("DE"),
+        IvaRateKind("general"),
+        date(2025, 7, 1),
+        Decimal("19"),
+        False,
+    ) in projected
 
 
 def test_retired_iva_schedule_lane_cannot_reappear() -> None:
@@ -128,7 +146,7 @@ def test_retired_iva_schedule_lane_cannot_reappear() -> None:
 def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
     resolved = resolve_governed_fact(
         _catalogue(),
-        iva_rate_fact_query(EUMemberState.ES, IvaRateKind.GENERAL, date(2025, 6, 1)),
+        iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("general"), date(2025, 6, 1)),
         authority_digest="a" * 64,
     )
 
@@ -140,7 +158,7 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         resolve_governed_fact(
             _catalogue(),
-            iva_rate_fact_query(EUMemberState.ES, IvaRateKind.GENERAL, date(2012, 8, 31)),
+            iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("general"), date(2012, 8, 31)),
             authority_digest="a" * 64,
         )
 
@@ -149,14 +167,14 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
     catalogue = _catalogue()
     ordinary = resolve_governed_fact(
         catalogue,
-        iva_rate_fact_query(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, date(2024, 11, 1)),
+        iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("super_reduced"), date(2024, 11, 1)),
         authority_digest="b" * 64,
     )
     coexisting = resolve_governed_fact(
         catalogue,
         iva_rate_fact_query(
-            EUMemberState.ES,
-            IvaRateKind.SUPER_REDUCED,
+            require_eu_member_state("ES"),
+            IvaRateKind("super_reduced"),
             date(2024, 11, 1),
             superseding_percentage=Decimal("2"),
         ),
