@@ -33,7 +33,7 @@ class M130RetencionesRoute:
     output_casilla: CasillaId
 
 
-# fact-relocation: selected Renta binding routing is consumed through the governed mapping fact
+# Registry authority: selected Renta binding routing is consumed through the governed mapping fact
 def _registry_m130_retenciones_route(
     *,
     authority: GovernedFactSource | None = None,

@@ -64,6 +64,18 @@ def test_valid_backoff_still_acquires(tmp_path: Path) -> None:
         assert lock_path.exists()
 
 
+def test_existing_unlocked_sidecar_does_not_prevent_acquisition(tmp_path: Path) -> None:
+    """Sidecar existence is not lock ownership; retained files remain reusable."""
+    target = tmp_path / "resource.json"
+    sidecar = tmp_path / "resource.json.lock"
+    sidecar.write_bytes(b"")
+
+    with exclusive_file_lock(target, timeout=0, retry_backoff=0.01) as lock_path:
+        assert lock_path == sidecar
+
+    assert sidecar.exists()
+
+
 def test_valid_backoff_still_times_out_with_the_lock_error(tmp_path: Path) -> None:
     """A genuine contention timeout keeps its own message, not the backoff one."""
     target = tmp_path / "resource.json"
