@@ -19,8 +19,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ....domain.calculations.registry.tests.published_authority import published_legal_reference
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -44,11 +44,10 @@ def test_pt_interest_resolves_treaty_ceiling_of_15_percent() -> None:
 
 def test_pt_treaty_legal_entries_are_grounded() -> None:
     """The PT treaty rows and their BOE-grounded legal entries are registered."""
-    catalogues = compiled_bundled_authority().catalogues
-    assert "convenio-es-pt-1993:art-10" in catalogues.legal
-    assert "convenio-es-pt-1993:art-11" in catalogues.legal
-    art10 = catalogues.legal["convenio-es-pt-1993:art-10"]
-    art11 = catalogues.legal["convenio-es-pt-1993:art-11"]
+    assert published_legal_reference("convenio-es-pt-1993:art-10").id == "convenio-es-pt-1993:art-10"
+    assert published_legal_reference("convenio-es-pt-1993:art-11").id == "convenio-es-pt-1993:art-11"
+    art10 = published_legal_reference("convenio-es-pt-1993:art-10")
+    art11 = published_legal_reference("convenio-es-pt-1993:art-11")
     assert art10.document_id == "BOE-A-1995-24001"
     assert art11.document_id == "BOE-A-1995-24001"
     assert "15 por 100 del importe bruto de los dividendos" in art10.required_text

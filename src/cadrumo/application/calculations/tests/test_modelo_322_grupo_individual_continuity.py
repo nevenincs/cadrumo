@@ -39,7 +39,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.domain.iva.flow import IvaFlowDirection
@@ -52,6 +51,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaLedgerObservationRole
 
@@ -143,7 +143,7 @@ def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     IVA ledger lines, resolves bound casilla inputs, and evaluates the engine.
     Returns the result plus its produced-value count.
     """
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
+    snapshot = published_snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
     binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, _year_ledger(filing_year))
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(

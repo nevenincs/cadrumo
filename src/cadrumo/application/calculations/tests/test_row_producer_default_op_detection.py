@@ -16,12 +16,12 @@ row producer, the BIND-01 regression has returned.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition
+from ....domain.calculations.registry.tests.published_authority import published_revision
 from ..row_set_assembly import _row_field_lookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -67,7 +67,7 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
     detection keeps it.
     """
 
-    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = published_revision("720", "2013-y-siguientes")
     revision_with_default = revision.model_copy(update={"bindings": (_rows_default_detail_binding(),)})
 
     lookup = _row_field_lookup(revision_with_default)
@@ -76,7 +76,7 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
 
 
 def test_row_field_lookup_rejects_rows_binding_without_row_set_projection() -> None:
-    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = published_revision("720", "2013-y-siguientes")
     malformed_row_binding = BindingDefinition.model_validate(
         {
             "id": "synthetic-row-without-grouping",

@@ -6,7 +6,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.hashing import content_hash_hex
 from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
@@ -16,6 +15,7 @@ from ....domain.calculations.registry.iva_schema_vocabulary import (
     iva_regime_exento_token,
     iva_regime_no_aplica_token,
 )
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -36,7 +36,7 @@ __all__ = ["_wizard_catalogue"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_UUID = "66666666-6666-4666-8666-666666666666"
-_SCHEMA = load_user_profile_schema()
+_SCHEMA = published_profile_schema()
 _CREATE_CONTEXT = ProfileCreateContext(
     schema=_SCHEMA,
     generation=AuthorityGenerationPin(

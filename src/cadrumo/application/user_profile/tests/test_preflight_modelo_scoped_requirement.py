@@ -11,16 +11,16 @@ consults it -- which is precisely what these tests pin.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.classification.policies import SensitivityClass
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -96,7 +96,7 @@ def test_a_modelo_that_does_not_declare_it_is_never_asked() -> None:
 
 def test_the_registry_declares_the_requirement_rather_than_a_code_branch() -> None:
     """The shipped schema carries the axis, so no handler needs a modelo branch."""
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     declared = tuple(
         field for section in schema.sections for field in section.fields if Modelo("111") in field.required_for_modelos
     )

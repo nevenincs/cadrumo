@@ -431,7 +431,7 @@ def modelo_applicability_refusal(
         operation: Caller-held pinned operation for applicability facts.
     """
     modelo_code = modelo.strip()
-    profile = projection_for_taxpayer(record)
+    profile = projection_for_taxpayer(record, schema=operation.profile_schema())
     applicability = derive_modelo_applicability(profile, modelo_code, operation=operation)
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None

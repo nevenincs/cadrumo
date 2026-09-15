@@ -27,14 +27,14 @@ cannot come from the row being absent for some unrelated reason.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.classification.policies import SensitivityClass
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import (
     ProfileDerivedSelectorDefinition,
     ProfileFieldDefinition,
@@ -148,7 +148,7 @@ def test_the_shipped_schema_declares_no_field_the_filter_would_catch() -> None:
     exists for, and the write door now refuses writes to it -- so the pairing
     needs re-reading rather than the test being relaxed.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     matching = [
         f"{section.key}.{field.key}"
         for section in schema.sections

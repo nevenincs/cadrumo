@@ -55,7 +55,7 @@ class TestSetupAnswersTaxpayerAxes:
             entity_type=EntityType.from_registry("legal_entity"),
             legal_entity_form=LegalEntityForm.from_registry("cooperativa"),
         )
-        assert answers.legal_entity_form is LegalEntityForm.from_registry("cooperativa")
+        assert answers.legal_entity_form == LegalEntityForm.from_registry("cooperativa")
 
     def test_irpf_income_categories_rejects_unknown_token(self) -> None:
         with pytest.raises(ValueError, match=r"not_a_category"):
@@ -145,13 +145,13 @@ class TestTaxpayerProfileProjection:
             },
             tax_id_default="00000000T",
         )
-        assert profile.entity_type is EntityType.from_registry("natural_person")
+        assert profile.entity_type == EntityType.from_registry("natural_person")
         assert profile.irpf_income_categories == frozenset(
             {IrpfIncomeCategory.from_registry("capital_inmobiliario"), IrpfIncomeCategory.from_registry("pension")},
         )
-        assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("objetiva")
+        assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
         assert profile.art109_activity_income_withholding_ge_70pct is True
-        assert profile.iva_regime is IVARegime("REAGP")
+        assert profile.iva_regime == IVARegime("REAGP")
         iva = profile.iva
         assert iva is not None
         assert iva.regime_composition.value == "general"
@@ -191,7 +191,7 @@ class TestTaxpayerProfileProjection:
             },
             tax_id_default="00000000T",
         )
-        assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("objetiva")
+        assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
 
     def test_objetiva_regime_projects_modulos_annual_profile_facts(self) -> None:
         """Annual módulos facts project from the real profile mapping."""
@@ -208,7 +208,7 @@ class TestTaxpayerProfileProjection:
             },
             tax_id_default="00000000T",
         )
-        assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("objetiva")
+        assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
         assert profile.objective_estimation_modulos_iae_epigraph == "972.1"
         assert str(profile.objective_estimation_modulos_module_1_units) == "2.50"
         assert str(profile.objective_estimation_modulos_module_2_units) == "85"

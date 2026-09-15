@@ -26,9 +26,9 @@ from __future__ import annotations
 from enum import StrEnum
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..profile_keys import profile_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -92,7 +92,7 @@ field stops diverging, never left standing.
 
 def _schema_facts() -> tuple[set[str], set[str], dict[str, bool]]:
     """Return schema paths, schema-required paths, and path -> section repeatable."""
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     paths: set[str] = set()
     required: set[str] = set()
     repeatable: dict[str, bool] = {}

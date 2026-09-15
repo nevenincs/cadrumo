@@ -40,10 +40,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -104,7 +104,7 @@ _RETENCIONES_BY_YEAR: dict[int, Decimal] = {
 
 def _calculate_151(*, filing_year: int) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL registry 151 cuota calculation for one renta year."""
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
+    snapshot = published_snapshot(_MODELO, filing_year=filing_year, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={

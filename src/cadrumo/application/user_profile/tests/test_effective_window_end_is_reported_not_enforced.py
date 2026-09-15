@@ -26,13 +26,13 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..projections import record_to_path_values
 from ..validation import ProfileValidationService
@@ -45,7 +45,7 @@ _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 
 
 def _warned_paths(*facts: UserProfileFact) -> set[str | None]:
-    report = ProfileValidationService(schema=load_user_profile_schema()).validate_facts(_PROFILE_ID, facts)
+    report = ProfileValidationService(schema=published_profile_schema()).validate_facts(_PROFILE_ID, facts)
     return {issue.path for issue in report.issues if issue.code == EXPIRY_NOT_ENFORCED}
 
 
@@ -123,7 +123,7 @@ def test_the_message_names_the_declared_end_and_the_way_to_supersede_it() -> Non
     """
 
     expired = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1), valid_to=date(2020, 12, 31))
-    report = ProfileValidationService(schema=load_user_profile_schema()).validate_facts(_PROFILE_ID, (expired,))
+    report = ProfileValidationService(schema=published_profile_schema()).validate_facts(_PROFILE_ID, (expired,))
 
     message = next(issue.message for issue in report.issues if issue.code == EXPIRY_NOT_ENFORCED)
 

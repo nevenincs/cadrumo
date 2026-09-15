@@ -18,14 +18,14 @@ back, which is exactly the state the change exists to leave behind.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.config import override_settings
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import ProfileFieldType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import MASKED_PLACEHOLDER, build_profile_overview
@@ -148,7 +148,7 @@ def test_schema_field_coverage_is_complete_in_the_projection() -> None:
     subtraction, so the carve-out cannot quietly widen to cover a field
     that simply went missing.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     namespaces = {
         f"{section.key}.{field.key}"
         for section in schema.sections

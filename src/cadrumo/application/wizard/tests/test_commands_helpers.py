@@ -21,15 +21,18 @@ import typing
 from pathlib import Path
 from typing import Annotated
 
+import click
 import pytest
 import typer
 from typer.testing import CliRunner
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.i18n.translatable import Translatable as tr
+from ....domain.calculations.registry.ccaa_catalogue import ccaa_choices, foral_cli_choices
+from ..catalogue import build_setup_flow
 from ..commands import (
-    _CCAA_CHOICE_VALUES,
     SETUP_OPTION_INFOS,
     _canonical_from_flag_value,
     _flag_name,
@@ -111,20 +114,27 @@ def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
     assert option.show_choices is False
 
 
-@pytest.mark.usefixtures("authority_operation")
-def test_tax_residence_ccaa_choices_match_the_ccaa_enum() -> None:
-    """The CCAA choice tokens are the canonical CCAA enum plus foral redirects.
+def test_tax_residence_ccaa_choices_match_the_ccaa_enum(authority_operation: PinnedAuthorityOperation) -> None:
+    """The CCAA choice tokens are the canonical CCAA catalogue plus foral redirects.
 
-    The two foral tokens (``pais_vasco``, ``navarra``) are accepted by Click
-    so the operator receives a localised redirect-to-foral-Hacienda refusal
-    rather than a generic "not one of" error; the wizard persistence layer
-    rejects them via ``ForalRegimeError``. See ``_ccaa_choice_values``.
+    The foral tokens are accepted by Click so the operator receives a
+    localised redirect-to-foral-Hacienda refusal rather than a generic
+    "not one of" error; the wizard persistence layer rejects them via
+    ``ForalRegimeError``. The choices are read from the option the command
+    builder materializes for the leased setup flow, and the expectation
+    comes from the registry CCAA catalogue rather than from the wizard.
     """
 
-    from ....domain.contribuyente.ccaa import CCAA
+    build_wizard_command(build_setup_flow(authority_operation), mode="create", operation=authority_operation)
+    option = SETUP_OPTION_INFOS["tax-residence-ccaa"]
+    assert option is not None, "the command builder materialized no --tax-residence-ccaa option"
+    choice_type = option.click_type
+    assert isinstance(choice_type, click.Choice)
 
-    expected = [member.value for member in CCAA] + ["pais_vasco", "navarra"]
-    assert expected == _CCAA_CHOICE_VALUES
+    expected = [member.value for member in ccaa_choices(authority=authority_operation)] + list(
+        foral_cli_choices(authority=authority_operation)
+    )
+    assert list(choice_type.choices) == expected
 
 
 # ---------------------------------------------------------------------------

@@ -6,7 +6,6 @@ from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
@@ -29,6 +28,7 @@ from ....domain.calculations.registry.m303_regimen_simplificado_projection impor
     project_m303_regimen_simplificado_rows,
     validate_m303_regimen_simplificado_endpoint_epoch,
 )
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.errors import IvaValidationError
 from ....domain.iva.regimen_simplificado_rows import (
@@ -60,11 +60,11 @@ def _activity_ref() -> M303RegimenSimplificadoActivityProjectionRef:
 
 
 def _resolved_annual_orden_for_2026():
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = published_snapshot("303", filing_year=2026, period="1T")
     return resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
+            scope=m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource()),
         ),
     ).orden
 
@@ -146,9 +146,9 @@ def test_projection_identity_never_uses_json_serialisation() -> None:
 def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = published_snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
@@ -224,9 +224,9 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The two live same-IAE pairs remain distinct through typed projection refs."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = published_snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("simplified", authority=PublishedGovernedFactSource()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,

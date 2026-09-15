@@ -17,15 +17,15 @@ stubbed.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -145,7 +145,7 @@ def test_the_shipped_schema_assesses_nothing_for_a_real_modelo() -> None:
     examined. This asserts the flag exposes that, and is paired with the
     positive controls above so it cannot pass against a hardcoded ``False``.
     """
-    report = _report(load_user_profile_schema(), _record())
+    report = _report(published_profile_schema(), _record())
 
     assert report.per_operation_requirements_assessed is False
     assert report.ready is True, "documents the current unassessed grant this signal makes visible"

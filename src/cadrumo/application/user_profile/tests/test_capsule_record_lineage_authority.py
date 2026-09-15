@@ -30,7 +30,6 @@ from __future__ import annotations
 from uuid import UUID, uuid4
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.hashing import content_hash_hex
 from ....domain.calculations.registry.authority_artifact import (
@@ -38,12 +37,13 @@ from ....domain.calculations.registry.authority_artifact import (
     ProfileCreateContext,
     ProfileDecodeContext,
 )
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord, create_user_profile_record
 from ..capsule_record import ProfileRecordIntegrityError, ProfileRecordSession
 from ..profile_record_repository import bound_profile_record_session, require_profile_record_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-_SCHEMA = load_user_profile_schema()
+_SCHEMA = published_profile_schema()
 _DECODE_CONTEXT = ProfileDecodeContext(
     schema=_SCHEMA,
     generation=AuthorityGenerationPin(

@@ -33,9 +33,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.errors.severity import BaseSeverity
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import DERIVED_FIELD_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE, ProfileValidationService
 
@@ -47,7 +47,7 @@ _OPERATOR_PATH = "renta_family.cotizaciones_ss_madre_2024"
 
 
 def _service() -> ProfileValidationService:
-    return ProfileValidationService(schema=load_user_profile_schema())
+    return ProfileValidationService(schema=published_profile_schema())
 
 
 def _refusals(*facts: UserProfileFact) -> list[tuple[str, str]]:

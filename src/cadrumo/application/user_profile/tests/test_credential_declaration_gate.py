@@ -50,9 +50,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.classification.policies import SensitivityClass
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -348,7 +348,7 @@ def test_the_shipped_schema_declares_every_presumed_credential_secret() -> None:
     because a predicate matching nothing would pass this just as
     happily.
     """
-    misdeclared = _misdeclared(load_user_profile_schema())
+    misdeclared = _misdeclared(published_profile_schema())
     assert not misdeclared, (
         "these fields are presumed credentials but are not declared secret; "
         f"classify them or record why they are not: {misdeclared}"
@@ -363,7 +363,7 @@ def test_every_credential_section_is_really_declared_by_the_schema() -> None:
     zero fields while still reading like protection. The presumption has
     to fail loudly instead.
     """
-    declared = {section.key for section in load_user_profile_schema().sections}
+    declared = {section.key for section in published_profile_schema().sections}
     missing = sorted(_CREDENTIAL_SECTIONS - declared)
     assert not missing, f"these sections are policed as credential-bearing but are not declared: {missing}"
 
@@ -456,7 +456,7 @@ def test_no_exemption_outlives_the_evidence_that_caused_it() -> None:
     credential -- on either kind of evidence, so moving a field out of
     the auth section retires its exemption just as rewording one does.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     presumed = _presumed_credential(schema)
     stale = sorted(path for path in _EXEMPT if path not in presumed)
     assert not stale, f"these exemptions no longer describe a presumed credential and must be removed: {stale}"

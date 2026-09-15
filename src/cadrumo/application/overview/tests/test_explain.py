@@ -112,9 +112,10 @@ def test_explain_undeclared_profile_yields_incomplete_verdict() -> None:
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert result.applicable is False
-    # The rationale is the "declare your taxpayer type first" guidance.
+    # The rationale is the "declare your taxpayer type first" guidance, as
+    # prose only: the remedy command travels as a typed recovery precondition.
     assert "tipo de contribuyente" in result.rationale
-    assert "config profile edit" in result.rationale
+    assert "config profile edit" not in result.rationale
     # The verdict still carries grounding refs.
     assert result.legal_refs
 

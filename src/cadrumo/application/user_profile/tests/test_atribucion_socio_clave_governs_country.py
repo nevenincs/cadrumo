@@ -21,8 +21,8 @@ forbids, on the majority case, where it was least likely to be noticed.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import (
     CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
@@ -53,7 +53,7 @@ def _codes_at_socio_paths(*, clave: str | None, country: str | None) -> set[str]
         facts.append(UserProfileFact(path=_CLAVE_PATH, value=clave))
     if country is not None:
         facts.append(UserProfileFact(path=_COUNTRY_PATH, value=country))
-    service = ProfileValidationService(schema=load_user_profile_schema())
+    service = ProfileValidationService(schema=published_profile_schema())
     report = service.validate_facts(_PROFILE_ID, tuple(facts))
     return {issue.code for issue in report.issues if issue.path in {_CLAVE_PATH, _COUNTRY_PATH}}
 

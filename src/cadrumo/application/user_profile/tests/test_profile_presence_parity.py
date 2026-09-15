@@ -17,14 +17,14 @@ once or fail here.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..completeness import missing_required_field_paths, profile_value_is_present
 from ..keys_validation import validate_profile_values
@@ -52,7 +52,7 @@ def test_canonical_predicate_accepts_a_value_with_surrounding_whitespace() -> No
 
 @pytest.mark.parametrize("blank", _BLANK_VALUES)
 def test_completeness_reports_a_whitespace_only_required_field_missing(blank: str) -> None:
-    missing = missing_required_field_paths(load_user_profile_schema(), {_TAX_ID_PATH: blank})
+    missing = missing_required_field_paths(published_profile_schema(), {_TAX_ID_PATH: blank})
 
     assert _TAX_ID_PATH in missing
 
@@ -100,7 +100,7 @@ def test_overview_and_key_authority_agree_on_a_real_value() -> None:
 
 
 def test_cleared_and_absent_values_are_equally_absent() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     assert _TAX_ID_PATH in missing_required_field_paths(schema, {})
     assert _TAX_ID_PATH in missing_required_field_paths(schema, {_TAX_ID_PATH: ""})

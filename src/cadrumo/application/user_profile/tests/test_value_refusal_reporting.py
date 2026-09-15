@@ -17,9 +17,9 @@ only that something did.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.errors.severity import BaseSeverity
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.schema import ProfileValueRefusalKind
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -40,7 +40,7 @@ _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 
 
 def _issues_for(path: str, value: object):
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     service = ProfileValidationService(schema=schema)
     report = service.validate_facts(_PROFILE_ID, (UserProfileFact(path=path, value=value),))
     return [issue for issue in report.issues if issue.severity is BaseSeverity.ERROR and issue.path == path]
