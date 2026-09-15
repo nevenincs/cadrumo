@@ -60,6 +60,11 @@ class LiveIvaAcquisitionFailureProtocol(Protocol):
         ...
 
 
+def _runtime_object(value: object) -> object:
+    """Capture an adapter-provided value before checking its runtime shape."""
+    return value
+
+
 class LiveReadPrecondition(StrEnum):
     """Closed failed-condition identities for live-read safety dispositions.
 
@@ -189,7 +194,9 @@ def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisit
     if isinstance(exc, LiveIvaSurfaceTimeoutError):
         return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
     if isinstance(exc, LiveIvaAcquisitionFailureProtocol):
-        mode = exc.live_iva_failure_mode
+        # Adapter implementations cross this boundary at runtime; retain the
+        # defensive check even though the protocol advertises the enum type.
+        mode = _runtime_object(exc.live_iva_failure_mode)
         return mode if isinstance(mode, LiveIvaAcquisitionFailureMode) else LiveIvaAcquisitionFailureMode.UNKNOWN
     return LiveIvaAcquisitionFailureMode.UNKNOWN
 

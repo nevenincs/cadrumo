@@ -140,5 +140,6 @@ _RESERVED_EVENTS_WITHOUT_OPERATOR_PATHS: tuple[BucketEventType, ...] = (BucketEv
 
 def test_reserved_events_remain_in_the_closed_catalogue() -> None:
     """Reserved setup events keep stable catalogue slots until operator paths exist."""
+    expected_values = {BucketEventType.CONFIG_ENV_UPDATED: "config.env.updated"}
     for event in _RESERVED_EVENTS_WITHOUT_OPERATOR_PATHS:
-        assert event.value, f"{event.name} is missing its catalogue value"
+        assert event.value == expected_values[event], f"{event.name} has an unexpected catalogue value"

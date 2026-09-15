@@ -240,7 +240,7 @@ def _encode_recovery_slot(source: ProfileCapsuleSource) -> bytes:
     capacity = RECOVERY_SLOT_BYTES - _SLOT_LENGTH_PREFIX_BYTES
     if len(body) > capacity:
         raise ProfileCapsuleArchiveError("recovery wrapper exceeds the archive's constant recovery slot")
-    length = len(body) if body else _ABSENT_RECOVERY_LENGTH
+    length = _ABSENT_RECOVERY_LENGTH
     return length.to_bytes(_SLOT_LENGTH_PREFIX_BYTES, "big") + body + bytes(capacity - len(body))
 
 

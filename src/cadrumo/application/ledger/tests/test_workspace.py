@@ -6,8 +6,6 @@ import ast
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import SimpleNamespace
-from typing import cast
 
 import pytest
 
@@ -365,9 +363,9 @@ def test_contradictory_summary_or_review_facts_are_refused(
 
 
 def test_affected_revision_without_declaration_identity_is_never_silently_dropped() -> None:
-    revision = cast(
-        CalculationRevision,
-        SimpleNamespace(work_unit_id="a" * 64, calculation_revision_id="b" * 64),
+    revision = CalculationRevision.model_construct(
+        work_unit_id="a" * 64,
+        calculation_revision_id="b" * 64,
     )
     verdict = LedgerFilingStalenessVerdict(is_stale=True, changed=("c" * 64,))
 
@@ -408,9 +406,9 @@ def test_affected_declarations_keep_natural_addresses_counts_and_deterministic_o
             )
         )
         revisions.append(
-            cast(
-                CalculationRevision,
-                SimpleNamespace(work_unit_id=work_unit_id, calculation_revision_id=f"{index}" * 64),
+            CalculationRevision.model_construct(
+                work_unit_id=work_unit_id,
+                calculation_revision_id=f"{index}" * 64,
             )
         )
         verdicts.append(

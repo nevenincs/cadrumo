@@ -761,7 +761,7 @@ class ModeloRowEditIntentV1(EditModel):
             _validate_update_row_intent_shape(self.address, self.row, self.move_to_index)
         elif self.kind is ModeloEditRowIntentKind.DELETE_ROW:
             _validate_delete_row_intent_shape(self.address, self.row, self.move_to_index)
-        elif self.kind is ModeloEditRowIntentKind.MOVE_ROW:
+        else:
             _validate_move_row_intent_shape(self.address, self.row, self.move_to_index)
         return self
 
@@ -785,8 +785,9 @@ class ModeloDetailRowEditIntentV1(EditModel):
         if self.kind in (ModeloEditDetailRowIntentKind.ADD_ROW, ModeloEditDetailRowIntentKind.UPDATE_ROW):
             if self.row is None:
                 raise ValueError("ADD_ROW/UPDATE_ROW detail-row intent requires a complete typed row")
-        elif self.kind is ModeloEditDetailRowIntentKind.DELETE_ROW and self.row is not None:
-            raise ValueError("DELETE_ROW detail-row intent requires only the natural-key address")
+        else:
+            if self.row is not None:
+                raise ValueError("DELETE_ROW detail-row intent requires only the natural-key address")
         return self
 
 
