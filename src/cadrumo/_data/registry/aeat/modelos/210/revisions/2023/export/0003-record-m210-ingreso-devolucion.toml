@@ -1,7 +1,7 @@
-[[revisions."2023".export_layouts]]
+[[revisions.2023.export_layouts]]
 id = 'generated-modelo-210-2023-fichero'
 
-[[revisions."2023".export_layouts.records]]
+[[revisions.2023.export_layouts.records]]
 id = 'm210-ingreso-devolucion'
 record_type = 'ingreso-devolucion'
 order = 1
@@ -9,7 +9,7 @@ encoding = 'iso-8859-1'
 line_ending = 'crlf'
 required = true
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f001'
 offset = 1
 length = 2
@@ -23,7 +23,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f002'
 offset = 3
 length = 3
@@ -37,7 +37,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f003'
 offset = 6
 length = 2
@@ -51,7 +51,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f004'
 offset = 8
 length = 1
@@ -65,7 +65,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f005'
 offset = 9
 length = 1
@@ -78,7 +78,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f006'
 offset = 10
 length = 1
@@ -92,7 +92,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f007'
 offset = 11
 length = 48
@@ -105,7 +105,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f008'
 offset = 59
 length = 15
@@ -119,7 +119,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f009'
 offset = 74
 length = 125
@@ -133,7 +133,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f010'
 offset = 199
 length = 34
@@ -147,7 +147,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f011'
 offset = 233
 length = 11
@@ -161,7 +161,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f012'
 offset = 244
 length = 11
@@ -175,7 +175,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f013'
 offset = 255
 length = 34
@@ -189,7 +189,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f014'
 offset = 289
 length = 16
@@ -202,7 +202,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f015'
 offset = 305
 length = 70
@@ -216,7 +216,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f016'
 offset = 375
 length = 55
@@ -229,7 +229,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f017'
 offset = 430
 length = 35
@@ -243,7 +243,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f018'
 offset = 465
 length = 65
@@ -256,7 +256,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f019'
 offset = 530
 length = 30
@@ -270,7 +270,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f020'
 offset = 560
 length = 30
@@ -283,7 +283,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f021'
 offset = 590
 length = 2
@@ -297,7 +297,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f022'
 offset = 592
 length = 1
@@ -311,7 +311,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f023'
 offset = 593
 length = 158
@@ -324,7 +324,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f024'
 offset = 751
 length = 15
@@ -338,7 +338,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f025'
 offset = 766
 length = 125
@@ -352,7 +352,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f026'
 offset = 891
 length = 34
@@ -366,7 +366,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f027'
 offset = 925
 length = 11
@@ -380,7 +380,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f028'
 offset = 936
 length = 11
@@ -394,7 +394,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f029'
 offset = 947
 length = 34
@@ -408,7 +408,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f030'
 offset = 981
 length = 16
@@ -421,7 +421,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f031'
 offset = 997
 length = 70
@@ -435,7 +435,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f032'
 offset = 1067
 length = 55
@@ -448,7 +448,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f033'
 offset = 1122
 length = 35
@@ -462,7 +462,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f034'
 offset = 1157
 length = 65
@@ -475,7 +475,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f035'
 offset = 1222
 length = 30
@@ -489,7 +489,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f036'
 offset = 1252
 length = 30
@@ -502,7 +502,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f037'
 offset = 1282
 length = 2
@@ -516,7 +516,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f038'
 offset = 1284
 length = 1
@@ -530,7 +530,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f039'
 offset = 1285
 length = 107
@@ -543,7 +543,7 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[[revisions."2023".export_layouts.records.fields]]
+[[revisions.2023.export_layouts.records.fields]]
 id = 'm210-2022.pagina02.f040'
 offset = 1392
 length = 9
@@ -557,4 +557,4 @@ signed = false
 legal_refs = ['orden-eha-3316-2010:art-1']
 source_refs = ['aeat-dr-210-2022']
 
-[revisions."2023".export_layouts.records.row_field_casilla_ids]
+[revisions.2023.export_layouts.records.row_field_casilla_ids]

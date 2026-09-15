@@ -293,7 +293,7 @@ def test_art_104_tres_exclusion_roundtrips_for_judgment_exclusion() -> None:
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.art_104_tres_exclusion is Art104TresExclusion("non_habitual_real_estate_or_financial")
+    assert restored.art_104_tres_exclusion == Art104TresExclusion("non_habitual_real_estate_or_financial")
 
 
 def test_concepto_ingreso_roundtrips_for_an_excluded_concept() -> None:
@@ -317,7 +317,7 @@ def test_concepto_ingreso_roundtrips_for_an_excluded_concept() -> None:
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.concepto_ingreso is ConceptoIngreso.from_registry("subvencion_capital")
+    assert restored.concepto_ingreso == ConceptoIngreso.from_registry("subvencion_capital")
 
 
 def test_concepto_ingreso_dropped_from_the_payload_surfaces_as_inequality() -> None:
@@ -490,7 +490,7 @@ def test_input_classification_roundtrips_for_especial_common_use() -> None:
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored == original
-    assert restored.input_classification is InputClassification.from_registry("common")
+    assert restored.input_classification == InputClassification.from_registry("common")
 
 
 def test_input_classification_rejects_unknown_member_on_load() -> None:
@@ -572,7 +572,7 @@ def test_transaction_exemption_article_round_trips_for_domestic_exempt_category(
 
     assert restored == original
     assert restored.iva_category == IvaCategory("domestic_exempt")
-    assert restored.exemption_article is IvaExemptionArticle("art_20_uno_8")
+    assert restored.exemption_article == IvaExemptionArticle("art_20_uno_8")
 
 
 def test_transaction_rejects_exemption_article_without_domestic_exempt_category() -> None:

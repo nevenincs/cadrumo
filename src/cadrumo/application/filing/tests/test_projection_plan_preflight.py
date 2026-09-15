@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
@@ -17,6 +19,7 @@ from ....core.filing_projection_ref import (
 from ....core.modelo import Modelo
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
@@ -37,6 +40,13 @@ from ..record_renderer import preflight_projection_plan
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def _generation_pinned_authority() -> Iterator[None]:
+    """Run every test inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 # The layout below is synthetic -- it exists to give the preflight an exact

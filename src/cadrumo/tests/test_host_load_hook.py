@@ -1,6 +1,6 @@
 """Real-subprocess proof of the pre-timeout host-load stamp.
 
-:mod:`cadrumo.tests._host_load_hook` is reachable only through pytest-timeout's
+:mod:`cadrumo.tests.host_load_hook` is reachable only through pytest-timeout's
 ``pytest_timeout_set_timer`` / ``pytest_timeout_cancel_timer`` seam, and the
 whole point of it is that the stamp reaches the output of a run that ends in
 ``os._exit(1)``. Neither property can be proven by importing the module and
@@ -35,8 +35,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
-
-from ._host_load_hook import STAMP_PREFIX
+from cadrumo.tests.host_load_hook import STAMP_PREFIX
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -47,7 +46,7 @@ _SUBPROCESS_TIMEOUT_SECONDS = 120
 _PROBE_TIMEOUT_SECONDS = 4
 
 _PROBE_CONFTEST = """
-from cadrumo.tests._host_load_hook import arm_pre_timeout_stamp, disarm_pre_timeout_stamp
+from cadrumo.tests.host_load_hook import arm_pre_timeout_stamp, disarm_pre_timeout_stamp
 
 
 def pytest_timeout_set_timer(item, settings):

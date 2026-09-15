@@ -34,18 +34,25 @@ it cites, so a widening that would turn this gate green reds that one instead.
 
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from typing import Protocol
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ..catalogue import iva_catalogue_years
 from ..place_of_supply import place_of_supply_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease the bundled generation, which carries the IVA runtime catalogues."""
+    with bundled_indexed_authority().operation() as pinned:
+        yield pinned
 
 
 class _YearCoverageLoader(Protocol):

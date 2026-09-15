@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -29,6 +30,15 @@ from ..models import (
 from ..normalization import normalise_invoice_monetary_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Validate invoices under the generation-pinned authority production uses."""
+    with _indexed_authority_for_test().operation():
+        yield
+
+
 _DEFAULT_RATE_21 = IvaRate.from_registry("RATE_21")
 
 
@@ -104,7 +114,7 @@ def test_invoice_accepts_a_transitional_food_rate_inside_its_window() -> None:
         lines=(_valid_line(iva_rate=IvaRate.from_registry("RATE_2"), on_date=date(2024, 11, 15)),),
     )
 
-    assert invoice.lines[0].iva_rate is IvaRate.from_registry("RATE_2")
+    assert invoice.lines[0].iva_rate == IvaRate.from_registry("RATE_2")
     assert invoice.iva_total == Decimal("2.00")
 
 

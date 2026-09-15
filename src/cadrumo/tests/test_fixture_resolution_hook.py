@@ -25,6 +25,7 @@ from cadrumo.tests.audited_process import ensure_text_completed_process, run_aud
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _BANNER = "UNRESOLVED FIXTURE REQUESTS"
+_SERIAL_BANNER = "SERIAL TESTS HELD BACK"
 _RENDERED_NAMES_PREFIX = "unresolved fixture(s) "
 
 _CONFTEST = """\
@@ -65,6 +66,69 @@ def pytest_terminal_summary(terminalreporter):
 @pytest.fixture
 def shared_value():
     return 3
+"""
+
+_BOTH_HOOKS_CONFTEST = """\
+import pytest
+
+from cadrumo.tests import fixture_resolution_hook, marker_hook
+
+
+def pytest_configure(config):
+    marker_hook.reset_held_serials()
+    fixture_resolution_hook.reset_refused_requests()
+    config.addinivalue_line("markers", "serial: isolation-sensitive")
+    for name in ("unit", "hex_core"):
+        config.addinivalue_line("markers", name + ": taxonomy marker")
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(config, items):
+    fixture_resolution_hook.apply(config, items)
+    marker_hook.apply(config, items)
+
+
+def pytest_testnodedown(node, error):
+    marker_hook.record_held_from_node(node)
+    fixture_resolution_hook.record_refused_from_node(node)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    marker_hook.fail_session_on_held_serials(session)
+    fixture_resolution_hook.fail_session_on_refused_requests(session)
+
+
+def pytest_terminal_summary(terminalreporter):
+    marker_hook.report_held_serials(terminalreporter)
+    fixture_resolution_hook.report_refused_requests(terminalreporter)
+"""
+
+_BOTH_HOOKS_MODULE = """\
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_parallel_safe():
+    pass
+
+
+@pytest.mark.serial
+def test_needs_isolation():
+    pass
+
+
+def test_dead(never_defined_snapshot):
+    assert never_defined_snapshot
+"""
+
+_SPECIFIC_STATUS_CONFTEST = """\
+import pytest
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionfinish(session, exitstatus):
+    session.exitstatus = 7
 """
 
 _OWNER_CONFTEST = """\
@@ -171,6 +235,20 @@ def test_dead(never_defined_snapshot):
     assert never_defined_snapshot
 """
 
+_INTERRUPT_BESIDE_DEAD_TEST = """\
+import pytest
+
+
+@pytest.mark.unit
+def test_dead(never_defined_snapshot):
+    assert never_defined_snapshot
+
+
+@pytest.mark.unit
+def test_interrupts_the_session():
+    pytest.exit("interrupting the session")
+"""
+
 _CUSTOM_EXIT_BESIDE_DEAD_TEST = """\
 import pytest
 
@@ -233,10 +311,10 @@ def test_requests_nothing_itself():
 """
 
 
-def _package(root: Path, modules: dict[str, str]) -> Path:
-    """Materialise a package wired to the real hook, with ``modules`` beneath it."""
+def _package(root: Path, modules: dict[str, str], *, conftest: str = _CONFTEST) -> Path:
+    """Materialise a package wired to the real hook(s), with ``modules`` beneath it."""
     (root / "pytest.ini").write_text("[pytest]\naddopts =\n", encoding="utf-8")
-    (root / "conftest.py").write_text(_CONFTEST, encoding="utf-8")
+    (root / "conftest.py").write_text(conftest, encoding="utf-8")
     owner = root / "owner"
     owner.mkdir()
     (owner / "conftest.py").write_text(_OWNER_CONFTEST, encoding="utf-8")
@@ -248,7 +326,7 @@ def _package(root: Path, modules: dict[str, str]) -> Path:
 
 
 def _nested_pytest(package: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    """Run a real nested pytest over ``package``."""
+    """Run a real nested pytest over ``package`` with uncoloured output."""
     return ensure_text_completed_process(
         run_audited_process(
             [
@@ -257,6 +335,7 @@ def _nested_pytest(package: Path, *args: str) -> subprocess.CompletedProcess[str
                 "pytest",
                 "-p",
                 "no:cacheprovider",
+                "--color=no",
                 "-c",
                 str(package / "pytest.ini"),
                 "--rootdir",
@@ -424,7 +503,7 @@ def test_an_autouse_fixture_with_a_missing_dependency_is_refused(tmp_path: Path)
 
 
 def test_a_genuine_failure_beside_a_dead_test_exits_usage_error(tmp_path: Path) -> None:
-    """``TESTS_FAILED`` is overridden, so a dead test cannot hide behind an ordinary red run."""
+    """``TESTS_FAILED`` is replaced, so a dead test cannot hide behind an ordinary red run."""
     package = _package(tmp_path, {"test_failing.py": _FAILURE_BESIDE_DEAD_TEST})
 
     completed = _nested_pytest(package, "-n0")
@@ -435,14 +514,55 @@ def test_a_genuine_failure_beside_a_dead_test_exits_usage_error(tmp_path: Path) 
     assert _refused(output) == {"test_failing.py::test_dead": "['never_defined_snapshot']"}, output
 
 
+def test_an_interrupted_session_keeps_its_status_and_still_names_the_dead_test(tmp_path: Path) -> None:
+    """``INTERRUPTED`` is preserved, and its summary still carries the recorded refusal."""
+    package = _package(tmp_path, {"test_interrupted.py": _INTERRUPT_BESIDE_DEAD_TEST})
+
+    completed = _nested_pytest(package, "-n0", "-p", "no:randomly")
+    output = completed.stdout + completed.stderr
+
+    assert completed.returncode == int(pytest.ExitCode.INTERRUPTED), output
+    assert _refused(output) == {"test_interrupted.py::test_dead": "['never_defined_snapshot']"}, output
+
+
 def test_a_custom_pytest_exit_status_is_preserved(tmp_path: Path) -> None:
     """A more specific verdict than a plain pass or fail is never replaced."""
     package = _package(tmp_path, {"test_custom_exit.py": _CUSTOM_EXIT_BESIDE_DEAD_TEST})
 
     completed = _nested_pytest(package, "-n0", "-p", "no:randomly")
+
+    # pytest prints no terminal summary for a custom status, so only the preserved status is observable here.
+    assert completed.returncode == 7, completed.stdout + completed.stderr
+
+
+def test_both_refusing_hooks_replace_a_plain_status_under_real_workers(tmp_path: Path) -> None:
+    """A held serial item and a dead test together exit ``USAGE_ERROR`` and name both populations."""
+    package = _package(tmp_path, {"test_both.py": _BOTH_HOOKS_MODULE}, conftest=_BOTH_HOOKS_CONFTEST)
+
+    completed = _nested_pytest(package, "-n2")
+    output = completed.stdout + completed.stderr
+
+    assert completed.returncode == int(pytest.ExitCode.USAGE_ERROR), output
+    assert _SERIAL_BANNER in output, output
+    assert _refused(output) == {"test_both.py::test_dead": "['never_defined_snapshot']"}, output
+
+
+def test_both_refusing_hooks_preserve_a_more_specific_status_whichever_runs_first(tmp_path: Path) -> None:
+    """With a serial item held and a dead test present, a status set before either hook survives both."""
+    # The xdist controller collects nothing, so it loads only the conftests pytest finds at
+    # startup: the invocation directory and its ``test*`` children. The directory name matters.
+    package = _package(
+        tmp_path,
+        {"test_both.py": _BOTH_HOOKS_MODULE, "tests_specific_status/conftest.py": _SPECIFIC_STATUS_CONFTEST},
+        conftest=_BOTH_HOOKS_CONFTEST,
+    )
+
+    completed = _nested_pytest(package, "-n2")
     output = completed.stdout + completed.stderr
 
     assert completed.returncode == 7, output
+    assert _SERIAL_BANNER in output, output
+    assert _refused(output) == {"test_both.py::test_dead": "['never_defined_snapshot']"}, output
 
 
 def test_real_xdist_workers_hand_the_refusal_to_the_controller(tmp_path: Path) -> None:

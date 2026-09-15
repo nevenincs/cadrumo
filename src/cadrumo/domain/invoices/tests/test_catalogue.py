@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -9,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.aggregation import IntracomOperationType
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind
@@ -31,6 +33,13 @@ from ..service import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Validate invoices under the generation-pinned authority production uses."""
+    with bundled_indexed_authority().operation():
+        yield
 
 _HEX64_A = "a" * 64
 _HEX64_B = "b" * 64
@@ -192,7 +201,7 @@ def test_persistence_round_trip_preserves_catalogue() -> None:
     populated = next(invoice for invoice in restored if invoice.invoice_number == "F-2026-100")
     assert populated.series == "R"
     assert populated.rectifies_invoice_number == "F-2026-099"
-    assert populated.counterparty_identification_state is EUMemberState.from_registry("es")
+    assert populated.counterparty_identification_state == EUMemberState.from_registry("es")
     assert populated.issuer_address == "Calle Mayor 1, 28013 Madrid"
     assert populated.recipient_address == "Gran Vía 2, 28013 Madrid"
     assert populated.exemption_reference == "LIVA art. 20.Uno.26"

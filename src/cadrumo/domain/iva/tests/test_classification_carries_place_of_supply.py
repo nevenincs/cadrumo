@@ -167,7 +167,7 @@ def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> 
         services = classify_with_registry_rules(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
         goods = classify_with_registry_rules(_distance_sale_b2c(), operation=_authority_operation_for_test)
 
-        assert services.category is goods.category == IvaCategory("domestic_not_subject")
+        assert services.category == goods.category == IvaCategory("domestic_not_subject")
         assert services.matched_rule_id != goods.matched_rule_id
 
         services_grounding = services.place_of_supply

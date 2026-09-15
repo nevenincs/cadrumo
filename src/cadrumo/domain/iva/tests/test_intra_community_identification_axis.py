@@ -72,6 +72,13 @@ from .classification_authority_support import classify_with_registry_rules
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@pytest.fixture
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease the bundled generation, which carries the IVA runtime catalogues."""
+    with _indexed_authority_for_test().operation() as pinned:
+        yield pinned
+
+
 @pytest.fixture(scope="module", autouse=True)
 def _registry_authority_scope() -> Iterator[None]:
     with _indexed_authority_for_test().operation():

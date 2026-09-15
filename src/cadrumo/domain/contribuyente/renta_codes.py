@@ -157,6 +157,8 @@ def modelo100_ccaa_codigo(value: CCAA | str) -> str:
         community: CCAA | None = CCAA(value)
     except ValueError:
         community = None
+    if community is not None and not isinstance(value, CCAA) and str(community) != value:
+        community = None
     codigos = renta_modelo100_ccaa_codigos()
     codigo = codigos.get(community) if community is not None else None
     if codigo is None:

@@ -25,6 +25,7 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -113,22 +114,25 @@ def _state(
     applied: Decimal = Decimal("0.00"),
     available: Decimal | None = None,
 ) -> IvaCompensationPeriodState:
-    return IvaCompensationPeriodState(
-        provenance=IvaCompensationStateProvenance.APP_FILING,
-        taxpayer_nif=_TAXPAYER_REF,
-        filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
-        registry_snapshot_ref=m303_registry_snapshot_ref(filing_year, period),
-        presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
-        prior_pending_amount=None,
-        applied_amount=applied,
-        pending_for_later_amount=None,
-        period_result_amount=None,
-        final_result_amount=None,
-        generated_amount=generated,
-        available_end_amount=generated if available is None else available,
-        source_observation_key=f"303:{filing_year}:{period}:EXP",
-    )
+    snapshot_ref = m303_registry_snapshot_ref(filing_year, period)
+    # The taxpayer NIF is validated against the registry's tax-ID format fact.
+    with bundled_indexed_authority().operation():
+        return IvaCompensationPeriodState(
+            provenance=IvaCompensationStateProvenance.APP_FILING,
+            taxpayer_nif=_TAXPAYER_REF,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, period),
+            registry_snapshot_ref=snapshot_ref,
+            presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
+            prior_pending_amount=None,
+            applied_amount=applied,
+            pending_for_later_amount=None,
+            period_result_amount=None,
+            final_result_amount=None,
+            generated_amount=generated,
+            available_end_amount=generated if available is None else available,
+            source_observation_key=f"303:{filing_year}:{period}:EXP",
+        )
 
 
 def _wallet(amount: Decimal, *, generation_year: int = 2022) -> IvaCompensationWalletObservation:

@@ -20,16 +20,25 @@ key-and-context assertion in the suite -- but it cannot hide from this one.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from ...iva.errors import IvaRateNotFoundError
 from ..enums import iva_rate_percentage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Resolve rate slots under the generation-pinned authority production uses."""
+    with bundled_indexed_authority().operation():
+        yield
 
 #: Inside every ES tier's coverage. RATE_2 stood only October-December 2024, so
 #: this date reaches the legality branch rather than the coverage branch.
@@ -39,7 +48,7 @@ _COVERED_BUT_OUT_OF_WINDOW = date(2024, 6, 1)
 def test_not_in_force_refusal_carries_no_authored_sentence() -> None:
     """A covered date with an out-of-window rate takes the legality branch."""
     with pytest.raises(IvaRateNotFoundError) as caught:
-        iva_rate_percentage(resolve_iva_rate_token("rate_2", date.today()), _COVERED_BUT_OUT_OF_WINDOW)
+        iva_rate_percentage(resolve_iva_rate_token("RATE_2", date.today()), _COVERED_BUT_OUT_OF_WINDOW)
 
     assert str(caught.value) == "errors.iva.rate_slot_not_in_force"
 

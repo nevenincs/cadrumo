@@ -25,6 +25,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.core.descendant_relacion import DescendantRelacion
+from cadrumo.core.errors.hierarchy import ProfileAnswerTypeError
 
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
@@ -32,6 +33,7 @@ from ..descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
+from ..errors import ProfileValidationError
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ._registry_thresholds import (
@@ -145,7 +147,7 @@ class TestDescendantInfoValidation:
         assert d.birth_date == date(2020, 3, 15)
 
     def test_inscripcion_date_must_be_gte_birth_date(self) -> None:
-        with pytest.raises((ValidationError, ValueError), match="inscripcion_registro_civil_date"):
+        with pytest.raises(ProfileValidationError, match="inscripcion_registro_civil_date"):
             DescendantInfo(
                 birth_date=date(2020, 6, 1),
                 relacion=DescendantRelacion.from_registry("adoptado"),
@@ -153,7 +155,7 @@ class TestDescendantInfoValidation:
             )
 
     def test_acogimiento_date_must_be_gte_birth_date(self) -> None:
-        with pytest.raises((ValidationError, ValueError), match="acogimiento_resolucion_date"):
+        with pytest.raises(ProfileValidationError, match="acogimiento_resolucion_date"):
             DescendantInfo(
                 birth_date=date(2020, 6, 1),
                 relacion=DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
@@ -169,13 +171,13 @@ class TestDescendantInfoValidation:
         assert d.inscripcion_registro_civil_date == date(2020, 6, 1)
 
     def test_entry_dates_in_future_are_rejected(self) -> None:
-        with pytest.raises((ValidationError, ValueError), match="future"):
+        with pytest.raises(ProfileValidationError, match="future"):
             DescendantInfo(
                 birth_date=date(2000, 1, 1),
                 relacion=DescendantRelacion.from_registry("adoptado"),
                 inscripcion_registro_civil_date=date(2099, 1, 1),
             )
-        with pytest.raises((ValidationError, ValueError), match="future"):
+        with pytest.raises(ProfileValidationError, match="future"):
             DescendantInfo(
                 birth_date=date(2000, 1, 1),
                 relacion=DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
@@ -318,7 +320,7 @@ class TestArt58MinimoDescendientesEstatalOracleCases:
 
     def test_empty_birth_order_amounts_is_rejected(self) -> None:
         p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2015, 1, 1)),))
-        with pytest.raises(ValueError, match="birth_order_amounts"):
+        with pytest.raises(ProfileValidationError, match="birth_order_amounts"):
             p.minimo_descendientes_estatal(
                 2024,
                 birth_order_amounts=[],
@@ -402,11 +404,11 @@ class TestParseDescendienteFlag:
         assert d.nif == "TAXIDABCD"
 
     def test_missing_nacimiento_raises_value_error(self) -> None:
-        with pytest.raises(ValueError, match="NACIMIENTO"):
-            parse_descendiente_flag("ADOPCION=2024-05-12")
+        with pytest.raises(ProfileAnswerTypeError, match="NACIMIENTO"):
+            parse_descendiente_flag("INSCRIPCION=2024-05-12")
 
     def test_invalid_discapacidad_raises_value_error(self) -> None:
-        with pytest.raises(ValueError, match="DISCAPACIDAD"):
+        with pytest.raises(ProfileAnswerTypeError, match="DISCAPACIDAD"):
             parse_descendiente_flag("NACIMIENTO=2020-01-01,DISCAPACIDAD=50")
 
     def test_case_insensitive_keys(self) -> None:
@@ -445,12 +447,12 @@ class TestParseDescendienteFlag:
         all), while ``CUSTODIA`` resolved it to ``False`` (the full mínimo
         rather than the Art. 61 half). Opposite booleans, same direction.
         """
-        with pytest.raises(ValueError, match=key):
+        with pytest.raises(ProfileAnswerTypeError, match=key):
             parse_descendiente_flag(f"NACIMIENTO=2020-03-15,{key}=quizas")
 
     def test_the_yes_no_refusal_lists_the_spellings_it_accepts(self) -> None:
         """The refusal has to teach the vocabulary, not just reject the word."""
-        with pytest.raises(ValueError) as caught:
+        with pytest.raises(ProfileAnswerTypeError) as caught:
             parse_descendiente_flag("NACIMIENTO=2020-03-15,CONVIVENCIA=quizas")
 
         message = str(caught.value)

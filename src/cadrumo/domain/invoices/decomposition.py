@@ -54,6 +54,7 @@ from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..iva.components import (
@@ -159,6 +160,7 @@ class InvoiceComponents(BaseModel):
     cash: Decimal
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_identity(self) -> Self:
         """Enforce the canonical identity on the decomposed figures themselves.
 
@@ -203,6 +205,7 @@ class InvoiceDecomposition(BaseModel):
     defects: tuple[InvoiceDecompositionDefect, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_outcome_is_unambiguous(self) -> Self:
         """Refuse a verdict that is neither clearly grounded nor clearly excluded."""
         if (self.components is None) != bool(self.defects):

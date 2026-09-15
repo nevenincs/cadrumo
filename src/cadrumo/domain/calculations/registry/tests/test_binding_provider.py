@@ -30,6 +30,7 @@ from ....iva.schema import (
 from ..binding_provider import BindingProvider
 from ..binding_temporal import FilingYearOffset, SameTargetContext
 from ..bindings_previous_filing import PreviousFilingProvider
+from ..errors import RegistryValidationError
 from ..governed_fact_scope import validating_governed_facts
 from ..inventory_bindings import InventoryProvider
 from ..ledger_iva_bindings import LedgerIvaProvider
@@ -120,7 +121,8 @@ def test_provider_round_trips_through_its_own_discriminator(
     assert "source" not in payload
     assert payload["provider"]["kind"] == expected_kind.value
 
-    restored = BindingDefinition.model_validate(freeze_toml_value(payload))
+    with validating_governed_facts(compiled_bundled_authority()):
+        restored = BindingDefinition.model_validate(freeze_toml_value(payload))
 
     assert restored.provider == provider
     assert type(restored.provider) is type(provider)
@@ -169,7 +171,7 @@ def test_previous_filing_refuses_a_temporal_member_naming_no_source_window() -> 
     previous-filing declaration must name its source window explicitly rather
     than defaulting into reading the period it is supposed to carry from.
     """
-    with pytest.raises(ValidationError, match="same_target_context"):
+    with pytest.raises(RegistryValidationError, match="same_target_context"):
         PreviousFilingProvider(
             source_modelo="303",
             temporal=SameTargetContext(),

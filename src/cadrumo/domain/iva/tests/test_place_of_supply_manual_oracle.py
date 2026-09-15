@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterator
 from datetime import date
 from typing import Any
 
@@ -40,6 +41,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.resources.bundled_data import bundled_path
 from ..classification import (
     IvaInvoiceClassificationCriteria,
+    resolve_iva_classification_catalogue,
 )
 from ..place_of_supply import place_of_supply_rule
 from ..schema import IvaCategory
@@ -48,6 +50,14 @@ from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
+@pytest.fixture
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease the bundled generation, which carries the IVA runtime catalogues."""
+    with _indexed_authority_for_test().operation() as pinned:
+        yield pinned
+
+
 _ORACLE_PATH = bundled_path() / "corpus/manual_oracles/iva-2025-lugar-realizacion-entrega-intracomunitaria.json"
 
 
@@ -55,16 +65,20 @@ def _oracle() -> dict[str, Any]:
     return json.loads(_ORACLE_PATH.read_text(encoding="utf-8"))
 
 
-def _oracle_criteria(oracle: dict[str, Any]) -> IvaInvoiceClassificationCriteria:
+def _oracle_criteria(
+    oracle: dict[str, Any], *, operation: PinnedAuthorityOperation
+) -> IvaInvoiceClassificationCriteria:
     """Project the recorded operation through the criteria model's own registry fields."""
     operation_case = oracle["operation"]
+    on = date(oracle["source"]["year"], 6, 15)
+    vocabulary = resolve_iva_classification_catalogue(on, operation=operation)
     return IvaInvoiceClassificationCriteria.model_validate(
         {
-            "transaction_date": date(oracle["source"]["year"], 6, 15),
-            "issuer_residency": operation_case["issuer_residency"],
-            "customer_residency": operation_case["customer_residency"],
+            "transaction_date": on,
+            "issuer_residency": vocabulary.require_territorial_scope(operation_case["issuer_residency"]),
+            "customer_residency": vocabulary.require_territorial_scope(operation_case["customer_residency"]),
             "customer_identification_state": operation_case["customer_member_state"],
-            "customer_tax_status": operation_case["customer_tax_status"],
+            "customer_tax_status": vocabulary.require_customer_tax_status(operation_case["customer_tax_status"]),
             "kind": operation_case["transaction_kind"],
             "direction": operation_case["direction"],
         },
@@ -104,7 +118,7 @@ def test_the_classifier_reproduces_the_manual_outcome(*, operation: PinnedAuthor
     describe.
     """
     oracle = _oracle()
-    criteria = _oracle_criteria(oracle)
+    criteria = _oracle_criteria(oracle, operation=operation)
 
     result = classify_with_registry_rules(criteria, operation=operation)
 
@@ -123,7 +137,9 @@ def test_the_grounding_row_reads_the_two_articles_the_manual_reasons_through() -
         oracle = _oracle()
         expected = oracle["expected"]
 
-        result = classify_with_registry_rules(_oracle_criteria(oracle), operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(
+            _oracle_criteria(oracle, operation=_authority_operation_for_test), operation=_authority_operation_for_test
+        )
         rule = place_of_supply_rule(
             result.matched_rule_id,
             on=date(oracle["source"]["year"], 6, 15),

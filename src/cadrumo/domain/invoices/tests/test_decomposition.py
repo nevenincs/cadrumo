@@ -15,12 +15,14 @@ grounding changed.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind
@@ -34,6 +36,13 @@ from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Validate invoices under the generation-pinned authority production uses."""
+    with bundled_indexed_authority().operation():
+        yield
 
 _FX_RATE_SOURCE_ID = "test_reference"
 _INVOICE_DATE = date(2026, 4, 1)
@@ -330,7 +339,7 @@ def test_eu_member_state_substrate_still_resolves_for_a_partitioned_invoice() ->
         lines=(_line(iva_rate=IvaRate.from_registry("EXEMPT")),),
     )
 
-    assert invoice.counterparty_eu_member_state is EUMemberState.from_registry("de")
+    assert invoice.counterparty_eu_member_state == EUMemberState.from_registry("de")
     assert decompose_invoice(invoice).is_grounded
 
 

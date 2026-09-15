@@ -15,8 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
-
-from ._worker_count_hook import DEFAULT_WORKER_COUNT
+from cadrumo.tests.worker_count_hook import DEFAULT_WORKER_COUNT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

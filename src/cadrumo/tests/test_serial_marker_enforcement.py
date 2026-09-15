@@ -6,7 +6,7 @@ this repository supplied one, so the marker was honoured only by the justfile
 splitting the integration lane into a ``not serial`` parallel pass and a ``-n0``
 serial pass. Every other invocation ran isolation-sensitive tests against a
 run-varying set of co-resident files.
-:func:`~tests.marker_hook._hold_serial_items_from_xdist` closes that, and this
+:func:`cadrumo.tests.marker_hook._hold_serial_items_from_xdist` closes that, and this
 module is its proof.
 
 The proof runs a REAL nested pytest over a generated two-test package -- one
@@ -21,9 +21,9 @@ simply dropped every serial test, or one that never fired at all, fails one leg
 or the other -- neither can satisfy both.
 
 See Also:
-    :mod:`~tests.marker_hook`
+    :mod:`cadrumo.tests.marker_hook`
         Hosts the collection hook this module exercises.
-    :mod:`~tests.deselection_hook`
+    :mod:`cadrumo.tests.deselection_hook`
         Reports deselection; documents why the worker-side deselected count
         never reaches the controller, which is why the hold also warns.
 """

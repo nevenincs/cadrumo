@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._worker_count_hook import (
+from cadrumo.tests.worker_count_hook import (
     DEFAULT_WORKER_COUNT,
     replacement_occurred,
 )

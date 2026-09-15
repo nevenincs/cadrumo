@@ -39,7 +39,7 @@ from pathlib import Path
 
 import pytest
 
-from .deselection_hook import apply
+from cadrumo.tests.deselection_hook import apply
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

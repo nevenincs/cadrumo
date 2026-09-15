@@ -28,6 +28,7 @@ and the positive-tier scoping -- are kept below.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -41,6 +42,14 @@ from ...iva.schema import EUMemberState, IvaRateKind
 from ..enums import IvaRate, iva_rate_percentage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Resolve rate slots under the generation-pinned authority production uses."""
+    with _indexed_authority_for_test().operation():
+        yield
+
 
 #: Inside every tier's coverage, and the rates genuinely stood on this date.
 _COVERED = date(2024, 6, 1)

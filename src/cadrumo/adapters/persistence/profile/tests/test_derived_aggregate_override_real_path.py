@@ -63,7 +63,7 @@ from cadrumo.application.user_profile.validation import reject_invalid_profile_f
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -157,20 +157,20 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
     Registered through the production registration door, so the descendant facts
     are stored exactly as ``config profile descendiente add`` would store them.
     """
-    with bundled_indexed_authority().operation():
-        overrides = dict(descendant_facts_from_list(_descendants()))
-    # The surrounding renta facts the M100 annual revision needs to evaluate at
-    # all. None of them touches the Art. 58 aggregate; they exist so the
-    # calculation reaches casilla 0513 rather than refusing earlier.
-    overrides["tax_residence.ccaa"] = "cataluna"
-    overrides["renta_filing.declaration_type"] = "1"
-    overrides["renta_taxpayer.birth_date"] = "1978-05-11"
-    overrides["renta_taxpayer.marital_status"] = "1"
-    overrides["renta_family.minor_children_in_unit"] = "false"
     with (
+        bundled_indexed_authority().operation(),
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_BUCKET),
     ):
+        overrides = dict(descendant_facts_from_list(_descendants()))
+        # The surrounding renta facts the M100 annual revision needs to evaluate at
+        # all. None of them touches the Art. 58 aggregate; they exist so the
+        # calculation reaches casilla 0513 rather than refusing earlier.
+        overrides["tax_residence.ccaa"] = "cataluna"
+        overrides["renta_filing.declaration_type"] = "1"
+        overrides["renta_taxpayer.birth_date"] = "1978-05-11"
+        overrides["renta_taxpayer.marital_status"] = "1"
+        overrides["renta_family.minor_children_in_unit"] = "false"
         # Seeded through a detached WorkflowState, never a repository read:
         # the capsule publishes by an atomic no-replace rename onto
         # ``buckets/<profile-id>``, which a workflow-state repository
@@ -183,24 +183,24 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _calculate_estatal_minimo(*, operation: PinnedAuthorityOperation) -> Decimal:
+def _calculate_estatal_minimo() -> Decimal:
     """Run the real M100/2024/0A calculate action and return casilla 0513.
 
     Every repository is left to default, so the action resolves the active
     bucket through the same path production takes.
     """
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
-        revision_id=snapshot.revision.id,
-        ports=build_work_lifecycle_ports(bucket_id=_BUCKET),
-        clock=_T0,
-        operation=operation,
-    )
     with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET,
+            modelo="100",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
+            revision_id=snapshot.revision.id,
+            ports=build_work_lifecycle_ports(bucket_id=_BUCKET),
+            clock=_T0,
+            operation=operation,
+        )
         revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET, operation=operation),
@@ -268,9 +268,7 @@ def test_operator_write_door_refuses_a_value_at_the_derived_aggregate_path() -> 
 
 
 @pytest.mark.usefixtures("_active_profile")
-def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value(
-    *, operation: PinnedAuthorityOperation
-) -> None:
+def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value() -> None:
     """Casilla 0513 carries the computed Art. 58 aggregate and cannot be overridden.
 
     Inverted from the suppression half of the defect this module pinned. The
@@ -284,7 +282,7 @@ def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value(
     silently failed for some unrelated reason, which would leave the override
     channel open while looking closed.
     """
-    computed = _calculate_estatal_minimo(operation=operation)
+    computed = _calculate_estatal_minimo()
 
     # Control: the descendants really do drive a non-zero Art. 58 aggregate, so
     # a displacement would be visible if one were still possible. Without this
@@ -298,7 +296,7 @@ def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value(
     with pytest.raises(ProfileSchemaValidationError):
         _store_sentinel_at_derived_path()
 
-    unchanged = _calculate_estatal_minimo(operation=operation)
+    unchanged = _calculate_estatal_minimo()
 
     assert unchanged == computed, (
         f"casilla {_ESTATAL_CASILLA} moved from {computed} to {unchanged} after a refused "
