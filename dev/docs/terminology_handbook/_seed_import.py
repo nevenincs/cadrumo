@@ -348,7 +348,7 @@ def _tbx_terms(
 def _lang_set_code(lang_set: XmlElement[str]) -> str:
     # TBX carries the language on xml:lang; ElementTree expands the namespace.
     for key, value in lang_set.attrib.items():
-        if key.endswith("lang") and isinstance(value, str):
+        if key.endswith("lang"):
             return value.strip().lower()
     return ""
 

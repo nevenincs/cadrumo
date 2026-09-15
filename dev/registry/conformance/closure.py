@@ -139,7 +139,7 @@ class RegistryClosureRevisionReport(_ClosureReportModel):
             raise ValueError("temporal coverage coordinate must match its closure-report row")
         expected = (("filing_export", self.filing_export),)
         for name, limb in expected:
-            disagreements = tuple(item for item in self.join_disagreements if item.limb == name)
+            disagreements = self.join_disagreements
             if limb is None:
                 if len(disagreements) != 1 or disagreements[0].kind != "missing_from_limb":
                     raise ValueError(f"missing {name} limb requires one missing-from-limb disagreement")
@@ -467,7 +467,7 @@ def _limb_or_join_refusal(
 ) -> tuple[RegistryClosurePredicateRefusal, ...]:
     """Return the application refusal, or a visible join refusal when absent."""
     if limb is None:
-        disagreement = next(item for item in disagreements if item.limb == limb_name)
+        disagreement = next(iter(disagreements))
         return (
             RegistryClosurePredicateRefusal(
                 limb=limb_name,

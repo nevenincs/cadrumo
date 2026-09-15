@@ -81,9 +81,6 @@ def _declared_distributions() -> set[str]:
     declared: set[str] = set()
     for requirements in requirement_lists:
         for requirement in requirements:
-            if not isinstance(requirement, str):
-                # Defensive: a non-string entry is not a requirement specifier.
-                continue
             name = requirement.split(";")[0].strip()
             for separator in ("[", "=", ">", "<", "!", "~", " "):
                 name = name.split(separator)[0]

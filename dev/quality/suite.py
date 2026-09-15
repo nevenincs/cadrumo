@@ -38,6 +38,7 @@ _UTF_8: Final[str] = UTF_8
 GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-style", ("ruff", "check", ".")),
     ("check-format", ("ruff", "format", "--check", ".")),
+    ("check-data-format", (sys.executable, "-m", "dev.quality.data_files", "check")),
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
     ("check-import-boundaries", (sys.executable, "-m", "dev.quality.import_gate")),
     (

@@ -624,7 +624,7 @@ def _casilla_surface_shortfall(
         for sibling in (modelo.revisions or {}).values()
         if sibling is not revision
         and str(getattr(sibling, "authority_grade", "") or "").lower() == "filing"
-        and (sibling.casillas or ())
+        and sibling.casillas
     ]
     if not peers or declared >= min(peers):
         return None

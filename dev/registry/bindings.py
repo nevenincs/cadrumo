@@ -578,7 +578,7 @@ def audit(root: Path) -> dict[str, object]:
 
     for (modelo_id, revision_id), record in sorted(raw_revisions.items()):
         metadata = record["metadata"]
-        predecessor = metadata.get("predecessor") if isinstance(metadata, Mapping) else None
+        predecessor = metadata.get("predecessor")
         if predecessor is None:
             predecessor_shapes["absent_full_copy_or_unstated"] += 1
         elif isinstance(predecessor, str):

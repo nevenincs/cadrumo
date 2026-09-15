@@ -421,7 +421,10 @@ def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
     from cadrumo.domain.portals.registry import PORTAL_REGISTRY
 
     constants = load_external_constants().aeat
-    assert re.compile(constants.portal_paths.filing_censo_path_regex)
+    try:
+        re.compile(constants.portal_paths.filing_censo_path_regex)
+    except re.error as error:
+        pytest.fail(f"the filing CENSO path regex is invalid: {error}")
     assert constants.portal_paths.filing_censo_path_description
     assert set(constants.portal_paths.paths) == {portal.value for portal in Portal} - {
         Portal.PORTAL_PRE303_AYUDA.value,

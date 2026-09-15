@@ -20,6 +20,11 @@ from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_fi
 JsonObject = dict[str, Any]
 
 
+def _object_boundary(value: object) -> object:
+    """Expose a runtime-produced value as an object for shape validation."""
+    return value
+
+
 class JsonDumpable(Protocol):
     """The narrow Pydantic-compatible surface needed by a proof snapshot."""
 
@@ -133,7 +138,8 @@ def snapshot_definition(
         dumped = cast(JsonObject, _json_projection(cast(Mapping[str, object], definition)))
     else:
         dumped = definition.model_dump(mode="json", exclude_defaults=False, exclude_none=False)
-    if not isinstance(dumped, dict) or any(not isinstance(key, str) for key in dumped):
+    dumped_object = _object_boundary(dumped)
+    if not isinstance(dumped_object, dict) or any(not isinstance(key, str) for key in dumped_object):
         raise TypeError("definition model_dump must return a string-keyed object")
     locales = dict(locale_fields)
     metadata = {} if representation_metadata is None else dict(representation_metadata)

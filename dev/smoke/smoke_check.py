@@ -112,7 +112,7 @@ def check_import() -> None:
     """The package imports while version authority stays in its defining module."""
     from cadrumo.core.package_version import PACKAGE_VERSION
 
-    if not PACKAGE_VERSION:
+    if not PACKAGE_VERSION.strip():
         _fail("cadrumo package version is missing or empty")
     _ok(f"cadrumo imports, package version = {PACKAGE_VERSION}")
 

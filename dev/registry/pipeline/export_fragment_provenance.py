@@ -1302,10 +1302,11 @@ def _as_sorted_string_pairs(value: object, *, subject: str) -> list[list[str]]:
     if not isinstance(value, list):
         raise RegistryValidationError(f"{subject} schema drift: expected pair array")
     pairs: list[list[str]] = []
-    for item in cast(list[object], value):
+    items: list[object] = list(value)
+    for item in items:
         if not isinstance(item, list):
             raise RegistryValidationError(f"{subject} schema drift: expected two-element pairs")
-        members = cast(list[object], item)
+        members: list[object] = list(item)
         if len(members) != 2:
             raise RegistryValidationError(f"{subject} schema drift: expected two-element pairs")
         pairs.append([_as_string(members[0], subject=subject), _as_string(members[1], subject=subject)])
@@ -1315,26 +1316,33 @@ def _as_sorted_string_pairs(value: object, *, subject: str) -> list[list[str]]:
 def _as_object_list(value: object, *, subject: str) -> list[Mapping[str, object]]:
     if not isinstance(value, list):
         raise RegistryValidationError(f"{subject} schema drift: expected array")
-    return [_as_object(item, subject=subject) for item in cast(list[object], value)]
+    items: list[object] = list(value)
+    return [_as_object(item, subject=subject) for item in items]
 
 
 def _sorted_strings(value: object, *, subject: str) -> list[str]:
     if not isinstance(value, list):
         raise RegistryValidationError(f"{subject} schema drift: expected string array")
-    items = cast(list[object], value)
-    if any(not isinstance(item, str) for item in items):
-        raise RegistryValidationError(f"{subject} schema drift: expected string array")
-    return sorted(cast(list[str], items))
+    items: list[object] = list(value)
+    strings: list[str] = []
+    for item in items:
+        if not isinstance(item, str):
+            raise RegistryValidationError(f"{subject} schema drift: expected string array")
+        strings.append(item)
+    return sorted(strings)
 
 
 def _strings_in_order(value: object, *, subject: str) -> list[str]:
     """Validate a string array while retaining semantic sequence order."""
     if not isinstance(value, list):
         raise RegistryValidationError(f"{subject} schema drift: expected string array")
-    items = cast(list[object], value)
-    if any(not isinstance(item, str) for item in items):
-        raise RegistryValidationError(f"{subject} schema drift: expected string array")
-    return cast(list[str], items)
+    items: list[object] = list(value)
+    strings: list[str] = []
+    for item in items:
+        if not isinstance(item, str):
+            raise RegistryValidationError(f"{subject} schema drift: expected string array")
+        strings.append(item)
+    return strings
 
 
 def _as_string(value: object, *, subject: str) -> str:

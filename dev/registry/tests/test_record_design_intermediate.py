@@ -265,6 +265,11 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     ) == ("A16", "total", "Variable")
 
 
+def _object_boundary(value: object) -> object:
+    """Keep third-party spreadsheet values runtime-validated by callers."""
+    return value
+
+
 def _official_totals(path: Path) -> dict[str, int]:
     """Read every sheet's official ``Total:`` cell straight from the real binary.
 
@@ -287,8 +292,8 @@ def _official_totals(path: Path) -> dict[str, int]:
                 for row in range(sheet.nrows):
                     if sheet.ncols < 3:
                         continue
-                    label = sheet.cell_value(row, 0)
-                    value = sheet.cell_value(row, 2)
+                    label = _object_boundary(sheet.cell_value(row, 0))
+                    value = _object_boundary(sheet.cell_value(row, 2))
                     if not isinstance(label, str) or label.strip().casefold() != "total:":
                         continue
                     # xlrd surfaces every number as float; only a whole number is

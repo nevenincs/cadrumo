@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
-from typing import Final, cast
+from typing import Final
 
 from cadrumo.core.corpus_annotation import (
     CORPUS_PAGE_ANNOTATION_SUFFIX,
@@ -40,6 +40,18 @@ from .legal_grounding import PROVISION_SUFFIXED_FILENAME
 
 _NORMATIVES_TREE_PREFIX: Final = "corpus/normatives/"
 _SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 10000
+
+
+def _string_keyed_object_mapping(value: object, *, subject: str) -> Mapping[str, object]:
+    """Validate JSON object keys before passing the object to a typed consumer."""
+    if not isinstance(value, dict):
+        raise TypeError(f"{subject} must be a JSON object")
+    typed: dict[str, object] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            raise TypeError(f"{subject} keys must be strings")
+        typed[key] = item
+    return typed
 
 
 def verify_source_file(root: Path, source: GeneratedArtifactSource) -> Path:
@@ -109,7 +121,7 @@ def verify_manual_annotation_catalogue(root: Path, sources: Mapping[str, SourceR
             raw_manifest: object = json.loads(manifest_path.read_text(encoding="utf-8"))
             if not is_object_dict(raw_manifest):
                 raise TypeError("manifest must be a JSON object")
-            typed_manifest = cast(Mapping[str, object], raw_manifest)
+            typed_manifest = _string_keyed_object_mapping(raw_manifest, subject="manifest")
             identity = manual_manifest_identity(
                 typed_manifest,
                 manifest_path=(relative.parent / manifest_path.name).as_posix(),
@@ -207,8 +219,8 @@ def compile_record_design_manifest_catalogue(
             ) from error
         if not is_object_dict(raw_manifest):
             raise RegistryValidationError(f"record-design manifest {manifest_path.as_posix()!r} must be a JSON object")
-        typed_manifest = cast(Mapping[str, object], raw_manifest)
         try:
+            typed_manifest = _string_keyed_object_mapping(raw_manifest, subject="record-design manifest")
             identities.extend(record_design_manifest_identities(typed_manifest, manifest_path=manifest_path.as_posix()))
         except (TypeError, ValueError) as error:
             raise RegistryValidationError(

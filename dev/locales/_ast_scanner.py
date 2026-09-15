@@ -1891,7 +1891,7 @@ def dict_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int
         if not isinstance(target, ast.Name) or flow_confirmed.get(target.id) is not value:
             continue
         name = target.id
-        if not isinstance(name, str) or name.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
+        if name.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
             continue
         line = node.lineno
         if isinstance(line, int):

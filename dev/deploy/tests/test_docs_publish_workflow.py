@@ -30,7 +30,7 @@ _WORKFLOW = REPO_ROOT / ".github" / "workflows" / "docs-publish.yml"
 _PUBLICATION = REPO_ROOT / ".github" / "workflows" / "publish.yml"
 
 
-def _document() -> dict[str, Any]:
+def _document() -> dict[object, Any]:
     return yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
 
 

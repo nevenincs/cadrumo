@@ -69,6 +69,7 @@ jobs:
           # intersection was empty. Unformatted files reached HEAD unimpeded and
           # `ruff format --check .` was not green tree-wide.
           just check-format
+          just check-data-format
 
       - name: Import architecture
         run: just check-import-boundaries

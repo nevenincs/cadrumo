@@ -482,6 +482,8 @@ dev = [
   # as a string.
   "types-lxml>=2025.3.30",
   "ruff>=0.16.7",
+  # Repository-wide YAML syntax/style linting; TOML parsing uses stdlib tomllib.
+  "yamllint>=1.38,<2",
   "ty>=0.0.81",
   # Vault tooling — contributor-only; not imported by src/cadrumo/ and never
   # shipped in a published product wheel.

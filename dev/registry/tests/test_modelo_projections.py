@@ -130,11 +130,16 @@ def _revision(revision_id: str, parameters: tuple[ParameterDefinition, ...]) -> 
     return SimpleNamespace(id=revision_id, parameters=parameters, review_status=RevisionReviewStatus.AGENT_REVIEWED)
 
 
-def _modelo(modelo_id: str, revisions: dict[str, object]) -> ModeloDefinition:
+def _modelo_payload(modelo_id: str, revisions: dict[str, object]) -> object:
     from types import SimpleNamespace
+
+    return SimpleNamespace(id=modelo_id, revisions=revisions)
+
+
+def _modelo(modelo_id: str, revisions: dict[str, object]) -> ModeloDefinition:
     from typing import cast
 
-    return cast("ModeloDefinition", SimpleNamespace(id=modelo_id, revisions=revisions))
+    return cast("ModeloDefinition", _modelo_payload(modelo_id, revisions))
 
 
 def test_a_registry_without_a_projected_modelo_omits_that_fact_and_keeps_the_rest() -> None:

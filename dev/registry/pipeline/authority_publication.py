@@ -453,6 +453,18 @@ def install_validated_authority_database(
         )
 
 
+def _remove_unpublished_install(
+    installed: Path,
+    *,
+    created_install: bool,
+    descriptor_published: bool,
+) -> None:
+    """Remove a newly-created database when publication did not complete."""
+    if created_install and not descriptor_published:
+        with suppress(OSError):
+            installed.unlink()
+
+
 def _install_validated_authority_database(
     artifact: AuthorityArtifact,
     *,
@@ -504,9 +516,11 @@ def _install_validated_authority_database(
                 publication.publish()
                 descriptor_published = True
         finally:
-            if created_install and not descriptor_published:
-                with suppress(OSError):
-                    installed.unlink()
+            _remove_unpublished_install(
+                installed,
+                created_install=created_install,
+                descriptor_published=descriptor_published,
+            )
         _cleanup_retired_authority_databases(
             resolved_destination,
             current_database=descriptor.database,

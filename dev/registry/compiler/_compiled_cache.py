@@ -453,14 +453,11 @@ def _evict_stale_registry_pickles(cache_dir: Path, *, logger: logging.Logger) ->
 
 def _encode_frame(payload: CompiledRegistryPayload) -> bytes:
     """Serialise ``payload`` into the newline-framed version, digest, and pickle bytes."""
-    if isinstance(payload, tuple) and len(payload) == 2 and isinstance(payload[1], RegistryCatalogues):
-        modelos, catalogues = payload
-        catalogue_bytes = pickle.dumps(catalogues, protocol=pickle.HIGHEST_PROTOCOL)
-        modelos_bytes = pickle.dumps(modelos, protocol=pickle.HIGHEST_PROTOCOL)
-        payload_bytes = _PAYLOAD_ENVELOPE_PREFIX + struct.pack("!Q", len(catalogue_bytes))
-        payload_bytes += catalogue_bytes + modelos_bytes
-    else:
-        payload_bytes = pickle.dumps(payload, protocol=pickle.HIGHEST_PROTOCOL)
+    modelos, catalogues = payload
+    catalogue_bytes = pickle.dumps(catalogues, protocol=pickle.HIGHEST_PROTOCOL)
+    modelos_bytes = pickle.dumps(modelos, protocol=pickle.HIGHEST_PROTOCOL)
+    payload_bytes = _PAYLOAD_ENVELOPE_PREFIX + struct.pack("!Q", len(catalogue_bytes))
+    payload_bytes += catalogue_bytes + modelos_bytes
     digest = _payload_digest(payload_bytes)
     return _FRAME_SEPARATOR.join((_COMPILED_CACHE_SCHEMA_VERSION, digest, payload_bytes))
 
