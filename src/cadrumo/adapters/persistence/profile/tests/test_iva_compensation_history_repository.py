@@ -15,7 +15,7 @@ from cadrumo.core.period import Period
 
 from ._iva_compensation_history_support import _state
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _HISTORY_BUCKET_ID = "30330300-0000-4000-8000-000000000305"
 

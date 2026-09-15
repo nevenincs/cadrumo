@@ -276,6 +276,11 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
         "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # Casilla 0525 maritime exemption facts: the filer is not a maritime
+        # worker, so no navigation income and no days worked abroad.
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
     }
     # 2025 revision requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.
@@ -297,6 +302,7 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
         binding_values=_bindings_2025,
         relation_values=relation_values_2025,
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
     values = dict(result.values)
 

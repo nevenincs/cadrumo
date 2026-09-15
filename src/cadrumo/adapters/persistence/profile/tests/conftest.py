@@ -1,11 +1,12 @@
 """Fixtures for profile persistence integration tests."""
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     _file_flow_runtime,
     _FileFlowRuntime,
@@ -19,10 +20,13 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     reset_secure_object_store,
 )
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
 from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
+from ._invoice_confirmation_test_support import InvoiceAuthorityFixture
 from .ledger_action_persistence_support import _BUCKET_ID
 
 # These suites exercise the profile-bound secure-object adapter through an
@@ -39,6 +43,23 @@ def operation() -> PinnedAuthorityOperation:
         {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
     )
     return PinnedAuthorityOperation(reader, reader.pin())
+
+
+@pytest.fixture
+def certificate_secret_backend_factory() -> InMemoryCertificateSecretBackendFactory:
+    """Inject the application certificate-secret capability without a persistence adapter."""
+    return InMemoryCertificateSecretBackendFactory()
+
+
+@pytest.fixture
+def invoice_authority() -> Generator[InvoiceAuthorityFixture]:
+    """Keep extraction, legends, and confirmation on one live authority lease."""
+    with bundled_indexed_authority().operation() as operation:
+        period = default_invoice_extraction_period()
+        yield InvoiceAuthorityFixture(
+            operation=operation,
+            legends=resolve_regime_legends(operation=operation, effective_date=period.end_date),
+        )
 
 
 @pytest.fixture(scope="module")

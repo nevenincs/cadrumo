@@ -58,7 +58,6 @@ from cadrumo.application.aggregation.retenciones import (
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.aggregation import (
     BindingSourceKind,
-    RetencionClave,
     RetencionScheme,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -223,38 +222,48 @@ _YEAR_N_PLUS_1_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
 
 
 def _withholding_obs(source_id: str, nif: str, clave: str, *, filing_year: int) -> WithholdingObservation:
-    return WithholdingObservation(
-        source_id=source_id,
-        perceptor_tax_id=nif,
-        transaction_date=date(filing_year, 6, 1),
-        clave=RetencionClave(clave),
-        percibido_dinerario=Decimal("1000.00"),
-        retencion_practicada=Decimal("190.00"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("0"),
+    return WithholdingObservation.model_validate(
+        {
+            "source_id": source_id,
+            "perceptor_tax_id": nif,
+            "transaction_date": date(filing_year, 6, 1),
+            "clave": clave,
+            "percibido_dinerario": Decimal("1000.00"),
+            "retencion_practicada": Decimal("190.00"),
+            "incapacity_cash_perception": Decimal("0"),
+            "incapacity_cash_withholding": Decimal("0"),
+            "incapacity_kind_value": Decimal("0"),
+            "incapacity_kind_ingreso_a_cuenta": Decimal("0"),
+            "incapacity_kind_repercutido": Decimal("0"),
+            "foral_retention_estatal": Decimal("0"),
+            "foral_retention_navarra": Decimal("0"),
+            "foral_retention_araba": Decimal("0"),
+            "foral_retention_gipuzkoa": Decimal("0"),
+            "foral_retention_bizkaia": Decimal("0"),
+            "base_retenciones": Decimal("0"),
+        }
     )
 
 
-_YEAR_N_WITHHOLDING_OBSERVATIONS: tuple[WithholdingObservation, ...] = (
-    _withholding_obs("yN-a-q1", "11111111H", "A", filing_year=_YEAR_N),
-    _withholding_obs("yN-a-q2", "11111111H", "A", filing_year=_YEAR_N),
-    _withholding_obs("yN-g-q3", "11111111H", "G", filing_year=_YEAR_N),
-    _withholding_obs("yN-a-q4", "22222222J", "A", filing_year=_YEAR_N),
-)
+def _year_n_withholding_observations() -> tuple[WithholdingObservation, ...]:
+    return (
+        _withholding_obs("yN-a-q1", "11111111H", "A", filing_year=_YEAR_N),
+        _withholding_obs("yN-a-q2", "11111111H", "A", filing_year=_YEAR_N),
+        _withholding_obs("yN-g-q3", "11111111H", "G", filing_year=_YEAR_N),
+        _withholding_obs("yN-a-q4", "22222222J", "A", filing_year=_YEAR_N),
+    )
+
+
 _YEAR_N_WITHHOLDING_PERCEPCIONES = Decimal("3")
-_YEAR_N_PLUS_1_WITHHOLDING_OBSERVATIONS: tuple[WithholdingObservation, ...] = (
-    _withholding_obs("yN1-a-q1", "33333333P", "A", filing_year=_YEAR_N_PLUS_1),
-    _withholding_obs("yN1-b-q2", "33333333P", "B", filing_year=_YEAR_N_PLUS_1),
-)
+
+
+def _year_n_plus_1_withholding_observations() -> tuple[WithholdingObservation, ...]:
+    return (
+        _withholding_obs("yN1-a-q1", "33333333P", "A", filing_year=_YEAR_N_PLUS_1),
+        _withholding_obs("yN1-b-q2", "33333333P", "B", filing_year=_YEAR_N_PLUS_1),
+    )
+
+
 _YEAR_N_PLUS_1_WITHHOLDING_PERCEPCIONES = Decimal("2")
 _PERIOD_ACCRUAL_DATES = {
     "1T": "03-31",
@@ -518,15 +527,16 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         snapshot_190_n = compiled_bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_190_n, operation=operation, repository=obs_repo)
         resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
+        year_n_withholding = _year_n_withholding_observations()
         withholding_n = resolve_withholding_binding_values(
             snapshot_190_n.revision,
-            _YEAR_N_WITHHOLDING_OBSERVATIONS,
+            year_n_withholding,
         )
         assert withholding_n[_M190_PERCEPCIONES_BINDING] == _YEAR_N_WITHHOLDING_PERCEPCIONES
         result_n, _produced_n = _calculate_190(
             filing_year=_YEAR_N,
             relation_values=resolved_n,
-            withholding_observations=_YEAR_N_WITHHOLDING_OBSERVATIONS,
+            withholding_observations=year_n_withholding,
         )
 
         # Year N+1: same pipeline.
@@ -540,15 +550,16 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         snapshot_190_n1 = compiled_bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill_n1 = resolve_relations_from_local_store(snapshot_190_n1, operation=operation, repository=obs_repo)
         resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
+        year_n_plus_1_withholding = _year_n_plus_1_withholding_observations()
         withholding_n1 = resolve_withholding_binding_values(
             snapshot_190_n1.revision,
-            _YEAR_N_PLUS_1_WITHHOLDING_OBSERVATIONS,
+            year_n_plus_1_withholding,
         )
         assert withholding_n1[_M190_PERCEPCIONES_BINDING] == _YEAR_N_PLUS_1_WITHHOLDING_PERCEPCIONES
         result_n1, _produced_n1 = _calculate_190(
             filing_year=_YEAR_N_PLUS_1,
             relation_values=resolved_n1,
-            withholding_observations=_YEAR_N_PLUS_1_WITHHOLDING_OBSERVATIONS,
+            withholding_observations=year_n_plus_1_withholding,
         )
 
     # Wiring invariant Year N:

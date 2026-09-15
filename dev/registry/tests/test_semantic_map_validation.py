@@ -412,13 +412,13 @@ def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m13
     ),
 )
 def test_validation_refuses_changed_or_mixed_semantic_map_source_identity(
-    m200_inspection_snapshot,
+    _m200_inspection,
     source_ref: str,
     source_sha256: str,
     message: str,
 ) -> None:
     """Map source pins are exact and cannot cross-match a same-epoch design."""
-    intermediate_source_sha256 = _real_source_sha256(m200_inspection_snapshot)
+    intermediate_source_sha256 = _real_source_sha256(_m200_inspection)
     intermediate = RecordDesignIntermediate.model_validate(
         _intermediate_payload(source_sha256=intermediate_source_sha256),
     )
@@ -434,7 +434,7 @@ def test_validation_refuses_changed_or_mixed_semantic_map_source_identity(
     )
 
     with pytest.raises(RegistryValidationError, match=message):
-        validate_semantic_map(semantic_map, intermediate, m200_inspection_snapshot)
+        validate_semantic_map(semantic_map, intermediate, _m200_inspection)
 
 
 @pytest.mark.parametrize(
@@ -445,13 +445,13 @@ def test_validation_refuses_changed_or_mixed_semantic_map_source_identity(
     ),
 )
 def test_validation_refuses_a_semantic_map_authored_for_the_wrong_modelo_or_design_epoch(
-    m200_inspection_snapshot,
+    _m200_inspection,
     modelo: str,
     design_epoch: str,
     message: str,
 ) -> None:
     """A map authored against a different modelo or design epoch cannot enter scope validation."""
-    intermediate_source_sha256 = _real_source_sha256(m200_inspection_snapshot)
+    intermediate_source_sha256 = _real_source_sha256(_m200_inspection)
     intermediate = RecordDesignIntermediate.model_validate(
         _intermediate_payload(source_sha256=intermediate_source_sha256),
     )
@@ -468,13 +468,13 @@ def test_validation_refuses_a_semantic_map_authored_for_the_wrong_modelo_or_desi
     )
 
     with pytest.raises(RegistryValidationError, match=message):
-        validate_semantic_map(semantic_map, intermediate, m200_inspection_snapshot)
+        validate_semantic_map(semantic_map, intermediate, _m200_inspection)
 
 
-def test_validation_refuses_catalogued_parser_source_absent_from_selected_revision(m200_inspection_snapshot) -> None:
+def test_validation_refuses_catalogued_parser_source_absent_from_selected_revision(_m200_inspection) -> None:
     """A source catalogue entry cannot implicitly select a different revision authority."""
     source_ref = "aeat-dr-200-2025"
-    source_sha256 = m200_inspection_snapshot.sources[source_ref].sha256
+    source_sha256 = _m200_inspection.sources[source_ref].sha256
     intermediate = RecordDesignIntermediate.model_validate(
         _intermediate_payload(source_sha256=source_sha256),
     )
@@ -488,11 +488,9 @@ def test_validation_refuses_catalogued_parser_source_absent_from_selected_revisi
             ),
         ),
     )
-    snapshot_without_parser_source = m200_inspection_snapshot.model_copy(
+    snapshot_without_parser_source = _m200_inspection.model_copy(
         update={
-            "revision_source_refs": tuple(
-                ref for ref in m200_inspection_snapshot.revision_source_refs if ref != source_ref
-            ),
+            "revision_source_refs": tuple(ref for ref in _m200_inspection.revision_source_refs if ref != source_ref),
         },
     )
 
@@ -526,12 +524,12 @@ def test_validation_refuses_catalogued_parser_source_absent_from_selected_revisi
     ],
 )
 def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
-    m200_inspection_snapshot,
+    _m200_inspection,
     entries: tuple[dict[str, object], ...],
     message: str,
 ) -> None:
     """No anomaly declaration can turn an incomplete or ambiguous map into a join."""
-    source_sha256 = _real_source_sha256(m200_inspection_snapshot)
+    source_sha256 = _real_source_sha256(_m200_inspection)
     intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
     semantic_map = SemanticMap.model_validate(_semantic_map_payload(entries=entries, source_sha256=source_sha256))
     exception = SemanticMapAnomalyException(
@@ -542,7 +540,7 @@ def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
     )
 
     with pytest.raises(RegistryValidationError, match=message):
-        validate_semantic_map(semantic_map, intermediate, m200_inspection_snapshot, anomaly_exceptions=(exception,))
+        validate_semantic_map(semantic_map, intermediate, _m200_inspection, anomaly_exceptions=(exception,))
 
 
 @pytest.mark.parametrize(
@@ -630,9 +628,9 @@ def test_validation_refuses_unresolved_canonical_semantic_references(
         validate_semantic_map(semantic_map, intermediate, _m130_inspection)
 
 
-def test_validation_refuses_duplicate_export_id_without_consulting_legacy_layout(m200_inspection_snapshot) -> None:
+def test_validation_refuses_duplicate_export_id_without_consulting_legacy_layout(_m200_inspection) -> None:
     """Generated-layout identifiers are grammar-validated and map-local unique."""
-    source_sha256 = _real_source_sha256(m200_inspection_snapshot)
+    source_sha256 = _real_source_sha256(_m200_inspection)
     intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -644,12 +642,12 @@ def test_validation_refuses_duplicate_export_id_without_consulting_legacy_layout
     )
 
     with pytest.raises(RegistryValidationError, match="duplicate canonical export field ids"):
-        validate_semantic_map(semantic_map, intermediate, m200_inspection_snapshot)
+        validate_semantic_map(semantic_map, intermediate, _m200_inspection)
 
 
-def test_validation_refuses_duplicate_projection_refs_before_any_snapshot_inference(m200_inspection_snapshot) -> None:
+def test_validation_refuses_duplicate_projection_refs_before_any_snapshot_inference(_m200_inspection) -> None:
     """An exact typed ref may appear at most once, independent of its source anchor."""
-    source_sha256 = _real_source_sha256(m200_inspection_snapshot)
+    source_sha256 = _real_source_sha256(_m200_inspection)
     intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
     projection_ref = _projection_ref()
     semantic_map = SemanticMap.model_validate(
@@ -674,12 +672,12 @@ def test_validation_refuses_duplicate_projection_refs_before_any_snapshot_infere
     )
 
     with pytest.raises(RegistryValidationError, match="duplicate projection references"):
-        validate_semantic_map(semantic_map, intermediate, m200_inspection_snapshot)
+        validate_semantic_map(semantic_map, intermediate, _m200_inspection)
 
 
-def test_validation_refuses_projection_ref_not_admitted_by_the_selected_snapshot(m200_inspection_snapshot) -> None:
+def test_validation_refuses_projection_ref_not_admitted_by_the_selected_snapshot(_m200_inspection) -> None:
     """A source anchor cannot admit a typed row owner absent from the revision."""
-    source_sha256 = _real_source_sha256(m200_inspection_snapshot)
+    source_sha256 = _real_source_sha256(_m200_inspection)
     intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
@@ -697,7 +695,7 @@ def test_validation_refuses_projection_ref_not_admitted_by_the_selected_snapshot
     )
 
     with pytest.raises(RegistryValidationError, match="not admitted by the target revision"):
-        validate_semantic_map(semantic_map, intermediate, m200_inspection_snapshot)
+        validate_semantic_map(semantic_map, intermediate, _m200_inspection)
 
 
 def test_projection_admission_uses_the_real_revision_declaration_bijection(_m303_snapshot) -> None:

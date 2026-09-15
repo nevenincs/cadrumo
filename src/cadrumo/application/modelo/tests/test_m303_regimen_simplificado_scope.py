@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
 from ....domain.deadlines.models import TaxpayerProfile
 from ..action_errors import ModeloProfileReadinessError
@@ -14,7 +17,12 @@ from ..m303_regimen_simplificado_scope import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_GENERAL_IVA_REGIME = require_iva_regime("GENERAL")
+
+@pytest.fixture(autouse=True)
+def _generation_pinned_authority() -> Iterator[None]:
+    """Run every test inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def test_a_profile_projection_without_an_iva_block_blocks_m303_scope_resolution() -> None:
@@ -36,7 +44,7 @@ def test_a_profile_projection_without_an_iva_block_blocks_m303_scope_resolution(
     """
     with pytest.raises(ModeloProfileReadinessError) as raised_1:
         m303_regimen_simplificado_scope_for_profile(
-            TaxpayerProfile(tax_id="12345678Z", iva_regime=_GENERAL_IVA_REGIME, iva=None),
+            TaxpayerProfile(tax_id="12345678Z", iva_regime=require_iva_regime("GENERAL"), iva=None),
         )
 
     failure_1 = raised_1.value.precondition_failure
@@ -56,7 +64,7 @@ def test_raw_unknown_composition_is_refused() -> None:
 
 
 def test_profile_without_iva_is_refused_by_the_profile_mapper() -> None:
-    profile = TaxpayerProfile(tax_id="00000000T", iva_regime=_GENERAL_IVA_REGIME)
+    profile = TaxpayerProfile(tax_id="00000000T", iva_regime=require_iva_regime("GENERAL"))
 
     with pytest.raises(ModeloProfileReadinessError) as raised_3:
         m303_regimen_simplificado_scope_for_profile(profile)

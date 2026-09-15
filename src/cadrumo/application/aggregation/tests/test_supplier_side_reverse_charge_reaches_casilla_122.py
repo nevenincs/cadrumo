@@ -61,10 +61,11 @@ _DEVENGO = date(2024, 3, 15)
 _CASILLA_122 = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"
 _CASILLA_59 = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
-COMPONENT_CATALOGUE = registry_component_catalogue(effective_date=_DEVENGO)
 
 
-def test_every_declared_category_base_only_flow_stays_outside_deduction_authority() -> None:
+def test_every_declared_category_base_only_flow_stays_outside_deduction_authority(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The complete production table must remain output-side under the canonical predicate.
 
     These cuota-less issued rows are constructed without deduction provenance.
@@ -73,9 +74,10 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
     production table keeps the assertion total without restating its members or
     duplicating the deduction-side flow set.
     """
+    component_catalogue = registry_component_catalogue(effective_date=_DEVENGO, authority=authority_operation)
     wrongly_deducible = {
         category.value: flow.value
-        for (category, kind), row in COMPONENT_CATALOGUE.items()
+        for (category, kind), row in component_catalogue.items()
         if kind is InvoiceKind.ISSUED
         and row.applicability == IvaKindApplicability.from_registry("arises")
         and row.base == IvaComponentPresence.from_registry("required")
@@ -122,7 +124,7 @@ def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
                     "quantity": "1",
                     "unit_price": format(_BASE, "f"),
                     "subtotal": format(_BASE, "f"),
-                    "iva_rate": resolve_iva_rate_token("exempt", date.today()).value,
+                    "iva_rate": resolve_iva_rate_token("EXEMPT", date.today()).value,
                     "iva_amount": "0.00",
                 },
             ],

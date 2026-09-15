@@ -58,7 +58,7 @@ from ..compiler.record_design import extract_record_design
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 #: Provenance stamped onto directly-constructed projections in this module. A
@@ -409,35 +409,24 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
 
 
 @pytest.mark.parametrize(
-    ("entry", "message"),
+    ("regime", "message"),
     (
-        (
-            ProrrataRegisterEntry(
-                ejercicio=2025,
-                sector_id="a",
-                regime=ProrrataRegisterRegime.from_registry("ninguna"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            "no applicable regime",
-        ),
-        (
-            ProrrataRegisterEntry(
-                ejercicio=2025,
-                sector_id="a",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            "no resolved percentage",
-        ),
+        ("ninguna", "no applicable regime"),
+        ("general", "no resolved percentage"),
     ),
 )
 def test_projector_refuses_inactive_or_percentage_less_active_sector(
-    entry: ProrrataRegisterEntry,
+    regime: str,
     message: str,
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
+    entry = ProrrataRegisterEntry(
+        ejercicio=2025,
+        sector_id="a",
+        regime=ProrrataRegisterRegime.from_registry(regime),
+        especial_transition=None,
+        source_registry_snapshot_refs=(),
+    )
     register = _register().model_copy(update={"entries": (entry, _register().entry_for(2025, sector_id="b"))})
     with pytest.raises(RegistryValidationError, match=message):
         project_m303_differentiated_deduction_rows(

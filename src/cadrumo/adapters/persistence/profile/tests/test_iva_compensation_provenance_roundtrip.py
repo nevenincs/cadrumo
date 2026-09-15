@@ -42,7 +42,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PRESENTED_AT = datetime(2026, 1, 20, 10, 30, tzinfo=UTC)
 _EXPEDIENTE = "202530300000001Z"

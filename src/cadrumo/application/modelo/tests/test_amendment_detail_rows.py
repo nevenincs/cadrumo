@@ -16,12 +16,13 @@ the caller states the rows and the code refuses to guess.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....domain.modelos.row_models import Modelo347ContraparteRow, ModeloDetailRow
 from .._calculation_modelo_adjustments import detail_row_declaration_modelos
@@ -32,6 +33,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FILING_YEAR = 2025
 _EFFECTIVE_DATE = date(_FILING_YEAR, 12, 31)
+
+# Parametrization is fixed at collection, so the row-bearing membership is
+# projected once from a generation-pinned operation rather than per test.
+with bundled_indexed_authority().operation():
+    _DETAIL_ROW_DECLARATION_MODELOS = tuple(sorted(detail_row_declaration_modelos(effective_date=_EFFECTIVE_DATE)))
+
+
+@pytest.fixture(autouse=True)
+def _generation_pinned_authority() -> Iterator[None]:
+    """Run every test inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _revision_id(*, detail_rows: Sequence[ModeloDetailRow] | None = None) -> str:
@@ -69,14 +82,14 @@ def _counterparty() -> Modelo347ContraparteRow:
     )
 
 
-@pytest.mark.parametrize("modelo", sorted(detail_row_declaration_modelos(effective_date=_EFFECTIVE_DATE)))
+@pytest.mark.parametrize("modelo", _DETAIL_ROW_DECLARATION_MODELOS)
 def test_a_row_bearing_modelo_refuses_an_amendment_that_omits_its_rows(modelo: str) -> None:
     """Silence is not a nil declaration; the two amendment kinds read it apart."""
     with pytest.raises(AmendmentDetailRowsRequiredError):
         _require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=None)
 
 
-@pytest.mark.parametrize("modelo", sorted(detail_row_declaration_modelos(effective_date=_EFFECTIVE_DATE)))
+@pytest.mark.parametrize("modelo", _DETAIL_ROW_DECLARATION_MODELOS)
 def test_an_explicitly_empty_set_is_an_answer_and_is_accepted(modelo: str) -> None:
     """Declaring that the period had no counterparts is a statement, not silence."""
     assert _require_amendment_detail_rows(modelo=modelo, filing_year=_FILING_YEAR, supplied=[]) == ()

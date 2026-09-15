@@ -26,7 +26,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.iva.schema import IvaCategory
 
 from ....core.period import Period
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -75,7 +76,7 @@ def _raw(provider_id: str) -> RawTransaction:
     )
 
 
-def _row(provider_id: str, *, established_in: EUMemberState | None, identified_in: EUMemberState | None) -> Transaction:
+def _row(provider_id: str, *, established_in: str | None, identified_in: str | None) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": _raw(provider_id),
@@ -87,7 +88,7 @@ def _row(provider_id: str, *, established_in: EUMemberState | None, identified_i
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
             "iva_category": IvaCategory("intra_community_supply"),
-            "counterparty_country": (established_in.value.upper() if established_in is not None else None),
+            "counterparty_country": established_in,
             "counterparty_identification_state": identified_in,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },
@@ -106,21 +107,21 @@ def _accepted(transaction: Transaction) -> bool:
     ("established_in", "identified_in", "accepted"),
     [
         # Identification decides, across every establishment it can pair with.
-        (require_eu_member_state("ES"), require_eu_member_state("DE"), True),
-        (require_eu_member_state("FR"), require_eu_member_state("DE"), True),
-        (None, require_eu_member_state("DE"), True),
-        (require_eu_member_state("DE"), require_eu_member_state("ES"), False),
-        (require_eu_member_state("ES"), require_eu_member_state("ES"), False),
-        (None, require_eu_member_state("ES"), False),
+        ("ES", "DE", True),
+        ("FR", "DE", True),
+        (None, "DE", True),
+        ("DE", "ES", False),
+        ("ES", "ES", False),
+        (None, "ES", False),
         # Absent identification is absent, whatever the establishment says.
-        (require_eu_member_state("DE"), None, False),
-        (require_eu_member_state("ES"), None, False),
+        ("DE", None, False),
+        ("ES", None, False),
         (None, None, False),
     ],
 )
 def test_the_outcome_tracks_identification_and_ignores_establishment(
-    established_in: EUMemberState | None,
-    identified_in: EUMemberState | None,
+    established_in: str | None,
+    identified_in: str | None,
     accepted: bool,
 ) -> None:
     """The establishment axis is varied freely and never moves the result.
@@ -130,8 +131,13 @@ def test_the_outcome_tracks_identification_and_ignores_establishment(
     identification does. That is what "nothing derives one from the other"
     means operationally.
     """
-    row = _row(f"sweep-{established_in}-{identified_in}", established_in=established_in, identified_in=identified_in)
-    assert _accepted(row) is accepted
+    with bundled_indexed_authority().operation():
+        row = _row(
+            f"sweep-{established_in}-{identified_in}",
+            established_in=established_in,
+            identified_in=identified_in,
+        )
+        assert _accepted(row) is accepted
 
 
 def test_no_aggregation_module_builds_an_identification_from_a_country() -> None:

@@ -58,12 +58,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-@pytest.fixture
-def certificate_secret_backend_factory() -> InMemoryCertificateSecretBackendFactory:
-    """Inject the application contract without importing a persistence adapter."""
-    return InMemoryCertificateSecretBackendFactory()
-
-
 def test_check_reports_ok_for_a_certificate_far_from_expiry(
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,

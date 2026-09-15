@@ -49,7 +49,7 @@ from cadrumo.core.irnr import M210GrossIncomeSourceMode
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
-from cadrumo.domain.deadlines.models import TaxpayerProfile
+from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.m210_income_classification import (
@@ -73,7 +73,6 @@ _BUCKET_ID = "d210d210-d210-4210-8210-d210d210d210"
 _CLOCK = datetime(2026, 7, 10, 10, 0, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "0A")
 _DEVENGO_DATE = date(2025, 12, 31)
-_IVA_REGIME = default_iva_regime(effective_date=_DEVENGO_DATE)
 __all__ = ["register_wizard_catalogue"]
 
 
@@ -145,6 +144,11 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
     )
 
 
+def _iva_regime() -> IVARegime:
+    with bundled_indexed_authority().operation() as operation:
+        return default_iva_regime(effective_date=_DEVENGO_DATE, authority=operation)
+
+
 def _seed_m210_profile() -> None:
     authority = compiled_bundled_authority()
     seed_test_profile_record(
@@ -155,7 +159,7 @@ def _seed_m210_profile() -> None:
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="activities.description", value="Spanish-source income"),
-                UserProfileFact(path="iva.regime", value=_IVA_REGIME.value),
+                UserProfileFact(path="iva.regime", value=_iva_regime().value),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.m303_regime_composition", value="general"),
                 UserProfileFact(path="iva.redeme_enrolled", value=False),
@@ -663,7 +667,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator",
-                workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=_IVA_REGIME),
+                workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=_iva_regime()),
                 settings=ready_clave_settings("12345678Z"),
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,

@@ -35,9 +35,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.invoices.enums import IvaRate, resolve_iva_rate_token
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import IvaCategory
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import category_components
 from ....domain.iva.invoice_classification import invoice_line_to_iva_observation
@@ -46,13 +47,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.mark.parametrize(
-    ("category", "rate"),
+    "category",
     [
-        (IvaCategory("domestic_exempt"), resolve_iva_rate_token("exempt", date.today())),
-        (IvaCategory("intra_community_supply"), resolve_iva_rate_token("exempt", date.today())),
+        IvaCategory("domestic_exempt"),
+        IvaCategory("intra_community_supply"),
     ],
 )
-def test_a_zero_cuota_category_still_requires_its_base(category: IvaCategory, rate: IvaRate) -> None:
+def test_a_zero_cuota_category_still_requires_its_base(category: IvaCategory) -> None:
     """The component table is the authority, and it says the base is required.
 
     Asserted against the table rather than against a hand-written expectation,
@@ -60,7 +61,8 @@ def test_a_zero_cuota_category_still_requires_its_base(category: IvaCategory, ra
     ``base=required, cuota=zero_by_law`` for is a category whose line MUST reach
     the declaration despite carrying no cuota.
     """
-    components = category_components(category, InvoiceKind.ISSUED)
+    with bundled_indexed_authority().operation():
+        components = category_components(category, InvoiceKind.ISSUED)
 
     assert components.base.value == "required", f"{category.value} should require a base"
     assert components.cuota.value == "zero_by_law", f"{category.value} should carry no cuota by law"
@@ -74,17 +76,19 @@ def test_an_exempt_line_builds_a_declarable_observation() -> None:
     classifier hands back exactly the record Modelo 303 wants for an exempt
     operation. The screen simply never asked for it.
     """
-    observation = invoice_line_to_iva_observation(
-        invoice_id="invoice:exempt-line-proof:0",
-        issued_at=date(2026, 2, 10),
-        invoice_kind=InvoiceKind.ISSUED,
-        iva_rate=resolve_iva_rate_token("exempt", date.today()),
-        base_amount=Decimal("1000.00"),
-        iva_amount=Decimal("0"),
-        deduction_fact_kind=None,
-        deduction_provenance=None,
-        recargo_amount=Decimal("0"),
-    )
+    with bundled_indexed_authority().operation():
+        iva_rate = resolve_iva_rate_token("EXEMPT", date.today())
+        observation = invoice_line_to_iva_observation(
+            invoice_id="invoice:exempt-line-proof:0",
+            issued_at=date(2026, 2, 10),
+            invoice_kind=InvoiceKind.ISSUED,
+            iva_rate=iva_rate,
+            base_amount=Decimal("1000.00"),
+            iva_amount=Decimal("0"),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
+            recargo_amount=Decimal("0"),
+        )
 
     assert observation.category == IvaCategory("domestic_exempt")
     assert observation.base_amount == Decimal("1000.00")

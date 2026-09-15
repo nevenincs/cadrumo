@@ -103,15 +103,16 @@ def _autonomo(
     from cadrumo.domain.contribuyente.entity_type import EntityType
     from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        entity_type=EntityType.from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
-        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
-        iva_regime=IVARegime("GENERAL"),
-        activity_start_date=activity_start_date,
-        activity_end_date=activity_end_date,
-    )
+    with _indexed_authority_for_test().operation():
+        return TaxpayerProfile(
+            tax_id="X1234567L",
+            entity_type=EntityType.from_registry("natural_person"),
+            irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+            irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
+            iva_regime=IVARegime("GENERAL"),
+            activity_start_date=activity_start_date,
+            activity_end_date=activity_end_date,
+        )
 
 
 # ---------------------------------------------------------------- the year axis

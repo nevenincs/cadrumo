@@ -26,7 +26,6 @@ from ......domain.calculations.registry.relations import (
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ......tests.inventory import FIXTURES_DIR
-from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..declarations_capture import _select_authoritative_declaration as _select_authoritative_declaration_production
 from ..declarations_observations import (
     registry_observation_from_filed_declaration,
@@ -58,8 +57,6 @@ __all__ = [
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_BUCKET_ID = "2ffddd8e-61e6-4ea7-81b2-73f08392183d"  # was 'sede-declarations'
-
 _AEAT = Settings.external_constants().aeat
 
 _DECLARATIONS_LISTING_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.declarations_listing}"
@@ -75,12 +72,6 @@ _REGISTER_DOWNLOAD_URL = f"{_AEAT.domains.www6}{_DECLARATIONS_LISTING_BASE_PATH}
 if TYPE_CHECKING:
     from ......application.auth.session_types import AeatSession
     from ......domain.calculations.registry.schema import ModeloRevision
-
-
-# Prevents filed-observation store tests from writing into the active profile DB.
-_isolate_secure_object_backend = bucket_scoped_runtime_profile_fixture(
-    _BUCKET_ID, autouse=True, name="_isolate_secure_object_backend"
-)
 
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"

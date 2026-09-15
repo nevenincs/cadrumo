@@ -37,7 +37,7 @@ not taxpayer data, which this repository does not hold.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -46,11 +46,12 @@ import pytest
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IvaKindApplicability, registry_component_catalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from ....domain.iva.schema import EUMemberState, IvaCategory
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -65,8 +66,13 @@ _PERIOD = Period.from_year_and_code(2024, "4T")
 _ON = date(2024, 11, 6)
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
-COMPONENT_CATALOGUE = registry_component_catalogue()
-_DEFAULT_EU_MEMBER_STATE = EUMemberState.from_registry("de")
+_DEFAULT_EU_MEMBER_STATE = "DE"
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _component_authority_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _transaction(
@@ -74,7 +80,7 @@ def _transaction(
     *,
     direction: TransactionDirection,
     category: IvaCategory,
-    eu_member_state: EUMemberState | None = _DEFAULT_EU_MEMBER_STATE,
+    eu_member_state: str | None = _DEFAULT_EU_MEMBER_STATE,
     iva_rate: Decimal = Decimal("0.21"),
     iva_amount: Decimal = _CUOTA,
 ) -> Transaction:
@@ -112,7 +118,7 @@ def _transaction(
         "iva_rate": iva_rate,
         "iva_amount": iva_amount,
         "iva_category": category,
-        "counterparty_country": (eu_member_state.value.upper() if eu_member_state is not None else None),
+        "counterparty_country": eu_member_state,
         # The D5 gate reads the identification and runs BEFORE the side screen
         # these tests exercise. Supplied so an intra-community row reaches the
         # screen under test instead of being refused upstream.
@@ -167,8 +173,8 @@ def _non_arising_pairs() -> list[tuple[IvaCategory, InvoiceKind]]:
     """Every pair the table declares impossible, read at runtime."""
     return [
         (category, kind)
-        for (category, kind), row in COMPONENT_CATALOGUE.items()
-        if row.applicability is IvaKindApplicability.from_registry("does_not_arise")
+        for (category, kind), row in registry_component_catalogue().items()
+        if row.applicability == IvaKindApplicability.from_registry("does_not_arise")
     ]
 
 
@@ -302,7 +308,7 @@ def test_the_refusal_names_the_counterpart_the_operator_probably_meant() -> None
     catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
     detail = aggregate_iva_ledger_observations(catalogue, period=_PERIOD).issues[0].detail
 
-    note = COMPONENT_CATALOGUE[(IvaCategory("intra_community_supply"), InvoiceKind.RECEIVED)].retencion_note
+    note = registry_component_catalogue()[(IvaCategory("intra_community_supply"), InvoiceKind.RECEIVED)].retencion_note
     assert IvaCategory("intra_community_acquisition_reverse_charge").value in note, (
         "the table's note no longer names the counterpart, so the refusal below cannot carry it"
     )

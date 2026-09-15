@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -85,22 +86,24 @@ def _preview(rows: tuple[RawTransaction, ...], catalogue: TransactionCatalogue) 
 
 def _persist(rows: tuple[RawTransaction, ...], catalogue: TransactionCatalogue) -> tuple[int, int]:
     """Run the persisting path; return ``(imported, skipped)``."""
-    plan = evaluate_import_rows(
-        bucket_id=_BUCKET,
-        catalogue=catalogue,
-        parsed_rows=tuple(_parsed(raw) for raw in rows),
-    )
+    with bundled_indexed_authority().operation():
+        plan = evaluate_import_rows(
+            bucket_id=_BUCKET,
+            catalogue=catalogue,
+            parsed_rows=tuple(_parsed(raw) for raw in rows),
+        )
     return len(plan.imported), len(plan.skipped_refs)
 
 
 def _stored(rows: tuple[RawTransaction, ...]) -> TransactionCatalogue:
     """Persist ``rows`` through the real import path, returning the catalogue."""
-    plan = evaluate_import_rows(
-        bucket_id=_BUCKET,
-        catalogue=TransactionCatalogue(),
-        parsed_rows=tuple(_parsed(raw) for raw in rows),
-    )
-    return TransactionCatalogue.model_validate({tx.transaction_id: tx for tx in plan.imported})
+    with bundled_indexed_authority().operation():
+        plan = evaluate_import_rows(
+            bucket_id=_BUCKET,
+            catalogue=TransactionCatalogue(),
+            parsed_rows=tuple(_parsed(raw) for raw in rows),
+        )
+        return TransactionCatalogue.model_validate({tx.transaction_id: tx for tx in plan.imported})
 
 
 def _input_classes() -> list[tuple[str, tuple[RawTransaction, ...], TransactionCatalogue]]:

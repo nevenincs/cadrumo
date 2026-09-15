@@ -70,7 +70,7 @@ from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, Pay
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind
 from cadrumo.domain.iva.oss import OssIossRegime
-from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
+from cadrumo.domain.iva.schema import IvaRateKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 
@@ -111,39 +111,59 @@ def _empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
 # published rate (DE general 19%, FR general 20%): the resolver validates each
 # against lookup_rate before aggregating, so the iva_amount must equal
 # base * rate. Distinct bases -> distinct cuotas (19.00 / 40.00 / 57.00).
-_M369_DE_SERVICES = OssIossLedgerCandidate(
-    ledger_id="oss-de-services",
-    transaction_date=date(2026, 2, 15),
-    regime=OssIossRegime("union_scheme"),
-    destination_member_state=EUMemberState.from_registry("de"),
-    rate_kind=IvaRateKind("general"),
-    invoice_direction=InvoiceKind.ISSUED,
-    transaction_kind=TransactionKind("oss_union_services"),
-    base_amount=Decimal("100.00"),
-    iva_amount=Decimal("19.00"),  # 100 * 19% (DE general)
-)
-_M369_FR_SERVICES = OssIossLedgerCandidate(
-    ledger_id="oss-fr-services",
-    transaction_date=date(2026, 2, 16),
-    regime=OssIossRegime("union_scheme"),
-    destination_member_state=EUMemberState.from_registry("fr"),
-    rate_kind=IvaRateKind("general"),
-    invoice_direction=InvoiceKind.ISSUED,
-    transaction_kind=TransactionKind("oss_union_services"),
-    base_amount=Decimal("200.00"),
-    iva_amount=Decimal("40.00"),  # 200 * 20% (FR general)
-)
-_M369_DE_GOODS = OssIossLedgerCandidate(
-    ledger_id="oss-de-goods",
-    transaction_date=date(2026, 2, 17),
-    regime=OssIossRegime("union_scheme"),
-    destination_member_state=EUMemberState.from_registry("de"),
-    rate_kind=IvaRateKind("general"),
-    invoice_direction=InvoiceKind.ISSUED,
-    transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
-    base_amount=Decimal("300.00"),
-    iva_amount=Decimal("57.00"),  # 300 * 19% (DE general)
-)
+def _m369_candidate(
+    *,
+    ledger_id: str,
+    transaction_date: date,
+    destination_member_state: str,
+    transaction_kind: str,
+    base_amount: Decimal,
+    iva_amount: Decimal,
+) -> OssIossLedgerCandidate:
+    return OssIossLedgerCandidate.model_validate(
+        {
+            "ledger_id": ledger_id,
+            "transaction_date": transaction_date,
+            "regime": OssIossRegime("union_scheme"),
+            "destination_member_state": destination_member_state,
+            "rate_kind": IvaRateKind("general"),
+            "invoice_direction": InvoiceKind.ISSUED,
+            "transaction_kind": TransactionKind(transaction_kind),
+            "base_amount": base_amount,
+            "iva_amount": iva_amount,
+        }
+    )
+
+
+def _m369_candidates() -> tuple[OssIossLedgerCandidate, ...]:
+    return (
+        _m369_candidate(
+            ledger_id="oss-de-services",
+            transaction_date=date(2026, 2, 15),
+            destination_member_state="de",
+            transaction_kind="oss_union_services",
+            base_amount=Decimal("100.00"),
+            iva_amount=Decimal("19.00"),  # 100 * 19% (DE general)
+        ),
+        _m369_candidate(
+            ledger_id="oss-fr-services",
+            transaction_date=date(2026, 2, 16),
+            destination_member_state="fr",
+            transaction_kind="oss_union_services",
+            base_amount=Decimal("200.00"),
+            iva_amount=Decimal("40.00"),  # 200 * 20% (FR general)
+        ),
+        _m369_candidate(
+            ledger_id="oss-de-goods",
+            transaction_date=date(2026, 2, 17),
+            destination_member_state="de",
+            transaction_kind="oss_union_goods_distance_sale",
+            base_amount=Decimal("300.00"),
+            iva_amount=Decimal("57.00"),  # 300 * 19% (DE general)
+        ),
+    )
+
+
 _M369_DE_SERVICES_BINDING = "modelo-369-union-de-services-21pct"
 _M369_FR_SERVICES_BINDING = "modelo-369-union-fr-services-21pct"
 _M369_DE_GOODS_BINDING = "modelo-369-union-de-goods-distance-21pct"
@@ -177,26 +197,28 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
     below is solely the LIVE-PATH candidate source, not this fold.
     """
     revision = _revision("369", _M369_REVISION)
-    candidates = (_M369_DE_SERVICES, _M369_FR_SERVICES, _M369_DE_GOODS)
+    with bundled_indexed_authority().operation():
+        candidates = _m369_candidates()
 
-    # Resolver path (what the live mesh WOULD fold if it had candidates).
-    resolution = OssIossLedgerSourceResolver(
-        ports=_empty_catalogue_read_ports(),
-        candidates=candidates,
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=_M369_BUCKET,
-            modelo="369",
-            filing_year=_M369_YEAR,
-            period=Period.from_year_and_code(_M369_YEAR, "1T"),
-            revision=revision,
-        ),
-    )
+        # Resolver path (what the live mesh WOULD fold if it had candidates).
+        resolution = OssIossLedgerSourceResolver(
+            ports=_empty_catalogue_read_ports(),
+            candidates=candidates,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_M369_BUCKET,
+                modelo="369",
+                filing_year=_M369_YEAR,
+                period=Period.from_year_and_code(_M369_YEAR, "1T"),
+                revision=revision,
+            ),
+        )
+        # Cross-check the registry aggregation wrapper agrees with the resolver.
+        aggregated = aggregate_oss_ioss_bindings(revision, candidates)
     assert resolution.binding_values[_M369_DE_SERVICES_BINDING] == Decimal("19.00")
     assert resolution.binding_values[_M369_FR_SERVICES_BINDING] == Decimal("40.00")
     assert resolution.binding_values[_M369_DE_GOODS_BINDING] == Decimal("57.00")
-    # Cross-check the registry aggregation wrapper agrees with the resolver.
-    assert aggregate_oss_ioss_bindings(revision, candidates) == dict(resolution.binding_values)
+    assert aggregated == dict(resolution.binding_values)
     # The source is claimed; the resolver raises nothing and emits no diagnostics.
     assert resolution.diagnostics == ()
     assert BindingSourceKind.LEDGER_OSS_AGGREGATION in resolution.owned_sources
@@ -397,19 +419,20 @@ def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_voca
     unsupported_rate_kind: IvaRateKind,
 ) -> None:
     """Exterior never guesses an R/S wire token for an unsupported classification."""
-    observation = OssIossLedgerObservation(
-        ledger_id=f"unsupported-{unsupported_rate_kind.value}",
-        transaction_date=date(2026, 2, 15),
-        regime=OssIossRegime("external_scheme"),
-        destination_member_state=EUMemberState.from_registry("de"),
-        rate_kind=unsupported_rate_kind,
-        invoice_direction=InvoiceKind.ISSUED,
-        transaction_kind=TransactionKind("external_scheme_services"),
-        base_amount=Decimal("100"),
-        iva_amount=Decimal("0"),
-    )
-
     with pytest.raises(AggregationValidationError) as exc_info, bundled_indexed_authority().operation() as operation:
+        observation = OssIossLedgerObservation.model_validate(
+            {
+                "ledger_id": f"unsupported-{unsupported_rate_kind.value}",
+                "transaction_date": date(2026, 2, 15),
+                "regime": OssIossRegime("external_scheme"),
+                "destination_member_state": "de",
+                "rate_kind": unsupported_rate_kind,
+                "invoice_direction": InvoiceKind.ISSUED,
+                "transaction_kind": TransactionKind("external_scheme_services"),
+                "base_amount": Decimal("100"),
+                "iva_amount": Decimal("0"),
+            }
+        )
         oss_ioss_module._exterior_detail_binding_values(
             _revision("369", "esquema-exterior"),
             (observation,),

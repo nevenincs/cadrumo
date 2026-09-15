@@ -125,12 +125,6 @@ def _manages_storage_roots() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture
-def certificate_secret_backend_factory() -> InMemoryCertificateSecretBackendFactory:
-    """Inject the application capability without importing a persistence adapter."""
-    return InMemoryCertificateSecretBackendFactory()
-
-
 def _register_select_with_secret(
     tmp_path: Path,
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,

@@ -15,6 +15,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -58,14 +59,14 @@ def _assert_invoice_terminal(error: InvoiceValidationError | ValidationError) ->
 
 def _invoice_line_validation(*, description: str, quantity: object) -> ValidationError:
     """Produce a real Pydantic invoice-line validation transport."""
-    with pytest.raises(ValidationError) as raised:
+    with bundled_indexed_authority().operation(), pytest.raises(ValidationError) as raised:
         InvoiceLine.model_validate(
             {
                 "description": description,
                 "quantity": quantity,
                 "unit_price": Decimal("100"),
                 "subtotal": Decimal("100"),
-                "iva_rate": resolve_iva_rate_token("rate_21", date.today()),
+                "iva_rate": resolve_iva_rate_token("RATE_21", date.today()),
                 "iva_amount": Decimal("21"),
             },
         )
@@ -79,35 +80,37 @@ def _nested_invoice_line_validation() -> ValidationError:
 
 def _invoice_payload(*, counterparty_country: object = "DE") -> dict[str, object]:
     """Return one otherwise-valid Invoice payload for a boundary coercion test."""
-    return {
-        "kind": InvoiceKind.ISSUED,
-        "invoice_number": "S130-ORDINARY-COERCION",
-        "issued_at": date(2026, 3, 15),
-        "counterparty_name": "Test Counterparty GmbH",
-        "counterparty_tax_id": "DE123456789",
-        "counterparty_country": counterparty_country,
-        "base_total": Decimal("100.00"),
-        "iva_total": Decimal("21.00"),
-        "grand_total": Decimal("121.00"),
-        "currency": "EUR",
-        "lines": (
-            InvoiceLine(
-                description="Consultoría tecnológica",
-                quantity=Decimal("1"),
-                unit_price=Decimal("100.00"),
-                subtotal=Decimal("100.00"),
-                iva_rate=resolve_iva_rate_token("rate_21", date.today()),
-                iva_amount=Decimal("21.00"),
+    with bundled_indexed_authority().operation():
+        return {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "S130-ORDINARY-COERCION",
+            "issued_at": date(2026, 3, 15),
+            "counterparty_name": "Test Counterparty GmbH",
+            "counterparty_tax_id": "DE123456789",
+            "counterparty_country": counterparty_country,
+            "base_total": Decimal("100.00"),
+            "iva_total": Decimal("21.00"),
+            "grand_total": Decimal("121.00"),
+            "currency": "EUR",
+            "lines": (
+                InvoiceLine(
+                    description="Consultoría tecnológica",
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("100.00"),
+                    subtotal=Decimal("100.00"),
+                    iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
+                    iva_amount=Decimal("21.00"),
+                ),
             ),
-        ),
-        "payment_status": PaymentStatus.PENDING,
-    }
+            "payment_status": PaymentStatus.PENDING,
+        }
 
 
 def _invoice_validation(*, counterparty_country: object) -> ValidationError:
     """Produce a real Invoice Pydantic coercion failure without domain errors."""
-    with pytest.raises(ValidationError) as raised:
-        Invoice.model_validate(_invoice_payload(counterparty_country=counterparty_country))
+    payload = _invoice_payload(counterparty_country=counterparty_country)
+    with bundled_indexed_authority().operation(), pytest.raises(ValidationError) as raised:
+        Invoice.model_validate(payload)
     return raised.value
 
 

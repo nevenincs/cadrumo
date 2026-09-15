@@ -18,6 +18,7 @@ quarter and one on a quarter boundary date.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -26,6 +27,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
@@ -40,12 +42,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _REPOINTED_REVISIONS = ("2025-y-siguientes", "2011-2024")
 _M347_EFFECTIVE_DATE = date(2025, 12, 31)
-_M347_THRESHOLD = m347_threshold_decimal(
-    resolve_m347_counterparty_annual_threshold(effective_date=_M347_EFFECTIVE_DATE),
-)
-_M347_CLAVE_C_THRESHOLD = m347_threshold_decimal(
-    resolve_m347_clave_c_declaration_threshold(effective_date=_M347_EFFECTIVE_DATE),
-)
+
+
+@pytest.fixture(autouse=True)
+def _generation_pinned_authority() -> Iterator[None]:
+    """Run every test inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
+def _m347_threshold() -> Decimal:
+    return m347_threshold_decimal(resolve_m347_counterparty_annual_threshold(effective_date=_M347_EFFECTIVE_DATE))
+
+
+def _m347_clave_c_threshold() -> Decimal:
+    return m347_threshold_decimal(resolve_m347_clave_c_declaration_threshold(effective_date=_M347_EFFECTIVE_DATE))
 
 
 def _revision(revision_id: str):
@@ -146,13 +157,14 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
     names) produces no row either, and one ABOVE it still produces its row.
     """
     revision = _revision(revision_id)
+    threshold = _m347_threshold()
     observations = (
         _observation(
             invoice_id="inv-below",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Bajo Umbral SL",
             transaction_date=date(2025, 2, 10),
-            total=str(_M347_THRESHOLD - Decimal("0.01")),
+            total=str(threshold - Decimal("0.01")),
             operation_clave="A",
         ),
         _observation(
@@ -160,7 +172,7 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
             party_tax_id="C22222229",
             party_legal_name="Contraparte Umbral Exacto SA",
             transaction_date=date(2025, 6, 15),
-            total=str(_M347_THRESHOLD),
+            total=str(threshold),
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         ),
@@ -169,7 +181,7 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
             party_tax_id="D33333335",
             party_legal_name="Contraparte Sobre Umbral SL",
             transaction_date=date(2025, 9, 1),
-            total=str(_M347_THRESHOLD + Decimal("0.01")),
+            total=str(threshold + Decimal("0.01")),
             operation_clave="A",
         ),
     )
@@ -204,7 +216,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             party_tax_id="B11111112",
             party_legal_name="Colegiado Bajo Umbral SL",
             transaction_date=date(2025, 2, 10),
-            total=str(_M347_CLAVE_C_THRESHOLD - Decimal("0.01")),
+            total=str(_m347_clave_c_threshold() - Decimal("0.01")),
             operation_clave="C",
         ),
         _observation(
@@ -212,7 +224,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             party_tax_id="C22222229",
             party_legal_name="Colegiado Sobre Umbral SA",
             transaction_date=date(2025, 6, 15),
-            total=str(_M347_CLAVE_C_THRESHOLD + Decimal("0.01")),
+            total=str(_m347_clave_c_threshold() + Decimal("0.01")),
             operation_clave="C",
         ),
         _observation(
@@ -220,7 +232,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             party_tax_id="B11111112",
             party_legal_name="Colegiado Bajo Umbral SL",
             transaction_date=date(2025, 3, 1),
-            total=str(_M347_CLAVE_C_THRESHOLD + Decimal("100.00")),
+            total=str(_m347_clave_c_threshold() + Decimal("100.00")),
             operation_clave="B",
         ),
     )

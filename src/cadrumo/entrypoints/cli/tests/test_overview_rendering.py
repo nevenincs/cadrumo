@@ -28,7 +28,7 @@ from ....application.overview.calendar_models import OverviewCalendarRange, Over
 from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ....application.overview.next_actions import OverviewStatusNextStepId
 from ....core.json_contract import Notice, ResolvedNoticeAction
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.deadlines.models import TaxpayerProfile
 from .._overview_rendering import (
     overview_calendar_output,
@@ -342,9 +342,7 @@ def test_invoice_register_line_with_records_names_the_register() -> None:
     assert "register" in invoice_line.lower()
 
 
-def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap(
-    calendar_operation: PinnedAuthorityOperation,
-) -> None:
+def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap() -> None:
     """A régimen simplificado calendar-gap warning must render operator text, not a raw locale key."""
 
     profile = TaxpayerProfile(
@@ -355,7 +353,8 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap(
         iva_regime=IVARegime("SIMPLIFICADO"),
     )
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
-    calendar = build_overview_calendar(profile, rng, operation=calendar_operation, today=date(2026, 4, 1))
+    with bundled_indexed_authority().operation() as operation:
+        calendar = build_overview_calendar(profile, rng, operation=operation, today=date(2026, 4, 1))
 
     _, lines, notices = overview_calendar_output(calendar, rng, evidence_notices=())
 

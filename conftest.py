@@ -7,7 +7,7 @@ wrapper.
 
 Also hosts the project-branded ``CADRUMO_PYTEST_WORKERS`` worker-count policy
 (``pytest_xdist_auto_num_workers``), delegated to
-:func:`cadrumo.tests._worker_count_hook.resolve_auto_num_workers`, so every
+:func:`cadrumo.tests.worker_count_hook.resolve_auto_num_workers`, so every
 pytest invocation shape resolves ``-n auto`` through the same policy. See
 that module's docstring for the hook-ordering contract this delegation
 relies on.
@@ -103,17 +103,15 @@ bridge_env_file_into_environ = import_module("cadrumo.tests.env_loader").bridge_
 # against is already set by the pure-stdlib line above.
 bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
 
-# The collection-policy and reporting hooks load by their public package path,
-# after the storage-root and env bridging above; a top-of-file import statement
-# would run before those lines.
+# The collection-policy, reporting, timeout and worker-count hooks load by their
+# public package path, after the storage-root and env bridging above; a
+# top-of-file import statement would run before those lines.
 deselection_hook = import_module("cadrumo.tests.deselection_hook")
 fixture_resolution_hook = import_module("cadrumo.tests.fixture_resolution_hook")
+host_load_hook = import_module("cadrumo.tests.host_load_hook")
 lost_test_hook = import_module("cadrumo.tests.lost_test_hook")
 marker_hook = import_module("cadrumo.tests.marker_hook")
-_host_load_hook = import_module("cadrumo.tests._host_load_hook")
-_arm_host_load_stamp = _host_load_hook.arm_pre_timeout_stamp
-_disarm_host_load_stamp = _host_load_hook.disarm_pre_timeout_stamp
-_resolve_auto_num_workers = import_module("cadrumo.tests._worker_count_hook").resolve_auto_num_workers
+worker_count_hook = import_module("cadrumo.tests.worker_count_hook")
 temporary_env = import_module("cadrumo.tests.env").temporary_env
 
 if TYPE_CHECKING:
@@ -215,7 +213,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:
     """Delegate to the repository-owned xdist auto-width resolver."""
-    return _resolve_auto_num_workers(config)
+    return worker_count_hook.resolve_auto_num_workers(config)
 
 
 def pytest_timeout_set_timer(item: pytest.Item, settings: object) -> None:
@@ -225,13 +223,13 @@ def pytest_timeout_set_timer(item: pytest.Item, settings: object) -> None:
     pytest-timeout's own implementation is ``trylast``, so returning a value
     here would stop the call and leave the real timeout ceiling uninstalled.
     """
-    _arm_host_load_stamp(item, settings)
+    host_load_hook.arm_pre_timeout_stamp(item, settings)
     return None
 
 
 def pytest_timeout_cancel_timer(item: pytest.Item) -> None:
     """Delegate to the shared host-load stamp's cancel counterpart."""
-    _disarm_host_load_stamp(item)
+    host_load_hook.disarm_pre_timeout_stamp(item)
     return None
 
 
@@ -240,7 +238,7 @@ def pytest_terminal_summary(
     exitstatus: int,
     config: pytest.Config,
 ) -> None:
-    """Delegate to the shared deselection and lost-test reporters."""
+    """Delegate to the deselection, held-serial, unresolved-fixture and lost-test reporters."""
     deselection_hook.apply(terminalreporter, exitstatus, config)
     marker_hook.report_held_serials(terminalreporter)
     fixture_resolution_hook.report_refused_requests(terminalreporter)

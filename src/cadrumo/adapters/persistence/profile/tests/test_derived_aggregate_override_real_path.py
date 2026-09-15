@@ -91,13 +91,20 @@ _DERIVED_PATH = f"renta_family.descendientes_minimos_aggregate_{_YEAR}"
 #: runtime rather than relying on this reasoning alone.
 _SENTINEL = Decimal("4321.37")
 
-#: Two descendants born well before the filing year, both living with the
-#: taxpayer: an unambiguously Art. 58.1-eligible pair that produces a non-zero
-#: estatal aggregate the sentinel has to visibly displace.
-_DESCENDANTS = (
-    DescendantInfo(birth_date=date(2010, 3, 4)),
-    DescendantInfo(birth_date=date(2014, 9, 18)),
-)
+
+def _descendants() -> tuple[DescendantInfo, ...]:
+    """Two descendants born well before the filing year, both living with the taxpayer.
+
+    An unambiguously Art. 58.1-eligible pair that produces a non-zero estatal
+    aggregate the sentinel has to visibly displace. Callers build it inside a
+    pinned authority scope because the default relationship is a registry
+    projection.
+    """
+    return (
+        DescendantInfo(birth_date=date(2010, 3, 4)),
+        DescendantInfo(birth_date=date(2014, 9, 18)),
+    )
+
 
 #: The single binding the M100 estimación-directa régimen predicate needs set for
 #: the annual revision to reach the mínimo casillas at all.
@@ -150,7 +157,8 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
     Registered through the production registration door, so the descendant facts
     are stored exactly as ``config profile descendiente add`` would store them.
     """
-    overrides = dict(descendant_facts_from_list(_DESCENDANTS))
+    with bundled_indexed_authority().operation():
+        overrides = dict(descendant_facts_from_list(_descendants()))
     # The surrounding renta facts the M100 annual revision needs to evaluate at
     # all. None of them touches the Art. 58 aggregate; they exist so the
     # calculation reaches casilla 0513 rather than refusing earlier.
