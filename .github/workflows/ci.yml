@@ -28,7 +28,7 @@ name: Cadrumo CI
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, audit/ci-20260915]
     paths-ignore:
       - ".vault/**"
       - ".vaultspec/**"
