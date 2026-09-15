@@ -68,6 +68,18 @@ jobs:
           verify_run "$PACKAGING_RUN_ID" "Cadrumo Packaging Smoke"
           verify_run "$HOMEBREW_RUN_ID" "Cadrumo Homebrew Acquisition"
           verify_run "$SCOOP_RUN_ID" "Cadrumo Scoop Acquisition"
+          evidence_root="${RUNNER_TEMP}/cadrumo-release-evidence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -p "$evidence_root/homebrew" "$evidence_root/scoop"
+          gh run download "$HOMEBREW_RUN_ID" \
+            --name cadrumo-homebrew-acquisition-linux-x86_64 \
+            --dir "$evidence_root/homebrew"
+          gh run download "$SCOOP_RUN_ID" \
+            --name cadrumo-scoop-acquisition-evidence \
+            --dir "$evidence_root/scoop"
+          homebrew_source_run="$(tar -xOzf "$evidence_root/homebrew/cadrumo-homebrew-acquisition-linux-x86_64.tar.gz" ./run-context.json | jq -r .source_run_id)"
+          scoop_source_run="$(tar -xOzf "$evidence_root/scoop/cadrumo-scoop-acquisition-evidence.tar.gz" ./run-context.json | jq -r .source_run_id)"
+          test "$homebrew_source_run" = "$PACKAGING_RUN_ID" || { echo "::error::Homebrew evidence consumed Packaging Smoke run ${homebrew_source_run}, expected ${PACKAGING_RUN_ID}"; exit 1; }
+          test "$scoop_source_run" = "$PACKAGING_RUN_ID" || { echo "::error::Scoop evidence consumed Packaging Smoke run ${scoop_source_run}, expected ${PACKAGING_RUN_ID}"; exit 1; }
 
   runner-queue-watchdog:
     # Mandatory now that the release path runs on the fleet: `smoke-test`

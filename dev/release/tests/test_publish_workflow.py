@@ -144,6 +144,14 @@ def test_publication_promotes_the_validated_packaging_cohort_without_rebuilding(
     assert "uv build" not in executed
 
 
+def test_channel_evidence_is_bound_to_the_promoted_packaging_run() -> None:
+    """Successful channel runs cannot certify a different same-commit cohort."""
+    evidence = _executed(_document()["jobs"]["release-evidence"])
+    assert "cadrumo-homebrew-acquisition-linux-x86_64" in evidence
+    assert "cadrumo-scoop-acquisition-evidence" in evidence
+    assert evidence.count('= "$PACKAGING_RUN_ID"') >= 2
+
+
 def test_the_gate_notices_a_publication_path_that_lost_its_guard() -> None:
     """Detector teeth: this exact regression is what the gate exists to catch.
 
