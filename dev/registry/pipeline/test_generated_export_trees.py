@@ -170,7 +170,9 @@ def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_supp
     assert not (revision_root / "export").exists()
     assert not (revision_root / "export_layouts").exists()
     assert (registry_root / "m303_orden_anual" / "manifest.toml").is_file()
-    construct_text = (revision_root / "constructs" / "0001-constructs.toml").read_text(encoding="utf-8")
+    construct_text = "".join(
+        path.read_text(encoding="utf-8") for path in sorted((revision_root / "constructs").glob("*.toml"))
+    )
     assert "modelo-390-2022-fichero-boe" not in construct_text
     assert "generated-modelo-390-2022-fichero" in construct_text
 

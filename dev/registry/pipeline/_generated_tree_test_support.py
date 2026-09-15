@@ -9,9 +9,10 @@ from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-from ..compiler.loader import load_modelo_directory, load_shared_catalogues
+from ..compiler.loader import load_registry_tree, load_shared_catalogues
 from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ._tree_validation import GeneratedExportTreeValidationContext
 from .candidate_staging import (
@@ -92,15 +93,27 @@ def supporting_modelos(tree: GeneratedExportTree) -> frozenset[str]:
 
 
 @cache
+def _bundled_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    """The bundled authoring tree compiled once through the canonical whole-tree loader.
+
+    A single modelo directory cannot stand in: revision facts resolve against
+    the compiled governed facts and against the other modelos a revision
+    references, and only the whole-tree load hydrates both.
+    """
+    return load_registry_tree(bundled_path("registry", "aeat"))
+
+
+@cache
 def bundled_revision_inspection(modelo: str, revision: str) -> RegistryRevisionInspection:
-    """The static admission facts of one bundled revision, loaded through the canonical directory loader.
+    """The static admission facts of one bundled revision, from the compiled bundled tree.
 
     Memoised per coordinate: the inspection is frozen and its inputs are
     checked-in registry sources that a test session never mutates.
     """
-    registry_root = bundled_path("registry", "aeat")
-    catalogues = load_shared_catalogues(registry_root)
-    definition = load_modelo_directory(registry_root / "modelos" / modelo)
+    modelos, catalogues = _bundled_registry()
+    definition = next((item for item in modelos if str(item.id) == modelo), None)
+    if definition is None:
+        raise AssertionError(f"modelo {modelo!r} is absent from the bundled registry")
     return RegistryRevisionInspection.from_revision(
         modelo=definition,
         revision=definition.revisions[revision],
@@ -116,7 +129,7 @@ def isolated_authorities(
 ) -> tuple[JoinedRecordDesign, SemanticMap, ExportTreeTransportProfile, RenderProfile, RenderProfileSourceEvidence]:
     """Return the real (joined, semantic map, transport, render profile, evidence) for one tree.
 
-    Loads only the selected modelo plus its shared catalogue and source evidence.
+    The revision inspection and catalogues come from the compiled bundled tree.
     The result is memoised per tree: every returned model is frozen, and its
     inputs are checked-in authoring sources that a test session never mutates.
     Tests derive defects with ``model_copy`` and stage their own on-disk trees.
@@ -127,7 +140,7 @@ def isolated_authorities(
     render_profile = load_render_profile(
         _REPOSITORY_ROOT / "dev" / "registry" / "render_profiles" / f"modelo_{tree.modelo}" / tree.epoch
     )
-    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    _modelos, catalogues = _bundled_registry()
     inspection = bundled_revision_inspection(tree.modelo, tree.revision)
     intermediate = load_record_design_intermediate(
         bundled_path(),

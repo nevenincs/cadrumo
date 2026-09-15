@@ -201,12 +201,12 @@ def _representative_profiles() -> tuple[TaxpayerProfile, ...]:
             tax_id="12345678Z",
             entity_type=EntityType.from_registry("natural_person"),
             fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
-            iva_regime=IVARegime("no_aplica"),
+            iva_regime=IVARegime("NO_APLICA"),
         ),
         TaxpayerProfile(
-            tax_id="B12345674", entity_type=EntityType.from_registry("legal_entity"), iva_regime=IVARegime("no_aplica")
+            tax_id="B12345674", entity_type=EntityType.from_registry("legal_entity"), iva_regime=IVARegime("NO_APLICA")
         ),
-        TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("no_aplica")),
+        TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("NO_APLICA")),
     )
 
 

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#modelo-verify-nonzero-guards'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:dce75ee9c207e17ed96c2a8160b85f43e0eb89d66bb61f0e32ace5636218e51f'
+body_hash: 'sha256:056aaa7572fdd21162da7688f20539d12aed0f95aaf7cd9c1de10e6c1db17ef9'
 related:
   - '[[2026-06-30-modelo-verify-nonzero-guards-adr]]'
   - '[[2026-06-30-modelo-verify-nonzero-guards-audit]]'
@@ -17,9 +17,7 @@ related:
   - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m123-rirpf-exoneration-corpus]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m202-b2-resultado-formula-wiring]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m210-inmobiliaria-e2e]]'
-  - '[[2026-07-01-modelo-verify-nonzero-guards-exec]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit]]'
-  - '[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-exec]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit]]'
 ---
 
@@ -43,11 +41,9 @@ Auto-generated index of all documents tagged with `#modelo-verify-nonzero-guards
 ### exec
 
 - `2026-06-30-modelo-verify-nonzero-guards-ledger` - `modelo-verify-nonzero-guards` ledger
-- `2026-07-01-modelo-verify-nonzero-guards-exec` - M123 exoneration grounding re-verification
 - `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m123-rirpf-exoneration-corpus` - M123 RIRPF exoneration corpus deferral resolution
 - `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m202-b2-resultado-formula-wiring` - M202 B2 resultado previo formula-wiring deferral resolution
 - `2026-07-01-modelo-verify-nonzero-guards-exec-dfr-m210-inmobiliaria-e2e` - M210 inmobiliaria silent-zero advisory end-to-end resolution
-- `2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-exec` - M202 deferred items grounded decisions
 
 ### plan
 

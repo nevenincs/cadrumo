@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-test-signal'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:e624f85315e5edd05fa43d80960d9930dc7f03330ee60d911d3e9336d00e2f66'
+body_hash: 'sha256:3012116dde13eefd13267f1924b7e7c6de522a0cdd3337c671cde47e0683bc52'
 related:
   - '[[2026-09-11-registry-test-signal-reference]]'
 ---
@@ -19,4 +19,4 @@ Auto-generated index of all documents tagged with `#registry-test-signal`.
 
 ### reference
 
-- `2026-09-11-registry-test-signal-reference` - `registry-test-signal` reference: lane-aware pytest signal reduction
+- `2026-09-11-registry-test-signal-reference` - `registry-test-signal` reference: `delta-aware signal verification`

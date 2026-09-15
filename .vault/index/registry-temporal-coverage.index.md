@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-09-11'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:dbb918a3568f56a201d500c8bbcb0af6136791aeb0f5836dedc83a1ea1cec633'
+body_hash: 'sha256:1dccb92c1cd586fb8cc3dd53ede3adf22dc2a8f22c7259ef06454c77279b12a6'
 related:
-  - '[[2026-08-14-registry-temporal-coverage-W01-P09-S32]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-audit]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
@@ -53,27 +52,10 @@ related:
   - '[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]'
   - '[[2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research]]'
   - '[[2026-09-07-registry-temporal-coverage-s32-in-file-enrollment-census-review-audit]]'
-  - '[[2026-09-10-registry-temporal-coverage-W01-P01-S01]]'
-  - '[[2026-09-10-registry-temporal-coverage-W01-P01-S02]]'
-  - '[[2026-09-10-registry-temporal-coverage-W01-P02-S03]]'
-  - '[[2026-09-10-registry-temporal-coverage-W01-P02-S04]]'
-  - '[[2026-09-10-registry-temporal-coverage-W01-P02-S05]]'
-  - '[[2026-09-10-registry-temporal-coverage-W01-P02-S06]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P09-S24]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P09-S25]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P09-S26]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P10-S27]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P10-S28]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P11-S29]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P11-S30]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P11-S31]]'
-  - '[[2026-09-10-registry-temporal-coverage-W05-P11-S32]]'
-  - '[[2026-09-10-registry-temporal-coverage-W06-P12-S33]]'
-  - '[[2026-09-10-registry-temporal-coverage-W06-P12-S34]]'
-  - '[[2026-09-10-registry-temporal-coverage-W06-P12-summary]]'
   - '[[2026-09-10-registry-temporal-coverage-corpus-provenance-w01-p01-audit]]'
   - '[[2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-adr]]'
   - '[[2026-09-10-registry-temporal-coverage-corpus-tier-enforcement-research]]'
+  - '[[2026-09-10-registry-temporal-coverage-ledger]]'
   - '[[2026-09-10-registry-temporal-coverage-plan]]'
   - '[[2026-09-10-registry-temporal-coverage-w01-p02-provenance-authority-review-audit]]'
   - '[[2026-09-10-registry-temporal-coverage-w06-provenance-closure-audit]]'
@@ -133,25 +115,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 ### exec
 
 - `2026-08-14-registry-temporal-coverage-ledger` - `registry-temporal-coverage` ledger
-- `2026-08-14-registry-temporal-coverage-W01-P09-S32` - Reconcile the already-landed property-based Modelo 303 semantic-map census that discovers every authored design epoch dynamically, then extend temporal drift detection beyond year-token filenames to module-level literal (modelo, revision) enrolment collections. Derive the expected universe from the canonical law-selected temporal projection, require every exclusion to be an explicit source-digest-bound per-subject pin that goes dormant on reissue, and prove detector teeth with isolated yearless fixtures whose removed or altered pair reports the exact missing or extra identity without frozen corpus counts or double-counting imported collections.
-- `2026-09-10-registry-temporal-coverage-W01-P01-S01` - Define the derived normative-corpus provenance classifier and its file-resolution contract
-- `2026-09-10-registry-temporal-coverage-W01-P01-S02` - Prove attested, presumptive, authored, and out-of-scope provenance classifications with isolated corpus fixtures
-- `2026-09-10-registry-temporal-coverage-W01-P02-S03` - Bind derived provenance to legal-reference evidence-tier validation and correct the stale corpus-tier coverage statement
-- `2026-09-10-registry-temporal-coverage-W01-P02-S04` - Exercise accepted, presumptive-exception, and authored-refusal legal-reference cases through the real validator
-- `2026-09-10-registry-temporal-coverage-W01-P02-S05` - Expose provenance classification through the validated authority without a second resolver path
-- `2026-09-10-registry-temporal-coverage-W01-P02-S06` - Verify validated-authority publication preserves the provenance-bound legal authority contract
-- `2026-09-10-registry-temporal-coverage-W05-P09-S24` - Replace the hand-shaped Orden HAC/1526/2024 article corpus capture with official BOE-derived text
-- `2026-09-10-registry-temporal-coverage-W05-P09-S25` - Replace the hand-shaped Orden HAC/1526/2024 final-provision corpus capture with official BOE-derived text
-- `2026-09-10-registry-temporal-coverage-W05-P09-S26` - Re-ground the Censo legal catalogue entries to the replaced Orden HAC/1526/2024 corpus evidence
-- `2026-09-10-registry-temporal-coverage-W05-P10-S27` - Replace the hand-shaped Orden EHA/3290/2008 corpus capture with official BOE-derived article captures
-- `2026-09-10-registry-temporal-coverage-W05-P10-S28` - Re-ground the IRNR legal catalogue entries to the replaced Orden EHA/3290/2008 corpus evidence
-- `2026-09-10-registry-temporal-coverage-W05-P11-S29` - Replace the Ley 35/2006 article 48 corpus capture with official text separated from editorial gloss
-- `2026-09-10-registry-temporal-coverage-W05-P11-S30` - Re-ground the IRPF legal catalogue entry to the repaired Ley 35/2006 article 48 corpus evidence
-- `2026-09-10-registry-temporal-coverage-W05-P11-S31` - Replace the Ley 12/2002 corpus capture with official BOE-derived text
-- `2026-09-10-registry-temporal-coverage-W05-P11-S32` - Re-ground the IVA legal catalogue entry to the replaced Ley 12/2002 corpus evidence
-- `2026-09-10-registry-temporal-coverage-W06-P12-S33` - Assert every committed legal catalogue entry satisfies its provenance-bound filing-authority contract
-- `2026-09-10-registry-temporal-coverage-W06-P12-S34` - Verify normative corpus catalogue resolution preserves provenance classification without weakening byte-integrity checks
-- `2026-09-10-registry-temporal-coverage-W06-P12-summary` - `registry-temporal-coverage` `W06.P12` summary
+- `2026-09-10-registry-temporal-coverage-ledger` - `registry-temporal-coverage` ledger
 
 ### plan
 
