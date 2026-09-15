@@ -358,7 +358,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
                         quantity=Decimal("1"),
                         unit_price=Decimal("100.00"),
                         subtotal=Decimal("100.00"),
-                        iva_rate=IvaRate._from_registry("RATE_21"),
+                        iva_rate=IvaRate.from_registry("RATE_21"),
                         iva_amount=Decimal("21.00"),
                     ),
                 ),

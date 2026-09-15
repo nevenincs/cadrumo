@@ -114,7 +114,7 @@ def _modelo_303_iva_revision() -> ModeloRevision:
             "modelo-303-iva-repercutido-general-cuota",
             categories=(IvaCategory("domestic_general"),),
             rate_kinds=(IvaRateKind("general"),),
-            flow_direction=IvaFlowDirection._from_registry("repercutido"),
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
         ),
         _iva_binding(
             "modelo-303-iva-soportado-interiores-cuota",
@@ -124,7 +124,7 @@ def _modelo_303_iva_revision() -> ModeloRevision:
                 IvaCategory("domestic_super_reduced"),
             ),
             rate_kinds=(IvaRateKind("general"), IvaRateKind("reduced"), IvaRateKind("super_reduced")),
-            flow_direction=IvaFlowDirection._from_registry("soportado"),
+            flow_direction=IvaFlowDirection.from_registry("soportado"),
         ),
     )
 
@@ -230,11 +230,11 @@ def _transaction(
             "iva_amount": iva_amount,
             "iva_category": iva_category,
             "deduction_fact_kind": (
-                IvaDeductionFactKind._from_registry("domestic_current") if carries_input_iva else None
+                IvaDeductionFactKind.from_registry("domestic_current") if carries_input_iva else None
             ),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                    authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                     source_locator=f"test-invoice:{provider_id}",
                     evidence_digest="a" * 64,
                 )
@@ -256,7 +256,7 @@ def _transaction(
 def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> None:
     transaction = _transaction("direct-investment").model_copy(
         update={
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_investment"),
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_investment"),
             "investment_asset_id": "asset-direct",
             "prorrata_sector_id": "sector-a",
         }
@@ -277,7 +277,7 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
 def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> None:
     transaction = _transaction("direct-investment-valid").model_copy(
         update={
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_investment"),
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_investment"),
             "investment_asset_id": "asset-direct",
             "prorrata_sector_id": "sector-a",
         }
@@ -290,7 +290,7 @@ def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> N
                 acquisition_year=2026,
                 cuota_soportada=Decimal("21.00"),
                 prorrata_inicial_pct=Decimal("100"),
-                kind=BienInversionKind._from_registry("mueble"),
+                kind=BienInversionKind.from_registry("mueble"),
                 acquisition_ledger_id=transaction.transaction_id,
                 prorrata_sector_id="sector-a",
             ),
@@ -348,7 +348,7 @@ def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -
     assert observation.transaction_date == date(2026, 4, 5)
     assert observation.category == IvaCategory("domestic_general")
     assert observation.rate_kind is IvaRateKind("general")
-    assert observation.flow_direction is IvaFlowDirection._from_registry("soportado")
+    assert observation.flow_direction is IvaFlowDirection.from_registry("soportado")
     assert observation.base_amount == transaction.taxable_base
     assert observation.iva_amount == transaction.iva_amount
 
@@ -423,7 +423,7 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
     observation = result.observations[0]
     assert observation.category == IvaCategory("domestic_reduced")
     assert observation.rate_kind is IvaRateKind("reduced")
-    assert observation.flow_direction is IvaFlowDirection._from_registry("repercutido")
+    assert observation.flow_direction is IvaFlowDirection.from_registry("repercutido")
     assert observation.iva_amount == Decimal("10.00")
 
 
@@ -466,7 +466,7 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
     assert reference.transaction_id == transaction.transaction_id
     assert reference.transaction_date == date(2026, 4, 5)
     assert reference.reference.year == 2026
-    assert reference.reference.kind is ProrrataKind._from_registry("provisional")
+    assert reference.reference.kind is ProrrataKind.from_registry("provisional")
     assert reference.reference.regime is ProrrataRegime("general")
     assert reference.base_amount == Decimal("200.00")
     assert reference.input_iva_amount == Decimal("42.00")
@@ -521,7 +521,7 @@ def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation
         period=_Q2_2026,
     )
 
-    assert result.observations[0].flow_direction is IvaFlowDirection._from_registry("repercutido")
+    assert result.observations[0].flow_direction is IvaFlowDirection.from_registry("repercutido")
     assert result.prorrata_references == ()
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE
 

@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Protocol, override
+from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel
 
@@ -69,7 +69,7 @@ if TYPE_CHECKING:
     from .secret_submission import EphemeralSecretBroker
 
 
-class SupervisorHost(Protocol):
+class SupervisorHost:
     if TYPE_CHECKING:
         registry: OperationRegistry
         _authority_operation: PinnedAuthorityOperation
@@ -140,12 +140,12 @@ class SupervisorHost(Protocol):
 
         def _validate_cancelled_settlement(self, snapshot: OperationPersistedSnapshot) -> None: ...
 
-        async def _renew_while_executing(
+        async def _renew_while_executing[ResultT](
             self,
             *,
             identity: OperationIdentity,
-            executor: Coroutine[None, None, OperationReference | None],
-        ) -> OperationReference | None: ...
+            executor: Coroutine[None, None, ResultT],
+        ) -> ResultT: ...
 
         @staticmethod
         async def _wait_for_executor_or_deadline(
@@ -165,7 +165,7 @@ class SupervisorHost(Protocol):
             self,
             snapshot: OperationPersistedSnapshot,
             definition: OperationDefinition,
-            continuation: OperationConsumedInteraction,
+            checkpoint: OperationPendingInteraction | OperationConsumedInteraction,
         ) -> OperationPersistedSnapshot: ...
 
         def _continuation_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None: ...

@@ -105,7 +105,7 @@ def _profile_export_value(
     deliberately falls through to the ordinary path: the value stays a typed
     :class:`~datetime.date` and the renderer formats it from the row's declared
     type, so adding a second date rendering here would put a formatting
-    authority beside ``_format_xml_dictionary_value`` that could silently
+    authority beside ``format_xml_dictionary_value`` that could silently
     disagree with it on a filed artefact.
     """
     provider = binding.provider

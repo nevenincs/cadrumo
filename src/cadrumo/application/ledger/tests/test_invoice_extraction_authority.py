@@ -83,7 +83,7 @@ class TestTheResolverFollowsTheRateAuthority:
             operation: PinnedAuthorityOperation,
         ):
             resolved = real_lookup_rate(member_state, kind, on_date, operation=operation)
-            if member_state is EUMemberState._from_registry("es") and kind is IvaRateKind("general"):
+            if member_state is EUMemberState.from_registry("es") and kind is IvaRateKind("general"):
                 return resolved.model_copy(update={"pct": _FABRICATED_PCT})
             return resolved
 

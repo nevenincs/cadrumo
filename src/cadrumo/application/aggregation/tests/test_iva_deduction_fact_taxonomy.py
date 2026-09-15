@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _invoice_provenance(locator: str) -> IvaDeductionClassificationProvenance:
     return IvaDeductionClassificationProvenance(
-        authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+        authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
         source_locator=locator,
         evidence_digest="a" * 64,
     )
@@ -37,10 +37,10 @@ def _domestic_current_candidate() -> IvaLedgerCandidate:
         transaction_date=date(2026, 4, 10),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
-        flow_direction=IvaFlowDirection._from_registry("soportado"),
+        flow_direction=IvaFlowDirection.from_registry("soportado"),
         base_amount=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
         deduction_provenance=_invoice_provenance("invoice:purchase-2026-001"),
         cash_accounting_treatment=IvaCashAccountingTreatment("none"),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
@@ -53,7 +53,7 @@ def test_candidate_freeze_preserves_exact_deduction_authority_losslessly() -> No
 
         observation = validate_iva_ledger_observation(candidate, operation=_authority_operation_for_test)
 
-        assert observation.deduction_fact_kind == IvaDeductionFactKind._from_registry("domestic_current")
+        assert observation.deduction_fact_kind == IvaDeductionFactKind.from_registry("domestic_current")
         assert observation.deduction_provenance == candidate.deduction_provenance
         assert observation.investment_asset_id is None
         assert observation.rectifies_ledger_id is None
@@ -61,11 +61,11 @@ def test_candidate_freeze_preserves_exact_deduction_authority_losslessly() -> No
 
 def test_investment_kind_requires_an_asset_and_current_kind_forbids_one() -> None:
     payload = _domestic_current_candidate().model_dump()
-    payload["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("domestic_investment")
+    payload["deduction_fact_kind"] = IvaDeductionFactKind.from_registry("domestic_investment")
     with pytest.raises(ValueError, match="requires investment_asset_id"):
         IvaLedgerCandidate.model_validate(payload)
 
-    payload["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("domestic_current")
+    payload["deduction_fact_kind"] = IvaDeductionFactKind.from_registry("domestic_current")
     payload["investment_asset_id"] = "asset-001"
     with pytest.raises(ValueError, match="cannot carry investment_asset_id"):
         IvaLedgerCandidate.model_validate(payload)
@@ -78,12 +78,12 @@ def test_signed_rectification_with_one_corrected_fact_is_accepted_once() -> None
             transaction_date=date(2026, 4, 11),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection._from_registry("soportado"),
+            flow_direction=IvaFlowDirection.from_registry("soportado"),
             base_amount=Decimal("-100.00"),
             iva_amount=Decimal("-21.00"),
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("rectification"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("rectification"),
             deduction_provenance=IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("rectification_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("rectification_evidence"),
                 source_locator="invoice-rectification:2026-001",
                 evidence_digest="b" * 64,
             ),
@@ -116,10 +116,10 @@ def test_signed_rectification_with_one_corrected_fact_is_accepted_once() -> None
 @pytest.mark.parametrize(
     ("category", "flow"),
     (
-        (IvaCategory("import_third_country"), IvaFlowDirection._from_registry("soportado")),
+        (IvaCategory("import_third_country"), IvaFlowDirection.from_registry("soportado")),
         (
             IvaCategory("intra_community_acquisition_reverse_charge"),
-            IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+            IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
         ),
     ),
 )
@@ -136,9 +136,9 @@ def test_rectification_preserves_the_corrected_import_or_intra_eu_legal_axes(
             flow_direction=flow,
             base_amount=Decimal("-100.00"),
             iva_amount=Decimal("-21.00"),
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("rectification"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("rectification"),
             deduction_provenance=IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("rectification_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("rectification_evidence"),
                 source_locator=f"rectification:{category.value}",
                 evidence_digest="c" * 64,
             ),
@@ -156,13 +156,13 @@ def test_rectification_refuses_category_flow_mismatch_and_exempt_rate() -> None:
         "transaction_date": date(2026, 4, 11),
         "category": IvaCategory("import_third_country"),
         "rate_kind": IvaRateKind("general"),
-        "flow_direction": IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+        "flow_direction": IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
         "base_amount": Decimal("-100.00"),
         "iva_amount": Decimal("-21.00"),
         "observation_role": IvaLedgerObservationRole.SETTLEMENT,
-        "deduction_fact_kind": IvaDeductionFactKind._from_registry("rectification"),
+        "deduction_fact_kind": IvaDeductionFactKind.from_registry("rectification"),
         "deduction_provenance": IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("rectification_evidence"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("rectification_evidence"),
             source_locator="rectification:invalid",
             evidence_digest="d" * 64,
         ),
@@ -170,7 +170,7 @@ def test_rectification_refuses_category_flow_mismatch_and_exempt_rate() -> None:
     }
     with pytest.raises(ValueError, match="category and input IVA flow"):
         IvaLedgerCandidate.model_validate(payload)
-    payload["flow_direction"] = IvaFlowDirection._from_registry("soportado")
+    payload["flow_direction"] = IvaFlowDirection.from_registry("soportado")
     payload["rate_kind"] = IvaRateKind("exempt")
     with pytest.raises(ValueError, match="cannot use the exempt rate tier"):
         IvaLedgerCandidate.model_validate(payload)
@@ -182,13 +182,13 @@ def test_reagp_requires_its_exact_category_flow_and_rate_axes() -> None:
         "transaction_date": date(2026, 4, 11),
         "category": IvaCategory("reagp_compensation"),
         "rate_kind": IvaRateKind("exempt"),
-        "flow_direction": IvaFlowDirection._from_registry("soportado"),
+        "flow_direction": IvaFlowDirection.from_registry("soportado"),
         "base_amount": Decimal("100.00"),
         "iva_amount": Decimal("12.00"),
         "observation_role": IvaLedgerObservationRole.SETTLEMENT,
-        "deduction_fact_kind": IvaDeductionFactKind._from_registry("reagp_compensation"),
+        "deduction_fact_kind": IvaDeductionFactKind.from_registry("reagp_compensation"),
         "deduction_provenance": IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("reagp_receipt"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("reagp_receipt"),
             source_locator="reagp-receipt:001",
             evidence_digest="e" * 64,
         ),
@@ -205,10 +205,10 @@ def _investment_candidate(*, ledger_id: str, asset_id: str, sector_id: str) -> I
         transaction_date=date(2026, 4, 10),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
-        flow_direction=IvaFlowDirection._from_registry("soportado"),
+        flow_direction=IvaFlowDirection.from_registry("soportado"),
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_investment"),
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_investment"),
         deduction_provenance=_invoice_provenance(f"invoice:{ledger_id}"),
         investment_asset_id=asset_id,
         prorrata_sector_id=sector_id,
@@ -224,7 +224,7 @@ def _investment_record(*, ledger_id: str, asset_id: str, sector_id: str) -> Bien
         acquisition_year=2026,
         cuota_soportada=Decimal("210.00"),
         prorrata_inicial_pct=Decimal("100"),
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         acquisition_ledger_id=ledger_id,
         prorrata_sector_id=sector_id,
     )

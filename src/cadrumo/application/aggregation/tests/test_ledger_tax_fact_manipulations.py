@@ -138,7 +138,7 @@ def test_base_iva_rederivation_without_invoice_evidence_is_refused() -> None:
 
 # --- behavior contract: business_pct / usage-ratio proportionality propagates -------------
 # arrendamiento_local maps to a first-slice Modelo 100 deductible casilla.
-_DEDUCTIBLE_CATEGORY = SpendingCategory._from_registry("arrendamiento_local")
+_DEDUCTIBLE_CATEGORY = SpendingCategory.from_registry("arrendamiento_local")
 
 
 def _deductible_total(*, classification: BusinessClassification, business_pct: Decimal | None) -> Decimal:

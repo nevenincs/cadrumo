@@ -58,7 +58,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SUPPLY_DATE = date(2025, 7, 15)
 _DEFAULT_OSS_REGIME = OssIossRegime("union_scheme")
-_DEFAULT_DESTINATION = EUMemberState._from_registry("de")
+_DEFAULT_DESTINATION = EUMemberState.from_registry("de")
 _DEFAULT_RATE_KIND = IvaRateKind("general")
 _DEFAULT_TRANSACTION_KIND = TransactionKind("oss_union_services")
 
@@ -113,7 +113,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
                 "ledger_id": "ledger-1",
                 "transaction_date": _SUPPLY_DATE,
                 "regime": OssIossRegime("union_scheme"),
-                "destination_member_state": EUMemberState._from_registry("de"),
+                "destination_member_state": EUMemberState.from_registry("de"),
                 "rate_kind": IvaRateKind("general"),
                 "invoice_direction": InvoiceKind.ISSUED,
                 "transaction_kind": TransactionKind("oss_union_services"),
@@ -150,7 +150,7 @@ def test_validation_accepts_candidate_matching_destination_de_general_rate() -> 
     Base 100 EUR with IVA 19 EUR satisfies the destination-MS rate."""
 
     candidate = _candidate(
-        destination=EUMemberState._from_registry("de"),
+        destination=EUMemberState.from_registry("de"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=Decimal("19"),
@@ -169,13 +169,13 @@ def test_validation_accepts_candidate_matching_destination_fr_general_rate() -> 
     Germany."""
 
     candidate = _candidate(
-        destination=EUMemberState._from_registry("fr"),
+        destination=EUMemberState.from_registry("fr"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=Decimal("20"),
     )
     observation = validate_oss_ioss_observation(candidate)
-    assert observation.destination_member_state is EUMemberState._from_registry("fr")
+    assert observation.destination_member_state is EUMemberState.from_registry("fr")
     assert observation.iva_amount == Decimal("20")
 
 
@@ -186,7 +186,7 @@ def test_validation_rejects_candidate_with_iva_off_by_six_euros_on_destination_d
     data."""
 
     candidate = _candidate(
-        destination=EUMemberState._from_registry("de"),
+        destination=EUMemberState.from_registry("de"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=Decimal("25"),
@@ -202,7 +202,7 @@ def test_validation_rejects_zero_iva_when_destination_rate_is_non_zero() -> None
     blocker."""
 
     candidate = _candidate(
-        destination=EUMemberState._from_registry("de"),
+        destination=EUMemberState.from_registry("de"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=Decimal("0"),
@@ -218,7 +218,7 @@ def test_validation_accepts_one_cent_rounding_drift() -> None:
     persisted 19.01 EUR is within the one-cent tolerance."""
 
     candidate = _candidate(
-        destination=EUMemberState._from_registry("de"),
+        destination=EUMemberState.from_registry("de"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=Decimal("19.01"),
@@ -232,7 +232,7 @@ def test_validation_rejects_beyond_tolerance_drift() -> None:
     one-cent tolerance and the wrapper must reject."""
 
     candidate = _candidate(
-        destination=EUMemberState._from_registry("de"),
+        destination=EUMemberState.from_registry("de"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=Decimal("19.02"),
@@ -249,7 +249,7 @@ def test_validation_attaches_diagnostic_context_to_the_error() -> None:
 
     candidate = _candidate(
         ledger_id="line-bad-iva",
-        destination=EUMemberState._from_registry("de"),
+        destination=EUMemberState.from_registry("de"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=Decimal("25"),
@@ -274,7 +274,7 @@ def test_validation_raises_rate_not_found_for_pre_registry_date() -> None:
 
     candidate = _candidate(
         transaction_date=date(1900, 1, 1),
-        destination=EUMemberState._from_registry("de"),
+        destination=EUMemberState.from_registry("de"),
         rate_kind=IvaRateKind("general"),
         base=Decimal("100"),
         iva=Decimal("19"),
@@ -366,7 +366,7 @@ def test_aggregator_returns_zero_when_no_candidates_match_a_binding() -> None:
     candidates = [
         _candidate(
             ledger_id="a",
-            destination=EUMemberState._from_registry("it"),  # not the DE binding's selector
+            destination=EUMemberState.from_registry("it"),  # not the DE binding's selector
             base=Decimal("100"),
             iva=Decimal("22"),  # IT general = 22 %
         ),

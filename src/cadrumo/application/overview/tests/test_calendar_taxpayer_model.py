@@ -32,8 +32,8 @@ def _landlord_profile() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("capital_inmobiliario")}),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("exento"),
     )
 
@@ -79,8 +79,8 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         iva_regime=IVARegime("general"),
     )
 
@@ -230,9 +230,9 @@ def _fully_enrolled_autonomo() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("general"),
         has_employees=True,
         pays_professionals_with_retencion=True,
@@ -256,9 +256,9 @@ def _objetiva_autonomo() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("objetiva"),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         iva_regime=IVARegime("simplificado"),
     )
 
@@ -515,8 +515,8 @@ def _legal_entity() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType._from_registry("legal_entity"),
-        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        entity_type=EntityType.from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("general"),
     )
 
@@ -526,7 +526,7 @@ def _attribution_entity() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="E12345674",
-        entity_type=EntityType._from_registry("attribution_entity"),
+        entity_type=EntityType.from_registry("attribution_entity"),
         iva_regime=IVARegime("general"),
     )
 
@@ -577,8 +577,8 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
 
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
         iva_regime=IVARegime("general"),
         bienes_extranjero_above_threshold=False,
         monedas_virtuales_extranjero_above_threshold=False,

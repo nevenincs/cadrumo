@@ -27,7 +27,7 @@ def _record(identifier: str, *, initial_percentage: Decimal) -> BienInversionIva
         acquisition_year=2024,
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=initial_percentage,
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         acquisition_ledger_id=f"ledger:{identifier}",
     )
 
@@ -39,7 +39,7 @@ def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(*, operati
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 definitive_percentage=Decimal("60"),
                 definitive_volume_con_derecho=Decimal("600.00"),

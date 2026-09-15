@@ -157,7 +157,7 @@ class TestTheChannelReachesTheAssembly:
                 declared=DeclaredFacts(
                     supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
                     customer_tax_status=DeclaredFact(
-                        value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED
+                        value=CustomerTaxStatus.from_registry("b2c_consumer"), source=_ASSERTED
                     ),
                 ),
                 issuer_country_code="DE",
@@ -178,13 +178,13 @@ class TestTheChannelReachesTheAssembly:
                 declared=DeclaredFacts(
                     supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
                     customer_tax_status=DeclaredFact(
-                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                        value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
                     issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
                     customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
                 ),
                 issuer_country_code="ES",
@@ -211,7 +211,7 @@ class TestTheEnvelopeRefusesLaunderedBacking:
         with pytest.raises(ValueError, match="must not carry a document anchor"):
             ClassifierInputFact(
                 name="customer_tax_status",
-                value=CustomerTaxStatus._from_registry("b2c_consumer").value,
+                value=CustomerTaxStatus.from_registry("b2c_consumer").value,
                 source=_ASSERTED,
                 anchor="Cliente particular",
             )
@@ -221,7 +221,7 @@ class TestTheEnvelopeRefusesLaunderedBacking:
         with pytest.raises(ValueError, match="vouched for by the operator"):
             ClassifierInputFact(
                 name="customer_tax_status",
-                value=CustomerTaxStatus._from_registry("b2c_consumer").value,
+                value=CustomerTaxStatus.from_registry("b2c_consumer").value,
                 source=_ASSERTED,
                 authority="censo",
             )
@@ -234,7 +234,7 @@ class TestTheEnvelopeRefusesLaunderedBacking:
         """
         fact = ClassifierInputFact(
             name="customer_tax_status",
-            value=CustomerTaxStatus._from_registry("b2c_consumer").value,
+            value=CustomerTaxStatus.from_registry("b2c_consumer").value,
             source=_ASSERTED,
         )
 

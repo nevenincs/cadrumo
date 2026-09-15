@@ -59,7 +59,7 @@ def _ledger_binding() -> BindingDefinition:
             "kind": "ledger_iva_aggregation",
             "categories": (IvaCategory("domestic_general"),),
             "rate_kinds": (IvaRateKind("general"),),
-            "flow_direction": IvaFlowDirection._from_registry("repercutido"),
+            "flow_direction": IvaFlowDirection.from_registry("repercutido"),
             "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
             "cash_accounting_treatments": (IvaCashAccountingTreatment("none"),),
             "fact": "iva_amount_sum",

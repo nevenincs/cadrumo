@@ -64,12 +64,12 @@ def test_monoparental_required_is_registration_agnostic() -> None:
     bond, so every non-married situation — including a de-facto couple whether
     or not it is registered — is monoparental-only; only CASADO opts as a
     couple (Art. 82.1.1ª)."""
-    assert situacion_familiar_monoparental_required(SituacionFamiliar._from_registry("casado")) is False
+    assert situacion_familiar_monoparental_required(SituacionFamiliar.from_registry("casado")) is False
     for situacion in (
-        SituacionFamiliar._from_registry("soltero"),
-        SituacionFamiliar._from_registry("separado_divorciado"),
-        SituacionFamiliar._from_registry("pareja_hecho_registrada"),
-        SituacionFamiliar._from_registry("pareja_hecho_no_registrada"),
+        SituacionFamiliar.from_registry("soltero"),
+        SituacionFamiliar.from_registry("separado_divorciado"),
+        SituacionFamiliar.from_registry("pareja_hecho_registrada"),
+        SituacionFamiliar.from_registry("pareja_hecho_no_registrada"),
     ):
         assert situacion_familiar_monoparental_required(situacion) is True, situacion
 
@@ -97,10 +97,10 @@ def test_joint_non_married_without_children_fails() -> None:
     """Art. 82.1.2ª: a joint declaration for a non-married situation with no
     minor children cannot form a unidad familiar — every such situation fails."""
     for situacion in (
-        SituacionFamiliar._from_registry("soltero"),
-        SituacionFamiliar._from_registry("separado_divorciado"),
-        SituacionFamiliar._from_registry("pareja_hecho_registrada"),
-        SituacionFamiliar._from_registry("pareja_hecho_no_registrada"),
+        SituacionFamiliar.from_registry("soltero"),
+        SituacionFamiliar.from_registry("separado_divorciado"),
+        SituacionFamiliar.from_registry("pareja_hecho_registrada"),
+        SituacionFamiliar.from_registry("pareja_hecho_no_registrada"),
     ):
         verdicts = _verdicts(_JOINT, situacion.value, "false")
         assert _has_failure(verdicts), situacion
@@ -116,8 +116,8 @@ def test_joint_non_married_with_children_passes() -> None:
     """Art. 82.1.2ª is satisfied when the monoparental unit has qualifying
     children."""
     for situacion in (
-        SituacionFamiliar._from_registry("soltero"),
-        SituacionFamiliar._from_registry("pareja_hecho_no_registrada"),
+        SituacionFamiliar.from_registry("soltero"),
+        SituacionFamiliar.from_registry("pareja_hecho_no_registrada"),
     ):
         verdicts = _verdicts(_JOINT, situacion.value, "true")
         assert not _has_failure(verdicts), situacion
@@ -126,14 +126,14 @@ def test_joint_non_married_with_children_passes() -> None:
 def test_married_joint_passes_without_children() -> None:
     """Art. 82.1.1ª: a married couple opts for conjunta as a couple; children
     are optional, so a childless married joint declaration must not fail."""
-    verdicts = _verdicts(_JOINT, SituacionFamiliar._from_registry("casado").value, "false")
+    verdicts = _verdicts(_JOINT, SituacionFamiliar.from_registry("casado").value, "false")
     assert not _has_failure(verdicts)
 
 
 def test_individual_taxation_never_fails() -> None:
     """The rule scopes to joint declarations; an individual declaration with a
     childless non-married situation is out of scope and passes."""
-    verdicts = _verdicts(_INDIVIDUAL, SituacionFamiliar._from_registry("soltero").value, "false")
+    verdicts = _verdicts(_INDIVIDUAL, SituacionFamiliar.from_registry("soltero").value, "false")
     assert not _has_failure(verdicts)
 
 
@@ -146,15 +146,15 @@ def test_blank_situacion_passes() -> None:
 def test_antitautology_children_flag_flips_the_verdict() -> None:
     """A tautological check would return the same outcome regardless of the
     children fact; the monoparental rule must diverge on it."""
-    without = _verdicts(_JOINT, SituacionFamiliar._from_registry("soltero").value, "false")
-    with_children = _verdicts(_JOINT, SituacionFamiliar._from_registry("soltero").value, "true")
+    without = _verdicts(_JOINT, SituacionFamiliar.from_registry("soltero").value, "false")
+    with_children = _verdicts(_JOINT, SituacionFamiliar.from_registry("soltero").value, "true")
     assert _has_failure(without) and not _has_failure(with_children)
 
 
 def test_verdict_context_carries_only_check_and_fields() -> None:
     """The redacted verdict never leaks a raw answer — only the stable check
     token and code-identifier field names."""
-    failure = next(v for v in _verdicts(_JOINT, SituacionFamiliar._from_registry("soltero").value, "false") if not v.ok)
+    failure = next(v for v in _verdicts(_JOINT, SituacionFamiliar.from_registry("soltero").value, "false") if not v.ok)
     assert set(failure.context) <= {"check", "fields"}
 
 
@@ -240,7 +240,7 @@ def test_engine_section_exit_blocks_monoparental_without_children_then_clears() 
     state = start_flow(definition, mode=FlowMode.CREATE)
     state = answer(definition, state, _TAXATION_TYPE_PAGE, _JOINT)
     state = next_page(definition, state)
-    state = answer(definition, state, _SITUACION_FAMILIAR_PAGE, SituacionFamiliar._from_registry("soltero").value)
+    state = answer(definition, state, _SITUACION_FAMILIAR_PAGE, SituacionFamiliar.from_registry("soltero").value)
     state = next_page(definition, state)
     state = answer(definition, state, _MINOR_CHILDREN_PAGE, "false")
 

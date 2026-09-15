@@ -272,7 +272,7 @@ def _seguro_enfermedad_person_counts(
     general_field = _required_renta_ledger_declaration(declarations, "insurance.count_field.general")
     disability_field = _required_renta_ledger_declaration(declarations, "insurance.count_field.discapacidad")
     record = profile_record
-    profile_schema = profile_decode_context.schema if profile_decode_context is not None else None
+    profile_schema = profile_decode_context.schema
     if record is None:
         try:
             repository = ProfileRecordRepository.for_current_session(
@@ -283,8 +283,6 @@ def _seguro_enfermedad_person_counts(
             profile_schema = repository.session.profile_decode_context.schema
         except ProfileNotFoundError:
             return {}
-    if profile_schema is None:
-        raise TypeError("renta profile overrides require a ProfileDecodeContext")
     counts = seguro_enfermedad_insured_counts_from_facts(
         profile_fact_index(record, profile_schema),
         filing_year=filing_year,

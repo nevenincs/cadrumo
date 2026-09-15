@@ -50,7 +50,7 @@ from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ES = IvaTerritorialScope._from_registry("es_mainland")
+_ES = IvaTerritorialScope.from_registry("es_mainland")
 _WHEN = date(2026, 3, 1)
 
 
@@ -73,7 +73,7 @@ def _facts(*, established: bool, stated: IvaCategory | None = None) -> DeclaredF
     return DeclaredFacts(
         issuer_scope=_fact(_ES),
         customer_scope=_fact(_ES),
-        customer_tax_status=_fact(CustomerTaxStatus._from_registry("b2b_iva_registered")),
+        customer_tax_status=_fact(CustomerTaxStatus.from_registry("b2b_iva_registered")),
         supply_nature=_fact(SupplyNature.GOODS),
         stated_category=stated_fact,
     )
@@ -438,7 +438,7 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         declared = DeclaredFacts(
             issuer_scope=_fact(_ES),
-            customer_scope=_fact(IvaTerritorialScope._from_registry("third_country")),
+            customer_scope=_fact(IvaTerritorialScope.from_registry("third_country")),
             stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
         )
         assembly = assemble_classification_criteria(
@@ -643,7 +643,7 @@ def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         declared = DeclaredFacts(
             issuer_scope=_fact(_ES),
-            customer_scope=_fact(IvaTerritorialScope._from_registry("third_country")),
+            customer_scope=_fact(IvaTerritorialScope.from_registry("third_country")),
             stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
         )
         assembly = assemble_classification_criteria(
@@ -691,7 +691,7 @@ def _counterparty_only_relief(
     """
     declared = DeclaredFacts(
         issuer_scope=_fact(_ES),
-        customer_tax_status=_fact(CustomerTaxStatus._from_registry("b2b_iva_registered")),
+        customer_tax_status=_fact(CustomerTaxStatus.from_registry("b2b_iva_registered")),
         supply_nature=_fact(SupplyNature.GOODS),
         stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
     )

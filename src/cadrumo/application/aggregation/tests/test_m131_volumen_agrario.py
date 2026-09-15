@@ -145,8 +145,8 @@ def test_a_capital_subsidy_is_excluded_but_a_current_one_is_not() -> None:
     this guards against is treating them as one thing: any rule keyed on the word
     "subvención" gets exactly one of them wrong.
     """
-    corriente = _agrarian_row("sub-corr", concepto_ingreso=ConceptoIngreso._from_registry("subvencion_corriente"))
-    capital = _agrarian_row("sub-cap", concepto_ingreso=ConceptoIngreso._from_registry("subvencion_capital"))
+    corriente = _agrarian_row("sub-corr", concepto_ingreso=ConceptoIngreso.from_registry("subvencion_corriente"))
+    capital = _agrarian_row("sub-cap", concepto_ingreso=ConceptoIngreso.from_registry("subvencion_capital"))
 
     assert _total(corriente) == Decimal("1000.00")
     assert _total(capital) == Decimal("0")
@@ -154,7 +154,7 @@ def test_a_capital_subsidy_is_excluded_but_a_current_one_is_not() -> None:
 
 def test_an_indemnity_is_excluded() -> None:
     """The other half of the art. 110.1.c) exclusion."""
-    assert _total(_agrarian_row("indem", concepto_ingreso=ConceptoIngreso._from_registry("indemnizacion"))) == Decimal(
+    assert _total(_agrarian_row("indem", concepto_ingreso=ConceptoIngreso.from_registry("indemnizacion"))) == Decimal(
         "0"
     )
 
@@ -183,7 +183,7 @@ def test_a_mixed_catalogue_sums_only_the_qualifying_rows() -> None:
         _agrarian_row(
             "drop-capital",
             amount=Decimal("400.00"),
-            concepto_ingreso=ConceptoIngreso._from_registry("subvencion_capital"),
+            concepto_ingreso=ConceptoIngreso.from_registry("subvencion_capital"),
         ),
     )
 

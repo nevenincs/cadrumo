@@ -306,8 +306,8 @@ def _taxpayer_profile() -> TaxpayerProfile:
         tax_id=_TAXPAYER_TAX_ID,
         iva_regime=IVARegime("general"),
         iva={
-            "tax_territory": M303TaxTerritory._from_registry("common_regime"),
-            "regime_composition": M303RegimeComposition._from_registry("general"),
+            "tax_territory": M303TaxTerritory.from_registry("common_regime"),
+            "regime_composition": M303RegimeComposition.from_registry("general"),
             "redeme_enrolled": False,
             "cash_accounting_regime_enrolled": False,
             "voluntary_sii_enrolled": False,

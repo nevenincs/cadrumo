@@ -186,7 +186,7 @@ def test_renta_ledger_m100_expense_reads_converted_eur_amount(operation: PinnedA
     """Already-correct comparator: gross_amount is the converted 900.00, not 1000.00."""
     tx = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
-        category_id=SpendingCategory._from_registry("cuotas_autonomos_ss").value,
+        category_id=SpendingCategory.from_registry("cuotas_autonomos_ss").value,
     )
     result = _classify_renta_transaction(
         tx,
@@ -218,7 +218,7 @@ def test_renta_ledger_m100_expense_taxable_base_fallback_is_converted(
     """
     tx = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
-        category_id=SpendingCategory._from_registry("cuotas_autonomos_ss").value,
+        category_id=SpendingCategory.from_registry("cuotas_autonomos_ss").value,
         taxable_base=Decimal("826.45"),
     )
     result = _classify_renta_transaction(
@@ -253,7 +253,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
     """
     tx_provisional = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
-        category_id=SpendingCategory._from_registry("cuotas_autonomos_ss").value,
+        category_id=SpendingCategory.from_registry("cuotas_autonomos_ss").value,
     )
     # A separate native amount from the module-level fixture (this test builds
     # its own linked invoice pair), so transaction_id is dropped and re-derived
@@ -271,7 +271,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
         quantity=Decimal("1"),
         unit_price=base_total_native,
         subtotal=base_total_native,
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=iva_total_native,
     )
     invoice = Invoice.model_validate(
@@ -422,7 +422,7 @@ def _converted_usd_invoice(
         quantity=Decimal("1"),
         unit_price=base_total,
         subtotal=base_total,
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=iva_total,
         oss_rate_kind=oss_rate_kind,
     )

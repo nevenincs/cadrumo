@@ -21,9 +21,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
             "720",
             2025,
             (
-                ForeignAssetObligationGroup._from_registry("cuentas"),
-                ForeignAssetObligationGroup._from_registry("valores_derechos_seguros"),
-                ForeignAssetObligationGroup._from_registry("inmuebles"),
+                ForeignAssetObligationGroup.from_registry("cuentas"),
+                ForeignAssetObligationGroup.from_registry("valores_derechos_seguros"),
+                ForeignAssetObligationGroup.from_registry("inmuebles"),
             ),
             {
                 "rd-1065-2007:art-42-bis",
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
         (
             "721",
             2024,
-            (ForeignAssetObligationGroup._from_registry("monedas_virtuales"),),
+            (ForeignAssetObligationGroup.from_registry("monedas_virtuales"),),
             {"rd-1065-2007:art-42-quater", "ley-58-2003:da-18"},
             {"aeat-modelo-721-procedure"},
         ),

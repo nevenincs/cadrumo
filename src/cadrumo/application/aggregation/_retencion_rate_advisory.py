@@ -107,6 +107,7 @@ from .retenciones import RetencionObservation, registry_work_income_retencion_tr
 from .source_mesh import CalculationSourceDiagnostic
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.deadlines.models import TaxpayerProfile
 
 #: Diagnostic ``source_kind`` for a fixed-rate administrator withholding whose
@@ -255,14 +256,21 @@ def administrador_retencion_rate_advisory_observations(
     return tuple(diagnostics)
 
 
-def _load_profile_for_bucket(bucket_id: str) -> TaxpayerProfile | None:
+def _load_profile_for_bucket(
+    bucket_id: str,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> TaxpayerProfile | None:
     """Load and project the active profile, treating unavailable state as unknown."""
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import projection_for_taxpayer
 
     try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=profile_decode_context,
+        ).load(bucket_id)
     except ProfileNotFoundError:
         return None
     except (OSError, ValueError):
@@ -313,7 +321,11 @@ def _profile_regime_hint(profile: TaxpayerProfile) -> bool | None:
     return None
 
 
-def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
+def _profile_suggests_sectoral_activity(
+    bucket_id: str | None,
+    *,
+    profile_decode_context: ProfileDecodeContext | None = None,
+) -> bool | None:
     """Return whether the active profile hints at a sectoral activity.
 
     A HINT, and everything below the first check is deliberately weak. The
@@ -336,9 +348,9 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     must never decide whether one fires -- see
     :func:`inferred_actividad_retencion_rate_advisory_observations`.
     """
-    if bucket_id is None:
+    if bucket_id is None or profile_decode_context is None:
         return None
-    profile = _load_profile_for_bucket(bucket_id)
+    profile = _load_profile_for_bucket(bucket_id, profile_decode_context=profile_decode_context)
     if profile is None:
         return None
     declared_hint = _declared_activity_hint(profile)
@@ -468,6 +480,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
     observations: Iterable[RentaIncomeObservation],
     *,
     bucket_id: str | None = None,
+    profile_decode_context: ProfileDecodeContext | None = None,
     resolver_id: str | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisories for inferred retención against governed activity rates.
@@ -498,6 +511,8 @@ def inferred_actividad_retencion_rate_advisory_observations(
     Args:
         observations: The actividad-económica income rows feeding the calculation.
         bucket_id: Bucket whose active profile words the sectoral advisory.
+        profile_decode_context: Pinned schema context used when reading that
+            profile; absence keeps the wording explicitly unconfirmed.
         resolver_id: Identifier of the resolver emitting these diagnostics,
             stamped onto each one so the operator can attribute an advisory to
             the source that raised it. Every sibling diagnostic builder in the
@@ -531,7 +546,10 @@ def inferred_actividad_retencion_rate_advisory_observations(
             # suppress it, because the profile cannot establish the fact that
             # would justify suppression (see _profile_suggests_sectoral_activity).
             if sectoral_hint is _UNRESOLVED_HINT:
-                sectoral_hint = _profile_suggests_sectoral_activity(bucket_id)
+                sectoral_hint = _profile_suggests_sectoral_activity(
+                    bucket_id,
+                    profile_decode_context=profile_decode_context,
+                )
             diagnostics.append(
                 _sectoral_rate_diagnostic(
                     observation,

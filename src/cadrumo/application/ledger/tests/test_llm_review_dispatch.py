@@ -32,7 +32,7 @@ def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
         transaction_id=tx_id,
         provenance="llm:test:test-model",
         classification=BusinessClassification.BUSINESS,
-        category=SpendingCategory._from_registry("material_oficina"),
+        category=SpendingCategory.from_registry("material_oficina"),
         confidence=Decimal("0.9"),
         reason="focused dispatch fixture",
     )

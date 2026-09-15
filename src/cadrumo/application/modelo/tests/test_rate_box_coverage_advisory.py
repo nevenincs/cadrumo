@@ -65,7 +65,7 @@ def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> B
     selector: dict[str, object] = {
         "categories": (IvaCategory("domestic_super_reduced"),),
         "rate_kinds": (IvaRateKind("super_reduced"),),
-        "flow_direction": IvaFlowDirection._from_registry("repercutido"),
+        "flow_direction": IvaFlowDirection.from_registry("repercutido"),
         "fact": "iva_amount_sum",
         "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
         "cash_accounting_treatments": (

@@ -24,12 +24,12 @@ def _legal_entity_with_iva_group_role(
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType._from_registry("legal_entity"),
-        legal_entity_form=LegalEntityForm._from_registry("SL"),
+        entity_type=EntityType.from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm.from_registry("SL"),
         iva_regime=IVARegime("GENERAL"),
         iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory._from_registry("COMMON_REGIME"),
-            regime_composition=M303RegimeComposition._from_registry("GENERAL"),
+            tax_territory=M303TaxTerritory.from_registry("COMMON_REGIME"),
+            regime_composition=M303RegimeComposition.from_registry("GENERAL"),
             redeme_enrolled=False,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,

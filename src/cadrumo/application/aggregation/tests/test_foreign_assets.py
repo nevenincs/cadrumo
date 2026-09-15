@@ -265,7 +265,7 @@ class TestThreshold720:
                 modelo="720", filing_year=2025, operation=_authority_operation_for_test
             )
             assert thresholds[
-                ForeignAssetObligationGroup._from_registry("cuentas")
+                ForeignAssetObligationGroup.from_registry("cuentas")
             ].initial_declaration_floor_eur == Decimal("50000.00")
 
     def test_declarable_strict_above_50000(self) -> None:

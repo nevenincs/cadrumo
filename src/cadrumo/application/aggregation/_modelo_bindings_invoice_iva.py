@@ -414,7 +414,12 @@ class _RecargoRateDivergence:
     recargo_rate: Decimal
 
 
-def _recargo_rate_divergence(invoice: Invoice, *, devengo_date: date) -> _RecargoRateDivergence | None:
+def _recargo_rate_divergence(
+    invoice: Invoice,
+    *,
+    devengo_date: date,
+    operation: PinnedAuthorityOperation,
+) -> _RecargoRateDivergence | None:
     """Compare the recorded recargo against the rate art. 161 publishes for that slot.
 
     The invoice stays authoritative: this reads the recorded figure and never
@@ -445,7 +450,7 @@ def _recargo_rate_divergence(invoice: Invoice, *, devengo_date: date) -> _Recarg
         # Exempt and not-subject slots name no percentage, so there is no
         # pairing to look up and nothing to disagree with.
         return None
-    recargo_rate = recargo_rate_for_applied_rate(applied_rate, devengo_date)
+    recargo_rate = recargo_rate_for_applied_rate(applied_rate, devengo_date, operation=operation)
     if recargo_rate is None:
         return None
     expected = round_to_cents(line.subtotal * recargo_rate)
@@ -627,6 +632,7 @@ def screened_invoice_iva_observations(
         screened = _screened_invoice_iva_result(
             invoice,
             ledger_observations=ledger_observations,
+            operation=operation,
         )
         if screened.reverse_charge_underivable:
             reverse_charge_underivable.append(invoice)
@@ -656,6 +662,7 @@ def _screened_invoice_iva_result(
     invoice: Invoice,
     *,
     ledger_observations: Sequence[IvaLedgerObservation],
+    operation: PinnedAuthorityOperation,
 ) -> _ScreenedInvoiceIvaResult:
     """Resolve one already-period-selected invoice into its IVA screen facts."""
     reverse_charge_underivable = _reverse_charge_cuota_not_derivable(invoice)
@@ -664,7 +671,11 @@ def _screened_invoice_iva_result(
     devengo = resolve_invoice_devengo(invoice)
     # Read independently of the line projection: comparison is about the
     # recorded figure, not whether a line goes on to contribute an observation.
-    recargo_rate_divergence = _recargo_rate_divergence(invoice, devengo_date=devengo.devengo_date)
+    recargo_rate_divergence = _recargo_rate_divergence(
+        invoice,
+        devengo_date=devengo.devengo_date,
+        operation=operation,
+    )
     deduction_authority = _linked_invoice_deduction_authority(
         invoice,
         ledger_observations=ledger_observations,

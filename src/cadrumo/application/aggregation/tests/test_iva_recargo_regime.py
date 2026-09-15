@@ -64,11 +64,11 @@ def _tx(provider_id: str, *, iva_category: IvaCategory) -> Transaction:
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
             "iva_category": iva_category,
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current")
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current")
             if iva_category == IvaCategory("domestic_general")
             else None,
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="b" * 64,
             )

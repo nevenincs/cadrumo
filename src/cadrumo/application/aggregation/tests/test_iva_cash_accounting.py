@@ -85,11 +85,11 @@ def _transaction(
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
             "iva_category": IvaCategory("domestic_general"),
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current")
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current")
             if direction is TransactionDirection.OUTGOING
             else None,
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="a" * 64,
             )

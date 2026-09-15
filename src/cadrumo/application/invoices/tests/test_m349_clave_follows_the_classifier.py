@@ -44,10 +44,10 @@ def _eu_inbound_b2b(*, kind: TransactionKind) -> IvaInvoiceClassificationCriteri
     return IvaInvoiceClassificationCriteria.model_validate(
         {
             "transaction_date": date(2026, 3, 1),
-            "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
-            "issuer_identification_state": EUMemberState._from_registry("de"),
-            "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
-            "customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
+            "issuer_identification_state": EUMemberState.from_registry("de"),
+            "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
+            "customer_tax_status": CustomerTaxStatus.from_registry("b2b_iva_registered"),
             "kind": kind,
             "direction": InvoiceKind.RECEIVED,
             "rate_tier": IvaRateKind("general"),

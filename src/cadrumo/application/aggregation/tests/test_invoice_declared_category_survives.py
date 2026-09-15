@@ -64,7 +64,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 
 _BASE = Decimal("2000.00")
 _DAY = date(2026, 3, 15)
-_DEFAULT_INVOICE_RATE = IvaRate._from_registry("EXEMPT")
+_DEFAULT_INVOICE_RATE = IvaRate.from_registry("EXEMPT")
 
 
 def _received_reverse_charge(*, slot: IvaRate = _DEFAULT_INVOICE_RATE, cuota: str = "0.00") -> Invoice:
@@ -128,12 +128,12 @@ def _received_reverse_charge_deduction_authority() -> IvaLedgerObservation:
         transaction_date=_DAY,
         category=IvaCategory("domestic_reverse_charge"),
         rate_kind=IvaRateKind("exempt"),
-        flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+        flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
         base_amount=_BASE,
         iva_amount=Decimal("0"),
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
         deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
             source_locator="invoice:received-reverse-charge",
             evidence_digest="a" * 64,
         ),
@@ -155,7 +155,7 @@ def test_the_declared_reverse_charge_survives_the_projection() -> None:
     assert observation.category == IvaCategory("domestic_reverse_charge"), (
         f"the declared treatment was overwritten from the rate slot: {observation.category.value}"
     )
-    assert observation.flow_direction is IvaFlowDirection._from_registry("inversion_sujeto_pasivo"), (
+    assert observation.flow_direction is IvaFlowDirection.from_registry("inversion_sujeto_pasivo"), (
         f"the recipient is not recorded as self-assessing: {observation.flow_direction.value}"
     )
     assert observation.base_amount == _BASE
@@ -208,12 +208,14 @@ def test_a_rated_reverse_charge_line_is_not_reported() -> None:
     fires on every reverse charge, including the ones carrying a rate, trains the
     operator to ignore the channel. Only the underivable shape is reported.
     """
-    rated = _received_reverse_charge(slot=IvaRate._from_registry("RATE_21"), cuota="420.00")
+    rated = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00")
 
     assert _reverse_charge_cuota_not_derivable(rated) is False
 
 
-def test_a_cuota_bearing_received_invoice_is_withheld_when_no_ledger_authority_is_linked() -> None:
+def test_a_cuota_bearing_received_invoice_is_withheld_when_no_ledger_authority_is_linked(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """An invoice never manufactures the deduction authority an input row needs.
 
     An invoice carries an amount and a direction. It does not carry the exact
@@ -229,15 +231,17 @@ def test_a_cuota_bearing_received_invoice_is_withheld_when_no_ledger_authority_i
     a statutory fact, and the invented value would be indistinguishable from a
     recorded one everywhere downstream.
     """
-    rated = _received_reverse_charge(slot=IvaRate._from_registry("RATE_21"), cuota="420.00")
+    rated = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00")
 
-    screened = _screened_invoice_iva_result(rated, ledger_observations=())
+    screened = _screened_invoice_iva_result(rated, ledger_observations=(), operation=operation)
 
     assert screened.deduction_authority_missing is True
     assert screened.observations == ()
 
 
-def test_a_linked_ledger_authority_is_copied_onto_the_projection_not_reinvented() -> None:
+def test_a_linked_ledger_authority_is_copied_onto_the_projection_not_reinvented(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The complement: with the authority linked, the row projects and carries it.
 
     The point of withholding is not that received invoices are unroutable -- it
@@ -247,11 +251,11 @@ def test_a_linked_ledger_authority_is_copied_onto_the_projection_not_reinvented(
     literal would still pass if the projection substituted its own default.
     """
     authority = _received_reverse_charge_deduction_authority()
-    linked = _received_reverse_charge(slot=IvaRate._from_registry("RATE_21"), cuota="420.00").model_copy(
+    linked = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00").model_copy(
         update={"linked_transaction_ids": (authority.ledger_id,)},
     )
 
-    screened = _screened_invoice_iva_result(linked, ledger_observations=(authority,))
+    screened = _screened_invoice_iva_result(linked, ledger_observations=(authority,), operation=operation)
 
     assert screened.deduction_authority_missing is False
     (observation,) = screened.observations
@@ -268,7 +272,7 @@ def test_a_withheld_invoice_the_ledger_already_carries_is_not_counted_as_uncover
     is told through the diagnostic channel instead. Refusing here would block a
     correct filing purely because an invoice-to-transaction link is absent.
     """
-    rated = _received_reverse_charge(slot=IvaRate._from_registry("RATE_21"), cuota="420.00")
+    rated = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00")
 
     uncovered = _uncovered_withheld_invoice_cuota(
         (rated,),
@@ -288,7 +292,7 @@ def test_a_withheld_invoice_absent_from_the_ledger_is_counted_as_uncovered() -> 
     on the exact shortfall, not merely on being positive, because a guard that
     fires with the wrong magnitude tells the operator to look in the wrong place.
     """
-    rated = _received_reverse_charge(slot=IvaRate._from_registry("RATE_21"), cuota="420.00")
+    rated = _received_reverse_charge(slot=IvaRate.from_registry("RATE_21"), cuota="420.00")
 
     uncovered = _uncovered_withheld_invoice_cuota(
         (rated,),

@@ -490,7 +490,7 @@ def _xml_dictionary_rendered_value(
         if declarations is None:
             raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
         raw = _modelo_100_sign_branch_value(entry, raw, declarations=declarations)
-    rendered = _format_xml_dictionary_value(entry.data_type, raw)
+    rendered = format_xml_dictionary_value(entry.data_type, raw)
     converter_name = declarations.get(f"xml.converter.{entry.field_id}") if declarations is not None else None
     if converter_name is not None:
         converter = globals().get(converter_name)
@@ -652,7 +652,7 @@ def _modelo_100_sign_branch_value(
         A value that will not coerce carries no sign to route on, so it is read
         as zero for the purpose of choosing a branch. This selects a branch
         rather than validating a value: deciding what an uncoercible amount
-        means is :func:`_format_xml_dictionary_value`'s job, and it is the job
+        means is :func:`format_xml_dictionary_value`'s job, and it is the job
         it does for every other casilla. Without the default, ``coerce_decimal``
         answers ``None`` and the comparison below raises ``TypeError`` on the
         export path.
@@ -681,7 +681,7 @@ def _xml_dictionary_non_casilla_value(
     AEAT's own dictionary names, which is the address a registry binding
     declares, and each value arrives as the type its fact carries -- a ``bool``
     is still a ``bool``, a :class:`~datetime.date` still a ``date``, so
-    :func:`_format_xml_dictionary_value` can still decide ``SI``/``NO`` and
+    :func:`format_xml_dictionary_value` can still decide ``SI``/``NO`` and
     ``d/m/yyyy`` from it. ``headers`` is the flat declaration-header mapping,
     whose contract is ``str`` throughout: a value reaching here through it has
     already been rendered by its composer and is passed on as written.
@@ -705,7 +705,7 @@ def _xml_dictionary_non_casilla_value(
     return dictionary_values.get(entry.field_id)
 
 
-def _format_xml_dictionary_value(data_type: str, value: object) -> str:
+def format_xml_dictionary_value(data_type: str, value: object) -> str:
     """Render one value in the form the dictionary row's declared type accepts.
 
     The row's ``data_type`` decides the rendering, not the Python type of the

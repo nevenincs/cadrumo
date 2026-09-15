@@ -131,13 +131,13 @@ class TestARegistrationSettlesNoPlace:
                 declared=DeclaredFacts(
                     supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
                     customer_tax_status=DeclaredFact(
-                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                        value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
                     issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
                     customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
                     ),
                 ),
                 operation=_authority_operation_for_test,
@@ -159,13 +159,13 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                 declared=DeclaredFacts(
                     supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
                     customer_tax_status=DeclaredFact(
-                        value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED
+                        value=CustomerTaxStatus.from_registry("b2c_consumer"), source=_ASSERTED
                     ),
                     issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
                     customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
                 ),
                 rate_tier=IvaRateKind("general"),
@@ -190,13 +190,13 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                 declared=DeclaredFacts(
                     supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
                     customer_tax_status=DeclaredFact(
-                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                        value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
                     issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
                     customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
                     ),
                 ),
                 customer_identifier=_GERMAN_IVA_NUMBER,
@@ -216,13 +216,13 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                 declared=DeclaredFacts(
                     supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
                     customer_tax_status=DeclaredFact(
-                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                        value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
                     issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
                     customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
                     ),
                 ),
                 operation=_authority_operation_for_test,
@@ -240,13 +240,13 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                 declared=DeclaredFacts(
                     supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
                     customer_tax_status=DeclaredFact(
-                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                        value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
                     issuer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("es_mainland"), source=_ASSERTED
                     ),
                     customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
                     ),
                     customer_identification_state=DeclaredFact(value=require_eu_member_state("FR"), source=_ASSERTED),
                 ),
@@ -274,11 +274,11 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
                 declared=DeclaredFacts(
                     supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
                     customer_tax_status=DeclaredFact(
-                        value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                        value=CustomerTaxStatus.from_registry("b2b_iva_registered"), source=_ASSERTED
                     ),
-                    issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
+                    issuer_scope=DeclaredFact(value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED),
                     customer_scope=DeclaredFact(
-                        value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED
+                        value=IvaTerritorialScope.from_registry("eu_member"), source=_ASSERTED
                     ),
                 ),
                 operation=_authority_operation_for_test,
@@ -297,9 +297,9 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
             unplaced = classify_iva(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
-                    issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
-                    customer_residency=IvaTerritorialScope._from_registry("eu_member"),
-                    customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                    issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
+                    customer_residency=IvaTerritorialScope.from_registry("eu_member"),
+                    customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
                     kind=TransactionKind("goods"),
                     direction=InvoiceKind.ISSUED,
                 ),

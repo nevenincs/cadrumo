@@ -604,7 +604,7 @@ def _selected_revision_verification_predicates(
                 as_of=as_of,
             )
     if query_service is not None:
-        revision = query_service._resolve_revision_for_scope(
+        revision = query_service.resolve_revision_for_scope(
             modelo,
             filing_year=filing_year,
             period=period,

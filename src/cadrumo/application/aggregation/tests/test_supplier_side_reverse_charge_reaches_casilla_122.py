@@ -77,9 +77,9 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
         category.value: flow.value
         for (category, kind), row in COMPONENT_CATALOGUE.items()
         if kind is InvoiceKind.ISSUED
-        and row.applicability == IvaKindApplicability._from_registry("arises")
-        and row.base == IvaComponentPresence._from_registry("required")
-        and row.cuota == IvaComponentPresence._from_registry("zero_by_law")
+        and row.applicability == IvaKindApplicability.from_registry("arises")
+        and row.base == IvaComponentPresence.from_registry("required")
+        and row.cuota == IvaComponentPresence.from_registry("zero_by_law")
         for flow in (derive_flow_for_classification(category=category, invoice_direction=kind),)
         if is_deducible_flow(flow)
     }

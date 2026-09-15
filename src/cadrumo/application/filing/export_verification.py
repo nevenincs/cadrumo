@@ -27,8 +27,8 @@ from ...domain.calculations.registry.schema_exports import ExportLayoutDefinitio
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ._export_xml_dictionary import (
-    _format_xml_dictionary_value,
     expected_xml_dictionary_root_identity,
+    format_xml_dictionary_value,
     read_xml_dictionary_root_identity,
 )
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
@@ -454,7 +454,7 @@ def _mismatched_xml_dictionary_casilla_ids(
                 f"XML dictionary field {parsed.field_id!r} could not resolve its signed entry for verification"
             )
         try:
-            expected_wire = _format_xml_dictionary_value(entry.data_type, expected)
+            expected_wire = format_xml_dictionary_value(entry.data_type, expected)
         except FilingExportValidationError as exc:
             raise FilingExportValidationError(
                 f"XML dictionary field {parsed.field_id!r} could not render its expected verification value"

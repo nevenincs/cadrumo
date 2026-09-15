@@ -33,7 +33,7 @@ from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.filing.errors import FilingExportValidationError
-from .._export_xml_dictionary import _format_xml_dictionary_value
+from .._export_xml_dictionary import format_xml_dictionary_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -114,12 +114,12 @@ def test_boolean_rows_render_the_token_their_declared_type_accepts(
     xsd_type: str,
 ) -> None:
     for value in (True, False):
-        rendered = _format_xml_dictionary_value(dictionary_type, value)
+        rendered = format_xml_dictionary_value(dictionary_type, value)
         assert _accepts(xsd_type, rendered), (
             f"{dictionary_type} row rendered {rendered!r} for {value!r}, which {xsd_type} rejects"
         )
-    assert _format_xml_dictionary_value("LGC", True) != _format_xml_dictionary_value("LGC", False)
-    assert _format_xml_dictionary_value("S_N", True) != _format_xml_dictionary_value("S_N", False)
+    assert format_xml_dictionary_value("LGC", True) != format_xml_dictionary_value("LGC", False)
+    assert format_xml_dictionary_value("S_N", True) != format_xml_dictionary_value("S_N", False)
 
 
 @pytest.mark.parametrize(
@@ -132,7 +132,7 @@ def test_boolean_rows_render_the_token_their_declared_type_accepts(
     ],
 )
 def test_integer_rows_render_without_fractional_digits(dictionary_type: str, xsd_type: str) -> None:
-    rendered = _format_xml_dictionary_value(dictionary_type, Decimal("3"))
+    rendered = format_xml_dictionary_value(dictionary_type, Decimal("3"))
 
     assert _accepts(xsd_type, rendered), f"{dictionary_type} rendered {rendered!r}, which {xsd_type} rejects"
     assert "." not in rendered
@@ -149,7 +149,7 @@ def test_integer_rows_render_without_fractional_digits(dictionary_type: str, xsd
     ],
 )
 def test_two_decimal_rows_keep_their_two_decimals(dictionary_type: str, xsd_type: str) -> None:
-    rendered = _format_xml_dictionary_value(dictionary_type, Decimal("1.5"))
+    rendered = format_xml_dictionary_value(dictionary_type, Decimal("1.5"))
 
     assert rendered == "1.50"
     assert _accepts(xsd_type, rendered)
@@ -163,13 +163,13 @@ def test_the_scale_is_read_off_the_type_code_rather_than_enumerated() -> None:
     renderer being edited. Asserting that here keeps the property from being
     quietly replaced by a lookup table over today's codes.
     """
-    assert _format_xml_dictionary_value("P083", Decimal("1.2394")) == "1.239"
-    assert _format_xml_dictionary_value("P060", Decimal("1.6")) == "2"
+    assert format_xml_dictionary_value("P083", Decimal("1.2394")) == "1.239"
+    assert format_xml_dictionary_value("P060", Decimal("1.6")) == "2"
 
 
 def test_a_non_numeric_row_is_left_alone() -> None:
-    assert _format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
-    assert _format_xml_dictionary_value("TIT", Decimal("2")) == "2"
+    assert format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
+    assert format_xml_dictionary_value("TIT", Decimal("2")) == "2"
 
 
 def test_a_numeric_row_refuses_an_amount_it_cannot_read() -> None:
@@ -188,7 +188,7 @@ def test_a_numeric_row_refuses_an_amount_it_cannot_read() -> None:
     """
     for unreadable in ("1.234,56", "-1.234,56", "abc", ""):
         with pytest.raises(FilingExportValidationError, match="could not be read"):
-            _format_xml_dictionary_value("P102", unreadable)
+            format_xml_dictionary_value("P102", unreadable)
 
 
 def test_the_refusal_does_not_reach_a_value_the_row_can_read() -> None:
@@ -197,10 +197,10 @@ def test_the_refusal_does_not_reach_a_value_the_row_can_read() -> None:
     Without this, a renderer that raised on every numeric row would satisfy the
     refusal test above while breaking every export.
     """
-    assert _format_xml_dictionary_value("P102", Decimal("1234.56")) == "1234.56"
-    assert _format_xml_dictionary_value("P102", "1234.56") == "1234.56"
-    assert _format_xml_dictionary_value("P102", 0) == "0.00"
-    assert _format_xml_dictionary_value("X", "1.234,56") == "1.234,56"
+    assert format_xml_dictionary_value("P102", Decimal("1234.56")) == "1234.56"
+    assert format_xml_dictionary_value("P102", "1234.56") == "1234.56"
+    assert format_xml_dictionary_value("P102", 0) == "0.00"
+    assert format_xml_dictionary_value("X", "1.234,56") == "1.234,56"
 
 
 def test_a_text_amount_that_could_be_a_thousands_group_is_refused() -> None:
@@ -214,7 +214,7 @@ def test_a_text_amount_that_could_be_a_thousands_group_is_refused() -> None:
     the renderer applying it.
     """
     with pytest.raises(FilingExportValidationError, match="could not be read"):
-        _format_xml_dictionary_value("P102", "1.000")
+        format_xml_dictionary_value("P102", "1.000")
 
 
 def test_the_cap_is_a_precision_rule_and_ambiguity_is_refused_separately() -> None:
@@ -233,10 +233,10 @@ def test_the_cap_is_a_precision_rule_and_ambiguity_is_refused_separately() -> No
     euro-cent ``P102``. Resolving it either way would misstate a filed amount by
     a factor of one thousand.
     """
-    assert _format_xml_dictionary_value("P060", "1.6") == "2"
+    assert format_xml_dictionary_value("P060", "1.6") == "2"
     for data_type in ("P060", "P083", "P102"):
         with pytest.raises(FilingExportValidationError, match="could not be read"):
-            _format_xml_dictionary_value(data_type, "1.000")
+            format_xml_dictionary_value(data_type, "1.000")
 
 
 def test_the_ambiguity_guard_keys_on_shape_not_on_fraction_count() -> None:
@@ -252,12 +252,12 @@ def test_the_ambiguity_guard_keys_on_shape_not_on_fraction_count() -> None:
     is the accepting half that distinguishes an ambiguity rule from a precision
     rule, and only these cases exercise it.
     """
-    assert _format_xml_dictionary_value("P083", "0.239") == "0.239"
-    assert _format_xml_dictionary_value("P083", "1234.239") == "1234.239"
-    assert _format_xml_dictionary_value("P083", "1000.000") == "1000.000"
+    assert format_xml_dictionary_value("P083", "0.239") == "0.239"
+    assert format_xml_dictionary_value("P083", "1234.239") == "1234.239"
+    assert format_xml_dictionary_value("P083", "1000.000") == "1000.000"
     for ambiguous in ("1.239", "123.000", "1.000"):
         with pytest.raises(FilingExportValidationError, match="could not be read"):
-            _format_xml_dictionary_value("P083", ambiguous)
+            format_xml_dictionary_value("P083", ambiguous)
 
 
 def test_an_already_typed_amount_skips_the_text_grammar() -> None:
@@ -266,8 +266,8 @@ def test_an_already_typed_amount_skips_the_text_grammar() -> None:
     The grammar exists to read *text*. A ``Decimal`` or ``int`` already says
     what it is, so routing it through a text parser could only lose information.
     """
-    assert _format_xml_dictionary_value("P102", Decimal("1.000")) == "1.00"
-    assert _format_xml_dictionary_value("P102", 0) == "0.00"
+    assert format_xml_dictionary_value("P102", Decimal("1.000")) == "1.00"
+    assert format_xml_dictionary_value("P102", 0) == "0.00"
 
 
 def test_a_row_aeat_does_not_declare_boolean_refuses_a_boolean() -> None:
@@ -294,7 +294,7 @@ def test_a_row_aeat_does_not_declare_boolean_refuses_a_boolean() -> None:
     for dictionary_type in ("P102", "N102", "P010", "P012", "X", "FEC", "TIT", "MOD", "AAA"):
         for value in (True, False):
             with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
-                _format_xml_dictionary_value(dictionary_type, value)
+                format_xml_dictionary_value(dictionary_type, value)
 
 
 def test_the_boolean_refusal_spares_the_rows_declared_boolean() -> None:
@@ -309,12 +309,12 @@ def test_the_boolean_refusal_spares_the_rows_declared_boolean() -> None:
     """
     for dictionary_type, xsd_type in (("LGC", "tipo_logico"), ("S_N", "tipo_SINO_Exclusivo")):
         for value in (True, False):
-            rendered = _format_xml_dictionary_value(dictionary_type, value)
+            rendered = format_xml_dictionary_value(dictionary_type, value)
             assert _accepts(xsd_type, rendered), (
                 f"{dictionary_type} row rendered {rendered!r} for {value!r}, which {xsd_type} rejects"
             )
-    assert _format_xml_dictionary_value("P102", Decimal("1")) == "1.00"
-    assert _format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
+    assert format_xml_dictionary_value("P102", Decimal("1")) == "1.00"
+    assert format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
 
 
 def test_a_row_type_aeat_adds_later_refuses_a_boolean_by_default() -> None:
@@ -327,7 +327,7 @@ def test_a_row_type_aeat_adds_later_refuses_a_boolean_by_default() -> None:
     the dictionary declares today.
     """
     with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
-        _format_xml_dictionary_value("ZZZ", True)
+        format_xml_dictionary_value("ZZZ", True)
 
 
 def test_a_date_row_refuses_text_that_is_not_in_aeats_form() -> None:
@@ -350,7 +350,7 @@ def test_a_date_row_refuses_text_that_is_not_in_aeats_form() -> None:
     """
     for unusable in ("1980-01-02", "02-01-1980", "1980/01/02", "2/1/80", "notadate", ""):
         with pytest.raises(FilingExportValidationError, match="not in the form AEAT accepts"):
-            _format_xml_dictionary_value("FEC", unusable)
+            format_xml_dictionary_value("FEC", unusable)
 
 
 def test_a_date_row_accepts_the_form_aeat_declares() -> None:
@@ -363,7 +363,7 @@ def test_a_date_row_accepts_the_form_aeat_declares() -> None:
     facet allows both.
     """
     for usable in ("2/1/1980", "02/01/1980", "31/12/2024"):
-        rendered = _format_xml_dictionary_value("FEC", usable)
+        rendered = format_xml_dictionary_value("FEC", usable)
         assert _accepts("tipo_Fecha", rendered), f"tipo_Fecha rejects {rendered!r}"
-    assert _format_xml_dictionary_value("FEC", date(1980, 1, 2)) == "2/1/1980"
-    assert _accepts("tipo_Fecha", _format_xml_dictionary_value("FEC", date(1980, 1, 2)))
+    assert format_xml_dictionary_value("FEC", date(1980, 1, 2)) == "2/1/1980"
+    assert _accepts("tipo_Fecha", format_xml_dictionary_value("FEC", date(1980, 1, 2)))

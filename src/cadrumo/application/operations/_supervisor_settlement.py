@@ -161,8 +161,67 @@ class SupervisorHost(Protocol):
         async def _complete_cleanup_before_settlement(self, snapshot: OperationPersistedSnapshot) -> None: ...
 
 
-class SupervisorSettlementMixin(SupervisorHost):
+class SupervisorSettlementMixin:
     """Own cancellation requests, cleanup, terminal receipts, and commits."""
+
+    if TYPE_CHECKING:
+        registry: OperationRegistry
+        _journal: OperationJournal
+        _clock: Callable[[], datetime]
+        _cleanup_timeout: timedelta | None
+        _contexts: dict[OperationId, DefinitionBoundContext]
+        _executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]]
+        _cleanup_tasks: dict[OperationId, asyncio.Task[None]]
+        _continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
+        _resources: dict[OperationId, list[AsyncCloseable]]
+        _ephemeral_secrets: EphemeralSecretBroker
+
+        def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition: ...
+
+        def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None: ...
+
+        def _lease_lock(self, operation_id: OperationId) -> asyncio.Lock: ...
+
+        async def _require_owned_lease_unlocked(
+            self,
+            identity: OperationIdentity,
+            now: datetime,
+        ) -> OperationOwnerLease: ...
+
+        async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None: ...
+
+        async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+        async def _cancel_pre_entry_secret(
+            self,
+            snapshot: OperationPersistedSnapshot,
+        ) -> OperationPersistedSnapshot | None: ...
+
+        def _notify_durable_change(self, snapshot: OperationPersistedSnapshot) -> None: ...
+
+        async def _advance(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            *,
+            lifecycle: OperationLifecycle,
+            events: tuple[OperationEvent, ...] = (),
+            pending: OperationPendingInteraction | None = None,
+            consumed: tuple[OperationConsumedInteraction, ...] | None = None,
+            effect: OperationEffect | None = None,
+            execution_deadline: datetime | None = None,
+            cleanup_deadline: datetime | None = None,
+            cancellation_requested_at: datetime | None = None,
+            cancellation_acknowledged_at: datetime | None = None,
+            cancellation_deferred: bool | None = None,
+            executor_entered_at: datetime | None = None,
+            discard_ephemeral_secret: bool = False,
+        ) -> OperationPersistedSnapshot: ...
+
+        def _validate_executor_stopped_for_settlement(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            condition: OperationTerminalCondition,
+        ) -> None: ...
 
     def _validate_cancellation_request(self, snapshot: OperationPersistedSnapshot) -> timedelta:
         """Validate cancellation policy and return the configured cleanup window."""

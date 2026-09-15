@@ -234,7 +234,7 @@ def test_a_blank_name_part_contributes_no_separator() -> None:
 def test_a_value_keeps_the_type_the_renderer_decides_from(*, operation: PinnedAuthorityOperation) -> None:
     """Values are carried, not rendered, so the renderer keeps its one authority.
 
-    ``_format_xml_dictionary_value`` decides a row's rendering from the Python
+    ``format_xml_dictionary_value`` decides a row's rendering from the Python
     type it receives. Pre-rendering a date to text here would both destroy that
     signal and put a second formatting authority beside it.
     """

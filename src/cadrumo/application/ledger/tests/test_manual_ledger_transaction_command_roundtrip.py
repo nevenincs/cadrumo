@@ -67,7 +67,7 @@ def _populated_command() -> ManualLedgerTransactionCommand:
         usage_ratio_id="usage.home-office.2025",
         prorrata_reference="prorrata.iva.2025",
         art_104_tres_exclusion=Art104TresExclusion("non_habitual_real_estate_or_financial"),
-        input_classification=InputClassification._from_registry("common"),
+        input_classification=InputClassification.from_registry("common"),
         purchase_invoice_evidence_id="evidence.invoice.AC-2025-042",
         attachment_ids=("attach.invoice.pdf", "attach.delivery-note.pdf"),
         notes="Q2 office expense, mixed personal/business",
@@ -122,9 +122,9 @@ def test_command_preserves_art_104_tres_exclusion_through_json() -> None:
 def test_command_preserves_input_classification_through_json() -> None:
     """The operator-declared LIVA art. 106 input_classification survives the command wire contract."""
     original = _populated_command()
-    assert original.input_classification is InputClassification._from_registry("common")
+    assert original.input_classification is InputClassification.from_registry("common")
     roundtripped = ManualLedgerTransactionCommand.model_validate_json(original.model_dump_json())
-    assert roundtripped.input_classification is InputClassification._from_registry("common")
+    assert roundtripped.input_classification is InputClassification.from_registry("common")
 
 
 def test_command_json_roundtrip_preserves_decimal_precision() -> None:

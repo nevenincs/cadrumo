@@ -187,8 +187,8 @@ def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
 
 def _m303_profile() -> ModeloIVAProfile:
     return ModeloIVAProfile(
-        tax_territory=M303TaxTerritory._from_registry("common_regime"),
-        regime_composition=M303RegimeComposition._from_registry("general"),
+        tax_territory=M303TaxTerritory.from_registry("common_regime"),
+        regime_composition=M303RegimeComposition.from_registry("general"),
         roi_enrolled=False,
         oss_enrolled=False,
         group_member_enrolled=False,
@@ -239,7 +239,7 @@ def _covered_prorrata_register(filing_year: int) -> ProrrataRegister:
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=filing_year,
-                regime=ProrrataRegisterRegime._from_registry("ninguna"),
+                regime=ProrrataRegisterRegime.from_registry("ninguna"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -268,7 +268,7 @@ def _bien_inversion(identifier: str) -> BienInversionIvaRecord:
         acquisition_year=2024,
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("70"),
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         acquisition_ledger_id=f"ledger:{identifier}",
     )
 
@@ -387,9 +387,9 @@ def _m303_prorrata_transition_arrival(
     entry = ProrrataRegisterEntry(
         ejercicio=period.filing_year,
         regime=(
-            ProrrataRegisterRegime._from_registry("especial")
-            if transition == ProrrataEspecialTransitionKind._from_registry("opcion")
-            else ProrrataRegisterRegime._from_registry("general")
+            ProrrataRegisterRegime.from_registry("especial")
+            if transition == ProrrataEspecialTransitionKind.from_registry("opcion")
+            else ProrrataRegisterRegime.from_registry("general")
         ),
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=transition,
@@ -401,12 +401,12 @@ def _m303_prorrata_transition_arrival(
         (
             ProrrataRegisterEntry(
                 ejercicio=2025,
-                regime=ProrrataRegisterRegime._from_registry("especial"),
+                regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
         )
-        if transition == ProrrataEspecialTransitionKind._from_registry("revocacion")
+        if transition == ProrrataEspecialTransitionKind.from_registry("revocacion")
         else ()
     )
     register = ProrrataRegister(entries=(*prior_entries, entry))
@@ -448,8 +448,8 @@ def _m303_foral_snapshot(
     )
     profile = _m303_profile().model_copy(
         update={
-            "tax_territory": M303TaxTerritory._from_registry("foral"),
-            "regime_composition": M303RegimeComposition._from_registry("mixed"),
+            "tax_territory": M303TaxTerritory.from_registry("foral"),
+            "regime_composition": M303RegimeComposition.from_registry("mixed"),
             "redeme_enrolled": True,
             "cash_accounting_regime_enrolled": True,
             "voluntary_sii_enrolled": True,
@@ -676,7 +676,7 @@ def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() 
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
-        model_profile=_m303_profile().model_copy(update={"tax_territory": M303TaxTerritory._from_registry("foral")}),
+        model_profile=_m303_profile().model_copy(update={"tax_territory": M303TaxTerritory.from_registry("foral")}),
         elections=_elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
@@ -690,8 +690,8 @@ def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() 
 @pytest.mark.parametrize(
     "transition",
     (
-        ProrrataEspecialTransitionKind._from_registry("opcion"),
-        ProrrataEspecialTransitionKind._from_registry("revocacion"),
+        ProrrataEspecialTransitionKind.from_registry("opcion"),
+        ProrrataEspecialTransitionKind.from_registry("revocacion"),
     ),
 )
 def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
@@ -759,9 +759,9 @@ def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_perio
 @pytest.mark.parametrize(
     ("composition", "expected"),
     (
-        (M303RegimeComposition._from_registry("simplified"), "1"),
-        (M303RegimeComposition._from_registry("mixed"), "2"),
-        (M303RegimeComposition._from_registry("general"), "3"),
+        (M303RegimeComposition.from_registry("simplified"), "1"),
+        (M303RegimeComposition.from_registry("mixed"), "2"),
+        (M303RegimeComposition.from_registry("general"), "3"),
     ),
 )
 def test_m303_regime_composition_projects_only_the_exclusively_simplified_arm(
@@ -947,8 +947,8 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     refund_account = RefundAccount(iban=_REFUND_IBAN)
     charge_account = ChargeAccount(iban=_CHARGE_IBAN)
     source_profile = ModeloIVAProfile(
-        tax_territory=M303TaxTerritory._from_registry("common_regime"),
-        regime_composition=M303RegimeComposition._from_registry("general"),
+        tax_territory=M303TaxTerritory.from_registry("common_regime"),
+        regime_composition=M303RegimeComposition.from_registry("general"),
         redeme_enrolled=False,
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
@@ -1284,9 +1284,9 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
     period = Period.from_year_and_code(2026, "4T")
     canonical_entry = ProrrataRegisterEntry(
         ejercicio=period.filing_year,
-        regime=ProrrataRegisterRegime._from_registry("especial"),
+        regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind._from_registry("opcion"),
+            kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
             evidence_reference="operator-evidence:canonical-option",
         ),
         source_registry_snapshot_refs=(),
@@ -1294,7 +1294,7 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
     foreign_entry = canonical_entry.model_copy(
         update={
             "especial_transition": ProrrataEspecialTransitionEvidence(
-                kind=ProrrataEspecialTransitionKind._from_registry("opcion"),
+                kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
                 evidence_reference="operator-evidence:foreign-option",
             )
         }
@@ -1302,7 +1302,7 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
     payload = _m303_filing_facts().model_dump()
     payload["prorrata_transition"] = M303ProrrataTransitionArrival(
         period=period,
-        transition=ProrrataEspecialTransitionKind._from_registry("opcion"),
+        transition=ProrrataEspecialTransitionKind.from_registry("opcion"),
         register_evidence=(foreign_entry,),
     )
     payload["prorrata_register"] = ProrrataRegister(entries=(canonical_entry,))

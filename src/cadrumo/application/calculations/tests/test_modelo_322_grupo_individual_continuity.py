@@ -93,24 +93,24 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         # out of the ledger. Output lines must carry NEITHER, so this is supplied
         # only for the input direction.
         deduction_fact_kind=(
-            IvaDeductionFactKind._from_registry("domestic_current")
+            IvaDeductionFactKind.from_registry("domestic_current")
             if flow
             in {
-                IvaFlowDirection._from_registry("soportado"),
-                IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                IvaFlowDirection.from_registry("soportado"),
+                IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
             }
             else None
         ),
         deduction_provenance=(
             IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{ledger_id}",
                 evidence_digest="a" * 64,
             )
             if flow
             in {
-                IvaFlowDirection._from_registry("soportado"),
-                IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                IvaFlowDirection.from_registry("soportado"),
+                IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
             }
             else None
         ),
@@ -124,13 +124,13 @@ def _year_ledger(filing_year: int) -> tuple[IvaLedgerObservation, ...]:
         _ledger_line(
             ledger_id=f"{filing_year}-12-out",
             txn_date=date(filing_year, 12, 10),
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             iva=repercutido,
         ),
         _ledger_line(
             ledger_id=f"{filing_year}-12-in",
             txn_date=date(filing_year, 12, 20),
-            flow=IvaFlowDirection._from_registry("soportado"),
+            flow=IvaFlowDirection.from_registry("soportado"),
             iva=soportado,
         ),
     )

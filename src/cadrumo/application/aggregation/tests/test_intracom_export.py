@@ -69,9 +69,9 @@ def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> D
 
 
 _PERIOD = _period(2026, "2T")
-_DE = EUMemberState._from_registry("de")
-_ES = EUMemberState._from_registry("es")
-_XI = EUMemberState._from_registry("xi")
+_DE = EUMemberState.from_registry("de")
+_ES = EUMemberState.from_registry("es")
+_XI = EUMemberState.from_registry("xi")
 
 
 def _raw(provider_id: str, *, amount: Decimal, direction: TransactionDirection) -> RawTransaction:

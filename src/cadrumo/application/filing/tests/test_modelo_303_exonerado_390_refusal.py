@@ -204,7 +204,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=period.filing_year,
-                regime=ProrrataRegisterRegime._from_registry("ninguna"),
+                regime=ProrrataRegisterRegime.from_registry("ninguna"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -223,8 +223,8 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
         model_profile=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory._from_registry("common_regime"),
-            regime_composition=M303RegimeComposition._from_registry("general"),
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
             hydrocarbon_deposit_advance_payment_deduction_entitled=False,
@@ -314,8 +314,8 @@ def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_in
             ),
             presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
             model_profile=ModeloIVAProfile(
-                tax_territory=M303TaxTerritory._from_registry("common_regime"),
-                regime_composition=M303RegimeComposition._from_registry("general"),
+                tax_territory=M303TaxTerritory.from_registry("common_regime"),
+                regime_composition=M303RegimeComposition.from_registry("general"),
                 roi_enrolled=False,
                 oss_enrolled=False,
                 group_member_enrolled=False,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from datetime import datetime
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel
 
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from .secret_submission import EphemeralSecretBroker
 
 
-class SupervisorHost(Protocol):
+class SupervisorHost:
     if TYPE_CHECKING:
         registry: OperationRegistry
         _authority_operation: PinnedAuthorityOperation

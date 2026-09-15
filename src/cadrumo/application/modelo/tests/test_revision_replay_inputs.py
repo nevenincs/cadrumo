@@ -178,8 +178,8 @@ def test_revision_replay_inputs_zero_not_applicable_m100_pagos_relations_for_sal
     )
     profile = TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
         iva_regime=IVARegime("GENERAL"),
     )
 
@@ -198,9 +198,9 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
     revision = _revision(work_unit)
     profile = TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
     )
 

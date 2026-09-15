@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _counterparty() -> CounterpartyEstablishment:
     """A counterparty whose territory resolved, so the nature is the only variable."""
-    return CounterpartyEstablishment(scope=IvaTerritorialScope._from_registry("eu_member"))
+    return CounterpartyEstablishment(scope=IvaTerritorialScope.from_registry("eu_member"))
 
 
 @pytest.mark.parametrize("kind", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
@@ -53,7 +53,7 @@ def test_the_assertion_reaches_the_classifier_on_either_direction(
     declared = _declared_facts(
         kind=kind,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         supply_nature=nature,
     )
@@ -74,7 +74,7 @@ def test_the_assertion_is_stamped_operator_and_not_an_evidence_provenance(kind: 
     declared = _declared_facts(
         kind=kind,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         supply_nature=SupplyNature.SERVICES,
     )
@@ -98,7 +98,7 @@ def test_no_assertion_leaves_the_axis_unstated_rather_than_defaulted(kind: Invoi
     declared = _declared_facts(
         kind=kind,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
     )
 
@@ -131,7 +131,7 @@ def test_a_printed_citation_now_settles_the_nature() -> None:
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=_GOODS_CITATION,
     )
@@ -150,7 +150,7 @@ def test_a_citation_derived_nature_is_backed_by_the_page_not_by_a_person() -> No
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=_GOODS_CITATION,
     )
@@ -165,7 +165,7 @@ def test_the_citation_is_direction_independent_like_the_assertion(kind: InvoiceK
     declared = _declared_facts(
         kind=kind,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=_GOODS_CITATION,
     )
@@ -184,7 +184,7 @@ def test_the_operators_own_answer_beats_the_printed_citation() -> None:
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         supply_nature=SupplyNature.SERVICES,
         printed_citation=_GOODS_CITATION,
@@ -211,7 +211,7 @@ def test_a_document_establishing_nothing_still_leaves_the_axis_open(printed: str
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=printed,
     )
@@ -230,13 +230,13 @@ def test_reading_the_citation_is_what_settles_it() -> None:
     without_citation = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
     )
     with_citation = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=_GOODS_CITATION,
     )
@@ -270,7 +270,7 @@ def test_a_declared_category_settles_the_nature_with_nothing_printed() -> None:
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(IvaCategory("intra_community_supply")),
     )
 
@@ -298,7 +298,7 @@ def test_a_category_whose_law_reaches_both_limbs_stays_open(category: IvaCategor
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(category),
     )
 
@@ -325,7 +325,7 @@ def test_a_printed_citation_outranks_the_category_it_disagrees_with() -> None:
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(IvaCategory("intra_community_supply")),
         printed_citation="Exencion art. 163 octiesdecies LIVA",
     )
@@ -339,7 +339,7 @@ def test_the_operator_still_outranks_both_derivations() -> None:
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(IvaCategory("intra_community_supply")),
         supply_nature=SupplyNature.SERVICES,
     )
@@ -359,13 +359,13 @@ def test_the_category_join_is_what_settles_it() -> None:
     without_category = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
     )
     with_category = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=_stated(IvaCategory("intra_community_supply")),
     )
 
@@ -414,7 +414,7 @@ def test_a_proposal_does_not_reach_the_classifier_on_its_own() -> None:
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         printed_citation=proposed.regime_legend,
     )
@@ -433,7 +433,7 @@ def test_the_operators_answer_is_what_the_classifier_consumes() -> None:
     declared = _declared_facts(
         kind=InvoiceKind.ISSUED,
         counterparty=_counterparty(),
-        filer_scope=IvaTerritorialScope._from_registry("es_mainland"),
+        filer_scope=IvaTerritorialScope.from_registry("es_mainland"),
         stated_category=None,
         supply_nature=SupplyNature.SERVICES,
     )

@@ -399,7 +399,7 @@ def test_an_underdetermined_observation_would_reach_no_rung_at_all(
             transaction_date=date(2024, 11, 6),
             category=IvaCategory("domestic_reduced"),
             rate_kind=IvaRateKind("reduced"),
-            flow_direction=IvaFlowDirection._from_registry("repercutido"),
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
             base_amount=Decimal("1600.00"),
             iva_amount=Decimal("120.00"),
             recargo_amount=Decimal("0"),

@@ -312,19 +312,20 @@ class LedgerIvaAggregationSourceResolver:
                 prorrata_apportionment=aggregation.prorrata_apportionment,
                 operation=operation,
             )
-        screened_bindings = invoice_ledger_screen_binding_ids(
-            context.revision,
-            modelo=str(context.modelo),
-        )
-        silence_report = raise_if_invoice_iva_would_be_silent(
-            context=context,
-            period=aggregation_period,
-            transaction_binding_values=binding_values,
-            ledger_observations=aggregation.observations,
-            ports=self._invoice_catalogue_read_ports,
-            prorrata_apportionment=aggregation.prorrata_apportionment,
-            screened_bindings=screened_bindings,
-        )
+            screened_bindings = invoice_ledger_screen_binding_ids(
+                context.revision,
+                modelo=str(context.modelo),
+            )
+            silence_report = raise_if_invoice_iva_would_be_silent(
+                context=context,
+                period=aggregation_period,
+                operation=operation,
+                transaction_binding_values=binding_values,
+                ledger_observations=aggregation.observations,
+                ports=self._invoice_catalogue_read_ports,
+                prorrata_apportionment=aggregation.prorrata_apportionment,
+                screened_bindings=screened_bindings,
+            )
         # Reuse the fail-closed candidate-path screen as a NON-blocking advisory on
         # the calculate path: a declarable IVA observation whose category/rate/flow
         # triple no ``ledger_iva_aggregation`` binding selects would otherwise be
@@ -506,6 +507,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # the subvenciones de capital and indemnizaciones that article excludes.
         target_casilla_id = _renta_income_target_casilla(context)
         with bundled_indexed_authority().operation() as operation:
+            profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = _activity_category_matcher(operation)
             employment_category_matcher = _employment_category_matcher(operation)
             try:
@@ -627,6 +629,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             + inferred_actividad_retencion_rate_advisory_observations(
                 aggregation.observations,
                 bucket_id=context.bucket_id,
+                profile_decode_context=profile_decode_context,
                 resolver_id=self.resolver_id,
             )
             # Fourth screen, and the only one that can speak when there are NO

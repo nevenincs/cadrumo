@@ -66,7 +66,7 @@ def _canonical_payload(**overrides: object) -> dict[str, object]:
                 quantity=Decimal("1"),
                 unit_price=Decimal("100.00"),
                 subtotal=Decimal("100.00"),
-                iva_rate=IvaRate._from_registry("RATE_21"),
+                iva_rate=IvaRate.from_registry("RATE_21"),
                 iva_amount=Decimal("21.00"),
             ),
         ),
@@ -204,13 +204,13 @@ def test_a_simplificada_without_a_counterparty_tax_id_is_representable() -> None
     for the decomposition and renta-evidence paths even though it is a
     capability gain rather than a loss.
     """
-    payload = _canonical_payload(invoice_class=InvoiceClass._from_registry("SIMPLIFICADA"))
+    payload = _canonical_payload(invoice_class=InvoiceClass.from_registry("SIMPLIFICADA"))
     del payload["counterparty_tax_id"]
 
     invoice = Invoice.model_validate(payload)
 
     assert invoice.counterparty_tax_id is None
-    assert invoice.invoice_class is InvoiceClass._from_registry("SIMPLIFICADA")
+    assert invoice.invoice_class is InvoiceClass.from_registry("SIMPLIFICADA")
 
 
 def test_a_received_invoice_without_a_tax_id_refuses_even_as_simplificada() -> None:
@@ -223,7 +223,7 @@ def test_a_received_invoice_without_a_tax_id_refuses_even_as_simplificada() -> N
     """
     payload = _canonical_payload(
         kind=InvoiceKind.RECEIVED,
-        invoice_class=InvoiceClass._from_registry("SIMPLIFICADA"),
+        invoice_class=InvoiceClass.from_registry("SIMPLIFICADA"),
     )
     del payload["counterparty_tax_id"]
 
