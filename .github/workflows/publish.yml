@@ -68,6 +68,18 @@ jobs:
           verify_run "$PACKAGING_RUN_ID" "Cadrumo Packaging Smoke"
           verify_run "$HOMEBREW_RUN_ID" "Cadrumo Homebrew Acquisition"
           verify_run "$SCOOP_RUN_ID" "Cadrumo Scoop Acquisition"
+          evidence_root="${RUNNER_TEMP}/cadrumo-release-evidence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -p "$evidence_root/homebrew" "$evidence_root/scoop"
+          gh run download "$HOMEBREW_RUN_ID" \
+            --name cadrumo-homebrew-acquisition-linux-x86_64 \
+            --dir "$evidence_root/homebrew"
+          gh run download "$SCOOP_RUN_ID" \
+            --name cadrumo-scoop-acquisition-evidence \
+            --dir "$evidence_root/scoop"
+          homebrew_source_run="$(tar -xOzf "$evidence_root/homebrew/cadrumo-homebrew-acquisition-linux-x86_64.tar.gz" ./run-context.json | jq -r .source_run_id)"
+          scoop_source_run="$(tar -xOzf "$evidence_root/scoop/cadrumo-scoop-acquisition-evidence.tar.gz" ./run-context.json | jq -r .source_run_id)"
+          test "$homebrew_source_run" = "$PACKAGING_RUN_ID" || { echo "::error::Homebrew evidence consumed Packaging Smoke run ${homebrew_source_run}, expected ${PACKAGING_RUN_ID}"; exit 1; }
+          test "$scoop_source_run" = "$PACKAGING_RUN_ID" || { echo "::error::Scoop evidence consumed Packaging Smoke run ${scoop_source_run}, expected ${PACKAGING_RUN_ID}"; exit 1; }
 
   runner-queue-watchdog:
     # Mandatory now that the release path runs on the fleet: `smoke-test`
@@ -158,7 +170,7 @@ jobs:
 
   build:
     timeout-minutes: 120
-    name: "Build: Release artifacts (Linux)"
+    name: "Acquire: Validated release artifacts (Linux)"
     needs: runtime-inventory
     # Hosted. The three distributions are py3-none-any, so the build host
     # cannot affect the artifact, and this repository is public. A release
@@ -177,13 +189,30 @@ jobs:
       - name: Install Python
         run: uv python install
 
-      # cadrumo pins its two data corpora at `==`, so a build that silently
-      # omitted one would produce a root wheel no index can resolve.
-      - name: Build the three distributions
+      # Promote the immutable cohort that Packaging Smoke built and every
+      # platform/channel lane validated. Rebuilding here would publish bytes
+      # that none of those required runs actually exercised.
+      - name: Download the validated immutable release cohort
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
         run: |
-          uv build --out-dir dist .
-          uv build --out-dir dist packaging/cadrumo_data_manuals
-          uv build --out-dir dist packaging/cadrumo_data_official
+          set -euo pipefail
+          mkdir -p var/cohort-download var/release-cohort
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort \
+            --dir var/cohort-download
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz \
+            -C var/release-cohort
+
+      - name: Verify and select the validated distribution bytes
+        run: |
+          set -euo pipefail
+          uv run --no-sync python -m dev.packaging.release_cohort verify \
+            --cohort-dir var/release-cohort
+          mkdir -p dist
+          cp var/release-cohort/python/*.whl dist/
+          cp var/release-cohort/python/*.tar.gz dist/
+          test "$(find dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 6
           ls -l dist
 
       # PyPI rejects any file at or over its per-file cap. The corpus split
@@ -194,9 +223,9 @@ jobs:
       - name: Refuse a distribution over the index file cap
         run: python -m dev.packaging.distribution_cap --directory dist
 
-      # The checksum manifest is part of the uploaded directory. Every smoke
-      # leg verifies these exact bytes before installing, so no runtime can
-      # silently rebuild or substitute a release file.
+      # Seal the promoted subset for the downstream smoke and publication jobs.
+      # The cohort verifier above first checks these bytes against the immutable
+      # manifest produced by Packaging Smoke.
       - name: Seal and verify distribution bytes
         run: |
           sha256sum dist/*.whl dist/*.tar.gz | sort > dist/manifest.sha256
