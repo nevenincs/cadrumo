@@ -816,10 +816,10 @@ convention = "google"
 # (key + 18-char numeric value) that exceed 120 columns and cannot be split.
 "src/cadrumo/application/calculations/tests/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]
 # The packaging gate invokes only the trusted `uv` build driver from PATH.
-"src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
+"dev/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
 # Same rationale: the content-boundary gate builds the project's own wheel with
 # the trusted `uv` build driver (partial path resolved from PATH by design).
-"src/cadrumo/tests/test_wheel_content_boundary.py" = ["S603", "S607"]
+"dev/tests/test_wheel_content_boundary.py" = ["S603", "S607"]
 # Setup-answers subprocess test shells out to `sys.executable -c <script>` to
 # observe the project_answers registration error path; the script is a vetted
 # literal in this file.
