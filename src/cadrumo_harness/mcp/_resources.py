@@ -298,9 +298,11 @@ def _read_corpus_resource(ref: str, uri: str) -> HarnessResourceContent:
     """
     from cadrumo.application.corpus_search.citation_lookup import bundled_citation_lookup
     from cadrumo.application.corpus_search.errors import CorpusSearchInputError
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
     try:
-        text = bundled_citation_lookup().resolve_corpus_text(ref)
+        with bundled_indexed_authority().operation() as operation:
+            text = bundled_citation_lookup((ref,), operation=operation).resolve_corpus_text(ref)
     except CorpusSearchInputError as exc:
         raise HarnessResourceNotFoundError(f"no corpus text for {ref!r} ({uri})") from exc
     return HarnessResourceContent(ref=_ref_for(HarnessResourceKind.CORPUS, ref), text=text)

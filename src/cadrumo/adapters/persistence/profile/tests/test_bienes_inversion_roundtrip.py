@@ -46,9 +46,7 @@ def _populated_register() -> BienesInversionIvaRegister:
         kind=BienInversionKind.from_registry("mueble"),
         art108_elegible=True,
         acquisition_ledger_id="ledger-2022-furgoneta",
-        disposal=BienInversionDisposal(
-            year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
-        ),
+        disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")),
     )
     real_estate = BienInversionIvaRecord(
         identifier="bi-2021-local",
