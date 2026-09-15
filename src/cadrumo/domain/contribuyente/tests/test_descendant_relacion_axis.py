@@ -24,7 +24,8 @@ from datetime import date
 from functools import cache, partial
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.descendant_relacion import DescendantRelacion
 from ....core.errors.hierarchy import ProfileAnswerTypeError
@@ -57,7 +58,7 @@ _OLD_BIRTH = date(2010, 1, 1)
 def _family_context(filing_year: int) -> FamilyFactResolutionContext:
     coordinate = date(filing_year, 12, 31)
     return FamilyFactResolutionContext(
-        authority=compiled_bundled_authority(),
+        authority=PublishedGovernedFactSource(),
         filing_period=coordinate,
         devengo_date=coordinate,
     )

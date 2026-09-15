@@ -24,10 +24,10 @@ from collections.abc import Mapping
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -90,7 +90,7 @@ def _declared_rule_ids() -> frozenset[str]:
     Taking only the table would leave the one id a reader is most likely to meet
     on an unclassifiable document outside the grounding contract entirely.
     """
-    resolved = compiled_bundled_authority().resolve_governed_fact(
+    resolved = PublishedGovernedFactSource().resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-invoice-classification-catalogue",
             date_axis=DateAxis.FILING_PERIOD,

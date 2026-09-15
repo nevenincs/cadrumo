@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any, cast, override
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
@@ -411,10 +410,10 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     from decimal import Decimal
 
     from ...calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+    from ...calculations.registry.tests.published_authority import published_revision
     from ..invoice_classification import invoice_line_to_iva_observation
 
-    m303 = compiled_bundled_authority().modelo("303")
-    revision = m303.revisions["2022"]
+    revision = published_revision("303", "2022")
 
     # Two issued + one received line, all standard-case domestic
     observations = (

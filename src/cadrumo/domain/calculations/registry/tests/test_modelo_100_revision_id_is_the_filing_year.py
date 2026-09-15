@@ -26,10 +26,10 @@ import re
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import ValidatedRegistryAuthority
+from ..schema import ModeloDefinition
 from ..temporal import select_revision
+from ._published_authority import artifact_modelo
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -40,21 +40,25 @@ _ANNUAL_PERIOD = "0A"
 
 
 @pytest.fixture(scope="session")
-def registry_authority() -> ValidatedRegistryAuthority:
-    """The bundled validated authority."""
-    return compiled_bundled_authority()
+def modelo_100() -> ModeloDefinition:
+    """The published modelo 100 definition, every revision materialized."""
+    return artifact_modelo("100")
 
 
-def _modelo_100_years(authority: ValidatedRegistryAuthority) -> tuple[int, ...]:
+@pytest.fixture(scope="session")
+def modelo_303() -> ModeloDefinition:
+    """The published modelo 303 definition, every revision materialized."""
+    return artifact_modelo("303")
+
+
+def _modelo_100_years(modelo_100: ModeloDefinition) -> tuple[int, ...]:
     """Every filing year modelo 100 declares a revision for."""
-    return tuple(sorted(int(rid) for rid in authority.modelo("100").revisions if _YEAR_ID.match(rid)))
+    return tuple(sorted(int(rid) for rid in modelo_100.revisions if _YEAR_ID.match(rid)))
 
 
-def test_every_modelo_100_revision_id_is_a_bare_four_digit_year(
-    registry_authority: ValidatedRegistryAuthority,
-) -> None:
+def test_every_modelo_100_revision_id_is_a_bare_four_digit_year(modelo_100: ModeloDefinition) -> None:
     """A non-year id would break ``str(filing_year)`` at the three reading sites."""
-    ids = sorted(registry_authority.modelo("100").revisions)
+    ids = sorted(modelo_100.revisions)
     offenders = [rid for rid in ids if not _YEAR_ID.match(rid)]
     assert not offenders, (
         f"modelo 100 declares revision id(s) {offenders} that are not a bare year. "
@@ -64,15 +68,13 @@ def test_every_modelo_100_revision_id_is_a_bare_four_digit_year(
     )
 
 
-def test_every_modelo_100_revision_spans_exactly_its_own_calendar_year(
-    registry_authority: ValidatedRegistryAuthority,
-) -> None:
+def test_every_modelo_100_revision_spans_exactly_its_own_calendar_year(modelo_100: ModeloDefinition) -> None:
     """A revision narrower than its year means the year needs more than one.
 
     This is the shape of the modelo 303 mid-year split, caught before the id
     itself changes: the split revision's window shrinks first.
     """
-    for revision_id, revision in sorted(registry_authority.modelo("100").revisions.items()):
+    for revision_id, revision in sorted(modelo_100.revisions.items()):
         year = int(revision_id)
         assert revision.valid_from == date(year, 1, 1), (
             f"modelo 100 revision {revision_id} starts {revision.valid_from}, not 1 January. "
@@ -84,9 +86,7 @@ def test_every_modelo_100_revision_spans_exactly_its_own_calendar_year(
         )
 
 
-def test_canonical_selection_returns_the_revision_named_by_the_filing_year(
-    registry_authority: ValidatedRegistryAuthority,
-) -> None:
+def test_canonical_selection_returns_the_revision_named_by_the_filing_year(modelo_100: ModeloDefinition) -> None:
     """The load-bearing assertion: ``str(year)`` IS what canonical selection returns.
 
     The two tests above check the declaration's shape. This one checks the thing
@@ -94,9 +94,8 @@ def test_canonical_selection_returns_the_revision_named_by_the_filing_year(
     and asking the canonical resolver agree -- so a split that somehow preserved
     the naming would still be caught.
     """
-    modelo = registry_authority.modelo("100")
-    for year in _modelo_100_years(registry_authority):
-        selected = select_revision(modelo, filing_year=year, period=_ANNUAL_PERIOD, on=None)
+    for year in _modelo_100_years(modelo_100):
+        selected = select_revision(modelo_100, filing_year=year, period=_ANNUAL_PERIOD, on=None)
         assert selected.id == str(year), (
             f"modelo 100 filing year {year} canonically selects revision {selected.id!r}, "
             f"but three domain modules would read revision {str(year)!r}. They now "
@@ -104,15 +103,13 @@ def test_canonical_selection_returns_the_revision_named_by_the_filing_year(
         )
 
 
-def test_every_modelo_100_parameter_id_carries_its_own_revision_year(
-    registry_authority: ValidatedRegistryAuthority,
-) -> None:
+def test_every_modelo_100_parameter_id_carries_its_own_revision_year(modelo_100: ModeloDefinition) -> None:
     """The second half of the coincidence: the reads build ``renta-<year>-<slug>``.
 
     A parameter declared without the year prefix is unreachable from those call
     sites even when the revision id resolves perfectly.
     """
-    for revision_id, revision in sorted(registry_authority.modelo("100").revisions.items()):
+    for revision_id, revision in sorted(modelo_100.revisions.items()):
         prefix = f"renta-{revision_id}-"
         offenders = [parameter.id for parameter in revision.parameters if not parameter.id.startswith(prefix)]
         assert not offenders, (
@@ -121,9 +118,7 @@ def test_every_modelo_100_parameter_id_carries_its_own_revision_year(
         )
 
 
-def test_the_gate_is_not_vacuous_because_modelo_303_already_violates_it(
-    registry_authority: ValidatedRegistryAuthority,
-) -> None:
+def test_the_gate_is_not_vacuous_because_modelo_303_already_violates_it(modelo_303: ModeloDefinition) -> None:
     """TEETH, from the live tree rather than a fixture.
 
     Modelo 303's 2024 filing year is served by two revisions split at the RD-ley
@@ -132,7 +127,7 @@ def test_the_gate_is_not_vacuous_because_modelo_303_already_violates_it(
     the modelo 100 property, every assertion above would be passing vacuously
     and this test says so.
     """
-    revisions = registry_authority.modelo("303").revisions
+    revisions = modelo_303.revisions
     non_year_ids = [rid for rid in revisions if not _YEAR_ID.match(rid)]
     assert non_year_ids, (
         "modelo 303 now declares only bare-year revision ids, so the modelo 100 "

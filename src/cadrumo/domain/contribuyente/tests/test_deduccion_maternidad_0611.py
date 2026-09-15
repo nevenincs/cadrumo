@@ -33,7 +33,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.descendant_relacion import DescendantRelacion
 from ....core.errors.hierarchy import ProfileAnswerTypeError
@@ -60,7 +61,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: retyped, so a revision that moves either cannot leave this module asserting
 #: against a stale figure while the engine uses the new one.
 _THRESHOLDS = registry_thresholds(2024)
-_FACT_CONTEXT = FamilyFactResolutionContext(compiled_bundled_authority(), date(2024, 12, 31), date(2024, 12, 31))
+_FACT_CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(2024, 12, 31), date(2024, 12, 31))
 _ART_81_1_MATERNITY_RELATIONS = art_81_1_maternity_relations(context=_FACT_CONTEXT)
 
 # ---------------------------------------------------------------------------

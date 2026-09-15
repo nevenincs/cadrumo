@@ -87,11 +87,6 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "so it carries no taxpayer state of its own.",
     ),
     ExclusionExpectation(
-        "cadrumo_validation_verdict_cache_dir",
-        "One small fingerprint-keyed verdict per registry root, deleted and rewritten on a "
-        "mismatch. Regenerable and unrelated to taxpayer state.",
-    ),
-    ExclusionExpectation(
         "cadrumo_registry_disk_cache_dir",
         "The compiled registry pickle, rewritten on every recompile. Fingerprinting it churned "
         "the digest and produced spurious replay refusals; it was included only because the old "

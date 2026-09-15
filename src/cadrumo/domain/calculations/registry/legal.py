@@ -2,7 +2,7 @@
 
 The authority artifact carries immutable, already-published legal evidence.
 Corpus extraction, textual-grounding and provenance verification are publisher
-responsibilities in :mod:`dev.registry.compiler.legal_grounding`; runtime only
+responsibilities completed before the artifact is published; runtime only
 checks whether the artifact's selected citation is eligible for filing.
 """
 

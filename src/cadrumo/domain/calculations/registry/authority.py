@@ -150,6 +150,32 @@ def _require_artifact_coordinate_domain(domain: ContentDigest) -> None:
         raise RegistrySnapshotError("registry authority coordinate belongs to another process incarnation")
 
 
+_REGISTRY_CAPTURE_GENERATION = 1
+"""The one generation a registry capture comparison domain ever holds.
+
+A domain is minted per immutable authority incarnation -- an admitted
+generation pin, or one constructed validated authority -- so every capture
+under that domain observes the same content. A new generation arrives as a new
+incarnation and therefore a new domain; it is never a successor generation
+inside an old one.
+"""
+_PUBLISHED_CAPTURE_DOMAIN_LIMIT = 16
+_published_capture_domains: dict[AuthorityGenerationPin, ContentDigest] = {}
+_published_capture_domains_lock = RLock()
+
+
+def _published_capture_domain(pin: AuthorityGenerationPin) -> ContentDigest:
+    """Return the process-authenticated comparison domain shared by every lease of one pin."""
+    with _published_capture_domains_lock:
+        domain = _published_capture_domains.get(pin)
+        if domain is None:
+            domain = _artifact_coordinate_domain(f"{pin.logical_generation}:{pin.reader_incarnation}")
+            if len(_published_capture_domains) >= _PUBLISHED_CAPTURE_DOMAIN_LIMIT:
+                _published_capture_domains.pop(next(iter(_published_capture_domains)))
+            _published_capture_domains[pin] = domain
+        return domain
+
+
 @dataclass(frozen=True, slots=True, weakref_slot=True)
 class ValidatedRegistryAuthority:
     """Load, validate, and cache registry material behind one access point."""
@@ -527,7 +553,7 @@ class ValidatedRegistryAuthority:
             return RegistryAuthorityCapture(
                 projection=projection,
                 comparison_domain=self._current_coordinate().comparison_domain,
-                generation=0,
+                generation=_REGISTRY_CAPTURE_GENERATION,
             )
 
     def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
@@ -541,7 +567,7 @@ class ValidatedRegistryAuthority:
             raise RegistrySnapshotError("registry authority has no published capture coordinate")
         return RegistryAuthorityCurrentCoordinate(
             comparison_domain=comparison_domain,
-            generation=0,
+            generation=_REGISTRY_CAPTURE_GENERATION,
         )
 
     def deadline_windows(
@@ -839,6 +865,51 @@ class PinnedAuthorityOperation:
         """Answer one citation query from this generation's published legal evidence."""
         evidence = self.legal_evidence(str(legal_ref_id))
         return AuthorityEvidenceProjection(legal=(evidence,)).quotation_is_grounded(str(legal_ref_id), quotation)
+
+    def capture_law_selected_projection(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        grade: RegistryAuthorityGrade | None = None,
+    ) -> RegistryAuthorityCapture:
+        """Capture a law-selected inspection or grade-admitted snapshot from this generation.
+
+        ``grade=None`` selects the static inspection; supplying a grade selects
+        the snapshot admission path. The capture compares current against every
+        coordinate read from the same admitted generation in this process.
+        """
+        normalized = Modelo(modelo_id).value
+        projection: RegistryAuthorityProjection
+        if grade is None:
+            directory = self.modelo_directory(normalized)
+            selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=on)
+            revision = self.revision(normalized, str(selected.id))
+            modelo = directory.materialize(revision)
+            legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
+            projection = RegistryRevisionInspection.from_revision(
+                modelo=modelo,
+                revision=revision,
+                source_root=None,
+                sources={source_id: self.source_reference(source_id) for source_id in source_ids},
+                legal_ref_ids=frozenset(legal_ids),
+            )
+        else:
+            projection = self.snapshot(normalized, filing_year=filing_year, period=period, on=on, grade=grade)
+        return RegistryAuthorityCapture(
+            projection=projection,
+            comparison_domain=_published_capture_domain(self.generation),
+            generation=_REGISTRY_CAPTURE_GENERATION,
+        )
+
+    def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
+        """Return the current coordinate captures from this generation compare against."""
+        return RegistryAuthorityCurrentCoordinate(
+            comparison_domain=_published_capture_domain(self.generation),
+            generation=_REGISTRY_CAPTURE_GENERATION,
+        )
 
     def source_evidence(self, source_reference_id: str) -> PublishedSourceEvidence:
         """Load one publisher-captured public source payload."""

@@ -263,15 +263,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         override_policy=StorageOverridePolicy.FIXED,
     ),
     _location(
-        StorageCategory.VALIDATION_VERDICT_CACHE,
-        "cache/registry-verdict",
-        consumer_module="dev/registry/compiler/verdict_cache.py",
-        settings_field="cadrumo_validation_verdict_cache_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
         # The name is governed here; the field is deliberately NOT derived, so
         # the resolver's pytest branch can keep selecting on its absence.
         #

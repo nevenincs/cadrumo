@@ -456,14 +456,6 @@ class Settings(CadrumoLlmSettings):
             "exact content identity changes)"
         ),
     )
-    cadrumo_validation_verdict_cache_dir: Path = Field(
-        default=Path("cache") / "registry-verdict",
-        description=(
-            "Directory for the persistent registry-validation verdict cache "
-            "(a fingerprint-keyed proof that validate_registry ran green, so a "
-            "matching immutable tree skips runtime re-validation)"
-        ),
-    )
 
     # ── Browser Automation ──────────────────────────────────────────────────
     cadrumo_browser_channel: str = Field(
@@ -995,7 +987,6 @@ class Settings(CadrumoLlmSettings):
         "aeat_normatives_root",
         "cadrumo_corpus_text_cache_dir",
         "cadrumo_corpus_search_cache_dir",
-        "cadrumo_validation_verdict_cache_dir",
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",

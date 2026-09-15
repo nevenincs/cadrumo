@@ -10,19 +10,19 @@ chosen option.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
 from cadrumo.domain.calculations.registry.situacion_familiar_m145_catalogue import (
     resolve_situacion_familiar_m145_catalogue,
     situacion_familiar_m145_is_eligible_for_supplementary_reduction,
 )
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ..renta_codes import SituacionFamiliarM145
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_AUTHORITY = compiled_bundled_authority()
+_AUTHORITY = PublishedGovernedFactSource()
 _M145_CATALOGUE = resolve_situacion_familiar_m145_catalogue(authority=_AUTHORITY)
 
 

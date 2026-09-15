@@ -21,7 +21,8 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
@@ -44,7 +45,7 @@ _CAP_ANUAL = Decimal("1000")
 @cache
 def _context(filing_year: int) -> FamilyFactResolutionContext:
     coordinate = date(filing_year, 12, 31)
-    return FamilyFactResolutionContext(compiled_bundled_authority(), coordinate, coordinate)
+    return FamilyFactResolutionContext(PublishedGovernedFactSource(), coordinate, coordinate)
 
 
 def _child(

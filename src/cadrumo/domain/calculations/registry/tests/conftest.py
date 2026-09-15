@@ -1,12 +1,11 @@
 """Pytest fixtures for domain calculations registry tests."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.calculations.registry.authority import ValidatedRegistryAuthority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.ids import RevisionId
 from .....domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from ..schema import RegistrySnapshot
@@ -18,9 +17,10 @@ from .registry_tree import bundled_registry_tree
 
 
 @pytest.fixture(scope="session")
-def registry_authority() -> ValidatedRegistryAuthority:
-    """Expose the committed authority artifact to registry-owned tests."""
-    return compiled_bundled_authority()
+def registry_authority() -> Iterator[PinnedAuthorityOperation]:
+    """Expose the published authority operation lease to registry-owned tests."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 @pytest.fixture(scope="session")
@@ -31,7 +31,7 @@ def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
 
 @pytest.fixture(scope="session")
 def registry_snapshot(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> Callable[..., RegistrySnapshot]:
     """Build snapshots through the committed authority boundary."""
 

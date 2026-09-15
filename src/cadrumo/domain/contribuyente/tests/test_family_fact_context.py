@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_base import DateAxis
@@ -17,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _context() -> FamilyFactResolutionContext:
     coordinate = date(2024, 12, 31)
     return FamilyFactResolutionContext(
-        authority=compiled_bundled_authority(),
+        authority=PublishedGovernedFactSource(),
         filing_period=coordinate,
         devengo_date=coordinate,
     )

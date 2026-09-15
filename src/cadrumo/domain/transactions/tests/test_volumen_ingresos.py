@@ -9,12 +9,13 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.tipos_actividad import TipoActividad
-from ...calculations.registry.authority import ValidatedRegistryAuthority
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.facts.schema import EntitySetFactPayload
+from ...calculations.registry.governed_fact_scope import GovernedFactSource
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..tipo_actividad_partitions import tipo_actividad_code_set
 from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
@@ -25,8 +26,8 @@ _ACTIVITY_FACT_ID = "modelo-131:selector-m036-volumen-ingresos-agrario"
 
 
 @pytest.fixture(scope="module")
-def authority() -> ValidatedRegistryAuthority:
-    return compiled_bundled_authority()
+def authority() -> GovernedFactSource:
+    return PublishedGovernedFactSource()
 
 
 @pytest.mark.parametrize(
@@ -43,7 +44,7 @@ def test_the_predicate_splits_where_the_instrucciones_split(
     concepto: ConceptoIngreso | None,
     *,
     counts: bool,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> None:
     """Every member, including the two that share the 'subvención' prefix.
 
@@ -56,7 +57,7 @@ def test_the_predicate_splits_where_the_instrucciones_split(
     assert counts_toward_volumen_de_ingresos(concepto, effective_date=date(2026, 4, 1), authority=authority) is counts
 
 
-def test_the_two_subvencion_members_land_on_opposite_sides(authority: ValidatedRegistryAuthority) -> None:
+def test_the_two_subvencion_members_land_on_opposite_sides(authority: GovernedFactSource) -> None:
     """The assertion the prefix trap would break.
 
     Any implementation keyed on the word "subvención" -- a ``startswith``, a substring
@@ -88,7 +89,8 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     The governed fact is the sole legal authority for membership.  The enum only
     supplies the product vocabulary used to interpret its declared tokens.
     """
-    fact = compiled_bundled_authority().catalogues.facts.facts[_EXCLUDED_FACT]
+    with bundled_indexed_authority().operation() as operation:
+        fact = operation.governed_fact(_EXCLUDED_FACT)
     payload = fact.variants[0].payload
     assert isinstance(payload, EntitySetFactPayload)
     declared = frozenset(ConceptoIngreso.from_registry(token) for token in payload.entities)
@@ -99,7 +101,7 @@ def test_the_registry_exclusion_set_agrees_with_the_typed_one() -> None:
     }
 
 
-def test_the_modelo_131_activity_selector_is_not_the_art_95_one(authority: ValidatedRegistryAuthority) -> None:
+def test_the_modelo_131_activity_selector_is_not_the_art_95_one(authority: GovernedFactSource) -> None:
     """The form-specific agrarian selector is its own, and must stay its own.
 
     Modelo 131 instructions name agricultural, livestock, and forestry activity;
@@ -120,7 +122,7 @@ def test_the_modelo_131_activity_selector_is_not_the_art_95_one(authority: Valid
 
 
 def test_pesquera_is_absent_because_the_form_is_narrower_than_article_110(
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> None:
     """Modelo 131 is estimación objetiva, and pesca is not in the módulos regime.
 

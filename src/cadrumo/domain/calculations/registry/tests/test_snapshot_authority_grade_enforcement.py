@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from ..authority import ValidatedRegistryAuthority
+from ..authority import PinnedAuthorityOperation
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..snapshot import build_validated_snapshot
@@ -101,25 +99,26 @@ def test_equal_or_lower_snapshot_requests_pass_the_grade_boundary(
 
 
 def test_the_authority_facade_refuses_a_mutated_lower_grade_revision(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """A real selected revision mutation must bite through the public facade."""
     control = registry_authority.snapshot(_MODEL, filing_year=_YEAR, period=_PERIOD)
     assert control.revision.authority_grade is RegistryAuthorityGrade.FILING
 
-    original = registry_authority.modelo(_MODEL)
+    modelos, catalogues = bundled_registry_tree()
+    original = next(modelo for modelo in modelos if modelo.id == _MODEL)
     selected: ModeloRevision = next(iter(original.revisions.values()))
     downgraded = selected.model_copy(update={"authority_grade": RegistryAuthorityGrade.CALCULATION})
     mutated = original.model_copy(update={"revisions": {downgraded.id: downgraded}})
-    authority = replace(
-        registry_authority,
-        modelos=tuple(mutated if modelo.id == _MODEL else modelo for modelo in registry_authority.modelos),
-        _modelos_by_id={**registry_authority._modelos_by_id, _MODEL: mutated},
-        _snapshots={},
-    )
 
     with pytest.raises(
         RegistryValidationError,
         match=r"declares 'calculation' authority grade.*requested 'filing'",
     ):
-        authority.snapshot(_MODEL, filing_year=_YEAR, period=_PERIOD)
+        build_validated_snapshot(
+            mutated,
+            catalogues,
+            filing_year=_YEAR,
+            period=_PERIOD,
+            grade=RegistryAuthorityGrade.FILING,
+        )

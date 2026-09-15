@@ -24,7 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..values import (
@@ -36,7 +36,7 @@ from ..values import (
     new_profile_snapshot_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
 # The model validator raises the domain error, which pydantic wraps. Matching

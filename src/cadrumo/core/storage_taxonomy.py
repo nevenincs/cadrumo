@@ -225,7 +225,6 @@ class StorageCategory(StrEnum):
     CORPUS_TEXT_CACHE_FILE = "corpus-text-cache.file"
     CORPUS_SEARCH_CACHE = "corpus-search-cache"
     CORPUS_SEARCH_INDEX = "corpus-search-cache.index"
-    VALIDATION_VERDICT_CACHE = "validation-verdict-cache"
     REGISTRY_DISK_CACHE = "registry-disk-cache"
     # ── Durable generated outputs ───────────────────────────────────────────
     SUBMISSIONS = "submissions"

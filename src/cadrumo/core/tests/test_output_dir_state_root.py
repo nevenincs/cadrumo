@@ -52,7 +52,6 @@ DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
     "cadrumo_corpus_search_cache_dir": "cache/corpus-search",
-    "cadrumo_validation_verdict_cache_dir": "cache/registry-verdict",
     "cadrumo_submissions_dir": "submissions",
     "cadrumo_workflow_runs_dir": "workflow-runs",
     "cadrumo_drafts_dir": "drafts",

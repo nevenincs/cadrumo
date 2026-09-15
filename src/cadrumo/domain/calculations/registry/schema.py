@@ -779,9 +779,9 @@ class ModeloRevision(RegistryRevisionDeclaration):
     fields at snapshot build. Modelo 369's ``t36904`` is 9 authored fields and
     161 derived ones against a design sheet requiring 161; modelo 390's
     ``page-05`` is 6 and 105. Any consumer comparing a layout against an official
-    record design MUST resolve through that function, which is the stage
-    :func:`~dev.registry.compiler.validate_export_layout_coverage.validate_export_layout_record_coverage`
-    measures. Reading this attribute for that purpose reports every materialised
+    record design MUST resolve through that function, which is the stage the
+    export-layout record-coverage validation measures when the authority is
+    built. Reading this attribute for that purpose reports every materialised
     field as an unwritten position: it produced 22 confident false
     silent-data-loss findings across modelos 369, 390 and 131, twice, in trees
     that were already stamped and verified.

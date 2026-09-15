@@ -841,9 +841,8 @@ def resolve_applicability_rule_from_authority(
     profile view, and coupling its availability to full business-rule
     validation or the review-status filing gate would make an unrelated
     validation defect elsewhere in the tree break every taxpayer's
-    applicability answer. The fragment was already validated once, at
-    registry build time, by
-    :func:`~dev.registry.compiler.validate_applicability_section.validate_applicability_section`.
+    applicability answer. The fragment was already validated once, when the
+    registry authority was built and published.
 
     This is a deliberate asymmetry with :class:`~._schema.RegistrySnapshot`,
     which carries a same-shaped projection for every OTHER schema family:

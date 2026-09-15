@@ -3,9 +3,9 @@
 Detects field-level divergence when the same casilla id appears in
 multiple :class:`ModeloRevision` records of the same
 :class:`ModeloDefinition`. The strict-validation and advisory-summary
-policies in :mod:`dev.registry.compiler.validate_cross_revision`
-consume the divergences this module produces; keeping detection separate
-from policy keeps each module reviewable.
+policies applied while the registry authority is built consume the
+divergences this module produces; keeping detection separate from policy
+keeps each module reviewable.
 """
 
 from __future__ import annotations

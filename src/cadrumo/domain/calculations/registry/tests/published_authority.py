@@ -18,9 +18,10 @@ from datetime import date
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ....user_profile.schema import ProfileSchemaDefinition
-from ..authority import bundled_indexed_authority
+from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..authority_artifact import ProfileCreateContext
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
+from ..governed_fact_scope import governed_facts_in_scope
 from ..ids import RevisionId
 from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot, SupportedFilingYearsCatalogue
 from ..schema_references import LegalReference, SourceReference
@@ -146,7 +147,16 @@ def published_profile_schema() -> ProfileSchemaDefinition:
         return operation.profile_schema()
 
 
-def published_profile_create_context() -> ProfileCreateContext:
-    """Return a profile creation context pinned to the published generation."""
-    with bundled_indexed_authority().operation() as operation:
-        return operation.profile_create_context()
+def leased_profile_create_context() -> ProfileCreateContext:
+    """Return the creation context of the authority operation leased for the running test.
+
+    The code under test reads that same operation through the governed-fact
+    scope, so a record built with this context carries the generation pin the
+    code under test compares against. A test module obtains the lease with
+    ``pytest.mark.usefixtures("authority_operation")``; outside a lease this
+    refuses instead of opening a lease of its own.
+    """
+    operation = governed_facts_in_scope()
+    if not isinstance(operation, PinnedAuthorityOperation):
+        raise LookupError("a profile creation context requires a leased authority operation in scope")
+    return operation.profile_create_context()

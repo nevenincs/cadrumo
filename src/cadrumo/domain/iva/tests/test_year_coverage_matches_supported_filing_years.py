@@ -38,9 +38,9 @@ from collections.abc import Collection, Iterator
 from typing import Protocol
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 
 from ..catalogue import iva_catalogue_years
 from ..place_of_supply import place_of_supply_years
@@ -74,7 +74,7 @@ def _supported_filing_years() -> tuple[int, ...]:
     and is already validated before publication, so this shipped test must not
     reopen mutable TOML or invoke the development compiler.
     """
-    declaration = compiled_bundled_authority().catalogues.supported_filing_years
+    declaration = published_supported_filing_years()
     assert declaration is not None, "the published authority declares no supported filing years"
     return tuple(declaration.years)
 

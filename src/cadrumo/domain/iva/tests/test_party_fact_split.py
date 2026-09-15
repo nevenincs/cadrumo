@@ -25,9 +25,9 @@ from collections.abc import Iterator
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.schema_base import DateAxis
@@ -58,7 +58,7 @@ _DATE = date(2026, 3, 10)
 
 def _classification_fact_entries(*, on: date) -> dict[str, str]:
     """Resolve the published classification declaration at its filing coordinate."""
-    resolved = compiled_bundled_authority().resolve_governed_fact(
+    resolved = PublishedGovernedFactSource().resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-invoice-classification-catalogue",
             date_axis=DateAxis.FILING_PERIOD,

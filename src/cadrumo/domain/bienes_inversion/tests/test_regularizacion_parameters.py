@@ -13,13 +13,13 @@ point of moving it there.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import ValidatedRegistryAuthority
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.schema_base import ThresholdComparison
 from ..regularizacion_parameters import (
     BienesInversionParameterResolutionError,
@@ -30,14 +30,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
 @pytest.fixture(scope="session")
-def registry_authority() -> ValidatedRegistryAuthority:
-    """The bundled validated authority.
+def registry_authority() -> Iterator[PinnedAuthorityOperation]:
+    """The published authority operation lease.
 
     Declared here rather than reused: the registry package's conftest is not
     on this package's fixture path, and reaching across for it would couple
     two test packages through a file neither owns.
     """
-    return compiled_bundled_authority()
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 #: Every modelo 303 revision, with a filing-period date inside its own window.
@@ -53,12 +54,12 @@ _REVISION_PROBES = (
 
 @pytest.mark.parametrize(("revision_id", "probe"), _REVISION_PROBES)
 def test_every_modelo_303_revision_resolves_a_whole_bundle(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
     revision_id: str,
     probe: date,
 ) -> None:
     """The supported path: each revision supplies the complete figure set."""
-    revision = registry_authority.modelo("303").revisions[revision_id]
+    revision = registry_authority.revision("303", revision_id)
     bundle = resolve_bienes_inversion_regularizacion_parameters(
         revision,
         modelo_id="303",
@@ -72,7 +73,7 @@ def test_every_modelo_303_revision_resolves_a_whole_bundle(
 
 @pytest.mark.parametrize(("revision_id", "probe"), _REVISION_PROBES)
 def test_the_bundle_names_the_declaration_it_came_from(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
     revision_id: str,
     probe: date,
 ) -> None:
@@ -81,7 +82,7 @@ def test_the_bundle_names_the_declaration_it_came_from(
     Handing the same bundle to both would otherwise make a WRONG bundle
     self-consistent, so the values must arrive knowing where they came from.
     """
-    revision = registry_authority.modelo("303").revisions[revision_id]
+    revision = registry_authority.revision("303", revision_id)
     bundle = resolve_bienes_inversion_regularizacion_parameters(
         revision,
         modelo_id="303",
@@ -97,14 +98,14 @@ def test_the_bundle_names_the_declaration_it_came_from(
 
 
 def test_the_resolved_values_equal_what_the_registry_declares(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """The bundle must not transform the declaration it reads.
 
     Compared against the registry rather than against a literal, so this test
     holds no legal value of its own and stays true if the law changes.
     """
-    revision = registry_authority.modelo("303").revisions["2025"]
+    revision = registry_authority.revision("303", "2025")
     bundle = resolve_bienes_inversion_regularizacion_parameters(
         revision,
         modelo_id="303",
@@ -119,7 +120,7 @@ def test_the_resolved_values_equal_what_the_registry_declares(
 
 
 def test_a_revision_declaring_no_parameters_is_refused(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """TEETH: modelo 390 declares the family not applicable, and must not resolve.
 
@@ -127,7 +128,7 @@ def test_a_revision_declaring_no_parameters_is_refused(
     applicable. Constructing a bundle from one would mean regularising a capital
     good on figures that revision never declared.
     """
-    revision = registry_authority.modelo("390").revisions["2025"]
+    revision = registry_authority.revision("390", "2025")
     with pytest.raises(BienesInversionParameterResolutionError) as excinfo:
         resolve_bienes_inversion_regularizacion_parameters(
             revision,
@@ -138,10 +139,10 @@ def test_a_revision_declaring_no_parameters_is_refused(
 
 
 def test_a_filing_date_outside_the_revision_window_is_refused(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """TEETH: a value is not borrowed across the window that grounds it."""
-    revision = registry_authority.modelo("303").revisions["2025"]
+    revision = registry_authority.revision("303", "2025")
     with pytest.raises(BienesInversionParameterResolutionError) as excinfo:
         resolve_bienes_inversion_regularizacion_parameters(
             revision,
@@ -152,7 +153,7 @@ def test_a_filing_date_outside_the_revision_window_is_refused(
 
 
 def test_a_partial_family_is_refused(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """TEETH: half a family is worse than none, and must not build a bundle.
 
@@ -160,7 +161,7 @@ def test_a_partial_family_is_refused(
     is a defect this resolver uniquely owns: the registry itself has no rule
     requiring the family to be complete, and a partial set loads cleanly.
     """
-    revision = registry_authority.modelo("303").revisions["2025"]
+    revision = registry_authority.revision("303", "2025")
     kept = tuple(p for p in revision.parameters if not p.id.endswith("divisor-inmueble"))
     partial = revision.model_copy(update={"parameters": kept})
     with pytest.raises(BienesInversionParameterResolutionError) as excinfo:
@@ -173,14 +174,14 @@ def test_a_partial_family_is_refused(
 
 
 def test_the_de_minimis_gate_follows_the_declared_comparison(
-    registry_authority: ValidatedRegistryAuthority,
+    registry_authority: PinnedAuthorityOperation,
 ) -> None:
     """The comparison direction is registry data, not a hardcoded operator.
 
     Probed relative to the resolved threshold rather than to a literal, so the
     boundary case is exercised without this file asserting what the law says.
     """
-    revision = registry_authority.modelo("303").revisions["2025"]
+    revision = registry_authority.revision("303", "2025")
     bundle = resolve_bienes_inversion_regularizacion_parameters(
         revision,
         modelo_id="303",
