@@ -21,12 +21,13 @@ import contextlib
 import logging
 import logging.handlers
 import shutil
-import subprocess
 import sys
 import textwrap
 from pathlib import Path
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ..core.directory_scan import scan_directory
 from .collection_storage_root import _release_log_handlers_under
@@ -136,7 +137,7 @@ def test_registered_cleanup_removes_a_root_with_a_real_atexit_ordered_log_handle
         # ordering at normal interpreter exit, not a hand-picked one.
         """,
     )
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv; probe source is a test-local literal.
+    completed = run_audited_process(
         [sys.executable, "-c", probe],
         capture_output=True,
         text=True,

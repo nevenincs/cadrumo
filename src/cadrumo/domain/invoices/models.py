@@ -957,7 +957,9 @@ class Invoice(BaseModel):
         from ..calculations.registry.authority import PinnedAuthorityOperation
 
         if not isinstance(operation, PinnedAuthorityOperation):
-            raise RegistryValidationError("invoice OSS/IOSS validation requires a generation-pinned authority operation")
+            raise RegistryValidationError(
+                "invoice OSS/IOSS validation requires a generation-pinned authority operation",
+            )
         try:
             transaction_kind = resolve_transaction_kind_catalogue(
                 self.operation_date or self.issued_at,

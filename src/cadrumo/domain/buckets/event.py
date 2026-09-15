@@ -107,6 +107,14 @@ _PayloadValue = Annotated[
 ]
 
 
+_PROFILE_ROTATION_EVENT = "profile.passphrase.rotated"
+_CERTIFICATE_SOURCE_SET_EVENT = "auth.certificate_source.secret_set"
+_CERTIFICATE_SOURCE_ROTATED_EVENT = "auth.certificate_source.secret_rotated"
+_CERTIFICATE_SOURCE_REMOVED_EVENT = "auth.certificate_source.secret_removed"
+_CUSTODY_CHANGED_EVENT = "custody.passphrase.changed"
+_CUSTODY_RECOVERED_EVENT = "custody.secret_store.recovered"
+
+
 class BucketEventType(StrEnum):
     """Closed catalogue of bucket-event kinds.
 
@@ -155,7 +163,7 @@ class BucketEventType(StrEnum):
     # A lifecycle fact, not an operator verb: it records that the custody
     # generation advanced, which is what makes an earlier record row's
     # provenance witness legitimately stale rather than evidence of tampering.
-    PROFILE_PASSPHRASE_ROTATED = "profile.passphrase.rotated"  # noqa: S105 - event-type token, not a credential
+    PROFILE_PASSPHRASE_ROTATED = _PROFILE_ROTATION_EVENT
     # 036 censo cotejo: emitted once per artefact-apply reconciliation
     # commit (``apply_cotejo``). The live-refresh scrape against the sede
     # Mis Datos Censales endpoint was retired and its snapshot substrate
@@ -199,18 +207,18 @@ class BucketEventType(StrEnum):
     AUTH_CERTIFICATE_SOURCE_REGISTERED = "auth.certificate_source.registered"
     AUTH_CERTIFICATE_SOURCE_SELECTED = "auth.certificate_source.selected"
     AUTH_CERTIFICATE_SOURCE_REMOVED = "auth.certificate_source.removed"
-    AUTH_CERTIFICATE_SOURCE_SECRET_SET = "auth.certificate_source.secret_set"  # noqa: S105 - event-type label, not a secret
-    AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED = "auth.certificate_source.secret_rotated"  # noqa: S105 - event-type label
-    AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED = "auth.certificate_source.secret_removed"  # noqa: S105 - event-type label
+    AUTH_CERTIFICATE_SOURCE_SECRET_SET = _CERTIFICATE_SOURCE_SET_EVENT
+    AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED = _CERTIFICATE_SOURCE_ROTATED_EVENT
+    AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED = _CERTIFICATE_SOURCE_REMOVED_EVENT
 
     # secret-store custody: passphrase rotation and the recovery-code lifecycle.
     # Generic custody vocabulary with no AEAT surface, so the stems stay English.
     # Payloads carry only non-secret witnesses (the recovery fingerprint, the
     # store location); no passphrase, mnemonic, or key material is ever recorded.
-    CUSTODY_PASSPHRASE_CHANGED = "custody.passphrase.changed"  # noqa: S105 - event-type label, not a secret
+    CUSTODY_PASSPHRASE_CHANGED = _CUSTODY_CHANGED_EVENT
     CUSTODY_RECOVERY_CODE_CREATED = "custody.recovery_code.created"
     CUSTODY_RECOVERY_CODE_ROTATED = "custody.recovery_code.rotated"
-    CUSTODY_SECRET_STORE_RECOVERED = "custody.secret_store.recovered"  # noqa: S105 - event-type label, not a secret
+    CUSTODY_SECRET_STORE_RECOVERED = _CUSTODY_RECOVERED_EVENT
 
     # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"

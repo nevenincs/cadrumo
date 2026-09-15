@@ -34,6 +34,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from ._host_load_hook import STAMP_PREFIX
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -87,7 +89,7 @@ def _run_probe(*, probe_source: str) -> subprocess.CompletedProcess[str]:
         (tmp_path / "conftest.py").write_text(_PROBE_CONFTEST, encoding="utf-8")
         (tmp_path / "test_probe.py").write_text(probe_source, encoding="utf-8")
 
-        return subprocess.run(  # noqa: S603 - fixed interpreter argv; every other token is a module-local literal.
+        return run_audited_process(
             [
                 sys.executable,
                 "-m",

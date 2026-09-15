@@ -146,9 +146,8 @@ def test_a_resolution_that_cannot_be_performed_raises_instead_of_arriving_absent
     state can be mistaken for the other, and neither is the ``None`` field a
     hand-assembled result carries.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with pytest.raises(IvaCatalogueError, match=r"place-of-supply|grounding"):
-            classify_iva(_domestic_at_general_rate(on=_AFTER_GROUNDING), operation=_authority_operation_for_test)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(IvaCatalogueError, match=r"place-of-supply|grounding"):
+        classify_iva(_domestic_at_general_rate(on=_AFTER_GROUNDING), operation=_authority_operation_for_test)
 
 
 def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> None:

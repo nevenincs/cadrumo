@@ -8,12 +8,13 @@ the installed hook rather than replacing it with a direct helper call.
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ._worker_count_hook import DEFAULT_WORKER_COUNT
 
@@ -76,7 +77,7 @@ def _resolved_worker_count(
             command.extend(("--confcutdir", str(tmp_path)))
         command.append(str(probe_path))
 
-        result = subprocess.run(  # noqa: S603 - fixed interpreter argv; remaining values are test-local literals.
+        result = run_audited_process(
             command,
             cwd=_REPOSITORY_ROOT,
             env=env,

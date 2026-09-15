@@ -112,7 +112,7 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
 
     result = _run_python(
         """
-        import cadrumo.domain.renta.first_slice_routing_integrity  # noqa: F401  -- registration side effect
+        import cadrumo.domain.renta.first_slice_routing_integrity  # registration side effect
 
         from cadrumo.domain.resources.registry import resources
         from dev.registry.compiler.authority import compiled_bundled_authority

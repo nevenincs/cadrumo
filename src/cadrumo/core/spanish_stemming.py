@@ -10,8 +10,7 @@ own FTS layout and ranking policy.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
-from typing import Protocol
+from collections.abc import Callable, Iterable
 
 __all__ = [
     "SpanishStemmer",
@@ -24,21 +23,15 @@ __all__ = [
 _WORD_RE = re.compile(r"\w+", re.UNICODE)
 
 
-class SpanishStemmer(Protocol):
-    """The narrow Snowball contract the application's lexical indexes consume."""
-
-    def stemWords(self, words: list[str]) -> list[str]:  # noqa: N802 - third-party API
-        """Return the Snowball stem of each word in ``words``, in order."""
-        ...
+SpanishStemmer = Callable[[list[str]], list[str]]
+"""The narrow Snowball contract the application's lexical indexes consume."""
 
 
 def spanish_stemmer() -> SpanishStemmer:
     """Build the Spanish Snowball stemmer used by every shipped lexical index."""
     import snowballstemmer
 
-    # CAST-RATIONALE-SPANISH-STEMMER-PROTOCOL: snowballstemmer ships no static
-    # return protocol, while this boundary consumes only its stemWords method.
-    return snowballstemmer.stemmer("spanish")
+    return snowballstemmer.stemmer("spanish").stemWords
 
 
 def spanish_word_tokens(text: str) -> tuple[str, ...]:
@@ -57,7 +50,7 @@ def stem_spanish_terms(stemmer: SpanishStemmer, terms: Iterable[str]) -> tuple[s
     if not words:
         return ()
     stemmed: list[str] = []
-    for word in stemmer.stemWords(words):
+    for word in stemmer(words):
         if not isinstance(word, str):
             raise TypeError("the Spanish stemmer returned a non-string token")
         stemmed.append(word)

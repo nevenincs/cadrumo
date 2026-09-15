@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from ..core.directory_scan import scan_directory
 from .collection_storage_root import (
     _ABANDONED_AFTER_SECONDS,
@@ -333,7 +335,7 @@ def test_the_reclaim_runs_at_startup_and_not_only_at_exit(tmp_path: Path) -> Non
         os._exit(0)
         """,
     )
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv; probe source is a test-local literal.
+    completed = run_audited_process(
         [sys.executable, "-c", probe],
         capture_output=True,
         text=True,

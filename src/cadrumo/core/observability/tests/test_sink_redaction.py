@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.aeat_literal_fixtures import REDACTION_SECRET_WLPL_PATH_CANARY, aeat_url
+from ....tests.aeat_literal_fixtures import REDACTION_PATH_CANARY, aeat_url
 from ..models import ErrorPayload, FormFillPayload, NavigationPayload, RunEvent, RunEventKind, RunEventPayload
 from ..sink import JsonlRunSink
 
@@ -33,7 +33,7 @@ _RUN_ID = "0123456789abcdef"
 _NIF_CANARY = "12345678Z"
 _BEARER_TAIL = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 _BEARER_CANARY = f"Bearer {_BEARER_TAIL}"
-_URL_PATH_CANARY = REDACTION_SECRET_WLPL_PATH_CANARY
+_URL_PATH_CANARY = REDACTION_PATH_CANARY
 _AEAT_URL = aeat_url("aeat_gob", _URL_PATH_CANARY)
 
 

@@ -132,14 +132,13 @@ def test_lookup_rate_respects_effective_from() -> None:
     refuses -- and it now sits on the boundary the statute actually sets, the
     day before RDL 20/2012 art. 23.Dos took effect.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2012|rate"):
-            lookup_rate(
-                EUMemberState._from_registry("es"),
-                IvaRateKind("general"),
-                date(2012, 8, 31),
-                operation=_authority_operation_for_test,
-            )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2012|rate"):
+        lookup_rate(
+            EUMemberState._from_registry("es"),
+            IvaRateKind("general"),
+            date(2012, 8, 31),
+            operation=_authority_operation_for_test,
+        )
 
 
 def test_every_rate_window_is_well_ordered() -> None:

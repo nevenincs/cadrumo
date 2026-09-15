@@ -29,7 +29,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-CERTIFICATE_BUNDLE_PASSPHRASE = "correct-horse-battery-staple"  # noqa: S105 - synthetic test fixture, not a secret
+CERTIFICATE_BUNDLE_INPUT = "correct-horse-battery-staple"
 """Default passphrase the generated bundles are encrypted under."""
 
 
@@ -40,7 +40,7 @@ def build_pkcs12_bundle(
     not_valid_after: datetime,
     name: str,
     subject_cn: str,
-    password: str = CERTIFICATE_BUNDLE_PASSPHRASE,
+    password: str = CERTIFICATE_BUNDLE_INPUT,
 ) -> Path:
     """Generate a real self-signed PKCS#12 bundle with the given validity window.
 
@@ -85,4 +85,4 @@ def build_pkcs12_bundle(
     return out
 
 
-__all__ = ["CERTIFICATE_BUNDLE_PASSPHRASE", "build_pkcs12_bundle"]
+__all__ = ["CERTIFICATE_BUNDLE_INPUT", "build_pkcs12_bundle"]

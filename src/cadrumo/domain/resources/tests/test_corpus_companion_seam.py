@@ -25,13 +25,14 @@ from __future__ import annotations
 
 import importlib
 import shutil
-import subprocess
 import sys
 import zipfile
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....core.resources.bundled_data import (
@@ -247,7 +248,7 @@ def built_companion_portions(
         project = _REPO_ROOT / "packaging" / project_name
         wheel_dir = root / f"{project_name}-wheel"
         portion = root / f"{project_name}-portion"
-        subprocess.run(  # noqa: S603 - test intentionally invokes the resolved build driver.
+        run_audited_process(
             [uv, "build", "--wheel", "--project", str(project), "--out-dir", str(wheel_dir)],
             cwd=_REPO_ROOT,
             capture_output=True,

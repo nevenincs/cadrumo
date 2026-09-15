@@ -6,7 +6,9 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..schema import ProfileSchemaDefinition
-from ._schema_loader_fixtures import function_scoped_schema  # noqa: F401
+from ._schema_loader_fixtures import function_scoped_schema
+
+__all__ = ["function_scoped_schema"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

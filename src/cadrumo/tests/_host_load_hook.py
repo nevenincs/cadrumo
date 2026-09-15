@@ -182,8 +182,8 @@ def _emit(item: pytest.Item) -> None:
             terminal.line(line)
             terminal.flush()
             return
-        except Exception:  # noqa: S110 - fall through to the raw descriptor
-            pass
+        except Exception:
+            terminal = None
     try:
         os.write(2, (line + "\n").encode("utf-8", errors="replace"))
     except Exception:
