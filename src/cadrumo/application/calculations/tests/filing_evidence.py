@@ -54,7 +54,6 @@ def regimen_simplificado_filing_evidence(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=dana_2024_eligibility,
-            authority=compiled_bundled_authority(),
             operation=operation,
         ),
     )
