@@ -40,8 +40,25 @@ _EXPORT_AUTHORITY_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset({"export", 
 _BOOTSTRAP_TARGETS_PATH: Final[Path] = Path(__file__).with_name("generated_export_bootstrap_targets.toml")
 _CONTINUITY_SECTIONS: Final[tuple[str, ...]] = ("casillas", "casilla_continuidad_evolutions")
 _PREDECESSOR_DECLARATION: Final = "predecessor"
-_RESOLVED_STORAGE_DECLARATIONS: Final[frozenset[str]] = frozenset(
+_DETACHMENT_DECLARATIONS: Final[frozenset[str]] = frozenset(
     {_PREDECESSOR_DECLARATION, "casilla_storage_baseline", "family_storage_baseline"}
+)
+_RESOLVED_STORAGE_DECLARATIONS: Final[frozenset[str]] = frozenset(
+    {
+        _PREDECESSOR_DECLARATION,
+        "reviewed_against",
+        "casilla_storage_baseline",
+        "casilla_overrides",
+        "casilla_removals",
+        "casilla_positions",
+        "family_storage_baseline",
+        "cleared_families",
+        "scoped_families",
+        "family_overrides",
+        "family_removals",
+        "family_positions",
+        "restated_families",
+    }
 )
 _CASILLA_SECTION: Final = "casillas"
 _COMPLETE_EDITION_FRAGMENT: Final = "complete-edition.toml"
@@ -194,7 +211,7 @@ def _stage_complete_sibling(source_modelo_root: Path, metadata_modelo_root: Path
     manifest_table = {
         key: value
         for key, value in edition.table.items()
-        if key in manifest_members and key != _PREDECESSOR_DECLARATION
+        if key in manifest_members and key not in _RESOLVED_STORAGE_DECLARATIONS
     }
     revisions_root = metadata_modelo_root / "revisions" / revision
     revisions_root.mkdir(parents=True, exist_ok=True)
@@ -276,7 +293,7 @@ def stage_generated_export_candidate(
     for sibling in (staged_modelo_root / "revisions").iterdir():
         if sibling.name != revision:
             shutil.rmtree(sibling)
-    if edition.inherits_from is not None:
+    if _DETACHMENT_DECLARATIONS.intersection(edition.table):
         _write_complete_candidate_edition(staged_modelo_root / "revisions" / revision, edition)
     if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
         retarget_bootstrap_construct_export_layout(

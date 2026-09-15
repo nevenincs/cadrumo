@@ -146,8 +146,7 @@ def new_edition(
         raise typer.Exit(code=1) from exc
     _echo_result(result, mode="scaffold")
     typer.echo(
-        "Revision manifest created. Author only evidenced deltas; "
-        "run independent registry checks before publication."
+        "Revision manifest created. Author only evidenced deltas; run independent registry checks before publication."
     )
 
 

@@ -31,6 +31,8 @@ _INHERITED_MODELO = "390"
 _INHERITING_REVISION = "2023"
 _DECLARING_REVISION = "2022"
 _INHERITED_LINK = "modelo-390-approval"
+_STORAGE_ONLY_MODELO = "184"
+_STORAGE_ONLY_REVISION = "2025-y-siguientes"
 
 
 def _stage(candidate_root: Path, *, modelo: str, revision: str) -> Path:
@@ -77,6 +79,37 @@ def test_staged_edition_equals_the_loader_resolution_of_its_source(tmp_path: Pat
     revision = load_modelo_directory(staged).revisions[_INHERITING_REVISION]
 
     assert tuple(str(link.id) for link in revision.application_links) == resolved_links
+
+
+def test_storage_only_transitive_baselines_are_detached_as_complete_authority(tmp_path: Path) -> None:
+    """A storage-only target remains hydratable after every baseline sibling is pruned."""
+    source = bundled_path("registry", "aeat", "modelos", _STORAGE_ONLY_MODELO)
+    source_before = {path.relative_to(source): path.read_bytes() for path in source.rglob("*") if path.is_file()}
+    live = load_modelo_directory(source).revisions[_STORAGE_ONLY_REVISION]
+
+    staged_root = _stage(
+        tmp_path / "candidate",
+        modelo=_STORAGE_ONLY_MODELO,
+        revision=_STORAGE_ONLY_REVISION,
+    )
+    staged_revision_roots = tuple(path.name for path in (staged_root / "revisions").iterdir() if path.is_dir())
+    assert staged_revision_roots == (_STORAGE_ONLY_REVISION,)
+    declared = tomllib.loads(
+        (staged_root / "revisions" / _STORAGE_ONLY_REVISION / "revision.toml").read_text("utf-8")
+    )["revisions"][_STORAGE_ONLY_REVISION]
+    assert not {"predecessor", "casilla_storage_baseline", "family_storage_baseline"}.intersection(declared)
+
+    staged = load_modelo_directory(staged_root).revisions[_STORAGE_ONLY_REVISION]
+    assert tuple((str(row.id), row.number, row.data_type) for row in staged.casillas) == tuple(
+        (str(row.id), row.number, row.data_type) for row in live.casillas
+    )
+    assert staged.application_links == live.application_links
+    assert staged.workbook_parity_refs == live.workbook_parity_refs
+    assert staged.predecessor is None
+    assert staged.casilla_storage_baseline is None
+    assert staged.family_storage_baseline is None
+    source_after = {path.relative_to(source): path.read_bytes() for path in source.rglob("*") if path.is_file()}
+    assert source_after == source_before
 
 
 def test_a_candidate_missing_an_inherited_member_is_refused(tmp_path: Path) -> None:

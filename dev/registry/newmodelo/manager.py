@@ -119,6 +119,7 @@ class ScaffoldResult:
     already_present: tuple[Path, ...] = ()
     missing: tuple[Path, ...] = field(default_factory=tuple)
 
+
 def _validate_modelo_id(modelo_id: str) -> None:
     if not _MODELO_ID_RE.match(modelo_id):
         raise NewModeloError(f"{modelo_id!r}: modelo id must be exactly three digits, e.g. '410'")
@@ -386,9 +387,7 @@ class NewModeloScaffoldManager:
         resolved_title = title or f"TODO: title for modelo {modelo_id}"
         root = self.modelo_root(modelo_id)
         storage_baseline = (
-            _latest_existing_edition(root, revision_id, requested_valid_from=valid_from)
-            if existing_modelo
-            else None
+            _latest_existing_edition(root, revision_id, requested_valid_from=valid_from) if existing_modelo else None
         )
         if not periods:
             raise NewModeloError("at least one filing period is required")

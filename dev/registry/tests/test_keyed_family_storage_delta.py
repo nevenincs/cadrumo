@@ -92,6 +92,7 @@ def test_deadline_storage_reconstruction_is_separate_from_period_eligibility(
 ) -> None:
     spec = family_spec("deadline_windows")
     assert spec is not None
+    assert spec.identity is not None
     member = {"id": "deadline-2024", "filing_year": 2024, "period": "2024 0A"}
 
     result = inherit_keyed_family(
