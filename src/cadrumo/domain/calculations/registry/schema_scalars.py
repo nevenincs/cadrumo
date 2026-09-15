@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from decimal import Decimal
 from typing import Annotated, Literal
 
@@ -17,6 +17,7 @@ from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, Sp
 from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.period import StandardPeriodCode
 from ....core.spanish_postcode import SPANISH_POSTCODE_PATTERN, SPANISH_PROVINCE_CODE_PATTERN
+from ....core.type_guards import is_object_mapping
 from .errors import RegistryValidationError
 
 __all__ = [
@@ -79,7 +80,11 @@ def _validate_nif_string(value: object, info: ValidationInfo) -> object:
     surfaces identifier-format problems through its established error type.
     """
     context = info.context
-    tax_id_format = context.get(TAX_ID_FORMAT_CONTEXT) if isinstance(context, Mapping) else None
+    tax_id_format: SpanishTaxIdFormat | None = None
+    if is_object_mapping(context):
+        candidate = context.get(TAX_ID_FORMAT_CONTEXT)
+        if isinstance(candidate, SpanishTaxIdFormat):
+            tax_id_format = candidate
     return _validate_nif_value(value, tax_id_format)
 
 

@@ -12,6 +12,7 @@ from typing import Annotated, Final, Literal, override
 from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, model_validator
 
 from .....core.frozen_mapping import FROZEN_MAPPING
+from .....core.type_guards import is_object_collection, is_object_mapping
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId, RegistryRevisionNodeId, RevisionId, SourceRefId
 from ..revision_contracts import (
@@ -104,11 +105,11 @@ def _hydrate_tagged_fact_atom(value: object, info: ValidationInfo) -> object:
     canonical payload is accepted: an unknown tag, a malformed payload, or an
     untagged non-string value is refused rather than guessed from its shape.
     """
-    if not (isinstance(info.context, Mapping) and info.context.get(TAGGED_FACT_ATOM_CONTEXT)):
+    if not (is_object_mapping(info.context) and info.context.get(TAGGED_FACT_ATOM_CONTEXT)):
         return value
     if value is None or isinstance(value, str):
         return value
-    if not isinstance(value, Mapping) or len(value) != 1:
+    if not is_object_mapping(value) or len(value) != 1:
         raise RegistryValidationError("a non-string fact atom must be a single tagged value")
     ((tag, payload),) = value.items()
     if tag == _DECIMAL_TAG and isinstance(payload, str):
@@ -307,7 +308,7 @@ class MappingFactPayload(RegistryModel):
 
 def _coerce_entity_set(value: object) -> object:
     """Materialise immutable entity-set data parsed from a TOML array."""
-    if isinstance(value, (tuple, list, set, frozenset)):
+    if is_object_collection(value):
         return frozenset(value)
     return value
 

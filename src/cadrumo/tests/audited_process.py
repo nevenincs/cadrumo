@@ -14,6 +14,15 @@ import subprocess
 from collections.abc import Mapping, Sequence
 from os import PathLike
 from pathlib import Path
+from typing import TypedDict
+
+
+class _ProcessOptions(TypedDict, total=False):
+    """Typed optional ``Popen`` options forwarded by the audited boundary."""
+
+    pass_fds: tuple[int, ...]
+    close_fds: bool
+    startupinfo: subprocess.STARTUPINFO
 
 
 def run_audited_process(
@@ -30,7 +39,7 @@ def run_audited_process(
     check: bool = False,
     pass_fds: Sequence[int] = (),
     close_fds: bool | None = None,
-    startupinfo: object | None = None,
+    startupinfo: subprocess.STARTUPINFO | None = None,
 ) -> subprocess.CompletedProcess[str | bytes]:
     """Run an explicit argv through the audited async process boundary."""
     return asyncio.run(
@@ -66,7 +75,7 @@ async def _run_audited_process(
     check: bool,
     pass_fds: Sequence[int],
     close_fds: bool | None,
-    startupinfo: object | None,
+    startupinfo: subprocess.STARTUPINFO | None,
 ) -> subprocess.CompletedProcess[str | bytes]:
     """Implement :func:`run_audited_process` without shell or dispatch."""
     rendered_command = [str(argument) for argument in command]
@@ -80,7 +89,7 @@ async def _run_audited_process(
     else:
         raise TypeError("a string input requires text=True")
 
-    process_options: dict[str, object] = {}
+    process_options: _ProcessOptions = {}
     if pass_fds:
         process_options["pass_fds"] = tuple(pass_fds)
     if close_fds is not None:
@@ -101,6 +110,8 @@ async def _run_audited_process(
     except TimeoutError:
         process.kill()
         stdout, stderr = await process.communicate()
+        if timeout is None:
+            raise RuntimeError("the child process timed out without a timeout budget") from None
         raise subprocess.TimeoutExpired(
             rendered_command,
             timeout,
@@ -108,9 +119,12 @@ async def _run_audited_process(
             stderr=_render_output(stderr, text=text, encoding=encoding, errors=errors),
         ) from None
 
+    returncode = process.returncode
+    if returncode is None:
+        raise RuntimeError("the child process did not finish after communicate()")
     result = subprocess.CompletedProcess(
         rendered_command,
-        process.returncode,
+        returncode,
         _render_output(stdout, text=text, encoding=encoding, errors=errors),
         _render_output(stderr, text=text, encoding=encoding, errors=errors),
     )
@@ -137,4 +151,13 @@ def _render_output(
     return output.decode(encoding or "utf-8", errors or "strict")
 
 
-__all__ = ["run_audited_process"]
+def ensure_text_completed_process(
+    result: subprocess.CompletedProcess[str | bytes],
+) -> subprocess.CompletedProcess[str]:
+    """Validate the text-output contract of an explicitly text-mode child."""
+    if not isinstance(result.stdout, str) or not isinstance(result.stderr, str):
+        raise TypeError("the audited process did not return text output")
+    return subprocess.CompletedProcess(result.args, result.returncode, result.stdout, result.stderr)
+
+
+__all__ = ["ensure_text_completed_process", "run_audited_process"]

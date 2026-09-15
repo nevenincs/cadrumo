@@ -247,14 +247,20 @@ def _catalogue(entries: Mapping[str, str]) -> IvaFlowDirectionCatalogue:
             raise RegistryValidationError(f"IVA flow direction {raw_token!r} declares a mismatched value")
         raw_sides = _required(entries, f"{prefix}settlement_sides")
         if raw_sides == no_settlement_token:
-            settlement_sides = frozenset()
+            settlement_sides: frozenset[IvaSettlementSide] = frozenset[IvaSettlementSide]()
         else:
             side_tokens = tuple(token.strip() for token in raw_sides.split(",") if token.strip())
             if not side_tokens or len(side_tokens) != len(set(side_tokens)):
                 raise RegistryValidationError(
                     f"IVA flow direction {raw_token!r} must declare unique settlement sides",
                 )
-            settlement_sides = frozenset(IvaSettlementSide._from_registry(side) for side in side_tokens)
+            typed_sides: list[IvaSettlementSide] = []
+            for side in side_tokens:
+                projected_side = IvaSettlementSide._from_registry(side)
+                if not isinstance(projected_side, IvaSettlementSide):
+                    raise RegistryValidationError("IVA flow catalogue projected an invalid settlement side")
+                typed_sides.append(projected_side)
+            settlement_sides = frozenset(typed_sides)
             if not settlement_sides.issubset(settlement_choice_set):
                 raise RegistryValidationError(
                     f"IVA flow direction {raw_token!r} names an undeclared settlement side",

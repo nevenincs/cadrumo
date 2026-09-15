@@ -184,7 +184,10 @@ def _discapacidad_grade(
 ) -> _DisabilityGrade | None:
     if value is None:
         return None
-    return value if value in _accepted_disability_grades(authority=authority) else None
+    for accepted_grade in _accepted_disability_grades(authority=authority):
+        if value == accepted_grade:
+            return accepted_grade
+    return None
 
 
 def descendant_facts_from_list(

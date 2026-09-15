@@ -17,6 +17,7 @@ from typing import Final
 from ....core.errors.hierarchy import CadrumoError
 from ....core.file_change_time import file_change_time_ns
 from ....core.hashing import reject_duplicate_json_members, reject_json_constant, sha256_hex
+from ....core.type_guards import is_str_keyed_dict
 from .authority_artifact import (
     AuthorityComponentQuery,
     AuthorityGenerationPin,
@@ -71,7 +72,7 @@ class AuthorityDescriptor:
             )
         except (OSError, UnicodeDecodeError, ValueError) as exc:
             raise AuthorityStoreError(f"authority descriptor is unavailable or malformed at {path}") from exc
-        if not isinstance(document, dict) or set(document) != _DESCRIPTOR_MEMBERS:
+        if not is_str_keyed_dict(document) or frozenset(document) != _DESCRIPTOR_MEMBERS:
             raise AuthorityStoreError("authority descriptor has unexpected or missing members")
         try:
             format_name = document["format"]
@@ -79,9 +80,13 @@ class AuthorityDescriptor:
             database_size = document["database_size"]
             database_sha256 = document["database_sha256"]
             logical_generation = document["logical_generation"]
-            if not all(
-                isinstance(value, str) for value in (format_name, database, database_sha256, logical_generation)
-            ):
+            if not isinstance(format_name, str):
+                raise TypeError
+            if not isinstance(database, str):
+                raise TypeError
+            if not isinstance(database_sha256, str):
+                raise TypeError
+            if not isinstance(logical_generation, str):
                 raise TypeError
             if not isinstance(database_size, int) or isinstance(database_size, bool):
                 raise TypeError

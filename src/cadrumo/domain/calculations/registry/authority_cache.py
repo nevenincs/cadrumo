@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Callable, Hashable, Mapping
+from collections.abc import Callable, Hashable
 from concurrent.futures import Future
 from dataclasses import dataclass, fields, is_dataclass
 from sys import getsizeof
 from threading import RLock, get_ident, local
-from typing import cast
 
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.type_guards import is_object_collection, is_object_mapping
 
 DEFAULT_AUTHORITY_CACHE_BUDGET = 64 * 1024 * 1024
 
@@ -25,15 +25,15 @@ def retained_object_size(value: object) -> int:
             return 0
         seen.add(identity)
         size = getsizeof(item)
-        if isinstance(item, Mapping):
+        if is_object_mapping(item):
             return size + sum(measure(key) + measure(member) for key, member in item.items())
-        if isinstance(item, (tuple, list, set, frozenset)):
+        if is_object_collection(item):
             return size + sum(measure(member) for member in item)
         if is_dataclass(item) and not isinstance(item, type):
             return size + sum(measure(getattr(item, field.name)) for field in fields(item))
         model_fields = getattr(type(item), "model_fields", None)
-        if isinstance(model_fields, Mapping):
-            return size + sum(measure(getattr(item, name)) for name in model_fields)
+        if is_object_mapping(model_fields):
+            return size + sum(measure(getattr(item, name)) for name in model_fields if isinstance(name, str))
         return size
 
     return measure(value)
@@ -102,7 +102,7 @@ class AccountedAuthorityCache[K: Hashable, V]:
             future = self._in_flight.get(key)
             owner = future is None
             if future is None:
-                future = Future()
+                future = Future[RetainedAuthorityValue[V]]()
                 self._in_flight[key] = future
                 self._owners[key] = get_ident()
         if not owner:
@@ -111,7 +111,7 @@ class AccountedAuthorityCache[K: Hashable, V]:
                 self._refuse_wait_cycle(waiter, key)
                 self._waiting_for[waiter] = key
             try:
-                return cast(V, future.result().value)
+                return future.result().value
             finally:
                 with self._lock:
                     self._waiting_for.pop(waiter, None)

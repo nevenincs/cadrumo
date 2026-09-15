@@ -21,6 +21,8 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
+from ....core.type_guards import is_object_mapping
+
 __all__ = (
     "CANONICAL_FAMILY_SPECS",
     "CASILLAS_FAMILY",
@@ -143,7 +145,7 @@ def family_identity_value(member: object, path: str) -> object:
     """
     current = member
     for segment in path.split("."):
-        if isinstance(current, Mapping):
+        if is_object_mapping(current):
             current = current.get(segment)
         else:
             try:

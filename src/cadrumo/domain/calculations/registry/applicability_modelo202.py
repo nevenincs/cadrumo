@@ -102,7 +102,7 @@ def _modelo_202_legal_refs(
 ) -> tuple[LegalRefId, ...]:
     """Materialise the catalogue's legal-reference tuple for a verdict."""
     key = f"legal_refs.{outcome}"
-    return tuple(cast(LegalRefId, item) for item in declarations[key].split("|") if item)
+    return tuple(item for item in declarations[key].split("|") if item)
 
 
 def resolve_modelo_202_art_40_3_incn_threshold(

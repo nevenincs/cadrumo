@@ -8,7 +8,7 @@ nothing is supplied and the published artifact remains the only source.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
@@ -29,7 +29,7 @@ def compiling_catalogues(
     legal: Mapping[str, LegalReference],
     sources: Mapping[str, SourceReference],
     source_root: Path,
-) -> Iterator[None]:
+) -> Generator[None]:
     """Scope IVA grounding to the catalogues of the authority being compiled."""
     token = _COMPILING_CATALOGUES.set((legal, sources, source_root))
     try:

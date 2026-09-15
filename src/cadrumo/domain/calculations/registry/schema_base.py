@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from types import UnionType
-from typing import Annotated, Final, Literal, Union, cast, get_args, get_origin
+from typing import Annotated, Final, Literal, TypeGuard, Union, get_args, get_origin
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
 
@@ -409,6 +409,11 @@ ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
 """
 
 
+def _is_object_iterable(value: object) -> TypeGuard[Iterable[object]]:
+    """Narrow an arbitrary iterable to object-valued entries without changing its shape."""
+    return isinstance(value, Iterable)
+
+
 def sorted_unique_capabilities(value: object) -> object:
     """Order declared modelo capabilities and refuse a repeated declaration.
 
@@ -418,14 +423,15 @@ def sorted_unique_capabilities(value: object) -> object:
     irrelevant to the stored value; rejecting duplicates keeps the tuple's
     length a truthful count of what was declared.
     """
-    if isinstance(value, str) or not isinstance(value, Iterable):
+    if isinstance(value, str) or not _is_object_iterable(value):
         return value
     items = tuple(value)
     if not all(isinstance(item, str) for item in items):
         return items
     if len(set(items)) != len(items):
         raise RegistryValidationError("modelo capabilities must be declared at most once each")
-    return tuple(sorted(cast("tuple[str, ...]", items)))
+    string_items = tuple(item for item in items if isinstance(item, str))
+    return tuple(sorted(string_items))
 
 
 ModeloFilingCapabilities = Annotated[
