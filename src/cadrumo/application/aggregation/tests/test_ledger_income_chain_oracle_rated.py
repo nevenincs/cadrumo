@@ -52,6 +52,7 @@ ungrounded screen fires, which is the property pinned here.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -62,6 +63,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
@@ -79,6 +81,13 @@ from .renta_income_aggregation_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture(autouse=True)
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Drive the chain inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def modelo_130_revision():
@@ -327,10 +336,15 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
 # differ, which is what a real practitioner in their first years actually
 # invoices.
 
-_INICIO_RETENCION = (
-    _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate
-).quantize(Decimal("0.01"))
-_INICIO_CASH = _TOTAL - _INICIO_RETENCION
+
+def _inicio_retencion() -> Decimal:
+    return (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate).quantize(
+        Decimal("0.01")
+    )
+
+
+def _inicio_cash() -> Decimal:
+    return _TOTAL - _inicio_retencion()
 
 
 def test_the_inicio_de_actividad_rate_is_genuinely_below_the_general_rate() -> None:
@@ -343,8 +357,8 @@ def test_the_inicio_de_actividad_rate_is_genuinely_below_the_general_rate() -> N
     rates = load_retencion_actividades_rates(effective_date=_VALUE_DATE)
 
     assert rates.inicio_actividad_rate < rates.general_rate
-    assert _INICIO_RETENCION < _RETENCION
-    assert _INICIO_CASH > _CASH
+    assert _inicio_retencion() < _RETENCION
+    assert _inicio_cash() > _CASH
 
 
 def test_a_sub_cap_withholding_is_inferred_at_its_own_rate_not_clamped_to_the_bound() -> None:
@@ -356,11 +370,11 @@ def test_a_sub_cap_withholding_is_inferred_at_its_own_rate_not_clamped_to_the_bo
     strictly below the ceiling, and returning the ceiling is wrong by 80 euros
     on a single invoice -- an over-claimed credit against the pago fraccionado.
     """
-    aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
+    aggregation = _aggregated(declares_substrate=True, cash=_inicio_cash())
 
     observation = aggregation.observations[0]
 
-    assert observation.withheld_amount == _INICIO_RETENCION
+    assert observation.withheld_amount == _inicio_retencion()
     assert observation.withheld_amount != _RETENCION, "the bound is a ceiling, never the answer"
     assert observation.taxable_base_amount == _BASE
 
@@ -375,7 +389,7 @@ def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutor
     integros the article names as the base.
     """
     revision = modelo_130_revision()
-    aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
+    aggregation = _aggregated(declares_substrate=True, cash=_inicio_cash())
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     statutory = (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate).quantize(

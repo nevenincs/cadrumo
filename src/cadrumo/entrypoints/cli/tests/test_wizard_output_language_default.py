@@ -9,6 +9,7 @@ from cadrumo.application.wizard.tests.registry_setup_flow_support import registr
 
 from ....core.config import override_settings
 from ....core.i18n.render import clear_output_language_cache, tr
+from .clean_install_fixtures import clean_install as clean_install
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

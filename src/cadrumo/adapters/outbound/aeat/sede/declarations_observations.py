@@ -484,11 +484,11 @@ def _observed_casillas_from_declaration_pdf(
     declaration: Declaracion,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
+    declaration_period = declaration.period.registry_token
     try:
-        declaration_period = declaration.period.registry_token
         # The decrypted declaration bytes are parsed entirely in memory, including
         # bbox-anchored word-position extraction; they are never written to a
-        # plaintext scratch file (sensitive-financial-data-secure-storage-only).
+        # plaintext scratch file.
         filing = reconciliation_evidence_parser().parse_declaracion_bytes(
             body,
             modelo=declaration.modelo,
@@ -497,18 +497,21 @@ def _observed_casillas_from_declaration_pdf(
             registry_snapshot=snapshot,
         )
     except ReconciliationDeclaracionParseError:
-        # `from None`: the refusal carries the coordinates the operator needs and
-        # the parse cause would only add PDF internals to the traceback.
+        filing = None
+    if filing is None:
+        # Raised outside the handler so neither `__cause__` nor `__context__`
+        # links the parser failure: its chain carries PDF internals, and a
+        # suppressed context still travels with the exception object.
         raise SedeParseError(
             "declaration PDF did not yield registry casilla observations",
             context={
                 "operation": "declaration_pdf_parse",
                 "modelo": declaration.modelo,
                 "ejercicio": str(declaration.ejercicio),
-                "period": declaration.period.registry_token,
+                "period": declaration_period,
             },
             translated_message=tr("adapters.sede.errors.parse_failed"),
-        ) from None
+        )
 
     observations: list[ObservedCasillaValue] = []
     for casilla in filing.values:

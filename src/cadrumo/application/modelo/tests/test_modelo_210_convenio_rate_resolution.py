@@ -23,6 +23,7 @@ Covers the testimonial personas required by the M210 IRNR engine contract:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -34,6 +35,7 @@ __all__ = ["m210_snapshot"]
 
 from ....core.casilla_id import CasillaId
 from ....core.irnr import TipoRentaIrnr
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
@@ -41,7 +43,7 @@ from ....domain.calculations.registry.iva_schema_vocabulary import default_iva_r
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.contribuyente.renta_codes import FiscalResidency
-from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from .._m210_convenio_facts import resolve_m210_convenio_override
 from .._m210_rate import resolve_m210_rate
@@ -56,7 +58,17 @@ from ..verification_predicates import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DEVENGO_DATE = date(2025, 12, 31)
-_IVA_REGIME = default_iva_regime(effective_date=_DEVENGO_DATE)
+
+
+@pytest.fixture(autouse=True)
+def _generation_pinned_authority() -> Iterator[None]:
+    """Run every test inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
+def _iva_regime() -> IVARegime:
+    return default_iva_regime(effective_date=_DEVENGO_DATE)
 
 
 def _tipo_renta(value: str) -> TipoRentaIrnr:
@@ -91,7 +103,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=_IVA_REGIME,
+        iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
         representante_fiscal_nif="12345678Z",
@@ -107,7 +119,7 @@ def _resident_profile() -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=_IVA_REGIME,
+        iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
@@ -414,7 +426,7 @@ def _irnr_profile_without_representante(country_code: str) -> TaxpayerProfile:
 
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=_IVA_REGIME,
+        iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
     )
@@ -446,7 +458,7 @@ def test_representante_predicate_violated_for_non_eea_resident_without_represent
 
     profile = TaxpayerProfile.model_construct(
         tax_id="X1234567L",
-        iva_regime=_IVA_REGIME,
+        iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="AR",
         representante_fiscal_nif=None,
@@ -478,7 +490,7 @@ def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
     )
     profile = TaxpayerProfile.model_construct(
         tax_id="X1234567L",
-        iva_regime=_IVA_REGIME,
+        iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="AR",
         representante_fiscal_nif=None,

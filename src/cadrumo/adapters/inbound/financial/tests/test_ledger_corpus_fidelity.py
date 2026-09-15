@@ -333,19 +333,20 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130(built: _Corpus
     """Trabajo / capital income must not feed M130 actividad income."""
     excluded_ids = {tx.transaction_id for tx, rule, _ in built if "excluded_m130" in rule.get("feeds", [])}
     assert excluded_ids, "corpus must contain salary/rent/interest income"
-    catalogue = _catalogue(built)
     emitted: set[str] = set()
-    for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_renta_income_ledger(
-            catalogue,
-            bucket_id="corpus",
-            period=period,
-            modelo=M130_MODELO,
-            target_casilla_id=M130_INGRESOS_CASILLA,
-            activity_category_matcher=m130_activity_category_matcher,
-            employment_category_matcher=m130_employment_category_matcher,
-        )
-        emitted.update(o.transaction_id for o in result.observations)
+    with _indexed_authority_for_test().operation():
+        catalogue = _catalogue(built)
+        for period in _QUARTERLY_TEST_PERIODS:
+            result = aggregate_renta_income_ledger(
+                catalogue,
+                bucket_id="corpus",
+                period=period,
+                modelo=M130_MODELO,
+                target_casilla_id=M130_INGRESOS_CASILLA,
+                activity_category_matcher=m130_activity_category_matcher,
+                employment_category_matcher=m130_employment_category_matcher,
+            )
+            emitted.update(o.transaction_id for o in result.observations)
     leaked = emitted & excluded_ids
     assert not leaked, f"{len(leaked)} trabajo/capital rows leaked into M130 income"
 

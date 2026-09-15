@@ -1,6 +1,7 @@
 """Real public-surface tests for typed filing producer snapshots."""
 
 import json
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from datetime import date as _date
 from datetime import date as _prov_date
@@ -546,21 +547,23 @@ def test_modelo_202_exact_unsupported_inventory_includes_no_silent_filler() -> N
 
 
 def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatable_cnae() -> None:
-    taxpayer_profile = TaxpayerProfile(
-        tax_id=_TAXPAYER_TAX_ID,
-        iva=_m303_profile(),
-        iva_regime=IVARegime("GENERAL"),
-        incn_prior_12_months=Decimal("999999.99"),
-        ley_49_2002_special_regime_option_declared=True,
-        ley_49_2002_special_regime_option_date=date(2025, 1, 1),
-        ley_49_2002_special_regime_renunciation_declared=False,
-        ley_49_2002_special_regime_renunciation_date=date(2026, 1, 1),
-    )
-    facts = Modelo202ProducerProfile(
-        taxpayer_profile=taxpayer_profile,
-        activities=(Modelo202ActivityFacts(cnae="6201"), Modelo202ActivityFacts(cnae="6202")),
-    )
-    assert Modelo202ProducerProfile.model_validate_json(facts.model_dump_json()) == facts
+    with bundled_indexed_authority().operation():
+        taxpayer_profile = TaxpayerProfile(
+            tax_id=_TAXPAYER_TAX_ID,
+            iva=_m303_profile(),
+            iva_regime=IVARegime("GENERAL"),
+            incn_prior_12_months=Decimal("999999.99"),
+            ley_49_2002_special_regime_option_declared=True,
+            ley_49_2002_special_regime_option_date=date(2025, 1, 1),
+            ley_49_2002_special_regime_renunciation_declared=False,
+            ley_49_2002_special_regime_renunciation_date=date(2026, 1, 1),
+        )
+        facts = Modelo202ProducerProfile(
+            taxpayer_profile=taxpayer_profile,
+            activities=(Modelo202ActivityFacts(cnae="6201"), Modelo202ActivityFacts(cnae="6202")),
+        )
+        round_tripped = Modelo202ProducerProfile.model_validate_json(facts.model_dump_json())
+    assert round_tripped == facts
     assert facts.taxpayer_profile is taxpayer_profile
     assert tuple(activity.cnae for activity in facts.activities) == ("6201", "6202")
     assert "principal" not in facts.model_dump()
@@ -1143,38 +1146,48 @@ def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> 
     assert values[FilingProducerKey.PRESENTER_TAX_ID] == _PRESENTER_TAX_ID
 
 
+type _NonM303ProducerProfile = Modelo111ProfileFacts | Modelo202ProducerProfile | GeneralFilingProfileFacts
+
+
+def _m111_producer_profile() -> Modelo111ProfileFacts:
+    return Modelo111ProfileFacts(colegio_concertado=False)
+
+
+def _m202_producer_profile() -> Modelo202ProducerProfile:
+    return Modelo202ProducerProfile(
+        taxpayer_profile=TaxpayerProfile(tax_id=_TAXPAYER_TAX_ID, iva_regime=IVARegime("GENERAL")),
+        activities=(),
+    )
+
+
 @pytest.mark.parametrize(
-    ("modelo", "model_profile"),
+    ("modelo", "model_profile_factory"),
     (
-        (Modelo("111"), Modelo111ProfileFacts(colegio_concertado=False)),
-        (
-            Modelo("202"),
-            Modelo202ProducerProfile(
-                taxpayer_profile=TaxpayerProfile(tax_id=_TAXPAYER_TAX_ID, iva_regime=IVARegime("GENERAL")),
-                activities=(),
-            ),
-        ),
-        (Modelo("131"), GeneralFilingProfileFacts()),
+        (Modelo("111"), _m111_producer_profile),
+        (Modelo("202"), _m202_producer_profile),
+        (Modelo("131"), GeneralFilingProfileFacts),
     ),
 )
 def test_m303_filing_facts_are_refused_for_every_non_m303_modelo(
     modelo: Modelo,
-    model_profile: Modelo111ProfileFacts | Modelo202ProducerProfile | GeneralFilingProfileFacts,
+    model_profile_factory: Callable[[], _NonM303ProducerProfile],
 ) -> None:
     """Modelo-specific filing facts never cross into M111, M202, or generic producers."""
-    with pytest.raises(FilingProducerSnapshotError, match="M303FilingFacts are valid only for modelo 303"):
-        build_filing_producer_snapshot(
-            modelo=modelo,
-            taxpayer_tax_id=_TAXPAYER_TAX_ID,
-            taxpayer_identity=_taxpayer_identity(),
-            presenter=_presenter(),
-            model_profile=model_profile,
-            elections=_elections(ResultDisposition.NEGATIVA),
-            amendment_evidence=None,
-            refund_account=None,
-            charge_account=None,
-            m303_filing_facts=_m303_filing_facts(),
-        )
+    with bundled_indexed_authority().operation():
+        model_profile = model_profile_factory()
+        with pytest.raises(FilingProducerSnapshotError, match="M303FilingFacts are valid only for modelo 303"):
+            build_filing_producer_snapshot(
+                modelo=modelo,
+                taxpayer_tax_id=_TAXPAYER_TAX_ID,
+                taxpayer_identity=_taxpayer_identity(),
+                presenter=_presenter(),
+                model_profile=model_profile,
+                elections=_elections(ResultDisposition.NEGATIVA),
+                amendment_evidence=None,
+                refund_account=None,
+                charge_account=None,
+                m303_filing_facts=_m303_filing_facts(),
+            )
 
 
 def test_m303_filing_facts_refuse_a_regularisation_result_for_another_year() -> None:

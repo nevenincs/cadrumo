@@ -27,7 +27,7 @@ from ..declarations_observations import (
 )
 from ..declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from ..declarations_schema import Declaracion
-from ..errors import SedeParseError
+from ..errors import SedeParseError, SedeValidationError
 from ._declarations_support import (
     _COTEJO_QUERY_URL,
     _DECLARATIONS_LISTING_URL,
@@ -459,14 +459,14 @@ class TestParsePresentedAt:
             tzinfo=UTC,
         )
 
-    def test_invalid_shape_raises_value_error(self) -> None:
-        """Assert ISO-style timestamps are rejected."""
-        with pytest.raises(ValueError, match=r"presented_at|format|does not match"):
+    def test_invalid_shape_raises_registered_validation_error(self) -> None:
+        """Assert ISO-style timestamps are rejected with the registered sede error."""
+        with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape: '2024-02-01 19:15:34'"):
             _parse_presented_at("2024-02-01 19:15:34")
 
     def test_partial_match_rejected(self) -> None:
         """Assert a date-only string (no time component) is rejected."""
-        with pytest.raises(ValueError, match=r"presented_at|format|does not match"):
+        with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape: '01/02/2024'"):
             _parse_presented_at("01/02/2024")
 
 

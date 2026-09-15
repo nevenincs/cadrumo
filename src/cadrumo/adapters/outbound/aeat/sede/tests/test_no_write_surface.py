@@ -51,19 +51,39 @@ def _local_persistence_is_allowed(source_name: str, line: str) -> bool:
     :class:`TestTheGuardCanActuallyFire` can prove both that it excuses what it
     is meant to and that it excuses nothing else.
     """
-    if source_name != "observation_store.py":
-        return False
-    return (
-        "self._objects.save(" in line
-        or "self._repository.save(" in line
-        or "self._observations.save(" in line
-        or "self._wallet_observations.save(" in line
-    )
+    if source_name == "observation_store.py":
+        return (
+            "self._objects.save(" in line
+            or "self._repository.save(" in line
+            or "self._observations.save(" in line
+            or "self._wallet_observations.save(" in line
+        )
+    if source_name == "filed_observation_persistence.py":
+        # Port adapters over the encrypted profile repositories (calculation
+        # observations, justificantes, filing catalogue, bucket events). Each
+        # adapter declares the port's ``save`` and forwards it to its bound
+        # ``adapters.persistence.profile`` repository; nothing here reaches Sede.
+        stripped = line.strip()
+        return stripped.startswith("def save(self, ") or "lambda: self._repository.save(" in stripped
+    return False
+
+
+def _local_operation_submission_is_allowed(source_name: str, line: str) -> bool:
+    """Whether ``line`` is the sanctioned in-process operation-queue submission.
+
+    ``OperationSupervisor.submit`` durably enqueues a typed local operation
+    request; it is not a Sede form submission. The exemption is scoped to the
+    filed-history operation test that drives that supervisor and to the exact
+    ``supervisor.submit(request, ...)`` call shape it uses.
+    """
+    return source_name == "test_filed_history_operation.py" and "await supervisor.submit(request, " in line
 
 
 def _line_offends(source_name: str, line: str, verb: str) -> bool:
     """Whether ``line`` in ``source_name`` is a forbidden call of ``verb``."""
-    if _local_persistence_is_allowed(source_name, line):
+    if verb == "save" and _local_persistence_is_allowed(source_name, line):
+        return False
+    if verb == "submit" and _local_operation_submission_is_allowed(source_name, line):
         return False
     return bool(re.compile(rf"\b{re.escape(verb)}\s*\(", re.IGNORECASE).search(line))
 
@@ -175,3 +195,26 @@ class TestTheGuardCanActuallyFire:
     def test_the_exemption_does_not_excuse_a_different_verb(self) -> None:
         """Only ``save`` is exempted on those accessors, not every mutation verb."""
         assert _line_offends("observation_store.py", "        self._observations.submit(record)", "submit")
+
+    def test_the_port_adapter_exemption_is_scoped_to_its_module_and_shapes(self) -> None:
+        """Repository port forwarding is allowed only in its module and exact shapes."""
+        forwarding = '        _call_adapter("filing_save", lambda: self._repository.save(catalogue))'
+        definition = "    def save(self, catalogue: ModeloRecordCatalogue) -> None:"
+        assert not _line_offends("filed_observation_persistence.py", forwarding, "save")
+        assert not _line_offends("filed_observation_persistence.py", definition, "save")
+        assert _line_offends("_declarations_fetch.py", forwarding, "save")
+        assert _line_offends("_declarations_fetch.py", definition, "save")
+        assert _line_offends("filed_observation_persistence.py", "        self._client.save(url, data=payload)", "save")
+        assert _line_offends(
+            "filed_observation_persistence.py",
+            '        _call_adapter("x", lambda: self._repository.submit(form))',
+            "submit",
+        )
+
+    def test_the_operation_submission_exemption_is_scoped_to_its_test_and_shape(self) -> None:
+        """Only the filed-history test's supervisor enqueue call is excused."""
+        line = '        operation_id = await supervisor.submit(request, operation_id="3" * 64)'
+        assert not _line_offends("test_filed_history_operation.py", line, "submit")
+        assert _line_offends("_declarations_fetch.py", line, "submit")
+        assert _line_offends("test_filed_history_operation.py", "        await page.submit(form)", "submit")
+        assert _line_offends("test_filed_history_operation.py", line.replace("submit", "save"), "save")

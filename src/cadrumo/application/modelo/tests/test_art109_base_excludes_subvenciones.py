@@ -21,6 +21,7 @@ other way -- a Modelo 130 obligation silently dropped.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -30,6 +31,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.facts.schema import EntitySetFactPayload
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
@@ -54,11 +56,21 @@ _ART_110_CONCEPTS = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agr
 
 _PERIOD = Period.from_year_and_code(2025, "1T")
 _IN_WINDOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC).date()
-_ACTIVITY_IRPF_CATEGORY = next(
-    descriptor.id
-    for descriptor in ledger_irpf_category_catalogue()
-    if descriptor.purpose == "activity_income_withholding"
-)
+
+
+@pytest.fixture(autouse=True)
+def _generation_pinned_authority() -> Iterator[None]:
+    """Run every test inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
+def _activity_irpf_category() -> str:
+    return next(
+        descriptor.id
+        for descriptor in ledger_irpf_category_catalogue()
+        if descriptor.purpose == "activity_income_withholding"
+    )
 
 
 def _row(
@@ -92,7 +104,7 @@ def _row(
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,
-            "irpf_category": _ACTIVITY_IRPF_CATEGORY,
+            "irpf_category": _activity_irpf_category(),
             "taxable_base": amount,
             "iva_rate": None,
             "iva_amount": Decimal("0.00"),

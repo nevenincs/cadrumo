@@ -19,6 +19,8 @@ from cadrumo.domain.calculations.registry.entity_type import entity_type_tokens
 from cadrumo.domain.calculations.registry.irpf_income_categories import irpf_income_category_choices
 from cadrumo.domain.calculations.registry.renta_codes_catalogue import fiscal_residency_choices
 
+from .registry_setup_flow_support import registry_setup_flow as registry_setup_flow
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 

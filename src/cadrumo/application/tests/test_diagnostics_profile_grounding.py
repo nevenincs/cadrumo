@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
 
 from ..diagnostics import _grounded_profile_key_summary
@@ -22,7 +23,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _KNOWN_PATH = "identity.tax_id"
 _PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
     schema=load_user_profile_schema(),
-    generation=AuthorityGenerationPin(logical_generation="test-profile", reader_incarnation="test-reader"),
+    generation=AuthorityGenerationPin(
+        content_hash_hex({"generation": "diagnostics-profile-grounding-fixture"}),
+        content_hash_hex({"reader": "diagnostics-profile-grounding-fixture"}),
+    ),
 )
 
 

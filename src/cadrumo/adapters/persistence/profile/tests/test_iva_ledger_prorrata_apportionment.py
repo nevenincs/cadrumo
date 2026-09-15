@@ -773,42 +773,34 @@ def test_each_input_routes_to_its_own_sector_percentage(
 
 
 @pytest.mark.parametrize(
-    ("sector_entry", "message"),
+    ("sector_regime", "message"),
     (
         (None, "aggregation.iva_ledger.errors.differentiated_sector_without_filing_year_entry"),
-        (
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="comercio",
-                regime=ProrrataRegisterRegime.from_registry("ninguna"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            "aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year",
-        ),
-        (
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="comercio",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            "aggregation.iva_ledger.errors.differentiated_sector_without_provisional_percentage",
-        ),
+        ("ninguna", "aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year"),
+        ("general", "aggregation.iva_ledger.errors.differentiated_sector_without_provisional_percentage"),
     ),
 )
 def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry(
     tmp_path: Path,
-    sector_entry: ProrrataRegisterEntry | None,
+    sector_regime: str | None,
     message: str,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         entries = [_sector_entry(None, Decimal("50"))]
-        if sector_entry is not None:
-            entries.append(sector_entry)
+        if sector_regime is not None:
+            entries.append(
+                ProrrataRegisterEntry.model_validate(
+                    {
+                        "ejercicio": 2026,
+                        "sector_id": "comercio",
+                        "regime": sector_regime,
+                        "especial_transition": None,
+                        "source_registry_snapshot_refs": (),
+                    }
+                )
+            )
         repository.save(
             ProrrataRegister(
                 entries=tuple(entries),

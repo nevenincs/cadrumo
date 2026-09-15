@@ -22,6 +22,7 @@ from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.export_parse import parse_export_payload
 from ......domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ......domain.calculations.registry.schema_input_kind import InputKind
+from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .._declarations_fetch import assert_declarations_read_browser_action, assert_declarations_read_http
 from ..declarations_observations import (
     _observed_casillas_from_declaration_pdf,
@@ -57,6 +58,13 @@ pytestmark = [
     pytest.mark.hex_outbound_adapter,
     pytest.mark.usefixtures("_isolate_secure_object_backend"),
 ]
+
+_BUCKET_ID = "2ffddd8e-61e6-4ea7-81b2-73f08392183d"
+
+# Prevents filed-observation store tests from writing into the active profile DB.
+_isolate_secure_object_backend = bucket_scoped_runtime_profile_fixture(
+    _BUCKET_ID, autouse=False, name="_isolate_secure_object_backend"
+)
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id(
     "0224",
     surface="_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA",

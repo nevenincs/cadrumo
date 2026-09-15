@@ -92,8 +92,8 @@ from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.optional_extras import MissingOptionalExtraError
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.iva.regime_legend import RegimeLegend
 from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -116,19 +116,6 @@ class InvoiceAuthorityFixture(NamedTuple):
 
     operation: PinnedAuthorityOperation
     legends: tuple[RegimeLegend, ...]
-
-
-@pytest.fixture
-def invoice_authority() -> Generator[InvoiceAuthorityFixture]:
-    """Keep extraction, legends, and confirmation on one live authority lease."""
-    from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-
-    with bundled_indexed_authority().operation() as operation:
-        period = default_invoice_extraction_period()
-        yield InvoiceAuthorityFixture(
-            operation=operation,
-            legends=resolve_regime_legends(operation=operation, effective_date=period.end_date),
-        )
 
 
 def _ledger_evidence_ports(*, bucket_id: str) -> LedgerEvidencePorts:
@@ -486,7 +473,6 @@ __all__ = [
     "_EVIDENCE_CORPUS",
     "InvoiceAuthorityFixture",
     "_make_svc",
-    "invoice_authority",
     "invoice_confirmation_kwargs",
     "invoice_confirmation_kwargs_with_catalogue",
     "invoice_draft_extraction_kwargs",
