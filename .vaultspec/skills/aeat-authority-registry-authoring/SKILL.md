@@ -51,7 +51,7 @@ Projection works backward, forward and across gaps within the single registry-ow
 
 Capture the actual official documents in the canonical public corpus and enroll their identities in the source catalogue with content receipts and applicability. Add the governing legal references and any calendar/schedule changes at their existing owners. Reuse existing evidence IDs only for the same source identity; a new release is not permission to silently replace older evidence needed by historical revisions.
 
-For a new modelo, use the scaffold route in the command reference and replace every placeholder. For a new revision of an existing modelo, author the narrow revision manifest and required delta fragments directly; do not clone the previous revision directory or force the scaffold over its real manifest.
+For a new modelo, use the scaffold route in the command reference with explicit `--valid-from`, `--year-from` and `--period` applicability coordinates, then replace every placeholder. For a new revision of an existing modelo, use the preserving `new-edition` route with the same required applicability coordinates. It creates only the narrow revision manifest and preserves the existing manifest and declarations; author only the required delta fragments. Do not clone the previous revision directory or force the new-modelo scaffold over real content.
 
 Use the current `ModeloRevision` schema in `src/cadrumo/domain/calculations/registry/schema.py` and the public keyed-family/delta types it imports as the declaration contract:
 

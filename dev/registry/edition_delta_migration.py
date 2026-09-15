@@ -56,8 +56,10 @@ locale identity, and export bytes for each edition an export scenario is given
 for. The staged tree must
   preserve the edition's existing review metadata, so the carry-forward is
   decided at publication: ``--apply`` replaces the modelo in
-the target registry only when the gate reports nothing at all, including no
-edition whose export bytes went unchecked. Without ``--apply`` nothing outside
+the target registry only when source equivalence and minimality report no source
+finding. Publication-readiness findings, including unchecked export bytes,
+remain visible but do not block a proven source-only replacement. Without
+``--apply`` nothing outside
 the work directory is written by the migration; the command-line report is
 persisted separately under the repository's ``.logs/audit-runs`` evidence
 hierarchy.

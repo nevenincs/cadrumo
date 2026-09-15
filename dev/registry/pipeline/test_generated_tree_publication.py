@@ -89,17 +89,16 @@ def _non_export_authority_bytes(revision_root: Path) -> dict[str, bytes]:
     }
 
 
-def _publication_inputs(tmp_path: Path, snapshot, *, existing_export: bool, legacy_export: bool = False):
+def _publication_inputs(tmp_path: Path, *, existing_export: bool, legacy_export: bool = False):
     """Build independent candidates through the export-tree renderer, never from a shipped tree."""
     temporary_root = tmp_path / "temporary-root"
     validation, joined, semantic_map, rendered, _candidate_export = _write_isolated_generated_authority_tree(
         temporary_root,
-        snapshot,
     )
     target_root = tmp_path / "publication-root" / "registry" / "aeat"
     target_revision_root = target_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision
     target_revision_root.parent.mkdir(parents=True)
-    prior = _write_isolated_generated_authority_tree(tmp_path / "prior-root", snapshot)
+    prior = _write_isolated_generated_authority_tree(tmp_path / "prior-root")
     prior_context = prior[0]
     prior_model_root = prior_context.registry_root / "modelos" / _ISOLATED_TREE.modelo
     os.replace(prior_model_root / "manifest.toml", target_root / "modelos" / _ISOLATED_TREE.modelo / "manifest.toml")
@@ -357,11 +356,10 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
         assert survivor.is_dir(), f"{case}: the refusal removed {survivor}, the state this case exists to see preserved"
 
 
-def test_publication_replaces_only_export_and_removes_opaque_backup(m130_inspection_snapshot, tmp_path) -> None:
+def test_publication_replaces_only_export_and_removes_opaque_backup(tmp_path: Path) -> None:
     """Revision authority survives byte-identically while export+manifest cut over together."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=True,
         legacy_export=True,
     )
@@ -388,13 +386,10 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(m130_inspect
     assert not _tree_publication._journal_path(context).exists()
 
 
-def test_publication_creates_missing_export_without_touching_revision_authority(
-    m130_inspection_snapshot, tmp_path
-) -> None:
+def test_publication_creates_missing_export_without_touching_revision_authority(tmp_path: Path) -> None:
     """A revision can retain all non-export authority while gaining a generated export tree."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=False,
     )
     expected_export = _tree_bytes(candidate_export_root)
@@ -417,14 +412,12 @@ def test_publication_creates_missing_export_without_touching_revision_authority(
 
 @pytest.mark.parametrize("defect", ("missing", "extra"))
 def test_publication_refuses_invalid_candidate_without_changing_live_export(
-    m130_inspection_snapshot,
     tmp_path,
     defect: str,
 ) -> None:
     """The final validation gate leaves a live export byte-identical on incomplete or extra output."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=True,
     )
     before = _tree_bytes(context.target_export_root)
@@ -462,7 +455,6 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
     ),
 )
 def test_publication_refuses_coordinate_authority_and_output_mutations_before_cutover(
-    m130_inspection_snapshot,
     tmp_path,
     defect: str,
     error: str,
@@ -470,7 +462,6 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
     """Every mutated candidate rejects as a whole while the live revision stays byte-identical."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=True,
     )
     before_export = _tree_bytes(context.target_export_root)
@@ -540,13 +531,10 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
     assert not _rollback_siblings(context.target_export_root)
 
 
-def test_publication_restores_live_export_after_staged_cutover_refusal(
-    m130_inspection_snapshot, monkeypatch, tmp_path
-) -> None:
+def test_publication_restores_live_export_after_staged_cutover_refusal(monkeypatch, tmp_path: Path) -> None:
     """A same-volume staged candidate cannot leave the old export displaced."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=True,
     )
     before = _tree_bytes(context.target_export_root)
@@ -578,13 +566,10 @@ def test_publication_restores_live_export_after_staged_cutover_refusal(
     assert not _tree_publication._journal_path(context).exists()
 
 
-def test_publication_discards_only_a_completed_rollback_journal_from_an_abandoned_candidate(
-    m130_inspection_snapshot, tmp_path
-) -> None:
+def test_publication_discards_only_a_completed_rollback_journal_from_an_abandoned_candidate(tmp_path: Path) -> None:
     """A prior rollback never blocks a fresh caller-owned candidate from publishing."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=True,
     )
     expected_export = _tree_bytes(candidate_export_root)
@@ -622,11 +607,10 @@ def test_publication_discards_only_a_completed_rollback_journal_from_an_abandone
     assert not journal_path.exists()
 
 
-def test_publication_completes_a_real_interrupted_verified_candidate(m130_inspection_snapshot, tmp_path) -> None:
+def test_publication_completes_a_real_interrupted_verified_candidate(tmp_path: Path) -> None:
     """Journal recovery completes a candidate validation had already proved before a crash."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=True,
     )
     validate_generated_export_tree(
@@ -659,13 +643,11 @@ def test_publication_completes_a_real_interrupted_verified_candidate(m130_inspec
 
 @pytest.mark.parametrize("drift", ("profile", "evidence"))
 def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_mutation(
-    m130_inspection_snapshot,
     tmp_path,
     drift: str,
 ) -> None:
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=True,
     )
     backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
@@ -707,11 +689,10 @@ def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_
     assert journal_path.read_bytes() == journal_before
 
 
-def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(m130_inspection_snapshot, tmp_path) -> None:
+def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(tmp_path: Path) -> None:
     """The loader accepts the generated tree while validation refuses a missing internal attestation."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=False,
     )
     loaded = load_modelo_directory(candidate_export_root.parent.parent.parent)
@@ -729,11 +710,10 @@ def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(m130_in
         )
 
 
-def test_publication_refuses_stale_sibling_provenance_before_cutover(m130_inspection_snapshot, tmp_path) -> None:
+def test_publication_refuses_stale_sibling_provenance_before_cutover(tmp_path: Path) -> None:
     """The old outside-export manifest surface cannot silently survive a generated target."""
     context, joined, semantic_map, rendered, _candidate_export_root = _publication_inputs(
         tmp_path,
-        m130_inspection_snapshot,
         existing_export=True,
     )
     stale = context.target_export_root.parent / "export.provenance.json"

@@ -14,6 +14,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 
 from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from ._generated_tree_test_support import isolated_authorities, isolated_authority
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     validate_generated_export_tree,
@@ -29,12 +30,6 @@ from .joined_record_design import JoinedRecordDesign
 from .render_profile import RenderProfile, RenderProfileSourceEvidence
 from .semantic_map import SemanticMap
 from .test_export_tree import _wire_evidence, _wire_profile
-from .test_generated_export_trees import (
-    _authorities as _enrolled_authorities,
-)
-from .test_generated_export_trees import (
-    _isolated_authority,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -58,7 +53,7 @@ def _real_authorities(
     A thin adapter over the enrolled drift gate's own `_authorities`, so this
     fixture and that gate cannot disagree about how a generated tree is built.
     """
-    semantic_map, render_profile, joined, evidence, transport = _enrolled_authorities(tree)
+    semantic_map, render_profile, joined, evidence, transport = isolated_authorities(tree)
     return joined, semantic_map, transport, render_profile, evidence
 
 
@@ -71,19 +66,11 @@ def _real_authorities(
 #: layout can satisfy that gate against a real design, and no bundled design is
 #: small enough to be covered by a toy.
 #:
-#: Modelo 184 is used instead because it is ENROLLED in the generated-tree drift
-#: gate, so its real diseño and real semantic map are already proven to render a
-#: complete, valid tree. It also carries NO supporting modelo and exactly ONE
-#: revision, so the isolated candidate needs no staged neighbour -- modelo 202,
-#: the first choice, folds in modelo 200 and the candidate root must contain
-#: exactly the target modelo.
-#:
-#: It no longer carries exactly one revision: the split at Orden HAC/1430/2025's
-#: boundary gave it `2015-2024` and `2025-y-siguientes`, so the isolation does
-#: prune a sibling now. The tree named here is the later half, which is the one
-#: the 2025 design and its `2025` epoch belong to.
+#: Modelo 232's first generated revision is used because it is independently
+#: renderable and has no predecessor or family-storage baseline that would make
+#: a target-only validation fixture depend on a pruned sibling revision.
 _ISOLATED_TREE: Final[GeneratedExportTree] = GeneratedExportTree(
-    "184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
+    "232", "2016-2017", "aeat-dr-232-2016", "2016", 2016, "0A"
 )
 
 
@@ -112,7 +99,7 @@ def _write_isolated_generated_authority_tree(
     ``snapshot`` is accepted and ignored: callers pass a revision inspection that
     the real authorities now supersede.
     """
-    registry_root = _isolated_authority(_ISOLATED_TREE, tmp_path / "candidate")
+    registry_root = isolated_authority(_ISOLATED_TREE, tmp_path / "candidate")
     joined, semantic_map, transport, render_profile, render_evidence = _real_authorities(_ISOLATED_TREE)
 
     export_root = registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
