@@ -557,9 +557,7 @@ def _refuse_reinterpreted_formula_operands(
     if before != after:
         return
     for reference in expression_casilla_refs(before):
-        if not _same_casilla_identity(
-            reference, reference, inherited_casillas_by_id, successor_casillas_by_id
-        ):
+        if not _same_casilla_identity(reference, reference, inherited_casillas_by_id, successor_casillas_by_id):
             raise RegistryLoadError(
                 f"{context}: formulas {identity!r} inherits an unchanged expression whose casilla operand "
                 f"{reference!r} no longer identifies the predecessor's concept; state the successor's "

@@ -402,24 +402,25 @@ class RegistryValidator:
                 :func:`cadrumo.domain.calculations.registry.validate_registry_scope.validate_registry_scope`
                 checks cross-model closure.
         """
+        failure_tuple = self.registry_failures(modelos)
+        if failure_tuple:
+            raise RegistryValidationError(
+                "registry validation failed:\n" + "\n".join(f" - {f}" for f in failure_tuple),
+            )
+
+    def registry_failures(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
+        """Return candidate findings without granting authority validity."""
         modelo_tuple = tuple(modelos)
         cache_key = self._registry_cache_key(modelo_tuple)
         cached_failures = self._cached_registry_failures(modelo_tuple, cache_key)
         if cached_failures is not None:
-            if cached_failures:
-                raise RegistryValidationError(
-                    "registry validation failed:\n" + "\n".join(f" - {f}" for f in cached_failures),
-                )
-            return
+            return cached_failures
 
         failures = self._validate_registry_modelos(modelo_tuple)
         failures.extend(validate_registry_scope(modelo_tuple))
         failure_tuple = tuple(failures)
         self._cache_registry_failures(cache_key, modelo_tuple, failure_tuple)
-        if failure_tuple:
-            raise RegistryValidationError(
-                "registry validation failed:\n" + "\n".join(f" - {f}" for f in failure_tuple),
-            )
+        return failure_tuple
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
         from cadrumo.domain.user_profile.registry_contract import validate_user_profile_registry_contract

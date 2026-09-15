@@ -488,8 +488,7 @@ def _download(wheel: LockedWheel, destination: Path) -> None:
         response = connection.getresponse()
         if response.status < 200 or response.status >= 300:
             raise SystemExit(
-                f"runtime wheel download failed for {wheel.filename!r}: "
-                f"HTTP {response.status} {response.reason}"
+                f"runtime wheel download failed for {wheel.filename!r}: HTTP {response.status} {response.reason}"
             )
         with response, destination.open("xb") as handle:
             while chunk := response.read(1024 * 1024):

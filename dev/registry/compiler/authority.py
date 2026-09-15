@@ -51,7 +51,7 @@ from .profile_schema import (
     validate_captured_profile_schema,
 )
 from .runtime_catalogues import compile_runtime_catalogues
-from .source_evidence_fingerprint import collect_source_evidence_fingerprints
+from .source_evidence_fingerprint import SourceEvidenceFingerprint, collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
 
 
@@ -81,6 +81,57 @@ class StructuralRegistryComponents:
     catalogues: RegistryCatalogues
     identity_digest: str
     profile_schema: ProfileSchemaDefinition
+
+
+@dataclass(frozen=True, slots=True)
+class AuthoringCandidateInspection:
+    """Typed pre-publication inspection; deliberately not runtime authority."""
+
+    components: StructuralRegistryComponents
+    registry_fingerprint: str
+    source_evidence_fingerprint: SourceEvidenceFingerprint
+    findings: tuple[str, ...]
+
+    @property
+    def publication_valid(self) -> bool:
+        """Report whether full validation found no blockers."""
+        return not self.findings
+
+
+def inspect_authoring_candidate(
+    registry_root: Path,
+    source_root: Path,
+    *,
+    identity: RegistryIdentity | None = None,
+    profile_schema_path: Path | None = None,
+) -> AuthoringCandidateInspection:
+    """Inspect mutable sources before first publication without creating authority."""
+    root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
+    captured_identity = identity or resolve_registry_identity(
+        root, collect_fingerprints=collect_registry_tree_fingerprints
+    )
+    components = compile_structural_authority(
+        root,
+        sources_root,
+        identity=captured_identity,
+        profile_schema_path=profile_schema_path,
+    )
+    evidence_fingerprint = collect_source_evidence_fingerprints(sources_root, use_cache=False)
+    with validating_governed_facts(CandidateFactAuthority(components.catalogues.facts)):
+        from .validator import RegistryValidator
+
+        findings = RegistryValidator(
+            components.catalogues,
+            source_root=sources_root,
+            source_evidence_fingerprint=evidence_fingerprint,
+            user_profile_schema=components.profile_schema,
+        ).registry_failures(components.modelos)
+    return AuthoringCandidateInspection(
+        components=components,
+        registry_fingerprint=captured_identity.digest,
+        source_evidence_fingerprint=evidence_fingerprint,
+        findings=findings,
+    )
 
 
 def compile_structural_authority(

@@ -174,4 +174,3 @@ def test_filing_binding_provenance_is_copied_verbatim_from_validated_authority()
     with pytest.raises(ModeloBuilderError) as raised:
         binding_provenance(ungrounded)
     assert raised.value.translated_message == "application.filing.build_draft.errors.binding_provenance_missing"
-

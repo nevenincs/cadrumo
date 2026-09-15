@@ -250,5 +250,3 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
         "inventory entr(ies) are auxiliary envelope headers, which the coverage check handles on "
         "their own branch rather than through the weak fallback, so they are not debt: " + ", ".join(sorted(misfiled))
     )
-
-

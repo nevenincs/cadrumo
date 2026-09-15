@@ -479,4 +479,3 @@ def test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
 
     assert _CASILLA_71 in externally_grounded
     assert independently_grounded_fraction > 0.0
-

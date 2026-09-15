@@ -457,4 +457,3 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     assert with_recargo.values[_CASILLA_RESULTADO_REGIMEN_GENERAL] - without_recargo.values[
         _CASILLA_RESULTADO_REGIMEN_GENERAL
     ] == Decimal("1248.00")
-

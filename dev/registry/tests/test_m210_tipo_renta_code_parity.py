@@ -66,4 +66,3 @@ def test_non_m210_modelo_is_a_noop() -> None:
     authority = compiled_bundled_authority()
     m303 = next(modelo for modelo in authority.modelos if modelo.id == "303")
     assert rules.validate_m210_tipo_renta_code_projection_parity(m303) == []
-

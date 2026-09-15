@@ -104,4 +104,3 @@ for _revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
 def load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
     authority = compiled_bundled_authority()
     return authority.modelo("303"), authority.catalogues
-

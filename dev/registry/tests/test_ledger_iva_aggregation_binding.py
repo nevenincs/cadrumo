@@ -611,4 +611,3 @@ def test_resolve_handles_multiple_bindings_independently() -> None:
         "modelo-303-iva-repercutido-general-cuota": Decimal("210"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("63"),
     }
-

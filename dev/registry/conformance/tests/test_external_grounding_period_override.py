@@ -63,4 +63,3 @@ def test_a_year_outside_the_override_keeps_the_flat_surface() -> None:
 
     assert selected is not None
     assert selected.id == _REVISION
-

@@ -83,6 +83,7 @@ def _deduction_provenance(
         evidence_digest="a" * 64,
     )
 
+
 _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.interior.devengado"
 )

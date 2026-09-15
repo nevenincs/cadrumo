@@ -259,9 +259,9 @@ def test_a_written_lift_proves_identical_and_a_rerun_changes_nothing(tmp_path: P
     staged_dir = _stage_lift(reference_dir, tmp_path / "staged")
 
     manifest = (staged_dir / "revisions" / _SUCCESSOR / "revision.toml").read_text(encoding="utf-8")
-    fragment = (
-        staged_dir / "revisions" / _SUCCESSOR / "casillas" / _MINIMISED_SUCCESSOR_FRAGMENT
-    ).read_text(encoding="utf-8")
+    fragment = (staged_dir / "revisions" / _SUCCESSOR / "casillas" / _MINIMISED_SUCCESSOR_FRAGMENT).read_text(
+        encoding="utf-8"
+    )
     assert f'casilla_source_refs = ["{_SOURCE_REF}"]\n' in manifest
     assert f'formula_source_refs = ["{_SOURCE_REF}"]\n' in manifest
     assert 'predecessor = "2024"\n' in manifest

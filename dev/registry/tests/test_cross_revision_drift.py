@@ -1137,6 +1137,29 @@ def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_load
     }
 
 
+def test_committed_m100_annualidades_alimentos_successors_keep_grounded_identity(
+    committed_m100: ModeloDefinition,
+) -> None:
+    """The 2025 delta must not retire the unchanged five-child declaration surface."""
+    affected = {"0456", "0457", "0458", "0459", "0527", *(str(value) for value in range(1741, 1762))}
+    prior = {str(item.id): item for item in committed_m100.revisions["2024"].casillas}
+    current = {str(item.id): item for item in committed_m100.revisions["2025"].casillas}
+    evolutions = committed_m100.revisions["2025"].casilla_continuidad_evolutions
+
+    assert set(prior) >= affected
+    assert set(current) >= affected
+    for casilla_id in affected:
+        assert current[casilla_id].continuidad_id == prior[casilla_id].continuidad_id
+        assert current[casilla_id].continuidad_origin == "grounded"
+        assert any(
+            item.continuidad_id == current[casilla_id].continuidad_id
+            and item.from_revision == "2024"
+            and item.to_revision == "2025"
+            and item.evolution_kind == "legal_refs_evolved"
+            for item in evolutions
+        )
+
+
 def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift(
     committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
     committed_m100: ModeloDefinition,
