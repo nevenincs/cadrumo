@@ -81,7 +81,7 @@ from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
@@ -228,6 +228,7 @@ def _calculate_through_the_mesh(
     tmp_path: Path,
     observations: tuple[ForeignAssetIngestObservation, ...],
     declare_cuentas: bool = False,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, ModeloRevision, VerificationReport]:
     """Run the real year-N+1 M720 bucket-aggregation calculate, then the real verify.
 
@@ -278,6 +279,7 @@ def _calculate_through_the_mesh(
             revision_id=snapshot.revision.id,
             ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
             clock=_CLOCK_N_PLUS_1,
+            operation=operation,
         )
 
         casilla_inputs: dict[CasillaId, Decimal] = {
@@ -311,7 +313,7 @@ def _calculate_through_the_mesh(
 
 
 def test_the_enrolled_resolver_writes_row_bindings_keyed_as_the_evidence_join_reads_them(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A real producer run populates both joined row bindings under a shared row index.
 
@@ -323,6 +325,7 @@ def test_the_enrolled_resolver_writes_row_bindings_keyed_as_the_evidence_join_re
     revision, modelo_revision, _report = _calculate_through_the_mesh(
         tmp_path=tmp_path,
         observations=_foreign_asset_observations(),
+        operation=operation,
     )
 
     class_binding = _row_binding_id(modelo_revision, row_field=_ASSET_CLASS_ROW_FIELD)
@@ -350,11 +353,14 @@ def test_the_enrolled_resolver_writes_row_bindings_keyed_as_the_evidence_join_re
     assert sorted(Decimal(value) for value in valuation_rows.values()) == sorted((_VALORES_N1, _CUENTAS_N1))
 
 
-def test_the_evidence_projection_joins_the_produced_rows_at_their_bloque_totals(tmp_path: Path) -> None:
+def test_the_evidence_projection_joins_the_produced_rows_at_their_bloque_totals(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The projection turns the _produced rows into per-bloque valuation observations."""
     revision, modelo_revision, _report = _calculate_through_the_mesh(
         tmp_path=tmp_path,
         observations=_foreign_asset_observations(),
+        operation=operation,
     )
 
     with bundled_indexed_authority().operation() as operation:
@@ -379,14 +385,18 @@ def test_the_evidence_projection_joins_the_produced_rows_at_their_bloque_totals(
         assert observation.source_refs, "evidence rows must carry the casilla's source grounding"
 
 
-def test_the_evidence_projection_is_empty_when_the_producer_receives_no_observations(tmp_path: Path) -> None:
+def test_the_evidence_projection_is_empty_when_the_producer_receives_no_observations(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """No supplied holdings means no rows and no evidence — the join is producer-driven.
 
     The control for the two assertions above: without it a projection that
     fabricated observations from any source, or an assertion insensitive to the
     row bindings, would pass unnoticed.
     """
-    revision, modelo_revision, report = _calculate_through_the_mesh(tmp_path=tmp_path, observations=())
+    revision, modelo_revision, report = _calculate_through_the_mesh(
+        tmp_path=tmp_path, observations=(), operation=operation
+    )
 
     class_binding = _row_binding_id(modelo_revision, row_field=_ASSET_CLASS_ROW_FIELD)
     valuation_binding = _row_binding_id(modelo_revision, row_field=_VALUATION_ROW_FIELD)
@@ -409,7 +419,9 @@ def test_the_evidence_projection_is_empty_when_the_producer_receives_no_observat
     )
 
 
-def test_producer_supplied_rows_reach_the_verify_time_redeclaration_advisory(tmp_path: Path) -> None:
+def test_producer_supplied_rows_reach_the_verify_time_redeclaration_advisory(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The whole chain: typed holdings in, operator-visible advisory out.
 
     The cuentas bloque grew by EUR 25,000 over its declared baseline and is
@@ -419,6 +431,7 @@ def test_producer_supplied_rows_reach_the_verify_time_redeclaration_advisory(tmp
     _revision, _modelo_revision, report = _calculate_through_the_mesh(
         tmp_path=tmp_path,
         observations=_foreign_asset_observations(),
+        operation=operation,
     )
 
     findings = tuple(finding for finding in report.findings if finding.message_locale_key == _ADVISORY_LOCALE_KEY)
@@ -437,7 +450,9 @@ def test_producer_supplied_rows_reach_the_verify_time_redeclaration_advisory(tmp
     assert "rd-1065-2007:art-42-bis" in finding.legal_refs
 
 
-def test_declaring_the_grown_bloque_withdraws_the_producer_driven_advisory(tmp_path: Path) -> None:
+def test_declaring_the_grown_bloque_withdraws_the_producer_driven_advisory(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Declaring the grown cuentas valuation silences the advisory the same rows raised.
 
     Pins that the advisory is decided by the declaration channel and not merely
@@ -447,6 +462,7 @@ def test_declaring_the_grown_bloque_withdraws_the_producer_driven_advisory(tmp_p
         tmp_path=tmp_path,
         observations=_foreign_asset_observations(),
         declare_cuentas=True,
+        operation=operation,
     )
 
     assert [finding for finding in report.findings if finding.message_locale_key == _ADVISORY_LOCALE_KEY] == []

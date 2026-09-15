@@ -31,6 +31,7 @@ from .....application.modelo.m145_communication_records import (
     m145_communication_record_object_key,
     read_m145_communication_record,
 )
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
@@ -60,17 +61,22 @@ def _command(
     )
 
 
-def test_create_m145_communication_record_persists_bucket_scoped_registry_record(tmp_path: Path) -> None:
+def test_create_m145_communication_record_persists_bucket_scoped_registry_record(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
             _command(),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         read_back = read_m145_communication_record(
             record.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     assert isinstance(record, M145CommunicationRecord)
@@ -94,12 +100,16 @@ def test_create_m145_communication_record_persists_bucket_scoped_registry_record
     assert read_back == record
 
 
-def test_create_m145_communication_record_persists_to_secure_namespace(tmp_path: Path) -> None:
+def test_create_m145_communication_record_persists_to_secure_namespace(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
             _command(),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
         envelope = runtime.repository.load(
@@ -113,17 +123,22 @@ def test_create_m145_communication_record_persists_to_secure_namespace(tmp_path:
     assert envelope.classification is M145_COMMUNICATION_RECORD_NAMESPACE.sensitivity
 
 
-def test_create_m145_communication_record_is_idempotent_for_identical_content(tmp_path: Path) -> None:
+def test_create_m145_communication_record_is_idempotent_for_identical_content(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         first = create_m145_communication_record(
             _command(),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         second = create_m145_communication_record(
             _command(note="Ignored replay note"),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     assert second == first
@@ -131,27 +146,34 @@ def test_create_m145_communication_record_is_idempotent_for_identical_content(tm
     assert second.created_at == first.created_at
 
 
-def test_create_m145_communication_record_distinguishes_variation_period(tmp_path: Path) -> None:
+def test_create_m145_communication_record_distinguishes_variation_period(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         communication = create_m145_communication_record(
             _command(),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         variation = create_m145_communication_record(
             _command(period_token=M145CommunicationPeriod.VARIATION),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         communication_read = read_m145_communication_record(
             communication.communication_record_id,
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         variation_read = read_m145_communication_record(
             variation.communication_record_id,
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     assert variation.period_token is M145CommunicationPeriod.VARIATION
@@ -162,7 +184,10 @@ def test_create_m145_communication_record_distinguishes_variation_period(tmp_pat
     }
 
 
-def test_create_m145_communication_record_refuses_undeclared_casilla_id(tmp_path: Path) -> None:
+def test_create_m145_communication_record_refuses_undeclared_casilla_id(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     command = M145CommunicationCreateCommand(
         communication_year=2026,
         field_values={"perceptor.no-declarado": "x"},
@@ -172,6 +197,7 @@ def test_create_m145_communication_record_refuses_undeclared_casilla_id(tmp_path
             command,
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
 

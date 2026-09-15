@@ -46,6 +46,7 @@ from ....application.modelo.work_wizard import ModeloWorkWizardStep, open_modelo
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .. import _modelo_work_wizard_cli
 from .._modelo_behavior_support import resolve_work_unit_for_cli
@@ -95,7 +96,9 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _scripted_manual_answers(work_unit_id: str) -> list[tuple[ModeloWorkWizardStep, str]]:
+def _scripted_manual_answers(
+    work_unit_id: str, *, operation: PinnedAuthorityOperation
+) -> list[tuple[ModeloWorkWizardStep, str]]:
     """Walk the wizard's outstanding manual pages through the scripted substrate.
 
     Reproduces exactly what the wizard does — resolve the unit, discover its
@@ -113,7 +116,7 @@ def _scripted_manual_answers(work_unit_id: str) -> list[tuple[ModeloWorkWizardSt
     # command opens per invocation.
     with open_test_profile_session(bucket_id):
         unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
-        with open_modelo_work_wizard(unit) as wizard:
+        with open_modelo_work_wizard(unit, operation=operation) as wizard:
             definition = wizard.definition_for()
             tokens = ["0"] * len(wizard.steps)
             state, projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
@@ -149,7 +152,9 @@ def _seed_m130_ledger(source_key: str) -> None:
     seed_m130_expense_transaction(amount=_GASTOS, filing_year=2025, source_key=source_key)
 
 
-def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft() -> None:
+def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The wizard's discovered steps, driven scripted, produce the oracle M130 draft.
 
     The substrate's scripted driver walks the wizard's own outstanding-step
@@ -162,7 +167,7 @@ def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft
     _seed_m130_ledger("wizard-scripted-sequence")
     work_unit_id = _create_m130_work_unit()
 
-    answers = _scripted_manual_answers(work_unit_id)
+    answers = _scripted_manual_answers(work_unit_id, operation=operation)
 
     # The full manual-input sequence: exactly the registry-declared manual
     # casillas, each answered through the scripted substrate path.
@@ -189,7 +194,9 @@ def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft
     assert Decimal(casillas["19"]) == _PAGO_FRACCIONADO
 
 
-def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate() -> None:
+def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The scripted-wizard inputs assemble the same overrides and draft as ``work calculate``.
 
     The wizard is a guided front end over the shared calculate path
@@ -201,7 +208,7 @@ def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate() -
     _seed_m130_ledger("wizard-scripted-parity")
     work_unit_id = _create_m130_work_unit()
 
-    answers = _scripted_manual_answers(work_unit_id)
+    answers = _scripted_manual_answers(work_unit_id, operation=operation)
     scripted_overrides = sorted(f"{step.key}={value}" for step, value in answers)
 
     # The wizard's inputs are exactly the override set work calculate receives.
@@ -361,7 +368,7 @@ def test_wizard_prompted_casilla_payload_refuses_malformed_field(field: str, bad
         WizardPromptedCasillaPayload.model_validate(kwargs)
 
 
-def test_canonical_wizard_factory_carries_real_registry_grounding() -> None:
+def test_canonical_wizard_factory_carries_real_registry_grounding(*, operation: PinnedAuthorityOperation) -> None:
     """The public wizard factory discovers the registry's grounded question set."""
     _create_profile()
     _seed_m130_ledger("wizard-binding-grounding-lookup")
@@ -371,7 +378,7 @@ def test_canonical_wizard_factory_carries_real_registry_grounding() -> None:
 
     with open_test_profile_session(bucket_id):
         unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
-        with open_modelo_work_wizard(unit) as wizard:
+        with open_modelo_work_wizard(unit, operation=operation) as wizard:
             steps = wizard.steps
             definition = wizard.definition_for()
             first_page = definition.sections[0].items[0]

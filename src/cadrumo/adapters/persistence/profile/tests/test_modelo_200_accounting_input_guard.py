@@ -39,6 +39,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -175,7 +176,7 @@ def _seed_reviewed_business_ledger(tx_repo: TransactionCatalogueRepository) -> N
     )
 
 
-def _create_m200_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
+def _create_m200_work_unit(work_unit_repository: WorkUnitCatalogueRepository, *, operation: PinnedAuthorityOperation):
     snapshot = compiled_bundled_authority().snapshot(
         _M200,
         filing_year=_FILING_YEAR,
@@ -193,6 +194,7 @@ def _create_m200_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
         clock=_T0,
+        operation=operation,
     )
 
 
@@ -200,6 +202,7 @@ def _calculate_m200(
     secure_objects: SecureObjectRepository,
     *,
     casilla_inputs: dict[CasillaId, Decimal] | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[BucketAggregationCalculationResult, CalculationRevisionCatalogueRepository]:
     _seed_m200_legal_entity_profile(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -208,7 +211,7 @@ def _calculate_m200(
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     _seed_reviewed_business_ledger(tx_repo)
-    work_unit = _create_m200_work_unit(wu_repo)
+    work_unit = _create_m200_work_unit(wu_repo, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,
@@ -228,10 +231,10 @@ def _calculate_m200(
 
 
 def test_m200_refuses_business_ledger_rows_without_accounting_result_input(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        _calculate_m200(secure_objects)
+        _calculate_m200(secure_objects, operation=operation)
 
     error = exc_info.value
     message = resolve_error_message(error)
@@ -247,11 +250,12 @@ def test_m200_refuses_business_ledger_rows_without_accounting_result_input(
 
 
 def test_m200_uses_explicit_accounting_result_even_when_reviewed_ledger_rows_exist(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     result, _cr_repo = _calculate_m200(
         secure_objects,
         casilla_inputs={_RESULTADO_CONTABLE: Decimal("60000.00")},
+        operation=operation,
     )
 
     values = result.revision.casilla_values

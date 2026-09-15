@@ -64,6 +64,7 @@ from ....application.modelo.review_package_recipient_registry import add_recipie
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.buckets.event import BucketEventType
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_review_package_support import build_review_package_via_cli
@@ -110,9 +111,17 @@ _M111_CASILLAS: dict[CasillaId, str] = {
 }
 
 
-def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> tuple[Path, str, str]:
+def _build_package(
+    tmp_path: Path, *, name: str = "review-package.zip", operation: PinnedAuthorityOperation
+) -> tuple[Path, str, str]:
     _set_export_profile_name()
-    return build_review_package_via_cli(tmp_path, invoke=_invoke, input_values_by_casilla_id=_M111_CASILLAS, name=name)
+    return build_review_package_via_cli(
+        tmp_path,
+        invoke=_invoke,
+        input_values_by_casilla_id=_M111_CASILLAS,
+        name=name,
+        operation=operation,
+    )
 
 
 def _register_originator(recipient_id: str) -> str:
@@ -174,8 +183,10 @@ def _counter_sign(tmp_path: Path, package_path: Path, signature_path: Path) -> t
     return receipt_path, _payload_string(result.output, "counter_signer_public_key_hex")
 
 
-def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(tmp_path: Path) -> None:
-    package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
+def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path, operation=operation)
     originator_public_key_hex = _register_originator("my-client")
     signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
     receipt_path, counter_signer_public_key_hex = _counter_sign(tmp_path, package_path, signature_path)
@@ -252,8 +263,10 @@ def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(t
     assert attach_events, [event.event_type for event in catalogue.events.values()]
 
 
-def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(tmp_path: Path) -> None:
-    package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
+def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path, operation=operation)
     _register_originator("my-client")
     _signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
 
@@ -305,8 +318,10 @@ def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(tmp_p
     assert import_payload["note"] == "see attached corrections, no formal sign-off yet"
 
 
-def test_import_feedback_refuses_tampered_feedback_envelope(tmp_path: Path) -> None:
-    package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path)
+def test_import_feedback_refuses_tampered_feedback_envelope(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    package_path, work_unit_id, calculation_revision_id = _build_package(tmp_path, operation=operation)
     _register_originator("my-client")
     _signature_path, operator_public_key_hex = _sign(tmp_path, package_path)
 

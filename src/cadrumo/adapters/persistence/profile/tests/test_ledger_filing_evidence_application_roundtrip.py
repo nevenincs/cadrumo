@@ -23,6 +23,7 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.calculation_revision import (
@@ -85,7 +86,9 @@ def _txn() -> Transaction:
     )
 
 
-def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
+def _revision_with_evidence(
+    *, evidence: LedgerFilingEvidence, tx_id: str, operation: PinnedAuthorityOperation
+) -> CalculationRevision:
     period = Period.from_year_and_code(2025, "1T")
     registry_snapshot_ref = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
@@ -95,7 +98,9 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
     )
-    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-filing-evidence")
+    filing_instance_evidence = general_m303_filing_evidence(
+        period, reference="test:ledger-filing-evidence", operation=operation
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
@@ -130,7 +135,9 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
     )
 
 
-def test_evidence_roundtrips_through_encrypted_revision(secure_objects: SecureObjectRepository) -> None:
+def test_evidence_roundtrips_through_encrypted_revision(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     txn = _txn()
     catalogue = TransactionCatalogue.from_transactions((txn,))
     snapshot = compute_ledger_filing_snapshot(
@@ -155,7 +162,7 @@ def test_evidence_roundtrips_through_encrypted_revision(secure_objects: SecureOb
             ),
         ),
     )
-    original = _revision_with_evidence(evidence=evidence, tx_id=txn.transaction_id)
+    original = _revision_with_evidence(evidence=evidence, tx_id=txn.transaction_id, operation=operation)
     repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repo.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 

@@ -11,6 +11,7 @@ import typer
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.profile_session import ProfileSessionRefusalReason
 from .command_spec import CommandSpec, ProfileAuthenticationPosture
+from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
     from .common import RequestedCliLeaf
@@ -229,7 +230,10 @@ def _resume_or_authenticate(
     from ...application.profile_preconditions import profile_session_failure_verdict
     from ...application.user_profile.login_session import bind_resumed_profile_session
 
-    refusal = bind_resumed_profile_session(bucket_id=bucket_id)
+    refusal = bind_resumed_profile_session(
+        bucket_id=bucket_id,
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+    )
     if refusal is None:
         if not active_bucket_session_serves(bucket_id):
             raise InternalInvariantError("resumed profile session does not serve the requested target")

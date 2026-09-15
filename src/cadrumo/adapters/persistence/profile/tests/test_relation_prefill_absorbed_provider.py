@@ -127,13 +127,14 @@ def test_requirements_are_indexed_by_the_slot_binding_id() -> None:
 
 
 def test_the_real_resolver_folds_the_quarters_into_the_slot_values(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
         repository = _seeded_repository()
         snapshot = _snapshot("180", 2026, "0A")
 
         resolution = RelationPrefillSourceResolver(
             repository=repository,
             profile_read_ports=empty_profile_read_ports(),
+            operation=operation,
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(
@@ -164,13 +165,14 @@ def test_resolved_provenance_names_the_filed_casilla_terminal_origin(tmp_path: P
     audit compare the resolved origin against the binding's authored
     expectation instead of inferring it from the resolver id.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
         repository = _seeded_repository()
         snapshot = _snapshot("180", 2026, "0A")
 
         resolution = RelationPrefillSourceResolver(
             repository=repository,
             profile_read_ports=empty_profile_read_ports(),
+            operation=operation,
             registry_snapshot=snapshot,
         ).resolve(
             CalculationSourceContext(

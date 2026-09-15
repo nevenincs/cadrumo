@@ -12,6 +12,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -624,7 +625,7 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], *, operation: PinnedAuthorityOperation
 ) -> None:
     from ....core.bucket_pointer import resolve_active_bucket_id
 
@@ -633,6 +634,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     evidence_path = write_m303_filing_evidence(
         tmp_path / "m303-filing-evidence.json",
         Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
     # The CLI JSON output redacts ``bucket_id`` to the literal placeholder
     # ``"<bucket-id>"``; that placeholder is not a valid filesystem path
@@ -820,6 +822,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             wizard_context,
             ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit),
             (),
+            operation=operation,
         )
     wizard_payload = _payload(capsys.readouterr().out)
     assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
@@ -882,7 +885,9 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
         IvaWalletDecisionRepository().save_decision(decision)
 
 
-def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply(tmp_path: Path) -> None:
+def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """An INTRA_COMMUNITY_SUPPLY observation is cuota-less, so it raises NO advisory.
 
     Per the ``aeat-ledger-contract`` rule, an
@@ -901,6 +906,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     evidence_path = write_m303_filing_evidence(
         tmp_path / "m303-filing-evidence.json",
         Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
@@ -989,7 +995,9 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     assert "ADVISORY:" not in text_result.output
 
 
-def test_work_calculate_emits_no_advisory_when_all_iva_consumed(tmp_path: Path) -> None:
+def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """#64 converse: an all-consumed IVA observation set surfaces ZERO advisories.
 
     Anti-tautology guard for the advisory test above: only observations no
@@ -1004,6 +1012,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(tmp_path: Path) 
     evidence_path = write_m303_filing_evidence(
         tmp_path / "m303-filing-evidence.json",
         Period.from_year_and_code(2026, "1T"),
+        operation=operation,
     )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"

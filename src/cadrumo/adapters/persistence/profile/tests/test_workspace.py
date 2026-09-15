@@ -12,6 +12,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 if TYPE_CHECKING:
@@ -119,6 +120,7 @@ def _seed_work_unit(
     *,
     bucket_id: str,
     revision_id: str = _LAW_SELECTED_REVISION_ID,
+    operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     return create_work_unit(
         bucket_id=bucket_id,
@@ -131,6 +133,7 @@ def _seed_work_unit(
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
         clock=_T0,
+        operation=operation,
     )
 
 
@@ -445,12 +448,12 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
 
 
 def test_schema_facet_pagination_round_trips_a_cursor_across_all_pages(
-    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     inspection, target, schema_identity, baseline, contributors = _assemble_static_inspection_pieces(
         bucket_id, repository
     )
@@ -486,12 +489,12 @@ def test_schema_facet_pagination_round_trips_a_cursor_across_all_pages(
 
 
 def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_page(
-    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     inspection, target, schema_identity, baseline, contributors = _assemble_static_inspection_pieces(
         bucket_id, repository
     )
@@ -708,7 +711,7 @@ def test_static_inspection_family_dispositions_reports_only_declared_not_applica
 
 
 def test_a_caller_can_spend_the_cursor_the_schema_facet_mints(
-    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """The public resolver accepts the cursor it mints and returns the NEXT page.
 
@@ -725,7 +728,7 @@ def test_a_caller_can_spend_the_cursor_the_schema_facet_mints(
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = compiled_bundled_authority()
 
     def _resolve(cursor=None):
@@ -756,7 +759,7 @@ def test_a_caller_can_spend_the_cursor_the_schema_facet_mints(
 
 
 def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
-    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """A cursor for another facet must refuse, never silently return page one.
 
@@ -769,7 +772,7 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = compiled_bundled_authority()
 
     minted = resolve_static_inspection_result(
@@ -796,12 +799,12 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
 
 
 def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
-    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = compiled_bundled_authority()
 
     result = resolve_static_inspection_result(
@@ -831,12 +834,14 @@ def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
 def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
     caplog: pytest.LogCaptureFixture,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A single encrypted-SQL work-catalogue read must back the entire assembled result."""
     import logging
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = compiled_bundled_authority()
 
     from cadrumo.core.external_constants import OutputLanguage
@@ -859,6 +864,8 @@ def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
 def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_registry_exactly_once(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
     caplog: pytest.LogCaptureFixture,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Capture core: passing a grade switches REGISTRY's admission, not the read count or ordering."""
     import logging
@@ -867,7 +874,7 @@ def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_regist
     from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = compiled_bundled_authority()
 
     caplog.clear()
@@ -1039,7 +1046,7 @@ def _drain_pages(facet_type, records, *, facet, target, schema_identity, baselin
 
 
 def test_materialization_facet_pages_a_real_revision_that_exceeds_the_page_size(
-    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """A real M303 revision overflows one page and paginates instead of refusing.
 
@@ -1054,7 +1061,7 @@ def test_materialization_facet_pages_a_real_revision_that_exceeds_the_page_size(
     from cadrumo.core.casilla_id import validated_casilla_id
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     target, schema_identity, baseline, contributors = _paging_coordinate(bucket_id, repository)
     page_size = _production_default_page_size()
 
@@ -1093,7 +1100,7 @@ def test_materialization_facet_pages_a_real_revision_that_exceeds_the_page_size(
 
 
 def test_an_overflowing_facet_built_without_a_cursor_still_refuses(
-    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     """Anti-tautology: the invariant the paginator satisfies still bites when violated.
 
@@ -1112,7 +1119,7 @@ def test_an_overflowing_facet_built_without_a_cursor_still_refuses(
     from cadrumo.core.casilla_id import validated_casilla_id
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id)
+    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     target, schema_identity, baseline, contributors = _paging_coordinate(bucket_id, repository)
     page_size = _production_default_page_size()
 

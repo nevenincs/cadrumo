@@ -76,6 +76,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 from cadrumo.application.modelo.calculation_actions import (
+    BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
@@ -114,7 +115,10 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(work_unit_id: str, **kwargs: Any) -> Any:
+def _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+    work_unit_id: str,
+    **kwargs: Any,
+) -> BucketAggregationCalculationResult:
     repository = kwargs.pop("work_unit_repository", None)
     for key in ("calculation_repository", "transaction_repository", "invoice_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
@@ -391,17 +395,20 @@ def _calculate_and_file_m130_quarter(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="130",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
-        revision_id=_M130_REVISION,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="130",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period),
+            revision_id=_M130_REVISION,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
     revision = _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=_M130_MANUAL_INPUTS,
@@ -434,17 +441,20 @@ def _import_official_m130_result_observation(
     bucket_events = BucketEventHistoryRepository(objects=secure_objects)
     observation_repo = CalculationObservationRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("130", filing_year=_YEAR, period=period)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="130",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_FILE_AT,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="130",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_FILE_AT,
+        )
     casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
     # The reference id IS the justificante CSV, and a codigo seguro de
     # verificacion is uppercase alphanumeric: the model pins
@@ -641,17 +651,20 @@ def _calculate_m100_annual(
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _M100_ANNUAL_PERIOD),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, _M100_ANNUAL_PERIOD),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,

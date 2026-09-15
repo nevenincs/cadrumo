@@ -32,6 +32,7 @@ from .....application.modelo.m145_communication_records import (
     mark_m145_communication_record_locally_completed,
 )
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -90,7 +91,10 @@ def _assert_no_forbidden_terms(events: Iterable[BucketEvent]) -> None:
             assert term not in event_text
 
 
-def test_m145_communication_lifecycle_emits_communication_specific_events(tmp_path: Path) -> None:
+def test_m145_communication_lifecycle_emits_communication_specific_events(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         created = create_m145_communication_record(
@@ -98,6 +102,7 @@ def test_m145_communication_lifecycle_emits_communication_specific_events(tmp_pa
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         exported = export_m145_communication_record(
             created.communication_record_id,
@@ -105,18 +110,21 @@ def test_m145_communication_lifecycle_emits_communication_specific_events(tmp_pa
             renderer=RegistryFixedWidthRecordRenderer(),
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         mark_m145_communication_record_locally_completed(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         events = _events_for_record(event_repository, created.communication_record_id)
 
@@ -147,7 +155,10 @@ def test_m145_communication_lifecycle_emits_communication_specific_events(tmp_pa
     _assert_no_forbidden_terms(events)
 
 
-def test_m145_communication_idempotent_retries_do_not_duplicate_mutation_events(tmp_path: Path) -> None:
+def test_m145_communication_idempotent_retries_do_not_duplicate_mutation_events(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
         created = create_m145_communication_record(
@@ -155,36 +166,42 @@ def test_m145_communication_idempotent_retries_do_not_duplicate_mutation_events(
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         create_m145_communication_record(
             _command(),
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         mark_m145_communication_record_locally_completed(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         mark_m145_communication_record_locally_completed(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         events = _events_for_record(event_repository, created.communication_record_id)
 
@@ -195,7 +212,10 @@ def test_m145_communication_idempotent_retries_do_not_duplicate_mutation_events(
     assert BucketEventType.MODELO_145_COMMUNICATION_EXPORTED not in event_types
 
 
-def test_m145_communication_invalid_delivery_does_not_emit_delivery_event(tmp_path: Path) -> None:
+def test_m145_communication_invalid_delivery_does_not_emit_delivery_event(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     field_values = _field_values()
     field_values.pop("perceptor.nif")
 
@@ -206,6 +226,7 @@ def test_m145_communication_invalid_delivery_does_not_emit_delivery_event(tmp_pa
             bucket_id=runtime.bucket_id,
             actor=_ACTOR,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         with pytest.raises(ValueError, match="validation passes"):
             mark_m145_communication_record_delivered_to_payer(
@@ -213,6 +234,7 @@ def test_m145_communication_invalid_delivery_does_not_emit_delivery_event(tmp_pa
                 bucket_id=runtime.bucket_id,
                 actor=_ACTOR,
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+                operation=operation,
             )
         events = _events_for_record(event_repository, created.communication_record_id)
 

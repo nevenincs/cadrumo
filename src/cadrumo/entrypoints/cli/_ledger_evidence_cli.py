@@ -407,11 +407,12 @@ def _evidence_extract_payload(
     draft: InvoiceDraft,
 ) -> dict[str, object]:
     """Project the application draft and one-read consent provenance."""
+    draft_payload = {str(key): value for key, value in draft.model_dump(mode="json").items()}
     return {
         "bucket_id": bucket_id,
         "evidence_id": evidence_id,
         "attachment_id": attachment_id,
-        **draft.model_dump(mode="json"),
+        **draft_payload,
         "off_host_provider": None if consent_token is None else off_host_provider,
         "off_host_acknowledged_surface": None if consent_token is None else consent_token.surface,
     }

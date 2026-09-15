@@ -33,12 +33,19 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.grounding_anchor import normalise_for_anchor_search
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
+from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
+from ._invoice_confirmation_test_support import (
+    InvoiceAuthorityFixture,
+    invoice_draft_extraction_kwargs,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -53,11 +60,30 @@ _FACTURAE = "facturae_32_series_and_parties_invoice.xml"
 _TEXT_FIELDS = ("supplier_tax_id", "supplier_name", "supplier_postal_code", "invoice_number")
 
 
-def _draft(xml: str, *, settings: Settings, objects: SecureObjectRepository, tmp_path: Path) -> InvoiceDraft:
+def _registry_legends(operation):
+    """Resolve the registry vocabulary on the test's pinned authority lease."""
+    period = default_invoice_extraction_period()
+    return resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
+
+def _draft(
+    xml: str,
+    *,
+    settings: Settings,
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> InvoiceDraft:
     staged = tmp_path / "document.xml"
     staged.write_text(xml, encoding="utf-8")
     evidence_id = _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=staged).record.evidence_id
-    return extract_invoice_draft_from_evidence(bucket_id=_BUCKET_ID, evidence_id=evidence_id, settings=settings)
+    authority = InvoiceAuthorityFixture(operation=operation, legends=_registry_legends(operation))
+    return extract_invoice_draft_from_evidence(
+        bucket_id=_BUCKET_ID,
+        evidence_id=evidence_id,
+        settings=settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+    )
 
 
 def _corpus_xml() -> str:
@@ -68,6 +94,8 @@ def test_the_structured_path_stamps_an_origin_on_every_recovered_field(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """No value recovered from the record reaches the operator without an origin.
 
@@ -75,7 +103,13 @@ def test_the_structured_path_stamps_an_origin_on_every_recovered_field(
     so a field added to the structured projection later joins this gate when it
     is declared rather than when someone remembers.
     """
-    draft = _draft(_corpus_xml(), settings=isolated_settings, objects=secure_objects, tmp_path=tmp_path)
+    draft = _draft(
+        _corpus_xml(),
+        settings=isolated_settings,
+        objects=secure_objects,
+        tmp_path=tmp_path,
+        operation=operation,
+    )
 
     enveloped = {envelope.field for envelope in draft.provenance}
     assert enveloped, "the structured path produced no provenance at all"
@@ -88,6 +122,8 @@ def test_every_structured_envelope_declares_the_exact_structured_origin(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The origin is the one the taxonomy already reserves for this reading.
 
@@ -97,7 +133,13 @@ def test_every_structured_envelope_declares_the_exact_structured_origin(
     exact read into a heuristic one, which is the distinction the whole origin
     axis exists to preserve.
     """
-    draft = _draft(_corpus_xml(), settings=isolated_settings, objects=secure_objects, tmp_path=tmp_path)
+    draft = _draft(
+        _corpus_xml(),
+        settings=isolated_settings,
+        objects=secure_objects,
+        tmp_path=tmp_path,
+        operation=operation,
+    )
 
     origins = {envelope.origin for envelope in draft.provenance}
     assert origins == {FieldOrigin.EXACT_STRUCTURED}
@@ -107,6 +149,8 @@ def test_an_anchored_structured_value_really_occurs_in_the_document(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """An ANCHORED stamp is a check that ran, never a claim the reader asserted.
 
@@ -118,7 +162,13 @@ def test_an_anchored_structured_value_really_occurs_in_the_document(
     """
     xml = _corpus_xml()
     haystack = normalise_for_anchor_search(xml)
-    draft = _draft(xml, settings=isolated_settings, objects=secure_objects, tmp_path=tmp_path)
+    draft = _draft(
+        xml,
+        settings=isolated_settings,
+        objects=secure_objects,
+        tmp_path=tmp_path,
+        operation=operation,
+    )
 
     anchored = [e for e in draft.provenance if e.grounding is FieldGroundingOutcome.ANCHORED]
     assert anchored, "no field anchored, so the case cannot discriminate"
@@ -131,6 +181,8 @@ def test_the_anchor_is_the_printed_form_and_never_the_element_path(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """An element path is a location, not evidence, and must not sit in the anchor.
 
@@ -140,7 +192,13 @@ def test_the_anchor_is_the_printed_form_and_never_the_element_path(
     a human would see -- so putting a path there would let a schema location be
     read as evidence about the document's face. The path belongs in the note.
     """
-    draft = _draft(_corpus_xml(), settings=isolated_settings, objects=secure_objects, tmp_path=tmp_path)
+    draft = _draft(
+        _corpus_xml(),
+        settings=isolated_settings,
+        objects=secure_objects,
+        tmp_path=tmp_path,
+        operation=operation,
+    )
 
     by_field = {envelope.field: envelope for envelope in draft.provenance}
     postal = by_field["supplier_postal_code"]
@@ -155,6 +213,8 @@ def test_an_assembled_value_is_not_vouched_for_as_verbatim(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A value the reader BUILT cannot claim to have been read verbatim.
 
@@ -169,7 +229,13 @@ def test_an_assembled_value_is_not_vouched_for_as_verbatim(
     corpus, and a check that never fails is indistinguishable from one that is
     hardcoded to pass.
     """
-    draft = _draft(_corpus_xml(), settings=isolated_settings, objects=secure_objects, tmp_path=tmp_path)
+    draft = _draft(
+        _corpus_xml(),
+        settings=isolated_settings,
+        objects=secure_objects,
+        tmp_path=tmp_path,
+        operation=operation,
+    )
 
     by_field = {envelope.field: envelope for envelope in draft.provenance}
     supplier = by_field["supplier_name"]

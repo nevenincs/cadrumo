@@ -16,6 +16,7 @@ reaches the operator as a refusal rather than the command succeeding quietly.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -24,6 +25,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ....application.prorrata_register.service import ProrrataRegisterService
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -32,12 +34,13 @@ from ....core.i18n.render import output_language, tr
 from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ._cli_surface_profile_fixture import _isolated_backend
-from ._cli_surface_support import _invoke
+from ._cli_surface_support import _active_bucket_id, _invoke
 
 __all__ = ["_isolated_backend"]
 
@@ -70,6 +73,19 @@ _NEW_TRANSLATION_KEYS = (
     "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
     "cli.app.ledger.prorrata.settle_sector_entry_absent",
 )
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+def _service(authority_operation: PinnedAuthorityOperation) -> ProrrataRegisterService:
+    return ProrrataRegisterService(
+        repository=ProrrataRegisterRepository(bucket_id=_active_bucket_id()),
+        operation=authority_operation,
+    )
 
 
 def _law_determined_prior_revision_id() -> str:
@@ -131,7 +147,9 @@ def _refusal_text(result) -> str:
     return json.dumps(json.loads(result.output)["error"], ensure_ascii=False)
 
 
-def test_seed_persists_the_carried_prior_definitiva_entry() -> None:
+def test_seed_persists_the_carried_prior_definitiva_entry(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The seeded entry is written and reads back through the real service."""
     _store_prior_settlement_observation()
 
@@ -159,7 +177,7 @@ def test_seed_persists_the_carried_prior_definitiva_entry() -> None:
     assert "ledger.prorrata.seed.local_authority" in _notice_codes(result)
 
     # The entry is readable back through the real application service.
-    stored = ProrrataRegisterService().get(_CURRENT_YEAR)
+    stored = _service(authority_operation).get(_CURRENT_YEAR)
     assert stored is not None
     assert stored.provisional_percentage == _PRIOR_DEFINITIVE
     assert stored.provisional_provenance is ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
@@ -170,7 +188,9 @@ def test_seed_persists_the_carried_prior_definitiva_entry() -> None:
     assert entries[0]["provisional_percentage"] == str(_PRIOR_DEFINITIVE)
 
 
-def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding() -> None:
+def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Detector teeth: a contradicting standing entry refuses and names the finding.
 
     The register carries a ``carried_prior_definitiva`` entry whose percentage
@@ -180,7 +200,7 @@ def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding() 
     """
     _store_prior_settlement_observation()
 
-    service = ProrrataRegisterService()
+    service = _service(authority_operation)
     service.declare(
         ProrrataRegisterEntry(
             ejercicio=_CURRENT_YEAR,
@@ -214,7 +234,7 @@ def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding() 
     assert standing.provisional_percentage == Decimal("42")
 
 
-def test_seed_is_idempotent() -> None:
+def test_seed_is_idempotent(authority_operation: PinnedAuthorityOperation) -> None:
     """Seeding twice converges on one entry and does not double-apply."""
     _store_prior_settlement_observation()
 
@@ -230,12 +250,14 @@ def test_seed_is_idempotent() -> None:
     assert len(entries) == 1
     assert entries[0]["provisional_percentage"] == str(_PRIOR_DEFINITIVE)
 
-    stored = ProrrataRegisterService().get(_CURRENT_YEAR)
+    stored = _service(authority_operation).get(_CURRENT_YEAR)
     assert stored is not None
     assert stored.provisional_percentage == _PRIOR_DEFINITIVE
 
 
-def test_seed_without_a_prior_observation_refuses_as_absent_not_zero() -> None:
+def test_seed_without_a_prior_observation_refuses_as_absent_not_zero(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     result = _seed()
     assert result.exit_code != 0, result.output
     expected = tr(
@@ -245,13 +267,15 @@ def test_seed_without_a_prior_observation_refuses_as_absent_not_zero() -> None:
         ejercicio=_CURRENT_YEAR,
     )
     assert expected in _refusal_text(result)
-    assert ProrrataRegisterService().get(_CURRENT_YEAR) is None
+    assert _service(authority_operation).get(_CURRENT_YEAR) is None
 
 
-def test_seed_refuses_to_displace_a_standing_regulated_override() -> None:
+def test_seed_refuses_to_displace_a_standing_regulated_override(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """An art. 105.Dos authorisation outranks the carry and is never overwritten."""
     _store_prior_settlement_observation()
-    service = ProrrataRegisterService()
+    service = _service(authority_operation)
     service.record_aeat_autorizada(
         ejercicio=_CURRENT_YEAR,
         provisional_percentage=Decimal("55"),
@@ -268,7 +292,9 @@ def test_seed_refuses_to_displace_a_standing_regulated_override() -> None:
     assert standing.provisional_provenance is ProrrataProvisionalProvenance._from_registry("aeat_autorizada")
 
 
-def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio() -> None:
+def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """settle-sector computes the definitive; seed-sector carries it forward."""
     elected = _invoke(
         [
@@ -332,12 +358,14 @@ def test_sector_lifecycle_settles_then_seeds_the_next_ejercicio() -> None:
     )
     assert _json(seeded)["prior_ejercicio"] == _PRIOR_YEAR
 
-    stored = ProrrataRegisterService().get(_CURRENT_YEAR, sector_id="arrendamiento")
+    stored = _service(authority_operation).get(_CURRENT_YEAR, sector_id="arrendamiento")
     assert stored is not None
     assert stored.provisional_percentage == Decimal(str(definitive))
 
 
-def test_seed_sector_without_a_prior_definitive_refuses_as_absent() -> None:
+def test_seed_sector_without_a_prior_definitive_refuses_as_absent(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     result = _invoke(
         [
             "--format",
@@ -361,7 +389,7 @@ def test_seed_sector_without_a_prior_definitive_refuses_as_absent() -> None:
         ejercicio=_CURRENT_YEAR,
     )
     assert expected in _refusal_text(result)
-    assert ProrrataRegisterService().get(_CURRENT_YEAR, sector_id="arrendamiento") is None
+    assert _service(authority_operation).get(_CURRENT_YEAR, sector_id="arrendamiento") is None
 
 
 def test_settle_sector_without_an_entry_refuses() -> None:

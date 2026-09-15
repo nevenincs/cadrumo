@@ -35,6 +35,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.inbound.financial.ledger_import import build_ledger_import_ports
 from cadrumo.adapters.inbound.financial.providers.base import ParsedLedgerRow
 from cadrumo.adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -118,6 +119,7 @@ def test_usd_import_populates_fx_rate_and_value_in_eur(
     result = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=[_usd_parsed("usd-inv-001")],
+        ports=build_ledger_import_ports(),
         transaction_repository=repo,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         currency_normalizer=normalizer,
@@ -150,6 +152,7 @@ def test_missing_rate_leaves_fx_fields_absent(
     result = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=[_usd_parsed("usd-norate-001")],
+        ports=build_ledger_import_ports(),
         transaction_repository=repo,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         currency_normalizer=normalizer,
@@ -185,6 +188,7 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
     result_canonical = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=[_usd_parsed("usd-antitauto-canonical")],
+        ports=build_ledger_import_ports(),
         transaction_repository=repo_canonical,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         currency_normalizer=canonical_normalizer,
@@ -196,6 +200,7 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
     result_mutant = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=[_usd_parsed("usd-antitauto-mutant")],
+        ports=build_ledger_import_ports(),
         transaction_repository=repo_mutant,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         currency_normalizer=mutant_normalizer,

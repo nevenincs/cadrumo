@@ -17,6 +17,7 @@ from ....application.auth.apoderado_service import (
 )
 from ....core.classification.policies import SensitivityClass
 from ....core.identity.bucket import canonical_bucket_id
+from ..storage.envelope.contract import Envelope
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.errors import SecureObjectRowIdentityError
 from ..storage.path_safety import safe_repository_id
@@ -27,21 +28,17 @@ if TYPE_CHECKING:
     from ....core.config import Settings
 
 
-class ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
-    """Encrypted per-bucket adapter for apoderado configuration."""
+class _ApoderadoSecureRepository(SecureBoundRepository[ApoderadoConfiguration]):
+    """Store apoderado configuration through the generic secure envelope port."""
 
     namespace: ClassVar[str] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.schema_version
 
     def __init__(self, *, bucket_id: str, settings: Settings) -> None:
-        """Bind this adapter to one canonical bucket and explicit settings."""
-        self._bound_bucket_id = canonical_bucket_id(bucket_id)
-        self._safe_bucket_id = safe_repository_id(self._bound_bucket_id, context="bucket_id")
-        super().__init__(
-            bucket_id=self._safe_bucket_id,
-            objects=secure_object_repository_for_bucket(self._bound_bucket_id, settings),
-        )
+        """Bind the generic secure repository to one already-canonical bucket."""
+        self._bound_bucket_id = bucket_id
+        super().__init__(objects=secure_object_repository_for_bucket(bucket_id, settings))
 
     @override
     @classmethod
@@ -65,10 +62,44 @@ class ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
             },
         )
 
+
+class ApoderadoConfigRepository(ApoderadoConfigurationRepository):
+    """Encrypted per-bucket adapter for apoderado configuration."""
+
+    namespace: ClassVar[str] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.schema_version
+
+    def __init__(self, *, bucket_id: str, settings: Settings) -> None:
+        """Bind this application-facing adapter to one canonical bucket."""
+        self._bound_bucket_id = canonical_bucket_id(bucket_id)
+        self._safe_bucket_id = safe_repository_id(self._bound_bucket_id, context="bucket_id")
+        self._repository = _ApoderadoSecureRepository(
+            bucket_id=self._bound_bucket_id,
+            settings=settings,
+        )
+        self._objects = self._repository.secure_object_repository
+
+    @classmethod
+    def payload_model(cls) -> type[ApoderadoConfiguration]:
+        """Return the application configuration DTO wrapped by this adapter."""
+        return ApoderadoConfiguration
+
+    def _identified_envelope(
+        self,
+        payload: ApoderadoConfiguration,
+    ) -> tuple[str, Envelope[ApoderadoConfiguration]]:
+        """Expose the generic envelope builder to focused storage tests."""
+        return self._repository._identified_envelope(payload)
+
+    def extract_identifier(self, payload: ApoderadoConfiguration) -> str:
+        """Return the safe secure-object key for ``payload``'s bucket."""
+        return self._repository.extract_identifier(payload)
+
     @override
     def load(self) -> ApoderadoConfiguration | None:
         """Load this bucket's configuration, or return ``None`` when absent."""
-        return super().load(self._safe_bucket_id)
+        return self._repository.load(self._safe_bucket_id)
 
     @override
     def save(self, configuration: ApoderadoConfiguration) -> None:
@@ -82,12 +113,12 @@ class ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
                     "repository_bucket_id": self._bound_bucket_id,
                 },
             )
-        super().save(configuration)
+        self._repository.save(configuration)
 
     @override
     def delete(self) -> bool:
         """Delete this bucket's configuration, returning whether it existed."""
-        return super().delete(self._safe_bucket_id)
+        return self._repository.delete(self._safe_bucket_id)
 
 
 def build_apoderado_config_repository(

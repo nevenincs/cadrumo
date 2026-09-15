@@ -25,6 +25,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_runtime_profile_fixture,
@@ -76,7 +77,10 @@ def test_a_declared_dwelling_area_produces_the_suministros_ratio(_runtime_profil
         )
 
         ratios = resolve_effective_usage_ratios(
-            bucket_id=_BUCKET_ID, year=_YEAR, operation=_authority_operation_for_test
+            bucket_id=_BUCKET_ID,
+            year=_YEAR,
+            usage_ratio_profile_loader=load_usage_ratios,
+            operation=_authority_operation_for_test,
         )
 
         assert ratios[SpendingCategory._from_registry("suministros_home_office_luz")] == Decimal("0.060")
@@ -96,7 +100,10 @@ def test_the_ownership_costs_take_the_raw_proportion(_runtime_profile: object) -
         )
 
         ratios = resolve_effective_usage_ratios(
-            bucket_id=_BUCKET_ID, year=_YEAR, operation=_authority_operation_for_test
+            bucket_id=_BUCKET_ID,
+            year=_YEAR,
+            usage_ratio_profile_loader=load_usage_ratios,
+            operation=_authority_operation_for_test,
         )
 
         assert ratios[SpendingCategory._from_registry("amortizacion_vivienda_afecto")] == Decimal("0.20")
@@ -113,7 +120,10 @@ def test_no_declared_area_resolves_to_nothing_rather_than_a_guess(_runtime_profi
         _store_profile(**{"identity.tax_id": "X1234567L"})
 
         ratios = resolve_effective_usage_ratios(
-            bucket_id=_BUCKET_ID, year=_YEAR, operation=_authority_operation_for_test
+            bucket_id=_BUCKET_ID,
+            year=_YEAR,
+            usage_ratio_profile_loader=load_usage_ratios,
+            operation=_authority_operation_for_test,
         )
 
         assert SpendingCategory._from_registry("suministros_home_office_luz") not in ratios
@@ -123,6 +133,11 @@ def test_an_absent_profile_resolves_to_nothing(_runtime_profile: object) -> None
     """SUPPORTING. A bucket with no profile must not raise on the calculate path."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert (
-            resolve_effective_usage_ratios(bucket_id=_BUCKET_ID, year=_YEAR, operation=_authority_operation_for_test)
+            resolve_effective_usage_ratios(
+                bucket_id=_BUCKET_ID,
+                year=_YEAR,
+                usage_ratio_profile_loader=load_usage_ratios,
+                operation=_authority_operation_for_test,
+            )
             == {}
         )

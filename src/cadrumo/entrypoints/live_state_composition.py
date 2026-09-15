@@ -18,6 +18,7 @@ from typing import Any, Protocol, override
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
 from ..adapters.outbound.aeat.sede.filed_data_capture_port import SedeFiledDataCapturePort
 from ..adapters.outbound.aeat.sede.filed_observation_persistence import (
@@ -38,7 +39,7 @@ from ..adapters.outbound.aeat.sede.iva_compensation_wallet import (
 )
 from ..adapters.outbound.aeat.sede.notifications import fetch_notifications_query
 from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ..adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
+from ..adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, IvaCompensationWalletObservation
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -248,9 +249,11 @@ def compose_filed_observation_persistence_ports(
     justificante_repository = JustificanteRepository(objects=objects)
     calculation_repository = CalculationObservationRepository(bucket_id=bucket_id, objects=objects)
     iva_history_repository = IvaCompensationHistoryRepository(bucket_id=bucket_id, objects=objects)
+    with bundled_indexed_authority().operation() as operation:
+        transformation = FiledDeclarationTransformationAdapter(operation=operation)
     return FiledObservationPersistencePorts(
         parser=FiledObservationParserAdapter(),
-        transformation=FiledDeclarationTransformationAdapter(),
+        transformation=transformation,
         observation_persistence=FiledObservationStoreAdapter(root=output_root, objects=objects),
         calculation_repository=CalculationObservationRepositoryAdapter(repository=calculation_repository),
         iva_history_repository=IvaHistoryRepositoryAdapter(repository=iva_history_repository),
@@ -413,47 +416,78 @@ class AppIvaRemoteStatePort:
         observations = []
         failures: list[str] = []
         casilla_count = 0
-        async with (
-            shared_playwright(session) as playwright,
-            open_declarations_register(session, settings=settings, playwright=playwright) as register,
-        ):
-            for year in range(year_to, year_from - 1, -1):
-                if progress_context is not None:
-                    progress_context.update(
-                        {"stage": "walk_declarations_register", "modelo": Modelo("303").value, "ejercicio": year}
-                    )
-                declarations = await register.walk(modelo=Modelo("303").value, ejercicio=year)
-                for declaration in latest_declarations_by_period(declarations):
+
+        def persist_artefact(
+            observation_key: tuple[str, int, Period, str],
+            artefact: FiledDeclaracionArtefact,
+            body: bytes,
+        ) -> FiledDeclaracionArtefact:
+            persisted = store.persist_artefact(observation_key, artefact, body)
+            if not isinstance(persisted, FiledDeclaracionArtefact):
+                raise LiveApplicationError(
+                    translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
+                    context={"operation": "persist_artefact", "cause_type": type(persisted).__name__},
+                )
+            return persisted
+
+        with bundled_indexed_authority().operation() as operation:
+            async with (
+                shared_playwright(session) as playwright,
+                open_declarations_register(
+                    session,
+                    settings=settings,
+                    playwright=playwright,
+                    operation=operation,
+                ) as register,
+            ):
+                for year in range(year_to, year_from - 1, -1):
                     if progress_context is not None:
                         progress_context.update(
-                            {
-                                "stage": "capture_declaration_observation",
-                                "modelo": declaration.modelo,
-                                "ejercicio": declaration.ejercicio,
-                                "period": declaration.period.registry_token,
-                            }
+                            {"stage": "walk_declarations_register", "modelo": Modelo("303").value, "ejercicio": year}
                         )
-                    try:
-                        observation = await asyncio.wait_for(
-                            register.capture_observation(declaration, artefact_sink=store.persist_artefact),
-                            timeout=settings.cadrumo_live_iva_declaration_capture_timeout_ms / 1000,
+                    declarations = await register.walk(modelo=Modelo("303").value, ejercicio=year)
+                    for candidate in latest_declarations_by_period(declarations):
+                        if not isinstance(candidate, Declaracion):
+                            raise LiveApplicationError(
+                                translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
+                                context={
+                                    "operation": "filed_declaration_type",
+                                    "cause_type": type(candidate).__name__,
+                                },
+                            )
+                        declaration = candidate
+                        if progress_context is not None:
+                            progress_context.update(
+                                {
+                                    "stage": "capture_declaration_observation",
+                                    "modelo": declaration.modelo,
+                                    "ejercicio": declaration.ejercicio,
+                                    "period": declaration.period.registry_token,
+                                }
+                            )
+                        try:
+                            observation = await asyncio.wait_for(
+                                register.capture_observation(declaration, artefact_sink=persist_artefact),
+                                timeout=settings.cadrumo_live_iva_declaration_capture_timeout_ms / 1000,
+                            )
+                        except (TimeoutError, CadrumoError, OSError) as exc:
+                            failures.append(
+                                f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};period={declaration.period.registry_token};failure_type={type(exc).__name__}"
+                            )
+                            continue
+                        manifest_path = store.persist_observation(observation)
+                        paths.append(capture_report_path(manifest_path, output_root=output_root))
+                        artefacts.extend(
+                            artefact.storage_ref
+                            for artefact in observation.artefacts
+                            if artefact.storage_ref is not None
                         )
-                    except (TimeoutError, CadrumoError, OSError) as exc:
-                        failures.append(
-                            f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};period={declaration.period.registry_token};failure_type={type(exc).__name__}"
-                        )
-                        continue
-                    manifest_path = store.persist_observation(observation)
-                    paths.append(capture_report_path(manifest_path, output_root=output_root))
-                    artefacts.extend(
-                        artefact.storage_ref for artefact in observation.artefacts if artefact.storage_ref is not None
-                    )
-                    casilla_count += len(observation.casillas)
-                    observations.append(observation)
-        keys = persistiva_compensation_history_observations_strict(
-            tuple(observations),
-            ports=self._filed_observation_ports,
-        )
+                        casilla_count += len(observation.casillas)
+                        observations.append(observation)
+            keys = persistiva_compensation_history_observations_strict(
+                tuple(observations),
+                ports=self._filed_observation_ports,
+            )
         reloaded = self.list_history(as_of_year=None)
         return IvaCompensationHistoryCaptureReport(
             output_root=str(output_root),

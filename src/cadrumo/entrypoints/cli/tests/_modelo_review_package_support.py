@@ -15,6 +15,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from click.testing import Result
 
@@ -35,6 +36,9 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+
 
 def seed_exportable_modelo_revision(
     *,
@@ -42,6 +46,7 @@ def seed_exportable_modelo_revision(
     modelo: str = "111",
     filing_year: int = 2026,
     period: str = "1T",
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, str]:
     """Persist a real verified-complete revision ready for export or packaging."""
     state = workflow_state_repository().load()
@@ -53,6 +58,7 @@ def seed_exportable_modelo_revision(
         filing_year=filing_year,
         period=filing_period,
         requested_revision_id=None,
+        operation=operation,
     )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -114,6 +120,7 @@ def build_review_package_via_cli(
     invoke: Callable[[Sequence[str]], Result],
     input_values_by_casilla_id: Mapping[CasillaId, str],
     name: str = "review-package.zip",
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Path, str, str]:
     """Seed an exportable revision, build its package through the live CLI verb, and return it.
 
@@ -130,6 +137,7 @@ def build_review_package_via_cli(
     """
     work_unit_id, calculation_revision_id = seed_exportable_modelo_revision(
         input_values_by_casilla_id=input_values_by_casilla_id,
+        operation=operation,
     )
     package_path = tmp_path / name
     build_result = invoke(

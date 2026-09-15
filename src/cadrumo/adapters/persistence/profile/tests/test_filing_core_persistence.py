@@ -28,6 +28,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -125,6 +126,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) 
                 ),
             )
             repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+            ports = build_draft_review_ports(bucket_id=profile.bucket_id)
 
             repository.save(
                 TransactionCatalogue.from_transactions(
@@ -141,6 +143,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) 
                 draft,
                 bucket_id=profile.bucket_id,
                 schema_provider=schema_provider,
+                ports=ports,
                 operation=_authority_operation_for_test,
             )
 
@@ -159,6 +162,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) 
                 draft,
                 bucket_id=profile.bucket_id,
                 schema_provider=schema_provider,
+                ports=ports,
                 operation=_authority_operation_for_test,
             )
 

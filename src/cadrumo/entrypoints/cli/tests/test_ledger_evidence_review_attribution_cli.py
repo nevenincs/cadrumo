@@ -30,16 +30,20 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....application.ledger.grounded_reading import ground_draft_against_transcription
 from ....application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
+from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.iva.regime_legend import resolve_regime_legends
 from .ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -70,7 +74,7 @@ def _reader_envelope(field: str, anchor: str) -> FieldProvenance:
     )
 
 
-def _grounded_draft() -> InvoiceDraft:
+def _grounded_draft(*, operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return the draft the reading path produces for the page above."""
     draft = InvoiceDraft(
         supplier_tax_id="B12345674",
@@ -103,11 +107,16 @@ def _grounded_draft() -> InvoiceDraft:
                 revision="1",
             ),
         ),
+        legends=resolve_regime_legends(
+            operation=operation,
+            effective_date=default_invoice_extraction_period().end_date,
+        ),
+        operation=operation,
     )
 
 
 @pytest.fixture
-def seeded_draft(tmp_path: Path) -> Iterator[None]:
+def seeded_draft(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Iterator[None]:
     """A live bucket session carrying one pending draft of unverified attribution."""
     with open_ledger_ux_session(tmp_path):
         bucket_id = resolve_active_bucket_id()
@@ -115,7 +124,7 @@ def seeded_draft(tmp_path: Path) -> Iterator[None]:
         write_extraction_draft(
             bucket_id=bucket_id,
             evidence_reference=_REFERENCE,
-            draft=_grounded_draft(),
+            draft=_grounded_draft(operation=operation),
             extractor="text_layer",
             settings=load_settings(),
         )

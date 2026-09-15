@@ -4,17 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import cast, override
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
-from cadrumo.adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 
 from .....adapters.persistence.profile.apoderado import build_apoderado_config_repository
@@ -33,11 +35,13 @@ from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
 )
-from .....application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
-from .....entrypoints.adapter_composition import build_borrador_100_snapshot_repository
+from .....application.diagnostics_ports import (
+    DiagnosticSecureObjectNamespace,
+    DiagnosticSessionFailureClassifier,
+    DiagnosticsPorts,
+)
 from .....application.filing.history_ports import FilingHistoryPorts
 from .....application.filing.history_repository import ModeloHistoryRepository
-from .....application.workflow.review_models import WorkflowEvent
 from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....core.config import load_settings, override_settings
 from .....core.config_support import LLMProvider
@@ -50,6 +54,7 @@ from .....domain.invoices.models import InvoiceCatalogue
 from .....domain.modelos.work_unit import WorkUnitCatalogue
 from .....domain.transactions.models import TransactionCatalogue
 from .....domain.usage_ratios.model import UsageRatioProfile
+from .....entrypoints.adapter_composition import build_borrador_100_snapshot_repository
 from ....outbound.aeat.auth import session_store as _session_store
 from ....outbound.aeat.sede.errors import ExpedienteNotFoundError
 from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
@@ -70,9 +75,8 @@ from ..runtime_repository import (
     secure_object_repository_for_active_bucket_or_default_route,
     secure_object_repository_for_bucket,
 )
-from ..sql.secure_object_records import SecureObjectNamespaceIntegrity
-from ..sql.secure_objects import SecureObjectRepository
 from ..secure_object_namespaces import LLM_USAGE_NAMESPACE
+from ..sql.secure_objects import SecureObjectRepository
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,
     _BUCKET_A_ID,
@@ -117,7 +121,7 @@ class _StorageDiagnosticsPort:
     """Translate the real storage repository for this outward adapter test."""
 
     @staticmethod
-    def _repository():
+    def _repository() -> SecureObjectRepository:
         return secure_object_repository_for_active_bucket_or_default_route()
 
     @staticmethod
@@ -138,11 +142,20 @@ class _StorageDiagnosticsPort:
         return tuple(self._translate(row) for row in self._repository().quarantine_unreadable_rows())
 
 
+class _EmptySessionFailureClassifier(DiagnosticSessionFailureClassifier):
+    """Classify the empty test repository without widening the diagnostics port."""
+
+    @override
+    def __call__(self, error: BaseException) -> bool:
+        del error
+        return False
+
+
 def _diagnostics_ports() -> DiagnosticsPorts:
     """Provide the required application diagnostic capability bundle."""
     return DiagnosticsPorts(
         secure_object_repository=_StorageDiagnosticsPort(),
-        session_failure_classifier=lambda _error: False,
+        session_failure_classifier=_EmptySessionFailureClassifier(),
     )
 
 
@@ -155,7 +168,10 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("workflow_state", lambda: WorkflowStateRepository().load()),
     ("workflow_runs", lambda: WorkflowRunRepository().list()),
     ("bucket_events", lambda: BucketEventHistoryRepository().load()),
-    ("auth_diagnostics", list_auth_diagnostics),
+    (
+        "auth_diagnostics",
+        lambda: list_auth_diagnostics(persistence=build_auth_diagnostic_persistence()),
+    ),
     (
         "auth_apoderado",
         lambda: build_apoderado_config_repository(bucket_id=_BUCKET_A_ID, settings=load_settings()),
@@ -222,7 +238,10 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ),
     ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()),
     ("usage_ratios", lambda: _load_usage_ratios_for_test(bucket_id=_BUCKET_A_ID)),
-    ("borrador_100_snapshot", lambda: Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).list_snapshots()),
+    (
+        "borrador_100_snapshot",
+        lambda: build_borrador_100_snapshot_repository(bucket_id=_BUCKET_A_ID).list_snapshots(),
+    ),
     ("profile_inventory", lambda: InventoryLedgerRepository().load()),
 )
 
@@ -311,15 +330,15 @@ def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -
         WorkflowStateRepository().save(_workflow_state(_BUCKET_A_ID))
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert WorkflowStateRepository().load().declarations == {}
+        assert WorkflowStateRepository().load().invoice_reviews == {}
         WorkflowStateRepository().save(_workflow_state(_BUCKET_B_ID))
-        assert "303:2026:1T" in WorkflowStateRepository().load().declarations
+        assert WorkflowStateRepository().load().ledger_reviews == {}
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         loaded = WorkflowStateRepository().load()
 
-    assert "303:2026:1T" in loaded.declarations
-    assert loaded.declarations["303:2026:1T"].draft_id == "a" * 64
+    assert loaded.invoice_reviews == {}
+    assert loaded.ledger_reviews == {}
 
 
 def test_auth_session_store_default_isolates_active_profile_writes(tmp_path: Path) -> None:
@@ -600,21 +619,21 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 
 def test_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) -> None:
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).save(_borrador_snapshot(_BUCKET_A_ID))
+        build_borrador_100_snapshot_repository(bucket_id=_BUCKET_A_ID).save(_borrador_snapshot(_BUCKET_A_ID))
         _save_auth_diagnostic(_BUCKET_A_ID)
         _save_diagnostic_probe_row(_BUCKET_A_ID)
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert Borrador100SnapshotRepository(bucket_id=_BUCKET_B_ID).list_snapshots() == ()
-        assert list_auth_diagnostics().row_count == 0
+        assert build_borrador_100_snapshot_repository(bucket_id=_BUCKET_B_ID).list_snapshots() == ()
+        assert list_auth_diagnostics(persistence=build_auth_diagnostic_persistence()).row_count == 0
         assert preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports()).namespaces == ()
-        Borrador100SnapshotRepository(bucket_id=_BUCKET_B_ID).save(_borrador_snapshot(_BUCKET_B_ID))
+        build_borrador_100_snapshot_repository(bucket_id=_BUCKET_B_ID).save(_borrador_snapshot(_BUCKET_B_ID))
         _save_auth_diagnostic(_BUCKET_B_ID)
         _save_diagnostic_probe_row(_BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
-        snapshots = Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).list_snapshots()
-        auth_report = list_auth_diagnostics()
+        snapshots = build_borrador_100_snapshot_repository(bucket_id=_BUCKET_A_ID).list_snapshots()
+        auth_report = list_auth_diagnostics(persistence=build_auth_diagnostic_persistence())
         diagnostic_report = preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
 
     assert tuple(snapshot.snapshot_id for snapshot in snapshots) == (_borrador_snapshot(_BUCKET_A_ID).snapshot_id,)

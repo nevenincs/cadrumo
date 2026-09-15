@@ -174,6 +174,7 @@ def _import_record(
                 bucket_id=work_unit.bucket_id,
                 actor=actor or _actor(),
                 work_lifecycle_ports=calculation_ports.work_lifecycle_ports,
+                operation=authority_operation(ctx),
                 observation_repository=calculation_ports.observation_repository,
             )
         return import_external_filing_evidence(

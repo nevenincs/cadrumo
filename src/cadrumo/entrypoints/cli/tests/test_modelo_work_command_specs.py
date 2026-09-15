@@ -7,13 +7,12 @@ import importlib
 import inspect
 import sys
 import types
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from functools import cache
 from importlib.util import find_spec, resolve_name
 from pathlib import Path
-from typing import cast, get_args, get_origin
+from typing import get_args, get_origin
 
 import pytest
 from typer.main import get_command
@@ -75,7 +74,9 @@ class _StaticTarget:
             names.insert(len(self.node.args.posonlyargs) + len(self.node.args.args), self.node.args.vararg.arg)
         if self.node.args.kwarg is not None:
             names.append(self.node.args.kwarg.arg)
-        return inspect.Signature(inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD) for name in names)
+        return inspect.Signature(
+            [inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD) for name in names],
+        )
 
 
 def _source(module_name: str) -> tuple[Path, ast.Module] | None:
@@ -165,7 +166,8 @@ def _static_type_hints(target: _StaticTarget) -> dict[str, object]:
     return {
         argument.arg: hint
         for argument in (*target.node.args.posonlyargs, *target.node.args.args, *target.node.args.kwonlyargs)
-        if (hint := _annotation_target(target.module, argument.annotation, imports)) is not None
+        if argument.annotation is not None
+        and (hint := _annotation_target(target.module, argument.annotation, imports)) is not None
     }
 
 
@@ -208,10 +210,7 @@ def test_modelo_work_specs_match_public_handler_signatures_and_resolve_targets()
 def test_modelo_work_parameter_types_and_defaults_match_behavior_contracts() -> None:
     for spec in MODELO_WORK_COMMAND_SPECS:
         assert spec.handler is not None and spec.handler.target is not None
-        handler = cast(
-            Callable[..., object],
-            _resolve(spec.handler.target.module, spec.handler.target.qualname),
-        )
+        handler = _resolve(spec.handler.target.module, spec.handler.target.qualname)
         signature = inspect.signature(handler)
         hints = _static_type_hints(handler)
         for parameter in spec.parameters:

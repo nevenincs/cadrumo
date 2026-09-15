@@ -40,6 +40,7 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.tax_residence import parse_tax_region
@@ -63,7 +64,7 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
-from .state_projection_support import work_lifecycle_ports_factory
+from .state_projection_support import authority_operation, work_lifecycle_ports_factory
 
 
 def _validate_filing_year(year: int) -> None:
@@ -96,7 +97,12 @@ def guard_unsupported_work_modelo(modelo: str) -> None:
 
 
 def _validate_registry_target_before_profile_if_needed(
-    *, modelo: str, filing_year: int, period: Period, registry_revision_id: RevisionId | None
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    registry_revision_id: RevisionId | None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -104,7 +110,11 @@ def _validate_registry_target_before_profile_if_needed(
         return
     try:
         law_selected_revision_for_work_target(
-            modelo=modelo, filing_year=filing_year, period=period, requested_revision_id=registry_revision_id
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            requested_revision_id=registry_revision_id,
+            operation=operation,
         )
     except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -118,6 +128,7 @@ def _emit_work_create_result(
     name: str | None,
     name_applied: str | None,
     allow_not_applicable: bool,
+    authority_operation: PinnedAuthorityOperation,
     quiet: bool = False,
 ) -> None:
     status = "reused" if reused else "created"
@@ -136,7 +147,10 @@ def _emit_work_create_result(
             **work_unit_payload(unit).model_dump(mode="python"),
         }
     )
-    obligation_notices, obligation_lines = _modelo_100_obligation_advisory_output(unit)
+    obligation_notices, obligation_lines = _modelo_100_obligation_advisory_output(
+        unit,
+        operation=authority_operation,
+    )
     if quiet:
         lines = list(obligation_lines)
     else:
@@ -158,7 +172,11 @@ def _reused_work_status_message(*, name: str | None, name_applied: str | None) -
     return (tr("cli.app.modelo.work.create_reused"), "modelo.work.reuse")
 
 
-def _modelo_100_obligation_advisory_output(unit: WorkUnit) -> tuple[list[Notice], list[str]]:
+def _modelo_100_obligation_advisory_output(
+    unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[list[Notice], list[str]]:
     """Project M100 filing-obligation advisories onto notices and text lines.
 
     The advisory rides on the envelope ``notices`` channel (warning
@@ -176,7 +194,10 @@ def _modelo_100_obligation_advisory_output(unit: WorkUnit) -> tuple[list[Notice]
     bucket = resolve_active_bucket_id()
     if bucket is None:
         return ([], [])
-    record = ProfileRecordRepository.for_current_session(bucket).load(bucket)
+    record = ProfileRecordRepository.for_current_session(
+        bucket,
+        profile_decode_context=operation.profile_decode_context(),
+    ).load(bucket)
     raw = record_to_values(record)
     messages = [
         tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw, filing_year=unit.filing_year)
@@ -210,8 +231,13 @@ def work_create(
     guard_unsupported_work_modelo(modelo)
     resolved_period = resolve_year_period(year, period, modelo=modelo)
     resolved_year = resolved_period.filing_year
+    operation = authority_operation(ctx)
     _validate_registry_target_before_profile_if_needed(
-        modelo=modelo, filing_year=resolved_year, period=resolved_period, registry_revision_id=requested_revision
+        modelo=modelo,
+        filing_year=resolved_year,
+        period=resolved_period,
+        registry_revision_id=requested_revision,
+        operation=operation,
     )
     require_active_profile()
     guard_active_profile_foral_ccaa()
@@ -219,15 +245,22 @@ def work_create(
     resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
     resolved_actor = actor or resolve_default_actor()
     lifecycle_ports = work_lifecycle_ports_factory(ctx)(bucket_id=resolved_bucket)
+    profile_decode_context = operation.profile_decode_context()
     require_existing_profile_baseline_ready_for_modelo_work(
         bucket_id=resolved_bucket,
         modelo=modelo,
         filing_year=resolved_year,
         period=resolved_period,
         enforce_applicability=not allow_not_applicable,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
     )
     resolved_revision_id = law_selected_revision_for_work_target(
-        modelo=modelo, filing_year=resolved_year, period=resolved_period, requested_revision_id=requested_revision
+        modelo=modelo,
+        filing_year=resolved_year,
+        period=resolved_period,
+        requested_revision_id=requested_revision,
+        operation=operation,
     )
     require_profile_ready_for_modelo_work(
         bucket_id=resolved_bucket,
@@ -236,6 +269,8 @@ def work_create(
         filing_year=resolved_year,
         period=resolved_period,
         enforce_applicability=not allow_not_applicable,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
     )
     try:
         ensure_result = ensure_modelo_work_unit_for_active_target(
@@ -267,6 +302,7 @@ def work_create(
         name=name,
         name_applied=ensure_result.name_applied,
         allow_not_applicable=allow_not_applicable,
+        authority_operation=operation,
         quiet=quiet,
     )
 

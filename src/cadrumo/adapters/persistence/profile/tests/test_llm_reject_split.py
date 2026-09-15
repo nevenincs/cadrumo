@@ -29,7 +29,12 @@ from cadrumo.application.ledger.llm_classification import (
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts, LLMClassificationSuggestion
 from cadrumo.core.config import load_settings
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -75,6 +80,8 @@ def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
 
 def test_reject_split_suggestion_records_kind_split(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         repository, events, _objects = repositories
@@ -82,7 +89,7 @@ def test_reject_split_suggestion_records_kind_split(
         suggestion = suggest_evidence_split(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             operation=_authority_operation_for_test,
@@ -115,6 +122,8 @@ def test_reject_split_suggestion_records_kind_split(
 
 def test_reject_non_active_transaction_raises(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         repository, events, _objects = repositories
@@ -122,7 +131,7 @@ def test_reject_non_active_transaction_raises(
         suggestion = suggest_evidence_split(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             operation=_authority_operation_for_test,

@@ -47,7 +47,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.irnr import M210GrossIncomeSourceMode
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.row_models import Modelo210AgrupacionRentaRow
@@ -169,7 +169,9 @@ def _seed_m210_profile() -> None:
     )
 
 
-def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambient_store(tmp_path: Path) -> None:
+def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambient_store(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The public source mesh reads the injected store, never a same-bucket ambient store."""
     with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_BUCKET_ID) as runtime:  # noqa: SIM117
         with isolated_injected_secure_object_repository(
@@ -212,6 +214,7 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
                     bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
                 ),
                 clock=_CLOCK,
+                operation=operation,
             )
 
             with bundled_indexed_authority().operation() as operation:
@@ -335,7 +338,9 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
     assert persisted_foreign.m210_income_classification == _classification("01", Decimal("500.00"))
 
 
-def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusive(tmp_path: Path) -> None:
+def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusive(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Manual mode accepts [5]; ledger mode derives ES-only [5] and rejects a manual value."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         _seed_m210_profile()
@@ -379,6 +384,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
                 bucket_event_repository=event_repository,
             ),
             clock=_CLOCK,
+            operation=operation,
         )
 
         with bundled_indexed_authority().operation() as operation:
@@ -489,6 +495,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
                 bucket_event_repository=event_repository,
             ),
             clock=_CLOCK,
+            operation=operation,
         )
         with bundled_indexed_authority().operation() as operation:
             ledger_code_35 = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -591,7 +598,9 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
     assert jurisdiction_staleness.changed == (es_id,)
 
 
-def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_path: Path) -> None:
+def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Ledger mode keeps [5] out of the bundle's manual fact basis.
 
     The verify half of the authority-exclusivity test above, which can no
@@ -632,6 +641,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
                 bucket_event_repository=event_repository,
             ),
             clock=_CLOCK,
+            operation=operation,
         )
         with bundled_indexed_authority().operation() as operation:
             ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

@@ -38,6 +38,7 @@ from cadrumo.application.modelo.filed_revision_observation import persist_filed_
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import RelationId
@@ -169,7 +170,9 @@ def _calculate_303(
     )
 
 
-def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevision:
+def _revision_from_result(
+    result: RegistryCalculationResult, *, operation: PinnedAuthorityOperation
+) -> CalculationRevision:
     """Wrap the engine outputs as a minimal filed CalculationRevision.
 
     ``persist_filed_revision_observation`` reads only ``revision.observations``
@@ -180,7 +183,7 @@ def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevis
     work_unit_id = _year_n_4t_work_unit().work_unit_id
     values = dict(result.values)
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2025, "4T"), reference="test:m303-refunded-period-carry"
+        Period.from_year_and_code(2025, "4T"), reference="test:m303-refunded-period-carry", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -235,17 +238,21 @@ def _year_n_4t_work_unit() -> WorkUnit:
     )
 
 
-def _carry_in_for_year_n_plus_1(obs_repo: CalculationObservationRepository) -> Decimal | None:
+def _carry_in_for_year_n_plus_1(
+    obs_repo: CalculationObservationRepository, *, operation: PinnedAuthorityOperation
+) -> Decimal | None:
     """Resolve year N+1 1T casilla 110 from whatever year-N 4T carry is persisted."""
     snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-    relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
+    relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo, operation=operation)
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in relation_values.values if item.value is not None
     }
     return resolved.get(_CARRY_RELATION)
 
 
-def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> None:
+def test_refunded_4t_period_carries_zero_into_next_period(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A refunded (devolución) 4T credit period carries ZERO into 1T/N+1 casilla 110.
 
     The engine produces a real negative-result saldo for 4T/N. Filing that period
@@ -266,7 +273,7 @@ def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> Non
 
         obs_repo = CalculationObservationRepository()
         persist_filed_revision_observation(
-            revision=_revision_from_result(result_n),
+            revision=_revision_from_result(result_n, operation=operation),
             work_unit=_year_n_4t_work_unit(),
             repository=obs_repo,
             captured_at=_CLOCK,
@@ -275,7 +282,7 @@ def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> Non
             iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
 
-        carry_in = _carry_in_for_year_n_plus_1(obs_repo)
+        carry_in = _carry_in_for_year_n_plus_1(obs_repo, operation=operation)
         history_state = IvaCompensationHistoryRepository().load_period(_year_n_4t_work_unit().period)
 
     assert carry_in == Decimal("0")
@@ -283,7 +290,9 @@ def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> Non
     assert history_state.generated_amount == Decimal("0")
 
 
-def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) -> None:
+def test_carried_4t_period_carries_the_credit_forward_control(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """CONTROL (non-regressive): the SAME credit period, compensar-disposed, carries forward.
 
     the standard compensación behaviour every existing carry chain relies on.
@@ -304,7 +313,7 @@ def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) ->
 
         obs_repo = CalculationObservationRepository()
         persist_filed_revision_observation(
-            revision=_revision_from_result(result_n),
+            revision=_revision_from_result(result_n, operation=operation),
             work_unit=_year_n_4t_work_unit(),
             repository=obs_repo,
             captured_at=_CLOCK,
@@ -313,7 +322,7 @@ def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) ->
             iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
 
-        carry_in = _carry_in_for_year_n_plus_1(obs_repo)
+        carry_in = _carry_in_for_year_n_plus_1(obs_repo, operation=operation)
         history_state = IvaCompensationHistoryRepository().load_period(_year_n_4t_work_unit().period)
 
     assert carry_in is not None

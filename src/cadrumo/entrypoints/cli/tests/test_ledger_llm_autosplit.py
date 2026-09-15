@@ -14,8 +14,10 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....adapters.outbound.llm.suggestions import LLMClassificationSuggestion
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.ledger.llm_classification import reject_llm_suggestion
+from ....application.ledger.llm_classification_ports import LLMClassificationSuggestion
 from ....core.json_contract import NoticeSeverity
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
@@ -122,6 +124,10 @@ def test_list_hide_llm_rejected_retains_unrelated_rows(tmp_path: Path) -> None:
         reason="operator declined the recorded suggestion",
         actor="operator",
         source_command="aeat app ledger classify --llm --reject",
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id="00000000-0000-4000-8000-000000000000",
+        ),
+        bucket_event_repository=BucketEventHistoryRepository(),
     )
     assert rejection.transaction_id == rejected_id
 

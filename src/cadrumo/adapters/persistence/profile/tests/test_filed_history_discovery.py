@@ -22,10 +22,17 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 
 import pytest
-from pydantic import ValidationError
+from pydantic import AnyHttpUrl, ValidationError
 
+from cadrumo.adapters.outbound.aeat.sede.schema import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    ObservedCasillaValue,
+)
+from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import _registry_snapshot
 from cadrumo.application.live.filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
@@ -37,6 +44,7 @@ from cadrumo.application.live.filed_data_capture import (
     filed_history_discovery_report,
     recapture_divergence_notices,
 )
+from cadrumo.application.live.tests.filed_observation_test_support import _UnavailableFiledDataCapturePort
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
@@ -448,7 +456,8 @@ def test_discovery_classifies_the_live_offered_options_at_its_owning_boundary() 
     excluded = next(iter(sorted(_confidently_excluded(profile))))
     availability = _availability((excluded, (2025,)))
 
-    class _DiscoveryPort:
+    class _DiscoveryPort(_UnavailableFiledDataCapturePort):
+        @override
         async def discover_availability(self, *, operation: str) -> _AvailabilityReport:
             assert operation == "live-expedientes-read"
             return availability
@@ -539,43 +548,38 @@ def test_the_reading_does_not_change_the_walked_grid() -> None:
 # --------------------------------------------------- the re-capture divergence
 
 
-@dataclass(frozen=True, slots=True)
-class _ObservedCasilla:
-    """Inward casilla value used by the application divergence comparator."""
-
-    casilla_id: str
-    value: str
-    value_kind: CasillaValueKind
-
-    def decimal_value(self) -> Decimal:
-        """Parse the numeric token exactly as the comparator requires."""
-        return Decimal(self.value)
-
-
-@dataclass(frozen=True, slots=True)
-class _FiledObservation:
-    """Inward observation facts needed by application recapture projections."""
-
-    modelo: str
-    ejercicio: int
-    period: Period
-    expediente_id: str
-    casillas: tuple[_ObservedCasilla, ...]
-
-
-def _filed_130_observation_for_tests() -> _FiledObservation:
-    return _FiledObservation(
+def _filed_130_observation_for_tests() -> FiledDeclaracionObservation:
+    """Build one canonical filed observation for the recapture projections."""
+    presented_at = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
+    return FiledDeclaracionObservation(
         modelo="130",
         ejercicio=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        expediente_id="13020260420WXYZ9999QRST8888",
+        expediente_id="13020260410ABCD1234EFGH5678",
+        status="ALTA",
+        presented_at=presented_at,
+        authenticated_identity="12345678Z",
+        artefacts=(
+            FiledDeclaracionArtefact(
+                kind="submitted_file",
+                source_url=AnyHttpUrl("https://example.test/filed/130"),
+                content_type="application/octet-stream",
+                byte_count=1,
+                sha256="0" * 64,
+                captured_at=presented_at,
+            ),
+        ),
         casillas=(
-            _ObservedCasilla(
+            ObservedCasillaValue(
                 casilla_id=validated_casilla_id("03"),
                 value="1500.00",
                 value_kind=CasillaValueKind.NUMERIC,
+                source_artefact_kind="submitted_file",
+                source_locator="submitted-file:03",
+                confidence=1.0,
             ),
         ),
+        registry_snapshot_ref=_registry_snapshot("130", 2026, "1T").snapshot_ref,
     )
 
 

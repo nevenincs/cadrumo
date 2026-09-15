@@ -13,6 +13,7 @@ from dev.registry.tests.profile_schema_support import (
 )
 from pydantic import ValidationError
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.operations.secure_references import (
     operation_secure_reference_repository,
 )
@@ -39,6 +40,7 @@ from cadrumo.application.user_profile.censal_operation import (
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -51,7 +53,9 @@ _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 def _test_censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=build_censal_fetch_port(),
     )
 
 

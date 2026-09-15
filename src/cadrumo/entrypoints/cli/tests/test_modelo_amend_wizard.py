@@ -263,8 +263,8 @@ def _scripted_amend(
             unit.current_filing_record_id,
             ports=build_filing_action_ports(bucket_id=bucket_id),
         )
-        casilla_rows = _baseline_casilla_rows(unit)
         with bundled_indexed_authority().operation() as operation:
+            casilla_rows = _baseline_casilla_rows(unit, operation=operation)
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
@@ -368,8 +368,8 @@ def _permitted_kind_choice_values(
             unit.current_filing_record_id,
             ports=build_filing_action_ports(bucket_id=bucket_id),
         )
-        casilla_rows = _baseline_casilla_rows(unit)
         with bundled_indexed_authority().operation() as operation:
+            casilla_rows = _baseline_casilla_rows(unit, operation=operation)
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
@@ -721,8 +721,8 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
             unit.current_filing_record_id,
             ports=build_filing_action_ports(bucket_id=bucket_id),
         )
-        casilla_rows = _baseline_casilla_rows(unit)
         with bundled_indexed_authority().operation() as operation:
+            casilla_rows = _baseline_casilla_rows(unit, operation=operation)
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),

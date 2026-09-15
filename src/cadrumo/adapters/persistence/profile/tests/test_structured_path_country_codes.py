@@ -54,10 +54,13 @@ from cadrumo.application.ledger.invoice_extraction_authority import default_invo
 from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from cadrumo.domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
+from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+from cadrumo.entrypoints.cli._ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
 
 from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, repository, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
@@ -72,6 +75,7 @@ def _registry_legends(operation):
     """Resolve the registry vocabulary on the test's pinned authority lease."""
     period = default_invoice_extraction_period()
     return resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
 
 # The Facturae specimen states both parties' countries in full, in the alpha-3
 # form the format uses. These are the values the document itself carries, not
@@ -135,11 +139,14 @@ def _stored(
     return _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=staged).record.evidence_id
 
 
-def _draft(evidence_id: str, settings: Settings) -> InvoiceDraft:
+def _draft(evidence_id: str, settings: Settings, *, operation: PinnedAuthorityOperation) -> InvoiceDraft:
     return extract_invoice_draft_from_evidence(
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=settings,
+        ports=invoice_draft_extraction_ports(evidence_ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID)),
+        operation=operation,
+        legends=_registry_legends(operation),
     )
 
 
@@ -174,6 +181,8 @@ class TestTheCountryReachesTheDraft:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The stated alpha-3 arrives as alpha-2, which is the whole correspondence.
 
@@ -189,7 +198,7 @@ class TestTheCountryReachesTheDraft:
             name="facturae_countries.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert _STATED_ALPHA3 in _corpus(_FACTURAE_WITH_ADDRESSES)
         assert draft.supplier_country_code == "ES"
@@ -200,6 +209,8 @@ class TestTheCountryReachesTheDraft:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """UBL states the alpha-2 form already, and it arrives unchanged."""
         evidence_id = _stored(
@@ -210,7 +221,7 @@ class TestTheCountryReachesTheDraft:
             name="ubl_countries.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.supplier_country_code == "ES"
         assert draft.customer_country_code == "ES"
@@ -220,6 +231,8 @@ class TestTheCountryReachesTheDraft:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The third syntax reaches the draft, and the two parties do not collapse.
 
@@ -242,7 +255,7 @@ class TestTheCountryReachesTheDraft:
             name="cii_countries.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.supplier_country_code == _CII_SUPPLIER_COUNTRY
         assert draft.customer_country_code == _CII_CUSTOMER_COUNTRY
@@ -252,6 +265,8 @@ class TestTheCountryReachesTheDraft:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """Where a party is REGISTERED is not where it is ESTABLISHED, and only one is read.
 
@@ -291,7 +306,7 @@ class TestTheCountryReachesTheDraft:
             name="cii_registered_elsewhere.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.customer_country_code == "CH", "the ADDRESS country, never the IVA prefix"
         assert draft.customer_tax_id == "DE811569869", "the registration is still read, just not as a place"
@@ -301,6 +316,8 @@ class TestTheCountryReachesTheDraft:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """Absent stays absent, and above all never becomes Spain.
 
@@ -318,7 +335,7 @@ class TestTheCountryReachesTheDraft:
             name="facturae_no_address.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.supplier_country_code is None
         assert draft.customer_country_code is None
@@ -339,6 +356,8 @@ class TestTheStructuredPathOpensThePostalRung:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """A Spanish national-format invoice reaches the postal rung end to end.
 
@@ -358,7 +377,7 @@ class TestTheStructuredPathOpensThePostalRung:
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
-                draft=_draft(evidence_id, isolated_settings),
+                draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
@@ -374,6 +393,8 @@ class TestTheStructuredPathOpensThePostalRung:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The same document with a Canarian code resolves Canarias, not the peninsula.
 
@@ -401,7 +422,7 @@ class TestTheStructuredPathOpensThePostalRung:
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
-                draft=_draft(evidence_id, isolated_settings),
+                draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
@@ -417,6 +438,8 @@ class TestTheStructuredPathOpensThePostalRung:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The alpha-2 leg reaches the same rung, so neither format is left behind."""
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
@@ -430,7 +453,7 @@ class TestTheStructuredPathOpensThePostalRung:
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
-                draft=_draft(evidence_id, isolated_settings),
+                draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
@@ -446,6 +469,8 @@ class TestTheStructuredPathOpensThePostalRung:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """Direction selects which party's country is read, or the rung answers the wrong one.
 
@@ -464,7 +489,7 @@ class TestTheStructuredPathOpensThePostalRung:
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
-                draft=_draft(evidence_id, isolated_settings),
+                draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.ISSUED,
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
@@ -480,6 +505,8 @@ class TestTheStructuredPathOpensThePostalRung:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The received side reads the Spanish supplier, so country GATES postal and both fire.
 
@@ -500,7 +527,7 @@ class TestTheStructuredPathOpensThePostalRung:
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
-                draft=_draft(evidence_id, isolated_settings),
+                draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
@@ -516,6 +543,8 @@ class TestTheStructuredPathOpensThePostalRung:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The issued side reads the Swiss customer, whose country settles it alone.
 
@@ -536,7 +565,7 @@ class TestTheStructuredPathOpensThePostalRung:
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
-                draft=_draft(evidence_id, isolated_settings),
+                draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.ISSUED,
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
@@ -552,6 +581,8 @@ class TestTheStructuredPathOpensThePostalRung:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The rung opens on stated evidence only, never on the format.
 
@@ -571,7 +602,7 @@ class TestTheStructuredPathOpensThePostalRung:
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
-                draft=_draft(evidence_id, isolated_settings),
+                draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
@@ -639,6 +670,8 @@ class TestTheOverseasAddressIsNotConsulted:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The document states France and the draft carries no country at all."""
         document = self._overseas(_corpus(_FACTURAE_WITH_ADDRESSES))
@@ -652,7 +685,7 @@ class TestTheOverseasAddressIsNotConsulted:
             name="facturae_overseas.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.supplier_country_code is None
         # The postal side is skipped by the same scoping, asserted together so a
@@ -668,6 +701,8 @@ class TestTheOverseasAddressIsNotConsulted:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
         repository: CounterpartyEstablishmentRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The live consequence: France is stated, and no territory is resolved.
 
@@ -687,7 +722,7 @@ class TestTheOverseasAddressIsNotConsulted:
 
             resolved = resolve_draft_counterparty_establishment(
                 bucket_id=_BUCKET_ID,
-                draft=_draft(evidence_id, isolated_settings),
+                draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
@@ -736,6 +771,8 @@ class TestTheProvenanceTellsTheTwoApart:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The anchor is ``ESP`` while the value is ``ES``, which is the lookup made visible."""
         evidence_id = _stored(
@@ -746,7 +783,7 @@ class TestTheProvenanceTellsTheTwoApart:
             name="facturae_provenance.xml",
         )
 
-        envelope = self._envelope(_draft(evidence_id, isolated_settings), "supplier_country_code")
+        envelope = self._envelope(_draft(evidence_id, isolated_settings, operation=operation), "supplier_country_code")
 
         assert envelope.anchor == _STATED_ALPHA3
         assert envelope.grounding is FieldGroundingOutcome.ANCHORED
@@ -757,6 +794,8 @@ class TestTheProvenanceTellsTheTwoApart:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """UBL states the target form itself, so anchor and value coincide honestly."""
         evidence_id = _stored(
@@ -767,7 +806,7 @@ class TestTheProvenanceTellsTheTwoApart:
             name="ubl_provenance.xml",
         )
 
-        envelope = self._envelope(_draft(evidence_id, isolated_settings), "supplier_country_code")
+        envelope = self._envelope(_draft(evidence_id, isolated_settings, operation=operation), "supplier_country_code")
 
         assert envelope.anchor == "ES"
         assert envelope.grounding is FieldGroundingOutcome.ANCHORED
@@ -777,6 +816,8 @@ class TestTheProvenanceTellsTheTwoApart:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """The customer side, whose anchor no other party's element could supply.
 
@@ -795,7 +836,7 @@ class TestTheProvenanceTellsTheTwoApart:
             name="cii_provenance.xml",
         )
 
-        envelope = self._envelope(_draft(evidence_id, isolated_settings), "customer_country_code")
+        envelope = self._envelope(_draft(evidence_id, isolated_settings, operation=operation), "customer_country_code")
 
         assert envelope.anchor == _CII_CUSTOMER_COUNTRY
         assert envelope.grounding is FieldGroundingOutcome.ANCHORED
@@ -806,6 +847,8 @@ class TestTheProvenanceTellsTheTwoApart:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """An absent field has nothing to describe, so it must not acquire an origin.
 
@@ -820,11 +863,15 @@ class TestTheProvenanceTellsTheTwoApart:
             name="facturae_no_envelope.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert not [envelope for envelope in draft.provenance if envelope.field.endswith("_country_code")]
 
-    def test_a_value_the_anchor_does_not_derive_to_is_contradicted(self) -> None:
+    def test_a_value_the_anchor_does_not_derive_to_is_contradicted(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """An explicit anchor checks the value; it does not merely accompany it.
 
         The anchor occurring in the record is a fact about the ANCHOR. Once the
@@ -834,11 +881,15 @@ class TestTheProvenanceTellsTheTwoApart:
         that, and it is the textual counterpart of the decimal re-parse the
         printed lanes already run.
         """
+
+        def derive_country_code(stated_code: str) -> str | None:
+            return country_code_for_stated_country_code(stated_code, operation=operation)
+
         contradicted = ground_structured_value(
             field="supplier_country_code",
             value="ZW",
             anchor=_STATED_ALPHA3,
-            derive=country_code_for_stated_country_code,
+            derive=derive_country_code,
             element_path="SellerParty/AddressInSpain/CountryCode",
             source_text=_STATED_ALPHA3,
         )
@@ -866,6 +917,8 @@ class TestTheProvenanceTellsTheTwoApart:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """A tag name is not something the document states.
 
@@ -886,7 +939,7 @@ class TestTheProvenanceTellsTheTwoApart:
             name="ubl_no_country.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.supplier_country_code is None
         assert not [envelope for envelope in draft.provenance if envelope.field.endswith("_country_code")]
@@ -927,6 +980,8 @@ class TestTheProvenanceTellsTheTwoApart:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """An operator gets a location they can navigate to, not the shape's name."""
         evidence_id = _stored(
@@ -937,7 +992,7 @@ class TestTheProvenanceTellsTheTwoApart:
             name="facturae_note.xml",
         )
 
-        envelope = self._envelope(_draft(evidence_id, isolated_settings), "supplier_country_code")
+        envelope = self._envelope(_draft(evidence_id, isolated_settings, operation=operation), "supplier_country_code")
 
         assert "SellerParty/AddressInSpain/CountryCode" in envelope.note
 
@@ -946,6 +1001,8 @@ class TestTheProvenanceTellsTheTwoApart:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """A syntax the path table does not cover degrades to naming the shape.
 
@@ -963,7 +1020,7 @@ class TestTheProvenanceTellsTheTwoApart:
             name="cii_note.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert (
             "ram:SellerTradeParty/ram:PostalTradeAddress/ram:CountryID"

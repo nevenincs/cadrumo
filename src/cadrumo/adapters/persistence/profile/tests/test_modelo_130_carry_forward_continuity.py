@@ -61,7 +61,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -264,6 +264,7 @@ def _calculate_quarter(
     period: str,
     casilla_inputs: Mapping[CasillaId, Decimal],
     binding_values: Mapping[BindingId, Decimal],
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, _filing_repo = repos
     work_unit = create_work_unit(
@@ -274,6 +275,7 @@ def _calculate_quarter(
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_CLOCK,
+        operation=operation,
     )
     return _calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -304,6 +306,7 @@ def _import_official_filing_evidence(
     filing_year: int,
     period: str,
     casilla_values: Mapping[CasillaId, Decimal],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, dict[str, str]]:
     wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, filing_repo = repos
     source_snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
@@ -315,6 +318,7 @@ def _import_official_filing_evidence(
         revision_id=source_snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_CLOCK,
+        operation=operation,
     )
     evidence_reference_id = f"JUST{modelo}{filing_year}{period}"
     persist_justificante_metadata(
@@ -385,7 +389,7 @@ def _seed_prior_year_m100(
     )
 
 
-def test_q1_loss_produces_carry_forward_saldo(repos: _Repos) -> None:
+def test_q1_loss_produces_carry_forward_saldo(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """A loss-making Q1 produces a positive ``saldo-negativo-fin-periodo``.
 
     This is the seed the next quarter carries forward. The value is
@@ -393,12 +397,16 @@ def test_q1_loss_produces_carry_forward_saldo(repos: _Repos) -> None:
     20% pago fraccionado, with a minoración that cannot be absorbed),
     never hand-computed against the formula under test.
     """
-    revision = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
+    revision = _calculate_quarter(
+        repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS, operation=operation
+    )
     assert Decimal(revision.casilla_values[_M130_DIFERENCIA_CASILLA]) == Decimal("-100.00")
     assert Decimal(revision.casilla_values[_M130_SALDO_NEGATIVO_CASILLA]) == _EXPECTED_Q1_SALDO
 
 
-def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) -> None:
+def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """Q2's carry-forward binding auto-resolves to Q1's persisted saldo.
 
     The cross-period continuity contract: once Q1 is recorded as a
@@ -407,7 +415,9 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
     the operator does not re-key the prior-quarter loss by hand.
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
-    q1 = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
+    q1 = _calculate_quarter(
+        repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS, operation=operation
+    )
     obs_repo.save(
         obs_repo.prepare_observation_envelope(
             _observation_from_revision(q1, period="1T"),
@@ -432,7 +442,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
     assert report.binding_values.get(_PREV_YEAR_BINDING) == _PRIOR_YEAR_NET_INCOME
 
 
-def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
+def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The resolved carry-forward lands in Q2's casilla 15 through a real calculate.
 
     End-to-end: Q1 recorded -> Q2 prefill -> Q2 calculate with the
@@ -442,7 +452,9 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     resultados negativos de trimestres anteriores").
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
-    q1 = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
+    q1 = _calculate_quarter(
+        repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS, operation=operation
+    )
     obs_repo.save(
         obs_repo.prepare_observation_envelope(
             _observation_from_revision(q1, period="1T"),
@@ -478,11 +490,14 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
         binding_values=dict(resolved),
+        operation=operation,
     )
     assert Decimal(q2.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == _EXPECTED_Q1_SALDO
 
 
-def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos) -> None:
+def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     wu_repo, cr_repo, bv_repo, obs_repo, vr_repo, filing_repo = repos
     q1 = _calculate_quarter(
         repos,
@@ -501,6 +516,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
             _PREV_YEAR_BINDING: _PRIOR_YEAR_NET_INCOME,
             _CARRY_FORWARD_BINDING: Decimal("0"),
         },
+        operation=operation,
     )
     assert q1.casilla_values[_M130_SALDO_NEGATIVO_CASILLA] == Decimal("62.00")
     q1_revision_stamp, q1_source_metadata = _import_official_filing_evidence(
@@ -509,6 +525,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
         filing_year=2026,
         period="1T",
         casilla_values=q1.casilla_values,
+        operation=operation,
     )
     obs_repo.save(
         obs_repo.prepare_observation_envelope(
@@ -531,6 +548,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
         filing_year=2025,
         period="0A",
         casilla_values=m100_values,
+        operation=operation,
     )
     _seed_prior_year_m100(
         obs_repo,
@@ -560,6 +578,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
         binding_values=dict(resolved),
+        operation=operation,
     )
 
     assert q2.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA] == Decimal("37.40")

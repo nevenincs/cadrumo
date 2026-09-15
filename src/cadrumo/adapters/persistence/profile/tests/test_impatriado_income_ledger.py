@@ -21,6 +21,8 @@ from cadrumo.application.aggregation.impatriado_income_ledger import (
     aggregate_impatriado_income_ledger,
     aggregate_impatriado_income_ledger_from_repositories,
 )
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -29,7 +31,10 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
-_BASE_CASILLA = "impatriado.base-liquidable-general"
+_M151_MODELO = Modelo("151").value
+_BASE_CASILLA: CasillaId = validated_casilla_id("impatriado.base-liquidable-general")
+_M151_SOURCE_JURISDICTIONS = frozenset({"ES"})
+_M151_ELIGIBLE_INCOME_CATEGORIES = frozenset({"actividad_economica", "trabajo"})
 _BUCKET_ID = "16161616-1616-4616-8616-161616161616"
 
 
@@ -115,6 +120,10 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
         result = aggregate_impatriado_income_ledger_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_ANNUAL_2024,
+            modelo=_M151_MODELO,
+            target_casilla_id=_BASE_CASILLA,
+            source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+            eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
         )
 
@@ -157,6 +166,10 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
         result = aggregate_impatriado_income_ledger_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_ANNUAL_2024,
+            modelo=_M151_MODELO,
+            target_casilla_id=_BASE_CASILLA,
+            source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+            eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
         )
 
@@ -205,9 +218,21 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
         partitioned = aggregate_impatriado_income_ledger_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_ANNUAL_2024,
+            modelo=_M151_MODELO,
+            target_casilla_id=_BASE_CASILLA,
+            source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+            eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository),
         )
-        full_scan = aggregate_impatriado_income_ledger(catalogue, bucket_id=_BUCKET_ID, period=_ANNUAL_2024)
+        full_scan = aggregate_impatriado_income_ledger(
+            catalogue,
+            bucket_id=_BUCKET_ID,
+            period=_ANNUAL_2024,
+            modelo=_M151_MODELO,
+            target_casilla_id=_BASE_CASILLA,
+            source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+            eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
+        )
 
     assert set(partitioned.observations) == set(full_scan.observations)
     assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values

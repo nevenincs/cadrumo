@@ -19,6 +19,7 @@ from .....application.live.filed_data_ports import (
 from .....application.live.filed_observation_ports import FiledObservationProtocol
 from .....application.live.session import active_verified_session
 from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.schema import ModeloRevision
 from .declarations import (
     DeclaracionesRegisterSession,
@@ -30,6 +31,8 @@ from .declarations_capture import (
     capture_previous_filing_observations,
     capture_relation_source_observations,
 )
+from .declarations_schema import Declaracion
+from .schema import FiledDeclaracionArtefact
 
 _T = TypeVar("_T")
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
@@ -52,6 +55,26 @@ async def _call_adapter(operation: str, callback: Callable[[], Awaitable[_T]]) -
         raise
     except Exception as exc:
         raise _translate_adapter_error(operation, exc) from exc
+
+
+def _concrete_artefact_sink(
+    artefact_sink: FiledArtefactSink | None,
+) -> Callable[[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes], FiledDeclaracionArtefact] | None:
+    """Keep the Sede capture sink at its concrete artefact boundary."""
+    if artefact_sink is None:
+        return None
+
+    def persist(
+        observation_key: tuple[str, int, Period, str],
+        artefact: FiledDeclaracionArtefact,
+        body: bytes,
+    ) -> FiledDeclaracionArtefact:
+        stored = artefact_sink(observation_key, artefact, body)
+        if not isinstance(stored, FiledDeclaracionArtefact):
+            raise TypeError("filed artefact sink returned a non-Sede artefact")
+        return stored
+
+    return persist
 
 
 class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
@@ -84,9 +107,12 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
         artefact_sink: FiledArtefactSink | None = None,
     ) -> FiledObservationProtocol:
         """Capture one register row through the concrete Sede reader."""
+        if not isinstance(declaration, Declaracion):
+            raise TypeError("filed register port returned a non-Sede declaration")
+        concrete_sink = _concrete_artefact_sink(artefact_sink)
         return await _call_adapter(
             "filed_declaration_capture",
-            lambda: self._register.capture_observation(declaration, artefact_sink=artefact_sink),
+            lambda: self._register.capture_observation(declaration, artefact_sink=concrete_sink),
         )
 
 
@@ -110,23 +136,29 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
     async def open_register(self, *, operation: str) -> AsyncIterator[FiledDataRegisterPort]:
         """Open one browser-backed register for the complete operation scope."""
         try:
-            session, settings = await _call_adapter(
-                "filed_register_session",
-                lambda: active_verified_session(
-                    certificate_secret_backend_factory=self._certificate_secret_backend_factory,
-                    browser_session_factory=self._browser_session_factory,
-                    operation=operation,
-                    operator_scope_ports=self._operator_scope_ports,
-                ),
-            )
-            async with (
-                shared_playwright(session) as playwright,
-                open_declarations_register(session, settings=settings, playwright=playwright) as register,
-            ):
-                yield _SedeFiledDataRegisterPort(
-                    register,
-                    walk_timeout_ms=settings.cadrumo_live_filed_register_walk_timeout_ms,
+            with bundled_indexed_authority().operation() as indexed_operation:
+                session, settings = await _call_adapter(
+                    "filed_register_session",
+                    lambda: active_verified_session(
+                        certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                        browser_session_factory=self._browser_session_factory,
+                        operation=operation,
+                        operator_scope_ports=self._operator_scope_ports,
+                    ),
                 )
+                async with (
+                    shared_playwright(session) as playwright,
+                    open_declarations_register(
+                        session,
+                        operation=indexed_operation,
+                        settings=settings,
+                        playwright=playwright,
+                    ) as register,
+                ):
+                    yield _SedeFiledDataRegisterPort(
+                        register,
+                        walk_timeout_ms=settings.cadrumo_live_filed_register_walk_timeout_ms,
+                    )
         except LiveApplicationError:
             raise
         except Exception as exc:
@@ -174,39 +206,43 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         operation: str,
     ) -> tuple[FiledObservationProtocol, ...]:
         """Capture registry-selected source rows in one authenticated browser."""
-        session, settings = await _call_adapter(
-            "filed_register_session",
-            lambda: active_verified_session(
-                certificate_secret_backend_factory=self._certificate_secret_backend_factory,
-                browser_session_factory=self._browser_session_factory,
-                operation=operation,
-                operator_scope_ports=self._operator_scope_ports,
-            ),
-        )
+        with bundled_indexed_authority().operation() as indexed_operation:
+            session, settings = await _call_adapter(
+                "filed_register_session",
+                lambda: active_verified_session(
+                    certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                    browser_session_factory=self._browser_session_factory,
+                    operation=operation,
+                    operator_scope_ports=self._operator_scope_ports,
+                ),
+            )
+            concrete_sink = _concrete_artefact_sink(artefact_sink)
 
-        async def _capture() -> tuple[FiledObservationProtocol, ...]:
-            async with shared_playwright(session) as playwright:
-                previous = await capture_previous_filing_observations(
-                    session,
-                    revision,
-                    filing_year=filing_year,
-                    period=period,
-                    settings=settings,
-                    playwright=playwright,
-                    artefact_sink=artefact_sink,
-                )
-                related = await capture_relation_source_observations(
-                    session,
-                    revision,
-                    filing_year=filing_year,
-                    period=period,
-                    settings=settings,
-                    playwright=playwright,
-                    artefact_sink=artefact_sink,
-                )
-                return previous + related
+            async def _capture() -> tuple[FiledObservationProtocol, ...]:
+                async with shared_playwright(session) as playwright:
+                    previous = await capture_previous_filing_observations(
+                        session,
+                        revision,
+                        filing_year=filing_year,
+                        period=period,
+                        operation=indexed_operation,
+                        settings=settings,
+                        playwright=playwright,
+                        artefact_sink=concrete_sink,
+                    )
+                    related = await capture_relation_source_observations(
+                        session,
+                        revision,
+                        filing_year=filing_year,
+                        period=period,
+                        operation=indexed_operation,
+                        settings=settings,
+                        playwright=playwright,
+                        artefact_sink=concrete_sink,
+                    )
+                    return previous + related
 
-        return await _call_adapter("filed_source_capture", _capture)
+            return await _call_adapter("filed_source_capture", _capture)
 
 
 __all__ = ["SedeFiledDataCapturePort"]

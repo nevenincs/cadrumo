@@ -35,6 +35,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.filing.draft_construction import build_draft
@@ -93,6 +94,7 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
         taxable_base=taxable_base,
         iva_rate=Decimal("21"),
         currency="EUR",
+        rate_provider=default_ecb_rate_provider(),
     )
 
 

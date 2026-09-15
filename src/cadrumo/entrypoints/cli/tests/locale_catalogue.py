@@ -8,28 +8,62 @@ shipped package graph.
 
 from __future__ import annotations
 
-from collections.abc import Hashable
 from pathlib import Path
-from typing import IO, Any
+from typing import IO
 
 import yaml
 
-from .....core.external_constants import UTF_8_ENCODING
+from ....core.external_constants import UTF_8_ENCODING
 
 type LocaleNode = str | dict[str, "LocaleNode"] | None
 
 
-class _StrictUniqueKeyLoader(getattr(yaml, "CSafeLoader", yaml.SafeLoader)):  # type: ignore[misc,valid-type]
+def _coerce_locale_mapping(value: object) -> dict[str, LocaleNode]:
+    if not isinstance(value, dict):
+        raise TypeError(f"Locale root must be a mapping; got {type(value).__name__}")
+
+    mapping: dict[str, LocaleNode] = {}
+    for key, child in value.items():
+        if not isinstance(key, str):
+            raise TypeError(f"Locale mapping keys must be text; got {type(key).__name__}")
+        mapping[key] = _coerce_locale_node(child)
+    return mapping
+
+
+def _coerce_locale_node(value: object) -> LocaleNode:
+    if isinstance(value, str) or value is None:
+        return value
+    if isinstance(value, dict):
+        return _coerce_locale_mapping(value)
+    raise TypeError(f"Locale values must be text, mappings, or null; got {type(value).__name__}")
+
+
+def _locale_key(value: object) -> str:
+    if not isinstance(value, (str, int, float, bool)):
+        raise TypeError(f"Locale mapping keys must be scalar; got {type(value).__name__}")
+    return str(value)
+
+
+class _StrictUniqueKeyLoader(yaml.SafeLoader):
     """Reject duplicate YAML keys while retaining the safe-loader boundary."""
 
-    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Hashable, Any]:
-        mapping: dict[Hashable, Any] = {}
-        for key_node, value_node in node.value:
-            key = self.construct_object(key_node, deep=deep)
-            if key in mapping:
-                raise ValueError(f"Duplicate locale key {key!r} at line {key_node.start_mark.line + 1}")
-            mapping[key] = self.construct_object(value_node, deep=deep)
-        return mapping
+    pass
+
+
+def _construct_locale_mapping(loader: _StrictUniqueKeyLoader, node: yaml.MappingNode) -> dict[str, LocaleNode]:
+    mapping: dict[str, LocaleNode] = {}
+    for key_node, value_node in node.value:
+        key = _locale_key(loader.construct_object(key_node, deep=True))
+        if key in mapping:
+            raise ValueError(f"Duplicate locale key {key!r} at line {key_node.start_mark.line + 1}")
+        mapping[key] = _coerce_locale_node(loader.construct_object(value_node, deep=True))
+    return mapping
+
+
+_StrictUniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    _construct_locale_mapping,
+)
 
 
 def _parse_locale(source: IO[str]) -> dict[str, LocaleNode]:
@@ -38,13 +72,14 @@ def _parse_locale(source: IO[str]) -> dict[str, LocaleNode]:
         data = loader.get_single_data()
     finally:
         loader.dispose()
-    return data if data is not None else {}
+    return {} if data is None else _coerce_locale_mapping(data)
 
 
 def _merge(base: dict[str, LocaleNode], overlay: dict[str, LocaleNode]) -> None:
     for key, value in overlay.items():
-        if isinstance(base.get(key), dict) and isinstance(value, dict):
-            _merge(base[key], value)  # type: ignore[arg-type]
+        current = base.get(key)
+        if isinstance(current, dict) and isinstance(value, dict):
+            _merge(current, value)
         else:
             base[key] = value
 

@@ -29,6 +29,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand as 
 from cadrumo.application.ledger.models import ManualLedgerTransactionResult as _ManualLedgerTransactionResult
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -200,6 +201,7 @@ def _persist_verified_revision_citing_transaction(
     transaction_id: str,
     additional_transaction_ids: Iterable[str] = (),
     bucket_id: str = _BUCKET_ID,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
     period = Period.from_year_and_code(2026, "1T")
@@ -219,7 +221,11 @@ def _persist_verified_revision_citing_transaction(
         period=period,
         revision_id=registry_snapshot_ref.revision_id,
     )
-    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-action-support")
+    filing_instance_evidence = general_m303_filing_evidence(
+        period,
+        reference="test:ledger-action-support",
+        operation=operation,
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
@@ -279,10 +285,12 @@ def persist_verified_revision_citing_transaction(
     transaction_id: str,
     additional_transaction_ids: Iterable[str] = (),
     bucket_id: str = _BUCKET_ID,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     _persist_verified_revision_citing_transaction(
         objects,
         transaction_id=transaction_id,
         additional_transaction_ids=additional_transaction_ids,
         bucket_id=bucket_id,
+        operation=operation,
     )

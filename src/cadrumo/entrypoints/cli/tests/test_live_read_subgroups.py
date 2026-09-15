@@ -15,6 +15,8 @@ from time import sleep
 from typing import cast
 
 import pytest
+import typer
+from typer.main import get_command
 
 from ....adapters.persistence.profile.verify_observations import VerifyObservationRepository
 from ....application.auth.operator_results import LiveAuthPreflightReport
@@ -37,6 +39,7 @@ from ....application.live.verify import (
 from ....core.config import override_settings
 from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.period import Period
+from ....entrypoints.adapter_composition import build_borrador_100_snapshot_repository
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .._app_live import (
     _PROCESS_INVENTORY_TIMEOUT_SECONDS,
@@ -246,7 +249,10 @@ class TestBorrador100Subgroup:
 
     def test_borrador_100_full_lifecycle_via_service_seed(self) -> None:
         bucket_id = _ACTIVE_TEST_BUCKET_ID
-        Borrador100SnapshotService(bucket_id=bucket_id).capture(
+        Borrador100SnapshotService(
+            bucket_id=bucket_id,
+            repository=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
+        ).capture(
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
             captured_at=datetime(2025, 3, 15, tzinfo=UTC),
@@ -355,7 +361,11 @@ class TestIvaRemoteStateCliSurface:
 
         async def run() -> None:
             with pytest.raises(LiveIvaSurfaceTimeoutError) as raised:
-                await _run_live_iva_evidence_pull_command(slow_read(), timeout_ms=1)
+                ctx = typer.Context(get_command(live_app))
+                try:
+                    await _run_live_iva_evidence_pull_command(slow_read(), ctx=ctx, timeout_ms=1)
+                finally:
+                    ctx.close()
 
             assert raised.value.surface == "iva_evidence_command"
             assert raised.value.timeout_ms == 1

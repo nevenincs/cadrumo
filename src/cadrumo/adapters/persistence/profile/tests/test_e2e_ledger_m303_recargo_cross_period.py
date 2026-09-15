@@ -67,6 +67,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -259,7 +260,9 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
     )
 
 
-def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: str) -> CalculationRevision:
+def _calculate_m303_quarter(
+    secure_objects: SecureObjectRepository, *, period: str, operation: PinnedAuthorityOperation
+) -> CalculationRevision:
     """Run the live bucket-aggregation M303 calc for one quarter."""
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -273,6 +276,7 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         revision_id=compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period).revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
+        operation=operation,
     )
     decision = _wallet_decision(period=period)
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
@@ -294,13 +298,13 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
             ports=_calculation_ports_289,
             clock=_FILE_AT,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-recargo-cross-period"
+                work_unit.period, reference="test:m303-recargo-cross-period", operation=operation
             ),
         ).revision
 
 
 def test_ledger_recargo_sales_populate_m303_recargo_casillas_per_quarter(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Recargo repercutido sales fold into each quarter's M303 recargo cuotas, period-scoped."""
     _store_profile(secure_objects)
@@ -308,7 +312,7 @@ def test_ledger_recargo_sales_populate_m303_recargo_casillas_per_quarter(
 
     computed: RecargoAmountsByPeriod = {}
     for period in ("1T", "2T"):
-        revision = _calculate_m303_quarter(secure_objects, period=period)
+        revision = _calculate_m303_quarter(secure_objects, period=period, operation=operation)
 
         general = Decimal(revision.casilla_values[_RECARGO_GENERAL_CUOTA])
         reducido = Decimal(revision.casilla_values[_RECARGO_REDUCIDO_CUOTA])

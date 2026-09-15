@@ -30,8 +30,10 @@ import pytest
 from click.testing import Result
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
@@ -156,7 +158,7 @@ def _active_bucket_id() -> str:
     return bucket_id
 
 
-def _write_m303_filing_evidence(path: Path) -> None:
+def _write_m303_filing_evidence(path: Path, *, operation: PinnedAuthorityOperation) -> None:
     period = Period.from_year_and_code(2026, "1T")
     scope = M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
@@ -191,6 +193,7 @@ def _write_m303_filing_evidence(path: Path) -> None:
                 rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
                 regimen_snapshot=snapshot,
                 dana_2024_eligibility=None,
+                operation=operation,
             ),
         ),
     )
@@ -278,6 +281,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
         taxable_base=Decimal("200.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
+        rate_provider=default_ecb_rate_provider(),
     )
     sale = _m303_transaction(
         "quickfile-sale-general",
@@ -401,7 +405,7 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
 
 
 def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_withdrawn_export(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A fully taxable M303 reaches verify, then honestly refuses the withdrawn layout."""
 
@@ -409,7 +413,7 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_withd
     bucket_id = _active_bucket_id()
     _seed_m303_ledger_and_wallet(bucket_id)
     evidence_path = tmp_path / "m303-filing-evidence.json"
-    _write_m303_filing_evidence(evidence_path)
+    _write_m303_filing_evidence(evidence_path, operation=operation)
     out = tmp_path / "modelo-303-2026-1T.boe"
 
     result = _invoke(

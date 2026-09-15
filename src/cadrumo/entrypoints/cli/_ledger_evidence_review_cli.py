@@ -26,6 +26,7 @@ from ...application.ledger.extraction_draft_store import (
     load_extraction_drafts,
 )
 from ...application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
+from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ...application.ledger.party_attribution import PartyAttributionAdvisory, party_attribution_advisory
 from ...application.ledger.review_advisories import review_advisory_kinds
 from ...application.operator_actions.models import ActionReference
@@ -36,6 +37,7 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.establishment import StatedCountryCodeStatus
+from ...domain.iva.regime_legend import resolve_regime_legends
 from .common import bad, current_workflow_state, emit_envelope, resolve_notice_action, transaction_catalogue_repo
 from .ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
@@ -484,7 +486,14 @@ def _review_view_advisories(
     """
     notices: list[Notice] = []
     lines: list[str] = []
-    advisory = party_attribution_advisory(draft)
+    advisory = party_attribution_advisory(
+        draft,
+        legends=resolve_regime_legends(
+            operation=operation,
+            effective_date=default_invoice_extraction_period().end_date,
+        ),
+        operation=operation,
+    )
     if advisory is not None:
         attribution_notice = _party_attribution_notice(advisory)
         notices.append(attribution_notice)

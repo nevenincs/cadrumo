@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -37,6 +38,7 @@ from cadrumo.application.calculations.observations_repository import observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -91,6 +93,16 @@ def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _PE
     return str(snapshot.revision.id)
 
 
+def _prepare_without_stamped_revision_id(prepare: Callable[..., object]) -> object:
+    """Exercise the runtime boundary when a dynamic caller omits the required stamp."""
+    return prepare(
+        _minimal_observation(),
+        source_kind=_SOURCE_KIND,
+        captured_at=_CLOCK,
+        source_headers=_m303_declaration_header(),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Roundtrip tests for stamped_revision_id
 # ---------------------------------------------------------------------------
@@ -124,12 +136,7 @@ def test_prepare_observation_envelope_requires_stamped_revision_id(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         with pytest.raises(TypeError, match="stamped_revision_id"):
-            repo.prepare_observation_envelope(
-                _minimal_observation(),
-                source_kind=_SOURCE_KIND,
-                captured_at=_CLOCK,
-                source_headers=_m303_declaration_header(),
-            )
+            _prepare_without_stamped_revision_id(repo.prepare_observation_envelope)
 
 
 def test_stamped_revision_id_iter_modelo_propagates_stamp(tmp_path: Path) -> None:
@@ -264,7 +271,9 @@ def _m303_carry_source_observation(value: Decimal = Decimal("500.00")) -> Regist
     )
 
 
-def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> None:
+def test_carry_divergent_stamp_refuses_single_observation(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """R2: a divergent stamped_revision_id causes the M303/1T observation to be refused (carry blocked).
 
     Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
@@ -319,7 +328,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
             period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(
-            snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository()
+            snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository(), operation=operation
         )
 
         assert isinstance(report, BindingPrefillReport)
@@ -334,7 +343,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
         )
 
 
-def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
+def test_carry_matching_stamp_carries_cleanly(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """R2: a correctly stamped M303/1T observation carries without blocking.
 
     Subject: M303/2025/2T prefill; the single ``previous_filing`` binding
@@ -359,7 +368,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
             period=_M303_CARRY_TARGET_PERIOD,
         )
         report = resolve_bindings_from_local_store(
-            snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository()
+            snapshot, repository=repo, iva_history_repository=IvaCompensationHistoryRepository(), operation=operation
         )
 
         assert isinstance(report, BindingPrefillReport)

@@ -36,6 +36,7 @@ from .....application.modelo.m145_communication_records import (
     read_m145_communication_record,
 )
 from .....core.errors.error_codes import get_registered_error_code
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -108,6 +109,7 @@ def test_m145_communication_service_errors_are_registered_and_typed() -> None:
 def test_m145_communication_create_delivery_completion_logs_use_communication_vocabulary(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     caplog.set_level(logging.INFO, logger=_LOGGER_NAME)
 
@@ -116,16 +118,19 @@ def test_m145_communication_create_delivery_completion_logs_use_communication_vo
             _command(),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         mark_m145_communication_record_locally_completed(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     messages = _captured_service_messages(caplog)
@@ -138,6 +143,7 @@ def test_m145_communication_create_delivery_completion_logs_use_communication_vo
 def test_m145_communication_invalid_delivery_raises_typed_error_and_logs_refusal(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     caplog.set_level(logging.WARNING, logger=_LOGGER_NAME)
     field_values = _field_values()
@@ -148,12 +154,14 @@ def test_m145_communication_invalid_delivery_raises_typed_error_and_logs_refusal
             _command(field_values=field_values),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         with pytest.raises(M145CommunicationRecordValidationError) as raised:
             mark_m145_communication_record_delivered_to_payer(
                 record.communication_record_id,
                 bucket_id=runtime.bucket_id,
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+                operation=operation,
             )
 
     assert isinstance(raised.value, ValueError)
@@ -168,6 +176,7 @@ def test_m145_communication_invalid_delivery_raises_typed_error_and_logs_refusal
 def test_m145_communication_completion_before_delivery_raises_typed_error_and_logs_refusal(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     caplog.set_level(logging.WARNING, logger=_LOGGER_NAME)
 
@@ -176,12 +185,14 @@ def test_m145_communication_completion_before_delivery_raises_typed_error_and_lo
             _command(),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         with pytest.raises(M145CommunicationRecordTransitionError) as raised:
             mark_m145_communication_record_locally_completed(
                 record.communication_record_id,
                 bucket_id=runtime.bucket_id,
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+                operation=operation,
             )
 
     assert isinstance(raised.value, ValueError)
@@ -194,6 +205,7 @@ def test_m145_communication_completion_before_delivery_raises_typed_error_and_lo
 def test_m145_communication_missing_record_raises_typed_key_error_and_logs_lookup(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     caplog.set_level(logging.WARNING, logger=_LOGGER_NAME)
     missing_id = "0" * 64
@@ -206,6 +218,7 @@ def test_m145_communication_missing_record_raises_typed_key_error_and_logs_looku
             missing_id,
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     assert isinstance(raised.value, KeyError)

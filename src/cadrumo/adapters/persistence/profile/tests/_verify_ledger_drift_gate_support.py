@@ -32,7 +32,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -200,7 +200,7 @@ def _repositories(
 
 
 def calculate_irene_revision(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> tuple[
     CalculationRevision,
     Transaction,
@@ -235,6 +235,7 @@ def calculate_irene_revision(
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
+        operation=operation,
     )
     decision = _wallet_decision()
     from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -253,7 +254,7 @@ def calculate_irene_revision(
             iva_compensation_decision=decision,
             clock=_CALCULATED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-deductible-evidence-gate"
+                work_unit.period, reference="test:m303-deductible-evidence-gate", operation=operation
             ),
         ).revision
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo

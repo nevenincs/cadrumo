@@ -23,7 +23,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
@@ -50,7 +50,9 @@ _M200_MANUAL_DECIMAL_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp_path: Path) -> None:
+def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A raw ``--casilla`` token must be the canonical ``casilla.id``."""
     period = Period.from_year_and_code(2025, "0A")
     snapshot = compiled_bundled_authority().snapshot(
@@ -88,6 +90,7 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
                 revision_id=snapshot.revision.id,
                 ports=calculation_ports.work_lifecycle_ports,
                 clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
+                operation=operation,
             )
 
             with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
@@ -143,7 +146,9 @@ _NON_CANONICAL_CASILLA_VALUES = (
 _CANONICAL_CASILLA_VALUES = ("140000", "140000.00", "-140000.55", "0", "0.335", "0.075")
 
 
-def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCalculateInputBundle:
+def _m200_bundle_with_casilla_value(
+    raw_value: str, *, tmp_path: Path, operation: PinnedAuthorityOperation
+) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one manual ``--casilla`` value."""
     period = Period.from_year_and_code(2025, "0A")
     snapshot = compiled_bundled_authority().snapshot(
@@ -180,6 +185,7 @@ def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCa
                 revision_id=snapshot.revision.id,
                 ports=calculation_ports.work_lifecycle_ports,
                 clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
+                operation=operation,
             )
             return build_work_calculate_input_bundle(
                 work_unit_id=work_unit.work_unit_id,
@@ -194,20 +200,24 @@ def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCa
 
 
 @pytest.mark.parametrize("raw_value", _NON_CANONICAL_CASILLA_VALUES)
-def test_casilla_override_refuses_non_canonical_decimal(raw_value: str, tmp_path: Path) -> None:
+def test_casilla_override_refuses_non_canonical_decimal(
+    raw_value: str, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A non-canonical ``--casilla`` value refuses instead of being coerced."""
     with pytest.raises(ModeloCalculateDecimalInputError):
-        _m200_bundle_with_casilla_value(raw_value, tmp_path=tmp_path)
+        _m200_bundle_with_casilla_value(raw_value, tmp_path=tmp_path, operation=operation)
 
 
 @pytest.mark.parametrize("raw_value", _CANONICAL_CASILLA_VALUES)
-def test_casilla_override_accepts_canonical_decimal(raw_value: str, tmp_path: Path) -> None:
+def test_casilla_override_accepts_canonical_decimal(
+    raw_value: str, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The tightening refuses only non-canonical text; real amounts still parse.
 
     Sub-cent precision is included deliberately: capping the fractional part at
     two digits here would refuse a value the AEAT encoder is built to round.
     """
-    bundle = _m200_bundle_with_casilla_value(raw_value, tmp_path=tmp_path)
+    bundle = _m200_bundle_with_casilla_value(raw_value, tmp_path=tmp_path, operation=operation)
     assert bundle.casilla_inputs[_M200_MANUAL_DECIMAL_CASILLA] == Decimal(raw_value)
 
 
@@ -224,7 +234,9 @@ _M303_PERIOD_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="
 _M303_PROFILE_ID = "20000000-0000-4000-8000-000000000303"
 
 
-def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> WorkCalculateInputBundle:
+def _m303_bundle_with_period_override(
+    raw_value: str, *, tmp_path: Path, operation: PinnedAuthorityOperation
+) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one ``period_code`` ``--casilla`` value."""
     period = Period.from_year_and_code(2025, "1T")
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period=period.registry_token)
@@ -253,6 +265,7 @@ def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> Work
                 revision_id=snapshot.revision.id,
                 ports=calculation_ports.work_lifecycle_ports,
                 clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
+                operation=operation,
             )
             return build_work_calculate_input_bundle(
                 work_unit_id=work_unit.work_unit_id,
@@ -266,18 +279,22 @@ def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> Work
             )
 
 
-def test_period_code_casilla_override_routes_to_the_text_channel(tmp_path: Path) -> None:
+def test_period_code_casilla_override_routes_to_the_text_channel(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A ``period_code`` override lands on the string channel, never the Decimal one."""
-    bundle = _m303_bundle_with_period_override("1T", tmp_path=tmp_path)
+    bundle = _m303_bundle_with_period_override("1T", tmp_path=tmp_path, operation=operation)
 
     assert bundle.text_casilla_inputs[_M303_PERIOD_CASILLA] == "1T"
     assert _M303_PERIOD_CASILLA not in bundle.casilla_inputs
 
 
-def test_period_code_casilla_override_refuses_a_malformed_token(tmp_path: Path) -> None:
+def test_period_code_casilla_override_refuses_a_malformed_token(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The declared family validator runs at the boundary, naming the data_type."""
     with pytest.raises(ModeloCalculateTextInputError) as exc_info:
-        _m303_bundle_with_period_override("9Q", tmp_path=tmp_path)
+        _m303_bundle_with_period_override("9Q", tmp_path=tmp_path, operation=operation)
 
     context = exc_info.value.context or {}
     assert context.get("data_type") == "period_code"
@@ -300,7 +317,7 @@ _MATERNIDAD_CASILLA_ID: CasillaId = validated_casilla_id("0611", surface="_MATER
 
 
 def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_everything(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A default-relacion descendant contributing declared months to a pre-2023 filing.
 
@@ -345,6 +362,7 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
                 revision_id=snapshot.revision.id,
                 ports=calculation_ports.work_lifecycle_ports,
                 clock=datetime(2026, 8, 5, 12, 0, tzinfo=UTC),
+                operation=operation,
             )
             bundle = build_work_calculate_input_bundle(
                 work_unit_id=work_unit.work_unit_id,

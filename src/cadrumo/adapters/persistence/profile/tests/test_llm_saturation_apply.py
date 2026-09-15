@@ -25,7 +25,7 @@ from cadrumo.application.ledger.llm_classification import (
 )
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts
 from cadrumo.core.config import load_settings
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -60,6 +60,8 @@ _LLM_PORTS = LLMClassificationPorts(
 
 def test_apply_persists_derived_substrate_with_llm_provenance(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events = repositories
     gross = Decimal("121.00")
@@ -69,7 +71,9 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
+            classifier=_saturating_subprocess_classifier(
+                iva_category=IvaCategory("domestic_general"), operation=operation
+            ),
             transaction_repository=repository,
             settings=load_settings(),
             ports=_LLM_PORTS,
@@ -105,6 +109,8 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
 
 def test_apply_non_derivable_persists_category_without_numbers(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events = repositories
     tx_id = _seed_unclassified(repository)
@@ -113,7 +119,9 @@ def test_apply_non_derivable_persists_category_without_numbers(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("intra_community_supply")),
+            classifier=_saturating_subprocess_classifier(
+                iva_category=IvaCategory("intra_community_supply"), operation=operation
+            ),
             transaction_repository=repository,
             settings=load_settings(),
             ports=_LLM_PORTS,
@@ -143,6 +151,8 @@ def test_apply_non_derivable_persists_category_without_numbers(
 
 def test_apply_mixed_without_business_pct_refuses(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events = repositories
     tx_id = _seed_unclassified(repository)
@@ -155,6 +165,7 @@ def test_apply_mixed_without_business_pct_refuses(
                 classification=BusinessClassification.MIXED,
                 iva_category=IvaCategory("domestic_general"),
                 business_pct=None,
+                operation=operation,
             ),
             transaction_repository=repository,
             settings=load_settings(),
@@ -182,6 +193,8 @@ def test_apply_mixed_without_business_pct_refuses(
 
 def test_apply_mixed_uses_proposed_business_pct(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events = repositories
     tx_id = _seed_unclassified(repository)
@@ -194,6 +207,7 @@ def test_apply_mixed_uses_proposed_business_pct(
                 classification=BusinessClassification.MIXED,
                 iva_category=IvaCategory("domestic_general"),
                 business_pct=Decimal("0.6"),
+                operation=operation,
             ),
             transaction_repository=repository,
             settings=load_settings(),

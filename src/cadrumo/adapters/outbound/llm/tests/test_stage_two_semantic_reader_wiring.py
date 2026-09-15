@@ -39,6 +39,7 @@ from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .....core.time.clock import now
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..client import LLMClient
 from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..models import LLMResponse
@@ -97,23 +98,29 @@ def _transcription(origin: FieldOrigin, *, name: str = "pdfplumber") -> Document
     )
 
 
-def _extract(transcription: DocumentTranscription) -> tuple[_CapturingClient, InvoiceDraft]:
+def _extract(
+    transcription: DocumentTranscription, *, operation: PinnedAuthorityOperation
+) -> tuple[_CapturingClient, InvoiceDraft]:
     client = _CapturingClient()
-    extractor = TextInvoiceFieldExtractor(model="stub-text", client=client, settings=load_settings())
+    extractor = TextInvoiceFieldExtractor(
+        model="stub-text", client=client, operation=operation, settings=load_settings()
+    )
     return client, extractor.extract(transcription=transcription)
 
 
-def test_the_stage_takes_the_transcription_artefact_and_reads_its_text() -> None:
+def test_the_stage_takes_the_transcription_artefact_and_reads_its_text(*, operation: PinnedAuthorityOperation) -> None:
     """The document text the model receives is the transcription's own."""
     transcription = _transcription(FieldOrigin.TEXT_LAYER)
-    client, _draft = _extract(transcription)
+    client, _draft = _extract(transcription, operation=operation)
 
     assert len(client.requests) == 1
     assert transcription.text in client.requests[0].prompt
 
 
 @pytest.mark.parametrize("origin", [FieldOrigin.TEXT_LAYER, FieldOrigin.VISION])
-def test_every_envelope_carries_the_transcribers_origin_not_a_hardcoded_one(origin: FieldOrigin) -> None:
+def test_every_envelope_carries_the_transcribers_origin_not_a_hardcoded_one(
+    origin: FieldOrigin, *, operation: PinnedAuthorityOperation
+) -> None:
     """Both acquisition origins must survive to the envelope, unchanged.
 
     Parametrised across BOTH members rather than asserting one: a reader that
@@ -123,30 +130,32 @@ def test_every_envelope_carries_the_transcribers_origin_not_a_hardcoded_one(orig
     Mutation that must trip this: replace ``transcription.transcriber.origin``
     with a literal ``FieldOrigin.TEXT_LAYER`` in ``TextInvoiceFieldExtractor``.
     """
-    _client, draft = _extract(_transcription(origin))
+    _client, draft = _extract(_transcription(origin), operation=operation)
 
     envelopes = draft.provenance
     assert envelopes, "the fixture must produce envelopes, or this passes vacuously"
     assert {envelope.origin for envelope in envelopes} == {origin}
 
 
-def test_the_request_pins_local_and_carries_no_images() -> None:
+def test_the_request_pins_local_and_carries_no_images(*, operation: PinnedAuthorityOperation) -> None:
     """On-host by expression, and text-only: a rasterised text document is a defect."""
-    client, _draft = _extract(_transcription(FieldOrigin.TEXT_LAYER))
+    client, _draft = _extract(_transcription(FieldOrigin.TEXT_LAYER), operation=operation)
     request = client.requests[0]
 
     assert request.provider_override is LLMProvider.LOCAL
     assert not request.images
 
 
-def test_the_request_is_marked_evidence_derived_unless_the_corpus_is_named() -> None:
+def test_the_request_is_marked_evidence_derived_unless_the_corpus_is_named(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """Naming the public corpus is the deliberate act; forgetting gets the gate.
 
     The default direction is fail-closed, so a caller that says nothing about
     where its pages came from is treated as holding a taxpayer's document.
     """
     client = _CapturingClient()
-    TextInvoiceFieldExtractor(model="stub-text", client=client, settings=load_settings()).extract(
+    TextInvoiceFieldExtractor(model="stub-text", client=client, operation=operation, settings=load_settings()).extract(
         transcription=_transcription(FieldOrigin.TEXT_LAYER),
     )
     assert client.requests[0].evidence_derived is True
@@ -155,13 +164,16 @@ def test_the_request_is_marked_evidence_derived_unless_the_corpus_is_named() -> 
     TextInvoiceFieldExtractor(
         model="stub-text",
         client=corpus_client,
+        operation=operation,
         settings=load_settings(),
         public_corpus=True,
     ).extract(transcription=_transcription(FieldOrigin.TEXT_LAYER))
     assert corpus_client.requests[0].evidence_derived is False
 
 
-def test_the_default_local_model_is_the_text_extraction_role_not_the_vision_one() -> None:
+def test_the_default_local_model_is_the_text_extraction_role_not_the_vision_one(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The two local roles resolve independently, and this stage takes the text one.
 
     They are separate because the capability bars differ in BOTH directions:
@@ -172,7 +184,7 @@ def test_the_default_local_model_is_the_text_extraction_role_not_the_vision_one(
     """
     settings = load_settings()
     client = _CapturingClient()
-    TextInvoiceFieldExtractor(client=client, settings=settings).extract(
+    TextInvoiceFieldExtractor(client=client, operation=operation, settings=settings).extract(
         transcription=_transcription(FieldOrigin.TEXT_LAYER),
     )
 
@@ -180,7 +192,9 @@ def test_the_default_local_model_is_the_text_extraction_role_not_the_vision_one(
     assert client.requests[0].model_override != settings.cadrumo_llm_ollama_vision_model
 
 
-def test_the_role_evidence_the_model_returned_reaches_the_draft_envelope() -> None:
+def test_the_role_evidence_the_model_returned_reaches_the_draft_envelope(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """Stage two carries the role-evidence claim through, unchecked and intact.
 
     The check belongs to the grounding stage, which holds the document. What
@@ -188,7 +202,7 @@ def test_the_role_evidence_the_model_returned_reaches_the_draft_envelope() -> No
     role evidence does not resolve, so losing it here would silently disable
     counterparty auto-fill with nothing reporting a failure.
     """
-    _client, draft = _extract(_transcription(FieldOrigin.TEXT_LAYER))
+    _client, draft = _extract(_transcription(FieldOrigin.TEXT_LAYER), operation=operation)
 
     supplier = next(e for e in draft.provenance if e.field == "supplier_tax_id")
     assert supplier.role_evidence == "Proveedor:"

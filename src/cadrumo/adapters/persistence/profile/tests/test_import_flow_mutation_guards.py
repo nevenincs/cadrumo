@@ -9,6 +9,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -57,7 +58,7 @@ from cadrumo.application.modelo.work_lifecycle import (
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -79,11 +80,11 @@ __all__ = ["repos"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
+def test_import_refuses_discarded_work_unit(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """A discarded work unit cannot accept new imports."""
 
     wu_repo, _, _, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
     discard_work_unit(
         work_unit.work_unit_id,
         actor="operator-A",
@@ -114,11 +115,14 @@ def test_import_refuses_unknown_work_unit(repos: _Repos) -> None:
             calculation_repository=cr_repo,
             filing_repository=fr_repo,
             bucket_event_repository=bv_repo,
+            observation_repository=CalculationObservationRepository(),
             clock=_T1,
         )
 
 
-def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _Repos) -> None:
+def test_external_import_refuses_m303_without_complete_filing_evidence(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     period = Period.from_year_and_code(2026, "1T")
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
@@ -130,6 +134,7 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _R
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
+        operation=operation,
     )
 
     with pytest.raises(ExternalModeloImportError, match="external_import_m303_filing_evidence_required"):
@@ -142,6 +147,7 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _R
             calculation_repository=cr_repo,
             filing_repository=fr_repo,
             bucket_event_repository=bv_repo,
+            observation_repository=CalculationObservationRepository(),
             clock=_T1,
         )
 
@@ -149,7 +155,9 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _R
     assert len(fr_repo.load()) == 0
 
 
-def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repos) -> None:
+def test_amend_locally_filed_still_refused_after_import_path_exists(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """The import path does not loosen the local-filing amendment evidence gate."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
@@ -161,6 +169,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_PROFILE_ID,
@@ -246,6 +255,7 @@ def test_import_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path
                 calculation_repository=cr_repo,
                 filing_repository=fr_repo,
                 bucket_event_repository=bv_repo,
+                observation_repository=CalculationObservationRepository(),
                 expected_tax_id="X1234567L",
                 clock=_GUARD_CLOCK,
             )

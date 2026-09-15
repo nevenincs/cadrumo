@@ -32,7 +32,7 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -246,7 +246,7 @@ def _m100_caller_zero_bindings() -> dict[BindingId, Decimal]:
 
 
 def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Work create must not treat the M100 modalidad selector as export layout."""
     _seed_sofia_profile(secure_objects)
@@ -263,6 +263,7 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
         revision_id=_REVISION_ID,
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
+        operation=operation,
     )
 
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)

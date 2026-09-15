@@ -26,7 +26,7 @@ from cadrumo.application.ledger.llm_classification import apply_evidence_split, 
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitApplyResult
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch, SplitChildCommand
 from cadrumo.core.config import load_settings
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -63,6 +63,8 @@ _LLM_PORTS = LLMClassificationPorts(
 
 def test_apply_splits_parent_and_classifies_children(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, _objects = repositories
     gross = Decimal("121.00")
@@ -73,7 +75,7 @@ def test_apply_splits_parent_and_classifies_children(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -119,6 +121,8 @@ def test_apply_splits_parent_and_classifies_children(
 
 def test_apply_links_parent_invoice_evidence_to_each_child(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, objects = repositories
     evidence_id = _seed_received_invoice(objects)
@@ -129,7 +133,7 @@ def test_apply_links_parent_invoice_evidence_to_each_child(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -158,6 +162,8 @@ def test_apply_links_parent_invoice_evidence_to_each_child(
 
 def test_apply_child_numbers_are_registry_derived_not_model(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, _objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("242.00"))
@@ -167,7 +173,7 @@ def test_apply_child_numbers_are_registry_derived_not_model(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -200,6 +206,8 @@ def test_apply_child_numbers_are_registry_derived_not_model(
 
 def test_split_children_retain_lineage_and_evidence_provenance(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # The atomic writer persists classification AND split lineage AND inherited
     # evidence provenance for every child in one transaction: no child is left
@@ -213,7 +221,7 @@ def test_split_children_retain_lineage_and_evidence_provenance(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -254,6 +262,8 @@ def test_split_children_retain_lineage_and_evidence_provenance(
 
 def test_split_child_evidence_failure_leaves_everything_unchanged(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # A parent carrying an evidence id whose record does not exist forces the
     # per-child evidence validation to fail during the atomic build. Because the
@@ -268,7 +278,7 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),

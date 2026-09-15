@@ -101,6 +101,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.period import calculation_filing_date
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -179,6 +180,7 @@ def _calculate_m202(
     *,
     period_code: str,
     cuota_base_ejercicio_anterior: Decimal,
+    operation: PinnedAuthorityOperation,
 ) -> BucketAggregationCalculationResult:
     """Run the live M202/2025 calculate with the manual's Ejemplo casilla inputs."""
     _seed_sociedad_m_profile()
@@ -196,6 +198,7 @@ def _calculate_m202(
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -218,18 +221,24 @@ def _calculate_m202(
         )
 
 
-def test_m202_2025_primer_pago_manual_worked_example(secure_objects: SecureObjectRepository) -> None:
+def test_m202_2025_primer_pago_manual_worked_example(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     """1P casilla "03" = 1.800,00 EUR (base 10.000,00, 18%).
 
     Oracle: AEAT Manual practico de Sociedades 2024, Cap. 15, Ejemplo, "Primer
     pago" (pagina 811): "Base del pago fraccionado: (12.000 - 2.000) = 10.000
     euros. 18% de 10.000 euros = 1.800 euros".
     """
-    result = _calculate_m202(secure_objects, period_code="1P", cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED)
+    result = _calculate_m202(
+        secure_objects, period_code="1P", cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED, operation=operation
+    )
     assert result.revision.casilla_values[_CASILLA_A_INGRESAR] == _A_INGRESAR_PRIMER_PAGO_EXPECTED
 
 
-def test_m202_2025_segundo_pago_manual_worked_example(secure_objects: SecureObjectRepository) -> None:
+def test_m202_2025_segundo_pago_manual_worked_example(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     """2P casilla "03" = 450,00 EUR (base 2.500,00, 18%).
 
     Oracle: AEAT Manual practico de Sociedades 2024, Cap. 15, Ejemplo, "Segundo
@@ -239,11 +248,14 @@ def test_m202_2025_segundo_pago_manual_worked_example(secure_objects: SecureObje
         secure_objects,
         period_code="2P",
         cuota_base_ejercicio_anterior=_BASE_SEGUNDO_TERCER_PAGO_EXPECTED,
+        operation=operation,
     )
     assert result.revision.casilla_values[_CASILLA_A_INGRESAR] == _A_INGRESAR_SEGUNDO_TERCER_PAGO_EXPECTED
 
 
-def test_m202_2025_tercer_pago_manual_worked_example(secure_objects: SecureObjectRepository) -> None:
+def test_m202_2025_tercer_pago_manual_worked_example(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     """3P casilla "03" = 450,00 EUR (base 2.500,00, 18%), same figures as 2P.
 
     Oracle: AEAT Manual practico de Sociedades 2024, Cap. 15, Ejemplo, "Tercer
@@ -255,6 +267,7 @@ def test_m202_2025_tercer_pago_manual_worked_example(secure_objects: SecureObjec
         secure_objects,
         period_code="3P",
         cuota_base_ejercicio_anterior=_BASE_SEGUNDO_TERCER_PAGO_EXPECTED,
+        operation=operation,
     )
     assert result.revision.casilla_values[_CASILLA_A_INGRESAR] == _A_INGRESAR_SEGUNDO_TERCER_PAGO_EXPECTED
 
@@ -272,6 +285,8 @@ def test_m202_calculation_revision_replays_to_draft_on_the_same_sanctioned_filin
     period_code: str,
     cuota_base_ejercicio_anterior: Decimal,
     expected_filing_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The AEAT-worked M202 calculation must retain its result through draft replay.
 
@@ -284,6 +299,7 @@ def test_m202_calculation_revision_replays_to_draft_on_the_same_sanctioned_filin
         secure_objects,
         period_code=period_code,
         cuota_base_ejercicio_anterior=cuota_base_ejercicio_anterior,
+        operation=operation,
     ).revision
     work_unit = WorkUnitCatalogueRepository(objects=secure_objects).load().get(calculated.work_unit_id)
     assert work_unit is not None
@@ -308,7 +324,7 @@ def test_m202_calculation_revision_replays_to_draft_on_the_same_sanctioned_filin
 
 
 def test_casilla_01_anti_tautology_delta_changes_casilla_03_proportionally(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Anti-tautology: the manual's own base delta must produce its own result delta.
 
@@ -321,12 +337,13 @@ def test_casilla_01_anti_tautology_delta_changes_casilla_03_proportionally(
     manual's own 1.800,00 - 450,00 = 1.350,00.
     """
     primer_pago = _calculate_m202(
-        secure_objects, period_code="1P", cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED
+        secure_objects, period_code="1P", cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED, operation=operation
     )
     segundo_pago = _calculate_m202(
         secure_objects,
         period_code="2P",
         cuota_base_ejercicio_anterior=_BASE_SEGUNDO_TERCER_PAGO_EXPECTED,
+        operation=operation,
     )
 
     base_delta = _BASE_PRIMER_PAGO_EXPECTED - _BASE_SEGUNDO_TERCER_PAGO_EXPECTED

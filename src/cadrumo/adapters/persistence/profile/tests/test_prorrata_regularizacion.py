@@ -47,12 +47,14 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
 )
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
@@ -101,7 +103,8 @@ def _ledger_observation(
     transaction_date: date,
     category: IvaCategory,
     base: str,
-    flow: IvaFlowDirection = IvaFlowDirection._from_registry("repercutido"),
+    operation: PinnedAuthorityOperation,
+    flow: IvaFlowDirection,
     exemption_article: IvaExemptionArticle | None = None,
 ) -> IvaLedgerObservation:
     deduction = (
@@ -116,18 +119,19 @@ def _ledger_observation(
         if flow == IvaFlowDirection._from_registry("soportado")
         else {}
     )
-    return IvaLedgerObservation(
-        ledger_id=ledger_id,
-        transaction_date=transaction_date,
-        category=category,
-        exemption_article=exemption_article,
-        rate_kind=IvaRateKind("general"),
-        flow_direction=flow,
-        base_amount=Decimal(base),
-        iva_amount=Decimal("0.00"),
-        observation_role=IvaLedgerObservationRole.SETTLEMENT,
-        **deduction,
-    )
+    with validating_governed_facts(operation):
+        return IvaLedgerObservation(
+            ledger_id=ledger_id,
+            transaction_date=transaction_date,
+            category=category,
+            exemption_article=exemption_article,
+            rate_kind=IvaRateKind("general"),
+            flow_direction=flow,
+            base_amount=Decimal(base),
+            iva_amount=Decimal("0.00"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
+            **deduction,
+        )
 
 
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
@@ -143,9 +147,15 @@ def _seed_verified_m303_settlement(
     *,
     calculation_repository: CalculationRevisionCatalogueRepository,
     work_unit_repository: WorkUnitCatalogueRepository,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
     period = Period.from_year_and_code(_SETTLEMENT_YEAR, _SETTLEMENT_PERIOD)
-    revision_id = _m303_revision_id(filing_year=_SETTLEMENT_YEAR, period=_SETTLEMENT_PERIOD)
+    registry_snapshot = compiled_bundled_authority().snapshot(
+        Modelo("303").value,
+        filing_year=_SETTLEMENT_YEAR,
+        period=_SETTLEMENT_PERIOD,
+    )
+    revision_id = str(registry_snapshot.revision.id)
     casilla_values = {
         _VOLUMEN_TOTAL_ID: Decimal("200000.00"),
         _VOLUMEN_CON_DERECHO_ID: Decimal("150000.00"),
@@ -159,7 +169,9 @@ def _seed_verified_m303_settlement(
         period=period,
         revision_id=revision_id,
     )
-    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:prorrata-regularizacion")
+    filing_instance_evidence = general_m303_filing_evidence(
+        period, reference="test:prorrata-regularizacion", operation=operation
+    )
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -172,6 +184,7 @@ def _seed_verified_m303_settlement(
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot.snapshot_ref,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={},
         binding_overrides={},
@@ -298,12 +311,15 @@ def test_projection_feeds_m303_casilla_44_from_declared_volume_definitive_percen
         and isinstance(binding.provider, ProrrataRegularizacionProvider)
         and binding.provider.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
     )
-    assert projection.modelo_303_casilla_44_id in casillas_by_binding(snapshot.revision)[prorrata_binding.id]
-    assert projection.modelo_303_casilla_44_value == projection.result.importe
-    assert projection.modelo_390_regularizacion_anual_value == projection.result.importe
+    casilla_44_id = next(casilla.id for casilla in snapshot.revision.casillas if casilla.number == "44")
+    assert casillas_by_binding(snapshot.revision)[prorrata_binding.id] == (casilla_44_id,)
+    assert projection.proposed_value is not None
+    assert projection.proposed_value == projection.result.importe
 
 
-def test_declared_volume_divergence_advisory_preserves_declared_authority() -> None:
+def test_declared_volume_divergence_advisory_preserves_declared_authority(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """Ledger contradiction warns, but declared annual volume casillas stay authoritative."""
     observations = (
         _ledger_observation(
@@ -311,6 +327,8 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority() -> N
             transaction_date=date(2026, 1, 20),
             category=IvaCategory("domestic_general"),
             base="1000.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
         _ledger_observation(
             "art20-8-exempt-sale",
@@ -318,6 +336,8 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority() -> N
             category=IvaCategory("domestic_exempt"),
             exemption_article=IvaExemptionArticle("art_20_uno_8"),
             base="500.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
         _ledger_observation(
             "input-purchase-ignored",
@@ -325,12 +345,15 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority() -> N
             category=IvaCategory("domestic_general"),
             flow=IvaFlowDirection._from_registry("soportado"),
             base="700.00",
+            operation=operation,
         ),
         _ledger_observation(
             "outside-ejercicio-ignored",
             transaction_date=date(2025, 12, 31),
             category=IvaCategory("domestic_general"),
             base="999.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
     )
 
@@ -353,7 +376,9 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority() -> N
     assert "conservan la autoridad" in diagnostic.message
 
 
-def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms() -> None:
+def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """An art. 104.Tres judgment-tagged operation is removed from both ledger terms and recorded.
 
     A non-habitual inmobiliaria sale would otherwise inflate the con-derecho
@@ -367,12 +392,16 @@ def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms
             transaction_date=date(2026, 1, 20),
             category=IvaCategory("domestic_general"),
             base="1000.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
         _ledger_observation(
             "non-habitual-inmueble",
             transaction_date=date(2026, 6, 10),
             category=IvaCategory("domestic_general"),
             base="4000.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
     )
 
@@ -394,7 +423,9 @@ def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms
     assert diagnostic is None
 
 
-def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion() -> None:
+def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """When a divergence still fires, the advisory names the applied art. 104.Tres exclusion.
 
     The exclusion must be visible on the operator surface, never a silent
@@ -406,12 +437,16 @@ def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion() -> 
             transaction_date=date(2026, 1, 20),
             category=IvaCategory("domestic_general"),
             base="1000.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
         _ledger_observation(
             "foreign-pe-sale",
             transaction_date=date(2026, 6, 10),
             category=IvaCategory("domestic_general"),
             base="4000.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
     )
 
@@ -432,7 +467,9 @@ def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion() -> 
     assert "conservan la autoridad" in diagnostic.message
 
 
-def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values() -> None:
+def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """No advisory fires when the ledger projection matches the declared volumes."""
     observations = (
         _ledger_observation(
@@ -440,6 +477,8 @@ def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values() 
             transaction_date=date(2026, 1, 20),
             category=IvaCategory("domestic_general"),
             base="1000.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
         _ledger_observation(
             "art20-8-exempt-sale",
@@ -447,6 +486,8 @@ def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values() 
             category=IvaCategory("domestic_exempt"),
             exemption_article=IvaExemptionArticle("art_20_uno_8"),
             base="500.00",
+            flow=IvaFlowDirection._from_registry("repercutido"),
+            operation=operation,
         ),
     )
 
@@ -462,19 +503,25 @@ def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values() 
     assert diagnostic is None
 
 
-def test_generic_domestic_exempt_output_only_increases_prorrata_denominator() -> None:
+def test_generic_domestic_exempt_output_only_increases_prorrata_denominator(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """A generic Article 20 exempt sale raises only the without-deduction volume."""
     taxable_sale = _ledger_observation(
         "taxable-sale",
         transaction_date=date(2026, 1, 20),
         category=IvaCategory("domestic_general"),
         base="1000.00",
+        flow=IvaFlowDirection._from_registry("repercutido"),
+        operation=operation,
     )
     domestic_exempt_sale = _ledger_observation(
         "art20-generic-exempt-sale",
         transaction_date=date(2026, 5, 3),
         category=IvaCategory("domestic_exempt"),
         base="300.00",
+        flow=IvaFlowDirection._from_registry("repercutido"),
+        operation=operation,
     )
 
     taxable_rollup, taxable_diagnostic = build_prorrata_declared_volume_divergence_advisory(
@@ -606,7 +653,9 @@ def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
     assert result.prorrata_definitiva_pct == Decimal("100")
 
 
-def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_entry(tmp_path: Path) -> None:
+def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_entry(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Filing the settlement writes the register and lets year+1 carry from the stamped observation."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -618,6 +667,7 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
             revision, work_unit = _seed_verified_m303_settlement(
                 calculation_repository=calculation_repository,
                 work_unit_repository=work_unit_repository,
+                operation=operation,
             )
 
             persist_filed_revision(
@@ -643,6 +693,7 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
             seed_evaluation = evaluate_carried_prior_definitiva_seed(
                 ejercicio=_CARRY_YEAR,
                 observation_repository=observation_repository,
+                operation=_authority_operation_for_test,
             )
 
         assert settled_entry is not None

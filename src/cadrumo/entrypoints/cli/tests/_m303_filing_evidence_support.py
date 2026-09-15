@@ -16,6 +16,8 @@ from pathlib import Path
 
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.period import Period
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
@@ -40,6 +42,7 @@ def build_m303_filing_evidence(
     *,
     joint_return_elected: bool = True,
     insolvency: M303InsolvencyFilingFact | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> FilingInstanceEvidence:
     """Build one complete evidence document for ``period``.
 
@@ -78,6 +81,7 @@ def build_m303_filing_evidence(
                 rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
                 regimen_snapshot=snapshot,
                 dana_2024_eligibility=None,
+                operation=operation,
             ),
         ),
     )
@@ -89,12 +93,14 @@ def write_m303_filing_evidence(
     *,
     joint_return_elected: bool = True,
     insolvency: M303InsolvencyFilingFact | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Path:
     """Write the evidence document for ``period`` to ``path`` and return it."""
     evidence = build_m303_filing_evidence(
         period,
         joint_return_elected=joint_return_elected,
         insolvency=insolvency,
+        operation=operation,
     )
     path.write_text(evidence.model_dump_json(), encoding="utf-8")
     return path

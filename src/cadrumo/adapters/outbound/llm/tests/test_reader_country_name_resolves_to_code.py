@@ -22,6 +22,8 @@ import json
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....core.field_origin import FieldOrigin
 from ..invoice_field_contract import anchor_key_for_field
 from ..invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
@@ -85,46 +87,47 @@ def _reply(*, supplier_country: str | None, customer_country: str | None) -> str
     return json.dumps(payload)
 
 
-def _draft(*, supplier_country: str | None, customer_country: str | None):
+def _draft(*, supplier_country: str | None, customer_country: str | None, operation: PinnedAuthorityOperation):
     return ground_extracted_fields(
         parse_invoice_extraction_response(
             _reply(supplier_country=supplier_country, customer_country=customer_country),
         ),
         raw_text_length=256,
         origin=FieldOrigin.TEXT_LAYER,
+        operation=operation,
     )
 
 
-def test_a_printed_spanish_name_resolves_to_its_code() -> None:
-    draft = _draft(supplier_country="España", customer_country="España")
+def test_a_printed_spanish_name_resolves_to_its_code(*, operation: PinnedAuthorityOperation) -> None:
+    draft = _draft(supplier_country="España", customer_country="España", operation=operation)
 
     assert draft.supplier_country_code == "ES"
     assert draft.customer_country_code == "ES"
 
 
-def test_a_printed_foreign_name_resolves_to_that_country_not_to_spain() -> None:
+def test_a_printed_foreign_name_resolves_to_that_country_not_to_spain(*, operation: PinnedAuthorityOperation) -> None:
     """The discriminating case: Spain is the majority population here.
 
     A wiring that defaulted, or that resolved everything to the domestic code,
     passes the test above and fails this one.
     """
-    draft = _draft(supplier_country="Deutschland", customer_country="Alemania")
+    draft = _draft(supplier_country="Deutschland", customer_country="Alemania", operation=operation)
 
     assert draft.supplier_country_code == "DE"
     assert draft.customer_country_code == "DE"
 
 
-def test_the_printed_name_survives_the_derivation() -> None:
+def test_the_printed_name_survives_the_derivation(*, operation: PinnedAuthorityOperation) -> None:
     """The name is the evidence; the code is derived from it. Both are kept."""
-    draft = _draft(supplier_country="Deutschland", customer_country="España")
+    draft = _draft(supplier_country="Deutschland", customer_country="España", operation=operation)
 
     assert draft.supplier_country == "Deutschland"
     assert draft.customer_country == "España"
 
 
-def test_a_misspelled_name_produces_no_code_rather_than_the_nearest_one() -> None:
+def test_a_misspelled_name_produces_no_code_rather_than_the_nearest_one(*, operation: PinnedAuthorityOperation) -> None:
     """A near miss is not a match, and must not become one."""
-    draft = _draft(supplier_country="Esapna", customer_country="Alemanha")
+    draft = _draft(supplier_country="Esapna", customer_country="Alemanha", operation=operation)
 
     assert draft.supplier_country_code is None
     assert draft.customer_country_code is None
@@ -133,16 +136,16 @@ def test_a_misspelled_name_produces_no_code_rather_than_the_nearest_one() -> Non
     assert draft.supplier_country == "Esapna"
 
 
-def test_a_name_the_vocabulary_does_not_carry_produces_no_code() -> None:
-    draft = _draft(supplier_country="Freedonia", customer_country="Freedonia")
+def test_a_name_the_vocabulary_does_not_carry_produces_no_code(*, operation: PinnedAuthorityOperation) -> None:
+    draft = _draft(supplier_country="Freedonia", customer_country="Freedonia", operation=operation)
 
     assert draft.supplier_country_code is None
     assert draft.customer_country_code is None
 
 
-def test_an_absent_country_produces_no_code() -> None:
+def test_an_absent_country_produces_no_code(*, operation: PinnedAuthorityOperation) -> None:
     """Absence must stay absence -- never Spain, which is the majority population."""
-    draft = _draft(supplier_country=None, customer_country=None)
+    draft = _draft(supplier_country=None, customer_country=None, operation=operation)
 
     assert draft.supplier_country_code is None
     assert draft.customer_country_code is None

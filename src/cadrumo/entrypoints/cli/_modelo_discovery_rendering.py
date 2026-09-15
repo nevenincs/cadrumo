@@ -142,13 +142,16 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         return ""
-    try:
-        schema = ProfileRecordRepository.for_current_session(
-            active_bucket_id,
-        ).session.profile_decode_context.schema
-    except ProfileNotFoundError:
-        return ""
     with bundled_indexed_authority().operation() as operation:
+        try:
+            profile_decode_context = operation.profile_decode_context()
+            repository = ProfileRecordRepository.for_current_session(
+                active_bucket_id,
+                profile_decode_context=profile_decode_context,
+            )
+        except ProfileNotFoundError:
+            return ""
+        schema = repository.session.profile_decode_context.schema
         grounding_index = profile_grounding_index_for_operation(operation)
     return ", ".join(
         format_profile_path_requirements(

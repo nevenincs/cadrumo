@@ -21,14 +21,17 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.m036_lifecycle import build_m036_lifecycle_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.m036_lifecycle import (
     M036DeclarationCommand,
+    M036DeclarationNotFoundError,
     M036DeclarationResult,
     list_m036_declarations,
     read_m036_declaration,
     record_m036_declaration,
 )
+from cadrumo.application.modelo.m036_lifecycle_ports import M036LifecyclePorts
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -52,6 +55,11 @@ def _command(
     )
 
 
+def _ports(bucket_id: str) -> M036LifecyclePorts:
+    """Bind the real M036 lifecycle authorities for the active runtime."""
+    return build_m036_lifecycle_ports(bucket_id=bucket_id)
+
+
 def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
     """alta + modificacion + baja all surface in list with their persisted fields."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
@@ -63,6 +71,7 @@ def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
                 note="Initial registration",
             ),
             bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
         )
         modificacion = record_m036_declaration(
             _command(
@@ -72,6 +81,7 @@ def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
                 note="Domicilio fiscal update",
             ),
             bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
         )
         baja = record_m036_declaration(
             _command(
@@ -81,9 +91,10 @@ def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
                 note="Deregistration",
             ),
             bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
         )
 
-        declarations = list_m036_declarations(bucket_id=runtime.bucket_id)
+        declarations = list_m036_declarations(bucket_id=runtime.bucket_id, ports=_ports(runtime.bucket_id))
 
     assert all(isinstance(declaration, M036DeclarationResult) for declaration in declarations)
     by_id = {declaration.declaration_id: declaration for declaration in declarations}
@@ -115,6 +126,7 @@ def test_view_returns_exact_recorded_record_strict_equality(tmp_path: Path) -> N
         record_m036_declaration(
             _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 1, 1)),
             bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
         )
         recorded = record_m036_declaration(
             _command(
@@ -124,9 +136,14 @@ def test_view_returns_exact_recorded_record_strict_equality(tmp_path: Path) -> N
                 note="Read-back exact-equality probe",
             ),
             bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
         )
 
-        viewed = read_m036_declaration(recorded.declaration_id, bucket_id=runtime.bucket_id)
+        viewed = read_m036_declaration(
+            recorded.declaration_id,
+            bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
+        )
 
     assert viewed == recorded
     assert viewed.sede_justificante == "ACUSE-RB-EXACT"
@@ -146,9 +163,14 @@ def test_view_resolves_unambiguous_prefix(tmp_path: Path) -> None:
                 note="Prefix-resolution probe",
             ),
             bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
         )
 
-        viewed = read_m036_declaration(recorded.declaration_id[:12], bucket_id=runtime.bucket_id)
+        viewed = read_m036_declaration(
+            recorded.declaration_id[:12],
+            bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
+        )
 
     assert viewed == recorded
 
@@ -159,16 +181,21 @@ def test_view_unknown_id_refuses(tmp_path: Path) -> None:
         record_m036_declaration(
             _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 6, 1)),
             bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
         )
 
-        with pytest.raises(KeyError):
-            read_m036_declaration("f" * 64, bucket_id=runtime.bucket_id)
+        with pytest.raises(M036DeclarationNotFoundError):
+            read_m036_declaration(
+                "f" * 64,
+                bucket_id=runtime.bucket_id,
+                ports=_ports(runtime.bucket_id),
+            )
 
 
 def test_list_on_empty_bucket_returns_clean_empty(tmp_path: Path) -> None:
     """An untouched bucket lists no declarations — a clean empty, not an error."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
-        declarations = list_m036_declarations(bucket_id=runtime.bucket_id)
+        declarations = list_m036_declarations(bucket_id=runtime.bucket_id, ports=_ports(runtime.bucket_id))
 
     assert declarations == ()
 
@@ -192,6 +219,7 @@ def test_anti_tautology_unrecorded_declaration_absent_from_list(tmp_path: Path) 
                 note="present",
             ),
             bucket_id=runtime.bucket_id,
+            ports=_ports(runtime.bucket_id),
         )
         never_recorded_id = derive_m036_declaration_id(
             profile_id=_PROFILE_ID,
@@ -200,10 +228,14 @@ def test_anti_tautology_unrecorded_declaration_absent_from_list(tmp_path: Path) 
             sede_justificante="ACUSE-NEVER",
         )
 
-        declarations = list_m036_declarations(bucket_id=runtime.bucket_id)
+        declarations = list_m036_declarations(bucket_id=runtime.bucket_id, ports=_ports(runtime.bucket_id))
         listed_ids = {declaration.declaration_id for declaration in declarations}
 
         assert recorded.declaration_id in listed_ids
         assert never_recorded_id not in listed_ids
-        with pytest.raises(KeyError):
-            read_m036_declaration(never_recorded_id, bucket_id=runtime.bucket_id)
+        with pytest.raises(M036DeclarationNotFoundError):
+            read_m036_declaration(
+                never_recorded_id,
+                bucket_id=runtime.bucket_id,
+                ports=_ports(runtime.bucket_id),
+            )

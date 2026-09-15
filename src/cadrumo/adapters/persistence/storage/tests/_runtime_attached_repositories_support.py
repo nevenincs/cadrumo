@@ -475,6 +475,7 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=revision_id,
+        registry_snapshot_ref=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
         completeness_status=VerificationCompletenessStatus.COMPLETE,
         findings=(),
         resolved_casilla_ids=(validated_casilla_id("iva.devengado"),),
@@ -617,9 +618,16 @@ def _borrador_snapshot(bucket_id: str) -> Borrador100Snapshot:
     captured_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
     source_url = aeat_url("sede", BORRADOR_STORAGE_PATH_FIXTURE)
     binding_values = {"casilla-001": Decimal("1.00")}
+    registry_snapshot_ref = RegistrySnapshotRef(
+        modelo="100",
+        revision_id="2025",
+        modelo_year=filing_year,
+        period=period.registry_token,
+    )
     snapshot_id = derive_borrador_100_snapshot_id(
         filing_year=filing_year,
         period=period,
+        registry_snapshot_ref=registry_snapshot_ref,
         captured_at=captured_at,
         source_url=source_url,
         binding_values=binding_values,
@@ -630,6 +638,7 @@ def _borrador_snapshot(bucket_id: str) -> Borrador100Snapshot:
         modelo="100",
         filing_year=filing_year,
         period=period,
+        registry_snapshot_ref=registry_snapshot_ref,
         captured_at=captured_at,
         source_url=source_url,
         state=SnapshotLifecycleState.ACTIVE,

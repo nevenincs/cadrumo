@@ -45,7 +45,7 @@ from cadrumo.application.modelo.iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision,
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
@@ -90,7 +90,9 @@ def _require_persisted_iva_compensation_decision_matches_revision(work_unit: Any
     return require_persisted_iva_compensation_decision_matches_revision(work_unit, revision, **kwargs)
 
 
-def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tmp_path: Path) -> None:
+def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     taxpayer_nif = "12345678Z"
     with _secure_backend(tmp_path):
         _store_operator_profile_with_tax_id(taxpayer_nif)
@@ -112,7 +114,9 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
         assert report.decision.blocked is False
         assert {source.source_kind for source in report.decision.authority_sources} == {"local_recurrence"}
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
         revision = _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
@@ -126,7 +130,7 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:iva-wallet-engine-lifecycle-gate"
+                work_unit.period, reference="test:iva-wallet-engine-lifecycle-gate", operation=operation
             ),
         )
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("0")
@@ -151,10 +155,14 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
         assert not any(finding.kind.value == "cross_period_dependency_unclean" for finding in verification.findings)
 
 
-def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(tmp_path: Path) -> None:
+def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _secure_backend(tmp_path):
         _store_operator_profile()
-        work_unit, revision = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("1200.00"))
+        work_unit, revision = _work_unit_and_revision_for_wallet_gate(
+            compensation_amount=Decimal("1200.00"), operation=operation
+        )
 
         with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
             _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
@@ -162,11 +170,15 @@ def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(tmp_path:
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
 
 
-def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(tmp_path: Path) -> None:
+def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _secure_backend(tmp_path):
         _store_operator_profile()
         _save_wallet_gate_decision(amount=Decimal("800.00"))
-        work_unit, revision = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("1200.00"))
+        work_unit, revision = _work_unit_and_revision_for_wallet_gate(
+            compensation_amount=Decimal("1200.00"), operation=operation
+        )
 
         with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
             _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
@@ -175,11 +187,15 @@ def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(tmp_pat
         assert exc_info.value.context["divergence"] == "authority_amount_mismatch"
 
 
-def test_modelo_303_lifecycle_gate_accepts_matching_wallet_authority(tmp_path: Path) -> None:
+def test_modelo_303_lifecycle_gate_accepts_matching_wallet_authority(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _secure_backend(tmp_path):
         _store_operator_profile()
         _save_wallet_gate_decision(amount=Decimal("1200.00"))
-        work_unit, revision = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("1200.00"))
+        work_unit, revision = _work_unit_and_revision_for_wallet_gate(
+            compensation_amount=Decimal("1200.00"), operation=operation
+        )
 
         decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
 
@@ -187,7 +203,9 @@ def test_modelo_303_lifecycle_gate_accepts_matching_wallet_authority(tmp_path: P
         assert decision.selected_authority == "aeat_wallet"
 
 
-def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tmp_path: Path) -> None:
+def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _secure_backend(tmp_path):
         _store_operator_profile()
         snapshot = _snapshot_303()
@@ -206,7 +224,9 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
         assert report.decision.blocked is False
         assert {source.source_kind for source in report.decision.authority_sources} == {"aeat_wallet"}
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
         revision = _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
@@ -220,7 +240,7 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:iva-wallet-engine-lifecycle-gate"
+                work_unit.period, reference="test:iva-wallet-engine-lifecycle-gate", operation=operation
             ),
         )
 

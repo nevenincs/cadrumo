@@ -91,8 +91,10 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
         work_unit=work_unit,
         actor="operator-A",
         notes="Q1 IVA",
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
         clock=T3,
     )
     records_after_first = dict(fr_repo.load().records)
@@ -130,7 +132,10 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
         event_types=(BucketEventType.MODELO_FILED,),
     )
     assert len(filed_after_second) == 1
-    with calculation_ports_for_test(calculation_repository=cr_repo) as _calculation_ports_133:
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        calculation_repository=cr_repo,
+    ) as _calculation_ports_133:
         # The revision stays PRESENTADO.
         refreshed = get_calculation_revision(
             revision.calculation_revision_id,

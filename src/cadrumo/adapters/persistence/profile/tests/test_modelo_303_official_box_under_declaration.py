@@ -71,7 +71,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -286,6 +286,8 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
 def _seed_work_unit(
     wu_repo: WorkUnitCatalogueRepository,
     event_repo: BucketEventHistoryRepository,
+    *,
+    operation: PinnedAuthorityOperation,
 ):
     return create_work_unit(
         bucket_id=_BUCKET,
@@ -295,16 +297,19 @@ def _seed_work_unit(
         revision_id="2026-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
+        operation=operation,
     )
 
 
-def _filing_evidence(period: Period) -> FilingInstanceEvidence:
+def _filing_evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
     """Return the shared not-claimed M303 evidence every calculate now requires."""
-    return general_m303_filing_evidence(period, reference="test:official-box:exonerado-390")
+    return general_m303_filing_evidence(period, reference="test:official-box:exonerado-390", operation=operation)
 
 
 def _seeded_calculation(
     secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> BucketAggregationCalculationResult:
     _store_profile(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -331,7 +336,7 @@ def _seeded_calculation(
     # unmistakable (no copy/contamination can satisfy both legs).
     assert _SALE_CUOTA != _PURCHASE_CUOTA
 
-    work_unit = _seed_work_unit(wu_repo, event_repo)
+    work_unit = _seed_work_unit(wu_repo, event_repo, operation=operation)
     tx_repo.save(TransactionCatalogue.from_transactions((sale, purchase)))
     with calculation_ports_for_test(
         bucket_id=_BUCKET,
@@ -349,7 +354,7 @@ def _seeded_calculation(
             },
             iva_compensation_decision=_wallet_decision(),
             ports=_calculation_ports_344,
-            filing_instance_evidence=_filing_evidence(work_unit.period),
+            filing_instance_evidence=_filing_evidence(work_unit.period, operation=operation),
             clock=_T1,
         )
 
@@ -361,6 +366,8 @@ def _seeded_calculation(
 
 def test_calculate_projects_official_boxes_from_semantic_sources(
     secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A ledger-folded calculate populates the official boxes by projection.
 
@@ -372,7 +379,7 @@ def test_calculate_projects_official_boxes_from_semantic_sources(
     hand-summed Decimal). The two seeded cuotas are distinct, so a copy/
     contamination cannot satisfy both legs.
     """
-    result = _seeded_calculation(secure_objects)
+    result = _seeded_calculation(secure_objects, operation=operation)
     values = result.revision.casilla_values
 
     # Semantic layer carried the seeded cuotas.
@@ -397,6 +404,8 @@ def test_calculate_projects_official_boxes_from_semantic_sources(
 
 def test_calculate_rejects_caller_override_of_projected_box(
     secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A caller cannot override a now-computed official box.
 
@@ -421,7 +430,7 @@ def test_calculate_rejects_caller_override_of_projected_box(
         taxable_base=_SALE_BASE,
         iva_amount=_SALE_CUOTA,
     )
-    work_unit = _seed_work_unit(wu_repo, event_repo)
+    work_unit = _seed_work_unit(wu_repo, event_repo, operation=operation)
     tx_repo.save(TransactionCatalogue.from_transactions((sale,)))
 
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
@@ -442,7 +451,7 @@ def test_calculate_rejects_caller_override_of_projected_box(
                 },
                 iva_compensation_decision=_wallet_decision(),
                 ports=_calculation_ports_436,
-                filing_instance_evidence=_filing_evidence(work_unit.period),
+                filing_instance_evidence=_filing_evidence(work_unit.period, operation=operation),
                 clock=_T1,
             )
 
@@ -454,6 +463,8 @@ def test_calculate_rejects_caller_override_of_projected_box(
 
 def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
     secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The verify gate no longer surfaces the Stage-1 under-declaration advisory.
 
@@ -464,7 +475,7 @@ def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
     projection), so they surface NO BLOCKING finding — the projected filing is
     consistent.
     """
-    result = _seeded_calculation(secure_objects)
+    result = _seeded_calculation(secure_objects, operation=operation)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
@@ -588,6 +599,8 @@ def test_each_projected_box_has_exactly_one_producing_formula() -> None:
 
 def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The pull path and the calculate path produce identical projected-box values.
 
@@ -600,7 +613,7 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     a silent blank cannot pass as "equal".
     """
     # PATH A: live bucket-aggregation calculate.
-    result = _seeded_calculation(secure_objects)
+    result = _seeded_calculation(secure_objects, operation=operation)
     live = {box: Decimal(result.revision.casilla_values[box]) for box in _BOX_SOURCE_MAP}
     live_sources = {src: Decimal(result.revision.casilla_values[src]) for src in _BOX_SOURCE_MAP.values()}
 
@@ -662,6 +675,8 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
 
 def test_export_ref_points_at_projected_box_carrying_value(
     secure_objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Box 27 carries the projected value the export would write.
 
@@ -691,7 +706,7 @@ def test_export_ref_points_at_projected_box_carrying_value(
 
     # On a ledger-fed calculate, box 27 carries the projected (non-zero) cuota,
     # equal to its semantic source — so a transport reads value, not zero.
-    result = _seeded_calculation(secure_objects)
+    result = _seeded_calculation(secure_objects, operation=operation)
     box_27 = Decimal(result.revision.casilla_values[_OFFICIAL_CUOTA_DEVENGADA_TOTAL])
     source_total = Decimal(result.revision.casilla_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA])
     assert box_27 == source_total

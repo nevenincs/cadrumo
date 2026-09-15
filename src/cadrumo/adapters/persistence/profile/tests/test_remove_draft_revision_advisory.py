@@ -25,6 +25,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import remove_manual_transaction
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 
 from .ledger_action_persistence_support import (
@@ -37,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_remove_advises_on_draft_revision_and_still_removes(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     transaction_id = create_row(
@@ -50,6 +51,7 @@ def test_remove_advises_on_draft_revision_and_still_removes(
         transaction_id=transaction_id,
         state=CalculationRevisionState.BORRADOR,
         period_code="1T",
+        operation=operation,
     )
 
     report = remove_manual_transaction(
@@ -81,7 +83,7 @@ def test_remove_advises_on_draft_revision_and_still_removes(
 
 
 def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     transaction_id = create_row(
@@ -94,6 +96,7 @@ def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
         transaction_id=transaction_id,
         state=CalculationRevisionState.BORRADOR,
         period_code="1T",
+        operation=operation,
     )
 
     report = remove_manual_transaction(
@@ -114,7 +117,7 @@ def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
 
 
 def test_remove_uncited_row_yields_empty_draft_advisory(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     cited_id = create_row(
@@ -132,6 +135,7 @@ def test_remove_uncited_row_yields_empty_draft_advisory(
         transaction_id=cited_id,
         state=CalculationRevisionState.BORRADOR,
         period_code="1T",
+        operation=operation,
     )
 
     report = remove_manual_transaction(
@@ -150,7 +154,7 @@ def test_remove_uncited_row_yields_empty_draft_advisory(
 
 
 def test_remove_discarded_draft_is_not_advised(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     # A DESCARTADO (discarded) draft is not a live filing: removing a row it
     # cites must NOT raise an advisory.
@@ -165,6 +169,7 @@ def test_remove_discarded_draft_is_not_advised(
         transaction_id=transaction_id,
         state=CalculationRevisionState.DESCARTADO,
         period_code="1T",
+        operation=operation,
     )
 
     report = remove_manual_transaction(

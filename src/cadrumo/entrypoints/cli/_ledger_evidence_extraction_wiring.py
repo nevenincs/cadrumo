@@ -9,6 +9,7 @@ from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
 from ...adapters.inbound.einvoice.shape import probe_document_shape
 from ...adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from ...adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+from ...adapters.outbound.llm.consent import EvidenceConsentToken
 from ...adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
 from ...adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
 from ...adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
@@ -43,6 +44,7 @@ from ...application.ledger.invoice_draft_extraction_ports import (
     StructuredInvoiceReadError,
     VisionImage,
 )
+from ...application.ledger.invoice_draft_records import InvoiceDraft
 from ...application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from ...application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ...application.ledger.structured_invoice_ports import StructuredInvoiceRecord
@@ -108,23 +110,40 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
         except EInvoiceXmlParseError as exc:
             raise StructuredInvoiceReadError() from exc
 
+    def require_llm_consent_token(consent_token: EvidenceConsentProof | None) -> EvidenceConsentToken | None:
+        if consent_token is None:
+            return None
+        if not isinstance(consent_token, EvidenceConsentToken):
+            raise TypeError("LLM readers require the canonical EvidenceConsentToken")
+        return consent_token
+
     def read_text(
         transcription: DocumentTranscription,
         settings: Settings,
         provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
-        authority_values: InvoiceExtractionAuthorityValues,
-    ):
+        authority_values: object,
+    ) -> InvoiceDraft:
         try:
-            if provider is None:
-                return extract_invoice_fields_from_text(transcription, authority_values=authority_values)
-            return TextInvoiceFieldExtractor(
-                provider=provider,
-                model=settings.cadrumo_llm_cloud_text_model,
-                settings=settings,
-                authority_values=authority_values,
-                consent_token=consent_token,
-            ).extract(transcription=transcription)
+            if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
+                raise TypeError("text reader requires resolved invoice extraction authority values")
+            from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+            with bundled_indexed_authority().operation() as operation:
+                if provider is None:
+                    return extract_invoice_fields_from_text(
+                        transcription,
+                        operation=operation,
+                        authority_values=authority_values,
+                    )
+                return TextInvoiceFieldExtractor(
+                    provider=provider,
+                    model=settings.cadrumo_llm_cloud_text_model,
+                    operation=operation,
+                    settings=settings,
+                    authority_values=authority_values,
+                    consent_token=require_llm_consent_token(consent_token),
+                ).extract(transcription=transcription)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
@@ -157,18 +176,21 @@ def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> In
                 provider=provider,
                 model=settings.cadrumo_llm_cloud_vision_model,
                 settings=settings,
-                consent_token=consent_token,
+                consent_token=require_llm_consent_token(consent_token),
             ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
     def consent_binding_error(facts: dict[str, object]) -> Exception:
+        typed_facts: dict[str, str | int | bool] = {
+            key: value if isinstance(value, (str, int, bool)) else str(value) for key, value in facts.items()
+        }
         return LLMConsentError(
             translated_message="llm.evidence.consent.binding_mismatch",
             context=facts,
             precondition_verdict=llm_no_recovery_verdict(
                 LLMPreconditionCondition.EVIDENCE_TOKEN_BOUND,
-                facts=facts,
+                facts=typed_facts,
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )

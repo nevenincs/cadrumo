@@ -41,7 +41,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -179,36 +179,39 @@ def _insufficient_transactions() -> tuple[Transaction, ...]:
 
 
 def test_art109_period_evidence_derives_true_at_70_percent_from_current_period_rows(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     findings = _verify_art109_findings(
         objects,
         transactions=_positive_threshold_transactions(),
         profile_flag=False,
+        operation=operation,
     )
 
     assert len(findings) == 1
 
 
 def test_art109_period_evidence_derives_false_below_70_percent(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     findings = _verify_art109_findings(
         objects,
         transactions=_below_threshold_transactions(),
         profile_flag=True,
+        operation=operation,
     )
 
     assert findings == []
 
 
 def test_art109_period_evidence_fails_closed_when_gross_only_receipt_cannot_prove_denominator(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     findings = _verify_art109_findings(
         objects,
         transactions=_insufficient_transactions(),
         profile_flag=True,
+        operation=operation,
     )
 
     assert len(findings) == 1
@@ -221,7 +224,9 @@ def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _calculate_m130_draft(objects: SecureObjectRepository) -> CalculationRevision:
+def _calculate_m130_draft(
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> CalculationRevision:
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
     bv_repo = BucketEventHistoryRepository(objects=objects)
@@ -235,6 +240,7 @@ def _calculate_m130_draft(objects: SecureObjectRepository) -> CalculationRevisio
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -269,8 +275,9 @@ def _verify_art109_findings(
     *,
     transactions: tuple[Transaction, ...],
     profile_flag: bool,
+    operation: PinnedAuthorityOperation,
 ) -> list[ModeloVerificationFinding]:
-    revision = _calculate_m130_draft(objects)
+    revision = _calculate_m130_draft(objects, operation=operation)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
 
@@ -295,36 +302,39 @@ def _verify_art109_findings(
 
 
 def test_verify_art109_advisory_uses_proven_period_evidence_when_profile_flag_is_false(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     findings = _verify_art109_findings(
         objects,
         transactions=_positive_threshold_transactions(),
         profile_flag=False,
+        operation=operation,
     )
 
     assert len(findings) == 1
 
 
 def test_verify_art109_advisory_proven_below_threshold_overrides_declared_profile_flag(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     findings = _verify_art109_findings(
         objects,
         transactions=_below_threshold_transactions(),
         profile_flag=True,
+        operation=operation,
     )
 
     assert findings == []
 
 
 def test_verify_art109_advisory_keeps_declared_profile_fact_when_period_evidence_is_insufficient(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     findings = _verify_art109_findings(
         objects,
         transactions=_insufficient_transactions(),
         profile_flag=True,
+        operation=operation,
     )
 
     assert len(findings) == 1

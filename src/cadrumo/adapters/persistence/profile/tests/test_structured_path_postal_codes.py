@@ -39,13 +39,22 @@ import pytest
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
+from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from cadrumo.core.config import Settings
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
+from ._invoice_confirmation_test_support import (
+    InvoiceAuthorityFixture,
+    invoice_draft_extraction_kwargs,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -71,6 +80,13 @@ _UBL_INVOICE = "en16931_ubl_two_rate_invoice.xml"
 # never written to.
 _UBL_SUPPLIER_ADDRESS = "<cac:PostalAddress><cbc:PostalZone>35001</cbc:PostalZone></cac:PostalAddress>"
 _UBL_CUSTOMER_ADDRESS = "<cac:PostalAddress><cbc:PostalZone>28001</cbc:PostalZone></cac:PostalAddress>"
+
+
+def _registry_legends(operation):
+    """Resolve the registry vocabulary on the test's pinned authority lease."""
+    period = default_invoice_extraction_period()
+    return resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
 
 # A Canarian code, deliberately. Reading it as the mainland is the exact failure
 # the resolver's asymmetry exists to prevent, and a document is where that code
@@ -117,11 +133,13 @@ def _stored(
     return _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=staged).record.evidence_id
 
 
-def _draft(evidence_id: str, settings: Settings) -> InvoiceDraft:
+def _draft(evidence_id: str, settings: Settings, *, operation: PinnedAuthorityOperation) -> InvoiceDraft:
+    authority = InvoiceAuthorityFixture(operation=operation, legends=_registry_legends(operation))
     return extract_invoice_draft_from_evidence(
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -133,6 +151,8 @@ def test_a_facturae_document_carries_both_parties_postal_codes(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Both codes the document prints reach the draft, supplier and customer.
 
@@ -149,7 +169,7 @@ def test_a_facturae_document_carries_both_parties_postal_codes(
         name="facturae.xml",
     )
 
-    draft = _draft(evidence_id, isolated_settings)
+    draft = _draft(evidence_id, isolated_settings, operation=operation)
 
     assert draft.supplier_postal_code == _PRINTED_SUPPLIER_CODE
     assert draft.customer_postal_code == _PRINTED_CUSTOMER_CODE
@@ -159,6 +179,8 @@ def test_a_facturae_document_with_no_address_resolves_to_nothing(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A document that does not state an address must not imply the mainland.
 
@@ -175,7 +197,7 @@ def test_a_facturae_document_with_no_address_resolves_to_nothing(
             name="facturae-no-address.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.supplier_postal_code is None
         assert draft.customer_postal_code is None
@@ -197,6 +219,8 @@ def test_a_canarian_code_survives_the_document_as_canarias(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The whole chain, document to territory, on the case that actually matters.
 
@@ -219,7 +243,7 @@ def test_a_canarian_code_survives_the_document_as_canarias(
             tmp_path=tmp_path,
             name="facturae-canarias.xml",
         )
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.supplier_postal_code == _CANARIAS_CODE
         assert territorial_scope_for_spanish_postal_code(
@@ -236,6 +260,8 @@ def test_a_ubl_document_carries_the_postal_zone(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """UBL states the code in its own element, so it is read directly.
 
@@ -270,7 +296,7 @@ def test_a_ubl_document_carries_the_postal_zone(
         tmp_path=tmp_path,
         name="ubl.xml",
     )
-    draft = _draft(evidence_id, isolated_settings)
+    draft = _draft(evidence_id, isolated_settings, operation=operation)
 
     assert draft.supplier_postal_code == "35001"
     assert draft.customer_postal_code == "28001"
@@ -280,6 +306,8 @@ def test_a_cii_document_carries_the_postcode_code(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """CII states the code in its own element too, and the branch is reached.
 
@@ -304,7 +332,7 @@ def test_a_cii_document_carries_the_postcode_code(
             name="cii.xml",
         )
 
-        draft = _draft(evidence_id, isolated_settings)
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
 
         assert draft.supplier_postal_code == "38001"
         assert draft.customer_postal_code == "51001"

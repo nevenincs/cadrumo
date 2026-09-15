@@ -33,6 +33,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -157,7 +158,7 @@ def _income_transaction(
 
 
 def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
-    m130_objects: SecureObjectRepository,
+    m130_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: real seeded income transactions fold into M130 casilla 01 on the live path.
 
@@ -242,6 +243,7 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m130_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
@@ -272,7 +274,7 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
 
 
 def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_calculate(
-    m130_objects: SecureObjectRepository,
+    m130_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: net-paid professional invoice fills M130 casilla 06 without caller input."""
     wu_repo = WorkUnitCatalogueRepository(objects=m130_objects)
@@ -349,6 +351,7 @@ def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_cal
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m130_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     manual_inputs_without_c06 = {
         casilla_id: value

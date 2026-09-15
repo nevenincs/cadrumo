@@ -19,7 +19,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
@@ -75,7 +75,7 @@ def _repos(objects: SecureObjectRepository):
     )
 
 
-def _seed_m131_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
+def _seed_m131_work_unit(work_unit_repository: WorkUnitCatalogueRepository, *, operation: PinnedAuthorityOperation):
     return create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="131",
@@ -84,14 +84,15 @@ def _seed_m131_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
         revision_id="2026",
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
+        operation=operation,
     )
 
 
 def test_m131_page1_activity_bindings_feed_data_base_liquidation_without_repurposing_casilla_04(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, cr_repo, bv_repo = _repos(secure_objects)
-    work_unit = _seed_m131_work_unit(wu_repo)
+    work_unit = _seed_m131_work_unit(wu_repo, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -117,10 +118,10 @@ def test_m131_page1_activity_bindings_feed_data_base_liquidation_without_repurpo
 
 
 def test_m131_dpa_module_rendimiento_can_supply_data_base_casilla_01_when_page1_base_is_absent(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, cr_repo, bv_repo = _repos(secure_objects)
-    work_unit = _seed_m131_work_unit(wu_repo)
+    work_unit = _seed_m131_work_unit(wu_repo, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -145,10 +146,10 @@ def test_m131_dpa_module_rendimiento_can_supply_data_base_casilla_01_when_page1_
 
 
 def test_m131_unrelated_fixed_record_manual_binding_is_not_projected_as_a_casilla_input(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, cr_repo, bv_repo = _repos(secure_objects)
-    work_unit = _seed_m131_work_unit(wu_repo)
+    work_unit = _seed_m131_work_unit(wu_repo, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -166,10 +167,10 @@ def test_m131_unrelated_fixed_record_manual_binding_is_not_projected_as_a_casill
 
 
 def test_m131_explicit_casilla_inputs_override_data_base_binding_projection(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, cr_repo, bv_repo = _repos(secure_objects)
-    work_unit = _seed_m131_work_unit(wu_repo)
+    work_unit = _seed_m131_work_unit(wu_repo, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(

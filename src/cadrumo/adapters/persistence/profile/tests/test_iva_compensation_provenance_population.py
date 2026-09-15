@@ -75,6 +75,7 @@ from cadrumo.application.calculations.iva_compensation_history import (
 from cadrumo.application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.live.filed_observation_persistence import persist_filed_calculation_observation
+from cadrumo.application.live.filed_observation_ports import FiledObservationPersistencePorts
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
@@ -97,6 +98,7 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.entrypoints.live_state_composition import compose_filed_observation_persistence_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -220,7 +222,7 @@ def _app_filed_work_unit() -> WorkUnit:
     )
 
 
-def _app_filed_revision(work_unit: WorkUnit) -> CalculationRevision:
+def _app_filed_revision(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> CalculationRevision:
     """A filed Modelo 303 revision carrying registry-grounded carry observations.
 
     The five carry-bearing values are declared here as INPUTS to the filing, and
@@ -244,6 +246,7 @@ def _app_filed_revision(work_unit: WorkUnit) -> CalculationRevision:
     filing_instance_evidence = general_m303_filing_evidence(
         work_unit.period,
         reference="test:iva-compensation-provenance-population",
+        operation=operation,
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
@@ -256,6 +259,11 @@ def _app_filed_revision(work_unit: WorkUnit) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=operation.snapshot(
+            str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ).snapshot_ref,
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=casilla_values,
         observations=observations,
@@ -270,7 +278,7 @@ def _app_filed_revision(work_unit: WorkUnit) -> CalculationRevision:
     )
 
 
-def _aeat_captured_303_observation() -> FiledDeclaracionObservation:
+def _aeat_captured_303_observation(*, operation: PinnedAuthorityOperation) -> FiledDeclaracionObservation:
     """One AEAT declarations-register observation as the pull would observe it.
 
     Synthetic register data pushed through the real persistence function, not a
@@ -326,10 +334,19 @@ def _aeat_captured_303_observation() -> FiledDeclaracionObservation:
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
+        registry_snapshot_ref=operation.snapshot(
+            Modelo("303").value,
+            filing_year=_AEAT_CAPTURE_PERIOD.filing_year,
+            period=_AEAT_CAPTURE_PERIOD.registry_token,
+        ).snapshot_ref,
     )
 
 
-def _persist_every_legitimate_row(*, operation: PinnedAuthorityOperation) -> None:
+def _persist_every_legitimate_row(
+    *,
+    operation: PinnedAuthorityOperation,
+    ports: FiledObservationPersistencePorts,
+) -> None:
     """Drive all four persisting producers, one row each, through production code."""
     seed_iva_compensation_period(
         taxpayer_nif=_NIF,
@@ -360,7 +377,7 @@ def _persist_every_legitimate_row(*, operation: PinnedAuthorityOperation) -> Non
     )
     work_unit = _app_filed_work_unit()
     persist_filed_revision_observation(
-        revision=_app_filed_revision(work_unit),
+        revision=_app_filed_revision(work_unit, operation=operation),
         work_unit=work_unit,
         repository=CalculationObservationRepository(),
         captured_at=_APP_FILED_AT,
@@ -368,7 +385,10 @@ def _persist_every_legitimate_row(*, operation: PinnedAuthorityOperation) -> Non
         taxpayer_nif=_NIF,
         iva_compensation_history_repository=IvaCompensationHistoryRepository(),
     )
-    persist_filed_calculation_observation(_aeat_captured_303_observation())
+    persist_filed_calculation_observation(
+        _aeat_captured_303_observation(operation=operation),
+        ports=ports,
+    )
 
 
 def _wallet_balance_census() -> _PathCensus:
@@ -484,9 +504,14 @@ def _carry_ingress_census(*, operation: PinnedAuthorityOperation) -> _PathCensus
 @pytest.fixture(scope="module")
 def population(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Population]:
     """Build the legitimate population once and measure all three paths over it."""
-    with isolated_runtime_profile(tmp_path=tmp_path_factory.mktemp("iva-provenance-population")):
+    with isolated_runtime_profile(tmp_path=tmp_path_factory.mktemp("iva-provenance-population")) as runtime_profile:
+        ports = compose_filed_observation_persistence_ports(
+            bucket_id=runtime_profile.bucket_id,
+            output_root=runtime_profile.settings.cadrumo_live_state_dir,
+            objects=runtime_profile.repository,
+        )
         with bundled_indexed_authority().operation() as operation:
-            _persist_every_legitimate_row(operation=operation)
+            _persist_every_legitimate_row(operation=operation, ports=ports)
             yield _Population(
                 wallet_balance=_wallet_balance_census(),
                 binding_prefill=_binding_prefill_census(operation=operation),

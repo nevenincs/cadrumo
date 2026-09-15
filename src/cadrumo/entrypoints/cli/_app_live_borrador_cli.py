@@ -30,7 +30,7 @@ from ._app_live_borrador_payloads import (
     Borrador100ViewResult,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .state_projection_support import borrador_100_snapshot_repository_factory
+from .state_projection_support import authority_operation, borrador_100_snapshot_repository_factory
 
 
 class _BorradorRow(TypedDict):
@@ -160,7 +160,7 @@ def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotS
 def borrador_100_show(ctx: typer.Context, snapshot_id: str) -> None:
     """Show one Modelo 100 borrador snapshot with its binding values."""
     bucket_id = active_bucket_id_or_refuse()
-    record = _borrador_service(ctx, bucket_id).show(snapshot_id)
+    record = _borrador_service(ctx, bucket_id).show(snapshot_id, operation=authority_operation(ctx))
     binding_values = {
         key: format(value, "f") if isinstance(value, Decimal) else str(value)
         for key, value in record.binding_values.items()
@@ -186,7 +186,10 @@ def borrador_100_show(ctx: typer.Context, snapshot_id: str) -> None:
 def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
     """Show the most recent active Modelo 100 borrador snapshot for a year."""
     bucket_id = active_bucket_id_or_refuse()
-    record = _borrador_service(ctx, bucket_id).latest_for_year(filing_year=filing_year)
+    record = _borrador_service(ctx, bucket_id).latest_for_year(
+        filing_year=filing_year,
+        operation=authority_operation(ctx),
+    )
     if record is None:
         result = Borrador100LatestResult(bucket_id=bucket_id, filing_year=filing_year, snapshot_id=None)
         emit_envelope(

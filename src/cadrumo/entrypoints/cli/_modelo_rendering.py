@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     # state-free CLI surface pays no runtime aggregation-import cost, matching the
     # calculate module's own deferral of the same type.
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def _modelo_rendering_value(key: str) -> str:
@@ -541,6 +542,7 @@ def detail_row_payloads(rev: CalculationRevision) -> tuple[DetailRowPayload, ...
 def calculation_revision_payload(
     rev: CalculationRevision,
     *,
+    operation: PinnedAuthorityOperation,
     work_unit: WorkUnit | None = None,
     include_result_summary: bool = True,
 ) -> CalculationRevisionPayload:
@@ -571,7 +573,7 @@ def calculation_revision_payload(
             source_refs=tuple(obs.source_refs),
             absent_by_design=obs.absent_by_design,
         )
-        for obs in visible_calculation_observations(rev)
+        for obs in visible_calculation_observations(rev, operation=operation)
     )
     source_provenance = tuple(
         SourceProvenancePayload(
@@ -592,10 +594,16 @@ def calculation_revision_payload(
         work_unit_id=rev.work_unit_id,
         registry_snapshot_ref=rev.registry_snapshot_ref,
         state=rev.state.value,
-        casilla_values={k: str(v) for k, v in visible_calculation_casilla_values(rev).items()},
+        casilla_values={k: str(v) for k, v in visible_calculation_casilla_values(rev, operation=operation).items()},
         observations=observations,
         result_summary=(
-            result_summary_payload(rev, work_unit=work_unit) if include_result_summary and work_unit is not None else ()
+            result_summary_payload(
+                rev,
+                operation=operation,
+                work_unit=work_unit,
+            )
+            if include_result_summary and work_unit is not None
+            else ()
         ),
         detail_rows=detail_row_payloads(rev),
         source_provenance=source_provenance,
@@ -612,9 +620,14 @@ def calculation_revision_payload(
     )
 
 
-def result_summary_lines(rev: CalculationRevision, *, work_unit: WorkUnit) -> list[str]:
+def result_summary_lines(
+    rev: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+    work_unit: WorkUnit,
+) -> list[str]:
     """Return the headline-result summary block for a calculation revision."""
-    summary = calculation_result_summary(rev, work_unit=work_unit)
+    summary = calculation_result_summary(rev, operation=operation, work_unit=work_unit)
     if summary is None or not summary.rows:
         return []
     header = tr(
@@ -633,6 +646,7 @@ def result_summary_lines(rev: CalculationRevision, *, work_unit: WorkUnit) -> li
 def result_summary_payload(
     rev: CalculationRevision,
     *,
+    operation: PinnedAuthorityOperation,
     work_unit: WorkUnit,
 ) -> tuple[ResultSummaryRowPayload, ...]:
     """Return headline-result summary rows for the JSON payload.
@@ -640,7 +654,7 @@ def result_summary_payload(
     Each row is a
     :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`.
     """
-    summary = calculation_result_summary(rev, work_unit=work_unit)
+    summary = calculation_result_summary(rev, operation=operation, work_unit=work_unit)
     if summary is None:
         return ()
     return tuple(
@@ -782,10 +796,15 @@ def _calculation_casilla_row(
     return lines
 
 
-def _calculation_casilla_lines(rev: CalculationRevision, *, verbose: bool) -> list[str]:
-    observation_by_casilla = {obs.casilla_id: obs for obs in visible_calculation_observations(rev)}
+def _calculation_casilla_lines(
+    rev: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+    verbose: bool,
+) -> list[str]:
+    observation_by_casilla = {obs.casilla_id: obs for obs in visible_calculation_observations(rev, operation=operation)}
     lines: list[str] = []
-    for casilla, value in sorted(visible_calculation_casilla_values(rev).items()):
+    for casilla, value in sorted(visible_calculation_casilla_values(rev, operation=operation).items()):
         lines.extend(
             _calculation_casilla_row(
                 casilla,
@@ -809,6 +828,7 @@ def _calculation_detail_lines(rev: CalculationRevision) -> list[str]:
 def calculation_revision_lines(
     rev: CalculationRevision,
     *,
+    operation: PinnedAuthorityOperation,
     work_unit: WorkUnit | None = None,
     include_result_summary: bool = True,
     verbose: bool = False,
@@ -824,18 +844,24 @@ def calculation_revision_lines(
     ]
     lines.extend(_calculation_revision_lifecycle_lines(rev))
     summary_lines = (
-        result_summary_lines(rev, work_unit=work_unit) if include_result_summary and work_unit is not None else []
+        result_summary_lines(
+            rev,
+            operation=operation,
+            work_unit=work_unit,
+        )
+        if include_result_summary and work_unit is not None
+        else []
     )
     if summary_lines:
         lines.extend(summary_lines)
-    lines.extend(_calculation_casilla_lines(rev, verbose=verbose))
+    lines.extend(_calculation_casilla_lines(rev, operation=operation, verbose=verbose))
     lines.extend(_calculation_detail_lines(rev))
     return lines
 
 
-def calculation_observation_lines(rev: CalculationRevision) -> list[str]:
+def calculation_observation_lines(rev: CalculationRevision, *, operation: PinnedAuthorityOperation) -> list[str]:
     """Return a stable text view of a revision's typed casilla observations."""
-    payload = calculation_revision_payload(rev, include_result_summary=False)
+    payload = calculation_revision_payload(rev, operation=operation, include_result_summary=False)
     observations = sorted(payload.observations, key=lambda obs: obs.casilla_id)
     lines = [
         f"calculation_revision_id\t{payload.calculation_revision_id}",

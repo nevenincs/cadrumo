@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
     _file_flow_runtime,
@@ -18,6 +19,9 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     reset_secure_object_store,
 )
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
+from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 
 from .ledger_action_persistence_support import _BUCKET_ID
 
@@ -25,6 +29,16 @@ from .ledger_action_persistence_support import _BUCKET_ID
 # explicitly requested runtime.  The fixture body is composed by the outer
 # persistence test owner, not by an application test package.
 secure_engine = default_bucket_runtime_profile_fixture(autouse=False, name="secure_engine")
+
+
+@pytest.fixture(scope="session")
+def operation() -> PinnedAuthorityOperation:
+    """Expose canonical authored facts without requiring a published package."""
+    authority = compiled_bundled_authority()
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
+    )
+    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 @pytest.fixture(scope="module")

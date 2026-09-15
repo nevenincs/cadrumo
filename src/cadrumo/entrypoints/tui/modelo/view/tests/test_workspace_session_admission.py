@@ -38,7 +38,10 @@ def _admitted_projection(
     repository: WorkUnitCatalogueRepository,
 ) -> ModeloWorkspaceProjectionV1:
     """The real resolver's projection, already admitted once."""
-    return resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection
+    projection = resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection
+    if not isinstance(projection, ModeloWorkspaceProjectionV1):
+        raise TypeError("workspace resolver returned an unexpected projection type")
+    return projection
 
 
 def test_a_projection_on_the_supported_contract_opens_a_session(bucket_and_repository) -> None:

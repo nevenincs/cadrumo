@@ -27,7 +27,8 @@ from ....adapters.persistence.storage.master_key.active_session import close_act
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401
 )
-from ....application.wizard.catalogue import WIZARD_FLOWS
+from ....application.wizard.models import WizardFlow
+from ....application.wizard.tests._support import registry_setup_flow as registry_setup_flow
 from .._root_support import _prefer_complete_verb_path
 from .cli_runner import invoke_cached_cli
 
@@ -192,7 +193,7 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
 )
 
 
-def test_profile_create_prompted_question_inventory_is_pinned() -> None:
+def test_profile_create_prompted_question_inventory_is_pinned(*, registry_setup_flow: WizardFlow) -> None:
     """A silent add, drop, or rename of a setup-flow question fails loudly.
 
     The wizard surfaces one flow; ``create`` writes every declared question id to
@@ -212,8 +213,7 @@ def test_profile_create_prompted_question_inventory_is_pinned() -> None:
     size: the list being longer than the set means an id appears twice, and that
     holds at any inventory size.
     """
-    assert len(WIZARD_FLOWS) == 1, WIZARD_FLOWS
-    flow = WIZARD_FLOWS[0]
+    flow = registry_setup_flow
     assert flow.id == "setup", flow.id
 
     declared_ids = [question.id for section in flow.sections for question in section.questions]

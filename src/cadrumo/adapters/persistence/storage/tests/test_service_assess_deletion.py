@@ -50,6 +50,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.bucket_maintenance.contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
 from cadrumo.application.bucket_maintenance.service import BucketMaintenanceService
+from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
 from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from cadrumo.domain.buckets.errors import BucketDeleteRefusedError
@@ -124,7 +125,7 @@ def _assess() -> BucketDeletionAssessment:
 def _refusal_verdict(error: BucketDeleteRefusedError):
     """Return the typed safety refusal without a hand-authored recovery hint."""
     verdict = error.terminal_precondition_verdict
-    assert verdict is not None
+    assert isinstance(verdict, PreconditionVerdict)
     assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.SAFETY
     assert verdict.action is None

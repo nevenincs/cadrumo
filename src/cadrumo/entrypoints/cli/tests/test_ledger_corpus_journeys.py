@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
@@ -268,7 +270,7 @@ def test_reclassify_retains_classification_event_chain() -> None:
     assert txn.category_id == "asesoria_fiscal"
 
 
-def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
+def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: PinnedAuthorityOperation) -> None:
     """Once a verified modelo revision cites a ledger row, the CLI
     refuses to edit that row (finalized-modelo blocking guard).
     """
@@ -303,7 +305,9 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
         period=period,
         revision_id="2022",
     )
-    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-corpus-journey")
+    filing_instance_evidence = general_m303_filing_evidence(
+        period, reference="test:ledger-corpus-journey", operation=operation
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},

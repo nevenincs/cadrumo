@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import override
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.screen import Screen
@@ -29,6 +29,7 @@ from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
 from .....core.period import Period
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -64,7 +65,6 @@ _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _CASILLA = validated_casilla_id("01")
-_REGISTRY_SNAPSHOT_REF = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
 _EXPECTED = {
     OutputLanguage.ES: (
         "Resumen de declaraciones",
@@ -97,9 +97,17 @@ _EXPECTED = {
 }
 
 
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Keep one indexed authority generation live for each TUI projection test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 def _projection(
-    *, unavailable: DeclarationsWorkspaceZone | None = None, empty: bool = False
+    operation: PinnedAuthorityOperation, *, unavailable: DeclarationsWorkspaceZone | None = None, empty: bool = False
 ) -> DeclarationsWorkspaceProjectionV1:
+    registry_snapshot_ref = operation.snapshot("130", filing_year=2026, period="1T").snapshot_ref
     observations = tuple(
         DeclarationsWorkspaceZoneObservationV1(
             zone=zone,
@@ -115,6 +123,7 @@ def _projection(
     )
     if empty:
         return project_declarations_workspace(
+            operation=operation,
             bucket_id=_BUCKET,
             work_units=WorkUnitCatalogue(),
             calculation_revisions=CalculationRevisionCatalogue(),
@@ -127,7 +136,7 @@ def _projection(
         modelo="130",
         filing_year=2026,
         period=_PERIOD,
-        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        revision_id=registry_snapshot_ref.revision_id,
     )
     filed_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -165,7 +174,7 @@ def _projection(
         modelo="130",
         filing_year=2026,
         period=_PERIOD,
-        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        revision_id=registry_snapshot_ref.revision_id,
         name="private label",
         created_at=_NOW,
         updated_at=_NOW,
@@ -176,7 +185,7 @@ def _projection(
     filed_revision = CalculationRevision(
         calculation_revision_id=filed_revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.PRESENTADO,
         input_values_by_casilla_id={_CASILLA: "10.00"},
         casilla_values={},
@@ -192,7 +201,7 @@ def _projection(
     draft_revision = CalculationRevision(
         calculation_revision_id=draft_revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={_CASILLA: "20.00"},
         casilla_values={},
@@ -204,7 +213,7 @@ def _projection(
     later_draft_revision = CalculationRevision(
         calculation_revision_id=later_draft_revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={_CASILLA: "30.00"},
         casilla_values={},
@@ -247,6 +256,7 @@ def _projection(
         ),
     )
     return project_declarations_workspace(
+        operation=operation,
         bucket_id=_BUCKET,
         work_units=WorkUnitCatalogue.from_work_units((unit,)),
         calculation_revisions=CalculationRevisionCatalogue(
@@ -297,7 +307,9 @@ def _copy(screen: Screen[None]) -> str:
     return "\n".join(values)
 
 
-def test_closed_routes_and_factory_require_exact_catalogue_actions() -> None:
+def test_closed_routes_and_factory_require_exact_catalogue_actions(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     assert tuple(route.destination for route in DECLARATIONS_ROUTES) == (
         "declarations.overview",
         "declarations.revisions",
@@ -306,7 +318,7 @@ def test_closed_routes_and_factory_require_exact_catalogue_actions() -> None:
         "declarations.modelo_workspace",
     )
     factory = declarations_screen_factory(
-        _projection(),
+        _projection(authority_operation),
         work_action=_action("operator.modelo.work.list"),
         revisions_action=_action("operator.modelo.work.revisions"),
         filing_action=_action("operator.modelo.filing_record.list"),
@@ -314,7 +326,7 @@ def test_closed_routes_and_factory_require_exact_catalogue_actions() -> None:
     assert isinstance(factory(TuiScreenContextV1(destination="workbench.declarations")), DeclarationsOverviewScreen)
     with pytest.raises(ValueError, match="another application door"):
         declarations_screen_factory(
-            _projection(),
+            _projection(authority_operation),
             work_action=_action("operator.modelo.work.revisions"),
             revisions_action=_action("operator.modelo.work.revisions"),
             filing_action=_action("operator.modelo.filing_record.list"),
@@ -326,8 +338,10 @@ def test_closed_routes_and_factory_require_exact_catalogue_actions() -> None:
     "screen_type",
     (DeclarationsOverviewScreen, DeclarationsRevisionsScreen, DeclarationsFilingHistoryScreen),
 )
-async def test_each_screen_has_four_targets_one_outer_scroll_and_no_overflow(screen_type: type) -> None:
-    screen = screen_type(_controller(_projection()))
+async def test_each_screen_has_four_targets_one_outer_scroll_and_no_overflow(
+    screen_type: type, authority_operation: PinnedAuthorityOperation
+) -> None:
+    screen = screen_type(_controller(_projection(authority_operation)))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -340,8 +354,10 @@ async def test_each_screen_has_four_targets_one_outer_scroll_and_no_overflow(scr
 
 
 @pytest.mark.asyncio
-async def test_semantic_selection_uses_exact_projected_identity_and_typed_callbacks() -> None:
-    projection = _projection()
+async def test_semantic_selection_uses_exact_projected_identity_and_typed_callbacks(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection = _projection(authority_operation)
     selected: list[object] = []
     screen = DeclarationsRevisionsScreen(_controller(projection, revision_handoff=selected.append))
     app = ScreenHostApp[None](screen)
@@ -362,8 +378,10 @@ async def test_semantic_selection_uses_exact_projected_identity_and_typed_callba
 
 
 @pytest.mark.asyncio
-async def test_focus_restores_by_calculation_revision_identity_not_registry_revision_or_position() -> None:
-    projection = _projection()
+async def test_focus_restores_by_calculation_revision_identity_not_registry_revision_or_position(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection = _projection(authority_operation)
     revision_id = projection.calculation_revisions[-1].calculation_revision_id
     context = TuiScreenContextV1(
         destination="workbench.declarations",
@@ -383,16 +401,20 @@ async def test_focus_restores_by_calculation_revision_identity_not_registry_revi
 
 
 @pytest.mark.asyncio
-async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refuses() -> None:
-    controller = _controller(_projection(unavailable=DeclarationsWorkspaceZone.CALCULATION_REVISIONS))
+async def test_unavailable_is_refusal_empty_is_measured_and_missing_handoff_refuses(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    controller = _controller(
+        _projection(authority_operation, unavailable=DeclarationsWorkspaceZone.CALCULATION_REVISIONS)
+    )
     unavailable = resolve_declarations_screen(controller, controller.target("declarations.revisions"))
     assert isinstance(unavailable, DeclarationsUnavailableScreen)
-    empty = DeclarationsOverviewScreen(_controller(_projection(empty=True)))
+    empty = DeclarationsOverviewScreen(_controller(_projection(authority_operation, empty=True)))
     app = ScreenHostApp[None](empty)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         assert declarations_copy("tui.declarations.empty") in _copy(empty)
-    screen = DeclarationsOverviewScreen(_controller(_projection()))
+    screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation)))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -410,8 +432,10 @@ class _ModeloChild(Screen[None]):
 
 
 @pytest.mark.asyncio
-async def test_modelo_workspace_route_opens_exact_selected_factory_child_and_restores_focus() -> None:
-    projection = _projection()
+async def test_modelo_workspace_route_opens_exact_selected_factory_child_and_restores_focus(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection = _projection(authority_operation)
     calls: list[object] = []
     child = _ModeloChild()
 
@@ -440,8 +464,10 @@ async def test_modelo_workspace_route_opens_exact_selected_factory_child_and_res
 
 
 @pytest.mark.asyncio
-async def test_history_renders_filing_and_sanitized_lifecycle_in_chronological_semantic_rows() -> None:
-    projection = _projection()
+async def test_history_renders_filing_and_sanitized_lifecycle_in_chronological_semantic_rows(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection = _projection(authority_operation)
     screen = DeclarationsFilingHistoryScreen(_controller(projection))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(100, 30)) as pilot:
@@ -469,8 +495,10 @@ async def test_history_renders_filing_and_sanitized_lifecycle_in_chronological_s
 
 
 @pytest.mark.asyncio
-async def test_revision_and_filing_rows_render_exact_chronology_and_independent_axes() -> None:
-    projection = _projection()
+async def test_revision_and_filing_rows_render_exact_chronology_and_independent_axes(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    projection = _projection(authority_operation)
     selected: list[object] = []
     revisions = DeclarationsRevisionsScreen(_controller(projection, revision_handoff=selected.append))
     revision_app = ScreenHostApp[None](revisions)
@@ -516,14 +544,16 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", tuple(OutputLanguage))
-async def test_real_locales_change_copy_without_changing_semantic_rows(locale: OutputLanguage) -> None:
+async def test_real_locales_change_copy_without_changing_semantic_rows(
+    locale: OutputLanguage, authority_operation: PinnedAuthorityOperation
+) -> None:
     from .....core.config import override_settings
 
     with override_settings(cadrumo_output_language=locale.value):
         screens = (
-            DeclarationsOverviewScreen(_controller(_projection())),
-            DeclarationsRevisionsScreen(_controller(_projection())),
-            DeclarationsFilingHistoryScreen(_controller(_projection())),
+            DeclarationsOverviewScreen(_controller(_projection(authority_operation))),
+            DeclarationsRevisionsScreen(_controller(_projection(authority_operation))),
+            DeclarationsFilingHistoryScreen(_controller(_projection(authority_operation))),
         )
         filing_copy = ""
         filing_keys: tuple[object, ...] = ()
@@ -560,9 +590,11 @@ class _Root(App[None]):
 
 
 @pytest.mark.asyncio
-async def test_escape_dismisses_only_child_and_returns_to_generic_root() -> None:
+async def test_escape_dismisses_only_child_and_returns_to_generic_root(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     root = _Root()
-    screen = DeclarationsOverviewScreen(_controller(_projection()))
+    screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation)))
     async with root.run_test(size=(80, 24)) as pilot:
         await root.push_screen(screen)
         await pilot.pause()

@@ -69,7 +69,7 @@ from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
@@ -223,7 +223,9 @@ def _stage_profile_bucket(root: Path, bucket_id: str) -> None:
     provision_bucket_directory(root, bucket_id)
 
 
-def test_overview_status_reports_modelo_work_units(tmp_path: Path, state_projection_dependencies) -> None:
+def test_overview_status_reports_modelo_work_units(
+    tmp_path: Path, state_projection_dependencies, *, operation: PinnedAuthorityOperation
+) -> None:
     """The concrete bug this regression closes: with ``modelo work`` work units
     present, ``overview status`` must report them.
 
@@ -241,8 +243,9 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path, state_project
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T", operation=operation),
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+        operation=operation,
     )
 
     with bundled_indexed_authority().operation() as operation:
@@ -258,7 +261,9 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path, state_project
     assert report.drafts == 0, "the ModeloDraft store is separate and stays at zero"
 
 
-def test_overview_status_distinguishes_drafts_from_work_units(state_projection_dependencies) -> None:
+def test_overview_status_distinguishes_drafts_from_work_units(
+    state_projection_dependencies, *, operation: PinnedAuthorityOperation
+) -> None:
     """``drafts`` and ``work_units`` are distinct counters; neither is
     silently folded into the other."""
 
@@ -270,8 +275,11 @@ def test_overview_status_distinguishes_drafts_from_work_units(state_projection_d
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
-            revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            revision_id=active_registry_revision_id(
+                modelo="303", filing_year=2026, period=period_token, operation=operation
+            ),
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+            operation=operation,
         )
 
     with bundled_indexed_authority().operation() as operation:
@@ -289,7 +297,9 @@ def test_overview_status_distinguishes_drafts_from_work_units(state_projection_d
     assert projection.workspace.invoices == 0
 
 
-def test_work_units_counter_excludes_discarded_units(state_projection_dependencies) -> None:
+def test_work_units_counter_excludes_discarded_units(
+    state_projection_dependencies, *, operation: PinnedAuthorityOperation
+) -> None:
     """A discarded work unit must not inflate the active ``work_units``
     counter; it is carried separately in ``discarded_work_units`` so the
     operator is never shown a misleading total."""
@@ -302,16 +312,20 @@ def test_work_units_counter_excludes_discarded_units(state_projection_dependenci
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
-            revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            revision_id=active_registry_revision_id(
+                modelo="303", filing_year=2026, period=period_token, operation=operation
+            ),
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+            operation=operation,
         )
     discarded = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "4T"),
-        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="4T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="4T", operation=operation),
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+        operation=operation,
     )
     discard_work_unit(
         discarded.work_unit_id,
@@ -344,7 +358,9 @@ def test_work_units_counter_excludes_discarded_units(state_projection_dependenci
     assert report.discarded_work_units == 1
 
 
-def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None:
+def test_surfaces_agree_on_one_projection(
+    state_projection_dependencies, *, operation: PinnedAuthorityOperation
+) -> None:
     """Every operator-facing surface draws from one projection, so they
     cannot disagree.
 
@@ -364,8 +380,11 @@ def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_token),
-            revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
+            revision_id=active_registry_revision_id(
+                modelo="303", filing_year=2026, period=period_token, operation=operation
+            ),
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+            operation=operation,
         )
 
     with bundled_indexed_authority().operation() as operation:
@@ -376,7 +395,9 @@ def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
                     modelo="303",
-                    revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                    revision_id=active_registry_revision_id(
+                        modelo="303", filing_year=2026, period="1T", operation=operation
+                    ),
                     filing_year=2026,
                     period=Period.from_year_and_code(2026, "1T"),
                 ),
@@ -467,7 +488,9 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
                     modelo="303",
-                    revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                    revision_id=active_registry_revision_id(
+                        modelo="303", filing_year=2026, period="1T", operation=operation
+                    ),
                     filing_year=2026,
                     period=Period.from_year_and_code(2026, "1T"),
                 ),
@@ -498,7 +521,9 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projecti
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
                     modelo="303",
-                    revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+                    revision_id=active_registry_revision_id(
+                        modelo="303", filing_year=2026, period="1T", operation=operation
+                    ),
                     filing_year=2026,
                     period=Period.from_year_and_code(2026, "1T"),
                 ),
@@ -548,7 +573,9 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_pr
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
                     modelo="349",
-                    revision_id=active_registry_revision_id(modelo="349", filing_year=2026, period="1T"),
+                    revision_id=active_registry_revision_id(
+                        modelo="349", filing_year=2026, period="1T", operation=operation
+                    ),
                     filing_year=2026,
                     period=Period.from_year_and_code(2026, "1T"),
                 ),
@@ -628,7 +655,9 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
                     modelo="303",
-                    revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="2T"),
+                    revision_id=active_registry_revision_id(
+                        modelo="303", filing_year=2026, period="2T", operation=operation
+                    ),
                     filing_year=2026,
                     period=Period.from_year_and_code(2026, "2T"),
                 ),
@@ -658,7 +687,9 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
                     modelo="309",
-                    revision_id=active_registry_revision_id(modelo="309", filing_year=2026, period="AD-HOC"),
+                    revision_id=active_registry_revision_id(
+                        modelo="309", filing_year=2026, period="AD-HOC", operation=operation
+                    ),
                     filing_year=2026,
                     period=Period.from_year_and_code(2026, "AD-HOC"),
                 ),
@@ -714,7 +745,7 @@ def test_modelo_readiness_without_period_uses_annual_period(state_projection_dep
     assert readiness.period == Period.from_year_and_code(2026, "0A")
 
 
-def test_projection_is_pure_read(state_projection_dependencies) -> None:
+def test_projection_is_pure_read(state_projection_dependencies, *, operation: PinnedAuthorityOperation) -> None:
     """Building the projection mutates no store: two consecutive builds
     over an unchanged workspace return equal projections."""
 
@@ -725,8 +756,9 @@ def test_projection_is_pure_read(state_projection_dependencies) -> None:
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T", operation=operation),
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+        operation=operation,
     )
 
     with bundled_indexed_authority().operation() as operation:

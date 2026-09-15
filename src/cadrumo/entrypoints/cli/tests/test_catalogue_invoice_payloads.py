@@ -8,6 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+
 from ....application.invoices.catalogue_creation import CatalogueInvoiceCreateResult, build_catalogue_invoice
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoiceRemoveResult, CatalogueInvoiceUpdateResult
 from ....domain.iva.classification import InvoiceKind
@@ -48,6 +50,7 @@ def _canonical_invoice_payload() -> dict[str, object]:
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
+        rate_provider=default_ecb_rate_provider(),
     )
     return _catalogue_invoice_payload(invoice)
 

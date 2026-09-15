@@ -24,7 +24,10 @@ from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port, build_verification_repository_bundle
 
 from .....adapters.persistence.operations.journal import OperationJournalRepository
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -158,11 +161,18 @@ def _runtime(
         auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)
         auth_registrations = build_auth_operation_registrations(auth_definitions)
         censal_definition = build_censal_operation_definition(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            browser_session_factory=default_browser_session_factory,
             acquire=acquire_censo,
             before_irreversible_section=before_irreversible_section,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            censal_fetch_port=build_censal_fetch_port(),
         )
-        verify_definition = build_modelo_work_verify_definition(operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        verify_definition = build_modelo_work_verify_definition(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            verification_repository_bundle_factory=build_verification_repository_bundle,
+        )
         registry = OperationRegistry(
             definitions=(*auth_definitions, censal_definition, verify_definition),
             public_registrations=tuple(
@@ -317,7 +327,7 @@ async def _pause_until_rendered(pilot: Pilot[None], host: _ModalHost) -> Operati
     for _ in range(_TERMINAL_POLL_BUDGET):
         await pilot.pause()
         screen = host.screen
-        if isinstance(screen, OperationModal) and screen.is_mounted:
+        if isinstance(screen, OperationModal):
             status = screen.query_one("#operation-modal-status")
             if status.is_mounted:
                 return screen

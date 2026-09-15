@@ -95,7 +95,7 @@ _NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package_recipient_encryption")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package_recipient_encryption")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-RECIPIENT-ENCRYPTION-TEST"
-_CRYPTO_CAPABILITY = RecipientEncryptionAdapter(repository=object())
+_CRYPTO_CAPABILITY = RecipientEncryptionAdapter()
 
 
 def _work_unit(*, bucket_id: str) -> WorkUnit:

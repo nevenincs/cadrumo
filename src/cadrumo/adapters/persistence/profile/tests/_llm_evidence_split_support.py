@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -30,7 +31,9 @@ _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "c8bef9e4-b162-4bea-b33d-332c607f0ed1"  # was 'bucket-split'
 
 
-def _split_subprocess_proposer(*, response: LLMSplitResponse, model: str = "test-model") -> SubprocessLLMClassifier:
+def _split_subprocess_proposer(
+    *, response: LLMSplitResponse, model: str = "test-model", operation: PinnedAuthorityOperation
+) -> SubprocessLLMClassifier:
     response_json = response.model_dump_json()
     script = f"""
 import sys
@@ -42,7 +45,7 @@ print({response_json!r})
         name="claude",
         command=(sys.executable, "-c", script),
         model=model,
-        spec=prompt_spec_with_saturation_fields(year=2025),
+        spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
     )
 
 

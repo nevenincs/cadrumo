@@ -35,6 +35,7 @@ from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -211,7 +212,9 @@ def test_gestor_mode_refuses_even_a_minted_token(tmp_path: Path) -> None:
     assert bodies.qsize() == 0
 
 
-def test_the_unpinned_text_reader_cannot_reach_around_the_gate(tmp_path: Path) -> None:
+def test_the_unpinned_text_reader_cannot_reach_around_the_gate(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A reader constructed at a cloud provider refuses, pin or no pin.
 
     ``extract_invoice_fields_from_text`` is exported with no provider pin, and
@@ -226,6 +229,7 @@ def test_the_unpinned_text_reader_cannot_reach_around_the_gate(tmp_path: Path) -
             model="gpt-4.1",
             settings=settings,
             client=_client(settings),
+            operation=operation,
         )
         with pytest.raises(LLMConsentError):
             extractor.extract(transcription=_transcription())
@@ -297,7 +301,9 @@ def test_an_unmarked_request_is_not_gated(tmp_path: Path) -> None:
     assert bodies.qsize() == 1
 
 
-def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(tmp_path: Path) -> None:
+def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """POSITIVE CONTROL for the reach-around case, through the same class.
 
     Its sibling refusal builds a ``TextInvoiceFieldExtractor`` at a cloud
@@ -314,6 +320,7 @@ def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(tmp_pa
             model="gpt-4.1",
             settings=settings,
             client=_client(settings),
+            operation=operation,
             public_corpus=True,
         )
         extractor.extract(transcription=_transcription())

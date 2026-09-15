@@ -102,6 +102,7 @@ from .state_projection_support import (
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.filing_record import ModeloRecord
     from ...domain.modelos.work_unit import WorkUnit
@@ -221,7 +222,7 @@ def run_modelo_work_amend_wizard(
             ),
         ) from None
     try:
-        casilla_rows = _baseline_casilla_rows(unit)
+        casilla_rows = _baseline_casilla_rows(unit, operation=authority_operation(ctx))
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
     baseline_revision: CalculationRevision = get_calculation_revision(
@@ -298,10 +299,13 @@ def run_modelo_work_amend_wizard(
     )
 
 
-def _baseline_casilla_rows(unit: WorkUnit) -> tuple[ModeloCasillaRow, ...]:
+def _baseline_casilla_rows(unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> tuple[ModeloCasillaRow, ...]:
     """Return every casilla the registry declares for the unit's revision, for display."""
     report = registry_casillas_for_registry_scope(
-        str(unit.modelo), filing_year=unit.filing_year, period=unit.period.registry_token
+        str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+        operation=operation,
     )
     return tuple(report.rows)
 

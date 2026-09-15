@@ -71,9 +71,22 @@ def _ports(profile: TestRuntimeProfile) -> RecipientFingerprintRegistryPorts:
     )
 
 
-def _add(ports: RecipientFingerprintRegistryPorts, **values: object) -> RecipientFingerprintRegister:
+def _add(
+    ports: RecipientFingerprintRegistryPorts,
+    *,
+    recipient_id: str,
+    public_key_hex: str,
+    label: str = "",
+    added_at: datetime | None = None,
+) -> RecipientFingerprintRegister:
     """Invoke application registration policy through the composed capability."""
-    return add_recipient_fingerprint(ports=ports, **values)
+    return add_recipient_fingerprint(
+        ports=ports,
+        recipient_id=recipient_id,
+        public_key_hex=public_key_hex,
+        label=label,
+        added_at=added_at,
+    )
 
 
 def _get(ports: RecipientFingerprintRegistryPorts, recipient_id: str) -> RecipientFingerprintRecord:

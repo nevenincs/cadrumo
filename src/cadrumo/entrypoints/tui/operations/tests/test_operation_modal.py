@@ -23,10 +23,12 @@ from textual.app import App
 from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 
 from .....adapters.persistence.operations.journal import OperationJournalRepository
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -37,6 +39,7 @@ from .....application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,
 )
+from .....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from .....application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
@@ -90,6 +93,7 @@ from ..modal import OperationModal, OperationModalDetachedOutcomeV1, OperationMo
 from ..projection import OperationModalViewModelV1, build_operation_modal_view_model
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -143,9 +147,12 @@ def _runtime(
         auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)
         auth_registrations = build_auth_operation_registrations(auth_definitions)
         censal_definition = build_censal_operation_definition(
+            certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+            browser_session_factory=default_browser_session_factory,
             acquire=acquire_censo,
             before_irreversible_section=before_irreversible_section,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            censal_fetch_port=build_censal_fetch_port(),
         )
         registry = OperationRegistry(
             definitions=(*auth_definitions, censal_definition),
@@ -180,7 +187,11 @@ def _runtime(
 
 
 async def _submit_censal_review(services: OperationComposedServices, profile_id: UUID) -> OperationSubmission:
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    _, profile_decode_context = _profile_contexts_for_test()
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
     payload = build_censal_operation_request(record)
     return await services.submission.submit(
         OperationRequest(
@@ -508,12 +519,13 @@ async def _timeline(controller: OperationController) -> tuple[list[_RenderedSamp
     watching one that has already finished.
     """
     samples: list[_RenderedSample] = []
+    modal = OperationModal(controller)
 
     class _Host(App[None]):
         outcome: OperationModalSettledOutcomeV1 | OperationModalDetachedOutcomeV1 | None = None
 
         async def _present(self) -> None:
-            self.outcome = await self.push_screen_wait(OperationModal(controller))
+            self.outcome = await self.push_screen_wait(modal)
             self.exit()
 
         def on_mount(self) -> None:
@@ -521,12 +533,11 @@ async def _timeline(controller: OperationController) -> tuple[list[_RenderedSamp
 
     host = _Host()
     applied = False
-    modal: OperationModal | None = None
 
     def _record() -> None:
         # Sample the modal itself rather than whatever screen is current, so
         # a frame drawn just before the screen is swapped is still read.
-        if modal is None:
+        if not modal.is_mounted:
             return
         sample = _sample(modal)
         if sample is not None and (not samples or sample != samples[-1]):
@@ -534,11 +545,8 @@ async def _timeline(controller: OperationController) -> tuple[list[_RenderedSamp
 
     async with host.run_test(size=(120, 40)) as pilot:
         for _ in range(600):
-            screen = host.screen
-            if isinstance(screen, OperationModal) and screen.is_mounted:
-                modal = screen
             _record()
-            if modal is not None:
+            if modal.is_mounted:
                 apply_control = modal.query("#btn-operation-apply")
                 if not applied and apply_control and not apply_control.only_one(Button).disabled:
                     applied = True
@@ -592,20 +600,20 @@ def test_the_modal_renders_review_content_and_cancel_availability_while_waiting(
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
             await controller.start()
+            modal = OperationModal(controller)
 
             class _Host(App[None]):
                 def on_mount(self) -> None:
-                    self.run_worker(self.push_screen_wait(OperationModal(controller)))
+                    self.run_worker(self.push_screen_wait(modal))
 
             host = _Host()
             async with host.run_test(size=(120, 40)) as pilot:
                 waiting_sample = None
                 for _ in range(400):
                     await pilot.pause()
-                    screen = host.screen
-                    if not isinstance(screen, OperationModal) or not screen.is_mounted:
+                    if not modal.is_mounted:
                         continue
-                    sample = _sample(screen)
+                    sample = _sample(modal)
                     if sample is not None and sample.review:
                         waiting_sample = sample
                         break
@@ -731,16 +739,13 @@ def test_the_terminal_receipt_reaches_the_receipt_widget(tmp_path: Path) -> None
             watched = await _submit_censal_review(services, profile_id)
             watching = OperationController(services=services, submission=watched, actor_ref=_ACTOR)
 
-            host = ScreenHostApp(OperationModal(watching))
+            modal = OperationModal(watching)
+            host = ScreenHostApp(modal)
             async with host.run_test(size=(120, 40)) as pilot:
-                modal = None
                 for _ in range(200):
                     await pilot.pause()
-                    screen = host.screen
-                    if isinstance(screen, OperationModal) and screen.query("#operation-modal-receipt"):
-                        modal = screen
+                    if modal.is_mounted and modal.query("#operation-modal-receipt"):
                         break
-                assert modal is not None
                 modal._refresh_detail_rows(settled)
                 receipt = str(modal.query_one("#operation-modal-receipt", Static).content)
                 assert settled.receipt_ref in receipt

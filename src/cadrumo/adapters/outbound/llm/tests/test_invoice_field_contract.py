@@ -28,7 +28,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.iva.schema import IvaCategory, require_eu_member_state
 
 from .....core.field_origin import FieldOrigin
@@ -233,7 +238,9 @@ class TestRetencionIsAskedForAndNotMerelyEnumerated:
         assert field_name in ExtractedInvoiceFields.model_fields
         assert field_name in ExtractedFieldAnchors.model_fields
 
-    def test_a_withheld_invoice_survives_grounding_with_its_anchor(self) -> None:
+    def test_a_withheld_invoice_survives_grounding_with_its_anchor(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """End to end through the real parser and grounder: no model, no transport."""
         response = parse_invoice_extraction_response(
             json.dumps(
@@ -246,7 +253,7 @@ class TestRetencionIsAskedForAndNotMerelyEnumerated:
             ),
         )
 
-        draft = ground_extracted_fields(response, raw_text_length=400, origin=FieldOrigin.VISION)
+        draft = ground_extracted_fields(response, raw_text_length=400, origin=FieldOrigin.VISION, operation=operation)
 
         assert draft.retencion_rate == Decimal("15")
         assert draft.retencion_amount == Decimal("150.00")
@@ -307,7 +314,7 @@ class TestContractParityAcrossBothDerivations:
         assert text_forms | numeric_forms == set(InvoiceFieldForm)
         assert declared_forms <= set(InvoiceFieldForm)
 
-    def test_the_grounder_grounds_exactly_the_declared_fields(self) -> None:
+    def test_the_grounder_grounds_exactly_the_declared_fields(self, *, operation: PinnedAuthorityOperation) -> None:
         """Every declared field reaches the draft; a field it cannot is caught here."""
         populated = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(
@@ -333,7 +340,9 @@ class TestContractParityAcrossBothDerivations:
             anchors=ExtractedFieldAnchors(),
         )
 
-        draft = ground_extracted_fields(populated, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER)
+        draft = ground_extracted_fields(
+            populated, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation
+        )
 
         for contract in INVOICE_FIELD_CONTRACTS:
             assert getattr(draft, contract.field_name) is not None, contract.field_name
@@ -349,45 +358,58 @@ class TestThePrintedPercentSignNoLongerLosesTheRate:
     """
 
     @pytest.mark.parametrize("printed", ["21%", "21 %", "21percent", "21 pct", " 21% "])
-    def test_a_rate_carrying_its_printed_unit_still_grounds(self, printed: str) -> None:
+    def test_a_rate_carrying_its_printed_unit_still_grounds(
+        self, printed: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(iva_rate=printed), anchors=ExtractedFieldAnchors()
         )
 
-        assert ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER).iva_rate == Decimal(
-            "21"
-        )
+        assert ground_extracted_fields(
+            fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation
+        ).iva_rate == Decimal("21")
 
-    def test_the_anchor_keeps_the_printed_form_while_the_value_is_bare(self) -> None:
+    def test_the_anchor_keeps_the_printed_form_while_the_value_is_bare(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Anchor and value become explicitly distinct: the anchor keeps the printed text."""
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(iva_rate="21%"), anchors=ExtractedFieldAnchors()
         )
 
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation)
 
         assert fields.fields.iva_rate == "21%"
         assert draft.iva_rate == Decimal("21")
 
-    def test_a_percent_sign_on_a_monetary_amount_is_still_a_misread(self) -> None:
+    def test_a_percent_sign_on_a_monetary_amount_is_still_a_misread(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The tolerance is scoped to the rate form; an amount is not a percentage."""
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(taxable_base="100,00%", grand_total="121%"), anchors=ExtractedFieldAnchors()
         )
 
-        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation)
 
         assert draft.taxable_base is None
         assert draft.grand_total is None
 
     @pytest.mark.parametrize("printed", ["21%%", "%21", "21% de IVA", "twenty-one percent", "%"])
-    def test_a_rate_that_is_not_merely_unit_suffixed_still_drops(self, printed: str) -> None:
+    def test_a_rate_that_is_not_merely_unit_suffixed_still_drops(
+        self, printed: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Exactly one trailing unit is stripped; anything else fails the authority."""
         fields = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(iva_rate=printed), anchors=ExtractedFieldAnchors()
         )
 
-        assert ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER).iva_rate is None
+        assert (
+            ground_extracted_fields(
+                fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER, operation=operation
+            ).iva_rate
+            is None
+        )
 
 
 class TestTheSafetyPropertiesSurviveCompilation:
@@ -435,7 +457,7 @@ class TestAuthoredResponsesStillDropFabricatedValues:
     path -- with an authored response string standing in for the transport.
     """
 
-    def test_a_wholly_malformed_response_drops_every_field(self) -> None:
+    def test_a_wholly_malformed_response_drops_every_field(self, *, operation: PinnedAuthorityOperation) -> None:
         response = json.dumps(
             {
                 # Checksum-invalid: the control digit does not compute, and the
@@ -456,18 +478,22 @@ class TestAuthoredResponsesStillDropFabricatedValues:
             parse_invoice_extraction_response(response),
             raw_text_length=10,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         for contract in INVOICE_FIELD_CONTRACTS:
             assert getattr(draft, contract.field_name) is None, contract.field_name
 
-    def test_an_ambiguous_thousands_reading_is_dropped_rather_than_chosen(self) -> None:
+    def test_an_ambiguous_thousands_reading_is_dropped_rather_than_chosen(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         response = json.dumps({"taxable_base": "1.234", "grand_total": "121,00"})
 
         draft = ground_extracted_fields(
             parse_invoice_extraction_response(response),
             raw_text_length=10,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert draft.taxable_base is None

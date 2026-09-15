@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.inbound.financial.ledger_import import build_ledger_import_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_import import import_ledger_transactions
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -35,6 +36,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     first_import = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=(first_parsed, second_parsed),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
@@ -44,6 +46,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     duplicate_import = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=(first_parsed,),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
@@ -92,6 +95,7 @@ def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
     first = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=(twin_a, twin_b),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
@@ -104,6 +108,7 @@ def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
     second = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=(twin_a, twin_b),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
@@ -127,6 +132,7 @@ def test_import_skips_true_transaction_id_collision_within_batch(
     result = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=(row, row),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",

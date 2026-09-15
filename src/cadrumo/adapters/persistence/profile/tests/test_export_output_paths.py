@@ -74,7 +74,9 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     tmp_path: Path,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision()
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+            operation=_authority_operation_for_test,
+        )
 
         output_path = tmp_path / "modelo-303-wallet-only.txt"
         result = export_modelo_revision(
@@ -163,6 +165,7 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
             positive_result=True,
+            operation=_authority_operation_for_test,
         )
         charge_iban = "ES7921000813610123456789"
         output_path = tmp_path / "modelo-303-direct-debit.txt"
@@ -266,6 +269,7 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
         taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
             negative_result=True,
             casilla_111=Decimal("0"),
+            operation=_authority_operation_for_test,
         )
         assert verified.casilla_values["111"] == Decimal("0")
         rectificativa = _rectificativa_with_nota_three(verified)
@@ -320,6 +324,7 @@ def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_bef
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
             negative_result=True,
             casilla_111=Decimal("0"),
+            operation=_authority_operation_for_test,
         )
         rectificativa = _rectificativa_with_nota_three(verified)
         calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
@@ -356,6 +361,7 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
         taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
             negative_result=True,
             casilla_111=Decimal("0"),
+            operation=_authority_operation_for_test,
         )
         rectificativa = _rectificativa_with_nota_three(verified)
         calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
@@ -388,10 +394,12 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
     tmp_path: Path,
 ) -> None:
     """Actual export and filing event ledgers retain proof coordinates, never accounts."""
-    taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
-        negative_result=True,
-        casilla_111=Decimal("0"),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+            negative_result=True,
+            casilla_111=Decimal("0"),
+            operation=_authority_operation_for_test,
+        )
     work_unit = work_repo.load().get(verified.work_unit_id)
     assert work_unit is not None
     filing_repository = ModeloRecordCatalogueRepository()
@@ -468,23 +476,25 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
     calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
 
     output_path = tmp_path / "modelo-303-prior-domiciliation.txt"
-    result = export_modelo_revision(
-        ModeloExportCommand(
-            calculation_revision_id=rectificativa.calculation_revision_id,
-            output_path=output_path,
-            actor="operator",
-            prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
-        ),
-        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
-        export_ports=modelo_export_ports_for_test(
-            taxpayer_tax_id=taxpayer_nif,
-            work_unit=work_repo,
-            calculation=calc_repo,
-            filing=filing_repository,
-            bucket_event=event_repo,
-        ),
-        clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=rectificativa.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
+            ),
+            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
+            export_ports=modelo_export_ports_for_test(
+                taxpayer_tax_id=taxpayer_nif,
+                work_unit=work_repo,
+                calculation=calc_repo,
+                filing=filing_repository,
+                bucket_event=event_repo,
+            ),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            operation=_authority_operation_for_test,
+        )
     export_event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
     expected_event_proof = {
         "prior_domiciliation_election": PriorDomiciliationElection.CANCEL_OR_MODIFY.value,
@@ -498,25 +508,27 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
     assert "<T303DID00>" not in output_path.read_text(encoding="iso-8859-1")
     assert "iban" not in export_event.model_dump_json().casefold()
 
-    filing = persist_filed_revision(
-        target=rectificativa,
-        work_unit=work_unit,
-        work_units=work_repo.load(),
-        notes=None,
-        actor="operator",
-        now=datetime(2026, 5, 21, 12, 4, tzinfo=UTC),
-        calculation_repository=calc_repo,
-        filing_repository=filing_repository,
-        work_unit_repository=work_repo,
-        bucket_event_repository=event_repo,
-        result_disposition=result.resolved_result_disposition,
-        prior_domiciliation_election=result.prior_domiciliation_election,
-        taxpayer_nif=taxpayer_nif,
-        calculation_observation_repository=CalculationObservationRepository(),
-        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
-        participation_index_repository=TransactionParticipationIndexRepository(bucket_id=bucket_id),
-        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        filing = persist_filed_revision(
+            target=rectificativa,
+            work_unit=work_unit,
+            work_units=work_repo.load(),
+            notes=None,
+            actor="operator",
+            now=datetime(2026, 5, 21, 12, 4, tzinfo=UTC),
+            calculation_repository=calc_repo,
+            filing_repository=filing_repository,
+            work_unit_repository=work_repo,
+            bucket_event_repository=event_repo,
+            result_disposition=result.resolved_result_disposition,
+            prior_domiciliation_election=result.prior_domiciliation_election,
+            taxpayer_nif=taxpayer_nif,
+            calculation_observation_repository=CalculationObservationRepository(),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            participation_index_repository=TransactionParticipationIndexRepository(bucket_id=bucket_id),
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id),
+            operation=_authority_operation_for_test,
+        )
     filed_event = event_repo.load().for_bucket(
         bucket_id,
         event_types=(BucketEventType.MODELO_FILED,),
@@ -535,6 +547,7 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         _taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
             positive_result=True,
+            operation=_authority_operation_for_test,
         )
         output_path = tmp_path / "missing-charge-account.txt"
 
@@ -568,6 +581,7 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         _taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
             positive_result=True,
+            operation=_authority_operation_for_test,
         )
         output_path = tmp_path / "cuenta-corriente.txt"
 
@@ -604,6 +618,7 @@ def test_public_ingreso_export_omits_did_page(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
             positive_result=True,
+            operation=_authority_operation_for_test,
         )
         output_path = tmp_path / "modelo-303-ingreso.txt"
 
@@ -644,7 +659,9 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
     typed refusal and that no ``.tmp`` orphan remains on disk.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision()
+        taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+            operation=_authority_operation_for_test,
+        )
 
         existing_dir = tmp_path / "already-a-directory"
         existing_dir.mkdir()
@@ -681,7 +698,9 @@ def test_export_refuses_empty_output_path(
 ) -> None:
     """An empty / current-directory ``--output`` is refused before any write."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision()
+        taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+            operation=_authority_operation_for_test,
+        )
 
         with pytest.raises(ModeloExportOutputPathError):
             export_modelo_revision(
@@ -709,7 +728,9 @@ def test_export_success_path_is_idempotent_overwrite(
 ) -> None:
     """A valid file destination still exports, and a second export overwrites it cleanly."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision()
+        taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+            operation=_authority_operation_for_test,
+        )
         output_path = tmp_path / "modelo-303.txt"
         profile = TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL"))
 

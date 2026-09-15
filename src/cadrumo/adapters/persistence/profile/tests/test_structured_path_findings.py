@@ -39,11 +39,18 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
+from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from cadrumo.core.config import Settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, secure_objects
 from ._evidence_test_support import runtime_profile as runtime_profile
+from ._invoice_confirmation_test_support import (
+    InvoiceAuthorityFixture,
+    invoice_draft_extraction_kwargs,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -69,6 +76,12 @@ _BROKEN_TOTAL = "<TotalTaxOutputs>999.00</TotalTaxOutputs>"
 _LEGAL_LITERALS = "<LegalLiterals><LegalReference>inversión del sujeto pasivo</LegalReference></LegalLiterals>"
 
 
+def _registry_legends(operation):
+    """Resolve the registry vocabulary on the test's pinned authority lease."""
+    period = default_invoice_extraction_period()
+    return resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
+
 def _stored(
     xml: str,
     *,
@@ -86,11 +99,13 @@ def _corpus_xml() -> str:
     return (_CORPUS / _STRUCTURED_INVOICE).read_text(encoding="utf-8")
 
 
-def _draft(evidence_id: str, settings: Settings):
+def _draft(evidence_id: str, settings: Settings, *, operation: PinnedAuthorityOperation):
+    authority = InvoiceAuthorityFixture(operation=operation, legends=_registry_legends(operation))
     return extract_invoice_draft_from_evidence(
         bucket_id=_BUCKET_ID,
         evidence_id=evidence_id,
         settings=settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -98,6 +113,8 @@ def test_the_coherent_structured_document_raises_nothing(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The positive control, and it is load-bearing.
 
@@ -114,7 +131,7 @@ def test_the_coherent_structured_document_raises_nothing(
         name="coherent.xml",
     )
 
-    draft = _draft(evidence_id, isolated_settings)
+    draft = _draft(evidence_id, isolated_settings, operation=operation)
 
     assert draft.discrepancies == ()
     # The read itself still worked: an empty finding set from a failed read would
@@ -126,6 +143,8 @@ def test_a_structured_document_whose_arithmetic_does_not_close_is_caught(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The defect, stated as the case that used to confirm clean."""
     xml = _corpus_xml()
@@ -139,7 +158,7 @@ def test_a_structured_document_whose_arithmetic_does_not_close_is_caught(
         name="broken-total.xml",
     )
 
-    draft = _draft(evidence_id, isolated_settings)
+    draft = _draft(evidence_id, isolated_settings, operation=operation)
 
     assert DraftDiscrepancyKind.ARITHMETIC_CLOSURE in {finding.kind for finding in draft.discrepancies}
 
@@ -148,6 +167,8 @@ def test_a_structured_document_contradicting_its_own_regime_is_caught(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The regime check reaches the exact reader too.
 
@@ -167,7 +188,7 @@ def test_a_structured_document_contradicting_its_own_regime_is_caught(
         name="contradicted-regime.xml",
     )
 
-    draft = _draft(evidence_id, isolated_settings)
+    draft = _draft(evidence_id, isolated_settings, operation=operation)
 
     assert draft.regime_legend is not None, "the parser did not read the mention; the case proves nothing"
     assert DraftDiscrepancyKind.REGIME_CONTRADICTED in {finding.kind for finding in draft.discrepancies}

@@ -7,14 +7,25 @@ import asyncio
 import importlib
 import inspect
 import textwrap
+from contextlib import ExitStack
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
+from cadrumo.core.config import load_settings
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime
+from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
 
+from ......application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ......application.auth.operator_scope_ports import OperatorScopePorts
+from ......application.auth.protocols import BrowserSessionFactoryPort
 from ......application.live.filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_IVA_WALLET_REFUSAL_CODE,
@@ -33,6 +44,7 @@ from ......application.live.filed_data_capture import (
     filed_history_discovery_report,
     pull_filed_history,
 )
+from ......application.live.filed_data_ports import FiledDataCapturePort
 from ......application.live.filed_history_operation import (
     FILED_HISTORY_OPERATION_DEFINITION_ID,
     FILED_HISTORY_PHASE_CLEANUP,
@@ -40,21 +52,26 @@ from ......application.live.filed_history_operation import (
     FILED_HISTORY_PHASE_PREFLIGHT,
     FILED_HISTORY_PHASE_RESULT,
     FILED_HISTORY_PHASE_SETTLEMENT,
+    FiledHistoryComposition,
     FiledHistoryOperationRequest,
+    FiledHistoryPull,
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
     settled_filed_history_effect,
 )
+from ......application.live.filed_observation_ports import FiledObservationPersistencePorts
+from ......application.live.iva_remote_state_ports import IvaRemoteStatePort
+from ......application.live.notification_ports import NotificationsPorts
 from ......application.live.tests.filed_observation_test_support import in_memory_filed_observation_test_bundle
 from ......application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from ......application.operations.models import OperationRequest
+from ......application.operations.owner import OperationEventEmitter
 from ......application.operations.projection_services import OperationResultProjectionService
 from ......application.operations.registry import OperationRegistry
 from ......application.operations.supervisor import OperationSupervisor
-from ......application.operations.tests.authority_test_support import unread_authority_operation
 from ......core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ......core.operations import (
     OperationCancellation,
@@ -84,6 +101,34 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+
+
+@dataclass(frozen=True, slots=True)
+class _TestFiledHistoryComposition:
+    """Bind the canonical in-memory observation bundle to live outer ports."""
+
+    ports: FiledObservationPersistencePorts
+    filed_data_port: FiledDataCapturePort
+    iva_remote_state_port: IvaRemoteStatePort
+    notifications_ports: NotificationsPorts
+    certificate_secret_backend_factory: CertificateSecretBackendFactory
+    browser_session_factory: BrowserSessionFactoryPort
+    operator_scope_ports: OperatorScopePorts
+
+
+def _test_filed_history_composition(output_root: Path) -> FiledHistoryComposition:
+    """Compose deterministic observation ports with the real outer capabilities."""
+    del output_root
+    bundle = in_memory_filed_observation_test_bundle()
+    return _TestFiledHistoryComposition(
+        ports=bundle.ports,
+        filed_data_port=bundle.filed_data_port,
+        iva_remote_state_port=bundle.iva_remote_state_port,
+        notifications_ports=compose_notifications_ports(settings=load_settings()),
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        browser_session_factory=default_browser_session_factory,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
 
 
 class _DeterministicFiledHistoryDiscovery:
@@ -133,12 +178,28 @@ class _DeterministicFiledHistoryDiscovery:
 
 def _local_pull(
     discover: FiledHistoryDiscoveryPort,
-):
+) -> FiledHistoryPull:
     """Bind the canonical composition to deterministic discovery/register inputs."""
 
-    async def pull(payload, profile, repository, events, ports, filed_data_port, iva_remote_state_port):
+    async def pull(
+        payload: FiledHistoryOperationRequest,
+        profile: TaxpayerProfile | None,
+        repository: SyncRunRecordRepositoryProtocol,
+        events: OperationEventEmitter,
+        ports: FiledObservationPersistencePorts,
+        filed_data_port: FiledDataCapturePort,
+        iva_remote_state_port: IvaRemoteStatePort,
+        notifications_ports: NotificationsPorts,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
+        operator_scope_ports: OperatorScopePorts,
+    ) -> FiledHistoryOnboardingRun:
         return await pull_filed_history(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            browser_session_factory=browser_session_factory,
+            operator_scope_ports=operator_scope_ports,
             iva_remote_state_port=iva_remote_state_port,
+            notifications_ports=notifications_ports,
             ports=ports,
             filed_data_port=filed_data_port,
             output_root=payload.output_root,
@@ -149,7 +210,6 @@ def _local_pull(
             discover=discover,
             sync_run_repository=repository,
             events=events,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
     return pull
@@ -167,10 +227,27 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
     """Run canonical composition through the real locally routed register adapter."""
     document = aeat_sede_fixture("declaraciones-register-form-complete-synthetic")
 
-    async def pull(payload, profile, repository, events, ports, filed_data_port, iva_remote_state_port):
+    async def pull(
+        payload: FiledHistoryOperationRequest,
+        profile: TaxpayerProfile | None,
+        repository: SyncRunRecordRepositoryProtocol,
+        events: OperationEventEmitter,
+        ports: FiledObservationPersistencePorts,
+        filed_data_port: FiledDataCapturePort,
+        iva_remote_state_port: IvaRemoteStatePort,
+        notifications_ports: NotificationsPorts,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
+        operator_scope_ports: OperatorScopePorts,
+    ) -> FiledHistoryOnboardingRun:
+        del filed_data_port
         async with open_routed_declarations_register((document,), ver_click_timeout_ms=1500) as (register, routed):
             run = await pull_filed_history(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                browser_session_factory=browser_session_factory,
+                operator_scope_ports=operator_scope_ports,
                 iva_remote_state_port=iva_remote_state_port,
+                notifications_ports=notifications_ports,
                 ports=ports,
                 filed_data_port=RoutedFiledDataCapturePort(register),
                 output_root=payload.output_root,
@@ -181,7 +258,6 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
                 discover=discover,
                 sync_run_repository=repository,
                 events=events,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
             assert not routed.pending
             return run
@@ -221,17 +297,20 @@ def _composition_pair(modelo: str = "100") -> FiledHistoryDiscoveryPair:
 
 
 def _run_composition(*pairs: FiledHistoryDiscoveryPair, tmp_path: Path, dry_run: bool = False):
-    bundle = in_memory_filed_observation_test_bundle()
+    composition = _test_filed_history_composition(tmp_path)
     return asyncio.run(
         pull_filed_history(
-            iva_remote_state_port=bundle.iva_remote_state_port,
-            ports=bundle.ports,
-            filed_data_port=bundle.filed_data_port,
+            certificate_secret_backend_factory=composition.certificate_secret_backend_factory,
+            browser_session_factory=composition.browser_session_factory,
+            operator_scope_ports=composition.operator_scope_ports,
+            iva_remote_state_port=composition.iva_remote_state_port,
+            notifications_ports=composition.notifications_ports,
+            ports=composition.ports,
+            filed_data_port=composition.filed_data_port,
             output_root=tmp_path,
             today=date(2026, 3, 15),
             dry_run=dry_run,
             discover=_composition_discovery(*pairs),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         ),
     )
 
@@ -250,16 +329,19 @@ def test_canonical_composition_preserves_the_discovery_scoping_signal(tmp_path: 
         _composition_pair("303"),
         scoping_signal=RegisterScopingSignal.LIKELY_UNIVERSAL,
     )
-    bundle = in_memory_filed_observation_test_bundle()
+    composition = _test_filed_history_composition(tmp_path)
 
     run = asyncio.run(
         pull_filed_history(
-            iva_remote_state_port=bundle.iva_remote_state_port,
-            ports=bundle.ports,
-            filed_data_port=bundle.filed_data_port,
+            certificate_secret_backend_factory=composition.certificate_secret_backend_factory,
+            browser_session_factory=composition.browser_session_factory,
+            operator_scope_ports=composition.operator_scope_ports,
+            iva_remote_state_port=composition.iva_remote_state_port,
+            notifications_ports=composition.notifications_ports,
+            ports=composition.ports,
+            filed_data_port=composition.filed_data_port,
             output_root=tmp_path,
             discover=discovery,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
     )
 
@@ -282,15 +364,18 @@ def test_canonical_composition_dry_run_preserves_scope_without_provenance(tmp_pa
 
 def test_canonical_composition_empty_discovery_short_circuits_truthfully(tmp_path: Path) -> None:
     discovery = _composition_discovery(scoping_signal=RegisterScopingSignal.LIKELY_NIF_SCOPED)
-    bundle = in_memory_filed_observation_test_bundle()
+    composition = _test_filed_history_composition(tmp_path)
     run = asyncio.run(
         pull_filed_history(
-            iva_remote_state_port=bundle.iva_remote_state_port,
-            ports=bundle.ports,
-            filed_data_port=bundle.filed_data_port,
+            certificate_secret_backend_factory=composition.certificate_secret_backend_factory,
+            browser_session_factory=composition.browser_session_factory,
+            operator_scope_ports=composition.operator_scope_ports,
+            iva_remote_state_port=composition.iva_remote_state_port,
+            notifications_ports=composition.notifications_ports,
+            ports=composition.ports,
+            filed_data_port=composition.filed_data_port,
             output_root=tmp_path,
             discover=discovery,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
     )
 
@@ -303,6 +388,7 @@ def test_definition_declares_recorded_non_stoppable_execution(tmp_path: Path) ->
     with isolated_runtime_profile(tmp_path=tmp_path):
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,
+            composition_factory=_test_filed_history_composition,
             pull=_local_pull(_DeterministicFiledHistoryDiscovery()),
         )
 
@@ -314,7 +400,8 @@ def test_definition_declares_recorded_non_stoppable_execution(tmp_path: Path) ->
 
 
 def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, ExitStack() as stack:
+        authority_operation = stack.enter_context(bundled_indexed_authority().operation())
         discovery_entered = asyncio.Event()
         release_discovery = asyncio.Event()
         discovery = _DeterministicFiledHistoryDiscovery(
@@ -325,6 +412,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
         pull = _local_pull(discovery)
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,
+            composition_factory=_test_filed_history_composition,
             pull=pull,
             profile_resolver=lambda: taxpayer,
         )
@@ -332,7 +420,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
         operands = operation_secure_reference_repository(objects=profile.repository)
         supervisor = OperationSupervisor(
-            authority_operation=unread_authority_operation(),
+            authority_operation=authority_operation,
             registry=_registered_filed_history_definition(definition),
             journal=journal,
             event_stream=journal,
@@ -426,18 +514,20 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
 
 
 def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, ExitStack() as stack:
+        authority_operation = stack.enter_context(bundled_indexed_authority().operation())
         repository = SyncRunRecordRepository()
         sync_namespace_before = repository.secure_object_repository.namespace_payload_hashes(repository.namespace)
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
+            composition_factory=_test_filed_history_composition,
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
         operands = operation_secure_reference_repository(objects=profile.repository)
         supervisor = OperationSupervisor(
-            authority_operation=unread_authority_operation(),
+            authority_operation=authority_operation,
             registry=_registered_filed_history_definition(definition),
             journal=journal,
             event_stream=journal,
@@ -502,19 +592,21 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
     ``sync_run_ref`` field and is independently loadable through the
     sync-run repository.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, ExitStack() as stack:
+        authority_operation = stack.enter_context(bundled_indexed_authority().operation())
         repository = SyncRunRecordRepository()
         operands = operation_secure_reference_repository(objects=profile.repository)
 
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
+            composition_factory=_test_filed_history_composition,
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
         )
         durable_root = tmp_path / "terminal-operations"
         journal = OperationJournalRepository(storage_root=durable_root)
         leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
         supervisor = OperationSupervisor(
-            authority_operation=unread_authority_operation(),
+            authority_operation=authority_operation,
             registry=_registered_filed_history_definition(definition),
             journal=journal,
             event_stream=journal,
@@ -579,11 +671,13 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
     ``OperationResultProjectionService`` and the operation's public schema
     identity.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, ExitStack() as stack:
+        authority_operation = stack.enter_context(bundled_indexed_authority().operation())
         repository = SyncRunRecordRepository()
         operands = operation_secure_reference_repository(objects=profile.repository)
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
+            composition_factory=_test_filed_history_composition,
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
         )
         registry = _registered_filed_history_definition(definition)
@@ -591,7 +685,7 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
         journal = OperationJournalRepository(storage_root=durable_root)
         leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
         supervisor = OperationSupervisor(
-            authority_operation=unread_authority_operation(),
+            authority_operation=authority_operation,
             registry=registry,
             journal=journal,
             event_stream=journal,
@@ -687,6 +781,7 @@ def test_filed_history_operation_contract_has_one_public_defining_module() -> No
     operation = importlib.import_module("......application.live.filed_history_operation", package=__package__)
     definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository,
+        composition_factory=_test_filed_history_composition,
     )
 
     assert FILED_HISTORY_OPERATION_DEFINITION_ID == "live.filed-history.pull"
@@ -709,6 +804,7 @@ def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path:
     with isolated_runtime_profile(tmp_path=tmp_path):
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,
+            composition_factory=_test_filed_history_composition,
         )
         registration = build_filed_history_operation_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))

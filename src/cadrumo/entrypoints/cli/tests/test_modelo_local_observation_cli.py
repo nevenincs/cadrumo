@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
     seed_test_profile_record,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -78,7 +79,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
 
 
 def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A CLI-recorded local M100/2024 observation resolves Sofia's two prior-filing carries.
 
@@ -151,13 +152,19 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
 
         m100_snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(
-            m100_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
+            m100_snapshot,
+            repository=repository,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=operation,
         )
         assert m100_prefill.binding_values["renta-base-liquidable-negativa-general-anterior"] == Decimal("0")
 
         m130_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T")
         m130_prefill = resolve_bindings_from_local_store(
-            m130_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
+            m130_snapshot,
+            repository=repository,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=operation,
         )
         assert m130_prefill.binding_values["irpf.previous_year_economic_activity_net_income"] == Decimal("0")
 

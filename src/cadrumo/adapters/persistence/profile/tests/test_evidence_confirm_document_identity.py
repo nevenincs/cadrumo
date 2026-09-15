@@ -21,6 +21,7 @@ hand-built draft.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 
@@ -295,24 +296,52 @@ def test_public_confirmation_overrides_are_checked_on_reconfirm(
         authority=invoice_authority,
     )
 
-    corrections = (
-        ("counterparty_name", {"counterparty_name": "Corrected Proveedor SL"}),
-        ("invoice_number", {"invoice_number": "CORRECTED-0001"}),
+    corrections: tuple[tuple[str, Callable[[], InvoiceConfirmationResult]], ...] = (
         (
-            "retention_rate",
-            {"retention_rate": Decimal("0.15"), "retention_amount": Decimal("15.00")},
-        ),
-        ("notes", {"notes": "corrected after checking the paper"}),
-    )
-    for field, overrides in corrections:
-        with pytest.raises(InvoiceValidationError) as refusal:
-            _confirm(
+            "counterparty_name",
+            lambda: _confirm(
                 evidence_id=evidence_id,
                 isolated_settings=isolated_settings,
                 repository=repository,
                 authority=invoice_authority,
-                **overrides,
-            )
+                counterparty_name="Corrected Proveedor SL",
+            ),
+        ),
+        (
+            "invoice_number",
+            lambda: _confirm(
+                evidence_id=evidence_id,
+                isolated_settings=isolated_settings,
+                repository=repository,
+                authority=invoice_authority,
+                invoice_number="CORRECTED-0001",
+            ),
+        ),
+        (
+            "retention_rate",
+            lambda: _confirm(
+                evidence_id=evidence_id,
+                isolated_settings=isolated_settings,
+                repository=repository,
+                authority=invoice_authority,
+                retention_rate=Decimal("0.15"),
+                retention_amount=Decimal("15.00"),
+            ),
+        ),
+        (
+            "notes",
+            lambda: _confirm(
+                evidence_id=evidence_id,
+                isolated_settings=isolated_settings,
+                repository=repository,
+                authority=invoice_authority,
+                notes="corrected after checking the paper",
+            ),
+        ),
+    )
+    for field, confirm_correction in corrections:
+        with pytest.raises(InvoiceValidationError) as refusal:
+            confirm_correction()
         assert field in str(refusal.value)
 
     assert len(repository.load().invoices) == 1

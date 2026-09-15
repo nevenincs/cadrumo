@@ -21,7 +21,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
@@ -118,7 +118,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 # ---------------------------------------------------------------------------
 
 
-def _work_unit_3t(repos: _Repos):
+def _work_unit_3t(repos: _Repos, *, operation: PinnedAuthorityOperation):
     wu_repo, cr_repo, bv_repo = repos
     return (
         create_work_unit(
@@ -129,6 +129,7 @@ def _work_unit_3t(repos: _Repos):
             revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_CLOCK,
+            operation=operation,
         ),
         wu_repo,
         cr_repo,
@@ -149,8 +150,8 @@ def _common_inputs() -> dict[CasillaId, Decimal]:
     }
 
 
-def test_casilla_15_manual_input_is_rejected_at_3t(repos: _Repos) -> None:
-    work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos)
+def test_casilla_15_manual_input_is_rejected_at_3t(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos, operation=operation)
 
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
         _calculate_modelo_revision(
@@ -167,8 +168,10 @@ def test_casilla_15_manual_input_is_rejected_at_3t(repos: _Repos) -> None:
         )
 
 
-def test_casilla_15_binding_flows_into_casilla_17_when_within_cap(repos: _Repos) -> None:
-    work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos)
+def test_casilla_15_binding_flows_into_casilla_17_when_within_cap(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos, operation=operation)
     common_bindings = {
         "irpf.previous_year_economic_activity_net_income": Decimal("0"),
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
@@ -200,8 +203,8 @@ def test_casilla_15_binding_flows_into_casilla_17_when_within_cap(repos: _Repos)
     assert c17_override == c17_zero - carry
 
 
-def test_casilla_15_binding_is_capped_at_c14(repos: _Repos) -> None:
-    work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos)
+def test_casilla_15_binding_is_capped_at_c14(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos, operation=operation)
 
     revision = _calculate_modelo_revision(
         work_unit.work_unit_id,

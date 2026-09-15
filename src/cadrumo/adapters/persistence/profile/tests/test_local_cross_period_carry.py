@@ -77,6 +77,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.iva_wallet_carry_targets import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
@@ -161,7 +162,13 @@ _2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = {
 }
 
 
-def _seed_130(repos_: _Repos, *, period: str, clock: datetime):
+def _seed_130(
+    repos_: _Repos,
+    *,
+    period: str,
+    clock: datetime,
+    operation: PinnedAuthorityOperation,
+):
     wu_repo = repos_[0]
     return create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -171,10 +178,11 @@ def _seed_130(repos_: _Repos, *, period: str, clock: datetime):
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=clock,
+        operation=operation,
     )
 
 
-def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
+def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityOperation) -> Decimal:
     """File Modelo 130 1T with a negative Diferencia; return its saldo-negativo seed.
 
     Returns the value the 1T revision actually computed for
@@ -182,7 +190,7 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
     hand-derived from the formula — anti-tautology).
     """
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos_
-    work_unit = _seed_130(repos_, period="1T", clock=_T1)
+    work_unit = _seed_130(repos_, period="1T", clock=_T1, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,
@@ -325,7 +333,10 @@ def _seed_first_303_activity_profile(repos_: _Repos) -> None:
     seed_test_profile_record(profile)
 
 
-def test_local_file_then_next_period_calculate_carries_previous_filing_value(repos: _Repos) -> None:
+def test_local_file_then_next_period_calculate_carries_previous_filing_value(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """E2E: filing 1T auto-carries its saldo-negativo into 2T's casilla 15 on calculate.
 
     No manual ``--casilla 15`` / ``--binding`` is supplied for 2T. The carry contract:
@@ -335,9 +346,9 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
     """
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
-    carried_seed = _file_1t_with_negative_result(repos)
+    carried_seed = _file_1t_with_negative_result(repos, operation=operation)
 
-    work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
+    work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,
@@ -359,13 +370,16 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
     assert carried_casilla_15 == c14
 
 
-def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(repos: _Repos) -> None:
+def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """2T calculation reaches same-year carry without a manual prior-year M100 binding."""
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
-    carried_seed = _file_1t_with_negative_result(repos)
+    carried_seed = _file_1t_with_negative_result(repos, operation=operation)
 
-    work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
+    work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,
@@ -400,7 +414,10 @@ def test_app_filing_source_kind_is_not_official_evidence() -> None:
     assert not APP_FILING_SOURCE_KIND.is_official_aeat
 
 
-def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) -> None:
+def test_same_year_locally_filed_upstream_admitted_with_advisory(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Same-year admission: a same-year locally-filed 1T lets 2T FILE with a disclosing advisory.
 
     Filing 1T persists an ``app_filing`` carry observation. A SAME-FILING-YEAR dependent
@@ -420,7 +437,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
-    _file_1t_with_negative_result(repos)
+    _file_1t_with_negative_result(repos, operation=operation)
     local_filing = fr_repo.load().current_for(
         bucket_id=_BUCKET_ID,
         modelo="130",
@@ -435,7 +452,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     assert stored is not None
     assert stored.source_kind == APP_FILING_SOURCE_KIND
 
-    work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
+    work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,
@@ -493,7 +510,10 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     assert all(not d.non_official_local_chain_advisory for d in cross_year)
 
 
-def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repos) -> None:
+def test_caller_binding_override_beats_auto_carried_previous_filing(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """D2: a caller ``--binding`` of the carry binding overrides the auto-carried value.
 
     After filing 1T with a positive saldo-negativo carry, calculating 2T while supplying
@@ -504,11 +524,11 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
     """
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
-    carried_seed = _file_1t_with_negative_result(repos)
+    carried_seed = _file_1t_with_negative_result(repos, operation=operation)
     assert carried_seed > Decimal("0")
 
     override_value = carried_seed + Decimal("250")
-    work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
+    work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,
@@ -530,7 +550,10 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
     assert casilla_15 == c14
 
 
-def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> None:
+def test_carry_resolver_excludes_303_iva_compensation_binding(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """D3: the previous_filing resolver does not emit the M303 IVA-compensation binding.
 
     A prior 303 filing whose observation carries the compensation casillas is persisted
@@ -553,6 +576,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         revision_id="2026-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=_T4,
+        operation=operation,
     )
     _persist_prior_303(CalculationObservationRepository())
 
@@ -565,6 +589,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         revision=snapshot.revision,
     )
     raw = PreviousFilingSourceResolver(
+        operation=operation,
         registry_snapshot=snapshot,
         repository=CalculationObservationRepository(),
         iva_history_repository=IvaCompensationHistoryRepository(),
@@ -586,6 +611,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     assert all(item.dependency_treatment == "factual_evidence" for item in compensation_provenance)
 
     filtered = PreviousFilingSourceResolver(
+        operation=operation,
         registry_snapshot=snapshot,
         excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
             modelo_id=str(snapshot.modelo.id),
@@ -606,7 +632,10 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         assert filtered.binding_values[binding_id] == value
 
 
-def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repos) -> None:
+def test_source_mesh_excludes_303_iva_compensation_relation_binding(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """D3: relation-prefill must not bypass the IVA-wallet owner for M303 casilla 110."""
 
     wu_repo = repos[0]
@@ -619,6 +648,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
         revision_id="2026-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=_T4,
+        operation=operation,
     )
     _persist_prior_303(CalculationObservationRepository())
 
@@ -659,7 +689,10 @@ def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate()
     )
 
 
-def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos: _Repos) -> None:
+def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """An existing activity with no local 4T filing cannot invent a first-period zero."""
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_existing_303_activity_profile(repos)
@@ -671,6 +704,7 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
         revision_id="2025",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
+        operation=operation,
     )
 
     with (
@@ -687,12 +721,17 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
             ports=_calculation_ports_656,
             clock=_T1,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-local-cross-period-carry"
+                work_unit.period,
+                reference="test:m303-local-cross-period-carry",
+                operation=operation,
             ),
         )
 
 
-def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -> None:
+def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A true first IVA period proven by activity start may use a zero prior compensation."""
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_303_activity_profile(repos)
@@ -704,6 +743,7 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
         revision_id="2025",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -716,7 +756,9 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
             ports=_calculation_ports_682,
             clock=_T1,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-local-cross-period-carry"
+                work_unit.period,
+                reference="test:m303-local-cross-period-carry",
+                operation=operation,
             ),
         )
     revision = result.revision
@@ -766,7 +808,10 @@ def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 20
     )
 
 
-def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos: _Repos) -> None:
+def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A stored prior observation this build cannot read must block, never prove zero.
 
     The profile carries first-period activity-start evidence, so the activity-start
@@ -788,6 +833,7 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
         revision_id="2025",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
+        operation=operation,
     )
 
     with (
@@ -804,7 +850,9 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
             ports=_calculation_ports_764,
             clock=_T1,
             filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-local-cross-period-carry"
+                work_unit.period,
+                reference="test:m303-local-cross-period-carry",
+                operation=operation,
             ),
         )
 
@@ -858,7 +906,10 @@ def _persist_prior_303(repository: CalculationObservationRepository) -> None:
     )
 
 
-def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
+def test_first_filer_same_year_chain_is_fully_reachable(
+    repos: _Repos,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Reachability proof: with first-year activity-start, the M130 2T verdict is fully clean.
 
     Adversarial check of the end-to-end reachability claim. The M130 minoración binding
@@ -876,8 +927,8 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
-    _file_1t_with_negative_result(repos)
-    work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
+    _file_1t_with_negative_result(repos, operation=operation)
+    work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,

@@ -67,6 +67,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -350,6 +351,7 @@ def _calculate(
     objects: SecureObjectRepository,
     *,
     period: str,
+    operation: PinnedAuthorityOperation,
 ) -> BucketAggregationCalculationResult:
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
@@ -363,6 +365,7 @@ def _calculate(
         revision_id=_REVISION,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET,
@@ -388,7 +391,7 @@ def _minoracion_advisories(result: BucketAggregationCalculationResult) -> tuple[
 
 
 def test_two_t_carry_populates_casilla_05_and_degrades_overpayment_advisory(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A cumulative 2T with a prior 1T filing auto-carries casilla 05; the over-payment advisory degrades.
 
@@ -407,7 +410,7 @@ def test_two_t_carry_populates_casilla_05_and_degrades_overpayment_advisory(
     _seed_prior_1t_m130_filing(obs_repo)  # no casilla-16 entry -> not captured
     _income_transaction(objects)
 
-    result = _calculate(objects, period="2T")
+    result = _calculate(objects, period="2T", operation=operation)
 
     # Independent identity: Σ max(0, prior 07) − Σ prior 16 = max(0, 200) − 0 = 200.
     expected_casilla_05 = max(Decimal("0"), _PRIOR_1T_CASILLA_07) - Decimal("0")
@@ -434,7 +437,7 @@ def test_two_t_carry_populates_casilla_05_and_degrades_overpayment_advisory(
 
 
 def test_two_t_with_prior_filing_carrying_casilla_16_fires_no_advisory(
-    objects: SecureObjectRepository,
+    objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A 2T whose prior 1T filing declares casilla 16 explicitly fires NEITHER advisory.
 
@@ -449,7 +452,7 @@ def test_two_t_with_prior_filing_carrying_casilla_16_fires_no_advisory(
     _seed_prior_1t_m130_filing(obs_repo, minoracion=Decimal("0"))  # filed-zero is captured
     _income_transaction(objects)
 
-    result = _calculate(objects, period="2T")
+    result = _calculate(objects, period="2T", operation=operation)
 
     # Σ max(0, 200) − Σ 0 = 200, the carry resolves cleanly.
     assert Decimal(result.revision.casilla_values[_PRIOR_PAYMENT_CASILLA]) == Decimal("200")
@@ -496,9 +499,7 @@ def test_three_t_degraded_carry_advisory_names_all_same_ejercicio_prior_quarters
     assert "rd-439-2007:art-110" in advisory.legal_refs
 
 
-def test_first_trimestre_does_not_fire(
-    objects: SecureObjectRepository,
-) -> None:
+def test_first_trimestre_does_not_fire(objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation) -> None:
     """A 1T first-obligation calculate never fires the advisory (no prior trimestre).
 
     1T is the first possible obligation period of the ejercicio, so no prior
@@ -509,7 +510,7 @@ def test_first_trimestre_does_not_fire(
     _seed_prior_year_m100(obs_repo)
     _income_transaction(objects)
 
-    result = _calculate(objects, period="1T")
+    result = _calculate(objects, period="1T", operation=operation)
 
     assert _prior_payment_advisories(result) == (), (
         "a 1T first-obligation filing has no prior trimestre and must never fire the undeducted-prior-payment advisory"

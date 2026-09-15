@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.inbound.financial.ledger_import import build_ledger_import_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_import import import_ledger_source, import_ledger_transactions
 from cadrumo.application.ledger.models import LedgerSourceImportCommand
@@ -36,9 +37,11 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
 
     dry_run = import_ledger_source(
         LedgerSourceImportCommand(path=statement, provider="csv", dry_run=True, verify=True, source=statement),
+        ports=build_ledger_import_ports(),
     )
     persisted = import_ledger_source(
         LedgerSourceImportCommand(bucket_id=_BUCKET_ID, path=statement, provider="csv", actor="operator-A"),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
@@ -84,6 +87,7 @@ def test_import_outgoing_magnitude_row_stores_positive_with_outgoing_direction(
     result = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=(parsed,),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )
@@ -113,6 +117,7 @@ def test_import_internal_transfer_row_stores_magnitude_with_transfer_direction(
     result = import_ledger_transactions(
         bucket_id=_BUCKET_ID,
         parsed_rows=(parsed,),
+        ports=build_ledger_import_ports(),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     )

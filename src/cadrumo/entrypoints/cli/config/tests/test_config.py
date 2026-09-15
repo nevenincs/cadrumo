@@ -27,7 +27,12 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    open_test_profile_session,
+)
 
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....adapters.persistence.storage.tests.secure_sql import (
@@ -390,6 +395,7 @@ def _record_divergence(profile_name: str) -> None:
     from .....application.workflow.persistence import workflow_state_repository
     from .....application.workflow.profile_bucket_scan import read_profile_bucket
 
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     pointer = read_profile_bucket(profile_name)
     assert pointer is not None
     with open_test_profile_session(pointer.bucket_id):
@@ -403,6 +409,7 @@ def _record_divergence(profile_name: str) -> None:
                         artefact_value="Consultoría informática",
                     ),
                 ),
+                profile_decode_context=_profile_decode_context_for_test,
             ),
         )
 

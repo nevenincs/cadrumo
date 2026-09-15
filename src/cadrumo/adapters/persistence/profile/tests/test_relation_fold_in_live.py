@@ -260,17 +260,17 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
     modelos_180, _catalogues_180 = bundled_registry_tree()
     modelo_180 = next(candidate for candidate in modelos_180 if candidate.id == "180")
     revision_180 = select_revision(modelo_180, filing_year=_YEAR, period="0A")
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="180",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "0A"),
-        revision_id=revision_180.id,
-        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
-        clock=_T0,
-    )
-
     with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="180",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
+            revision_id=revision_180.id,
+            ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
+            clock=_T0,
+            operation=operation,
+        )
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),

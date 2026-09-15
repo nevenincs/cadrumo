@@ -15,6 +15,7 @@ from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import Su
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -32,6 +33,7 @@ def _saturating_subprocess_classifier(
     iva_category: IvaCategory | None = IvaCategory("domestic_general"),
     business_pct: Decimal | None = None,
     model: str = "test-model",
+    operation: PinnedAuthorityOperation,
 ) -> SubprocessLLMClassifier:
     payload = {
         "classification": classification.value,
@@ -53,7 +55,7 @@ print({response_json!r})
         name="claude",
         command=(sys.executable, "-c", script),
         model=model,
-        spec=prompt_spec_with_saturation_fields(year=2025),
+        spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
     )
 
 

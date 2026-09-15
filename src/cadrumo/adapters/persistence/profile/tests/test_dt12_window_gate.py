@@ -40,6 +40,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.core.rescate_type import RescateType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -55,7 +56,7 @@ _TOTALES = "33000"
 _EXPECTED_REDUCCION = Decimal("6981.82")
 
 
-def _create_m100_work_unit() -> tuple[str, str]:
+def _create_m100_work_unit(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
     """Register a minimal natural-person profile + M100 work unit; return ids.
 
     Returns:
@@ -82,6 +83,7 @@ def _create_m100_work_unit() -> tuple[str, str]:
             work_unit_repository=WorkUnitCatalogueRepository(),
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
+        operation=operation,
     )
     return work_unit.work_unit_id, reduccion_casilla_id
 
@@ -92,6 +94,7 @@ def _build_bundle(
     rescate_plan_pensiones_tipo: RescateType | None = None,
     rescate_plan_pensiones_contingencia_year: int | None = None,
     rescate_plan_pensiones_rescate_year: int | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> WorkCalculateInputBundle:
     return build_work_calculate_input_bundle(
         work_unit_id=work_unit_id,
@@ -106,6 +109,7 @@ def _build_bundle(
         rescate_plan_pensiones_tipo=rescate_plan_pensiones_tipo,
         rescate_plan_pensiones_contingencia_year=rescate_plan_pensiones_contingencia_year,
         rescate_plan_pensiones_rescate_year=rescate_plan_pensiones_rescate_year,
+        operation=operation,
     )
 
 
@@ -113,16 +117,17 @@ def _reasons(bundle: WorkCalculateInputBundle) -> list[str]:
     return [str(diag.reason) for diag in bundle.shortcut_diagnostics]
 
 
-def test_out_of_window_withholds_the_reduccion(tmp_path: Path) -> None:
+def test_out_of_window_withholds_the_reduccion(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """Declared years proving the window closed WITHHOLD the 40% reducción."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
+        work_unit_id, reduccion_casilla_id = _create_m100_work_unit(operation=operation)
         # Contingencia 2020 (general branch): window closes end-2022; a 2024
         # rescate is out of window.
         bundle = _build_bundle(
             work_unit_id,
             rescate_plan_pensiones_contingencia_year=2020,
             rescate_plan_pensiones_rescate_year=2024,
+            operation=operation,
         )
 
     assert reduccion_casilla_id not in bundle.casilla_inputs
@@ -134,38 +139,43 @@ def test_out_of_window_withholds_the_reduccion(tmp_path: Path) -> None:
     assert closed.asserted_legal_refs == ("ley-35-2006:dt-12",)
 
 
-def test_in_window_injects_the_reduccion_without_advisory(tmp_path: Path) -> None:
+def test_in_window_injects_the_reduccion_without_advisory(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """An in-window rescate injects the 40% reducción and raises no window advisory."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
+        work_unit_id, reduccion_casilla_id = _create_m100_work_unit(operation=operation)
         # Contingencia 2024, rescate 2024: inside the general window [2024, 2026].
         bundle = _build_bundle(
             work_unit_id,
             rescate_plan_pensiones_contingencia_year=2024,
             rescate_plan_pensiones_rescate_year=2024,
+            operation=operation,
         )
 
     assert bundle.casilla_inputs[reduccion_casilla_id] == _EXPECTED_REDUCCION
     assert _reasons(bundle) == []
 
 
-def test_rescate_year_defaults_to_filing_year(tmp_path: Path) -> None:
+def test_rescate_year_defaults_to_filing_year(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """Omitting --rescate-year uses the work unit filing year for the window check."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
+        work_unit_id, reduccion_casilla_id = _create_m100_work_unit(operation=operation)
         # Contingencia 2020, rescate_year omitted -> defaults to filing year 2024
         # -> out of the [2020, 2022] window -> withheld.
-        bundle = _build_bundle(work_unit_id, rescate_plan_pensiones_contingencia_year=2020)
+        bundle = _build_bundle(work_unit_id, rescate_plan_pensiones_contingencia_year=2020, operation=operation)
 
     assert reduccion_casilla_id not in bundle.casilla_inputs
     assert "dt12_regime_window_closed" in _reasons(bundle)
 
 
-def test_absent_contingencia_year_injects_with_unverified_advisory(tmp_path: Path) -> None:
+def test_absent_contingencia_year_injects_with_unverified_advisory(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """No contingencia year injects the reducción and warns the window is unverified."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
-        bundle = _build_bundle(work_unit_id)
+        work_unit_id, reduccion_casilla_id = _create_m100_work_unit(operation=operation)
+        bundle = _build_bundle(work_unit_id, operation=operation)
 
     assert bundle.casilla_inputs[reduccion_casilla_id] == _EXPECTED_REDUCCION
     assert "dt12_regime_window_unverified" in _reasons(bundle)
@@ -173,15 +183,16 @@ def test_absent_contingencia_year_injects_with_unverified_advisory(tmp_path: Pat
     assert unverified.asserted_legal_refs == ("ley-35-2006:dt-12",)
 
 
-def test_parcial_type_adds_guidance_advisory(tmp_path: Path) -> None:
+def test_parcial_type_adds_guidance_advisory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """A parcial rescate adds the shared-window/mixed-forfeiture guidance advisory."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        work_unit_id, reduccion_casilla_id = _create_m100_work_unit()
+        work_unit_id, reduccion_casilla_id = _create_m100_work_unit(operation=operation)
         bundle = _build_bundle(
             work_unit_id,
             rescate_plan_pensiones_tipo=RescateType.PARCIAL,
             rescate_plan_pensiones_contingencia_year=2024,
             rescate_plan_pensiones_rescate_year=2024,
+            operation=operation,
         )
 
     # In-window, so no window advisory, but the parcial guidance is present and
@@ -192,15 +203,16 @@ def test_parcial_type_adds_guidance_advisory(tmp_path: Path) -> None:
     assert guidance.asserted_legal_refs == ("ley-35-2006:dt-12",)
 
 
-def test_total_type_adds_no_guidance_advisory(tmp_path: Path) -> None:
+def test_total_type_adds_no_guidance_advisory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """A total rescate does not raise the parcial guidance advisory."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        work_unit_id, _ = _create_m100_work_unit()
+        work_unit_id, _ = _create_m100_work_unit(operation=operation)
         bundle = _build_bundle(
             work_unit_id,
             rescate_plan_pensiones_tipo=RescateType.TOTAL,
             rescate_plan_pensiones_contingencia_year=2024,
             rescate_plan_pensiones_rescate_year=2024,
+            operation=operation,
         )
 
     assert "dt12_parcial_rescate_guidance" not in _reasons(bundle)

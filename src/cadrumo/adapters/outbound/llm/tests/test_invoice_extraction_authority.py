@@ -13,6 +13,7 @@ import pytest
 
 from cadrumo.application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,14 +37,16 @@ def _fabricated_values() -> InvoiceExtractionAuthorityValues:
 class TestTheRendererCannotReachAroundItsArgument:
     """The prompt renderer has exactly the authority values it is handed."""
 
-    def test_fabricated_values_reach_the_text_and_the_real_ones_do_not(self) -> None:
+    def test_fabricated_values_reach_the_text_and_the_real_ones_do_not(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The renderer cannot reacquire the registry behind its argument."""
         from cadrumo.adapters.outbound.llm.invoice_extraction_prompt import render_invoice_extraction_prompt
         from cadrumo.application.ledger.invoice_extraction_authority import (
             resolve_invoice_extraction_authority_values,
         )
 
-        real = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
+        real = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
         rendered = render_invoice_extraction_prompt(values=_fabricated_values())
 
         assert "37.25" in rendered.text
@@ -67,11 +70,13 @@ class TestTheRendererCannotReachAroundItsArgument:
 class TestTheReaderEntryPointUsesTheAuthority:
     """The concrete text-reader entry point forwards authority to its prompt."""
 
-    def test_values_passed_to_the_reader_entry_point_reach_the_dispatched_prompt(self) -> None:
+    def test_values_passed_to_the_reader_entry_point_reach_the_dispatched_prompt(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Reader prompt bytes carry the exact application-owned values supplied."""
         from cadrumo.adapters.outbound.llm.evidence_draft_text import build_text_field_extraction_prompt
 
-        prompt = build_text_field_extraction_prompt("Factura 1", values=_fabricated_values())
+        prompt = build_text_field_extraction_prompt("Factura 1", values=_fabricated_values(), operation=operation)
 
         assert "37.25" in prompt
         assert "Factura 1" in prompt

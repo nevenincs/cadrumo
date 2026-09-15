@@ -19,7 +19,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -129,21 +128,22 @@ def _seed_ready_profile(root: Path) -> None:
 
 
 def _calculate_m111(objects: SecureObjectRepository, period: Period) -> dict[str, Decimal]:
-    snapshot = compiled_bundled_authority().snapshot("111", filing_year=period.filing_year, period="1T")
-    wu_repo = WorkUnitCatalogueRepository(objects=objects)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="111",
-        filing_year=period.filing_year,
-        period=period,
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo,
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-        clock=_T0,
-    )
     with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot("111", filing_year=period.filing_year, period="1T")
+        wu_repo = WorkUnitCatalogueRepository(objects=objects)
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="111",
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
+            clock=_T0,
+            operation=operation,
+        )
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),

@@ -61,7 +61,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
@@ -270,6 +270,8 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     operation_date: date,
     issued_at: date,
     expected_wire_period: bytes,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Every Exterior quarter retains its token and renders the official ordinal."""
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
@@ -305,6 +307,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_M369_BUCKET,
@@ -419,7 +422,7 @@ def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_voca
 
 
 def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Live M369 calculate and verification use the injected store."""
     with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_M369_BUCKET) as runtime:  # noqa: SIM117
@@ -483,6 +486,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                     bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
                 ),
                 clock=_T0,
+                operation=operation,
             )
             with calculation_ports_for_test(
                 bucket_id=_M369_BUCKET,
@@ -615,8 +619,7 @@ def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
 
 
 def test_m369_unresolved_oss_source_refuses_verification_and_export(
-    m369_objects: SecureObjectRepository,
-    tmp_path: Path,
+    m369_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """No live OSS source cannot turn a zero Modelo 369 draft into a filing artefact."""
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
@@ -633,6 +636,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_M369_BUCKET,
@@ -705,8 +709,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
 
 
 def test_m369_unrouted_observation_refuses_verification_and_export(
-    m369_objects: SecureObjectRepository,
-    tmp_path: Path,
+    m369_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A persisted positive OSS line outside the registry shape cannot be verified or exported."""
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
@@ -739,6 +742,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_M369_BUCKET,
@@ -843,7 +847,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
 
 
 def test_m369_zero_valued_oss_invoice_remains_verifiable(
-    m369_objects: SecureObjectRepository,
+    m369_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A real all-zero OSS invoice is source evidence, not an unrouted under-declaration."""
     wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
@@ -876,6 +880,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_M369_BUCKET,

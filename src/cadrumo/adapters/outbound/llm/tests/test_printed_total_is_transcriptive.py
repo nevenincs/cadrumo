@@ -36,6 +36,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....core.field_origin import FieldOrigin
 from ..invoice_field_contract import INVOICE_FIELD_CONTRACTS, anchor_key_for_field
 from ..invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
@@ -73,18 +75,23 @@ def _reply(*, taxable_base: str | None, iva_amount: str | None, grand_total: str
     return json.dumps(payload)
 
 
-def _draft_total(*, taxable_base: str | None, iva_amount: str | None, grand_total: str | None) -> Decimal | None:
+def _draft_total(
+    *, taxable_base: str | None, iva_amount: str | None, grand_total: str | None, operation: PinnedAuthorityOperation
+) -> Decimal | None:
     draft = ground_extracted_fields(
         parse_invoice_extraction_response(
             _reply(taxable_base=taxable_base, iva_amount=iva_amount, grand_total=grand_total),
         ),
         raw_text_length=512,
         origin=FieldOrigin.VISION,
+        operation=operation,
     )
     return draft.grand_total
 
 
-def test_a_printed_total_that_contradicts_the_lines_is_recorded_as_printed() -> None:
+def test_a_printed_total_that_contradicts_the_lines_is_recorded_as_printed(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The defect case, and the only one that discriminates.
 
     On a document where the printed total agrees with the sum, recording the
@@ -92,7 +99,7 @@ def test_a_printed_total_that_contradicts_the_lines_is_recorded_as_printed() -> 
     twenty-seven agreeing corpus slots prove nothing here and the two divergent
     ones are the whole test.
     """
-    recorded = _draft_total(taxable_base="766,30", iva_amount="160,92", grand_total="890,00")
+    recorded = _draft_total(taxable_base="766,30", iva_amount="160,92", grand_total="890,00", operation=operation)
 
     assert recorded == _PRINTED_TOTAL, (
         f"the document prints {_PRINTED_TOTAL} and the draft recorded {recorded}. The reader must "
@@ -106,14 +113,14 @@ def test_a_printed_total_that_contradicts_the_lines_is_recorded_as_printed() -> 
     )
 
 
-def test_a_total_that_agrees_with_the_lines_is_still_recorded() -> None:
+def test_a_total_that_agrees_with_the_lines_is_still_recorded(*, operation: PinnedAuthorityOperation) -> None:
     """Positive control: without it, "not recomputed" cannot be told from "never populated".
 
     Every assertion above passes equally against a reader that dropped the total
     on the floor, so this pins that the agreeing case -- the ordinary one, and
     twenty-seven of the twenty-nine corpus slots -- still lands a value.
     """
-    recorded = _draft_total(taxable_base="766,30", iva_amount="160,92", grand_total="927,22")
+    recorded = _draft_total(taxable_base="766,30", iva_amount="160,92", grand_total="927,22", operation=operation)
 
     assert recorded == _SUM_THE_LINES_IMPLY, (
         f"an ordinary invoice whose printed total agrees with its lines recorded {recorded}; the "
@@ -121,7 +128,7 @@ def test_a_total_that_agrees_with_the_lines_is_still_recorded() -> None:
     )
 
 
-def test_an_unprinted_total_stays_absent_rather_than_becoming_the_sum() -> None:
+def test_an_unprinted_total_stays_absent_rather_than_becoming_the_sum(*, operation: PinnedAuthorityOperation) -> None:
     """``None`` means NOT PRINTED -- never zero, and never the figure the lines imply.
 
     A document carrying only line items is ordinary. Collapsing that absence into
@@ -129,7 +136,7 @@ def test_an_unprinted_total_stays_absent_rather_than_becoming_the_sum() -> None:
     the downstream cross-check would then compare a derived figure against itself
     and report agreement it never observed.
     """
-    recorded = _draft_total(taxable_base="766,30", iva_amount="160,92", grand_total=None)
+    recorded = _draft_total(taxable_base="766,30", iva_amount="160,92", grand_total=None, operation=operation)
 
     assert recorded is None, (
         f"a document that printed no total recorded {recorded}. Absence must stay representable: "

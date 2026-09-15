@@ -28,7 +28,7 @@ import pytest
 import typer
 import yaml
 
-from ....domain.categories.spending_category import SpendingCategory
+from ....domain.categories.spending_category_catalogue import spending_category_tokens
 from .._ledger_support import validate_category_id as rules_validator
 from .._ledger_support import validate_category_id as support_validator
 
@@ -49,7 +49,7 @@ def test_every_command_taking_the_flag_reaches_one_implementation() -> None:
 
 def test_a_known_category_is_returned_unchanged() -> None:
     """The positive control: the validator admits the taxonomy it guards."""
-    known = next(iter(SpendingCategory)).value
+    known = spending_category_tokens()[0].value
 
     assert support_validator(known) == known
 
@@ -83,7 +83,7 @@ def test_a_compound_key_is_refused_with_an_example_and_the_catalogue_verb() -> N
         support_validator("office:material_oficina")
 
     message = str(raised.value)
-    assert any(category.value in message for category in SpendingCategory)
+    assert any(category.value in message for category in spending_category_tokens())
     assert "aeat app ledger categories" in message
 
 

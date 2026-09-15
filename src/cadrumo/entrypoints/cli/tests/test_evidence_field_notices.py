@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....application.ledger.grounded_reading import verified_provenance
 from ....application.ledger.identity_roles import IdentityCandidate, resolve_counterparty_identity
@@ -376,7 +378,7 @@ def test_the_refusal_reaches_the_operator_with_the_reason_the_check_computed() -
     assert grounded[0].note in notice.message
 
 
-def test_the_identity_resolver_really_emits_the_located_but_unroled_shape() -> None:
+def test_the_identity_resolver_really_emits_the_located_but_unroled_shape(operation: PinnedAuthorityOperation) -> None:
     """Reachability, from the producer rather than from a fixture.
 
     The shape above is only worth a notice of its own if something actually
@@ -394,6 +396,7 @@ def test_the_identity_resolver_really_emits_the_located_but_unroled_shape() -> N
         candidates=(IdentityCandidate(value="B12345674", anchor="B-12345674", role_evidence=""),),
         taxpayer_tax_id="A82645177",
         origin=FieldOrigin.TEXT_LAYER,
+        operation=operation,
     )
     envelope = resolution.provenance
 

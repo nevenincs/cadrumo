@@ -26,7 +26,6 @@ from pydantic import BaseModel, Field
 from ....core.casilla_id import CasillaId
 from ....core.identity.aeat_csv import AeatCsv
 from ....core.identity.digest import ContentDigest
-from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..pdf.extracted_casilla import ExtractedCasilla
 
@@ -133,7 +132,7 @@ class InboundBorradorObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: Literal[Modelo("100")] = Modelo("100")
+    modelo: Literal["100"] = "100"
     ejercicio: str = Field(min_length=4, max_length=4)
     tax_id: str = Field(min_length=4, max_length=32)
     artefact_kind: ArtefactKind

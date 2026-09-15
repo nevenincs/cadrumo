@@ -19,6 +19,7 @@ from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.ledger.counterparty_establishment import ConfirmedCounterpartyFacts
 from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
@@ -106,12 +107,12 @@ def seeded_filer_profile(secure_objects: SecureObjectRepository) -> None:
 
 
 @pytest.fixture
-def isolated_settings(runtime_profile) -> Settings:
+def isolated_settings(runtime_profile: TestRuntimeProfile) -> Settings:
     return runtime_profile.settings
 
 
 @pytest.fixture
-def secure_objects(runtime_profile) -> SecureObjectRepository:
+def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
     return runtime_profile.repository
 
 

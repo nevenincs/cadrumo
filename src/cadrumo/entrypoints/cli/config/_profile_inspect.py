@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from ....application.user_profile.commands import ProfileValidationIssue as _ProfileValidationIssue
     from ....application.user_profile.commands import ProfileValidationReport as _ProfileValidationReport
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
+    from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext as _ProfileDecodeContext
     from ....domain.user_profile.values import UserProfileRecord as _UserProfileRecord
     from ..config_payloads import ConfigProfileValidateResult as _ConfigProfileValidateResult
 
@@ -116,6 +117,7 @@ def config_profile_view(
     name: str | None = None,
     output_language: _OutputLanguage | None = None,
 ) -> None:
+    from ..state_projection_support import authority_operation
     from ._profile_support import resolve_active_profile_pointer
 
     """View one profile's facts (defaults to the active profile).
@@ -137,7 +139,10 @@ def config_profile_view(
     record = _read_record_for_show(ctx, pointer)
     from ..config_payloads import ConfigProfileViewResult, ProfileFactPayload, ProfileIssuePayload
 
-    profile_session = ProfileRecordRepository.for_current_session(record.profile_id).session
+    profile_session = ProfileRecordRepository.for_current_session(
+        record.profile_id,
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+    ).session
     report = ProfileValidationService(schema=profile_session.profile_decode_context.schema).validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     values = record_to_path_values(record)
@@ -206,9 +211,13 @@ def _read_record_for_validate(
 ) -> _UserProfileRecord:
     """Read the validation target, preserving the typed missing-profile refusal."""
     from ....domain.user_profile.errors import ProfileNotFoundError
+    from ....domain.user_profile.values import UserProfileRecord
 
     try:
-        return _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+        if not isinstance(record, UserProfileRecord):
+            raise _ConfigBoundaryError(TypeError("profile record reader returned an invalid record"))
+        return record
     except ProfileNotFoundError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.unknown_profile",
@@ -218,13 +227,18 @@ def _read_record_for_validate(
 
 def _profile_validation_issues(
     record: _UserProfileRecord,
+    *,
+    profile_decode_context: _ProfileDecodeContext,
 ) -> tuple[_ProfileValidationReport, tuple[_ProfileValidationIssue, ...]]:
     """Run canonical schema validation and append distinct filing-baseline issues."""
     from ....application.modelo.profile_readiness_gate import modelo_work_profile_baseline_validation_issues
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....application.user_profile.validation import ProfileValidationService
 
-    profile_session = ProfileRecordRepository.for_current_session(record.profile_id).session
+    profile_session = ProfileRecordRepository.for_current_session(
+        record.profile_id,
+        profile_decode_context=profile_decode_context,
+    ).session
     report = ProfileValidationService(schema=profile_session.profile_decode_context.schema).validate_record(record)
     issues = list(report.issues)
     seen_issues = {(issue.code, issue.path) for issue in issues}
@@ -281,6 +295,7 @@ def config_profile_validate(
     name: str | None = None,
     output_language: _OutputLanguage | None = None,
 ) -> None:
+    from ..state_projection_support import authority_operation
     from ._profile_support import resolve_active_profile_pointer
 
     """Validate a profile against the loaded schema (defaults to the active profile).
@@ -298,7 +313,10 @@ def config_profile_validate(
         resolve_active_profile_pointer=resolve_active_profile_pointer,
     )
     record = _read_record_for_validate(pointer, name=name)
-    report, issues = _profile_validation_issues(record)
+    report, issues = _profile_validation_issues(
+        record,
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+    )
     result, lines, blocked = _profile_validate_projection(
         record=record,
         pointer=pointer,

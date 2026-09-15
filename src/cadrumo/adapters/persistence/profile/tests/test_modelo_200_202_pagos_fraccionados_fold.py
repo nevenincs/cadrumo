@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -58,7 +59,8 @@ def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepositor
     snapshot = compiled_bundled_authority().snapshot(
         "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
-    relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
+    with bundled_indexed_authority().operation() as operation:
+        relation_vals = resolve_relations_from_local_store(snapshot, operation=operation, repository=repository)
     return {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
 
 
@@ -115,11 +117,13 @@ def _all_m202_relation_values(
     snapshot = compiled_bundled_authority().snapshot(
         "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
-    relation_vals = resolve_relations_from_local_store(
-        snapshot,
-        repository=repository,
-        modelo_202_first_year_cuota=first_year_cuota,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        relation_vals = resolve_relations_from_local_store(
+            snapshot,
+            operation=operation,
+            repository=repository,
+            modelo_202_first_year_cuota=first_year_cuota,
+        )
     return {rv.relation: rv.value for rv in relation_vals.values}
 
 

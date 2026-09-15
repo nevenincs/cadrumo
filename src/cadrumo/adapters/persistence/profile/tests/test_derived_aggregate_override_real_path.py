@@ -62,7 +62,7 @@ from cadrumo.application.user_profile.validation import reject_invalid_profile_f
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -174,7 +174,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _calculate_estatal_minimo() -> Decimal:
+def _calculate_estatal_minimo(*, operation: PinnedAuthorityOperation) -> Decimal:
     """Run the real M100/2024/0A calculate action and return casilla 0513.
 
     Every repository is left to default, so the action resolves the active
@@ -189,6 +189,7 @@ def _calculate_estatal_minimo() -> Decimal:
         revision_id=snapshot.revision.id,
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET),
         clock=_T0,
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -257,7 +258,9 @@ def test_operator_write_door_refuses_a_value_at_the_derived_aggregate_path() -> 
 
 
 @pytest.mark.usefixtures("_active_profile")
-def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value() -> None:
+def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """Casilla 0513 carries the computed Art. 58 aggregate and cannot be overridden.
 
     Inverted from the suppression half of the defect this module pinned. The
@@ -271,7 +274,7 @@ def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value() -
     silently failed for some unrelated reason, which would leave the override
     channel open while looking closed.
     """
-    computed = _calculate_estatal_minimo()
+    computed = _calculate_estatal_minimo(operation=operation)
 
     # Control: the descendants really do drive a non-zero Art. 58 aggregate, so
     # a displacement would be visible if one were still possible. Without this
@@ -285,7 +288,7 @@ def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value() -
     with pytest.raises(ProfileSchemaValidationError):
         _store_sentinel_at_derived_path()
 
-    unchanged = _calculate_estatal_minimo()
+    unchanged = _calculate_estatal_minimo(operation=operation)
 
     assert unchanged == computed, (
         f"casilla {_ESTATAL_CASILLA} moved from {computed} to {unchanged} after a refused "

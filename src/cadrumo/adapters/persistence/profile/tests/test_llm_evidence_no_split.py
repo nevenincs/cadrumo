@@ -31,7 +31,7 @@ from cadrumo.application.ledger.llm_classification import (
 )
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts
 from cadrumo.core.config import load_settings
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
@@ -68,6 +68,8 @@ _LLM_PORTS = LLMClassificationPorts(
 
 def test_single_child_suggestion_does_not_recommend_split(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, _events, _objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
@@ -77,7 +79,7 @@ def test_single_child_suggestion_does_not_recommend_split(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_single_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_single_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -92,6 +94,8 @@ def test_single_child_suggestion_does_not_recommend_split(
 
 def test_apply_evidence_split_refuses_a_no_split_verdict(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
@@ -100,18 +104,21 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_single_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_single_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
             ports=_LLM_PORTS,
         )
-    with ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports, pytest.raises(TransactionValidationError, match="no-split verdict"):
+    with (
+        ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            objects=objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports,
+        pytest.raises(TransactionValidationError, match="no-split verdict"),
+    ):
         apply_evidence_split(
             suggestion,
             bucket_id=_BUCKET,
@@ -123,6 +130,8 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
 
 def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
@@ -131,7 +140,7 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_single_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_single_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -167,6 +176,8 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
 
 def test_apply_evidence_classification_refuses_a_multi_child_split(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
@@ -175,18 +186,21 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal()),
+            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
             ports=_LLM_PORTS,
         )
-    with ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports, pytest.raises(TransactionValidationError, match="recommends a split"):
+    with (
+        ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            objects=objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports,
+        pytest.raises(TransactionValidationError, match="recommends a split"),
+    ):
         apply_evidence_classification(
             suggestion,
             bucket_id=_BUCKET,

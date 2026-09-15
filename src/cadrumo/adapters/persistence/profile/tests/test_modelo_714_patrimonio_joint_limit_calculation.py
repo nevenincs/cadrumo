@@ -34,6 +34,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -194,6 +195,7 @@ def _calculate_714_from_local_m100(
     *,
     scenario: JointLimitScenario,
     repository: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
 ) -> RegistryCalculationResult:
     snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=scenario.filing_year, period="0A")
     prefill = resolve_relations_from_local_store(
@@ -202,6 +204,7 @@ def _calculate_714_from_local_m100(
         captured_at=_CAPTURED_AT,
         m111_no_retenciones_periods=frozenset(),
         not_applicable_source_modelos=frozenset(),
+        operation=operation,
     )
     relation_values = {item.relation: item.value for item in prefill.values if item.value is not None}
     assert relation_values == {
@@ -229,7 +232,9 @@ def _assert_joint_limit_outputs(result: RegistryCalculationResult, scenario: Joi
     assert result.values[_PATRIMONIO_TOTAL_CUOTA_INTEGRA] == scenario.expected_total_cuota
 
 
-def test_modelo_714_joint_limit_calculates_from_local_m100_observation(tmp_path: Path) -> None:
+def test_modelo_714_joint_limit_calculates_from_local_m100_observation(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """M714 resolves same-year M100 outputs from the local store and calculates casilla 40."""
     scenario = _SCENARIOS[2023]
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -242,12 +247,14 @@ def test_modelo_714_joint_limit_calculates_from_local_m100_observation(tmp_path:
                 stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)),
             )
         )
-        result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
+        result = _calculate_714_from_local_m100(scenario=scenario, repository=repo, operation=operation)
 
     _assert_joint_limit_outputs(result, scenario)
 
 
-def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(tmp_path: Path) -> None:
+def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """End-to-end enrollment: M714 art.31 calculation across two renta years."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
@@ -261,5 +268,5 @@ def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(tmp_path: Pa
                     stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)),
                 )
             )
-            result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
+            result = _calculate_714_from_local_m100(scenario=scenario, repository=repo, operation=operation)
             _assert_joint_limit_outputs(result, scenario)

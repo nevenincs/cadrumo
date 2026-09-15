@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from cadrumo.adapters.persistence.profile.catalogue_creation import (
     build_catalogue_creation_ports,
     build_catalogue_lifecycle_ports,
@@ -57,6 +58,7 @@ def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
+        rate_provider=default_ecb_rate_provider(),
     )
     if linked:
         invoice = invoice.model_copy(update={"linked_transaction_ids": linked})
@@ -143,6 +145,7 @@ def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path: Path) -> Non
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
+                rate_provider=default_ecb_rate_provider(),
             ),
             ports=build_catalogue_creation_ports(bucket_id=_BUCKET_ID),
         )

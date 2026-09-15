@@ -35,7 +35,12 @@ from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -56,7 +61,7 @@ _HISTORY_BUCKET_ID = "30330300-0000-4000-8000-000000000303"
 _CONFLICT_BUCKET_ID = "30330300-0000-4000-8000-000000000304"
 
 
-def _history_state_from_filed_observation(observation: object):
+def _history_state_from_filed_observation(observation: object, *, operation: PinnedAuthorityOperation):
     """Build history only through the disposition-grounded envelope contract."""
     from cadrumo.adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
 
@@ -100,10 +105,13 @@ def _history_state_from_filed_observation(observation: object):
         source_observation_key=(
             f"303:{observation.ejercicio}:{observation.period.registry_token}:{observation.expediente_id}"
         ),
+        operation=operation,
     )
 
 
-def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path: Path) -> None:
+def test_three_year_filed_history_repository_projects_compensation_lots(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         repository = IvaCompensationHistoryRepository()
         observations = (
@@ -134,7 +142,7 @@ def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path
         )
 
         for observation in observations:
-            repository.save_period(_history_state_from_filed_observation(observation))
+            repository.save_period(_history_state_from_filed_observation(observation, operation=operation))
 
         reloaded = IvaCompensationHistoryRepository().list_periods()
         report = build_iva_compensation_carry_forward_report(reloaded, as_of_year=2026)
@@ -194,7 +202,9 @@ def test_iva_compensation_modelo_error_round_trips_through_build_error_envelope(
     assert envelope.message != "IVA compensation history only accepts Modelo 303 observations"
 
 
-def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generated() -> None:
+def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generated(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """A negative result generates carry-forward whether or not casilla 87 was declared.
 
     The canonical filed-casilla derivation declines a filing that declares no
@@ -220,7 +230,7 @@ def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generate
     )
     assert len(without_posterior.casillas) == len(observation.casillas) - 1, "the fixture still declares a posterior"
 
-    state = _history_state_from_filed_observation(without_posterior)
+    state = _history_state_from_filed_observation(without_posterior, operation=operation)
 
     assert state.pending_for_later_amount is None
     assert state.generated_amount == Decimal("100.00")
@@ -268,7 +278,9 @@ def test_iva_compensation_period_key_raises_localized_year_range_error() -> None
     assert excinfo.value.context == {"filing_year": 1999, "min_year": 2000, "max_year": 2099}
 
 
-def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric() -> None:
+def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """A carry-forward balance is never read from a casilla that is not an amount.
 
     Modelo 303 and Modelo 390 declare only money casillas today, so this cannot
@@ -292,7 +304,7 @@ def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric()
     )
 
     with pytest.raises(SedeError) as excinfo:
-        _history_state_from_filed_observation(observation)
+        _history_state_from_filed_observation(observation, operation=operation)
 
     assert str(_M303_RESULTADO_CASILLA) in str(excinfo.value)
 

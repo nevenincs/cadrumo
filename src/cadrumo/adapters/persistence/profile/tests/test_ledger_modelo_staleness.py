@@ -39,6 +39,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
@@ -123,7 +125,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
     )
 
 
-def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
+def _verified_revision(snapshot, tx_id: str, *, operation: PinnedAuthorityOperation) -> CalculationRevision:
     registry_snapshot_ref = (
         compiled_bundled_authority()
         .snapshot(
@@ -140,7 +142,9 @@ def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
         period=_FILING_PERIOD,
         revision_id=registry_snapshot_ref.revision_id,
     )
-    filing_instance_evidence = general_m303_filing_evidence(_FILING_PERIOD, reference="test:ledger-modelo-staleness")
+    filing_instance_evidence = general_m303_filing_evidence(
+        _FILING_PERIOD, reference="test:ledger-modelo-staleness", operation=operation
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
@@ -176,7 +180,7 @@ def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
 
 
 # --- behavior contract: modify a contributing row → drift is surfaced, never silent ----
-def test_modifying_contributing_row_surfaces_staleness_not_silent() -> None:
+def test_modifying_contributing_row_surfaces_staleness_not_silent(*, operation: PinnedAuthorityOperation) -> None:
     original = _txn(taxable_base=Decimal("100.00"))
     tx_id = original.transaction_id
     snapshot = compute_ledger_filing_snapshot(
@@ -184,7 +188,7 @@ def test_modifying_contributing_row_surfaces_staleness_not_silent() -> None:
         catalogue=TransactionCatalogue.from_transactions((original,)),
         captured_at=_NOW,
     )
-    revision = _verified_revision(snapshot, tx_id)
+    revision = _verified_revision(snapshot, tx_id, operation=operation)
 
     # Unchanged ledger: the filed revision is NOT stale (no false positive).
     clean = evaluate_ledger_filing_staleness(snapshot, TransactionCatalogue.from_transactions((original,)))
@@ -232,7 +236,9 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def test_finalized_modelo_blocks_destructive_ledger_edit(secure_objects: SecureObjectRepository) -> None:
+def test_finalized_modelo_blocks_destructive_ledger_edit(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     objects = secure_objects
     tx = _txn(taxable_base=Decimal("100.00"))
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects).save(
@@ -243,7 +249,7 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(secure_objects: SecureO
         catalogue=TransactionCatalogue.from_transactions((tx,)),
         captured_at=_NOW,
     )
-    revision = _verified_revision(snapshot, tx.transaction_id)
+    revision = _verified_revision(snapshot, tx.transaction_id, operation=operation)
     work_unit = WorkUnit(
         work_unit_id=revision.work_unit_id,
         bucket_id=_BUCKET_ID,

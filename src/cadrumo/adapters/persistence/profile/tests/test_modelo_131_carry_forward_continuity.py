@@ -54,6 +54,7 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -206,7 +207,9 @@ def test_q1_2025_profitable_produces_zero_saldo(tmp_path: Path) -> None:
     assert result.values[_M131_SALDO_NEGATIVO_CASILLA] == Decimal("0.00")
 
 
-def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(tmp_path: Path) -> None:
+def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Q2/2024's casilla 11 auto-resolves to Q1/2024's persisted saldo.
 
     The within-ejercicio carry-forward contract (max_year_delta=0, offset=-1):
@@ -234,7 +237,10 @@ def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(tmp_path: Path) -> No
         )
         q2_snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N, period="2T")
         report = resolve_bindings_from_local_store(
-            q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
+            q2_snapshot,
+            repository=obs_repo,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=operation,
         )
 
     assert report.binding_values.get(_CARRY_BINDING) == _EXPECTED_Q1_2024_SALDO

@@ -46,6 +46,10 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+)
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
@@ -464,7 +468,7 @@ def _source_casilla_ids_by_period() -> dict[str, set[CasillaId]]:
     return source_casilla_ids_by_period
 
 
-def _create_source_303_work_unit(period: str) -> WorkUnit:
+def _create_source_303_work_unit(period: str, *, operation: PinnedAuthorityOperation) -> WorkUnit:
     registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
         filing_year=_M390_YEAR,
@@ -481,6 +485,7 @@ def _create_source_303_work_unit(period: str) -> WorkUnit:
             work_unit_repository=WorkUnitCatalogueRepository(),
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
+        operation=operation,
     )
 
 
@@ -497,11 +502,13 @@ def _persist_source_justificante_if_needed(
 
 def _seed_source_period_filing(
     *,
+    observation_repository: CalculationObservationRepository,
     work_unit: WorkUnit,
     values: dict[CasillaId, Decimal],
     evidence_kind: ExternalEvidenceKind,
     evidence_reference_id: str,
     omitted: bool,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     if _is_justificante_evidence(evidence_kind) and omitted:
         _seed_source_filing_record_without_import_flow(
@@ -524,7 +531,9 @@ def _seed_source_period_filing(
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period,
             reference=evidence_reference_id,
+            operation=operation,
         ),
+        observation_repository=observation_repository,
         clock=_CLOCK,
     )
 
@@ -587,6 +596,7 @@ def _seed_official_303_source_period(
     omit_justificante_metadata_periods: set[str],
     source_kind_by_period: dict[str, str],
     source_metadata_by_period: dict[str, dict[str, str] | None],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
     evidence_reference_id = f"JUST0000{period}"
@@ -597,14 +607,16 @@ def _seed_official_303_source_period(
         evidence_reference_id=evidence_reference_id,
         omitted=omitted,
     )
-    work_unit = _create_source_303_work_unit(period)
+    work_unit = _create_source_303_work_unit(period, operation=operation)
     values = _source_values(period, source_casilla_ids)
     _seed_source_period_filing(
+        observation_repository=observation_repository,
         work_unit=work_unit,
         values=values,
         evidence_kind=evidence_kind,
         evidence_reference_id=evidence_reference_id,
         omitted=omitted,
+        operation=operation,
     )
     default_source_kind, source_metadata = _source_observation_metadata(
         period=period,
@@ -637,16 +649,18 @@ def _seed_official_303_source_filings(
     omit_justificante_metadata_periods = omit_justificante_metadata_periods or set()
     source_kind_by_period = source_kind_by_period or {}
     source_metadata_by_period = source_metadata_by_period or {}
-    for period, source_casilla_ids in sorted(_source_casilla_ids_by_period().items()):
-        _seed_official_303_source_period(
-            observation_repository,
-            period=period,
-            source_casilla_ids=tuple(sorted(source_casilla_ids)),
-            evidence_kind_by_period=evidence_kind_by_period,
-            omit_justificante_metadata_periods=omit_justificante_metadata_periods,
-            source_kind_by_period=source_kind_by_period,
-            source_metadata_by_period=source_metadata_by_period,
-        )
+    with bundled_indexed_authority().operation() as operation:
+        for period, source_casilla_ids in sorted(_source_casilla_ids_by_period().items()):
+            _seed_official_303_source_period(
+                observation_repository,
+                period=period,
+                source_casilla_ids=tuple(sorted(source_casilla_ids)),
+                evidence_kind_by_period=evidence_kind_by_period,
+                omit_justificante_metadata_periods=omit_justificante_metadata_periods,
+                source_kind_by_period=source_kind_by_period,
+                source_metadata_by_period=source_metadata_by_period,
+                operation=operation,
+            )
 
 
 def _seed_source_filing_record_without_import_flow(
@@ -747,28 +761,30 @@ def _evaluate_clean_state(
     not_applicable_source_modelos: frozenset[str] | None = None,
     zero_value_previous_filing_binding_ids: frozenset[str] | None = None,
 ) -> CrossPeriodCleanStateVerdict:
-    return evaluate_cross_period_clean_state(
-        snapshot,
-        bucket_id=bucket_id,
-        observation_repository=observation_repository
-        if observation_repository is not None
-        else CalculationObservationRepository(),
-        filing_repository=filing_repository if filing_repository is not None else ModeloRecordCatalogueRepository(),
-        calculation_repository=calculation_repository
-        if calculation_repository is not None
-        else CalculationRevisionCatalogueRepository(),
-        verification_repository=verification_repository
-        if verification_repository is not None
-        else VerificationReportCatalogueRepository(),
-        justificante_repository=JustificanteRepository(),
-        taxpayer_tax_id=taxpayer_tax_id,
-        expected_member_sets=expected_member_sets,
-        activity_start_date=activity_start_date,
-        modelo_202_modality=modelo_202_modality,
-        taxpayer_files_economic_activity=taxpayer_files_economic_activity,
-        not_applicable_source_modelos=not_applicable_source_modelos,
-        zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return evaluate_cross_period_clean_state(
+            snapshot,
+            operation=operation,
+            bucket_id=bucket_id,
+            observation_repository=observation_repository
+            if observation_repository is not None
+            else CalculationObservationRepository(),
+            filing_repository=filing_repository if filing_repository is not None else ModeloRecordCatalogueRepository(),
+            calculation_repository=calculation_repository
+            if calculation_repository is not None
+            else CalculationRevisionCatalogueRepository(),
+            verification_repository=verification_repository
+            if verification_repository is not None
+            else VerificationReportCatalogueRepository(),
+            justificante_repository=JustificanteRepository(),
+            taxpayer_tax_id=taxpayer_tax_id,
+            expected_member_sets=expected_member_sets,
+            activity_start_date=activity_start_date,
+            modelo_202_modality=modelo_202_modality,
+            taxpayer_files_economic_activity=taxpayer_files_economic_activity,
+            not_applicable_source_modelos=not_applicable_source_modelos,
+            zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
+        )
 
 
 BUCKET_ID = _BUCKET_ID

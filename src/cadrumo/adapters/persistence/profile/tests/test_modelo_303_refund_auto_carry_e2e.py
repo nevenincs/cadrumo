@@ -239,39 +239,42 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
         )
     assert report.decision.divergence == "first_period_zero"
 
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=work_repo,
-            bucket_event_repository=BucketEventHistoryRepository(),
-        ),
-        clock=_DECIDED_AT,
-    )
-    with calculation_ports_for_test(
-        bucket_id=_BUCKET_ID,
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        bucket_event_repository=event_repo,
-    ) as _calculation_ports_266:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-            backend_binding_values=_NEGATIVE_CREDIT_ENGINE_INPUTS,
-            iva_compensation_decision=report.decision,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period,
-                reference="test:m303-refund-auto-carry",
+    with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
             ),
-            filing_period_date=date(_YEAR, 6, 30),
-            ports=_calculation_ports_266,
+            operation=operation,
             clock=_DECIDED_AT,
         )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_266:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                backend_binding_values=_NEGATIVE_CREDIT_ENGINE_INPUTS,
+                iva_compensation_decision=report.decision,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period,
+                    reference="test:m303-refund-auto-carry",
+                    operation=operation,
+                ),
+                filing_period_date=date(_YEAR, 6, 30),
+                ports=_calculation_ports_266,
+                clock=_DECIDED_AT,
+            )
     # The scenario genuinely produced a negative result and a positive carry saldo.
     assert revision.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
     saldo = revision.casilla_values[_SALDO_CASILLA]

@@ -60,7 +60,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -379,7 +379,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
 
 
 def test_verify_refuses_when_required_casilla_missing_real_registry(
-    repos: Repos,
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Real e2e: omit one required casilla; the verifier emits a
     BLOCKING ``MISSING_REQUIRED_CASILLA`` finding for it; the
@@ -409,6 +409,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        operation=operation,
     )
 
     with bundled_indexed_authority().operation() as operation:
@@ -465,7 +466,9 @@ def test_work_unit_creation_refuses_unresolvable_registry_snapshot_before_verify
         )
 
 
-def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos) -> None:
+def test_verify_reverify_collapses_to_existing_report_real_registry(
+    repos: Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """Real e2e: re-verifying an already-verified revision is a guarded no-op.
 
     Per aeat-cli-contract, verify is a creating
@@ -494,6 +497,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         first = verify_modelo_revision(

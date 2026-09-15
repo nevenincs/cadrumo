@@ -29,7 +29,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord, derive_filing_record_id
@@ -124,7 +124,12 @@ def seed_ready_profile(*, bucket_id: str) -> None:
     )
 
 
-def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository, bucket_event_repository: BucketEventHistoryRepository):
+def _seed_work_unit(
+    wu_repo: WorkUnitCatalogueRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+):
     """Create the Modelo 130 work unit used by the import-flow scenarios."""
 
     return create_work_unit(
@@ -135,6 +140,7 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository, bucket_event_repositor
         revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repository),
         clock=_T0,
+        operation=operation,
     )
 
 
@@ -193,10 +199,10 @@ def _import_external_filing(
     )
 
 
-def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
+def _drive_import_persists_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> _ImportOutcome:
     """Run the seed-work-unit and import-evidence scenario."""
     wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo, repos[-1])
+    work_unit = _seed_work_unit(wu_repo, repos[-1], operation=operation)
     _persist_matching_justificante(
         "JUST2026303Q1OPERATOR1",
         work_unit,

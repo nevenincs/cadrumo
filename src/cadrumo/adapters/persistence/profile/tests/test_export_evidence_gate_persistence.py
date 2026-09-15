@@ -22,7 +22,12 @@ from cadrumo.application.modelo.export import (
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -68,6 +73,7 @@ def _revision(
     *,
     source_transaction_ids: tuple[str, ...],
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
         bucket_id="bucket-operator",
@@ -77,7 +83,7 @@ def _revision(
         revision_id="gate",
     )
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "1T"), reference="test:export-evidence-gate"
+        Period.from_year_and_code(2026, "1T"), reference="test:export-evidence-gate", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -120,11 +126,10 @@ def _revision(
 
 
 def test_export_service_refuses_ledger_revision_without_evidence_reference(
-    active_profile: None,
-    tmp_path: Path,
+    active_profile: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        revision = _revision(source_transaction_ids=(_TX_ID,))
+        revision = _revision(source_transaction_ids=(_TX_ID,), operation=operation)
         repository = CalculationRevisionCatalogueRepository()
         repository.save(upsert_calculation_revision(repository.load(), revision))
         output_path = tmp_path / "modelo-303.txt"

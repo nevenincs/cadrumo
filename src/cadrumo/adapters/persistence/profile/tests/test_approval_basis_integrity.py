@@ -23,14 +23,21 @@ tampered aggregate checksum is refused after reload.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
-from datetime import UTC, datetime
+from collections.abc import Iterable, Iterator, Mapping
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.calculations.observations_repository import (
+    CalculationObservationStorageProtocol,
+    ObservationEnvelopePayload,
+    ObservationSourceKind,
+    PriorDomiciliationElectionProjection,
+    ResultDispositionProjection,
+)
 from cadrumo.application.filing.draft_review import (
     approve_draft,
     compute_review_checksum,
@@ -44,17 +51,22 @@ from cadrumo.application.filing.tests.filing_support import (
     empty_profile_activity_fingerprint,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-)
+from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloDraft
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.submission.models import ModeloDraftStatus
-from cadrumo.domain.transactions.models import TransactionCatalogue
+from cadrumo.domain.transactions.models import (
+    LedgerDatePartition,
+    TransactionCatalogue,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -111,25 +123,130 @@ def _ready_draft(*, operation: PinnedAuthorityOperation) -> ModeloDraft:
 class _EmptyTransactionRepository:
     """Keep unrelated catalogue state deterministic for review integration cases."""
 
+    @property
+    def bucket_id(self) -> str:
+        return _BUCKET_ID
+
+    @staticmethod
+    def exists() -> bool:
+        return False
+
     @staticmethod
     def load() -> TransactionCatalogue:
         return TransactionCatalogue()
+
+    @staticmethod
+    def load_for_date_range(start: date, end: date) -> TransactionCatalogue:
+        del start, end
+        return TransactionCatalogue()
+
+    @staticmethod
+    def load_by_ids(transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        del transaction_ids
+        return TransactionCatalogue()
+
+    @staticmethod
+    def partition_by_date_range(start: date, end: date) -> LedgerDatePartition:
+        del start, end
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue(),
+            out_of_window=(),
+            out_of_window_summary=None,
+            index_complete=True,
+        )
+
+    @staticmethod
+    def save(catalogue: TransactionCatalogue) -> None:
+        del catalogue
 
 
 class _EmptyInvoiceRepository:
     """Keep unrelated invoice state deterministic for review integration cases."""
 
+    @property
+    def bucket_id(self) -> str:
+        return _BUCKET_ID
+
+    @staticmethod
+    def exists() -> bool:
+        return False
+
     @staticmethod
     def load() -> InvoiceCatalogue:
         return InvoiceCatalogue()
+
+    @staticmethod
+    def save(catalogue: InvoiceCatalogue) -> None:
+        del catalogue
 
 
 class _EmptyObservationRepository:
     """Unused observation capability because the tests supply its digest."""
 
-    @staticmethod
-    def iter_records() -> Iterator[object]:
+    def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
+        del modelo, period
+        return None
+
+    def iter_modelo(self, modelo: str) -> Iterator[ObservationEnvelopePayload]:
+        del modelo
         return iter(())
+
+    def iter_records(self) -> Iterator[ObservationEnvelopePayload]:
+        return iter(())
+
+    def prepare_observation_envelope(
+        self,
+        observation: RegistryModeloObservation,
+        *,
+        source_kind: ObservationSourceKind | str,
+        stamped_revision_id: RevisionId,
+        captured_at: datetime | None = None,
+        member_nif: str | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+        source_headers: tuple[ObservedHeaderFact, ...] = (),
+        result_disposition: ResultDispositionProjection | None = None,
+        prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
+        replace_official_evidence: bool = False,
+    ) -> ObservationEnvelopePayload:
+        del (
+            observation,
+            source_kind,
+            stamped_revision_id,
+            captured_at,
+            member_nif,
+            source_metadata,
+            source_headers,
+            result_disposition,
+            prior_domiciliation_election,
+            replace_official_evidence,
+        )
+        raise AssertionError("approval-basis observation fake does not prepare envelopes")
+
+    @staticmethod
+    def save(payload: ObservationEnvelopePayload) -> None:
+        del payload
+
+    @staticmethod
+    def to_secure_object_write(payload: ObservationEnvelopePayload) -> SecureObjectWrite:
+        del payload
+        raise AssertionError("approval-basis observation fake does not support secure-object writes")
+
+    @property
+    def secure_object_repository(self) -> CalculationObservationStorageProtocol:
+        return _EmptyObservationStorage()
+
+
+class _EmptyObservationStorage:
+    """Atomic storage capability that is unreachable in these digest-only tests."""
+
+    @staticmethod
+    def apply_batch(writes: tuple[SecureObjectWrite, ...]) -> None:
+        del writes
+        raise AssertionError("approval-basis observation storage is not writable")
+
+    @property
+    def engine(self) -> object:
+        return self
 
 
 class _EmptyProfileRepository:
@@ -179,9 +296,11 @@ def test_real_approval_basis_has_the_shapes_this_module_pins(tmp_path: Path) -> 
     carries the draft's 16-character content address. A uniform hex-64 rule
     across all eight would refuse a value the approval path actually writes.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+    ):
+        approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
 
     basis = approved.approval_basis
     assert basis is not None
@@ -278,9 +397,11 @@ def test_untampered_approved_draft_survives_refresh(tmp_path: Path) -> None:
 
 def test_approved_at_is_utc(tmp_path: Path) -> None:
     """The approval instant a real approval stamps is UTC-aware."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+    ):
+        approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
 
     assert approved.approved_at is not None
     assert approved.approved_at.tzinfo is not None

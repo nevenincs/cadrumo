@@ -56,11 +56,13 @@ def modelo_readiness(
     only by reading the payload.
     """
     resolved_period = _resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period)
+    operation = authority_operation(ctx)
     revision_id = _resolve_readiness_revision_id(
         modelo=modelo,
         filing_year=filing_year,
         period=resolved_period,
         revision_id=revision_id,
+        operation=operation,
     )
     request = ModeloReadinessRequest(
         modelo=modelo,
@@ -74,7 +76,7 @@ def modelo_readiness(
         operator_probe_ports=operator_probe_ports(ctx),
         operator_scope_ports=operator_scope_ports(ctx),
         read_ports=state_projection_read_ports(ctx),
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     readiness_result = _readiness_result(
         report,
@@ -100,7 +102,12 @@ def modelo_readiness(
 
 
 def _resolve_readiness_revision_id(
-    *, modelo: str, filing_year: int, period: Period | None, revision_id: str | None
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period | None,
+    revision_id: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> str:
     """Resolve the revision law-determined, or assert a supplied override equal to it."""
     from ...application.modelo.work_addressing import law_selected_revision_for_work_target
@@ -111,6 +118,7 @@ def _resolve_readiness_revision_id(
         filing_year=filing_year,
         period=target_period,
         requested_revision_id=revision_id or None,
+        operation=operation,
     )
 
 

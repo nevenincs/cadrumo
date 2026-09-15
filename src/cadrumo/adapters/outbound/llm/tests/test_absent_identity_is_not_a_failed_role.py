@@ -17,6 +17,7 @@ from cadrumo.adapters.outbound.llm.invoice_field_grounding import (
 )
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -28,15 +29,16 @@ _COUNTERPARTY_CIF = "B12345674"
 _BAD_CHECKSUM_CIF = "B1234567X"
 
 
-def _grounded(payload: dict[str, str]):
+def _grounded(payload: dict[str, str], *, operation: PinnedAuthorityOperation):
     return ground_extracted_fields(
         parse_invoice_extraction_response(json.dumps(payload)),
         raw_text_length=256,
         origin=FieldOrigin.TEXT_LAYER,
+        operation=operation,
     )
 
 
-def test_the_reading_stage_records_an_identifier_it_rejected() -> None:
+def test_the_reading_stage_records_an_identifier_it_rejected(*, operation: PinnedAuthorityOperation) -> None:
     """Dropping the VALUE is right; dropping the FACT is not.
 
     The grounder drops a checksum-failing identifier to ``None`` and builds no
@@ -50,6 +52,7 @@ def test_the_reading_stage_records_an_identifier_it_rejected() -> None:
             "supplier_tax_id_anchor": _BAD_CHECKSUM_CIF,
             "supplier_tax_id_role_evidence": "Proveedor:",
         },
+        operation=operation,
     )
 
     assert draft.supplier_tax_id is None, "the unverifiable value must still be dropped"
@@ -59,19 +62,23 @@ def test_the_reading_stage_records_an_identifier_it_rejected() -> None:
     )
 
 
-def test_the_reading_stage_records_nothing_when_the_document_printed_nothing() -> None:
+def test_the_reading_stage_records_nothing_when_the_document_printed_nothing(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The bound on the case above: silence must not become a rejection.
 
     Without this, "record a rejection" could be implemented as "record one
     whenever the slot is empty", which re-creates the blocker across the
     legitimate population from the other side.
     """
-    draft = _grounded({"invoice_number": "2026-0142", "invoice_number_anchor": "2026-0142"})
+    draft = _grounded({"invoice_number": "2026-0142", "invoice_number_anchor": "2026-0142"}, operation=operation)
 
     assert draft.discrepancies == ()
 
 
-def test_the_reading_stage_records_nothing_for_an_identifier_that_verifies() -> None:
+def test_the_reading_stage_records_nothing_for_an_identifier_that_verifies(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """A good identifier is not a rejection, on either party's slot."""
     draft = _grounded(
         {
@@ -80,6 +87,7 @@ def test_the_reading_stage_records_nothing_for_an_identifier_that_verifies() -> 
             "customer_tax_id": _FILER_CIF,
             "customer_tax_id_anchor": _FILER_CIF,
         },
+        operation=operation,
     )
 
     assert draft.supplier_tax_id == _COUNTERPARTY_CIF

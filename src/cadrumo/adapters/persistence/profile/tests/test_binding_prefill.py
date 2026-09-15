@@ -281,6 +281,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             annual_partition = IvaCompensationAnnualPartitionSourceResolver(
                 repository=repository,
                 registry_snapshot=snapshot,
+                operation=_authority_operation_for_test,
             ).resolve(
                 CalculationSourceContext(
                     bucket_id="m390-binding-prefill",
@@ -297,6 +298,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             # zero. Enrolling it here mirrors the calculate-path mesh so the
             # annual snapshot has every declared binding fact.
             bienes_resolution = BienesInversionRegularizacionSourceResolver(
+                operation=_authority_operation_for_test,
                 register_repository=BienesInversionIvaRegisterRepository(objects=profile.repository),
                 observation_repository=CalculationObservationRepository(objects=profile.repository),
             ).resolve(

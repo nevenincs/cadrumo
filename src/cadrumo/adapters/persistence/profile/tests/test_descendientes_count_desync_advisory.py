@@ -29,8 +29,10 @@ from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture 
     advisory_profile_bucket,  # noqa: F401
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from cadrumo.core.modelo import Modelo
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.values import UserProfileFact
@@ -49,7 +51,7 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _revision():
+def _revision() -> ModeloRevision:
     return compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
 
 
@@ -62,7 +64,7 @@ def _two_descendants() -> tuple[UserProfileFact, ...]:
     return tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(kids))
 
 
-def _diagnostics(*, modelo: str = Modelo("100").value) -> tuple:
+def _diagnostics(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourceDiagnostic, ...]:
     return collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
         {},

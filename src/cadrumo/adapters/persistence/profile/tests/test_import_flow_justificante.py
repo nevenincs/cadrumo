@@ -14,6 +14,7 @@ from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     repos,
 )
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 
 __all__ = ["repos"]
@@ -21,9 +22,11 @@ __all__ = ["repos"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_import_refuses_justificante_evidence_without_persisted_artifact(repos: _Repos) -> None:
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+def test_import_refuses_justificante_evidence_without_persisted_artifact(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
 
     with pytest.raises(ExternalModeloImportError) as raised:
         _import_external_filing(
@@ -37,9 +40,11 @@ def test_import_refuses_justificante_evidence_without_persisted_artifact(repos: 
     assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_missing"
 
 
-def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Repos) -> None:
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+def test_import_refuses_justificante_evidence_without_expected_tax_id(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
     _persist_matching_justificante(
         "JUSTNOTAXID1",
         work_unit,
@@ -57,9 +62,11 @@ def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Re
     assert raised.value.translated_message == "application.modelo.errors.external_import_tax_id_missing"
 
 
-def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos) -> None:
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+def test_import_refuses_justificante_evidence_for_different_period(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
     _persist_matching_justificante(
         "JUSTMISMATCH",
         work_unit,
@@ -79,9 +86,11 @@ def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos
     assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_mismatch"
 
 
-def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Repos) -> None:
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+def test_import_refuses_justificante_evidence_for_different_taxpayer(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
     _persist_matching_justificante(
         "JUSTWRONGTAXPAYER",
         work_unit,
@@ -100,9 +109,11 @@ def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Rep
     assert raised.value.translated_message == "application.modelo.errors.external_import_justificante_mismatch"
 
 
-def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -> None:
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+def test_import_justificante_taxpayer_match_is_case_insensitive(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
     _persist_matching_justificante(
         "JUSTCASETAXPAYER",
         work_unit,
@@ -123,9 +134,11 @@ def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -
     assert filing.external_evidence.reference_id == "JUSTCASETAXPAYER"
 
 
-def test_import_justificante_pdf_refuses_without_enrolled_justificante(repos: _Repos) -> None:
-    wu_repo, _, _, _, _ = repos
-    work_unit = _seed_work_unit(wu_repo)
+def test_import_justificante_pdf_refuses_without_enrolled_justificante(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    wu_repo, _, _, _, bucket_event_repository = repos
+    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
 
     with pytest.raises(ExternalModeloImportError) as exc_info:
         _import_external_filing(

@@ -54,7 +54,7 @@ from cadrumo.application.modelo.verification_repository_ports import Verificatio
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -195,7 +195,7 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
     )
 
 
-def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
+def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOperation) -> None:
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
@@ -208,6 +208,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
         revision_id=snapshot.revision.id,
         ports=_work_ports(work_repo),
         clock=_CLOCK,
+        operation=operation,
     )
     evidence_reference_id = "JUSTM20020240A"
     casilla_values = {_M200_CUOTA_LIQUIDA: Decimal("0")}
@@ -261,6 +262,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
 def _calculate_m202(
     *,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[
     WorkUnit,
     CalculationRevision,
@@ -282,6 +284,7 @@ def _calculate_m202(
         revision_id=snapshot.revision.id,
         ports=_work_ports(work_repo),
         clock=_CLOCK,
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
@@ -342,7 +345,9 @@ def _seed_legacy_zero_m202_revision(
     return revision
 
 
-def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(tmp_path: Path) -> None:
+def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed_profile(bucket_id=_BUCKET_ID, incn=None)
         work_repo = WorkUnitCatalogueRepository()
@@ -356,6 +361,7 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(tmp
             revision_id=snapshot.revision.id,
             ports=_work_ports(work_repo),
             clock=_CLOCK,
+            operation=operation,
         )
 
         with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
@@ -384,7 +390,9 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(tmp
         assert stored_work_unit.current_calculation_revision_id is None
 
 
-def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) -> None:
+def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed_profile(bucket_id=_BUCKET_ID, incn=Decimal("500000"))
         work_repo = WorkUnitCatalogueRepository()
@@ -400,6 +408,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
             revision_id=snapshot.revision.id,
             ports=_work_ports(work_repo),
             clock=_CLOCK,
+            operation=operation,
         )
         draft = _seed_legacy_zero_m202_revision(
             work_unit=work_unit,
@@ -499,12 +508,15 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
         assert export_path.exists() is False
 
 
-def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(tmp_path: Path) -> None:
+def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed_profile(bucket_id=_BUCKET_ID, incn=Decimal("500000"))
-        _seed_prior_m200_evidence(bucket_id=_BUCKET_ID)
+        _seed_prior_m200_evidence(bucket_id=_BUCKET_ID, operation=operation)
         _work_unit, revision, work_repo, calc_repo, filing_repo, verification_repo = _calculate_m202(
             bucket_id=_BUCKET_ID,
+            operation=operation,
         )
 
         with (
@@ -536,10 +548,12 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(tmp_pa
         assert state == CalculationRevisionState.BORRADOR.value
 
 
-def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(tmp_path: Path) -> None:
+def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed_profile(bucket_id=_BUCKET_ID, incn=None)
-        _seed_prior_m200_evidence(bucket_id=_BUCKET_ID)
+        _seed_prior_m200_evidence(bucket_id=_BUCKET_ID, operation=operation)
         work_repo = WorkUnitCatalogueRepository()
         calc_repo = CalculationRevisionCatalogueRepository()
         snapshot = compiled_bundled_authority().snapshot("202", filing_year=2026, period="1P")
@@ -551,6 +565,7 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(tmp_p
             revision_id=snapshot.revision.id,
             ports=_work_ports(work_repo),
             clock=_CLOCK,
+            operation=operation,
         )
 
         with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
@@ -575,12 +590,15 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(tmp_p
 
 
 @pytest.mark.parametrize("incn", (Decimal("500000"), Decimal("7000000")))
-def test_m202_declared_incn_below_or_above_threshold_can_verify(tmp_path: Path, incn: Decimal) -> None:
+def test_m202_declared_incn_below_or_above_threshold_can_verify(
+    tmp_path: Path, incn: Decimal, *, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed_profile(bucket_id=_BUCKET_ID, incn=incn)
-        _seed_prior_m200_evidence(bucket_id=_BUCKET_ID)
+        _seed_prior_m200_evidence(bucket_id=_BUCKET_ID, operation=operation)
         _work_unit, revision, work_repo, calc_repo, filing_repo, verification_repo = _calculate_m202(
             bucket_id=_BUCKET_ID,
+            operation=operation,
         )
 
         with bundled_indexed_authority().operation() as operation:

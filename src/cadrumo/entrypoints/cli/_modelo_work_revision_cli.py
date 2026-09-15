@@ -272,13 +272,22 @@ def work_revision(
         modality_lines = [f"modality\t{modality_summary.modality}"]
     result = WorkRevisionResult.model_validate(
         {
-            **calculation_revision_payload(selected_revision, work_unit=unit_for_modality).model_dump(mode="python"),
+            **calculation_revision_payload(
+                selected_revision,
+                operation=calculation_ports.operation,
+                work_unit=unit_for_modality,
+            ).model_dump(mode="python"),
             **modality_payload,
         }
     )
     lines = [
         "operation\tmodelo.work.revision",
-        *calculation_revision_lines(selected_revision, work_unit=unit_for_modality, verbose=verbose),
+        *calculation_revision_lines(
+            selected_revision,
+            operation=calculation_ports.operation,
+            work_unit=unit_for_modality,
+            verbose=verbose,
+        ),
         *modality_lines,
     ]
     emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
@@ -320,7 +329,11 @@ def work_observations(
         selector=select,
         calculation_ports=calculation_ports,
     )
-    revision_payload = calculation_revision_payload(selected_revision, include_result_summary=False)
+    revision_payload = calculation_revision_payload(
+        selected_revision,
+        operation=calculation_ports.operation,
+        include_result_summary=False,
+    )
     result = WorkObservationsResult.model_validate(
         {
             "calculation_revision_id": revision_payload.calculation_revision_id,
@@ -330,5 +343,8 @@ def work_observations(
             "observations": revision_payload.observations,
         }
     )
-    lines = ["operation\tmodelo.work.observations", *calculation_observation_lines(selected_revision)]
+    lines = [
+        "operation\tmodelo.work.observations",
+        *calculation_observation_lines(selected_revision, operation=calculation_ports.operation),
+    ]
     emit_envelope(ctx, command="modelo.work.observations", result=result, lines=lines)

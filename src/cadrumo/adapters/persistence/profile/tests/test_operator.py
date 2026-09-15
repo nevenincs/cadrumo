@@ -10,6 +10,7 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from cadrumo.adapters.outbound.aeat.auth import session_store
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
@@ -547,11 +548,15 @@ def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> 
         ),
     )
 
-    with active_auth_projection_span(operator_scope_ports=_OPERATOR_SCOPE_PORTS) as snapshot:
+    with active_auth_projection_span(
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    ) as snapshot:
         assert snapshot.state is not None
         assert snapshot.state.auth.provider == invalid_selector
         assert snapshot.provider is None
         projection = build_operator_state_projection(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,
             auth_snapshot=snapshot,
             probe_live_backend=True,
@@ -560,6 +565,7 @@ def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> 
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         direct_state_projection = build_operator_state_projection(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,
             state=snapshot.state,
             probe_live_backend=True,
@@ -587,6 +593,8 @@ def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> 
     with pytest.raises(AuthLoginPreconditionError) as excinfo:
         asyncio.run(
             login_operator_auth(
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+                browser_session_factory=default_browser_session_factory,
                 guarded_read_context="",
                 operator_probe_ports=_OPERATOR_PROBE_PORTS,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -973,7 +981,11 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
             assert certificate_lock.is_file()
             assert clave_lock.is_file()
 
-            result = reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            result = reset_operator_auth(
+                provider="certificate",
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            )
 
             assert certificate_lock.exists() is False
             assert clave_lock.is_file(), "an unrelated provider's acquisition lock must survive a scoped reset"

@@ -81,38 +81,37 @@ def _modelo_iva_wallet_seed_ports() -> ModeloIvaWalletSeedPorts:
 
 
 def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine_prefill(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path), bundled_indexed_authority().operation() as operation:
         _store_operator_profile()
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
         snapshot = _snapshot_303()
-        with bundled_indexed_authority().operation() as operation:
-            local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
-                snapshot,
-                repository=observation_repo,
-                captured_at=_DECIDED_AT,
-                iva_history_repository=IvaCompensationHistoryRepository(),
-                operation=operation,
-            )
-            report = reconcile_modelo_303_iva_compensation(
-                snapshot,
-                taxpayer_nif=_TAXPAYER_NIF,
-                wallet=None,
-                repository=observation_repo,
-                decision_repository=IvaWalletDecisionRepository(),
-                override=IvaCompensationOverride(
-                    amount=Decimal("1200.00"),
-                    operator_explanation=(
-                        "Operator reviewed filed-history evidence while direct wallet/cartera was unavailable."
-                    ),
-                    evidence_locator="operator-review:modelo-303-2026-2T-filed-history",
-                    recorded_at=_DECIDED_AT,
+        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=observation_repo,
+            captured_at=_DECIDED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=operation,
+        )
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_NIF,
+            wallet=None,
+            repository=observation_repo,
+            decision_repository=IvaWalletDecisionRepository(),
+            override=IvaCompensationOverride(
+                amount=Decimal("1200.00"),
+                operator_explanation=(
+                    "Operator reviewed filed-history evidence while direct wallet/cartera was unavailable."
                 ),
-                decided_at=_DECIDED_AT,
-                local_recurrence=local_recurrence,
-                prefill_report=prefill_report,
-                operation=operation,
-            )
+                evidence_locator="operator-review:modelo-303-2026-2T-filed-history",
+                recorded_at=_DECIDED_AT,
+            ),
+            decided_at=_DECIDED_AT,
+            local_recurrence=local_recurrence,
+            prefill_report=prefill_report,
+            operation=operation,
+        )
 
         assert report.decision.selected_authority == "taxpayer_override"
         assert report.decision.divergence == "override"
@@ -123,7 +122,9 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             "taxpayer_override",
         }
 
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
             work_unit_repository=work_repo,
@@ -137,7 +138,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 backend_binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=report.decision,
-                filing_instance_evidence=_filing_instance_evidence(work_unit.period),
+                filing_instance_evidence=_filing_instance_evidence(work_unit.period, operation=operation),
                 filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_136,
                 clock=_DECIDED_AT,
@@ -154,10 +155,12 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
     result (iva.resultado) drops to 550. This asserts the carry's effect on the
     final figure, not just that the override value plumbs through to casilla 110.
     """
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path), bundled_indexed_authority().operation() as operation:
         _store_operator_profile()
         snapshot = _snapshot_303()
-        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
+        work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            snapshot, operation=operation
+        )
 
         def _calculate() -> CalculationRevision:
             with calculation_ports_for_test(
@@ -173,7 +176,7 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                     backend_binding_values=_modelo_303_engine_inputs(),
                     iva_compensation_decision=None,
-                    filing_instance_evidence=_filing_instance_evidence(work_unit.period),
+                    filing_instance_evidence=_filing_instance_evidence(work_unit.period, operation=operation),
                     filing_period_date=date(2026, 6, 30),
                     ports=_calculation_ports_171,
                     clock=_DECIDED_AT,
@@ -191,6 +194,7 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
             reason="Operator asserts the prior-quarter cuota a compensar.",
             evidence_locator="operator-review:m303-prior-quarter",
             ports=_modelo_iva_wallet_seed_ports(),
+            operation=operation,
         )
         assert decision.selected_authority == "taxpayer_override"
         assert decision.blocked is False
@@ -206,13 +210,15 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
 def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> None:
     """Filed-immutability guard: an override is refused when a sealed Modelo 303 at or
     after the period has already consumed that period's compensación basis."""
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path), bundled_indexed_authority().operation() as operation:
         _store_operator_profile()
-        work_unit, _ = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("450.00"))
+        work_unit, _ = _work_unit_and_revision_for_wallet_gate(
+            compensation_amount=Decimal("450.00"), operation=operation
+        )
         casilla_values: dict[CasillaId, Decimal] = {
             _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Decimal("450.00"),
         }
-        sealed_filing_instance_evidence = _filing_instance_evidence(work_unit.period)
+        sealed_filing_instance_evidence = _filing_instance_evidence(work_unit.period, operation=operation)
         sealed_revision = CalculationRevision.model_validate(
             {
                 "calculation_revision_id": derive_calculation_revision_id(
@@ -261,13 +267,14 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
                 reason="x",
                 evidence_locator="y",
                 ports=_modelo_iva_wallet_seed_ports(),
+                operation=operation,
             )
 
 
 def test_override_refused_when_fresh_wallet_decision_exists(tmp_path: Path) -> None:
     """No override of fresh AEAT evidence: an override is refused when a non-blocked
     aeat_wallet decision already resolves the period."""
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path), bundled_indexed_authority().operation() as operation:
         _store_operator_profile()
         _save_wallet_gate_decision(amount=Decimal("450.00"), blocked=False)
 
@@ -279,4 +286,5 @@ def test_override_refused_when_fresh_wallet_decision_exists(tmp_path: Path) -> N
                 reason="x",
                 evidence_locator="y",
                 ports=_modelo_iva_wallet_seed_ports(),
+                operation=operation,
             )

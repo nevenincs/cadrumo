@@ -64,11 +64,11 @@ from cadrumo.application.calculations.observations_repository import observation
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
@@ -279,8 +279,9 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
     deductible less 21.00 accrued VAT yields the asserted 42.00 carry; the
     calculation engine is not used as the expected-value oracle.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(
-        tmp_path=tmp_path
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path),
     ):
         observation_repository = CalculationObservationRepository()
         source_snapshot = compiled_bundled_authority().snapshot(
@@ -345,9 +346,10 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
 
 def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Path) -> None:
     """A persisted 2T observation cannot carry when its design stamp is wrong."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(
-        tmp_path=tmp_path
-    ) as profile:
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path) as profile,
+    ):
         observation_repository = CalculationObservationRepository()
         source_result, _ = _calculate_303(
             filing_year=_YEAR_2024,
@@ -431,8 +433,9 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
     ``iva.compensacion-disponible-fin-periodo`` — the operator does not re-key
     the prior-year credit by hand.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(
-        tmp_path=tmp_path
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path),
     ):
         obs_repo = CalculationObservationRepository()
         result_n, _ = _calculate_303(
@@ -477,8 +480,9 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
     assertion is that year N+1's 1T casilla 110 equals year N's 4T persisted
     saldo — the prior-year credit carried forward with no manual re-entry.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(
-        tmp_path=tmp_path
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path),
     ):
         obs_repo = CalculationObservationRepository()
 

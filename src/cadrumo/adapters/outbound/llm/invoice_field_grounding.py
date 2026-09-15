@@ -56,6 +56,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.parsing.codes import normalise_iso_4217_currency
 from ....core.parsing.dates import parse_date
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ....domain.iva.establishment import country_code_for_printed_country_name
@@ -637,6 +638,7 @@ def _unverified_identity_findings(
 def ground_extracted_fields(
     response: ExtractedInvoiceResponse,
     *,
+    operation: PinnedAuthorityOperation,
     raw_text_length: int,
     origin: FieldOrigin,
 ) -> InvoiceDraft:
@@ -665,6 +667,8 @@ def ground_extracted_fields(
     Args:
         response: The parsed, not-yet-grounded reply. Left untouched: its anchor
             half carries the verbatim printed forms.
+        operation: The caller-owned generation-pinned authority operation used for
+            the printed-country vocabulary lookup.
         raw_text_length: How much source material the reader had to work with.
         origin: How these values were obtained. Required rather than defaulted:
             a reader that could omit it would silently claim whichever origin was
@@ -752,12 +756,12 @@ def ground_extracted_fields(
         # A name the vocabulary does not carry stays absent rather than becoming
         # the nearest match: every consumer of this field branches domestic
         # versus not, and none can express that the question went unanswered.
-        supplier_country_code=country_code_for_printed_country_name(supplier_country),
+        supplier_country_code=country_code_for_printed_country_name(supplier_country, operation=operation),
         customer_tax_id=customer_tax_id,
         customer_name=customer_name,
         customer_postal_code=customer_postal_code,
         customer_country=customer_country,
-        customer_country_code=country_code_for_printed_country_name(customer_country),
+        customer_country_code=country_code_for_printed_country_name(customer_country, operation=operation),
         invoice_number=invoice_number,
         invoice_date=invoice_date,
         taxable_base=taxable_base,

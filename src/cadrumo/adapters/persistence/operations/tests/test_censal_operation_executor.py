@@ -11,12 +11,15 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.outbound.aeat.sede.censal_datos import fetch_censal_datos
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -28,6 +31,7 @@ from cadrumo.application.operations.interactions import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import (
+    OperationDefinition,
     OperationExecutorFactory,
     OperationRegistry,
     operation_public_schema_reference,
@@ -73,10 +77,12 @@ _PASSPHRASE = "censal-operation-executor-passphrase"  # noqa: S105 - synthetic f
 _RESPONSE_TOKEN = "a" * 64
 
 
-def _test_censal_operation_definition():
+def _test_censal_operation_definition() -> OperationDefinition:
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=fetch_censal_datos,
     )
 
 
@@ -85,7 +91,7 @@ def _test_censal_operation_definition_id() -> str:
 
 
 @contextmanager
-def _subject(tmp_path: Path) -> Generator[tuple[str, object, ProfileRecordSession]]:
+def _subject(tmp_path: Path) -> Generator[tuple[str, SecureObjectRepository, ProfileRecordSession]]:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         outcome = register_profile_with_credentials(
@@ -111,6 +117,7 @@ def _subject(tmp_path: Path) -> Generator[tuple[str, object, ProfileRecordSessio
                     root=root,
                 ) as objects,
             ):
+                assert isinstance(objects, SecureObjectRepository)
                 yield outcome.profile_id, objects, session
         finally:
             session.close()
@@ -153,15 +160,13 @@ def _payload(profile_id: str) -> CensalOperationRequest:
 def _supervisor(
     *,
     root: Path,
-    objects: object,
+    objects: SecureObjectRepository,
     executor: CensalOperationExecutor,
     owner: str,
     token: str,
     now: datetime = _NOW,
 ) -> OperationSupervisor:
-    operands = operation_secure_reference_repository(
-        objects=objects,  # type: ignore[arg-type]  # reason: the profile-custody port narrows the same concrete SecureObjectRepository this call needs
-    )
+    operands = operation_secure_reference_repository(objects=objects)
     definition = _test_censal_operation_definition().model_copy(
         update={
             "executor_factory": OperationExecutorFactory(
@@ -218,6 +223,9 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
         durable_root = tmp_path / "operations"
         executor = CensalOperationExecutor(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+            browser_session_factory=default_browser_session_factory,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            censal_fetch_port=fetch_censal_datos,
             acquire=acquire,
         )
         owner = _supervisor(
@@ -309,6 +317,9 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 objects=objects,
                 executor=CensalOperationExecutor(
                     certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    browser_session_factory=default_browser_session_factory,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    censal_fetch_port=fetch_censal_datos,
                     acquire=acquire,
                 ),
                 owner="6" * 64,
@@ -349,8 +360,17 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
         history_before_race = ProfileRecordStore(session=session).history()
 
         def competing_write_then_stale(operand: CensalReviewedOperand) -> None:
-            apply_cotejo(None, adopted=(), divergences=())
-            apply_cotejo(None, reviewed_proposal=operand)
+            apply_cotejo(
+                None,
+                adopted=(),
+                divergences=(),
+                profile_decode_context=_profile_decode_context_for_test,
+            )
+            apply_cotejo(
+                None,
+                reviewed_proposal=operand,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
         async def stale_race_run() -> None:
             supervisor = _supervisor(
@@ -358,6 +378,9 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 objects=objects,
                 executor=CensalOperationExecutor(
                     certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    browser_session_factory=default_browser_session_factory,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    censal_fetch_port=fetch_censal_datos,
                     acquire=acquire,
                     apply=competing_write_then_stale,
                 ),
@@ -400,7 +423,11 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
         assert len(history_after_race) == len(history_before_race) + 1
 
         def commit_then_fail(operand: CensalReviewedOperand) -> None:
-            apply_cotejo(None, reviewed_proposal=operand)
+            apply_cotejo(
+                None,
+                reviewed_proposal=operand,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
             raise RuntimeError("synthetic repository acknowledgement loss")
 
         async def ambiguous_run() -> None:
@@ -409,6 +436,9 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 objects=objects,
                 executor=CensalOperationExecutor(
                     certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    browser_session_factory=default_browser_session_factory,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    censal_fetch_port=fetch_censal_datos,
                     acquire=acquire,
                     apply=commit_then_fail,
                 ),
@@ -473,6 +503,9 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
             objects=objects,
             executor=CensalOperationExecutor(
                 certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                browser_session_factory=default_browser_session_factory,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                censal_fetch_port=fetch_censal_datos,
                 acquire=acquire,
                 before_irreversible_section=hold_before_entry,
             ),

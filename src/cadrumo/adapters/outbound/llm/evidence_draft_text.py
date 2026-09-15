@@ -63,6 +63,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Collection
+from typing import TYPE_CHECKING
 
 from ....application.ledger.document_transcription import DocumentTranscription
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -88,6 +89,9 @@ from .invoice_field_grounding import ground_extracted_fields, parse_invoice_extr
 from .models import LLMRequest
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+
 __all__ = [
     "TextInvoiceFieldExtractor",
     "build_text_field_extraction_prompt",
@@ -96,7 +100,7 @@ __all__ = [
 ]
 
 
-def default_extraction_authority_values() -> InvoiceExtractionAuthorityValues:
+def default_extraction_authority_values(*, operation: PinnedAuthorityOperation) -> InvoiceExtractionAuthorityValues:
     """Resolve the authority values for the fallback period.
 
     The one place this package turns "no values were supplied" into values, and
@@ -107,12 +111,13 @@ def default_extraction_authority_values() -> InvoiceExtractionAuthorityValues:
         :class:`~application.ledger.invoice_extraction_authority.InvoiceExtractionAuthorityValues`: The values
         in force across the current civil year.
     """
-    return resolve_invoice_extraction_authority_values(period=default_extraction_period())
+    return resolve_invoice_extraction_authority_values(period=default_extraction_period(), operation=operation)
 
 
 def build_text_field_extraction_prompt(
     evidence_text: str,
     *,
+    operation: PinnedAuthorityOperation,
     values: InvoiceExtractionAuthorityValues | None = None,
     fields: Collection[str] | None = None,
 ) -> str:
@@ -129,6 +134,8 @@ def build_text_field_extraction_prompt(
 
     Args:
         evidence_text: The document's text representation.
+        operation: The caller-owned generation-pinned authority operation used
+            when resolving fallback authority values.
         values: Regulatory values to enumerate, resolved by the application
             layer. ``None`` resolves the current civil year's, which is the
             honest fallback for a document not yet bound to a filing period.
@@ -155,7 +162,7 @@ def build_text_field_extraction_prompt(
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )
-    resolved = values if values is not None else default_extraction_authority_values()
+    resolved = values if values is not None else default_extraction_authority_values(operation=operation)
     compiled = render_invoice_extraction_prompt(values=resolved, fields=fields)
     return f"{compiled.text}\nINVOICE TEXT:\n{evidence_text}"
 
@@ -173,6 +180,8 @@ class TextInvoiceFieldExtractor:
         client: Injected :class:`~llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
+        operation: Caller-owned generation-pinned authority operation retained
+            for authority resolution and field grounding.
         settings: Injected settings; defaults to ``load_settings()``.
         authority_values: The regulatory values the compiled prompt enumerates,
             resolved by
@@ -205,6 +214,7 @@ class TextInvoiceFieldExtractor:
         model: str | None = None,
         provider: LLMProvider = LLMProvider.LOCAL,
         client: LLMClient | None = None,
+        operation: PinnedAuthorityOperation,
         settings: Settings | None = None,
         authority_values: InvoiceExtractionAuthorityValues | None = None,
         consent_token: EvidenceConsentToken | None = None,
@@ -218,6 +228,7 @@ class TextInvoiceFieldExtractor:
         require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._provider = provider
+        self._operation = operation
         self._consent_token = consent_token
         self._public_corpus = public_corpus
         self._fields = fields
@@ -240,7 +251,9 @@ class TextInvoiceFieldExtractor:
         else:
             self._model = model
         self._authority_values = (
-            authority_values if authority_values is not None else default_extraction_authority_values()
+            authority_values
+            if authority_values is not None
+            else default_extraction_authority_values(operation=operation)
         )
         self._client = (
             client
@@ -317,6 +330,7 @@ class TextInvoiceFieldExtractor:
             parsed,
             raw_text_length=len(transcription.text),
             origin=transcription.transcriber.origin,
+            operation=self._operation,
         )
 
     def _build_request(self, evidence_text: str) -> LLMRequest:
@@ -339,6 +353,7 @@ class TextInvoiceFieldExtractor:
         return LLMRequest(
             prompt=build_text_field_extraction_prompt(
                 evidence_text,
+                operation=self._operation,
                 values=self._authority_values,
                 fields=self._fields,
             ),
@@ -367,6 +382,7 @@ class TextInvoiceFieldExtractor:
 def extract_invoice_fields_from_text(
     transcription: DocumentTranscription,
     *,
+    operation: PinnedAuthorityOperation,
     model: str | None = None,
     settings: Settings | None = None,
     authority_values: InvoiceExtractionAuthorityValues | None = None,
@@ -391,6 +407,8 @@ def extract_invoice_fields_from_text(
 
     Args:
         transcription: The acquisition-stage transcription to read.
+        operation: The caller-owned generation-pinned authority operation used
+            for authority resolution and field grounding.
         model: Optional model override.
         settings: Optional resolved settings override.
         authority_values: Application-resolved regulatory values for the prompt.
@@ -405,6 +423,7 @@ def extract_invoice_fields_from_text(
         model=model,
         settings=settings,
         provider=LLMProvider.LOCAL,
+        operation=operation,
         authority_values=authority_values,
     )
     return extractor.extract(transcription=transcription)

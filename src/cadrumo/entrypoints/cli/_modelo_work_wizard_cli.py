@@ -87,6 +87,7 @@ from .errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ...application.modelo.calculate_input import ModeloWorkCalculationServiceResult
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.work_unit import WorkUnit
 
 
@@ -195,7 +196,12 @@ def _drive_wizard_calculation(
         )
         if calculation_result is None:
             continue
-        _emit_wizard_result(ctx, calculation_result, tuple(prompted))
+        _emit_wizard_result(
+            ctx,
+            calculation_result,
+            tuple(prompted),
+            operation=calculation_ports.operation,
+        )
         return
     failure = modelo_work_wizard_retry_exhausted_precondition(
         work_unit_id=wizard.unit.work_unit_id,
@@ -302,6 +308,8 @@ def _emit_wizard_result(
     ctx: typer.Context,
     calculation_result: ModeloWorkCalculationServiceResult,
     prompted: tuple[tuple[ModeloWorkWizardStep, str], ...],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     calculation_revision = calculation_result.revision
     saved_confirmation = tr(
@@ -334,6 +342,7 @@ def _emit_wizard_result(
             "saved_confirmation": saved_confirmation,
             **calculation_revision_payload(
                 calculation_revision,
+                operation=operation,
                 work_unit=calculation_result.work_unit,
             ).model_dump(mode="python"),
             "prompted_casillas": prompted_payload,
@@ -341,7 +350,11 @@ def _emit_wizard_result(
     )
     lines = [
         "operation\tmodelo.work.wizard",
-        *calculation_revision_lines(calculation_revision, work_unit=calculation_result.work_unit),
+        *calculation_revision_lines(
+            calculation_revision,
+            operation=operation,
+            work_unit=calculation_result.work_unit,
+        ),
         *(f"prompted\t{step.number}\t{step.channel}\t{value}" for step, value in prompted),
         saved_confirmation,
     ]

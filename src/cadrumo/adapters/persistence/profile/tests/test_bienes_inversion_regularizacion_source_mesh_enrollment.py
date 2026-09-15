@@ -32,9 +32,13 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
@@ -48,7 +52,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienInversionIvaRecord
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
@@ -67,39 +71,20 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
 _VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
 
 
-class _EmptyInvoiceRepository:
-    """Deterministic inward fake for the invoice authorities unused by this test."""
-
-    @staticmethod
-    def load() -> InvoiceCatalogue:
-        return InvoiceCatalogue()
-
-
-class _EmptyPercepcionRepository:
-    """Deterministic inward fake for the optional withholding source."""
-
-    @staticmethod
-    def load_observations(modelo: str, period: Period) -> tuple[object, ...]:
-        del modelo, period
-        return ()
-
-
-class _EmptyRetencionRepository:
-    """Deterministic inward fake for the optional retención source."""
-
-    @staticmethod
-    def load_observations(modelo: str, period: Period) -> tuple[object, ...]:
-        del modelo, period
-        return ()
-
-
-def _source_mesh_ports(*, bucket_id: str, objects: object, bienes_repository: object) -> CalculationActionPorts:
+def _source_mesh_ports(
+    *,
+    bucket_id: str,
+    objects: SecureObjectRepository,
+    bienes_repository: BienesInversionIvaRegisterRepository,
+    operation: PinnedAuthorityOperation,
+) -> CalculationActionPorts:
     """Bind the real profile repositories while keeping unrelated authorities inward and deterministic."""
     transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
-    invoice_repository = _EmptyInvoiceRepository()
+    invoice_repository = InvoiceCatalogueRepository(bucket_id=bucket_id, objects=objects)
     work_unit_repository = Mock()
     bucket_event_repository = Mock()
     return CalculationActionPorts(
+        operation=operation,
         work_unit_repository=work_unit_repository,
         work_lifecycle_ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository,
@@ -121,11 +106,15 @@ def _source_mesh_ports(*, bucket_id: str, objects: object, bienes_repository: ob
         inventory_repository=Mock(),
         observation_repository=CalculationObservationRepository(objects=objects),
         invoice_source_ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repository),
-        percepciones_observation_ports=PercepcionObservationPorts(repository=_EmptyPercepcionRepository()),
+        percepciones_observation_ports=PercepcionObservationPorts(
+            repository=PercepcionObservationRepositoryAdapter(objects=objects),
+        ),
         iva_compensation_history_repository=Mock(),
         iva_compensation_decision_repository=Mock(),
         borrador_snapshot_repository=Mock(),
-        retencion_observation_ports=RetencionObservationPorts(repository=_EmptyRetencionRepository()),
+        retencion_observation_ports=RetencionObservationPorts(
+            repository=RetencionObservationRepositoryAdapter(objects=objects),
+        ),
         relation_override_migration=Mock(),
     )
 
@@ -164,7 +153,8 @@ def _record() -> BienInversionIvaRecord:
 
 def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: Path) -> None:
     """The live mesh projects the register value into Modelo 303 casilla 43."""
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    authority = compiled_bundled_authority()
+    snapshot = authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
@@ -172,22 +162,24 @@ def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: 
         bienes_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
         bienes_repository.add(_record())
 
-        resolution = resolve_bucket_source_mesh(
-            snapshot,
-            work_unit,
-            ports=_source_mesh_ports(
-                bucket_id=_BUCKET_ID,
-                objects=profile.repository,
-                bienes_repository=bienes_repository,
-            ),
-            foreign_asset_observations=(),
-            foreign_asset_row_observations=(),
-            casilla_inputs={
-                _VOLUMEN_CON_DERECHO_ID: Decimal("60000.00"),
-                _VOLUMEN_TOTAL_ID: Decimal("100000.00"),
-            },
-            filing_period_date=snapshot.filing_period.end_date,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            resolution = resolve_bucket_source_mesh(
+                snapshot,
+                work_unit,
+                ports=_source_mesh_ports(
+                    bucket_id=_BUCKET_ID,
+                    objects=profile.repository,
+                    bienes_repository=bienes_repository,
+                    operation=operation,
+                ),
+                foreign_asset_observations=(),
+                foreign_asset_row_observations=(),
+                casilla_inputs={
+                    _VOLUMEN_CON_DERECHO_ID: Decimal("60000.00"),
+                    _VOLUMEN_TOTAL_ID: Decimal("100000.00"),
+                },
+                filing_period_date=snapshot.filing_period.end_date,
+            )
 
     bienes_diagnostics = tuple(
         diagnostic

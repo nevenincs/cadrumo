@@ -28,6 +28,7 @@ from cadrumo.adapters.inbound.einvoice.parsers import parse_einvoice_document
 from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
 from cadrumo.adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from cadrumo.adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+from cadrumo.adapters.outbound.llm.consent import EvidenceConsentToken
 from cadrumo.adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
 from cadrumo.adapters.outbound.llm.evidence_draft_text import (
     TextInvoiceFieldExtractor,
@@ -54,6 +55,7 @@ from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
@@ -83,6 +85,7 @@ from cadrumo.application.ledger.invoice_draft_extraction_ports import (
     StructuredInvoiceReadError,
     VisionImage,
 )
+from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from cadrumo.core.config import Settings, override_settings
@@ -164,7 +167,26 @@ def evidence_text_layer_ports_for_test() -> EvidenceTextLayerPorts:
     return EvidenceTextLayerPorts(extract_pages_text=extract_pages_text)
 
 
-def _invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> InvoiceDraftExtractionPorts:
+def _require_evidence_consent_token(proof: EvidenceConsentProof) -> EvidenceConsentToken:
+    """Narrow the application proof to the concrete outbound token at its adapter boundary."""
+    if not isinstance(proof, EvidenceConsentToken):
+        raise TypeError("the outbound LLM adapter requires the concrete evidence consent token")
+    return proof
+
+
+def _validated_llm_facts(facts: Mapping[str, object]) -> dict[str, str | int | bool]:
+    """Validate the scalar fact vocabulary before handing it to the LLM verdict builder."""
+    validated: dict[str, str | int | bool] = {}
+    for key, value in facts.items():
+        if not isinstance(value, str | int | bool):
+            raise TypeError(f"LLM precondition fact {key!r} is not a scalar")
+        validated[key] = value
+    return validated
+
+
+def _invoice_draft_extraction_ports(
+    *, evidence_ports: LedgerEvidencePorts, operation: PinnedAuthorityOperation
+) -> InvoiceDraftExtractionPorts:
     """Compose reader adapters locally for the profile persistence tests."""
     evidence_input_ports = EvidenceInputPorts(document_shape_probe=probe_document_shape)
     text_layer_ports = evidence_text_layer_ports_for_test()
@@ -200,17 +222,24 @@ def _invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> I
         settings: Settings,
         provider: LLMProvider | None,
         consent_token: EvidenceConsentProof | None,
-        authority_values: InvoiceExtractionAuthorityValues,
-    ):
+        authority_values: object,
+    ) -> InvoiceDraft:
         try:
+            if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
+                raise TypeError("invoice text extraction requires resolved authority values")
             if provider is None:
-                return extract_invoice_fields_from_text(transcription, authority_values=authority_values)
+                return extract_invoice_fields_from_text(
+                    transcription,
+                    authority_values=authority_values,
+                    operation=operation,
+                )
             return TextInvoiceFieldExtractor(
                 provider=provider,
                 model=settings.cadrumo_llm_cloud_text_model,
                 settings=settings,
                 authority_values=authority_values,
-                consent_token=consent_token,
+                operation=operation,
+                consent_token=(None if consent_token is None else _require_evidence_consent_token(consent_token)),
             ).extract(transcription=transcription)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
@@ -244,7 +273,7 @@ def _invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> I
                 provider=provider,
                 model=settings.cadrumo_llm_cloud_vision_model,
                 settings=settings,
-                consent_token=consent_token,
+                consent_token=(None if consent_token is None else _require_evidence_consent_token(consent_token)),
             ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
@@ -255,7 +284,7 @@ def _invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> I
             context=facts,
             precondition_verdict=llm_no_recovery_verdict(
                 LLMPreconditionCondition.EVIDENCE_TOKEN_BOUND,
-                facts=facts,
+                facts=_validated_llm_facts(facts),
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )
@@ -308,12 +337,12 @@ def seeded_filer_profile(
 
 
 @pytest.fixture
-def isolated_settings(runtime_profile) -> Settings:
+def isolated_settings(runtime_profile: TestRuntimeProfile) -> Settings:
     return runtime_profile.settings
 
 
 @pytest.fixture
-def secure_objects(runtime_profile) -> SecureObjectRepository:
+def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
     return runtime_profile.repository
 
 
@@ -348,7 +377,10 @@ def invoice_confirmation_kwargs(
         "invoice_confirmation_ports": build_invoice_confirmation_ports(bucket_id=bucket_id),
         "counterparty_establishment_repository": CounterpartyEstablishmentRepository(bucket_id=bucket_id),
         "evidence_ports": evidence_ports,
-        "extraction_ports": _invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+        "extraction_ports": _invoice_draft_extraction_ports(
+            evidence_ports=evidence_ports,
+            operation=authority.operation,
+        ),
         "operation": authority.operation,
         "legends": authority.legends,
     }
@@ -367,7 +399,10 @@ def invoice_confirmation_kwargs_with_catalogue(
         "invoice_confirmation_ports": build_invoice_confirmation_ports(bucket_id=bucket_id),
         "counterparty_establishment_repository": CounterpartyEstablishmentRepository(bucket_id=bucket_id),
         "evidence_ports": evidence_ports,
-        "extraction_ports": _invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+        "extraction_ports": _invoice_draft_extraction_ports(
+            evidence_ports=evidence_ports,
+            operation=authority.operation,
+        ),
         "operation": authority.operation,
         "legends": authority.legends,
     }
@@ -389,7 +424,10 @@ def invoice_draft_extraction_kwargs(
     """Compose the real reader ports and same-generation authority inputs."""
     evidence_ports = _ledger_evidence_ports(bucket_id=bucket_id)
     return {
-        "ports": _invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+        "ports": _invoice_draft_extraction_ports(
+            evidence_ports=evidence_ports,
+            operation=authority.operation,
+        ),
         "operation": authority.operation,
         "legends": authority.legends,
     }

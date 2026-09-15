@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.errors import EnvelopeVersionError
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
@@ -83,7 +84,7 @@ def _transaction(provider_id: str) -> Transaction:
 
 
 def _resolver(
-    *, transaction_repository: TransactionCatalogueRepository, objects: object
+    *, transaction_repository: TransactionCatalogueRepository, objects: SecureObjectRepository
 ) -> LedgerIvaAggregationSourceResolver:
     invoice_repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     return LedgerIvaAggregationSourceResolver(

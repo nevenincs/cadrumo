@@ -23,6 +23,7 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.entrypoints.cli._app_live_justificante_composition import build_justificante_capture_service
 from cadrumo.tests.inventory import FIXTURES_DIR
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
@@ -81,10 +82,8 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
 
 
 def _persist_capture(*, pdf_bytes: bytes, modelo: str, filing_year: int, period: str):
-    from cadrumo.application.live.justificante import JustificanteCaptureSnapshotService
-
     bucket_id = _active_bucket_id()
-    return JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
+    return build_justificante_capture_service(bucket_id).capture(
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),

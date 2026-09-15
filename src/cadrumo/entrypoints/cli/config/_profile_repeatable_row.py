@@ -7,6 +7,7 @@ import typer
 from ....core.external_constants import OutputLanguage
 from ..common import activate_subcommand_output_language, emit_envelope
 from ..errors import CliRefusedBoundaryError
+from ..state_projection_support import authority_operation
 
 
 def _parse_values(tokens: list[str]) -> dict[str, str]:
@@ -42,10 +43,13 @@ def profile_add_row(
     pointer = resolve_active_profile_pointer()
     if pointer is None:
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
+    profile_decode_context = authority_operation(ctx).profile_decode_context()
     outcome = add_profile_repeatable_section_row(
         profile_id=pointer.bucket_id,
         section_key=section,
         values=_parse_values(value),
+        schema=profile_decode_context.schema,
+        profile_decode_context=profile_decode_context,
     )
     result = ConfigProfileAddRowResult(
         profile_id=outcome.record.profile_id,

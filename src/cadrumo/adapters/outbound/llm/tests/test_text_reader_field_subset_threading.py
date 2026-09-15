@@ -29,6 +29,7 @@ import pytest
 from .....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from .....core.config_support import LLMProvider
 from .....core.field_origin import FieldOrigin
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..client import LLMClient
 from ..evidence_draft_text import (
     TextInvoiceFieldExtractor,
@@ -66,13 +67,14 @@ class _CapturingClient(LLMClient):
         raise _RequestCapturedError
 
 
-def _prompt_the_reader_builds(*, fields: list[str] | None) -> str:
+def _prompt_the_reader_builds(*, fields: list[str] | None, operation: PinnedAuthorityOperation) -> str:
     """Return the prompt a reader configured with ``fields`` actually sends."""
     client = _CapturingClient(caller="tests.text_reader_field_subset", prompt_id="invoice-extraction")
     reader = TextInvoiceFieldExtractor(
         model="test-text-model",
         provider=LLMProvider.ANTHROPIC,
         client=client,
+        operation=operation,
         fields=fields,
         public_corpus=True,
     )
@@ -98,26 +100,26 @@ def _contract_lines(prompt: str) -> list[str]:
     return [contract.field_name for contract in INVOICE_FIELD_CONTRACTS if f"- {contract.field_name}:" in prompt]
 
 
-def test_the_unselected_prompt_is_byte_identical_to_the_compilers_own() -> None:
+def test_the_unselected_prompt_is_byte_identical_to_the_compilers_own(*, operation: PinnedAuthorityOperation) -> None:
     """Passing no selection must change nothing at all.
 
     Byte equality, because comparability with every already-recorded baseline
     depends on this exact string.
     """
-    values = default_extraction_authority_values()
-    threaded = build_text_field_extraction_prompt(_SENTINEL_TEXT, values=values, fields=None)
+    values = default_extraction_authority_values(operation=operation)
+    threaded = build_text_field_extraction_prompt(_SENTINEL_TEXT, operation=operation, values=values, fields=None)
     compiled = render_invoice_extraction_prompt(values=values)
     assert threaded == f"{compiled.text}\nINVOICE TEXT:\n{_SENTINEL_TEXT}"
 
 
-def test_the_full_prompt_still_carries_every_declared_contract() -> None:
+def test_the_full_prompt_still_carries_every_declared_contract(*, operation: PinnedAuthorityOperation) -> None:
     """The default asks for the whole declaration, not a subset of it."""
-    prompt = _prompt_the_reader_builds(fields=None)
+    prompt = _prompt_the_reader_builds(fields=None, operation=operation)
     assert _contract_lines(prompt) == [contract.field_name for contract in INVOICE_FIELD_CONTRACTS]
 
 
 @pytest.mark.parametrize("size", [1, 3, 7])
-def test_the_readers_selection_reaches_the_prompt_it_sends(size: int) -> None:
+def test_the_readers_selection_reaches_the_prompt_it_sends(size: int, *, operation: PinnedAuthorityOperation) -> None:
     """The threading gate: a reader asked for N fields must SEND N contracts.
 
     This is the assertion a dropped selection fails. A reader that accepts
@@ -126,30 +128,30 @@ def test_the_readers_selection_reaches_the_prompt_it_sends(size: int) -> None:
     carries the whole declaration.
     """
     selection = [contract.field_name for contract in INVOICE_FIELD_CONTRACTS[:size]]
-    prompt = _prompt_the_reader_builds(fields=selection)
+    prompt = _prompt_the_reader_builds(fields=selection, operation=operation)
     assert _contract_lines(prompt) == selection
     assert len(_contract_lines(prompt)) < len(INVOICE_FIELD_CONTRACTS)
 
 
-def test_a_selected_read_still_carries_the_document_text() -> None:
+def test_a_selected_read_still_carries_the_document_text(*, operation: PinnedAuthorityOperation) -> None:
     """Narrowing the ask must not narrow what the model is given to read.
 
     The selection governs which fields are requested, never how much of the
     document the model sees. A subset prompt that also truncated the evidence
     would measure a different task and look like a call-shape effect.
     """
-    prompt = _prompt_the_reader_builds(fields=[INVOICE_FIELD_CONTRACTS[0].field_name])
+    prompt = _prompt_the_reader_builds(fields=[INVOICE_FIELD_CONTRACTS[0].field_name], operation=operation)
     assert _SENTINEL_TEXT in prompt
 
 
-def test_the_provenance_stamp_describes_the_prompt_that_was_sent() -> None:
+def test_the_provenance_stamp_describes_the_prompt_that_was_sent(*, operation: PinnedAuthorityOperation) -> None:
     """A narrowed read must not stamp the full instruction.
 
     The stamp answers "under which instruction was this read performed". A stamp
     naming the full prompt while three fields were asked for is a confident wrong
     answer to exactly that question.
     """
-    values = default_extraction_authority_values()
+    values = default_extraction_authority_values(operation=operation)
     selection = [contract.field_name for contract in INVOICE_FIELD_CONTRACTS[:3]]
     narrowed = render_invoice_extraction_prompt(values=values, fields=selection)
     full = render_invoice_extraction_prompt(values=values)
@@ -160,19 +162,27 @@ def test_the_provenance_stamp_describes_the_prompt_that_was_sent() -> None:
         model="test-text-model",
         provider=LLMProvider.ANTHROPIC,
         client=client,
+        operation=operation,
         fields=selection,
         public_corpus=True,
     )
     assert reader._compiled_prompt().fingerprint == narrowed.fingerprint
 
 
-def test_a_selection_the_declaration_cannot_satisfy_refuses_at_the_reader() -> None:
+def test_a_selection_the_declaration_cannot_satisfy_refuses_at_the_reader(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """A bad name must refuse rather than silently emitting a shorter prompt.
 
     Dropped silently, an unknown name yields a prompt missing a contract nobody
     asked to remove -- and a measurement taken against it carries the authority
     of a number while describing a task nobody specified.
     """
-    values = default_extraction_authority_values()
+    values = default_extraction_authority_values(operation=operation)
     with pytest.raises(ValueError, match=r"(?i)field"):
-        build_text_field_extraction_prompt(_SENTINEL_TEXT, values=values, fields=["not_a_declared_field"])
+        build_text_field_extraction_prompt(
+            _SENTINEL_TEXT,
+            operation=operation,
+            values=values,
+            fields=["not_a_declared_field"],
+        )

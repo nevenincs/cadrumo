@@ -7,6 +7,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
@@ -104,7 +106,7 @@ def _m130_revision(work_unit: WorkUnit) -> CalculationRevision:
     )
 
 
-def test_result_summary_rows_render_requested_localized_label() -> None:
+def test_result_summary_rows_render_requested_localized_label(operation: PinnedAuthorityOperation) -> None:
     """Modelo result-summary labels resolve for the active output language.
 
     The row label is the display projection of the casilla label and is
@@ -119,15 +121,15 @@ def test_result_summary_rows_render_requested_localized_label() -> None:
     revision = _m130_revision(work_unit)
 
     with override_settings(cadrumo_output_language="es"):
-        summary = calculation_result_summary(revision, work_unit=work_unit)
+        summary = calculation_result_summary(revision, work_unit=work_unit, operation=operation)
         assert summary is not None
         row = next(item for item in summary.rows if item.casilla_id == "03")
         assert row.label == "Rendimiento neto"
         assert "localized_labels" not in row.model_dump()
 
     with override_settings(cadrumo_output_language="ca"):
-        lines = result_summary_lines(revision, work_unit=work_unit)
-        payload = result_summary_payload(revision, work_unit=work_unit)
+        lines = result_summary_lines(revision, work_unit=work_unit, operation=operation)
+        payload = result_summary_payload(revision, work_unit=work_unit, operation=operation)
 
     rendered = "\n".join(lines)
     assert "key_figure\t03\t123.45\tRendiment net" in rendered
@@ -152,17 +154,21 @@ def test_result_summary_row_refuses_an_unknown_role() -> None:
         ResultSummaryRowPayload(casilla_id="03", label="Rendimiento neto", value="123.45", role="bogus")
 
 
-def test_headline_revision_rendering_refuses_to_silently_omit_its_work_unit() -> None:
+def test_headline_revision_rendering_refuses_to_silently_omit_its_work_unit(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Headline projections fail closed unless omission is explicitly requested."""
     work_unit = _seed_m130_work_unit()
     revision = _m130_revision(work_unit)
 
     with pytest.raises(TypeError, match="selected work unit"):
-        calculation_revision_payload(revision)
+        calculation_revision_payload(revision, operation=operation)
     with pytest.raises(TypeError, match="selected work unit"):
-        calculation_revision_lines(revision)
+        calculation_revision_lines(revision, operation=operation)
 
-    assert calculation_revision_payload(revision, include_result_summary=False).result_summary == ()
+    assert (
+        calculation_revision_payload(revision, include_result_summary=False, operation=operation).result_summary == ()
+    )
 
 
 def test_result_summary_row_accepts_every_canonical_role() -> None:

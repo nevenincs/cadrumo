@@ -30,6 +30,7 @@ from cadrumo.application.overview.data_prep import (
 )
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -178,11 +179,13 @@ def _walkthrough(
     invoice_catalogue: InvoiceCatalogue | None = None,
     evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
     work_units: tuple[WorkUnit, ...] = (),
+    operation: PinnedAuthorityOperation,
 ):
     preflight_report = preflight_ledger_tax_readiness(
         bucket_id=_BUCKET_ID,
         period=_PERIOD_1T_2026,
         transaction_repository=tx_repository,
+        operation=operation,
     )
     return build_data_prep_walkthrough(
         bucket_id=_BUCKET_ID,
@@ -197,12 +200,12 @@ def _walkthrough(
 
 
 def test_fresh_bucket_declares_no_import_action_and_a_concrete_work_create_action(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A brand-new profile with no ledger data: step 1 is pending and every
     later step is pending too, none marked done."""
 
-    walkthrough = _walkthrough(_tx_repository)
+    walkthrough = _walkthrough(_tx_repository, operation=operation)
 
     steps_by_id = {step.step_id: step for step in walkthrough.steps}
     import_step = steps_by_id[DataPrepStepId.IMPORT_TRANSACTIONS]
@@ -228,7 +231,7 @@ def test_fresh_bucket_declares_no_import_action_and_a_concrete_work_create_actio
 
 
 def test_import_step_advances_once_a_transaction_is_recorded(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """M19-style progression check: after a transaction lands in the
     requested period, step 1 flips from pending to done - it must not keep
@@ -236,7 +239,7 @@ def test_import_step_advances_once_a_transaction_is_recorded(
 
     _tx_repository.save(TransactionCatalogue.from_transactions((_transaction("row-1"),)))
 
-    walkthrough = _walkthrough(_tx_repository)
+    walkthrough = _walkthrough(_tx_repository, operation=operation)
     steps_by_id = {step.step_id: step for step in walkthrough.steps}
 
     import_step = steps_by_id[DataPrepStepId.IMPORT_TRANSACTIONS]
@@ -251,7 +254,7 @@ def test_import_step_advances_once_a_transaction_is_recorded(
 
 
 def test_out_of_period_transaction_does_not_satisfy_import_step(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A transaction dated outside the requested 1T 2026 window must not
     falsely mark the import step done for that scope."""
@@ -260,13 +263,13 @@ def test_out_of_period_transaction_does_not_satisfy_import_step(
         TransactionCatalogue.from_transactions((_transaction("row-q3", booked_date=date(2026, 8, 1)),)),
     )
 
-    walkthrough = _walkthrough(_tx_repository)
+    walkthrough = _walkthrough(_tx_repository, operation=operation)
     import_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.IMPORT_TRANSACTIONS)
     assert import_step.state is DataPrepStepState.PENDING
 
 
 def test_classify_step_done_once_all_period_transactions_classified(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     classified = _transaction(
         "row-classified",
@@ -279,7 +282,7 @@ def test_classify_step_done_once_all_period_transactions_classified(
     )
     _tx_repository.save(TransactionCatalogue.from_transactions((classified,)))
 
-    walkthrough = _walkthrough(_tx_repository, evidence_records=(_evidence(),))
+    walkthrough = _walkthrough(_tx_repository, evidence_records=(_evidence(),), operation=operation)
     steps_by_id = {step.step_id: step for step in walkthrough.steps}
 
     assert steps_by_id[DataPrepStepId.CLASSIFY_TRANSACTIONS].state is DataPrepStepState.DONE
@@ -288,7 +291,7 @@ def test_classify_step_done_once_all_period_transactions_classified(
 
 
 def test_evidence_step_flags_business_expense_with_no_attached_evidence(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     expense_without_evidence = _transaction(
         "row-expense",
@@ -301,7 +304,7 @@ def test_evidence_step_flags_business_expense_with_no_attached_evidence(
     )
     _tx_repository.save(TransactionCatalogue.from_transactions((expense_without_evidence,)))
 
-    walkthrough = _walkthrough(_tx_repository)
+    walkthrough = _walkthrough(_tx_repository, operation=operation)
     evidence_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.ATTACH_EVIDENCE)
     assert evidence_step.state is DataPrepStepState.PENDING
     assert "1 of 1" in evidence_step.summary
@@ -310,7 +313,7 @@ def test_evidence_step_flags_business_expense_with_no_attached_evidence(
 
 
 def test_evidence_step_does_not_count_incoming_business_income_as_expense(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """An incoming BUSINESS row belongs to income, not purchase evidence."""
     income = _transaction(
@@ -320,7 +323,7 @@ def test_evidence_step_does_not_count_incoming_business_income_as_expense(
     )
     _tx_repository.save(TransactionCatalogue.from_transactions((income,)))
 
-    walkthrough = _walkthrough(_tx_repository)
+    walkthrough = _walkthrough(_tx_repository, operation=operation)
     evidence_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.ATTACH_EVIDENCE)
 
     assert evidence_step.state is DataPrepStepState.DONE
@@ -328,21 +331,21 @@ def test_evidence_step_does_not_count_incoming_business_income_as_expense(
 
 
 def test_invoices_step_reflects_period_scoped_invoice_catalogue(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
 
-    walkthrough = _walkthrough(_tx_repository, invoice_catalogue=catalogue)
+    walkthrough = _walkthrough(_tx_repository, invoice_catalogue=catalogue, operation=operation)
     invoices_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.REGISTER_INVOICES)
     assert invoices_step.state is DataPrepStepState.DONE
     assert "1 business invoice" in invoices_step.summary
 
 
 def test_work_unit_step_resolves_matching_unit_and_names_calculate_command(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     unit = _work_unit()
-    walkthrough = _walkthrough(_tx_repository, work_units=(unit,))
+    walkthrough = _walkthrough(_tx_repository, work_units=(unit,), operation=operation)
     work_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.START_MODELO_WORK)
 
     assert work_step.state is DataPrepStepState.DONE
@@ -354,7 +357,7 @@ def test_work_unit_step_resolves_matching_unit_and_names_calculate_command(
 
 
 def test_ready_for_calculation_true_only_when_every_step_is_done(
-    _tx_repository: TransactionCatalogueRepository,
+    _tx_repository: TransactionCatalogueRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     fully_ready_row = _transaction(
         "row-ready",
@@ -368,7 +371,9 @@ def test_ready_for_calculation_true_only_when_every_step_is_done(
     _tx_repository.save(TransactionCatalogue.from_transactions((fully_ready_row,)))
     catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
 
-    not_ready = _walkthrough(_tx_repository, invoice_catalogue=catalogue, evidence_records=(_evidence(),))
+    not_ready = _walkthrough(
+        _tx_repository, invoice_catalogue=catalogue, evidence_records=(_evidence(),), operation=operation
+    )
     assert not_ready.ready_for_calculation is False  # no matching work unit yet
 
     fully_ready = _walkthrough(
@@ -376,6 +381,7 @@ def test_ready_for_calculation_true_only_when_every_step_is_done(
         invoice_catalogue=catalogue,
         evidence_records=(_evidence(),),
         work_units=(_work_unit(),),
+        operation=operation,
     )
     assert fully_ready.ready_for_calculation is True
     assert all(step.state is DataPrepStepState.DONE for step in fully_ready.steps)

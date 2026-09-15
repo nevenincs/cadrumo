@@ -42,7 +42,7 @@ _TEXTUAL_ROOT = "textual"
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _self_assigned_attributes(cls: type) -> set[str]:
+def _self_assigned_attributes(cls: type | _SourceTuiClass) -> set[str]:
     """Every name the class body assigns to ``self``, from its own source.
 
     Read from the AST rather than from an instance: these names are created
@@ -238,7 +238,7 @@ def _tui_node_classes() -> tuple[_SourceTuiClass, ...]:
     return tuple(item for item in classes if f"{item.module}.{item.qualname}" in selected)
 
 
-def _textual_private_surface(cls: type) -> set[str]:
+def _textual_private_surface(cls: type | _SourceTuiClass) -> set[str]:
     """The private names ``cls`` inherits from Textual's own classes."""
     if isinstance(cls, _SourceTuiClass):
         return set(_textual_private_by_class().get(f"{cls.module}.{cls.qualname}", ()))

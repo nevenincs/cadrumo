@@ -67,6 +67,7 @@ def censo_import(
     from ....application.user_profile.cotejo_apply import apply_cotejo
     from ....application.workflow.persistence import workflow_state_repository
     from ....domain.censo.certificado import censo_facts_from_certificado
+    from ..state_projection_support import authority_operation
 
     certificado = parse_certificado_censal_bytes(file.read_bytes())
     facts = censo_facts_from_certificado(certificado)
@@ -82,7 +83,14 @@ def censo_import(
         # cannot coherently leave a prior deferral standing.
         repository = workflow_state_repository()
         state = repository.load()
-        repository.save(apply_cotejo(state, adopted=facts, divergences=()))
+        repository.save(
+            apply_cotejo(
+                state,
+                adopted=facts,
+                divergences=(),
+                profile_decode_context=authority_operation(ctx).profile_decode_context(),
+            )
+        )
 
     rows = tuple(CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts)
     result = CensoFileIngestResult(applied=apply, facts=rows)

@@ -30,6 +30,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -119,7 +120,7 @@ def _zero_relation_values(snapshot: RegistrySnapshot) -> dict[RelationId, Decima
 
 
 def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_input(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A Modelo 100 calculation resolves CCAA from the persisted profile."""
     with _secure_backend(tmp_path):
@@ -134,6 +135,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
             revision_id="2025",
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -155,7 +157,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
 
 
 def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Supplying the enum-consumed CCAA binding as Decimal is refused."""
     with _secure_backend(tmp_path):
@@ -170,6 +172,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
             revision_id="2025",
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
+            operation=operation,
         )
         decimal_bindings = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}
         with (
@@ -194,7 +197,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
 
 
 def test_estimacion_directa_binding_stays_in_the_decimal_channel(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The estimacion-directa binding remains on the Decimal channel."""
     with _secure_backend(tmp_path):
@@ -209,6 +212,7 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
             revision_id="2025",
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
+            operation=operation,
         )
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -229,7 +233,7 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
 
 
 def test_estimacion_directa_binding_rejected_through_enum_channel(
-    tmp_path: Path,
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Routing the Decimal-consumed binding through enum is refused."""
     with _secure_backend(tmp_path):
@@ -244,6 +248,7 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
             revision_id="2025",
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
+            operation=operation,
         )
         with (
             pytest.raises(ModeloError),

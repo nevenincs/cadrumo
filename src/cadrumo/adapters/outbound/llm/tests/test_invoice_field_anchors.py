@@ -43,6 +43,8 @@ from typing import ClassVar
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
 from .....core.field_grounding import FieldGroundingOutcome
@@ -152,11 +154,12 @@ def _canned_response(values: dict[str, str | None], anchors: dict[str, str | Non
     return json.dumps(payload)
 
 
-def _spanish_draft() -> InvoiceDraft:
+def _spanish_draft(*, operation: PinnedAuthorityOperation) -> InvoiceDraft:
     return ground_extracted_fields(
         parse_invoice_extraction_response(_canned_response(_SPANISH_INVOICE, _SPANISH_ANCHORS)),
         raw_text_length=256,
         origin=FieldOrigin.VISION,
+        operation=operation,
     )
 
 
@@ -221,33 +224,34 @@ class TestThePromptAsksForEveryValueAndItsAnchor:
 class TestEveryExtractedFieldCarriesItsAnchor:
     """Every extracted field carries its own anchor, driven end to end through the real path."""
 
-    def test_every_populated_field_gets_exactly_one_envelope(self) -> None:
-        draft = _spanish_draft()
+    def test_every_populated_field_gets_exactly_one_envelope(self, *, operation: PinnedAuthorityOperation) -> None:
+        draft = _spanish_draft(operation=operation)
 
         assert {item.field for item in draft.provenance} == {
             contract.field_name for contract in INVOICE_FIELD_CONTRACTS
         }
 
-    def test_every_envelope_carries_a_populated_verbatim_anchor(self) -> None:
+    def test_every_envelope_carries_a_populated_verbatim_anchor(self, *, operation: PinnedAuthorityOperation) -> None:
         """The anchor is the load-bearing half: an empty one leaves nothing to check."""
-        draft = _spanish_draft()
+        draft = _spanish_draft(operation=operation)
 
         for item in draft.provenance:
             assert item.anchor, item.field
             assert item.anchor == _SPANISH_ANCHORS[item.field]
 
-    def test_the_envelope_records_the_reader_that_produced_it(self) -> None:
-        vision = _spanish_draft()
+    def test_the_envelope_records_the_reader_that_produced_it(self, *, operation: PinnedAuthorityOperation) -> None:
+        vision = _spanish_draft(operation=operation)
         text_layer = ground_extracted_fields(
             parse_invoice_extraction_response(_canned_response(_SPANISH_INVOICE, _SPANISH_ANCHORS)),
             raw_text_length=256,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert {item.origin for item in vision.provenance} == {FieldOrigin.VISION}
         assert {item.origin for item in text_layer.provenance} == {FieldOrigin.TEXT_LAYER}
 
-    def test_a_field_the_grounder_dropped_gets_no_envelope(self) -> None:
+    def test_a_field_the_grounder_dropped_gets_no_envelope(self, *, operation: PinnedAuthorityOperation) -> None:
         """An envelope describes a value; a dropped field has no value to describe."""
         values = dict(_SPANISH_INVOICE)
         values["taxable_base"] = "one thousand two hundred"
@@ -257,13 +261,16 @@ class TestEveryExtractedFieldCarriesItsAnchor:
             parse_invoice_extraction_response(_canned_response(values, anchors)),
             raw_text_length=256,
             origin=FieldOrigin.VISION,
+            operation=operation,
         )
 
         assert draft.taxable_base is None
         assert "taxable_base" not in {item.field for item in draft.provenance}
         assert "grand_total" in {item.field for item in draft.provenance}
 
-    def test_a_value_reported_with_no_anchor_still_grounds_but_says_so(self) -> None:
+    def test_a_value_reported_with_no_anchor_still_grounds_but_says_so(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Null-over-guess applies to the anchor too: absent is recorded, never invented."""
         anchors = dict(_SPANISH_ANCHORS)
         anchors["grand_total"] = None
@@ -272,6 +279,7 @@ class TestEveryExtractedFieldCarriesItsAnchor:
             parse_invoice_extraction_response(_canned_response(_SPANISH_INVOICE, anchors)),
             raw_text_length=256,
             origin=FieldOrigin.VISION,
+            operation=operation,
         )
 
         envelope = _envelope(draft, "grand_total")
@@ -280,12 +288,13 @@ class TestEveryExtractedFieldCarriesItsAnchor:
         assert envelope.anchor is None
         assert "no printed form" in envelope.note
 
-    def test_a_reply_carrying_no_anchors_at_all_still_parses(self) -> None:
+    def test_a_reply_carrying_no_anchors_at_all_still_parses(self, *, operation: PinnedAuthorityOperation) -> None:
         """A model that ignores the anchor half is recorded honestly, not rejected."""
         draft = ground_extracted_fields(
             parse_invoice_extraction_response(json.dumps(_SPANISH_INVOICE)),
             raw_text_length=256,
             origin=FieldOrigin.VISION,
+            operation=operation,
         )
 
         assert draft.grand_total == Decimal("1452.00")
@@ -303,13 +312,17 @@ class TestEveryExtractedFieldCarriesItsAnchor:
 class TestTheAnchorKeepsThePrintedFormTheValueDropped:
     """The ``21%`` / ``21`` case, asserted as the distinctness it exists to create."""
 
-    def test_the_rate_anchor_keeps_its_unit_while_the_value_is_bare(self) -> None:
-        draft = _spanish_draft()
+    def test_the_rate_anchor_keeps_its_unit_while_the_value_is_bare(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        draft = _spanish_draft(operation=operation)
 
         assert draft.iva_rate == Decimal("21")
         assert _envelope(draft, "iva_rate").anchor == "21%"
 
-    def test_a_rate_printed_with_its_unit_grounds_bare_and_anchors_printed(self) -> None:
+    def test_a_rate_printed_with_its_unit_grounds_bare_and_anchors_printed(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The measured defect ran the other way: the literal reader lost the field."""
         values = dict(_SPANISH_INVOICE)
         values["iva_rate"] = "21%"
@@ -320,12 +333,13 @@ class TestTheAnchorKeepsThePrintedFormTheValueDropped:
             parse_invoice_extraction_response(_canned_response(values, anchors)),
             raw_text_length=256,
             origin=FieldOrigin.VISION,
+            operation=operation,
         )
 
         assert draft.iva_rate == Decimal("21")
         assert _envelope(draft, "iva_rate").anchor == "IVA (21%)"
 
-    def test_no_envelope_is_byte_identical_to_its_value(self) -> None:
+    def test_no_envelope_is_byte_identical_to_its_value(self, *, operation: PinnedAuthorityOperation) -> None:
         """A vacuous pair makes the downstream parse check compare a value to itself.
 
         Driven from the contract declaration rather than a hardcoded name tuple,
@@ -340,7 +354,7 @@ class TestTheAnchorKeepsThePrintedFormTheValueDropped:
         FIXTURE, not about the form: whatever a field's declared form, an anchor
         authored equal to its value tests nothing.
         """
-        draft = _spanish_draft()
+        draft = _spanish_draft(operation=operation)
 
         for contract in INVOICE_FIELD_CONTRACTS:
             envelope = _envelope(draft, contract.field_name)
@@ -356,25 +370,27 @@ class TestNothingHereClaimsAVerificationItDidNotRun:
     rides along as the claim a later stage verifies.
     """
 
-    def test_every_envelope_is_unanchored_rather_than_anchored(self) -> None:
-        draft = _spanish_draft()
+    def test_every_envelope_is_unanchored_rather_than_anchored(self, *, operation: PinnedAuthorityOperation) -> None:
+        draft = _spanish_draft(operation=operation)
 
         assert {item.grounding for item in draft.provenance} == {FieldGroundingOutcome.UNANCHORED}
 
-    def test_no_envelope_claims_an_independent_corroboration(self) -> None:
-        draft = _spanish_draft()
+    def test_no_envelope_claims_an_independent_corroboration(self, *, operation: PinnedAuthorityOperation) -> None:
+        draft = _spanish_draft(operation=operation)
         overclaims = {FieldGroundingOutcome.RECONCILED, FieldGroundingOutcome.ANCHORED}
 
         assert not {item.grounding for item in draft.provenance} & overclaims
 
-    def test_the_note_says_the_anchor_is_unchecked_rather_than_implying_otherwise(self) -> None:
-        draft = _spanish_draft()
+    def test_the_note_says_the_anchor_is_unchecked_rather_than_implying_otherwise(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        draft = _spanish_draft(operation=operation)
 
         assert "not yet checked against the document" in _envelope(draft, "iva_rate").note
 
-    def test_no_envelope_carries_candidates_it_cannot_justify(self) -> None:
+    def test_no_envelope_carries_candidates_it_cannot_justify(self, *, operation: PinnedAuthorityOperation) -> None:
         """The envelope refuses candidates under a decided outcome; nothing here builds any."""
-        draft = _spanish_draft()
+        draft = _spanish_draft(operation=operation)
 
         assert all(item.candidates == () for item in draft.provenance)
 
@@ -410,13 +426,19 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
         "currency": "€",
     }
 
-    def _german_draft(self, **value_overrides: str) -> InvoiceDraft:
+    def _german_draft(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+        **value_overrides: str,
+    ) -> InvoiceDraft:
         values = dict(self._GERMAN_INVOICE)
         values.update(value_overrides)
         return ground_extracted_fields(
             parse_invoice_extraction_response(_canned_response(values, self._GERMAN_ANCHORS)),
             raw_text_length=256,
             origin=FieldOrigin.VISION,
+            operation=operation,
         )
 
     def test_the_rate_is_not_on_the_spanish_enumeration(self) -> None:
@@ -425,34 +447,55 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
 
         assert Decimal("19") not in compiled.iva_rate_pcts
 
-    def test_a_foreign_rate_survives_parse_and_grounding_unmoved(self) -> None:
-        draft = self._german_draft()
+    def test_a_foreign_rate_survives_parse_and_grounding_unmoved(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        draft = self._german_draft(operation=operation)
 
         assert draft.iva_rate == Decimal("19")
 
-    def test_the_foreign_rate_is_never_snapped_onto_a_spanish_one(self) -> None:
+    def test_the_foreign_rate_is_never_snapped_onto_a_spanish_one(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
-        draft = self._german_draft()
+        draft = self._german_draft(operation=operation)
 
         assert draft.iva_rate not in set(compiled.iva_rate_pcts)
 
     @pytest.mark.parametrize("printed", ["19", "19%", "19 %", "19,00"])
-    def test_the_foreign_rate_survives_whatever_unit_it_is_printed_with(self, printed: str) -> None:
-        draft = self._german_draft(iva_rate=printed)
+    def test_the_foreign_rate_survives_whatever_unit_it_is_printed_with(
+        self,
+        printed: str,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        draft = self._german_draft(operation=operation, iva_rate=printed)
 
         assert draft.iva_rate == Decimal("19")
 
-    def test_the_whole_foreign_invoice_survives_intact(self) -> None:
+    def test_the_whole_foreign_invoice_survives_intact(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """The rate is the headline risk, but a coerced rate would drag the cuota with it."""
-        draft = self._german_draft()
+        draft = self._german_draft(operation=operation)
 
         assert draft.taxable_base == Decimal("1000.00")
         assert draft.iva_amount == Decimal("190.00")
         assert draft.grand_total == Decimal("1190.00")
         assert draft.supplier_tax_id == "DE811907980"
 
-    def test_the_foreign_rate_keeps_its_printed_anchor(self) -> None:
-        draft = self._german_draft()
+    def test_the_foreign_rate_keeps_its_printed_anchor(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        draft = self._german_draft(operation=operation)
 
         assert _envelope(draft, "iva_rate").anchor == "19 %"
 
@@ -478,11 +521,15 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
     """
 
     @staticmethod
-    def _eu_table_rates(period: Period) -> set[Decimal]:
+    def _eu_table_rates(
+        period: Period,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> set[Decimal]:
         start, end = period.start_date, period.end_date
         return {
             record.pct
-            for record in load_iva_rate_table()[EUMemberState._from_registry("es")]
+            for record in load_iva_rate_table(operation=operation)[EUMemberState._from_registry("es")]
             if record.effective_from <= end and (record.effective_until is None or record.effective_until >= start)
         }
 
@@ -503,10 +550,14 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
                 rates.update(Decimal(str(value)) * Decimal("100") for value in applied)
         return rates
 
-    def test_the_registry_declares_a_box_for_every_rate_in_force(self) -> None:
+    def test_the_registry_declares_a_box_for_every_rate_in_force(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """The load-bearing direction: an in-force rate with no box under-declares."""
         for period in (_ANNUAL_2024, _ANNUAL_2026):
-            eu_rates = self._eu_table_rates(period)
+            eu_rates = self._eu_table_rates(period, operation=operation)
             registry_rates = self._registry_rates(period)
 
             assert eu_rates, f"the EU table yielded no Spanish rate for {period.code} {period.filing_year}"
@@ -514,7 +565,11 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
                 f"{period.filing_year}: rates in force with no Modelo 390 box: {sorted(eu_rates - registry_rates)}"
             )
 
-    def test_the_two_authorities_agree_exactly_where_their_windows_coincide(self) -> None:
+    def test_the_two_authorities_agree_exactly_where_their_windows_coincide(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """2024 is the discriminating year: every transitional tier is live in it.
 
         A containment assertion alone would pass against a registry that declared
@@ -522,20 +577,28 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         all seven rates in force at once, so the EU table and the rate-box layer
         must match exactly -- there is no slack left for one to drift into.
         """
-        assert self._eu_table_rates(_ANNUAL_2024) == self._registry_rates(_ANNUAL_2024)
+        assert self._eu_table_rates(_ANNUAL_2024, operation=operation) == self._registry_rates(_ANNUAL_2024)
 
-    def test_the_agreement_is_asserted_over_a_non_trivial_rate_set(self) -> None:
+    def test_the_agreement_is_asserted_over_a_non_trivial_rate_set(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """Guards the two assertions above from passing vacuously on a thin table."""
-        rates_2024 = self._eu_table_rates(_ANNUAL_2024)
+        rates_2024 = self._eu_table_rates(_ANNUAL_2024, operation=operation)
 
-        assert len(rates_2024) >= len(self._eu_table_rates(_ANNUAL_2026))
+        assert len(rates_2024) >= len(self._eu_table_rates(_ANNUAL_2026, operation=operation))
         assert {Decimal("4"), Decimal("10"), Decimal("21")} <= rates_2024
 
-    def test_the_prompt_enumerates_exactly_the_eu_table_rates_it_resolved(self) -> None:
+    def test_the_prompt_enumerates_exactly_the_eu_table_rates_it_resolved(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """Closes the loop: the agreement above is about the numbers the model is shown."""
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2024)
 
-        assert set(compiled.iva_rate_pcts) == self._eu_table_rates(_ANNUAL_2024)
+        assert set(compiled.iva_rate_pcts) == self._eu_table_rates(_ANNUAL_2024, operation=operation)
 
 
 class TestTheAnchorModelStaysBoundToTheOneDeclaration:
@@ -549,9 +612,11 @@ class TestTheAnchorModelStaysBoundToTheOneDeclaration:
     def test_the_anchor_schema_mirrors_the_value_schema_exactly(self) -> None:
         assert set(ExtractedFieldAnchors.model_fields) == set(ExtractedInvoiceFields.model_fields)
 
-    def test_every_draft_field_an_envelope_names_is_a_real_draft_field(self) -> None:
+    def test_every_draft_field_an_envelope_names_is_a_real_draft_field(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The draft's own validator enforces this; the gate proves the names we emit pass it."""
-        draft = _spanish_draft()
+        draft = _spanish_draft(operation=operation)
 
         assert draft.provenance
         for item in draft.provenance:

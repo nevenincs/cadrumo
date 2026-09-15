@@ -26,6 +26,7 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import LLMClassifierError
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.entrypoints.cli._ledger_llm_composition import compose_ledger_llm
 
 from .subprocess_classifier_support import SubprocessLLMClassifier
 
@@ -92,6 +93,7 @@ def test_suggest_llm_classification_records_one_run_on_success(profile: TestRunt
 
         run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
         assert run_recorder.load_records() == ()
+        ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=profile.settings).ports
 
         suggestion = suggest_llm_classification(
             bucket_id=_BUCKET_ID,
@@ -99,6 +101,7 @@ def test_suggest_llm_classification_records_one_run_on_success(profile: TestRunt
             classifier=classifier,
             transaction_repository=repository,
             settings=profile.settings,
+            ports=ports,
             operation=_authority_operation_for_test,
         )
         assert suggestion.provenance == "llm:test-provider:test-model"
@@ -125,6 +128,7 @@ def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRunt
         )
 
         run_recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
+        ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=profile.settings).ports
 
         with pytest.raises(LLMClassifierError):
             suggest_llm_classification(
@@ -133,6 +137,7 @@ def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRunt
                 classifier=classifier,
                 transaction_repository=repository,
                 settings=profile.settings,
+                ports=ports,
                 operation=_authority_operation_for_test,
             )
 

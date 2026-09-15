@@ -312,18 +312,20 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID_M200,
-        modelo=_M200,
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "0A"),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
     with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID_M200,
+            modelo=_M200,
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, "0A"),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -459,18 +461,20 @@ def _calculate_m202(secure_objects: SecureObjectRepository, *, period: str) -> B
     _seed_sociedad_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period=period)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=_M202,
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, period),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
     with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=_M202,
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, period),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -566,19 +570,20 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     snapshot = compiled_bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=_M202,
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "2P"),
-        revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
-        ),
-        clock=_T0,
-    )
-
     with bundled_indexed_authority().operation() as operation:
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=_M202,
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, "2P"),
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            ),
+            operation=operation,
+            clock=_T0,
+        )
         with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,

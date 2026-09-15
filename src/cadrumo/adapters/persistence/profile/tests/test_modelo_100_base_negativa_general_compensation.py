@@ -174,36 +174,37 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
             iva_history_repository=IvaCompensationHistoryRepository(),
             operation=operation,
         ).binding_values
-    binding_values, relation_values = _zeroed_channels(snapshot)
-    binding_values.update(carry)
+        binding_values, relation_values = _zeroed_channels(snapshot)
+        binding_values.update(carry)
 
-    work_repo = WorkUnitCatalogueRepository()
-    calc_repo = CalculationRevisionCatalogueRepository()
-    event_repo = BucketEventHistoryRepository()
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo=_MODELO,
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, _PERIOD),
-        revision_id=str(_FILING_YEAR),
-        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
-        clock=_CLOCK,
-    )
-    with calculation_ports_for_test(
-        bucket_id=_BUCKET_ID,
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        bucket_event_repository=event_repo,
-    ) as _calculation_ports_198:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor=_BUCKET_ID,
-            casilla_inputs=casilla_inputs,
-            binding_values=binding_values,
-            relation_values=relation_values,
-            ports=_calculation_ports_198,
+        work_repo = WorkUnitCatalogueRepository()
+        calc_repo = CalculationRevisionCatalogueRepository()
+        event_repo = BucketEventHistoryRepository()
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=_MODELO,
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, _PERIOD),
+            revision_id=str(_FILING_YEAR),
+            ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
+            operation=operation,
             clock=_CLOCK,
         )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_198:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor=_BUCKET_ID,
+                casilla_inputs=casilla_inputs,
+                binding_values=binding_values,
+                relation_values=relation_values,
+                ports=_calculation_ports_198,
+                clock=_CLOCK,
+            )
     return revision
 
 

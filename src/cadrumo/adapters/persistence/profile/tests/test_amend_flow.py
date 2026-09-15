@@ -67,7 +67,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -207,6 +207,7 @@ def _seed_work_unit(
     filing_year: int = 2026,
     period_code: str = "1T",
     revision_id: str = "2019-y-siguientes",
+    operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     """Modelo 130 1T 2026 — registry-resolvable so the formula engine
     in ``calculate_modelo_revision`` has a snapshot to operate on."""
@@ -219,6 +220,7 @@ def _seed_work_unit(
         period=Period.from_year_and_code(filing_year, period_code),
         revision_id=revision_id,
         clock=_T0,
+        operation=operation,
     )
 
 
@@ -237,6 +239,7 @@ def _seed_external_baseline(
     revision_id_value: str = "2019-y-siguientes",
     member_nif: str | None = None,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
     its underlying calculation revision and work unit.
@@ -252,6 +255,7 @@ def _seed_external_baseline(
         filing_year=filing_year,
         period_code=period_code,
         revision_id=revision_id_value,
+        operation=operation,
     )
 
     inputs: dict[CasillaId, str] = {}
@@ -364,7 +368,9 @@ def _seed_local_filing_record(
     return filing
 
 
-def test_amend_refuses_evidence_less_m303_external_baseline(repos: _Repos) -> None:
+def test_amend_refuses_evidence_less_m303_external_baseline(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     _, _, baseline = _seed_external_baseline(
         repos,
@@ -374,6 +380,7 @@ def test_amend_refuses_evidence_less_m303_external_baseline(repos: _Repos) -> No
         revision_id_value=snapshot.revision.id,
         casilla_values={_M303_RESULT_CASILLA: Decimal("0")},
         filing_instance_evidence=None,
+        operation=operation,
     )
 
     with pytest.raises(AmendmentEvidenceMissingError), bundled_indexed_authority().operation() as operation:
@@ -388,11 +395,11 @@ def test_amend_refuses_evidence_less_m303_external_baseline(repos: _Repos) -> No
         )
 
 
-def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
+def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """A locally-filed return (no ``external_evidence``) cannot be amended."""
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, operation=operation)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
@@ -417,6 +424,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision(
@@ -461,11 +469,13 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         )
 
 
-def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
+def test_amend_refuses_when_baseline_already_superseded(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """A SUPERSEDED filing record cannot be amended."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
+    _, _, baseline = _seed_external_baseline(
+        repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
+    )
     successor_record_id = "f" * 64
     fr_repo.save(
         upsert_filing_record(
@@ -507,12 +517,13 @@ class _AmendOutcome:
     new_filing: ModeloRecord
 
 
-def _drive_amend_creates_complementaria(repos: _Repos) -> _AmendOutcome:
+def _drive_amend_creates_complementaria(repos: _Repos, *, operation: PinnedAuthorityOperation) -> _AmendOutcome:
     """Run the seed-baseline + amend scenario and bundle the observable state."""
     wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
     work_unit, baseline_revision, baseline = _seed_external_baseline(
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000"), _AMEND_EXPENSE_CASILLA: Decimal("250")},
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         new_filing = amend_modelo_revision(
@@ -532,21 +543,23 @@ def _drive_amend_creates_complementaria(repos: _Repos) -> _AmendOutcome:
     )
 
 
-def test_amend_new_filing_is_current_complementaria_record(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_new_filing_is_current_complementaria_record(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     assert outcome.new_filing.status is ModeloRecordStatus.VIGENTE
     assert outcome.new_filing.amends_filing_record_id == outcome.baseline.filing_record_id
     assert outcome.new_filing.external_evidence is None
 
 
-def test_amend_new_filing_records_filing_metadata(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_new_filing_records_filing_metadata(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     assert outcome.new_filing.filed_at == _T4
     assert outcome.new_filing.filed_by == "operator-A"
 
 
-def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, _, fr_repo, _, _ = repos
     refreshed_baseline = get_filing_record(
         outcome.baseline.filing_record_id,
@@ -556,8 +569,8 @@ def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos) -> None:
     assert refreshed_baseline.superseded_by_filing_record_id == outcome.new_filing.filing_record_id
 
 
-def test_amend_new_revision_is_filed_complementaria(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_new_revision_is_filed_complementaria(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
@@ -571,7 +584,9 @@ def test_amend_new_revision_is_filed_complementaria(repos: _Repos) -> None:
     assert new_revision.amendment_reason == "under-reported turnover discovered in audit"
 
 
-def test_amend_member_scoped_filing_id_carries_member_nif(repos: _Repos) -> None:
+def test_amend_member_scoped_filing_id_carries_member_nif(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """A member-scoped amendment's new filing record carries the baseline's
     ``member_nif`` -- both on the persisted record and in its derived id --
     rather than silently defaulting to the single-filer ``None`` slot."""
@@ -581,6 +596,7 @@ def test_amend_member_scoped_filing_id_carries_member_nif(repos: _Repos) -> None
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
         member_nif="A00000000",
+        operation=operation,
     )
     assert baseline.member_nif == "A00000000"
 
@@ -604,7 +620,9 @@ def test_amend_member_scoped_filing_id_carries_member_nif(repos: _Repos) -> None
     )
 
 
-def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(repos: _Repos) -> None:
+def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """Amending a member-scoped baseline must not collide with an unrelated
     single-filer VIGENTE record sharing the same (modelo, year, period).
 
@@ -621,6 +639,7 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(re
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
         member_nif="A00000000",
+        operation=operation,
     )
 
     single_filer_revision_id = "b" * 64
@@ -662,8 +681,8 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(re
     assert refreshed_single_filer.status is ModeloRecordStatus.VIGENTE
 
 
-def test_amend_overridden_casilla_takes_new_value(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_overridden_casilla_takes_new_value(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
@@ -673,8 +692,10 @@ def test_amend_overridden_casilla_takes_new_value(repos: _Repos) -> None:
         assert new_revision.casilla_values[_AMEND_INCOME_CASILLA] == Decimal("1100")
 
 
-def test_amend_unoverridden_casilla_inherits_baseline_value(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_unoverridden_casilla_inherits_baseline_value(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
@@ -687,8 +708,8 @@ def test_amend_unoverridden_casilla_inherits_baseline_value(repos: _Repos) -> No
         )
 
 
-def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     wu_repo, _, _, _, _ = repos
     refreshed_wu = get_work_unit(
         outcome.work_unit.work_unit_id,
@@ -698,8 +719,8 @@ def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
     assert refreshed_wu.current_filing_record_id == outcome.new_filing.filing_record_id
 
 
-def test_amend_emits_single_modelo_amended_event(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_emits_single_modelo_amended_event(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, _, _, _, bv_repo = repos
     amended_events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
@@ -715,8 +736,10 @@ _AMENDED_EVENT_PAYLOAD_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("payload_key", "expected"), _AMENDED_EVENT_PAYLOAD_EXPECTATIONS)
-def test_amend_amended_event_payload_records_metadata(repos: _Repos, payload_key: str, expected: str) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_amended_event_payload_records_metadata(
+    repos: _Repos, payload_key: str, expected: str, *, operation: PinnedAuthorityOperation
+) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, _, _, _, bv_repo = repos
     amended_events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
@@ -725,8 +748,8 @@ def test_amend_amended_event_payload_records_metadata(repos: _Repos, payload_key
     assert amended_events[0].payload[payload_key] == expected
 
 
-def test_amend_amended_event_targets_new_filing_record(repos: _Repos) -> None:
-    outcome = _drive_amend_creates_complementaria(repos)
+def test_amend_amended_event_targets_new_filing_record(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, _, _, _, bv_repo = repos
     amended_events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
@@ -737,13 +760,15 @@ def test_amend_amended_event_targets_new_filing_record(repos: _Repos) -> None:
     assert event.payload["amends_filing_record_id"] == outcome.baseline.filing_record_id
 
 
-def test_amend_refuses_no_op_overrides(repos: _Repos) -> None:
+def test_amend_refuses_no_op_overrides(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """Overrides identical to the baseline produce the same content-
     addressed revision id; the action refuses rather than persisting
     a no-op amendment."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
+    _, _, baseline = _seed_external_baseline(
+        repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
+    )
 
     with pytest.raises(CalculationRevisionStateError) as exc_info:
         with bundled_indexed_authority().operation() as operation:
@@ -759,14 +784,18 @@ def test_amend_refuses_no_op_overrides(repos: _Repos) -> None:
     assert exc_info.value.translated_message == "errors.error.error_modelo_calculation_revision_state"
 
 
-def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos) -> None:
+def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """An override targeting a casilla id the registry does not declare
     for the baseline modelo / filing_year / period is refused. The
     corrected revision is the legal basis of the complementaria filing;
     fabricated casillas cannot be silently accepted."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
+    _, _, baseline = _seed_external_baseline(
+        repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
+    )
 
     with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
         with bundled_indexed_authority().operation() as operation:
@@ -786,7 +815,7 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos)
     assert _UNKNOWN_AMEND_CASILLA in casillas_obj
 
 
-def test_amend_refuses_printed_number_metadata_token(repos: _Repos) -> None:
+def test_amend_refuses_printed_number_metadata_token(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """Amendment overrides must not treat a printed number as a casilla reference."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
@@ -800,7 +829,9 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos) -> None:
         filing_instance_evidence=general_m303_filing_evidence(
             Period.from_year_and_code(2025, "1T"),
             reference="test:amend:printed-token",
+            operation=operation,
         ),
+        operation=operation,
     )
 
     with pytest.raises(AmendmentOverrideCasillaError, match="non-canonical reference tokens") as exc_info:
@@ -821,11 +852,15 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos) -> None:
     assert "iva.resultado" in str(exc_info.value)
 
 
-def test_amend_refuses_non_string_override_casilla_keys_without_coercion(repos: _Repos) -> None:
+def test_amend_refuses_non_string_override_casilla_keys_without_coercion(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
     """Malformed override casilla keys fail before registry membership checks."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
+    _, _, baseline = _seed_external_baseline(
+        repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
+    )
 
     with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
         with bundled_indexed_authority().operation() as operation:
@@ -843,7 +878,7 @@ def test_amend_refuses_non_string_override_casilla_keys_without_coercion(repos: 
     assert exc_info.value.context.get("casillas") == ["1"]
 
 
-def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:
+def test_amend_revision_carries_casilla_observations(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The amendment revision preserves regulatory grounding.
 
     The amend path used to build the corrected `CalculationRevision`
@@ -854,7 +889,7 @@ def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:
     registry snapshot even when the baseline revision itself carries
     no observations (the externally-imported baseline seeded here)."""
 
-    outcome = _drive_amend_creates_complementaria(repos)
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
@@ -871,7 +906,7 @@ def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:
     assert observed[_AMEND_EXPENSE_CASILLA].value == new_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
 
 
-def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos) -> None:
+def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """An amendment baseline is an imported filing, so it has no ledger rows.
 
     This pins the fact the export evidence guard silently depends on. The
@@ -895,7 +930,7 @@ def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos) -> None:
     contributors and no evidence, which the guard refuses. The fix then
     belongs on the amend path, not on the guard.
     """
-    outcome = _drive_amend_creates_complementaria(repos)
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     _, cr_repo, _, _, _ = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
@@ -912,7 +947,9 @@ def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos) -> None:
     assert new_revision.ledger_filing_evidence is None
 
 
-def test_export_refuses_an_amendment_carrying_contributors(repos: _Repos, tmp_path: Path) -> None:
+def test_export_refuses_an_amendment_carrying_contributors(
+    repos: _Repos, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """The latent half: contributors without evidence IS refused.
 
     The sibling test pins that an amendment carries no contributors. This
@@ -920,7 +957,7 @@ def test_export_refuses_an_amendment_carrying_contributors(repos: _Repos, tmp_pa
     states the whole invariant rather than half of it — the reachability
     fact and the consequence are recorded together.
     """
-    outcome = _drive_amend_creates_complementaria(repos)
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
@@ -955,7 +992,7 @@ def test_export_refuses_an_amendment_carrying_contributors(repos: _Repos, tmp_pa
 
 
 def test_amendment_commits_its_catalogues_and_event_in_one_transaction(
-    amend_runtime: _AmendRuntime,
+    amend_runtime: _AmendRuntime, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The amendment's three catalogues and its event share one transaction.
 
@@ -969,6 +1006,7 @@ def test_amendment_commits_its_catalogues_and_event_in_one_transaction(
     _, _, baseline = _seed_external_baseline(
         repos_tuple,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
+        operation=operation,
     )
     recorder = WriteUnitRecorder(amend_runtime.engine)
 
@@ -987,7 +1025,7 @@ def test_amendment_commits_its_catalogues_and_event_in_one_transaction(
 
 
 def test_split_amendment_write_shape_commits_between_catalogues(
-    amend_runtime: _AmendRuntime,
+    amend_runtime: _AmendRuntime, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Anti-tautology: the recorder does report a seam when one exists.
 
@@ -999,6 +1037,7 @@ def test_split_amendment_write_shape_commits_between_catalogues(
     _, _, baseline = _seed_external_baseline(
         repos_tuple,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
+        operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         amend_modelo_revision(
@@ -1026,7 +1065,7 @@ def test_split_amendment_write_shape_commits_between_catalogues(
 
 
 def test_amendment_event_and_state_are_both_present_after_success(
-    amend_runtime: _AmendRuntime,
+    amend_runtime: _AmendRuntime, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Parity: co-committing the event does not change what an amendment records."""
     repos_tuple = amend_runtime.repos
@@ -1034,6 +1073,7 @@ def test_amendment_event_and_state_are_both_present_after_success(
     _, _, baseline = _seed_external_baseline(
         repos_tuple,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
+        operation=operation,
     )
 
     with bundled_indexed_authority().operation() as operation:

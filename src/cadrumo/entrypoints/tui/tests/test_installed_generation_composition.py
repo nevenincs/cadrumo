@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 import pytest
 
@@ -59,15 +59,13 @@ from ....application.workbench_generation import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
 )
-from ...adapter_composition import build_censal_fetch_port
-
-if TYPE_CHECKING:
-    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.transactions.models import TransactionCatalogue
+from ...adapter_composition import build_censal_fetch_port
 from ..declarations.calendar import DeclarationsCalendarScreen
 from ..declarations.controller import DeclarationsWorkspaceScreen
 from ..declarations.routes import resolve_declarations_screen
@@ -94,6 +92,13 @@ class _GenerationReadDoor:
 
     def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         return self.read()
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Keep one indexed authority generation live across composition and reads."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 _BUCKET = "11111111-1111-4111-8111-111111111111"
@@ -139,7 +144,7 @@ def _ledger() -> LedgerWorkspaceProjectionV1:
     )
 
 
-def _declarations(at: datetime) -> DeclarationsWorkspaceProjectionV1:
+def _declarations(at: datetime, *, operation: PinnedAuthorityOperation) -> DeclarationsWorkspaceProjectionV1:
     observations = tuple(
         DeclarationsWorkspaceZoneObservationV1(
             zone=zone,
@@ -149,6 +154,7 @@ def _declarations(at: datetime) -> DeclarationsWorkspaceProjectionV1:
         for zone in DeclarationsWorkspaceZone
     )
     return project_declarations_workspace(
+        operation=operation,
         bucket_id=_BUCKET,
         work_units=WorkUnitCatalogue(),
         calculation_revisions=CalculationRevisionCatalogue(),
@@ -183,7 +189,7 @@ def _admission(destination: str, state: WorkbenchDestinationAdmissionState) -> W
     )
 
 
-def _aeat_sync_projection(at: datetime) -> AeatSyncWorkspaceProjectionV1:
+def _aeat_sync_projection(at: datetime, *, operation: PinnedAuthorityOperation) -> AeatSyncWorkspaceProjectionV1:
     """A real pre-pull AEAT Sync reading, built by its own production reader."""
     from ....application.aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
@@ -192,21 +198,25 @@ def _aeat_sync_projection(at: datetime) -> AeatSyncWorkspaceProjectionV1:
         subject_key="00000001R",
         observed_at=at,
         filings=(),
-        operation_contracts=_operation_runtime().public_contracts,
+        operation_contracts=_operation_runtime(operation=operation).public_contracts,
     )
 
 
-def _inputs(at: datetime, *, aeat_sync_available: bool = False) -> WorkbenchGenerationInputsV1:
+def _inputs(
+    at: datetime, *, operation: PinnedAuthorityOperation, aeat_sync_available: bool = False
+) -> WorkbenchGenerationInputsV1:
     """One generation. ``aeat_sync_available`` models a declared NIF."""
     return WorkbenchGenerationInputsV1(
         assembled_at=at,
         home=WorkbenchGenerationSourceResultV1.available(_home(at), observed_at=at),
         ledger=WorkbenchGenerationSourceResultV1.available(_ledger(), observed_at=at),
-        declarations=WorkbenchGenerationSourceResultV1.available(_declarations(at), observed_at=at),
+        declarations=WorkbenchGenerationSourceResultV1.available(
+            _declarations(at, operation=operation), observed_at=at
+        ),
         declarations_calendar=WorkbenchGenerationSourceResultV1.available(_calendar(at), observed_at=at),
         aeat_sync=(
             WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].available(
-                _aeat_sync_projection(at), observed_at=at
+                _aeat_sync_projection(at, operation=operation), observed_at=at
             )
             if aeat_sync_available
             else WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].never_captured(
@@ -278,7 +288,7 @@ def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
     )
 
 
-def _operation_runtime() -> TuiOperationCompositionV1:
+def _operation_runtime(*, operation: PinnedAuthorityOperation) -> TuiOperationCompositionV1:
     contracts = OperationPublicContractSetV1.build(
         (
             build_censal_operation_registration(
@@ -295,15 +305,21 @@ def _operation_runtime() -> TuiOperationCompositionV1:
     return TuiOperationCompositionV1(
         services=services,
         public_contracts=contracts,
-        authority_operation=cast("PinnedAuthorityOperation", object()),
+        authority_operation=operation,
     )
 
 
-def test_generation_provider_binds_real_declarations_factory_and_calendar_projection() -> None:
+def test_generation_provider_binds_real_declarations_factory_and_calendar_projection(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The installed Declarations route reaches the application-built calendar."""
 
-    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(lambda: _inputs(_NOW)))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    provider = InstalledWorkbenchGenerationProviderV1(
+        _GenerationReadDoor(lambda: _inputs(_NOW, operation=authority_operation))
+    )
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(
+        _operation_runtime(operation=authority_operation)
+    )
     root = compose_installed_workbench_root(root_inputs)
 
     route = root.destination_catalogue.resolve("workbench.declarations")
@@ -315,10 +331,16 @@ def test_generation_provider_binds_real_declarations_factory_and_calendar_projec
     assert isinstance(resolve_declarations_screen(declarations.controller, target), DeclarationsCalendarScreen)
 
 
-def test_generation_provider_keeps_modelo_navigation_unavailable_without_a_captured_workspace_projection() -> None:
+def test_generation_provider_keeps_modelo_navigation_unavailable_without_a_captured_workspace_projection(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The installed factory never creates a second read or treats no capture as empty work."""
-    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(lambda: _inputs(_NOW)))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    provider = InstalledWorkbenchGenerationProviderV1(
+        _GenerationReadDoor(lambda: _inputs(_NOW, operation=authority_operation))
+    )
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(
+        _operation_runtime(operation=authority_operation)
+    )
     root = compose_installed_workbench_root(root_inputs)
     route = root.destination_catalogue.resolve("workbench.declarations")
     assert route.factory is not None
@@ -329,10 +351,16 @@ def test_generation_provider_keeps_modelo_navigation_unavailable_without_a_captu
     assert declarations.controller.modelo_workspace_factory is None
 
 
-def test_generation_provider_composes_the_real_account_screen_owners_without_effects() -> None:
+def test_generation_provider_composes_the_real_account_screen_owners_without_effects(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The installed root receives real account doors, not a test-only placeholder."""
-    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(lambda: _inputs(_NOW)))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    provider = InstalledWorkbenchGenerationProviderV1(
+        _GenerationReadDoor(lambda: _inputs(_NOW, operation=authority_operation))
+    )
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(
+        _operation_runtime(operation=authority_operation)
+    )
     context = TuiScreenContextV1(destination="workbench.profile")
 
     assert isinstance(root_inputs.account_factories.profile(context), ProfileManagerScreen)
@@ -358,6 +386,7 @@ def test_account_composition_refuses_stale_profile_identity_or_label(
 
 def test_generation_factory_receives_exact_session_operation_contract_object(
     monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """AEAT Sync authority comes from the active service graph, not dependencies."""
     captured: list[OperationPublicContractSetV1] = []
@@ -373,8 +402,10 @@ def test_generation_factory_receives_exact_session_operation_contract_object(
         "cadrumo.entrypoints.tui.launcher._aeat_sync_generation_factory",
         capture_contracts,
     )
-    runtime = _operation_runtime()
-    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(lambda: _inputs(_NOW)))
+    runtime = _operation_runtime(operation=authority_operation)
+    provider = InstalledWorkbenchGenerationProviderV1(
+        _GenerationReadDoor(lambda: _inputs(_NOW, operation=authority_operation))
+    )
 
     compose_installed_workbench_generation_provider(provider, _dependencies())(runtime)
 
@@ -382,9 +413,11 @@ def test_generation_factory_receives_exact_session_operation_contract_object(
     assert captured[0] is runtime.services.public_contracts
 
 
-def test_available_declarations_admission_requires_calendar_projection() -> None:
+def test_available_declarations_admission_requires_calendar_projection(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The admitted Declarations route cannot silently omit its calendar child."""
-    payload = _inputs(_NOW).model_dump()
+    payload = _inputs(_NOW, operation=authority_operation).model_dump()
     payload["declarations"]["value"]["bucket_id"] = _BUCKET
     payload["declarations_calendar"] = (
         WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1]
@@ -396,9 +429,14 @@ def test_available_declarations_admission_requires_calendar_projection() -> None
         WorkbenchGenerationInputsV1.model_validate(payload)
 
 
-def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_sources_explicit() -> None:
+def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_sources_explicit(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A child return captures once; unavailable sources never become empty fixtures."""
-    captures = [_inputs(_NOW), _inputs(_NOW + timedelta(minutes=1))]
+    captures = [
+        _inputs(_NOW, operation=authority_operation),
+        _inputs(_NOW + timedelta(minutes=1), operation=authority_operation),
+    ]
     calls = 0
 
     def read() -> WorkbenchGenerationInputsV1:
@@ -408,7 +446,9 @@ def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_so
         return value
 
     provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(read))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(
+        _operation_runtime(operation=authority_operation)
+    )
 
     assert calls == 1
     assert root_inputs.search_inputs is None
@@ -420,7 +460,9 @@ def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_so
     assert refreshed_home.generated_at == _NOW + timedelta(minutes=1)
 
 
-def test_a_generation_that_gains_a_source_readmits_its_destination() -> None:
+def test_a_generation_that_gains_a_source_readmits_its_destination(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Availability belongs to the CURRENT capture, not to the session's first.
 
     An operator who declares their NIF part-way through a session makes AEAT
@@ -430,13 +472,18 @@ def test_a_generation_that_gains_a_source_readmits_its_destination() -> None:
     navigation kept advertising a reader-unavailable reason that had stopped
     being true.
     """
-    generations = [_inputs(_NOW), _inputs(_NOW, aeat_sync_available=True)]
+    generations = [
+        _inputs(_NOW, operation=authority_operation),
+        _inputs(_NOW, operation=authority_operation, aeat_sync_available=True),
+    ]
 
     def read() -> WorkbenchGenerationInputsV1:
         return generations.pop(0) if len(generations) > 1 else generations[0]
 
     provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(read))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(
+        _operation_runtime(operation=authority_operation)
+    )
     root = compose_installed_workbench_root(root_inputs)
 
     assert root.destination_catalogue.resolve("workbench.aeat_sync").factory is None
@@ -450,20 +497,27 @@ def test_a_generation_that_gains_a_source_readmits_its_destination() -> None:
     assert route.factory is not None
 
 
-def test_a_generation_that_loses_a_source_stops_offering_its_destination() -> None:
+def test_a_generation_that_loses_a_source_stops_offering_its_destination(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The other direction, which used to crash rather than refuse.
 
     Clearing a declared NIF is a supported profile edit. The catalogue kept
     listing AEAT Sync with a live factory that then raised out of a Textual
     handler when the operator selected it from the palette.
     """
-    generations = [_inputs(_NOW, aeat_sync_available=True), _inputs(_NOW)]
+    generations = [
+        _inputs(_NOW, operation=authority_operation, aeat_sync_available=True),
+        _inputs(_NOW, operation=authority_operation),
+    ]
 
     def read() -> WorkbenchGenerationInputsV1:
         return generations.pop(0) if len(generations) > 1 else generations[0]
 
     provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(read))
-    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
+    root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(
+        _operation_runtime(operation=authority_operation)
+    )
     root = compose_installed_workbench_root(root_inputs)
 
     assert root.destination_catalogue.resolve("workbench.aeat_sync").factory is not None

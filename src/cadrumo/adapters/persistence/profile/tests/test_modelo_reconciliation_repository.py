@@ -54,6 +54,7 @@ from .....application.workflow.persistence import workflow_state_repository
 from .....core.period import Period
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.buckets.event import BucketEventType
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.repository import upsert_work_unit
@@ -136,7 +137,7 @@ def _registry_snapshot_ref_for_work_unit(work_unit_id: str) -> RegistrySnapshotR
     )
 
 
-def _reconcile(work_unit_id: str) -> None:
+def _reconcile(work_unit_id: str, *, operation: PinnedAuthorityOperation) -> None:
     modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=work_unit_id,
@@ -144,6 +145,7 @@ def _reconcile(work_unit_id: str) -> None:
             source_path=MODELO_130_FIXTURE,
             actor="tester",
         ),
+        operation=operation,
     )
 
 
@@ -305,11 +307,18 @@ def test_n_records_for_one_work_unit_persist_distinctly_and_all_read_back() -> N
     stored = tuple(repository.iter_records())
     assert {record.bucket_event_id for record in stored} == set(event_ids)
 
-    entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), work_unit_id=work_unit_id)
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(
+            bucket_id=_active_bucket_id(),
+            operation=operation,
+            work_unit_id=work_unit_id,
+        )
     assert [entry.event_id for entry in entries] == event_ids
 
 
-def test_repeated_reconciliation_of_one_work_unit_records_every_run() -> None:
+def test_repeated_reconciliation_of_one_work_unit_records_every_run(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """End-to-end: three real reconciliations of one work unit list as three.
 
     Drives the production verb rather than the repository, so it gates the key
@@ -317,18 +326,25 @@ def test_repeated_reconciliation_of_one_work_unit_records_every_run() -> None:
     """
     work_unit_id = _seed_work_unit()
 
-    _reconcile(work_unit_id)
-    _reconcile(work_unit_id)
-    _reconcile(work_unit_id)
+    _reconcile(work_unit_id, operation=operation)
+    _reconcile(work_unit_id, operation=operation)
+    _reconcile(work_unit_id, operation=operation)
 
-    entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), work_unit_id=work_unit_id)
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(
+            bucket_id=_active_bucket_id(),
+            operation=operation,
+            work_unit_id=work_unit_id,
+        )
 
     assert len(entries) == 3
     assert len({entry.event_id for entry in entries}) == 3
     assert [entry.reconciled_at for entry in entries] == sorted(entry.reconciled_at for entry in entries)
 
 
-def test_reconciliation_with_no_persisted_revision_still_persists_and_reads_back() -> None:
+def test_reconciliation_with_no_persisted_revision_still_persists_and_reads_back(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A run that has no calculation revision at all is storable.
 
     Modelo 131 declares a ``reconciliation_total_casilla_ids`` map, so with no
@@ -357,12 +373,18 @@ def test_reconciliation_with_no_persisted_revision_still_persists_and_reads_back
         source_ref="test://m131-no-revision",
         actor="operator",
         justificante=receipt,
+        operation=operation,
     )
 
     assert "no_persisted_revision" in {
         advisory.context.get("reason") for advisory in report.advisories if advisory.code == "totals_not_reconciled"
     }
-    entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), work_unit_id=work_unit_id)
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(
+            bucket_id=_active_bucket_id(),
+            operation=operation,
+            work_unit_id=work_unit_id,
+        )
     assert len(entries) == 1
     stored = tuple(ModeloReconciliationRecordRepository().iter_records())
     assert len(stored) == 1
@@ -376,7 +398,12 @@ def test_grounded_diffs_survive_the_persist_and_read_back_cycle() -> None:
     record = _fully_populated_record(work_unit_id=work_unit_id, bucket_event_id="d" * 64)
     ModeloReconciliationRecordRepository().save(record)
 
-    entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), work_unit_id=work_unit_id)
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(
+            bucket_id=_active_bucket_id(),
+            operation=operation,
+            work_unit_id=work_unit_id,
+        )
 
     assert len(entries) == 1
     entry = entries[0]
@@ -422,7 +449,9 @@ def test_finalise_reconciliation_issues_exactly_one_atomic_persistence_call() ->
     assert {keyword.arg for keyword in atomic_call.keywords} == set()
 
 
-def test_a_failed_write_in_the_batch_rolls_the_whole_batch_back() -> None:
+def test_a_failed_write_in_the_batch_rolls_the_whole_batch_back(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A failure on the record write rolls the co-written event write back.
 
     The runtime half of the atomicity proof: because both writes go to one
@@ -432,7 +461,7 @@ def test_a_failed_write_in_the_batch_rolls_the_whole_batch_back() -> None:
     that session; the event-catalogue write queued ahead of it must not survive.
     """
     work_unit_id = _seed_work_unit()
-    _reconcile(work_unit_id)
+    _reconcile(work_unit_id, operation=operation)
 
     catalogue_repo = BucketEventHistoryRepository()
     objects = catalogue_repo.secure_object_repository

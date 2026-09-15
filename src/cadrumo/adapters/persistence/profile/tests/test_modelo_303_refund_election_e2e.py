@@ -75,7 +75,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -296,6 +296,7 @@ def _calculate_negative_period(
     *,
     period_token: str,
     redeme_enrolled: bool,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, Decimal]:
     """Calculate + verify a negative-credit M303 period; return (revision_id, saldo).
 
@@ -344,6 +345,7 @@ def _calculate_negative_period(
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period,
             reference="test:m303-refund-election",
+            operation=operation,
         ),
         filing_period_date=_period_end(period_token),
         work_unit_repository=work_repo,
@@ -443,7 +445,9 @@ def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None
     return resolved.get(_CARRY_RELATION)
 
 
-def test_non_redeme_last_period_refund_election_yields_devolucion_and_zero_carry(tmp_path: Path) -> None:
+def test_non_redeme_last_period_refund_election_yields_devolucion_and_zero_carry(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A non-REDEME autónomo who ELECTS ``devolver`` in the last period files ``D`` and carries ZERO.
 
     4T is the year's last filing period, so the refund election is lawful for a
@@ -452,7 +456,9 @@ def test_non_redeme_last_period_refund_election_yields_devolucion_and_zero_carry
     carry-in of zero — the credit is requested as devolución, not double-claimed.
     """
     with _secure_backend(tmp_path):
-        revision_id, saldo = _calculate_negative_period(period_token=_LAST_PERIOD, redeme_enrolled=False)
+        revision_id, saldo = _calculate_negative_period(
+            period_token=_LAST_PERIOD, redeme_enrolled=False, operation=operation
+        )
         assert saldo > Decimal("0")  # the engine produced a credit to refund
         disposition = _file_period(
             calculation_revision_id=revision_id,
@@ -465,7 +471,9 @@ def test_non_redeme_last_period_refund_election_yields_devolucion_and_zero_carry
     assert carry_in == Decimal("0")
 
 
-def test_non_redeme_last_period_without_election_carries_credit_forward(tmp_path: Path) -> None:
+def test_non_redeme_last_period_without_election_carries_credit_forward(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """CONTROL: the SAME last period filed without the election stays ``C`` and carries the credit.
 
     The only difference from the refund test is the default ``COMPENSAR`` election —
@@ -474,7 +482,9 @@ def test_non_redeme_last_period_without_election_carries_credit_forward(tmp_path
     the carry-forward path is behaviour-preserving for a non-REDEME taxpayer.
     """
     with _secure_backend(tmp_path):
-        revision_id, saldo = _calculate_negative_period(period_token=_LAST_PERIOD, redeme_enrolled=False)
+        revision_id, saldo = _calculate_negative_period(
+            period_token=_LAST_PERIOD, redeme_enrolled=False, operation=operation
+        )
         disposition = _file_period(
             calculation_revision_id=revision_id,
             redeme_enrolled=False,
@@ -488,7 +498,9 @@ def test_non_redeme_last_period_without_election_carries_credit_forward(tmp_path
     assert carry_in > Decimal("0")
 
 
-def test_non_redeme_mid_period_refund_election_is_refused(tmp_path: Path) -> None:
+def test_non_redeme_mid_period_refund_election_is_refused(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A non-REDEME autónomo who elects ``devolver`` MID-year (2T) is REFUSED, not silently carried.
 
     2T is not the year's last filing period, so a non-REDEME refund is not lawful
@@ -497,7 +509,9 @@ def test_non_redeme_mid_period_refund_election_is_refused(tmp_path: Path) -> Non
     or silently filing an unlawful refund.
     """
     with _secure_backend(tmp_path):
-        revision_id, saldo = _calculate_negative_period(period_token=_MID_PERIOD, redeme_enrolled=False)
+        revision_id, saldo = _calculate_negative_period(
+            period_token=_MID_PERIOD, redeme_enrolled=False, operation=operation
+        )
         assert saldo > Decimal("0")
         with pytest.raises(ModeloRefundElectionNotEligibleError) as excinfo:
             _file_period(
@@ -511,7 +525,9 @@ def test_non_redeme_mid_period_refund_election_is_refused(tmp_path: Path) -> Non
     assert excinfo.value.context["modelo"] == "303"
 
 
-def test_redeme_taxpayer_refunds_without_election_regression_guard(tmp_path: Path) -> None:
+def test_redeme_taxpayer_refunds_without_election_regression_guard(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """REGRESSION: a REDEME taxpayer still refunds its eligible period under the standing election.
 
     REDEME inscription is the always-on refund election; it does not depend on the
@@ -535,7 +551,9 @@ def test_redeme_taxpayer_refunds_without_election_regression_guard(tmp_path: Pat
     quarterly-carry counterpart is exercised by the non-REDEME control above.
     """
     with _secure_backend(tmp_path):
-        revision_id, saldo = _calculate_negative_period(period_token=_REDEME_LAST_PERIOD, redeme_enrolled=True)
+        revision_id, saldo = _calculate_negative_period(
+            period_token=_REDEME_LAST_PERIOD, redeme_enrolled=True, operation=operation
+        )
         assert saldo > Decimal("0")
         disposition = _file_period(
             calculation_revision_id=revision_id,

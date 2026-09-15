@@ -30,6 +30,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, load_external_constants
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -75,9 +76,9 @@ def _period(filing_year: int, period: str) -> Period:
 _TARGET_PERIOD_VALUE = _period(_TARGET_YEAR, _TARGET_PERIOD)
 
 
-def _filing_instance_evidence(period: Period) -> FilingInstanceEvidence:
+def _filing_instance_evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
     """Delegate to the one shared typed-evidence fixture builder."""
-    return general_m303_filing_evidence(period, reference="test:iva-wallet:exonerado-390")
+    return general_m303_filing_evidence(period, reference="test:iva-wallet:exonerado-390", operation=operation)
 
 
 @cache
@@ -210,6 +211,7 @@ def _create_modelo_303_work_unit(
     *,
     work_unit_repository: WorkUnitCatalogueRepository,
     clock: datetime = _DECIDED_AT,
+    operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     return create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -219,6 +221,7 @@ def _create_modelo_303_work_unit(
         revision_id=snapshot.revision.id,
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=clock,
+        operation=operation,
     )
 
 
@@ -226,6 +229,7 @@ def _work_unit_repositories_with_modelo_303_work_unit(
     snapshot: RegistrySnapshot,
     *,
     clock: datetime = _DECIDED_AT,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[
     WorkUnit,
     WorkUnitCatalogueRepository,
@@ -233,7 +237,7 @@ def _work_unit_repositories_with_modelo_303_work_unit(
     BucketEventHistoryRepository,
 ]:
     work_repo, calc_repo, event_repo = _work_unit_repositories()
-    work_unit = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo, clock=clock)
+    work_unit = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo, clock=clock, operation=operation)
     return work_unit, work_repo, calc_repo, event_repo
 
 
@@ -306,6 +310,7 @@ def _work_unit_and_revision_for_wallet_gate(
     *,
     compensation_amount: Decimal,
     state: CalculationRevisionState = CalculationRevisionState.BORRADOR,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision]:
     target_period = _period(_TARGET_YEAR, _TARGET_PERIOD)
     work_unit_id = derive_work_unit_id(
@@ -318,7 +323,9 @@ def _work_unit_and_revision_for_wallet_gate(
     casilla_values: dict[CasillaId, Decimal] = {
         _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: compensation_amount,
     }
-    filing_instance_evidence = general_m303_filing_evidence(target_period, reference="test:iva-wallet-engine")
+    filing_instance_evidence = general_m303_filing_evidence(
+        target_period, reference="test:iva-wallet-engine", operation=operation
+    )
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},

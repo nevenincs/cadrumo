@@ -43,7 +43,7 @@ from cadrumo.application.modelo.work_selection import (
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -118,6 +118,7 @@ def _seed_work_unit(
     *,
     bucket_id: str,
     clock: datetime = _T0,
+    operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     return create_work_unit(
         bucket_id=bucket_id,
@@ -127,6 +128,7 @@ def _seed_work_unit(
         revision_id="2019-y-siguientes",
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         clock=clock,
+        operation=operation,
     )
 
 
@@ -177,12 +179,14 @@ def _seed_revision(
     return revision
 
 
-def test_captured_catalogue_selector_uses_no_second_encrypted_sql_read_after_mutation(tmp_path: Path) -> None:
+def test_captured_catalogue_selector_uses_no_second_encrypted_sql_read_after_mutation(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Selection stays on one encrypted-SQL capture after the persisted singleton changes."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
         _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        first = _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        first = _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         captured, _revision_id = repository.load_revisioned()
         second_revision_id = "2019-y-siguientes-post-capture"
         second_payload = first.model_dump()
@@ -238,9 +242,11 @@ def test_captured_catalogue_selector_uses_no_second_encrypted_sql_read_after_mut
 
 def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
     addressing_repos: tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     bucket_id, work_repository, calculation_repository = addressing_repos
-    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
+    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id, operation=operation)
     draft = _seed_revision(
         calculation_repository,
         work_unit_id=work_unit.work_unit_id,
@@ -270,6 +276,7 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
         catalogue=catalogue,
         resolved_bucket_id=bucket_id,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
     assert current_pick.calculation_revision_id == draft.calculation_revision_id
     assert current_pick.work_unit_id == work_unit.work_unit_id
@@ -281,6 +288,7 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
         catalogue=catalogue,
         resolved_bucket_id=bucket_id,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
     assert explicit_pick.calculation_revision_id == draft.calculation_revision_id
     assert explicit_pick.work_unit_id == work_unit.work_unit_id
@@ -289,9 +297,11 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
 
 def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
     addressing_repos: tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     bucket_id, work_repository, calculation_repository = addressing_repos
-    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
+    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id, operation=operation)
     draft = _seed_revision(
         calculation_repository,
         work_unit_id=work_unit.work_unit_id,
@@ -338,6 +348,7 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
         catalogue=catalogue,
         resolved_bucket_id=bucket_id,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
     export_pick = resolve_modelo_revision_pick(
         target=visible,
@@ -345,6 +356,7 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
         catalogue=catalogue,
         resolved_bucket_id=bucket_id,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
 
     assert verify_pick.calculation_revision_id == draft.calculation_revision_id
@@ -368,6 +380,7 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
         catalogue=work_repository.load(),
         resolved_bucket_id=bucket_id,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
     assert file_pick.calculation_revision_id == verified.calculation_revision_id
     assert file_pick.work_unit_id == work_unit.work_unit_id
@@ -381,26 +394,27 @@ def test_exact_work_unit_id_in_calculation_revision_slot_has_only_the_canonical_
     addressing_repos: tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
     default_for: Literal["verify", "file"],
     subject_leaf_key: str,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The application, rather than the CLI, recognizes the exact persisted work-unit identity."""
     bucket_id, work_repository, _calculation_repository = addressing_repos
-    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
+    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id, operation=operation)
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        with bundled_indexed_authority().operation() as operation:
-            resolve_modelo_revision_for_operator_target(
-                calculation_revision_id=work_unit.work_unit_id,
-                work_unit_id=None,
-                modelo=None,
-                year=None,
-                period=None,
-                registry_revision_id=None,
-                selector=ModeloCalculationRevisionSelector.CURRENT,
-                default_for=default_for,
-                catalogue=work_repository.load(),
-                resolved_bucket_id=bucket_id,
-                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
-            )
+        resolve_modelo_revision_for_operator_target(
+            calculation_revision_id=work_unit.work_unit_id,
+            work_unit_id=None,
+            modelo=None,
+            year=None,
+            period=None,
+            registry_revision_id=None,
+            selector=ModeloCalculationRevisionSelector.CURRENT,
+            default_for=default_for,
+            catalogue=work_repository.load(),
+            resolved_bucket_id=bucket_id,
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+        )
 
     failure = raised.value.precondition_failure
     assert failure is not None
@@ -431,10 +445,12 @@ def test_positional_work_unit_id_resolves_its_current_revision_after_calculation
     addressing_repos: tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
     default_for: Literal["verify", "file"],
     revision_state: CalculationRevisionState,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The declared calculate recovery makes the unchanged verify/file selector executable."""
     bucket_id, work_repository, calculation_repository = addressing_repos
-    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
+    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id, operation=operation)
     revision = _seed_revision(
         calculation_repository,
         work_unit_id=work_unit.work_unit_id,
@@ -449,20 +465,19 @@ def test_positional_work_unit_id_resolves_its_current_revision_after_calculation
         ),
     )
 
-    with bundled_indexed_authority().operation() as operation:
-        resolved = resolve_modelo_revision_for_operator_target(
-            calculation_revision_id=work_unit.work_unit_id,
-            work_unit_id=None,
-            modelo=None,
-            year=None,
-            period=None,
-            registry_revision_id=None,
-            selector=ModeloCalculationRevisionSelector.CURRENT,
-            default_for=default_for,
-            catalogue=work_repository.load(),
-            resolved_bucket_id=bucket_id,
-            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
-        )
+    resolved = resolve_modelo_revision_for_operator_target(
+        calculation_revision_id=work_unit.work_unit_id,
+        work_unit_id=None,
+        modelo=None,
+        year=None,
+        period=None,
+        registry_revision_id=None,
+        selector=ModeloCalculationRevisionSelector.CURRENT,
+        default_for=default_for,
+        catalogue=work_repository.load(),
+        resolved_bucket_id=bucket_id,
+        ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+    )
 
     assert resolved == revision
     assert resolved.work_unit_id == work_unit.work_unit_id
@@ -476,10 +491,12 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
     addressing_repos: tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
     default_for: Literal["verify", "file"],
     subject_leaf_key: str,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """A discarded work unit cannot be advertised as a calculable recovery target."""
     bucket_id, work_repository, _calculation_repository = addressing_repos
-    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
+    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id, operation=operation)
     discard_work_unit(
         work_unit.work_unit_id,
         actor="operator",
@@ -489,20 +506,19 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
     )
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        with bundled_indexed_authority().operation() as operation:
-            resolve_modelo_revision_for_operator_target(
-                calculation_revision_id=work_unit.work_unit_id,
-                work_unit_id=None,
-                modelo=None,
-                year=None,
-                period=None,
-                registry_revision_id=None,
-                selector=ModeloCalculationRevisionSelector.CURRENT,
-                default_for=default_for,
-                catalogue=work_repository.load(),
-                resolved_bucket_id=bucket_id,
-                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
-            )
+        resolve_modelo_revision_for_operator_target(
+            calculation_revision_id=work_unit.work_unit_id,
+            work_unit_id=None,
+            modelo=None,
+            year=None,
+            period=None,
+            registry_revision_id=None,
+            selector=ModeloCalculationRevisionSelector.CURRENT,
+            default_for=default_for,
+            catalogue=work_repository.load(),
+            resolved_bucket_id=bucket_id,
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+        )
 
     failure = raised.value.precondition_failure
     assert failure is not None
@@ -541,12 +557,14 @@ def _capture_source_imports() -> str:
     )
 
 
-def test_work_capture_is_singleflight_for_one_unchanged_observation(tmp_path: Path) -> None:
+def test_work_capture_is_singleflight_for_one_unchanged_observation(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Two captures over one unchanged catalogue share their generation."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
         _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         request = _capture_request(profile.bucket_id)
 
         first = capture_modelo_work_resolution(request, catalogue_repository=repository)
@@ -558,12 +576,14 @@ def test_work_capture_is_singleflight_for_one_unchanged_observation(tmp_path: Pa
         assert first.require_current(coordinate) is first
 
 
-def test_work_capture_generation_advances_and_refuses_a_superseded_capture(tmp_path: Path) -> None:
+def test_work_capture_generation_advances_and_refuses_a_superseded_capture(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A catalogue write supersedes an earlier capture through its coordinate."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
         _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        first_unit = _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        first_unit = _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         request = _capture_request(profile.bucket_id)
         stale = capture_modelo_work_resolution(request, catalogue_repository=repository)
 
@@ -591,7 +611,9 @@ def test_work_capture_generation_advances_and_refuses_a_superseded_capture(tmp_p
             stale.require_current(current)
 
 
-def test_work_capture_pointer_limb_defeats_an_aba_return_to_the_same_bucket(tmp_path: Path) -> None:
+def test_work_capture_pointer_limb_defeats_an_aba_return_to_the_same_bucket(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A pointer rewritten away and back is not mistaken for an unchanged limb."""
     from cadrumo.core.bucket_pointer import read_pointer, write_pointer
     from cadrumo.core.config import load_settings
@@ -599,7 +621,7 @@ def test_work_capture_pointer_limb_defeats_an_aba_return_to_the_same_bucket(tmp_
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
         _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         implicit_request = _capture_request(None)
         root = load_settings().cadrumo_local_storage_root
         original = read_pointer(root)
@@ -614,7 +636,9 @@ def test_work_capture_pointer_limb_defeats_an_aba_return_to_the_same_bucket(tmp_
         assert after.generation > before.generation
 
 
-def test_explicit_bucket_capture_excludes_the_pointer_limb(tmp_path: Path) -> None:
+def test_explicit_bucket_capture_excludes_the_pointer_limb(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """An explicit operand keeps its catalogue generation across pointer churn."""
     from cadrumo.core.bucket_pointer import read_pointer, write_pointer
     from cadrumo.core.config import load_settings
@@ -622,7 +646,7 @@ def test_explicit_bucket_capture_excludes_the_pointer_limb(tmp_path: Path) -> No
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
         _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         explicit_request = _capture_request(profile.bucket_id)
         root = load_settings().cadrumo_local_storage_root
         original = read_pointer(root)
@@ -636,12 +660,14 @@ def test_explicit_bucket_capture_excludes_the_pointer_limb(tmp_path: Path) -> No
         assert after.generation == before.generation
 
 
-def test_work_capture_reads_the_catalogue_exactly_once_and_touches_no_registry(tmp_path: Path) -> None:
+def test_work_capture_reads_the_catalogue_exactly_once_and_touches_no_registry(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """One capture is one encrypted-SQL catalogue read and no registry access."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
         _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         request = _capture_request(profile.bucket_id)
         selects: list[str] = []
 
@@ -668,12 +694,14 @@ def test_work_capture_reads_the_catalogue_exactly_once_and_touches_no_registry(t
         assert "cadrumo.domain.calculations.registry" not in _capture_source_imports()
 
 
-def test_distinct_storage_roots_cannot_compare_their_coordinates(tmp_path: Path) -> None:
+def test_distinct_storage_roots_cannot_compare_their_coordinates(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Coordinates from two physical roots are refused, not silently equal."""
     with isolated_runtime_profile(tmp_path=tmp_path / "one", bucket_id=_ADDRESSING_PROFILE_ID) as first_profile:
         _seed_ready_profile(first_profile.repository, bucket_id=first_profile.bucket_id)
         first_repository = WorkUnitCatalogueRepository(objects=first_profile.repository)
-        _seed_work_unit(first_repository, bucket_id=first_profile.bucket_id)
+        _seed_work_unit(first_repository, bucket_id=first_profile.bucket_id, operation=operation)
         first_capture = capture_modelo_work_resolution(
             _capture_request(first_profile.bucket_id),
             catalogue_repository=first_repository,
@@ -682,7 +710,7 @@ def test_distinct_storage_roots_cannot_compare_their_coordinates(tmp_path: Path)
     with isolated_runtime_profile(tmp_path=tmp_path / "two", bucket_id=_ADDRESSING_PROFILE_ID) as second_profile:
         _seed_ready_profile(second_profile.repository, bucket_id=second_profile.bucket_id)
         second_repository = WorkUnitCatalogueRepository(objects=second_profile.repository)
-        _seed_work_unit(second_repository, bucket_id=second_profile.bucket_id)
+        _seed_work_unit(second_repository, bucket_id=second_profile.bucket_id, operation=operation)
         second_coordinate = read_modelo_work_current_coordinate(
             _capture_request(second_profile.bucket_id),
             catalogue_repository=second_repository,

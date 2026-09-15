@@ -54,6 +54,7 @@ if TYPE_CHECKING:
 
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer
     from ....core.json_contract import Notice
+    from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 
 def _load_descendientes(bucket_id: str) -> tuple[DescendantInfo, ...]:
@@ -72,7 +73,12 @@ def _load_descendientes(bucket_id: str) -> tuple[DescendantInfo, ...]:
     return descendant_list_from_facts(facts)
 
 
-def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ...]) -> None:
+def _write_descendientes(
+    bucket_id: str,
+    descendientes: tuple[DescendantInfo, ...],
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> None:
     """Rewrite the active profile's full descendiente fact set, clearing stale rows.
 
     Clears every ``renta_family.descendiente.{n}.*`` and the count/aggregate facts
@@ -105,6 +111,7 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
         profile_id=bucket_id,
         changes=(*clears, *upserts),
         door=ProfileFactWriteDoor.CLI_DESCENDIENTE,
+        profile_decode_context=profile_decode_context,
     )
 
 
@@ -348,7 +355,13 @@ def descendiente_add(
             ) from exc
 
     combined = (*existing, *new_rows)
-    _write_descendientes(pointer.bucket_id, combined)
+    from ..state_projection_support import authority_operation
+
+    _write_descendientes(
+        pointer.bucket_id,
+        combined,
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+    )
 
     from .._config_descendiente_payloads import ConfigProfileDescendienteAddResult
 
@@ -397,7 +410,13 @@ def descendiente_remove(
             context={"index": str(index), "total": str(len(existing))},
         )
     remaining = tuple(d for i, d in enumerate(existing) if i != index)
-    _write_descendientes(pointer.bucket_id, remaining)
+    from ..state_projection_support import authority_operation
+
+    _write_descendientes(
+        pointer.bucket_id,
+        remaining,
+        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+    )
 
     from .._config_descendiente_payloads import ConfigProfileDescendienteRemoveResult
 

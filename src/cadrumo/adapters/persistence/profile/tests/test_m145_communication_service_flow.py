@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -48,7 +50,7 @@ def _field_values() -> dict[str, str]:
 
 
 def test_m145_communication_service_flow_creates_validates_exports_delivers_and_completes(
-    tmp_path: Path,
+    tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
@@ -60,11 +62,13 @@ def test_m145_communication_service_flow_creates_validates_exports_delivers_and_
             bucket_id=runtime.bucket_id,
             actor="service-flow-test",
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         validation = validate_m145_communication_record(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         exported = export_m145_communication_record(
             created.communication_record_id[:12],
@@ -72,23 +76,27 @@ def test_m145_communication_service_flow_creates_validates_exports_delivers_and_
             renderer=RegistryFixedWidthRecordRenderer(),
             actor="service-flow-test",
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         delivered = mark_m145_communication_record_delivered_to_payer(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             actor="service-flow-test",
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         completed = mark_m145_communication_record_locally_completed(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             actor="service-flow-test",
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
         read_back = read_m145_communication_record(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
         )
 
     assert created.state is M145CommunicationRecordState.CREATED

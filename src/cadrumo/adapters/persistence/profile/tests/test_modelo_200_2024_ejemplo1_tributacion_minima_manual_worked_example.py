@@ -152,6 +152,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -337,6 +338,7 @@ def _calculate_m200(
     secure_objects: SecureObjectRepository,
     *,
     cuota_liquida_minima: Decimal,
+    operation: PinnedAuthorityOperation,
 ) -> BucketAggregationCalculationResult:
     """Run the live M200/2024/0A calculate with Ejemplo 1's manual casilla inputs."""
     _seed_sociedad_profile()
@@ -360,6 +362,7 @@ def _calculate_m200(
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
+        operation=operation,
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -384,7 +387,7 @@ def _calculate_m200(
 
 
 def test_m200_2024_ejemplo1_con_tributacion_minima_manual_worked_example(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """00562/00582/00592/00611 = 500.000/350.000/300.000/300.000, con tributacion minima.
 
@@ -402,7 +405,7 @@ def test_m200_2024_ejemplo1_con_tributacion_minima_manual_worked_example(
     downstream max(00619, ...) cuota-liquida/cuota-diferencial chain that
     IS a registry formula under test.
     """
-    result = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("300000.00"))
+    result = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("300000.00"), operation=operation)
     values = result.revision.casilla_values
 
     assert values[_CASILLA_CUOTA_INTEGRA] == _CUOTA_INTEGRA_EXPECTED
@@ -412,7 +415,7 @@ def test_m200_2024_ejemplo1_con_tributacion_minima_manual_worked_example(
 
 
 def test_m200_2024_ejemplo1_sin_tributacion_minima_manual_worked_example(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """00592/00611 = 270.000, sin tributacion minima (00619 = 0).
 
@@ -422,14 +425,16 @@ def test_m200_2024_ejemplo1_sin_tributacion_minima_manual_worked_example(
     [01586] 270.000". Every other raw input (00501/00573/00588) is identical
     to the con-minima scenario; only casilla 00619 changes (300.000 -> 0).
     """
-    result = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("0"))
+    result = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("0"), operation=operation)
     values = result.revision.casilla_values
 
     assert values[_CASILLA_CUOTA_LIQUIDA] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
     assert values[_CASILLA_CUOTA_DIFERENCIAL] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
 
 
-def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(secure_objects: SecureObjectRepository) -> None:
+def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
     """Anti-tautology: raising casilla 00619 from 0 to 300.000 must raise 00592/00611
     by exactly the manual's own delta (30.000 = 300.000 - 270.000).
 
@@ -439,8 +444,8 @@ def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(secure_objects
     AEAT-printed figures from the SAME worked example (never hand-computed
     from the formula under test).
     """
-    sin_minima = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("0"))
-    con_minima = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("300000.00"))
+    sin_minima = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("0"), operation=operation)
+    con_minima = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("300000.00"), operation=operation)
 
     delta = Decimal("300000.00") - Decimal("270000.00")
     assert (
