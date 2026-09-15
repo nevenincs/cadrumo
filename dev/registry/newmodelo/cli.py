@@ -62,7 +62,9 @@ def scaffold(
         str | None,
         typer.Option("--title", help="Working title for the manifest.toml placeholder."),
     ] = None,
-    valid_to: Annotated[str | None, typer.Option("--valid-to", help="Grounded applicability end date, if known.")] = None,
+    valid_to: Annotated[
+        str | None, typer.Option("--valid-to", help="Grounded applicability end date, if known.")
+    ] = None,
     registry_modelos_root: Annotated[
         Path | None,
         typer.Option(
@@ -115,7 +117,9 @@ def new_edition(
     valid_from: Annotated[str, typer.Option("--valid-from", help="Grounded applicability start date (YYYY-MM-DD).")],
     year_from: Annotated[int, typer.Option("--year-from", help="First filing year selected by this revision.")],
     period: Annotated[list[str], typer.Option("--period", help="Applicable filing period; repeat as needed.")],
-    valid_to: Annotated[str | None, typer.Option("--valid-to", help="Grounded applicability end date, if known.")] = None,
+    valid_to: Annotated[
+        str | None, typer.Option("--valid-to", help="Grounded applicability end date, if known.")
+    ] = None,
     registry_modelos_root: Annotated[
         Path | None,
         typer.Option("--registry-modelos-root", help="Override the modelos root for isolated developer/test runs."),
@@ -141,7 +145,10 @@ def new_edition(
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(code=1) from exc
     _echo_result(result, mode="scaffold")
-    typer.echo("Revision manifest created. Author only evidenced deltas; run independent registry checks before publication.")
+    typer.echo(
+        "Revision manifest created. Author only evidenced deltas; "
+        "run independent registry checks before publication."
+    )
 
 
 @app.command("checklist")

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -21,11 +23,28 @@ _THROWAWAY_MODELO_ID = "987"
 _THROWAWAY_REVISION_ID = "2026-y-siguientes"
 
 
+def _scaffold(
+    manager: NewModeloScaffoldManager,
+    modelo_id: str,
+    revision_id: str,
+    **kwargs: Any,
+) -> ScaffoldResult:
+    year = int(revision_id[:4])
+    return manager.scaffold(
+        modelo_id,
+        revision_id,
+        valid_from=date(year, 1, 1),
+        year_from=year,
+        periods=("0A",),
+        **kwargs,
+    )
+
+
 def test_scaffold_writes_full_skeleton_and_is_idempotent(tmp_path: Path) -> None:
     """scaffold() writes every planned file once; a second run is a no-op."""
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
 
-    first = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    first = _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
     assert isinstance(first, ScaffoldResult)
     assert first.written, "first scaffold run must write files"
     assert not first.already_present
@@ -54,7 +73,7 @@ def test_scaffold_writes_full_skeleton_and_is_idempotent(tmp_path: Path) -> None
     assert not locales_dir.exists(), "new Modelo scaffolding must not recreate legacy locale storage"
 
     # Second run: nothing new written, everything reported as already present.
-    second = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    second = _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
     assert not second.written
     assert second.already_present
     assert set(second.already_present) == set(first.written)
@@ -75,12 +94,12 @@ def test_scaffold_invalidates_the_conformance_snapshot_cache_only_when_it_writes
     primed = load_locale_coverage_index()
     assert load_locale_coverage_index() is primed, "a live cache must serve the identical object"
 
-    first = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    first = _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
     assert first.written
     after_write = load_locale_coverage_index()
     assert after_write is not primed, "a scaffold that wrote must have dropped the conformance snapshot cache"
 
-    second = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    second = _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
     assert not second.written
     assert load_locale_coverage_index() is after_write, "a no-op scaffold must leave the cache intact"
 
@@ -90,7 +109,7 @@ def test_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     for bad_modelo_id in ("", "AB", "12", "1234", "abc"):
         with pytest.raises(NewModeloError, match="modelo id must be exactly three digits"):
-            manager.scaffold(bad_modelo_id, _THROWAWAY_REVISION_ID)
+            _scaffold(manager, bad_modelo_id, _THROWAWAY_REVISION_ID)
         assert not scan_directory(tmp_path), bad_modelo_id
 
 
@@ -99,7 +118,13 @@ def test_scaffold_rejects_malformed_revision_id(tmp_path: Path) -> None:
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     for bad_revision_id in ("", "Bad Revision", "_leading-underscore", "trailing-"):
         with pytest.raises(NewModeloError, match="revision id must be a lowercase kebab-style ref"):
-            manager.scaffold(_THROWAWAY_MODELO_ID, bad_revision_id)
+            manager.scaffold(
+                _THROWAWAY_MODELO_ID,
+                bad_revision_id,
+                valid_from=date(2026, 1, 1),
+                year_from=2026,
+                periods=("0A",),
+            )
         assert not (tmp_path / _THROWAWAY_MODELO_ID).exists(), bad_revision_id
 
 
@@ -109,7 +134,7 @@ def test_scaffold_refuses_when_modelo_root_is_a_file(tmp_path: Path) -> None:
     (tmp_path / _THROWAWAY_MODELO_ID).write_text("not a directory", encoding="utf-8")
 
     with pytest.raises(NewModeloError, match="exists and is not a directory"):
-        manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+        _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
 
 def test_scaffold_refuses_to_graft_a_revision_onto_a_real_foreign_modelo(tmp_path: Path) -> None:
@@ -131,7 +156,7 @@ def test_scaffold_refuses_to_graft_a_revision_onto_a_real_foreign_modelo(tmp_pat
     )
 
     with pytest.raises(NewModeloError, match="modelo already exists"):
-        manager.scaffold(_THROWAWAY_MODELO_ID, "2099-y-siguientes")
+        _scaffold(manager, _THROWAWAY_MODELO_ID, "2099-y-siguientes")
 
     # Confirm nothing was written into the foreign modelo's revisions tree.
     assert not (foreign_modelo_dir / "revisions" / "2099-y-siguientes").exists()
@@ -149,7 +174,7 @@ def test_new_edition_preserves_existing_manifest_and_declarations(tmp_path: Path
     before_manifest = manifest.read_bytes()
     before_existing = existing.read_bytes()
 
-    result = manager.scaffold(_THROWAWAY_MODELO_ID, "2099-y-siguientes", existing_modelo=True)
+    result = _scaffold(manager, _THROWAWAY_MODELO_ID, "2099-y-siguientes", existing_modelo=True)
     assert (foreign_modelo_dir / "revisions" / "2099-y-siguientes" / "revision.toml").is_file()
     assert result.written == (Path("revisions/2099-y-siguientes/revision.toml"),)
     assert manifest.read_bytes() == before_manifest
@@ -177,7 +202,7 @@ def test_scaffolded_tree_is_refused_by_the_directory_mode_loader(tmp_path: Path)
     from ...compiler.loader import load_modelo_directory
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     modelo_root = tmp_path / _THROWAWAY_MODELO_ID
     with pytest.raises(RegistryLoadError, match=r"revision fragment must declare \[revisions\.<id>\]"):
@@ -203,7 +228,7 @@ def test_scaffolded_toml_declares_only_fields_the_schema_knows(tmp_path: Path) -
     )
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
     modelo_root = tmp_path / _THROWAWAY_MODELO_ID
 
     manifest = tomllib.loads((modelo_root / "manifest.toml").read_text(encoding="utf-8"))
@@ -261,7 +286,7 @@ def test_a_first_edition_declares_no_predecessor_key_at_all(tmp_path: Path) -> N
     import tomllib
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
     declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
@@ -284,13 +309,28 @@ def test_a_successor_edition_uses_latest_edition_only_as_storage_baseline(tmp_pa
     (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").write_text('[modelo]\nid = "987"\n', encoding="utf-8")
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, "2025", existing_modelo=True)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, "2025", existing_modelo=True)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / "2025" / "revision.toml"
     declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"]["2025"]
     assert declared["casilla_storage_baseline"] == "2024-desde-09-y-3t"
     assert declared["family_storage_baseline"] == "2024-desde-09-y-3t"
     assert "predecessor" not in declared
+
+
+def test_a_backfilled_edition_does_not_reuse_a_later_storage_baseline(tmp_path: Path) -> None:
+    import tomllib
+
+    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2025", "2025-01-01")
+    (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").write_text('[modelo]\nid = "987"\n', encoding="utf-8")
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+
+    _scaffold(manager, _THROWAWAY_MODELO_ID, "2024", existing_modelo=True)
+
+    revision = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / "2024" / "revision.toml"
+    declared = tomllib.loads(revision.read_text(encoding="utf-8"))["revisions"]["2024"]
+    assert "casilla_storage_baseline" not in declared
+    assert "family_storage_baseline" not in declared
 
 
 def test_a_rescaffolded_new_modelo_is_a_no_op(tmp_path: Path) -> None:
@@ -303,8 +343,8 @@ def test_a_rescaffolded_new_modelo_is_a_no_op(tmp_path: Path) -> None:
     import tomllib
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
-    result = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    result = _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
     declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
@@ -317,7 +357,7 @@ def test_the_revision_manifest_declares_the_editions_casilla_source_default(tmp_
     import tomllib
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
     declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
@@ -333,7 +373,7 @@ def test_the_casillas_fragment_proposes_no_restated_row_field(tmp_path: Path) ->
     report them. The scaffold is where they are not proposed in the first place.
     """
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
     fragment = (
         tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "casillas" / "0001-casillas.toml"
@@ -363,7 +403,7 @@ def test_the_scaffold_does_not_create_the_hand_authored_export_directory(tmp_pat
     default nobody notices.
     """
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    _scaffold(manager, _THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
 
     revision_root = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID
 

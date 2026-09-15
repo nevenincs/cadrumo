@@ -40,6 +40,9 @@ _EXPORT_AUTHORITY_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset({"export", 
 _BOOTSTRAP_TARGETS_PATH: Final[Path] = Path(__file__).with_name("generated_export_bootstrap_targets.toml")
 _CONTINUITY_SECTIONS: Final[tuple[str, ...]] = ("casillas", "casilla_continuidad_evolutions")
 _PREDECESSOR_DECLARATION: Final = "predecessor"
+_RESOLVED_STORAGE_DECLARATIONS: Final[frozenset[str]] = frozenset(
+    {_PREDECESSOR_DECLARATION, "casilla_storage_baseline", "family_storage_baseline"}
+)
 _CASILLA_SECTION: Final = "casillas"
 _COMPLETE_EDITION_FRAGMENT: Final = "complete-edition.toml"
 _EXPORT_AUTHORITY_MEMBERS: Final[frozenset[str]] = frozenset({"export", "export_layouts"})
@@ -311,7 +314,11 @@ def _write_complete_candidate_edition(revision_root: Path, edition: Materialised
     """
     manifest = tomllib.loads((revision_root / "revision.toml").read_text("utf-8"))
     manifest_members = frozenset(manifest.get("revisions", {}).get(edition.revision_id, {}))
-    revision_table = {key: value for key, value in edition.table.items() if key in manifest_members}
+    revision_table = {
+        key: value
+        for key, value in edition.table.items()
+        if key in manifest_members and key not in _RESOLVED_STORAGE_DECLARATIONS
+    }
     rows = edition.table.get(_CASILLA_SECTION, ())
     if not isinstance(rows, list | tuple) or not all(isinstance(row, Mapping) for row in rows):
         raise ValueError(f"edition {edition.modelo_id}/{edition.revision_id} resolved no casilla rows")

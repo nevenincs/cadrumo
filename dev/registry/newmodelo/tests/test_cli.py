@@ -77,7 +77,7 @@ def test_cli_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:
     """A malformed modelo id exits non-zero with an instructive error, not a traceback."""
     result = CliRunner().invoke(
         app,
-        _scaffold_args(tmp_path)[:1] + ["AB"] + _scaffold_args(tmp_path)[2:],
+        [*_scaffold_args(tmp_path)[:1], "AB", *_scaffold_args(tmp_path)[2:]],
     )
 
     assert result.exit_code == 1

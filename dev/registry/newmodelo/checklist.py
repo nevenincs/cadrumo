@@ -46,7 +46,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "revisions/<revision-id>/revision.toml: valid_from/valid_to, period_selector, "
             "legal_refs, source_refs, and the mandatory orden_aplicabilidad citing the "
-            "Orden(es) ministeriales that approve or amend this revision's form. Declare "
+            "Orden(es) ministeriales that approve or amend this revision's form. "
             "Select casilla_storage_baseline and family_storage_baseline only for lossless "
             "payload reuse. Legal predecessor continuity is a separate evidenced claim and "
             "must never be inferred from storage ancestry. casilla_source_refs supplies the "
@@ -79,7 +79,8 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         title="Author changed bindings and verify hydrated binding coverage",
         detail=(
             "revisions/<revision-id>/bindings/*.toml: only new or changed bindings. Verify the "
-            "hydrated edition binds every required ledger, profile, counterpart, or cross-modelo casilla. Use the single "
+            "hydrated edition binds every required ledger, profile, counterpart, or cross-modelo "
+            "casilla. Use the single "
             "canonical BindingSourceKind taxonomy (aeat-registry-bindings) and "
             "enroll a new source resolver in the live calculate mesh "
             "(aeat-calculation-aggregation) rather than leaving it dormant."
@@ -88,10 +89,10 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
     ChecklistItem(
         title="Close the calculation-completeness manifest",
         detail=(
-            "Verify the hydrated revision's full calculation closure (every formula target, formula-expression "
+            "Author the revision's full calculation closure (every formula target, formula-expression "
             "reference, binding/relation endpoint, verification-expectation operand) keyed "
-            "by canonical casilla_id plus reviewed segment/number metadata. Author a "
-            "completeness_manifest delta only where the inherited declaration differs "
+            "by canonical casilla_id plus reviewed segment/number metadata. The completeness "
+            "manifest is a revision-owned attestation and is never inherited or delta-authored "
             "(modelo-export-mirrors-official-structure)."
         ),
     ),

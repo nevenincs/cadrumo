@@ -133,8 +133,8 @@ def _validate_revision_id(revision_id: str) -> None:
 
 # First line of every scaffolded manifest.toml. Used as the sole signal that an
 # existing manifest.toml on disk was authored by this scaffold (and is
-# therefore safe to leave alone / overwrite with --force) rather than being
-# real, already-modelled registry content this scaffold must never graft onto.
+# therefore recognizable as an unfinished new-modelo scaffold) rather than
+# real, already-modelled registry content.
 _SCAFFOLDED_MANIFEST_SENTINEL = "# Scaffolded modelo manifest —"
 
 
@@ -314,7 +314,7 @@ def _declared_valid_from(revision_root: Path) -> date | None:
     return declared if isinstance(declared, date) else None
 
 
-def _latest_existing_edition(modelo_root: Path, revision_id: str) -> str | None:
+def _latest_existing_edition(modelo_root: Path, revision_id: str, *, requested_valid_from: date) -> str | None:
     """Return the modelo's latest edition already on disk, excluding *revision_id*.
 
     "Latest" is decided by declared ``valid_from``, never by directory order:
@@ -330,7 +330,9 @@ def _latest_existing_edition(modelo_root: Path, revision_id: str) -> str | None:
     dated = [
         (valid_from, child.name)
         for child in scan_directory(revisions_root, select=DirectoryEntryKind.DIRECTORIES)
-        if child.name != revision_id and (valid_from := _declared_valid_from(child)) is not None
+        if child.name != revision_id
+        and (valid_from := _declared_valid_from(child)) is not None
+        and valid_from <= requested_valid_from
     ]
     if not dated:
         return None
@@ -358,19 +360,18 @@ class NewModeloScaffoldManager:
         modelo_id: str,
         revision_id: str,
         *,
-        valid_from: date | None = None,
-        year_from: int | None = None,
-        periods: tuple[str, ...] = ("0A",),
+        valid_from: date,
+        year_from: int,
+        periods: tuple[str, ...],
         valid_to: date | None = None,
         title: str | None = None,
         existing_modelo: bool = False,
     ) -> tuple[ScaffoldPlanEntry, ...]:
         """Compute the full skeleton file plan without writing anything.
 
-        Reads the modelo's existing editions to offer the newest of them as the
-        new edition's ``predecessor``; a modelo with no earlier edition on disk
-        is planned with no ``predecessor`` key at all. The read is the only way
-        the plan touches the filesystem, and it writes nothing.
+        For an existing modelo, selects the latest storage baseline effective
+        no later than the requested applicability start. Legal continuity is
+        never inferred.
 
         Returns:
             An ordered tuple of :class:`ScaffoldPlanEntry`, each naming a
@@ -382,18 +383,13 @@ class NewModeloScaffoldManager:
         """
         _validate_modelo_id(modelo_id)
         _validate_revision_id(revision_id)
-        inferred_year = int(revision_id[:4]) if revision_id[:4].isdigit() else None
-        if valid_from is None:
-            if inferred_year is None:
-                raise NewModeloError("valid_from is required when the revision id has no leading year")
-            valid_from = date(inferred_year, 1, 1)
-        if year_from is None:
-            if inferred_year is None:
-                raise NewModeloError("year_from is required when the revision id has no leading year")
-            year_from = inferred_year
         resolved_title = title or f"TODO: title for modelo {modelo_id}"
         root = self.modelo_root(modelo_id)
-        storage_baseline = _latest_existing_edition(root, revision_id) if existing_modelo else None
+        storage_baseline = (
+            _latest_existing_edition(root, revision_id, requested_valid_from=valid_from)
+            if existing_modelo
+            else None
+        )
         if not periods:
             raise NewModeloError("at least one filing period is required")
         if valid_to is not None and valid_to < valid_from:
@@ -438,9 +434,9 @@ class NewModeloScaffoldManager:
         modelo_id: str,
         revision_id: str,
         *,
-        valid_from: date | None = None,
-        year_from: int | None = None,
-        periods: tuple[str, ...] = ("0A",),
+        valid_from: date,
+        year_from: int,
+        periods: tuple[str, ...],
         valid_to: date | None = None,
         title: str | None = None,
         existing_modelo: bool = False,
