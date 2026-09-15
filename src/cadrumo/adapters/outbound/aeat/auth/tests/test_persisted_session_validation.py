@@ -16,7 +16,7 @@ from .. import session_store as session_store
 from ..authenticator import AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
 from ..certificate import extract_nif_from_subject
-from ._auth_fixtures import SECRET_PASSPHRASE
+from ._auth_fixtures import CERTIFICATE_INPUT
 from ._authenticator_support import _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -48,7 +48,7 @@ async def test_resume_rejects_invalid_encrypted_session_before_browser_resolutio
         bundle_path = _build_bundle(tmp_path)
         settings = Settings(
             cadrumo_certificate_path=bundle_path,
-            cadrumo_certificate_password_secret=SecretStr(SECRET_PASSPHRASE),
+            cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
             cadrumo_token_dir=tmp_path / ".tokens",
         )
         authenticator = AeatAuthenticator(

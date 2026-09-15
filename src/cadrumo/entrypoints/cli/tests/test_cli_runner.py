@@ -8,10 +8,11 @@ Click's ``CliRunner.invoke`` correctly.  No mocks.
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from .cli_runner import ClickInvokeKwargs, invoke_cached_cli, semantic_cli_text
 
@@ -71,7 +72,7 @@ assert result.exit_code == 0, result.output
 assert "\\x1b[" not in result.output
 assert "--output-language" in semantic_cli_output(result)
 """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and literal regression probe.
+    completed = run_audited_process(
         [sys.executable, "-c", source],
         capture_output=True,
         check=False,

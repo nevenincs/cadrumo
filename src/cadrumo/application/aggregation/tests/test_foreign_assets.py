@@ -8,11 +8,13 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
+from ....core.identity.transaction_ids import TransactionId
 from ....core.period import Period
 from ....domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -547,11 +549,6 @@ class TestInvariants:
                     "total_valuation_eur": Decimal("0"),
                 },
             )
-
-
-from pydantic import TypeAdapter, ValidationError  # noqa: E402
-
-from ....core.identity.transaction_ids import TransactionId  # noqa: E402
 
 
 @pytest.mark.parametrize("impossible", ["2026-99-99", "2026-02-30", "2025-13-01", "0000-00-00"])

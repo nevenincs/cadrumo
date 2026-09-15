@@ -13,6 +13,8 @@ from typing import cast
 import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from ...errors import CliRefusedBoundaryError
 from ..secure_input import (
     _MAX_SECRETS_BYTES,
@@ -200,7 +202,7 @@ except CliRefusedBoundaryError as exc:
 else:
     print("accepted")
 """
-    return subprocess.run(  # noqa: S603 - fixed interpreter/code; payload travels only on stdin.
+    return run_audited_process(
         [sys.executable, "-c", code],
         input=payload,
         capture_output=True,

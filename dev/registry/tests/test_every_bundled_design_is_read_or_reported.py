@@ -552,4 +552,3 @@ def test_every_provenance_only_design_still_refuses_and_is_a_promotion_candidate
         "they are layout authorities and set design_authority accordingly, rather than leaving "
         "them excluded from the worklist: " + ", ".join(promotable)
     )
-

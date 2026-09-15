@@ -78,9 +78,9 @@ def public_option_behavior(ctx: object, *, name: str, enabled: bool) -> None:
 
 def _graph() -> CommandSpecGraph:
     root = CommandSpec(
-        key="root",
-        parent_key=None,
-        token="aeat",  # noqa: S106 - CLI operator token, not a credential
+        "root",
+        None,
+        "aeat",
         kind=CommandNodeKind.ROOT,
         help_key=TranslationKey("cli.root.app_help"),
         short_help_key=None,
@@ -91,9 +91,9 @@ def _graph() -> CommandSpecGraph:
         result_schema=_NO_SCHEMA,
     )
     leaf = CommandSpec(
-        key="greet",
-        parent_key="root",
-        token="greet",  # noqa: S106 - CLI operator token, not a credential
+        "greet",
+        "root",
+        "greet",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.root.version_help"),
         short_help_key=None,

@@ -78,6 +78,45 @@ _UNCOVERED_TAMPERS = {
     "conflict_policy": "forged-policy",
 }
 
+_COLUMN_SQL: dict[str, tuple[str, str]] = {
+    "previous_revision_id": (
+        "SELECT previous_revision_id FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET previous_revision_id = ? WHERE namespace = ?",
+    ),
+    "previous_payload_hash": (
+        "SELECT previous_payload_hash FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET previous_payload_hash = ? WHERE namespace = ?",
+    ),
+    "payload_hash": (
+        "SELECT payload_hash FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET payload_hash = ? WHERE namespace = ?",
+    ),
+    "ciphertext_hash": (
+        "SELECT ciphertext_hash FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET ciphertext_hash = ? WHERE namespace = ?",
+    ),
+    "revision_ancestor_ids": (
+        "SELECT revision_ancestor_ids FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET revision_ancestor_ids = ? WHERE namespace = ?",
+    ),
+    "revision_written_at": (
+        "SELECT revision_written_at FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET revision_written_at = ? WHERE namespace = ?",
+    ),
+    "write_provenance": (
+        "SELECT write_provenance FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET write_provenance = ? WHERE namespace = ?",
+    ),
+    "source_event_id": (
+        "SELECT source_event_id FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET source_event_id = ? WHERE namespace = ?",
+    ),
+    "conflict_policy": (
+        "SELECT conflict_policy FROM secure_objects WHERE namespace = ?",
+        "UPDATE secure_objects SET conflict_policy = ? WHERE namespace = ?",
+    ),
+}
+
 
 def _seed(db_path: Path) -> None:
     """Write the subject TWICE through the public repository.
@@ -106,10 +145,10 @@ def _tamper(db_path: Path, column: str, value: str) -> None:
     untouched row rather than by a forged one.
     """
     with sqlite3.connect(db_path) as con:
-        select = f"SELECT {column} FROM secure_objects WHERE namespace = ?"  # noqa: S608 - column names are module constants
+        select, update = _COLUMN_SQL[column]
         before = con.execute(select, (_NAMESPACE,)).fetchone()[0]
         con.execute(
-            f"UPDATE secure_objects SET {column} = ? WHERE namespace = ?",  # noqa: S608 - column names are module constants
+            update,
             (value, _NAMESPACE),
         )
         after = con.execute(select, (_NAMESPACE,)).fetchone()[0]

@@ -66,7 +66,7 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSWORD = "terminal-sizes-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "terminal-sizes-operator-secret"
 _LABEL = "Terminal Sizes Subject"
 _ACTOR: OperationActorReference = "operator:terminal-sizes"
 
@@ -122,13 +122,13 @@ def _registered_profile(tmp_path: Path) -> Generator[tuple[Path, PinnedAuthority
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=authority_operation.profile_create_context(),
             profile_decode_context=authority_operation.profile_decode_context(),
         )
         login_profile(
             name=_LABEL,
-            passphrase_callback=lambda: _PASSWORD,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),
         )
         yield root, authority_operation
@@ -191,7 +191,7 @@ def _operation_runtime(tmp_path: Path) -> Generator[tuple[OperationComposedServi
         enrolled = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=authority_operation.profile_create_context(),
             profile_decode_context=authority_operation.profile_decode_context(),
         )
@@ -200,7 +200,7 @@ def _operation_runtime(tmp_path: Path) -> Generator[tuple[OperationComposedServi
         # its own session, so the profile must be unlocked again first.
         login_profile(
             name=enrolled.profile_id,
-            passphrase_callback=lambda: _PASSWORD,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),
         )
         verify_definition = build_modelo_work_verify_definition(

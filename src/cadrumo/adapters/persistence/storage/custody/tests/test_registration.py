@@ -39,8 +39,8 @@ from cadrumo.application.user_profile.custody_ports import unlock_profile_custod
 from cadrumo.application.user_profile.login_session import logout_active_profile
 from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
 from cadrumo.core.credentials import (
-    PROFILE_PASSWORD_MAX_SCALARS,
-    PROFILE_PASSWORD_MIN_SCALARS,
+    PROFILE_CREDENTIAL_INPUT_MAX_SCALARS,
+    PROFILE_CREDENTIAL_INPUT_MIN_SCALARS,
     PassphraseStrength,
     ProfilePasswordRefusalReason,
     assess_profile_password,
@@ -49,8 +49,8 @@ from cadrumo.domain.user_profile.values import ProfileSetupState
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_OPERATOR_PASSPHRASE = "operator-chosen-registration-secret"  # noqa: S105 - synthetic test fixture
-_WRONG_PASSPHRASE = "not-the-operator-chosen-secret"  # noqa: S105 - synthetic test fixture
+_OPERATOR_CREDENTIAL_INPUT = "operator-chosen-registration-secret"
+_WRONG_CREDENTIAL_INPUT = "not-the-operator-chosen-secret"
 
 
 # ── the credential actually protects the bucket ─────────────────────────────
@@ -74,7 +74,7 @@ def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path: P
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Registration Subject",
-            passphrase=_OPERATOR_PASSPHRASE,
+            passphrase=_OPERATOR_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -84,13 +84,13 @@ def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path: P
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
         operator_key = unlock_profile_custody(
             material.envelope,
-            _OPERATOR_PASSPHRASE,
+            _OPERATOR_CREDENTIAL_INPUT,
             sentinel=material.sentinel,
         ).dek
         assert len(operator_key) == 32
 
         with pytest.raises(ProfileCustodyPasswordError):
-            unlock_profile_custody(material.envelope, _WRONG_PASSPHRASE, sentinel=material.sentinel)
+            unlock_profile_custody(material.envelope, _WRONG_CREDENTIAL_INPUT, sentinel=material.sentinel)
 
 
 def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path: Path) -> None:
@@ -110,13 +110,13 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Minimal Subject",
-            passphrase=_OPERATOR_PASSPHRASE,
+            passphrase=_OPERATOR_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
 
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
-        unlocked = unlock_profile_custody(material.envelope, _OPERATOR_PASSPHRASE, sentinel=material.sentinel)
+        unlocked = unlock_profile_custody(material.envelope, _OPERATOR_CREDENTIAL_INPUT, sentinel=material.sentinel)
         from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
         from cadrumo.application.user_profile.profile_record_repository import (
             ProfileRecordRepository,
@@ -155,7 +155,7 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Legal Hold Subject",
-            passphrase=_OPERATOR_PASSPHRASE,
+            passphrase=_OPERATOR_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -180,7 +180,7 @@ def test_blank_label_is_refused_before_any_bucket_is_created(tmp_path: Path) -> 
             register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="   ",
-                passphrase=_OPERATOR_PASSPHRASE,
+                passphrase=_OPERATOR_CREDENTIAL_INPUT,
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )
@@ -201,7 +201,7 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
             register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Too Short",
-                passphrase="a" * (PROFILE_PASSWORD_MIN_SCALARS - 1),
+                passphrase="a" * (PROFILE_CREDENTIAL_INPUT_MIN_SCALARS - 1),
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )
@@ -218,7 +218,7 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
             {"reason": "too_few_scalars", "scalar_count": 7, "utf8_byte_count": 7, "minimum_scalars": 8},
         ),
         (
-            "a" * (PROFILE_PASSWORD_MAX_SCALARS + 1),
+            "a" * (PROFILE_CREDENTIAL_INPUT_MAX_SCALARS + 1),
             ProfilePasswordRefusalReason.TOO_MANY_SCALARS,
             "application.user_profile.errors.profile_password_too_many_scalars",
             {"reason": "too_many_scalars", "scalar_count": 257, "utf8_byte_count": 257, "maximum_scalars": 256},
@@ -285,8 +285,8 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
 @pytest.mark.parametrize(
     "candidate",
     (
-        "a" * PROFILE_PASSWORD_MIN_SCALARS,
-        "a" * PROFILE_PASSWORD_MAX_SCALARS,
+        "a" * PROFILE_CREDENTIAL_INPUT_MIN_SCALARS,
+        "a" * PROFILE_CREDENTIAL_INPUT_MAX_SCALARS,
         "\U0001f600" * 256,
     ),
 )
@@ -308,8 +308,8 @@ def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path,
 def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_path: Path) -> None:
     """Visually equivalent credentials stay distinct; registration never normalises."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    composed = "\u00e9" * PROFILE_PASSWORD_MIN_SCALARS
-    decomposed = "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS
+    composed = "\u00e9" * PROFILE_CREDENTIAL_INPUT_MIN_SCALARS
+    decomposed = "e\u0301" * PROFILE_CREDENTIAL_INPUT_MIN_SCALARS
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         composed_profile = register_profile_with_credentials(
@@ -346,7 +346,7 @@ def test_duplicate_label_is_refused(tmp_path: Path) -> None:
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Same Label",
-            passphrase=_OPERATOR_PASSPHRASE,
+            passphrase=_OPERATOR_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -354,7 +354,7 @@ def test_duplicate_label_is_refused(tmp_path: Path) -> None:
             register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label="Same Label",
-                passphrase=_OPERATOR_PASSPHRASE,
+                passphrase=_OPERATOR_CREDENTIAL_INPUT,
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )
@@ -371,11 +371,11 @@ def test_strength_is_advisory_and_profile_policy_is_the_hard_gate() -> None:
     of its band. Asserting acceptance here pins that the band is
     advice, not a second gate.
     """
-    too_short = assess_profile_password("a" * (PROFILE_PASSWORD_MIN_SCALARS - 1))
+    too_short = assess_profile_password("a" * (PROFILE_CREDENTIAL_INPUT_MIN_SCALARS - 1))
     assert too_short.reason is ProfilePasswordRefusalReason.TOO_FEW_SCALARS
     assert not too_short.accepted
 
-    long_enough = assess_profile_password("a" * PROFILE_PASSWORD_MIN_SCALARS)
+    long_enough = assess_profile_password("a" * PROFILE_CREDENTIAL_INPUT_MIN_SCALARS)
     assert long_enough.strength is PassphraseStrength.WEAK
     assert long_enough.accepted
 

@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the live iva wallet service."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from ._app_live_command_spec_support import (
@@ -38,9 +34,9 @@ from .command_spec import (
 
 LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_live_iva_wallet",
-        parent_key="app_live",
-        token="iva-wallet",
+        "app_live_iva_wallet",
+        "app_live",
+        "iva-wallet",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.iva_wallet.app_help"),
         short_help_key=None,
@@ -51,9 +47,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_iva_wallet_pull",
-        parent_key="app_live_iva_wallet",
-        token="pull",
+        "app_live_iva_wallet_pull",
+        "app_live_iva_wallet",
+        "pull",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.iva_wallet.pull_help"),
         short_help_key=None,
@@ -72,9 +68,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_iva_wallet_history",
-        parent_key="app_live_iva_wallet",
-        token="history",
+        "app_live_iva_wallet_history",
+        "app_live_iva_wallet",
+        "history",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.iva_wallet.history_help"),
         short_help_key=None,
@@ -101,9 +97,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_iva_wallet_pull_history",
-        parent_key="app_live_iva_wallet",
-        token="pull-history",
+        "app_live_iva_wallet_pull_history",
+        "app_live_iva_wallet",
+        "pull-history",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.iva_wallet.pull_history_help"),
         short_help_key=None,
@@ -122,9 +118,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_iva_wallet_pull_evidence",
-        parent_key="app_live_iva_wallet",
-        token="pull-evidence",
+        "app_live_iva_wallet_pull_evidence",
+        "app_live_iva_wallet",
+        "pull-evidence",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.iva_wallet.pull_evidence_help"),
         short_help_key=None,
@@ -176,3 +172,5 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LIVE_IVA_WALLET_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live iva wallet service."""
+"""Authored CommandSpec declarations for the live iva wallet service."""

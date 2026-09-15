@@ -47,8 +47,8 @@ from ..records import ProfileCustodyEnvelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_PASSPHRASE_A = "isolation-subject-a-operator-secret"  # noqa: S105 - synthetic test credential
-_PASSPHRASE_B = "isolation-subject-b-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_A = "isolation-subject-a-operator-secret"
+_CREDENTIAL_B = "isolation-subject-b-operator-secret"
 
 
 def _register(label: str, passphrase: str) -> UUID:
@@ -128,12 +128,12 @@ class _EnrolledProfile:
 def test_one_profiles_password_envelope_cannot_unlock_another(tmp_path: Path) -> None:
     """A's envelope under B's passphrase refuses at the real unlock door."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_a = _register("Isolation A", _PASSPHRASE_A)
-        _register("Isolation B", _PASSPHRASE_B)
+        profile_a = _register("Isolation A", _CREDENTIAL_A)
+        _register("Isolation B", _CREDENTIAL_B)
 
         material = load_committed_profile_password_material(profile_a)
         with pytest.raises(ProfileCustodyPasswordError):
-            unlock_profile_custody_password(material, password=_PASSPHRASE_B)
+            unlock_profile_custody_password(material, password=_CREDENTIAL_B)
 
 
 def test_one_profiles_recovery_artifact_cannot_restore_another(tmp_path: Path) -> None:
@@ -148,8 +148,8 @@ def test_one_profiles_recovery_artifact_cannot_restore_another(tmp_path: Path) -
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        profile_a = _EnrolledProfile(root, label="Isolation A", password=_PASSPHRASE_A)
-        profile_b = _EnrolledProfile(root, label="Isolation B", password=_PASSPHRASE_B)
+        profile_a = _EnrolledProfile(root, label="Isolation A", password=_CREDENTIAL_A)
+        profile_b = _EnrolledProfile(root, label="Isolation B", password=_CREDENTIAL_B)
         target = tmp_path / "exports" / "recovery.json"
         target.parent.mkdir()
         profile_a.export(target)

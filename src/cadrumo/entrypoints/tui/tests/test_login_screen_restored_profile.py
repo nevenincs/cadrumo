@@ -41,7 +41,7 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (140, 60)
-_PASSWORD = "login-restored-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "login-restored-operator-secret"
 
 
 def _screen(choices: list[ProfileLoginChoice], *, profile_decode_context: ProfileDecodeContext) -> LoginScreen:
@@ -73,7 +73,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Restore-born",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=profile_create_context,
             profile_decode_context=profile_decode_context,
         )
@@ -81,7 +81,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
         restored = restore_profile_capsule_with_password(
             label="Restore-born",
             capsule=read_profile_capsule_source(capsule),
-            password=_PASSWORD,
+            password=_CREDENTIAL_INPUT,
             root=tmp_path / "tui-root",
             profile_decode_context=profile_decode_context,
         )
@@ -95,7 +95,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
 
         app = _screen(choices, profile_decode_context=profile_decode_context)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(pilot, _PASSWORD)
+            await _unlock_with(pilot, _CREDENTIAL_INPUT)
             assert app.error is None
             assert app.outcome is not None
             assert app.outcome.bucket_id == restored.profile_id

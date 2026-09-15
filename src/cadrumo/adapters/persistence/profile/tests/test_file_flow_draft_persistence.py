@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import (
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.submission.models import ModeloDraftStatus
+from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -161,7 +162,10 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
         # empty result is the CORRECT answer for a healthy approved draft and so
         # cannot distinguish a working invariant from a queue that saw nothing.
         refreshed, reasons = reviewed_against_current_state(
-            stored[0], bucket_id=work_unit.bucket_id, operation=_authority_operation_for_test
+            stored[0],
+            bucket_id=work_unit.bucket_id,
+            ports=build_draft_review_ports(bucket_id=work_unit.bucket_id),
+            operation=_authority_operation_for_test,
         )
         assert reasons == ()
         assert refreshed.status is ModeloDraftStatus.APROBADO

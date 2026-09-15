@@ -10,7 +10,7 @@ away.
 
 from __future__ import annotations
 
-import subprocess
+import asyncio
 import sys
 from pathlib import Path
 
@@ -21,16 +21,40 @@ from ..secure_input import write_to_controlling_terminal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_SECRET = "abandon ability able about above absent absorb abstract absurd abuse access accident"  # noqa: S105 - synthetic BIP-39 words, never a live credential
+_MNEMONIC_INPUT = "abandon ability able about above absent absorb abstract absurd abuse access accident"
 
 _REFUSAL_PROBE = (
     "from cadrumo.entrypoints.cli.config.secure_input import write_to_controlling_terminal\n"
     "from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError\n"
-    f"try:\n    write_to_controlling_terminal({_SECRET!r})\n"
+    f"try:\n    write_to_controlling_terminal({_MNEMONIC_INPUT!r})\n"
     "    outcome = 'wrote'\n"
     "except CliRefusedBoundaryError:\n    outcome = 'refused'\n"
     "open({path!r}, 'w', encoding='utf-8').write(outcome)\n"
 )
+
+
+async def _run_redirected_child(*, command: list[str], stdout: object, stderr: object) -> tuple[int, str]:
+    """Run a fixed child while preserving the operator-visible stream routing."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=stdout,
+        stderr=stderr,
+        stdin=asyncio.subprocess.DEVNULL,
+    )
+    _, captured_stderr = await process.communicate()
+    return int(process.returncode), (captured_stderr or b"").decode("utf-8", errors="replace")
+
+
+async def _run_detached_child(*, command: list[str], stream: object, **process_options: object) -> int:
+    """Run a fixed child with the platform's real detached-process option."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=stream,
+        stderr=stream,
+        stdin=asyncio.subprocess.DEVNULL,
+        **process_options,
+    )
+    return int(await process.wait())
 
 
 def test_a_captured_session_refuses_and_leaves_the_streams_clean(
@@ -46,11 +70,11 @@ def test_a_captured_session_refuses_and_leaves_the_streams_clean(
     a surface an operator was told to read from.
     """
     with pytest.raises(CliRefusedBoundaryError):
-        write_to_controlling_terminal(_SECRET)
+        write_to_controlling_terminal(_MNEMONIC_INPUT)
 
     captured = capsys.readouterr()
-    assert _SECRET not in captured.out
-    assert _SECRET not in captured.err
+    assert _MNEMONIC_INPUT not in captured.out
+    assert _MNEMONIC_INPUT not in captured.err
 
 
 def test_a_redirected_child_leaves_no_secret_in_the_captured_file(tmp_path: Path) -> None:
@@ -65,23 +89,22 @@ def test_a_redirected_child_leaves_no_secret_in_the_captured_file(tmp_path: Path
     script = (
         "from cadrumo.entrypoints.cli.config.secure_input import write_to_controlling_terminal\n"
         "from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError\n"
-        f"try:\n    write_to_controlling_terminal({_SECRET!r})\n"
+        f"try:\n    write_to_controlling_terminal({_MNEMONIC_INPUT!r})\n"
         "except CliRefusedBoundaryError:\n    pass\n"
     )
 
     with transcript.open("w", encoding="utf-8") as handle:
-        completed = subprocess.run(  # noqa: S603
-            [sys.executable, "-c", script],
-            stdout=handle,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.DEVNULL,
-            check=False,
-            text=True,
+        returncode, stderr = asyncio.run(
+            _run_redirected_child(
+                command=[sys.executable, "-c", script],
+                stdout=handle,
+                stderr=asyncio.subprocess.PIPE,
+            ),
         )
 
-    assert completed.returncode == 0, completed.stderr
-    assert _SECRET not in transcript.read_text(encoding="utf-8")
-    assert _SECRET not in (completed.stderr or "")
+    assert returncode == 0, stderr
+    assert _MNEMONIC_INPUT not in transcript.read_text(encoding="utf-8")
+    assert _MNEMONIC_INPUT not in stderr
 
 
 def test_a_detached_child_refuses_rather_than_falling_back(tmp_path: Path) -> None:
@@ -99,23 +122,21 @@ def test_a_detached_child_refuses_rather_than_falling_back(tmp_path: Path) -> No
 
     with transcript.open("w", encoding="utf-8") as handle:
         if sys.platform == "win32":
-            subprocess.run(  # noqa: S603
-                [sys.executable, "-c", script],
-                stdout=handle,
-                stderr=handle,
-                stdin=subprocess.DEVNULL,
-                check=False,
-                creationflags=0x00000008,
+            asyncio.run(
+                _run_detached_child(
+                    command=[sys.executable, "-c", script],
+                    stream=handle,
+                    creationflags=0x00000008,
+                ),
             )
         else:
-            subprocess.run(  # noqa: S603
-                [sys.executable, "-c", script],
-                stdout=handle,
-                stderr=handle,
-                stdin=subprocess.DEVNULL,
-                check=False,
-                start_new_session=True,
+            asyncio.run(
+                _run_detached_child(
+                    command=[sys.executable, "-c", script],
+                    stream=handle,
+                    start_new_session=True,
+                ),
             )
 
     assert outcome_path.read_text(encoding="utf-8") == "refused"
-    assert _SECRET not in transcript.read_text(encoding="utf-8")
+    assert _MNEMONIC_INPUT not in transcript.read_text(encoding="utf-8")

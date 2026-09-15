@@ -13,7 +13,6 @@ from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -29,6 +28,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -129,25 +129,19 @@ _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56"
 
 def _inward_export_ports(
     *,
+    objects: SecureObjectRepository,
     work_unit: WorkUnitCatalogueRepositoryProtocol,
     calculation: CalculationRevisionCatalogueRepositoryProtocol,
     filing: ModeloRecordCatalogueRepositoryProtocol,
 ) -> ModeloExportPorts:
-    """Provide inward fakes for authorities unused by this handoff gate."""
-    authority = SimpleNamespace()
-    return ModeloExportPorts(
+    """Compose typed export ports over the same persisted repositories."""
+    return modelo_export_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        taxpayer_tax_id=_TAX_ID,
+        secure_objects=objects,
         calculation=calculation,
         work_unit=work_unit,
         filing=filing,
-        verification=authority,
-        bucket_event=authority,
-        observation=authority,
-        iva_compensation_decision=authority,
-        justificante=authority,
-        prorrata_register=authority,
-        bienes_inversion=authority,
-        transaction=authority,
-        draft_review_ports=SimpleNamespace(),
     )
 
 
@@ -877,6 +871,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
             ),
             workflow_profile=workflow_profile(),
             export_ports=_inward_export_ports(
+                objects=secure_objects,
                 work_unit=work_units,
                 calculation=calculations,
                 filing=filings,

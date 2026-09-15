@@ -172,7 +172,9 @@ def _envelope(draft: InvoiceDraft, field_name: str) -> FieldProvenance:
 class TestThePromptAsksForEveryValueAndItsAnchor:
     """The contract the model is held to must actually request the anchor."""
 
-    def test_the_skeleton_asks_for_a_value_key_and_an_anchor_key_per_field(self) -> None:
+    def test_the_skeleton_asks_for_a_value_key_and_an_anchor_key_per_field(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """And a role-evidence key on exactly the fields whose contract declares one.
 
         Derived from the contract rows rather than listed, so a new identity
@@ -182,7 +184,7 @@ class TestThePromptAsksForEveryValueAndItsAnchor:
         with its anchor and its role evidence most reliably when they are
         written together.
         """
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
+        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
         skeleton = text[text.index("{") : text.rindex("}") + 1]
 
         as_json = re.sub(r"<[^>]*>", "null", skeleton, flags=re.DOTALL)
@@ -198,17 +200,21 @@ class TestThePromptAsksForEveryValueAndItsAnchor:
 
         assert list(json.loads(as_json)) == expected
 
-    def test_the_prompt_states_the_anchor_keeps_what_the_field_drops(self) -> None:
+    def test_the_prompt_states_the_anchor_keeps_what_the_field_drops(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The one instruction that makes anchor and value distinct rather than duplicated."""
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
+        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
 
         assert "EXACTLY as printed" in text
         assert "the field's own rule told you to drop" in text
         assert "Never write an anchor that does not appear in the document." in text
 
-    def test_the_anchor_suffix_the_prompt_renders_is_the_one_the_parser_reads(self) -> None:
+    def test_the_anchor_suffix_the_prompt_renders_is_the_one_the_parser_reads(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """One declaration, two derivations: a suffix spelled twice fails silently."""
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
+        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
 
         for contract in INVOICE_FIELD_CONTRACTS:
             assert f'"{contract.field_name}{ANCHOR_KEY_SUFFIX}"' in text
@@ -441,9 +447,9 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
             operation=operation,
         )
 
-    def test_the_rate_is_not_on_the_spanish_enumeration(self) -> None:
+    def test_the_rate_is_not_on_the_spanish_enumeration(self, *, operation: PinnedAuthorityOperation) -> None:
         """Anchors the premise: a fixture whose rate WAS Spanish would prove nothing."""
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
         assert Decimal("19") not in compiled.iva_rate_pcts
 
@@ -461,7 +467,7 @@ class TestAForeignRateSurvivesTheSpanishEnumeration:
         *,
         operation: PinnedAuthorityOperation,
     ) -> None:
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
         draft = self._german_draft(operation=operation)
 
         assert draft.iva_rate not in set(compiled.iva_rate_pcts)
@@ -596,7 +602,7 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         operation: PinnedAuthorityOperation,
     ) -> None:
         """Closes the loop: the agreement above is about the numbers the model is shown."""
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2024)
+        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2024, operation=operation)
 
         assert set(compiled.iva_rate_pcts) == self._eu_table_rates(_ANNUAL_2024, operation=operation)
 
@@ -652,23 +658,23 @@ class TestTheTemplateIsRegisteredRatherThanOnlyAConstant:
         assert definition.version == INVOICE_EXTRACTION_PROMPT_VERSION
         assert definition.template == PROMPT_TEMPLATE
 
-    def test_the_compiler_consumes_the_registered_template(self) -> None:
+    def test_the_compiler_consumes_the_registered_template(self, *, operation: PinnedAuthorityOperation) -> None:
         """Asserted by substituting the registered template by hand and comparing."""
         definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
         assert compiled.text.startswith(definition.template[: definition.template.index("{")])
         assert compiled.template_version == definition.version
 
-    def test_the_version_and_the_fingerprint_are_different_facts(self) -> None:
+    def test_the_version_and_the_fingerprint_are_different_facts(self, *, operation: PinnedAuthorityOperation) -> None:
         """Two periods share one template version but must not share a fingerprint.
 
         This is why registering the template does not retire the fingerprint: the
         instructions were identical, the compiled text was not, and only one of
         the two axes can say so.
         """
-        annual = build_invoice_extraction_prompt(period=_ANNUAL_2024)
-        later = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+        annual = build_invoice_extraction_prompt(period=_ANNUAL_2024, operation=operation)
+        later = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
         assert annual.template_version == later.template_version
         assert annual.fingerprint != later.fingerprint

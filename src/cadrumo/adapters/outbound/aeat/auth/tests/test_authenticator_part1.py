@@ -29,7 +29,7 @@ from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator, _require_e
 from ..certificate import CertificateError, CertificateNifParseError, extract_nif_from_subject
 from ..errors import AuthConfigurationError, AuthValidationError
 from ..provider_selection import select_provider
-from ._auth_fixtures import SECRET_PASSPHRASE
+from ._auth_fixtures import CERTIFICATE_INPUT
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
@@ -217,7 +217,7 @@ def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
         storage_state_path=tmp_path / "storage.json",
     )
     dumped = session.model_dump_json()
-    assert SECRET_PASSPHRASE not in dumped
+    assert CERTIFICATE_INPUT not in dumped
     assert "_pkcs12_bytes" not in dumped
 
 
@@ -429,7 +429,7 @@ def test_describe_forwards_typed_bundle_and_friendly_name(
     assert captured["path"] == bundle_path
     captured_password = captured["password"]
     assert isinstance(captured_password, SecretStr)
-    assert captured_password.get_secret_value() == SECRET_PASSPHRASE
+    assert captured_password.get_secret_value() == CERTIFICATE_INPUT
     assert captured["friendly_name"] == "operator cert"
 
 

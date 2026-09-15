@@ -130,5 +130,3 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
         f"Unconsumed relations carry unexpected roles {unconsumed_roles - {_EVIDENCE_ROLE}!r}; "
         f"only {_EVIDENCE_ROLE!r} cross-checks may stand unconsumed."
     )
-
-

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 import sys
@@ -10,7 +11,7 @@ import time
 from collections.abc import Callable
 from itertools import product
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal, cast
 from uuid import UUID
 
 import pytest
@@ -164,7 +165,8 @@ def test_incomplete_point_cannot_be_selected() -> None:
         _select_profile_kdf_calibration([(candidate, (0.3, 0.3, 0.3, 0.3))])
 
 
-def test_os_released_lease_blocks_another_real_process_then_recovers_after_death(tmp_path: Path) -> None:
+@pytest.mark.asyncio
+async def test_os_released_lease_blocks_another_real_process_then_recovers_after_death(tmp_path: Path) -> None:
     hold_script = """
 from pathlib import Path
 import sys
@@ -176,17 +178,18 @@ with profile_kdf_lease(deadline=time.monotonic() + 30):
     print("leased", flush=True)
     time.sleep(30)
 """
-    holder = subprocess.Popen(  # noqa: S603 - fixed test interpreter and module import
-        [sys.executable, "-c", hold_script],
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
+    holder = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        hold_script,
+        stdin=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
         env={**os.environ, "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path)},
     )
     try:
         assert holder.stdout is not None
-        assert holder.stdout.readline().strip() == "leased"
+        assert (await holder.stdout.readline()).decode().strip() == "leased"
         with (
             pytest.raises(ProfileCustodyRefusedError) as captured,
             profile_kdf_lease(settings=_settings(tmp_path), deadline=time.monotonic() + 0.1),
@@ -194,13 +197,13 @@ with profile_kdf_lease(deadline=time.monotonic() + 30):
             raise AssertionError("cross-process lease unexpectedly admitted a concurrent owner")
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
         holder.kill()
-        holder.wait(timeout=2.0)
+        await asyncio.wait_for(holder.wait(), timeout=2.0)
         with profile_kdf_lease(settings=_settings(tmp_path), deadline=time.monotonic() + 1.0):
             assert (tmp_path / "profile-kdf.v1.lock").is_file()
     finally:
-        if holder.poll() is None:
+        if holder.returncode is None:
             holder.kill()
-            holder.wait(timeout=2.0)
+            await asyncio.wait_for(holder.wait(), timeout=2.0)
 
 
 def test_strict_frame_reader_refuses_oversized_wire_length() -> None:
@@ -270,7 +273,7 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle
             assert not os.get_inheritable(worker._result_fd)
 
 
-def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready() -> None:
+async def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_async() -> None:
     import pty
 
     pty_open_member = "openpty"
@@ -298,17 +301,17 @@ def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_r
             "--descriptor-bound",
             str(sysconf("SC_OPEN_MAX")),
         ]
-        process = subprocess.Popen(  # noqa: S603 - fixed interpreter and module argv
-            command,
+        process = await asyncio.create_subprocess_exec(
+            *command,
             close_fds=True,
             cwd=neutral_root,
             env=worker_environment(neutral_root=neutral_root),
             pass_fds=inherited,
             preexec_fn=apply_posix_worker_limits,
             start_new_session=True,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
         )
         os.close(request_read)
         os.close(result_write)
@@ -327,7 +330,12 @@ def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_r
             os.close(result_read)
             for descriptor in (extra_pipe_read, extra_pipe_write, pty_controller, pty_peer):
                 os.close(descriptor)
-            process.wait(timeout=5.0)
+            await asyncio.wait_for(process.wait(), timeout=5.0)
+
+
+def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready() -> None:
+    """Run the descriptor-bound worker probe in its own event loop."""
+    asyncio.run(_assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_async())
 
 
 def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready() -> None:
@@ -354,7 +362,8 @@ def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready
         assert not os.get_handle_inheritable(msvcrt.get_osfhandle(worker._result_fd))
 
 
-def test_real_os_containment_refuses_or_reaps_a_worker_child_escape() -> None:
+@pytest.mark.asyncio
+async def test_real_os_containment_refuses_or_reaps_a_worker_child_escape() -> None:
     child_script = """
 import subprocess
 import sys
@@ -369,32 +378,39 @@ else:
     print(child.pid, flush=True)
 time.sleep(30)
 """
-    parent = subprocess.Popen(  # noqa: S603 - fixed test interpreter and source
-        [sys.executable, "-c", child_script],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+    parent = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        child_script,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
         start_new_session=sys.platform != "win32",
+    )
+    native_parent = cast(
+        "subprocess.Popen[bytes]",
+        cast(Any, parent)._transport.get_extra_info("subprocess"),
     )
     job = _WindowsJob.create() if sys.platform == "win32" else None
     try:
         if job is not None:
-            job.assign(parent)
-            assert job.contains(parent)
+            job.assign(native_parent)
+            assert job.contains(native_parent)
         assert parent.stdin is not None
         assert parent.stdout is not None
         parent.stdin.write(b"\n")
-        parent.stdin.flush()
-        child_result = parent.stdout.readline().strip()
+        await parent.stdin.drain()
+        child_result = (await parent.stdout.readline()).strip()
         if child_result == b"contained":
             assert sys.platform == "win32"
-            _terminate_process_tree(parent, job)
-            assert parent.poll() is not None
+            _terminate_process_tree(native_parent, job)
+            assert native_parent.poll() is not None
+            await parent.wait()
             return
         descendant_pid = int(child_result)
         if sys.platform != "win32":
             assert os.getpgid(descendant_pid) == parent.pid
-        _terminate_process_tree(parent, job)
+        _terminate_process_tree(native_parent, job)
         deadline = time.monotonic() + 2.0
         while True:
             try:
@@ -403,11 +419,12 @@ time.sleep(30)
                 break
             if time.monotonic() >= deadline:
                 raise AssertionError("OS containment left the real worker descendant alive")
-            time.sleep(0.02)
-        assert parent.poll() is not None
+            await asyncio.sleep(0.02)
+        assert native_parent.poll() is not None
+        await parent.wait()
     finally:
-        if parent.poll() is None:
-            _terminate_process_tree(parent, job)
+        if native_parent.poll() is None:
+            _terminate_process_tree(native_parent, job)
         else:
             if job is not None:
                 job.close()

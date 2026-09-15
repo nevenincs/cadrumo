@@ -124,6 +124,7 @@ class _CompiledCacheUnpickler(pickle.Unpickler):
             return _RegistryProjectedType
         raise pickle.UnpicklingError(f"compiled cache references forbidden global {module}.{name}")
 
+
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
 
 _CADRUMO_PACKAGE_DIR: Final[Path] = Path(cadrumo.__file__).resolve().parent

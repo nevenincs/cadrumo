@@ -142,6 +142,7 @@ class ConfigResetJournalRepository(JournalRepositoryBase[ConfigResetOperation]):
         settings: Settings | None = None,
         storage_root: Path | None = None,
     ) -> None:
+        """Configure the journal repository against the selected storage root."""
         root = effective_storage_root(storage_root, settings=settings)
         super().__init__(
             journal_dirname=CONFIG_RESET_JOURNAL_DIRNAME,

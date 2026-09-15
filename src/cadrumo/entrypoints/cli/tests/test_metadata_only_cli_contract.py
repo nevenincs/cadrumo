@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 import textwrap
 from pathlib import Path
@@ -12,6 +11,7 @@ from typing import cast
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.tests.audited_process import run_audited_process
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -50,7 +50,7 @@ def _probe(arguments: tuple[str, ...], *, locale: str) -> dict[str, object]:
     )
     # Security rationale: argv is the current trusted
     # interpreter plus an in-repo constant script; no operator input reaches it.
-    completed = subprocess.run(  # noqa: S603
+    completed = run_audited_process(
         [sys.executable, "-c", script],
         capture_output=True,
         text=True,
@@ -126,7 +126,7 @@ def test_root_shell_completion_reads_registration_metadata_only(locale: str, exp
     )
     # Security rationale: same fixed interpreter/script
     # boundary as `_probe`; a fresh module table is the property under test.
-    completed = subprocess.run(  # noqa: S603
+    completed = run_audited_process(
         [sys.executable, "-c", script],
         capture_output=True,
         text=True,

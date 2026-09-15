@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from ......core.optional_extras import OFX_EXTRA
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
@@ -35,7 +37,7 @@ def test_a_bare_core_probe_miss_carries_machine_identity_not_install_prose(tmp_p
     assert uv is not None
 
     try:
-        probe = subprocess.run(  # noqa: S603 - resolved uv executable and every argument are test-owned constants.
+        probe = run_audited_process(
             [
                 uv,
                 "run",

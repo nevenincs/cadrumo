@@ -89,15 +89,15 @@ def _grammar_to_pattern(grammar: str, root: Path) -> re.Pattern[str]:
     position = 0
     for match in _PLACEHOLDER_RE.finditer(grammar):
         parts.append(re.escape(grammar[position : match.start()]))
-        token = match.group(1)
-        if token == "root":  # noqa: S105 - grammar placeholder name, not a credential
+        placeholder_name = match.group(1)
+        if placeholder_name == "root":
             parts.append(re.escape(root.as_posix()))
         else:
             try:
-                parts.append(_PLACEHOLDER_PATTERNS[token])
+                parts.append(_PLACEHOLDER_PATTERNS[placeholder_name])
             except KeyError:
                 raise AssertionError(
-                    f"grammar placeholder <{token}> has no declared regex fragment in "
+                    f"grammar placeholder <{placeholder_name}> has no declared regex fragment in "
                     "_storage_path_grammar.py -- add one before pinning a test against it",
                 ) from None
         position = match.end()

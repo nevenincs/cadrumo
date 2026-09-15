@@ -307,7 +307,8 @@ def test_secret_answer_is_masked_in_the_reprompt_header_and_never_captured() -> 
         state, _ = frontend.run(mode=FlowMode.MODIFY)
 
     captured = buffer.getvalue()
-    assert state.answers["p_secret"] == "hunter2"  # noqa: S105 - test fixture secret, not a credential
+    expected_answer = "hunter2"
+    assert state.answers["p_secret"] == expected_answer
     # Pair the assertion: prove the header actually re-rendered the answered
     # page (its position marker present) AND that the current-answer line
     # rendered the masked marker, THEN assert the raw secret is absent — an

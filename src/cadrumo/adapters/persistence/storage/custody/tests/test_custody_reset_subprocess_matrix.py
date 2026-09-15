@@ -14,8 +14,8 @@ process would use.
 
 from __future__ import annotations
 
+import asyncio
 import os
-import subprocess
 import sys
 from pathlib import Path
 from uuid import UUID
@@ -123,6 +123,37 @@ os._exit(97)
 )
 
 
+async def _read_child_lines(
+    command: list[str],
+    *,
+    env: dict[str, str],
+    line_count: int,
+    timeout: float,
+) -> tuple[list[str], int, str]:
+    """Read readiness lines and completion status through an audited child boundary."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdin=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        env=env,
+    )
+    try:
+        assert process.stdout is not None
+        lines = [
+            (await asyncio.wait_for(process.stdout.readline(), timeout=timeout))
+            .decode("utf-8", errors="replace")
+            .strip()
+            for _ in range(line_count)
+        ]
+        _, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        return lines, int(process.returncode), stderr.decode("utf-8", errors="replace")
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+
+
 def _child_env(root: Path) -> dict[str, str]:
     """Mirror the isolated-root overrides into a fresh interpreter's settings."""
     from ......core.config import load_settings
@@ -145,17 +176,16 @@ def test_fresh_interpreter_reset_erases_the_seeded_profile_through_the_productio
 ) -> None:
     """A whole reset runs to completion in an interpreter with no test state."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        proc = subprocess.Popen(  # noqa: S603 - fixed test interpreter and module
-            [sys.executable, "-c", _RESET_CHILD, str(root), str(_PROFILE_ID)],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            env=_child_env(root),
+        lines, returncode, stderr = asyncio.run(
+            _read_child_lines(
+                [sys.executable, "-c", _RESET_CHILD, str(root), str(_PROFILE_ID)],
+                env=_child_env(root),
+                line_count=1,
+                timeout=120,
+            ),
         )
-        assert proc.stdout is not None
-        status = proc.stdout.readline().strip()
-        assert proc.wait(timeout=120) == 0, proc.stderr.read() if proc.stderr else status
+        status = lines[0]
+        assert returncode == 0, stderr or status
         assert status == "complete"
         assert not (root / "buckets" / str(_PROFILE_ID)).exists()
 
@@ -165,17 +195,15 @@ def test_fresh_interpreter_refuses_a_reset_against_a_retired_custody_member(
 ) -> None:
     """The DESTRUCTIVE_RESET guidance fires with no test process state behind it."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        proc = subprocess.Popen(  # noqa: S603 - fixed test interpreter and module
-            [sys.executable, "-c", _LEGACY_REFUSAL_CHILD, str(root), _LEGACY_BUCKET_ID],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            env=_child_env(root),
+        lines, returncode, stderr = asyncio.run(
+            _read_child_lines(
+                [sys.executable, "-c", _LEGACY_REFUSAL_CHILD, str(root), _LEGACY_BUCKET_ID],
+                env=_child_env(root),
+                line_count=2,
+                timeout=60,
+            ),
         )
-        assert proc.stdout is not None
-        lines = [proc.stdout.readline().strip() for _ in range(2)]
-        assert proc.wait(timeout=60) == 7, proc.stderr.read() if proc.stderr else lines
+        assert returncode == 7, stderr or lines
         assert lines == [
             ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED.value,
             f"{ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET.value} "
@@ -188,17 +216,16 @@ def test_crash_between_confirm_and_delete_leaves_an_intact_capsule_and_no_resuma
 ) -> None:
     """A delete torn after confirmation is inert: nothing resumes it, and a fresh one completes."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
-        proc = subprocess.Popen(  # noqa: S603 - fixed test interpreter and module
-            [sys.executable, "-c", _DELETE_CRASH_CHILD, str(root), str(_PROFILE_ID)],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            env=_child_env(root),
+        lines, returncode, stderr = asyncio.run(
+            _read_child_lines(
+                [sys.executable, "-c", _DELETE_CRASH_CHILD, str(root), str(_PROFILE_ID)],
+                env=_child_env(root),
+                line_count=1,
+                timeout=120,
+            ),
         )
-        assert proc.stdout is not None
-        tx_line = proc.stdout.readline().strip()
-        assert proc.wait(timeout=120) == 97, proc.stderr.read() if proc.stderr else tx_line
+        tx_line = lines[0]
+        assert returncode == 97, stderr or tx_line
         stale_transaction_id = UUID(tx_line)
 
         capsule = root / "buckets" / str(_PROFILE_ID)

@@ -105,10 +105,13 @@ class AtribucionMemberSourceResolver:
         record = self._profile_record
         profile_schema = self._profile_decode_context.schema if self._profile_decode_context is not None else None
         if record is None:
+            profile_decode_context = self._profile_decode_context
+            if profile_decode_context is None:
+                raise TypeError("attribution profile resolution requires a ProfileDecodeContext")
             try:
                 repository = ProfileRecordRepository.for_current_session(
                     context.bucket_id,
-                    profile_decode_context=self._profile_decode_context,
+                    profile_decode_context=profile_decode_context,
                 )
                 record = repository.load(context.bucket_id)
                 profile_schema = repository.session.profile_decode_context.schema

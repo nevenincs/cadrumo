@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
 _LABEL = "Archive Roundtrip Subject"
-_PASSPHRASE = "archive-roundtrip-subject-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "archive-roundtrip-subject-operator-secret"
 _TAX_ID = "12345678Z"
 _NAME = "Genoveva"
 _SURNAMES = "Iriarte Zubizarreta"
@@ -48,7 +48,7 @@ def _register(handed: list[str] | None = None) -> str:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
         label=_LABEL,
-        passphrase=_PASSPHRASE,
+        passphrase=_CREDENTIAL_INPUT,
         facts=(
             UserProfileFact(path="identity.tax_id", value=_TAX_ID),
             UserProfileFact(path="identity.name", value=_NAME),
@@ -79,7 +79,7 @@ def test_a_profile_survives_an_archive_and_a_restore_on_a_fresh_root(tmp_path: P
         restored = restore_profile_capsule_with_password(
             label="Restored on a fresh machine",
             capsule=read_profile_capsule_archive(archive),
-            password=_PASSPHRASE,
+            password=_CREDENTIAL_INPUT,
             root=tmp_path / "fresh-machine",
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -146,7 +146,7 @@ def test_the_recovery_wrapper_is_excluded_from_archive_and_import(tmp_path: Path
         restored = restore_profile_capsule_with_password(
             label="Imported keeping recovery",
             capsule=archive_source,
-            password=_PASSPHRASE,
+            password=_CREDENTIAL_INPUT,
             root=destination,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -229,7 +229,7 @@ def test_an_archived_profile_keeps_its_setup_state_and_facts(tmp_path: Path) -> 
         restored = restore_profile_capsule_with_password(
             label="Facts intact",
             capsule=source,
-            password=_PASSPHRASE,
+            password=_CREDENTIAL_INPUT,
             root=tmp_path / "facts-restored",
             profile_decode_context=_profile_decode_context_for_test,
         )

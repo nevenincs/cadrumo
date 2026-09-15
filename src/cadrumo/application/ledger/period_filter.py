@@ -26,6 +26,7 @@ class LedgerPeriodValidationError(CadrumoError):
     """A ledger period token is not a span-shaped canonical AEAT period."""
 
     def __init__(self, *, raw: str, accepted_period_tokens: tuple[str, ...]) -> None:
+        """Create a validation error with the rejected and accepted tokens."""
         self.raw = raw
         self.accepted_period_tokens = accepted_period_tokens
         super().__init__(f"unrecognised ledger period token: {raw!r}")

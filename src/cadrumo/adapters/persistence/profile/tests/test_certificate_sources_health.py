@@ -31,7 +31,7 @@ from cadrumo.application.auth.probes import ProviderProbeResult
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _certificate_indexed_authority_for_test,
 )
-from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
+from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -87,7 +87,7 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="personal",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -131,7 +131,7 @@ def test_check_reports_expiring_within_the_warning_window(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="apoderado-acme",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -179,7 +179,7 @@ def test_check_reports_expired_for_a_lapsed_certificate(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="expired-cert",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -241,14 +241,14 @@ def test_check_covers_every_registered_source_independently(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="personal",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="apoderado-acme",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )

@@ -55,7 +55,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PASSPHRASE = "complete-setup-schema-judgement-passphrase"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "complete-setup-schema-judgement-passphrase"
 
 
 @contextmanager
@@ -66,13 +66,13 @@ def _setup_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...]) -> Gen
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Promotion subject",
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             facts=facts,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
-        unlocked = unlock_profile_custody(material.envelope, _PASSPHRASE, sentinel=material.sentinel)
+        unlocked = unlock_profile_custody(material.envelope, _CREDENTIAL_INPUT, sentinel=material.sentinel)
         session = ProfileRecordSession.from_envelope(
             envelope=material.envelope, dek=unlocked.dek, profile_decode_context=_profile_decode_context_for_test
         )

@@ -36,12 +36,14 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from ...tests.cli_runner import invoke_cached_cli
 from ..errors import ConfigBoundaryError
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

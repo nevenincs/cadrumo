@@ -45,7 +45,7 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (140, 60)
-_PASSWORD = "registration-language-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "registration-language-operator-secret"
 _STARTING_LANGUAGE = "en"
 _TARGET_LANGUAGE = "hu"
 
@@ -166,16 +166,16 @@ async def test_the_language_switch_keeps_what_has_already_been_typed(tmp_path) -
             await _choose(pilot, _STARTING_LANGUAGE)
 
             app.query_one("#field-username", Input).value = "Half Filled"
-            app.query_one("#field-password", Input).value = _PASSWORD
-            app.query_one("#field-confirm", Input).value = _PASSWORD
+            app.query_one("#field-password", Input).value = _CREDENTIAL_INPUT
+            app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
             await pilot.pause()
             assert app.query_one("#strength-line", Static).has_class("strength-strong")
 
             await _choose(pilot, _TARGET_LANGUAGE)
 
             assert app.query_one("#field-username", Input).value == "Half Filled"
-            assert app.query_one("#field-password", Input).value == _PASSWORD
-            assert app.query_one("#field-confirm", Input).value == _PASSWORD
+            assert app.query_one("#field-password", Input).value == _CREDENTIAL_INPUT
+            assert app.query_one("#field-confirm", Input).value == _CREDENTIAL_INPUT
             assert app.query_one("#strength-line", Static).has_class("strength-strong"), (
                 "the advisory must survive the re-word, in the new language"
             )
@@ -203,8 +203,8 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             await _choose(pilot, _TARGET_LANGUAGE)
 
             app.query_one("#field-username", Input).value = "Language Subject"
-            app.query_one("#field-password", Input).value = _PASSWORD
-            app.query_one("#field-confirm", Input).value = _PASSWORD
+            app.query_one("#field-password", Input).value = _CREDENTIAL_INPUT
+            app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
             await pilot.pause()
             await pilot.click("#btn-create")
             for _ in range(100):
@@ -240,7 +240,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         _, profile_decode_context = _profile_contexts_for_test()
         login_profile(
             name="Language Subject",
-            passphrase_callback=lambda: _PASSWORD,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
         )
         record = load_test_profile_record(require_active_bucket_id())

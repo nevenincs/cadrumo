@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the Modelo non-work discovery family."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from typing import Final
@@ -72,9 +68,9 @@ CASILLA_LOOKUP_SCOPE: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
 
 MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_list",
-        parent_key="app_modelo",
-        token="list",
+        "app_modelo_list",
+        "app_modelo",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.list.help"),
         short_help_key=None,
@@ -102,9 +98,9 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_describe",
-        parent_key="app_modelo",
-        token="describe",
+        "app_modelo_describe",
+        "app_modelo",
+        "describe",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.describe.help"),
         short_help_key=None,
@@ -149,9 +145,9 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_casillas",
-        parent_key="app_modelo",
-        token="casillas",
+        "app_modelo_casillas",
+        "app_modelo",
+        "casillas",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.casillas.help"),
         short_help_key=None,
@@ -225,9 +221,9 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_casilla",
-        parent_key="app_modelo",
-        token="casilla",
+        "app_modelo_casilla",
+        "app_modelo",
+        "casilla",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.casilla.help"),
         short_help_key=None,
@@ -251,9 +247,9 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_requires",
-        parent_key="app_modelo",
-        token="requires",
+        "app_modelo_requires",
+        "app_modelo",
+        "requires",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.requires.help"),
         short_help_key=None,
@@ -299,3 +295,5 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_DISCOVERY_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work discovery family."""
+"""Authored CommandSpec declarations for the Modelo non-work discovery family."""

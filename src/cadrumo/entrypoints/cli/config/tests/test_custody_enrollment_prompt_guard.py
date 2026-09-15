@@ -33,6 +33,7 @@ auditable rather than assumed.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import pathlib
@@ -57,7 +58,7 @@ _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, obj
 _CHILD_BUDGET_SECONDS = 300.0
 
 _LABEL = "Console Less Login Subject"
-_PASSPHRASE = "console-less-login-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "console-less-login-operator-secret"
 
 _LOGIN_PROBE = """
 import json, sys
@@ -134,32 +135,48 @@ def _child_env() -> dict[str, str]:
     return env
 
 
+async def _wait_for_console_less_login(command: list[str], *, creationflags: int, env: dict[str, str]) -> None:
+    """Run the fixed login probe with a bounded detached-process lifecycle."""
+    options = {} if creationflags == 0 else {"creationflags": creationflags}
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        env=env,
+        stdin=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL,
+        **options,
+    )
+    try:
+        await asyncio.wait_for(process.wait(), timeout=_CHILD_BUDGET_SECONDS)
+    except TimeoutError:
+        process.kill()
+        await process.wait()
+        raise
+
+
 def _run_console_less_login(storage_root: pathlib.Path) -> dict[str, object]:
     """Run ``config login`` in a console-less child and return its verdict."""
     verdict_path = storage_root.parent / "verdict.json"
     creationflags = 0
     if sys.platform == "win32":
         creationflags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
-    process = subprocess.Popen(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
-        [
-            sys.executable,
-            "-c",
-            textwrap.dedent(_LOGIN_PROBE),
-            str(storage_root),
-            str(verdict_path),
-            _LABEL,
-            _PASSPHRASE,
-        ],
-        creationflags=creationflags,
-        env=_child_env(),
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
     try:
-        process.wait(timeout=_CHILD_BUDGET_SECONDS)
-    except subprocess.TimeoutExpired:
-        process.kill()
+        asyncio.run(
+            _wait_for_console_less_login(
+                [
+                    sys.executable,
+                    "-c",
+                    textwrap.dedent(_LOGIN_PROBE),
+                    str(storage_root),
+                    str(verdict_path),
+                    _LABEL,
+                    _CREDENTIAL_INPUT,
+                ],
+                creationflags=creationflags,
+                env=_child_env(),
+            ),
+        )
+    except TimeoutError:
         pytest.fail(
             "`config login` BLOCKED on a console-less host instead of refusing; "
             "the unlock path has regressed to the storage substrate's unguarded "

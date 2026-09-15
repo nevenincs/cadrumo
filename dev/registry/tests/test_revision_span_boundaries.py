@@ -199,6 +199,7 @@ def test_no_revision_spans_a_design_relayout() -> None:
     names every boundary, which signal saw it, and how many revisions the span
     actually needs, so nobody has to union two lists by hand to act on it.
     """
+
     def description_suffix(evidence: tuple[str, ...]) -> str:
         if len(evidence) == 1 and "unnumbered slot(s) re-described" in evidence[0]:
             return " " + _DESCRIPTION_ONLY

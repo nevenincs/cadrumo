@@ -27,7 +27,9 @@ from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ..cache import LLMCache
 from ..errors import LLMCacheError
 from ..models import LLMRequest, LLMResponse
-from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
+from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine
+
+__all__ = ["_ENGINE_HOLDER", "_bind_engine"]
 
 # The encrypted-SQL substrate is imported inside the helpers below, matching
 # the sibling round-trip proof. Pulling ``adapters.persistence.storage`` in at

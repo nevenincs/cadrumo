@@ -83,11 +83,7 @@ def _profile_reader(extra_facts: tuple[UserProfileFact, ...]) -> ProfilePathValu
             "identity.legal_name": "Relation Prefill Grounding",
             "tax_residence.ccaa": "madrid",
             "tax_residence.jurisdiction_scope": "common_regime",
-            **{
-                fact.path: _render_profile_value(fact.value)
-                for fact in extra_facts
-                if fact.value is not None
-            },
+            **{fact.path: _render_profile_value(fact.value) for fact in extra_facts if fact.value is not None},
         },
     )
 

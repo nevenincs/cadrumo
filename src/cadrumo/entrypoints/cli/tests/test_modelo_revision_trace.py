@@ -79,8 +79,7 @@ def _calculate_m130_draft() -> str:
     return revision_id
 
 
-def test_work_revision_renders_inline_formula_trace_for_computed_casilla(
-) -> None:
+def test_work_revision_renders_inline_formula_trace_for_computed_casilla() -> None:
     """`work revision` shows the formula trace inline for a computed casilla.
 
     Casilla 07 = subtract(04, 05, 06); its operand values are 1.600,00 / 0,00 /
@@ -100,8 +99,7 @@ def test_work_revision_renders_inline_formula_trace_for_computed_casilla(
     assert "subtract(04, 05, 06) = subtract(1600.00, 0.00, 0.00) = 1600.00" in casilla_07_line
 
 
-def test_work_revision_input_casilla_renders_value_without_trace(
-) -> None:
+def test_work_revision_input_casilla_renders_value_without_trace() -> None:
     """An input / bound casilla with no formula renders its value only.
 
     Casilla 01 (ingresos) is a source-bound input - it carries no formula, so
@@ -120,8 +118,7 @@ def test_work_revision_input_casilla_renders_value_without_trace(
     assert " = " not in casilla_01_line
 
 
-def test_work_revision_verbose_exposes_full_ledger_entry(
-) -> None:
+def test_work_revision_verbose_exposes_full_ledger_entry() -> None:
     """`work revision --verbose` exposes the full per-casilla trace entry.
 
     Beneath casilla 07's row, --verbose emits a single line carrying the
@@ -149,8 +146,7 @@ def test_work_revision_verbose_exposes_full_ledger_entry(
     assert not any(line.lstrip().startswith("trace\t07\t") for line in default.output.splitlines())
 
 
-def test_work_revision_json_observation_carries_formula_op(
-) -> None:
+def test_work_revision_json_observation_carries_formula_op() -> None:
     """The JSON observation for a computed casilla carries the typed ``op``.
 
     The trace is always reconstructible from the typed JSON payload (op +

@@ -376,7 +376,10 @@ def _calculate_negative_period(
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     assert verification.granted_verificado_completo is True
-    return revision.calculation_revision_id, saldo
+    calculation_revision_id = revision.calculation_revision_id
+    assert isinstance(calculation_revision_id, str)
+    assert isinstance(saldo, Decimal)
+    return calculation_revision_id, saldo
 
 
 def _file_period(

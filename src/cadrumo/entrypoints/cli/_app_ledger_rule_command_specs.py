@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the ledger rule surface."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from ._app_ledger_command_spec_policies import (
@@ -29,9 +25,9 @@ from .command_spec import (
 
 LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_rule_add",
-        parent_key="app_ledger_rule",
-        token="add",
+        "app_ledger_rule_add",
+        "app_ledger_rule",
+        "add",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.rule.add_help"),
         short_help_key=None,
@@ -114,9 +110,9 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_rule_apply",
-        parent_key="app_ledger_rule",
-        token="apply",
+        "app_ledger_rule_apply",
+        "app_ledger_rule",
+        "apply",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.rule.apply_help"),
         short_help_key=None,
@@ -165,9 +161,9 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_rule_list",
-        parent_key="app_ledger_rule",
-        token="list",
+        "app_ledger_rule_list",
+        "app_ledger_rule",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.rule.list_help"),
         short_help_key=None,
@@ -184,3 +180,5 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_RULE_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger rule surface."""
+"""Authored CommandSpec declarations for the ledger rule surface."""

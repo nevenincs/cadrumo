@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
@@ -52,22 +52,8 @@ active_profile = active_profile_isolated_backend_fixture(autouse=False, name="ac
 
 
 def _inward_export_ports(*, calculation: CalculationRevisionCatalogueRepositoryProtocol) -> ModeloExportPorts:
-    """Provide application-owned fakes for authorities unused by this gate."""
-    authority = SimpleNamespace()
-    return ModeloExportPorts(
-        calculation=calculation,
-        work_unit=authority,
-        filing=authority,
-        verification=authority,
-        bucket_event=authority,
-        observation=authority,
-        iva_compensation_decision=authority,
-        justificante=authority,
-        prorrata_register=authority,
-        bienes_inversion=authority,
-        transaction=authority,
-        draft_review_ports=SimpleNamespace(),
-    )
+    """Compose typed persistence ports for the active isolated profile."""
+    return modelo_export_ports_for_test(calculation=calculation)
 
 
 def _revision(

@@ -22,7 +22,9 @@ from .models import PreconditionVerdict
 class PreconditionActionResolutionPort(Protocol):
     """Resolve one application action against an outer live surface."""
 
-    def resolve_action_reference(self, verdict: PreconditionVerdict) -> ResolvedActionReference | None: ...
+    def resolve_action_reference(self, verdict: PreconditionVerdict) -> ResolvedActionReference | None:
+        """Resolve the action reference associated with a factual verdict."""
+        ...
 
 
 def project_precondition_action(

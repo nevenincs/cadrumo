@@ -70,18 +70,20 @@ _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 _Q4_2024 = Period.from_year_and_code(2024, "4T")
 
 
-def _compiled(period: Period = _ANNUAL_2026) -> str:
-    return build_invoice_extraction_prompt(period=period).text
+def _compiled(*, operation: PinnedAuthorityOperation, period: Period = _ANNUAL_2026) -> str:
+    return build_invoice_extraction_prompt(period=period, operation=operation).text
 
 
 class TestCompiledEnumerationsComeFromTheRegistry:
     """The compiled numbers equal what the owning authority resolves for the period."""
 
     @pytest.mark.parametrize("period", [_ANNUAL_2026, _Q4_2024], ids=["annual-2026", "q4-2024"])
-    def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(self, period: Period) -> None:
+    def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(
+        self, period: Period, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Asserted on two periods whose law differs, so one hardcoded tuple cannot satisfy both."""
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            compiled = build_invoice_extraction_prompt(period=period)
+            compiled = build_invoice_extraction_prompt(period=period, operation=operation)
 
             expected = sorted(
                 {
@@ -98,8 +100,10 @@ class TestCompiledEnumerationsComeFromTheRegistry:
             for pct in expected:
                 assert format(pct.normalize(), "f") in compiled.text
 
-    def test_retencion_rates_equal_the_rirpf_art_95_parameters_as_percentages(self) -> None:
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+    def test_retencion_rates_equal_the_rirpf_art_95_parameters_as_percentages(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
         expected = sorted(
             rate * Decimal("100") for rate in statutory_activity_retencion_rates(effective_date=_ANNUAL_2026.end_date)
@@ -107,7 +111,9 @@ class TestCompiledEnumerationsComeFromTheRegistry:
 
         assert list(compiled.retencion_rate_pcts) == expected
 
-    def test_a_period_whose_law_differs_compiles_a_different_enumeration(self) -> None:
+    def test_a_period_whose_law_differs_compiles_a_different_enumeration(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """RD-ley 4/2024 stepped part of two tiers in Q4 2024; the prompt follows.
 
         This is the property a literal cannot have, and it is why the values are
@@ -115,22 +121,22 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         the 2024 Q4 prompt and not into the 2026 one, with nothing in this
         package changed between the two calls.
         """
-        annual_2026 = build_invoice_extraction_prompt(period=_ANNUAL_2026)
-        q4_2024 = build_invoice_extraction_prompt(period=_Q4_2024)
+        annual_2026 = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        q4_2024 = build_invoice_extraction_prompt(period=_Q4_2024, operation=operation)
 
         assert Decimal("7.5") in q4_2024.iva_rate_pcts
         assert Decimal("7.5") not in annual_2026.iva_rate_pcts
         assert q4_2024.text != annual_2026.text
         assert q4_2024.fingerprint != annual_2026.fingerprint
 
-    def test_the_enumeration_is_a_hint_and_never_a_constraint(self) -> None:
+    def test_the_enumeration_is_a_hint_and_never_a_constraint(self, *, operation: PinnedAuthorityOperation) -> None:
         """Documents in scope are international; a foreign rate must not be coerced.
 
         A model told "the rate is one of these" would move a German 19 % onto
         21 %, fabricating exactly the class of figure the null-over-guess rule
         exists to prevent.
         """
-        text = _compiled()
+        text = _compiled(operation=operation)
 
         assert "may print a rate on neither list" in text
         assert "never move it onto a listed one" in text
@@ -148,7 +154,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
     commit the mutation.
     """
 
-    def test_moving_a_registry_rate_moves_the_compiled_prompt(self) -> None:
+    def test_moving_a_registry_rate_moves_the_compiled_prompt(self, *, operation: PinnedAuthorityOperation) -> None:
         """Direction one: the compiled text FOLLOWS the rate authority.
 
         The mutation adds one record to the table the compiler reads and asserts
@@ -157,7 +163,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
         original enumeration under the mutated authority.
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            baseline = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+            baseline = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
             planted = Decimal("13.5")
             assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
 
@@ -172,8 +178,8 @@ class TestTheAntiDriftGateBitesInBothDirections:
             )
             mutated = dict(real_table) | {require_eu_member_state("ES"): (*spain, extra)}
             # Patch the defining module used by the prompt builder.
-            with scoped_attribute(_iva_rates_module, "load_iva_rate_table", lambda: mutated):
-                after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+            with scoped_attribute(_iva_rates_module, "load_iva_rate_table", lambda **_: mutated):
+                after = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
                 assert planted in after.iva_rate_pcts
                 assert "13.5" in after.text
@@ -200,14 +206,16 @@ class TestTheNoPrintedTaxLineAsksThePaperQuestion:
             IvaCategory("intra_community_service_acquisition_reverse_charge"),
         ],
     )
-    def test_the_reverse_charge_family_is_named_as_a_tax_free_invoice(self, category: IvaCategory) -> None:
+    def test_the_reverse_charge_family_is_named_as_a_tax_free_invoice(
+        self, category: IvaCategory, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Fixture anchor: pinned by member, so a rename cannot pass this vacuously."""
         assert category in registry_category_projection("no_printed_tax")
-        assert category.value.replace("_", " ") in _compiled()
+        assert category.value.replace("_", " ") in _compiled(operation=operation)
 
-    def test_the_line_enumerates_the_derived_set_exactly(self) -> None:
+    def test_the_line_enumerates_the_derived_set_exactly(self, *, operation: PinnedAuthorityOperation) -> None:
         """No member is dropped and none is invented, in both directions."""
-        text = _compiled()
+        text = _compiled(operation=operation)
         opening = "carry no tax at all ("
         rendered = text[text.index(opening) + len(opening) : text.index(").")]
 
@@ -228,8 +236,10 @@ class TestRetencionIsAskedForAndNotMerelyEnumerated:
     """
 
     @pytest.mark.parametrize("field_name", ["retencion_rate", "retencion_amount"])
-    def test_the_withholding_fields_are_declared_asked_for_and_grounded(self, field_name: str) -> None:
-        text = _compiled()
+    def test_the_withholding_fields_are_declared_asked_for_and_grounded(
+        self, field_name: str, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        text = _compiled(operation=operation)
 
         assert field_name in {contract.field_name for contract in INVOICE_FIELD_CONTRACTS}
         assert f'"{field_name}"' in text
@@ -274,16 +284,18 @@ class TestContractParityAcrossBothDerivations:
 
         assert declared == set(ExtractedInvoiceFields.model_fields)
 
-    def test_every_declared_field_appears_in_the_compiled_prompt(self) -> None:
-        text = _compiled()
+    def test_every_declared_field_appears_in_the_compiled_prompt(self, *, operation: PinnedAuthorityOperation) -> None:
+        text = _compiled(operation=operation)
 
         for contract in INVOICE_FIELD_CONTRACTS:
             assert f'"{contract.field_name}"' in text
             assert contract.form_instruction in text
 
-    def test_the_prompt_asks_for_exactly_the_declared_keys_and_no_others(self) -> None:
+    def test_the_prompt_asks_for_exactly_the_declared_keys_and_no_others(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The JSON skeleton the prompt shows is the schema, parsed as JSON."""
-        text = _compiled()
+        text = _compiled(operation=operation)
         skeleton = text[text.index("{") : text.rindex("}") + 1]
 
         as_json = re.sub(r"<[^>]*>", "null", skeleton, flags=re.DOTALL)
@@ -414,36 +426,40 @@ class TestThePrintedPercentSignNoLongerLosesTheRate:
 class TestTheSafetyPropertiesSurviveCompilation:
     """The null-over-guess line is the single most important line in the prompt."""
 
-    def test_the_compiled_prompt_instructs_null_rather_than_a_guess(self) -> None:
-        lowered = _compiled().lower()
+    def test_the_compiled_prompt_instructs_null_rather_than_a_guess(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        lowered = _compiled(operation=operation).lower()
 
         assert "its value is null" in lowered
         assert "never substitute a plausible value for a missing one" in lowered
 
-    def test_the_compiled_prompt_forbids_deriving_any_value(self) -> None:
-        lowered = _compiled().lower()
+    def test_the_compiled_prompt_forbids_deriving_any_value(self, *, operation: PinnedAuthorityOperation) -> None:
+        lowered = _compiled(operation=operation).lower()
 
         for forbidden in ("calculate", "infer", "estimate", "guess"):
             assert forbidden in lowered
         assert "exactly as printed" in lowered
 
-    def test_the_compiled_prompt_is_language_neutral(self) -> None:
-        lowered = _compiled().lower()
+    def test_the_compiled_prompt_is_language_neutral(self, *, operation: PinnedAuthorityOperation) -> None:
+        lowered = _compiled(operation=operation).lower()
 
         assert "may be written in any language" in lowered
         assert "scanned spanish invoice" not in lowered
 
-    def test_a_document_bearing_no_tax_is_told_to_emit_null_rather_than_a_rate(self) -> None:
+    def test_a_document_bearing_no_tax_is_told_to_emit_null_rather_than_a_rate(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Derived from the cuota-less category set, so the law moves it, not an author."""
-        text = _compiled()
+        text = _compiled(operation=operation)
 
         assert "carry no tax at all" in text
         assert "intra community supply" in text
         assert "Never supply a rate the document does not print." in text
 
-    def test_no_doubled_brace_reaches_the_model(self) -> None:
+    def test_no_doubled_brace_reaches_the_model(self, *, operation: PinnedAuthorityOperation) -> None:
         """Nothing ``format``s the COMPILED text, so a doubled brace is not an escape."""
-        text = _compiled()
+        text = _compiled(operation=operation)
 
         assert "{{" not in text
         assert "}}" not in text
@@ -510,10 +526,12 @@ class TestTheDefaultPeriodIsDerivedNotGuessed:
         assert period.filing_year == today_madrid().year
         assert str(period.code) == "0A"
 
-    def test_the_annual_default_unions_every_rate_in_force_that_year(self) -> None:
+    def test_the_annual_default_unions_every_rate_in_force_that_year(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """An annual span never omits a rate a mid-year statute introduced."""
-        annual = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "0A"))
-        q3 = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "3T"))
+        annual = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "0A"), operation=operation)
+        q3 = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "3T"), operation=operation)
 
         assert set(q3.iva_rate_pcts) <= set(annual.iva_rate_pcts)
         assert Decimal("7.5") in annual.iva_rate_pcts

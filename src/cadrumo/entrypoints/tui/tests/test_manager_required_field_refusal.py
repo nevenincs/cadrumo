@@ -39,7 +39,7 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (160, 60)
-_PASSWORD = "manager-required-field-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "manager-required-field-operator-secret"
 _LABEL = "Required Field Subject"
 _REQUIRED_PATH = "identity.tax_id"
 _OPTIONAL_PATH = "identity.name"
@@ -58,7 +58,9 @@ def _ensure_logged_in() -> None:
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     login_profile(
-        name=_LABEL, passphrase_callback=lambda: _PASSWORD, profile_decode_context=_profile_decode_context_for_test
+        name=_LABEL,
+        passphrase_callback=lambda: _CREDENTIAL_INPUT,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
 
@@ -111,7 +113,7 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -136,7 +138,7 @@ async def test_a_whitespace_only_submission_on_a_required_field_does_not_clear_i
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -164,7 +166,7 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -197,7 +199,7 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )

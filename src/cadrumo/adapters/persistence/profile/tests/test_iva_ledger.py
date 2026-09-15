@@ -27,6 +27,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_exclusions import Art104TresExclusion
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
@@ -63,6 +64,7 @@ def aggregate_iva_ledger_observations(
     transactions: TransactionCatalogue,
     *,
     period: Period,
+    operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregation:
     """Exercise the public path with an explicit empty authority owned by this test profile."""
     return iva_ledger.aggregate_iva_ledger_observations(
@@ -71,6 +73,7 @@ def aggregate_iva_ledger_observations(
         ledger_profile_id="test-profile",
         investment_asset_register=_TEST_ASSET_REGISTER,
         investment_asset_profile_id="test-profile",
+        operation=operation,
     )
 
 
@@ -265,48 +268,52 @@ def _transaction(
 def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
-            aggregate_iva_ledger_observations_from_repositories(
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(AggregationValidationError, match="bucket_mismatch"),
+    ):
+        aggregate_iva_ledger_observations_from_repositories(
+            bucket_id=_BUCKET_ID,
+            period=_Q2_2026,
+            prorrata_register_repository=ProrrataRegisterRepository(
                 bucket_id=_BUCKET_ID,
-                period=_Q2_2026,
-                prorrata_register_repository=ProrrataRegisterRepository(
-                    bucket_id=_BUCKET_ID,
-                    objects=secure_objects,
-                ),
-                transaction_repository=TransactionCatalogueRepository(
-                    bucket_id=_OTHER_BUCKET_ID,
-                    objects=secure_objects,
-                ),
-                investment_asset_register=_TEST_ASSET_REGISTER,
-                investment_asset_profile_id=_BUCKET_ID,
-                operation=_authority_operation_for_test,
-            )
+                objects=secure_objects,
+            ),
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=_OTHER_BUCKET_ID,
+                objects=secure_objects,
+            ),
+            investment_asset_register=_TEST_ASSET_REGISTER,
+            investment_asset_profile_id=_BUCKET_ID,
+            operation=_authority_operation_for_test,
+        )
 
 
 def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository_before_loading(
     tmp_path: Path,
 ) -> None:
     """IVA aggregation never combines a primary ledger with another bucket's register."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-            TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id).save(
-                TransactionCatalogue.from_transactions((_transaction("primary-ledger-row"),))
-            )
-            foreign_prorrata_repository = ProrrataRegisterRepository(
-                bucket_id=runtime.secondary.bucket_id,
-                objects=runtime.secondary.repository,
-            )
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime,
+    ):
+        TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id).save(
+            TransactionCatalogue.from_transactions((_transaction("primary-ledger-row"),))
+        )
+        foreign_prorrata_repository = ProrrataRegisterRepository(
+            bucket_id=runtime.secondary.bucket_id,
+            objects=runtime.secondary.repository,
+        )
 
-            assert foreign_prorrata_repository.bucket_id == runtime.secondary.bucket_id
-            with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
-                aggregate_iva_ledger_observations_from_repositories(
-                    bucket_id=runtime.primary.bucket_id,
-                    period=_Q2_2026,
-                    prorrata_register_repository=foreign_prorrata_repository,
-                    transaction_repository=TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id),
-                    operation=_authority_operation_for_test,
-                )
+        assert foreign_prorrata_repository.bucket_id == runtime.secondary.bucket_id
+        with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
+            aggregate_iva_ledger_observations_from_repositories(
+                bucket_id=runtime.primary.bucket_id,
+                period=_Q2_2026,
+                prorrata_register_repository=foreign_prorrata_repository,
+                transaction_repository=TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id),
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
@@ -449,7 +456,11 @@ def test_repository_backed_projection_partition_matches_full_scan(
             investment_asset_profile_id=_BUCKET_ID,
             operation=_authority_operation_for_test,
         )
-        full_scan = aggregate_iva_ledger_observations(catalogue, period=_Q2_2026)
+        full_scan = aggregate_iva_ledger_observations(
+            catalogue,
+            period=_Q2_2026,
+            operation=_authority_operation_for_test,
+        )
 
         # Declared-value invariance: observations and prorrata references are
         # identical SETS between the two paths (order may differ: full-scan

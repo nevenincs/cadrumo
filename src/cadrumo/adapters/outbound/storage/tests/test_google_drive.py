@@ -7,7 +7,6 @@ constructed. They use no Drive API doubles or patched dependencies.
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 import textwrap
 from typing import Any
@@ -18,6 +17,7 @@ import pytest
 from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....tests.audited_process import run_audited_process
 from .....tests.google_credentials import unused_google_credentials
 from ...google.tests.drive_media_server import drive_files_list_endpoint
 from .._google_drive import GoogleDriveProvider
@@ -56,7 +56,7 @@ def _provider() -> GoogleDriveProvider:
 
 
 def test_google_drive_explicit_constructor_does_not_build_google_client() -> None:
-    probe = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+    probe = run_audited_process(
         [
             sys.executable,
             "-c",

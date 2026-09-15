@@ -186,9 +186,7 @@ def _observation(
     )
 
 
-def _apportionment(
-    *, regime: ProrrataRegisterRegime = _DEFAULT_PRORRATA_REGIME
-) -> IvaLedgerProrrataApportionment:
+def _apportionment(*, regime: ProrrataRegisterRegime = _DEFAULT_PRORRATA_REGIME) -> IvaLedgerProrrataApportionment:
     return IvaLedgerProrrataApportionment(
         percentage=Decimal("50"),
         provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
@@ -360,8 +358,9 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
 def test_canonical_aggregation_refuses_unattributable_duplicate_and_wrong_owner_rows(
     observations: tuple[IvaLedgerObservation, ...], message: str
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(
-        ValueError, match=message
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(ValueError, match=message),
     ):
         resolve_iva_differentiated_deduction_contributions(
             _revision(), observations, apportionment=_apportionment(), operation=_authority_operation_for_test
@@ -369,8 +368,9 @@ def test_canonical_aggregation_refuses_unattributable_duplicate_and_wrong_owner_
 
 
 def test_especial_common_use_must_be_explicit() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(
-        ValueError, match="common-use classification must be explicit"
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(ValueError, match="common-use classification must be explicit"),
     ):
         resolve_iva_differentiated_deduction_contributions(
             _revision(),

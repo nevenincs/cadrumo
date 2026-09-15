@@ -257,5 +257,3 @@ def test_a_consistent_scale_reports_no_break() -> None:
 def test_cent_rounding_is_not_reported_as_a_break() -> None:
     """The band exists because official scales round; it must actually absorb that."""
     assert _accumulated_cuota_breaks(_scale("1000.01")) == []
-
-

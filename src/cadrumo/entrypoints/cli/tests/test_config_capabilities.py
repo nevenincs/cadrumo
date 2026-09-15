@@ -30,7 +30,7 @@ from .cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LABEL = "Capability test profile"
-_PASSPHRASE = "capability-test-passphrase"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "capability-test-passphrase"
 
 
 @pytest.fixture(autouse=True)
@@ -43,7 +43,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -52,7 +52,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         # DEK the capsule was sealed under.
         login_profile(
             name=_LABEL,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
         yield

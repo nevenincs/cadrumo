@@ -47,6 +47,7 @@ from ..place_of_supply import place_of_supply_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
 class _YearCoverageLoader(Protocol):
     def __call__(self, *, operation: PinnedAuthorityOperation) -> Collection[int]: ...
 

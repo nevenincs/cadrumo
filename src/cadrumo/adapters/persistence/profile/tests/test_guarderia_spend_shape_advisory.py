@@ -34,18 +34,18 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
-    advisory_profile_bucket,  # noqa: F401
+    advisory_profile_bucket,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from cadrumo.application.modelo.tests.advisory_diagnostic_assertions import operator_text as _operator_text
+from cadrumo.application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -56,6 +56,8 @@ from cadrumo.domain.contribuyente.guarderia_mensual import parse_guarderia_mensu
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+__all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"
 _FILING_YEAR = 2024
@@ -86,6 +88,7 @@ def _write(*descendants: DescendantInfo) -> None:
 
 
 def _collect(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourceDiagnostic, ...]:
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
         {_GUARDERIA_CASILLA: Decimal("0")},
@@ -93,10 +96,10 @@ def _collect(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourceDia
         bucket_id=_BUCKET_ID,
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
-        observation_repository=SimpleNamespace(),
-        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=SimpleNamespace(),
-        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
     )
     return tuple(diagnostic for diagnostic in diagnostics if diagnostic.source_kind.startswith("guarderia_"))
 
@@ -145,6 +148,7 @@ def test_it_reaches_the_operator_through_the_coordinator() -> None:
     """
     _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_euros=2400))
 
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
         {_GUARDERIA_CASILLA: Decimal("0")},
@@ -152,10 +156,10 @@ def test_it_reaches_the_operator_through_the_coordinator() -> None:
         bucket_id=_BUCKET_ID,
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
-        observation_repository=SimpleNamespace(),
-        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=SimpleNamespace(),
-        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
     )
 
     assert _KIND in {d.source_kind for d in diagnostics}

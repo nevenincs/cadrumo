@@ -172,8 +172,7 @@ def test_work_list_surfaces_revision_pointer_fields() -> None:
     assert unit["filed_calculation_revision_id"] is None
 
 
-def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(
-) -> None:
+def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action() -> None:
     """The list cannot bind one target until the operator selects a work unit."""
     _create_profile()
 
@@ -189,8 +188,7 @@ def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(
     }
 
 
-def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders(
-) -> None:
+def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders() -> None:
     """Profile-scoped text uses the operator label, never a storage identity."""
     _create_profile()
     work_unit_id = _create_m130_work_unit()
@@ -256,8 +254,7 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
     }
 
 
-def test_work_list_with_multiple_units_requires_an_explicit_selection(
-) -> None:
+def test_work_list_with_multiple_units_requires_an_explicit_selection() -> None:
     """A multi-row list never projects an action with an invented target."""
     _create_profile()
     _create_m130_work_unit()
@@ -564,8 +561,7 @@ def test_work_dependencies_surfaces_current_clean_state_blockers() -> None:
     )
 
 
-def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
-) -> None:
+def test_work_dependencies_honours_activity_start_date_pre_activity_scoping() -> None:
     """`work dependencies` threads the profile's activity-start-date into the
     clean-state evaluation, so a prior-period dependency that falls strictly
     before the declared activity start is scoped out (clean) - matching the
@@ -734,8 +730,7 @@ def test_work_create_without_revision_resumes_existing_visible_target() -> None:
     assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
 
 
-def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
-) -> None:
+def test_work_create_without_revision_uses_registry_revision_for_supplied_year() -> None:
     """A fresh create without ``--revision`` binds to the law-selected registry revision."""
 
     register_cli_profile(
@@ -946,8 +941,7 @@ def test_overview_next_step_not_import_after_manual_ledger_entry() -> None:
     assert "modelo work create" in next_section
 
 
-def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(
-) -> None:
+def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident() -> None:
     """A non-resident M210 profile gets discovery/Sede guidance, not work-create."""
 
     _create_gb_non_resident_profile()
@@ -971,8 +965,7 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(
     assert "G320" in next_section
 
 
-def test_work_create_rejects_revision_that_does_not_cover_filing_year(
-) -> None:
+def test_work_create_rejects_revision_that_does_not_cover_filing_year() -> None:
     """Supplying a revision whose period_selector excludes the filing year
     must be refused with a clear error naming both the revision and the
     year, not accepted silently.
@@ -1009,8 +1002,7 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
     assert "2024" in result.output
 
 
-def test_work_calculate_rejects_decimal_override_for_text_casilla(
-) -> None:
+def test_work_calculate_rejects_decimal_override_for_text_casilla() -> None:
     """Supplying a numeric value for a text-type casilla via --casilla must
     be refused before reaching the engine.
 

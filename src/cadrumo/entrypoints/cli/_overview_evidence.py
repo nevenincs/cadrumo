@@ -89,6 +89,7 @@ def local_live_calendar_events(
             The command body owns the clock and passes it in; this loader never
             reads one, so the projection stays reproducible.
         expected_tax_id: Taxpayer identity rows must match, when known.
+        expedientes_ports: Capability for reading persisted expediente snapshots.
     """
     from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...application.live.notifications import NotificationsService

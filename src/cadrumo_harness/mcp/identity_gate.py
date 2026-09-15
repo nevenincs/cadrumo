@@ -92,6 +92,7 @@ class SessionIdentityState:
     """
 
     def __init__(self) -> None:
+        """Create an armed gate that requires an identity read before mutation."""
         self._identity_confirmed = False
 
     @property

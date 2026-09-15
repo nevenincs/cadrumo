@@ -30,7 +30,7 @@ from cadrumo.application.auth.operation_definitions import (
     AUTH_RESET_OPERATION_DEFINITION_ID,
     AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
     PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-    PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+    PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
     AuthSessionAcquireOperationRequest,
     AuthTeardownOperationRequest,
@@ -210,7 +210,7 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
             supervisor = _supervisor(root, profile_objects=objects)
             terminal = _run_secret_operation(
                 supervisor=supervisor,
-                definition_id=PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+                definition_id=PROFILE_ROTATION_OPERATION_DEFINITION_ID,
                 subject_ref=f"profile:{profile_id}",
                 payload=ProfilePassphraseRotationOperationRequest(profile_id=profile_id),
                 operation_id="4" * 64,

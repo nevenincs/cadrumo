@@ -109,6 +109,7 @@ class SessionGroundingWindow:
     """
 
     def __init__(self, *, max_results: int = 32) -> None:
+        """Create an empty grounding window with a bounded result capacity."""
         self._max_results = max_results
         self._results: list[str] = []
 

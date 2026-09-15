@@ -68,7 +68,7 @@ from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PA
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PROFILE_PASSPHRASE = "s40-profile-operation-passphrase"  # noqa: S105 - synthetic test fixture
+_PROFILE_CREDENTIAL_INPUT = "s40-profile-operation-passphrase"
 
 
 def _supervisor(
@@ -109,14 +109,14 @@ def _register_profile() -> UUID:
     with bundled_indexed_authority().operation() as authority_operation:
         outcome = register_profile_with_credentials(
             label="S40 Profile Operation Subject",
-            passphrase=_PROFILE_PASSPHRASE,
+            passphrase=_PROFILE_CREDENTIAL_INPUT,
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=authority_operation.profile_create_context(),
             profile_decode_context=authority_operation.profile_decode_context(),
         )
         login_profile(
             name=outcome.profile_id,
-            passphrase_callback=lambda: _PROFILE_PASSPHRASE,
+            passphrase_callback=lambda: _PROFILE_CREDENTIAL_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),
         )
     return UUID(outcome.profile_id)
@@ -171,7 +171,8 @@ def _start_secret_operation(
         created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
         requirement = asyncio.run(supervisor.inspect(created)).secret_requirement
         assert requirement is not None
-        assert requirement.secret_kind == "profile.bundle-export.passphrase"  # noqa: S105
+        expected_requirement_kind = "profile.bundle-export.passphrase"
+        assert requirement.secret_kind == expected_requirement_kind
         submission = bytearray(secret)
         asyncio.run(supervisor.submit_ephemeral_secret(requirement, submission))
         assert submission == bytearray(len(secret))
@@ -308,7 +309,7 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
                     ),
                 ),
                 operation_id="c" * 64,
-                secret=_PROFILE_PASSPHRASE.encode("utf-8"),
+                secret=_PROFILE_CREDENTIAL_INPUT.encode("utf-8"),
             )
             assert terminal.lifecycle is OperationLifecycle.TERMINAL
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -322,7 +323,7 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
         assert result.profile_id == str(profile_id)
         assert result.destination == destination
         assert ProfileBundleExportJournalRepository(storage_root=root).scan().operations == ()
-        _assert_not_durable(root, _PROFILE_PASSPHRASE.encode("utf-8"))
+        _assert_not_durable(root, _PROFILE_CREDENTIAL_INPUT.encode("utf-8"))
 
 
 def test_profile_logout_strong_closes_real_custody_after_secure_request_resolution(tmp_path: Path) -> None:

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import ast
 import inspect
-import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
+from .._call_runtime import run_captured
 from .._command_policy import CommandPolicyProjection, policy_projection_is_coherent, project_command_policy
 from ..command_surface import command_surface
 from ..hitl import ConfirmationPolicy, confirmation_for_policy
@@ -66,11 +66,9 @@ before = set(sys.modules)
 confirmation_for_policy(target.execution_policy)
 print(json.dumps(sorted(set(sys.modules) - before)))
 """
-    result = subprocess.run(  # noqa: S603 - fixed interpreter and literal probe
+    result = run_captured(
         [sys.executable, "-c", script],
-        check=True,
-        capture_output=True,
-        text=True,
+        encoding="utf-8",
     )
     assert result.stdout.strip() == "[]"
 

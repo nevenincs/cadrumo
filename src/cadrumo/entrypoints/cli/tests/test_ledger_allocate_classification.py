@@ -20,11 +20,12 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_storage,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_storage,
 )
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_isolated_storage"]
 
 
 def _invoke(args: Sequence[str], *, env: dict[str, str] | None = None) -> Result:

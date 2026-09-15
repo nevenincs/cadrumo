@@ -44,6 +44,7 @@ from cadrumo.application.calculations.observations_repository import Observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -96,9 +97,10 @@ def _declared_previous_filing_binding_ids() -> frozenset[BindingId]:
     return frozenset(binding_ids)
 
 
-def _resolve(secure_objects: SecureObjectRepository):
+def _resolve(secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation):
     snapshot = _m130_snapshot()
     resolver = PreviousFilingSourceResolver(
+        operation=operation,
         repository=CalculationObservationRepository(objects=secure_objects),
         registry_snapshot=snapshot,
         iva_history_repository=IvaCompensationHistoryRepository(),
@@ -197,7 +199,11 @@ def _seed_prior_quarter(secure_objects: SecureObjectRepository) -> None:
     )
 
 
-def test_every_unsatisfiable_previous_filing_binding_is_named(tmp_path: Path) -> None:
+def test_every_unsatisfiable_previous_filing_binding_is_named(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """With an empty store, each declared carry is named on the diagnostics channel.
 
     Gated on the PROPERTY — every declared previous-filing binding is named by some
@@ -208,7 +214,7 @@ def test_every_unsatisfiable_previous_filing_binding_is_named(tmp_path: Path) ->
     assert declared, "the M130 revision must declare previous-filing bindings for this gate to mean anything"
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        resolution = _resolve(profile.repository)
+        resolution = _resolve(profile.repository, operation=operation)
 
     carry_diagnostics = tuple(
         diagnostic for diagnostic in resolution.diagnostics if diagnostic.source_kind == "previous_filing"
@@ -228,7 +234,11 @@ def test_every_unsatisfiable_previous_filing_binding_is_named(tmp_path: Path) ->
         assert str(_YEAR - 1) in diagnostic.message or str(_YEAR) in diagnostic.message
 
 
-def test_a_satisfiable_previous_filing_binding_stays_silent(tmp_path: Path) -> None:
+def test_a_satisfiable_previous_filing_binding_stays_silent(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The positive control: a carry the store CAN satisfy is not named.
 
     Without this, "emits on failure" is indistinguishable from "emits always", and
@@ -237,7 +247,7 @@ def test_a_satisfiable_previous_filing_binding_stays_silent(tmp_path: Path) -> N
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_prior_quarter(profile.repository)
-        resolution = _resolve(profile.repository)
+        resolution = _resolve(profile.repository, operation=operation)
 
     named = {
         diagnostic.binding_id for diagnostic in resolution.diagnostics if diagnostic.source_kind == "previous_filing"
@@ -251,7 +261,11 @@ def test_a_satisfiable_previous_filing_binding_stays_silent(tmp_path: Path) -> N
     assert _M130_PRIOR_PAGOS_BINDING not in set(resolution.unresolved_binding_ids)
 
 
-def test_a_satisfied_carry_declares_the_filed_casilla_it_rests_on(tmp_path: Path) -> None:
+def test_a_satisfied_carry_declares_the_filed_casilla_it_rests_on(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The resolver names the class of terminal fact behind the carry, not just its resolver id.
 
     A carry's terminal fact is a casilla of an immutable, already-filed
@@ -261,7 +275,7 @@ def test_a_satisfied_carry_declares_the_filed_casilla_it_rests_on(tmp_path: Path
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_prior_quarter(profile.repository)
-        resolution = _resolve(profile.repository)
+        resolution = _resolve(profile.repository, operation=operation)
 
     assert resolution.provenance, "the seeded prior trimestre must produce provenance, or this proves nothing"
     assert all(row.terminal_origin is TerminalOriginClass.FILED_MODELO_CASILLA for row in resolution.provenance)

@@ -20,6 +20,8 @@ from .ledger_action_persistence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     secure_objects: SecureObjectRepository,
 ) -> None:

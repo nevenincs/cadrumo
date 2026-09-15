@@ -310,31 +310,33 @@ def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric(
 
 
 def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONFLICT_BUCKET_ID):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONFLICT_BUCKET_ID),
+    ):
+        seed_iva_compensation_period(
+            taxpayer_nif=_TAXPAYER_REF,
+            period=Period.from_year_and_code(2024, "2T"),
+            amount=Decimal("100.00"),
+            repository=IvaCompensationHistoryRepository(),
+            operation=_authority_operation_for_test,
+        )
+
+        with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
             seed_iva_compensation_period(
                 taxpayer_nif=_TAXPAYER_REF,
                 period=Period.from_year_and_code(2024, "2T"),
-                amount=Decimal("100.00"),
+                amount=Decimal("50.00"),
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
 
-            with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
-                seed_iva_compensation_period(
-                    taxpayer_nif=_TAXPAYER_REF,
-                    period=Period.from_year_and_code(2024, "2T"),
-                    amount=Decimal("50.00"),
-                    repository=IvaCompensationHistoryRepository(),
-                    operation=_authority_operation_for_test,
-                )
-
-            assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
-            assert excinfo.value.context == {
-                "filing_year": 2024,
-                "period": "2T",
-                "existing_provenance": "operator_seed",
-            }
+        assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
+        assert excinfo.value.context == {
+            "filing_year": 2024,
+            "period": "2T",
+            "existing_provenance": "operator_seed",
+        }
 
 
 def test_iva_compensation_annual_summary_refuses_printed_number_references() -> None:

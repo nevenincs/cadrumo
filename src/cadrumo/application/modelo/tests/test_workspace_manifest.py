@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import cache
-from typing import Annotated, Literal, get_args
+from typing import TYPE_CHECKING, Annotated, Literal, get_args
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -39,6 +39,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 type _NestedTraversalAlias = Mapping[str, tuple[int, ...]]
 
+if TYPE_CHECKING:
+
+    class MissingWorkspaceType: ...
+
 
 class _NestedTraversalModel(BaseModel):
     value: str
@@ -57,7 +61,7 @@ class _AnnotatedForwardReferenceRoot(BaseModel):
 
 
 class _UnresolvedForwardReference(BaseModel):
-    missing: MissingWorkspaceType  # noqa: F821  # ty: ignore[unresolved-reference]  # reason: the unresolvable annotation IS the fixture under test
+    missing: MissingWorkspaceType
 
 
 @cache

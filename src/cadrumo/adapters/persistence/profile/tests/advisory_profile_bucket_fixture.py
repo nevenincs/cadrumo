@@ -21,11 +21,13 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.tests.bucket_id_fixture import bucket_id  # noqa: F401
+from cadrumo.tests.bucket_id_fixture import bucket_id as bucket_id_fixture
+
+bucket_id = bucket_id_fixture
 
 
 @pytest.fixture(autouse=True)
-def advisory_profile_bucket(tmp_path: Path, bucket_id: str) -> Iterator[None]:  # noqa: F811 - pytest injects the imported fixture
+def advisory_profile_bucket(tmp_path: Path, bucket_id: str) -> Iterator[None]:
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         # Seeded through a detached WorkflowState, never a repository read:
         # the capsule publishes by an atomic no-replace rename onto

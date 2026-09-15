@@ -28,6 +28,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.application.user_profile.custody_ports import default_profile_bucket_storage
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.storage_scope import storage_env_overrides
 
 from .test_config_reset import (
@@ -242,7 +243,7 @@ def _run_fresh_resume_allowing_failure(
     pass unnoticed. A case asserting the refusal itself needs the process back
     instead.
     """
-    return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
+    return run_audited_process(
         [sys.executable, "-c", _RESUME_HARNESS, str(root), operation_id, _OVERRIDE_REASON],
         cwd=Path.cwd(),
         env=_child_env(root),
@@ -290,7 +291,7 @@ def _refuse_with_child_stderr(
 
 
 def _run_crashing_start(root: Path, boundary: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
+    return run_audited_process(
         [sys.executable, "-c", _CRASH_HARNESS, str(root), boundary],
         cwd=Path.cwd(),
         env=_child_env(root),
@@ -307,7 +308,7 @@ def _run_fresh_resume(
     root: Path,
     operation_id: str,
 ) -> subprocess.CompletedProcess[str]:
-    resumed = subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
+    resumed = run_audited_process(
         [
             sys.executable,
             "-c",

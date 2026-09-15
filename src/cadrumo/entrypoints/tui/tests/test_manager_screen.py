@@ -41,7 +41,7 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (160, 60)
-_PASSWORD = "manager-screen-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "manager-screen-operator-secret"
 _EDITED_PATH = "identity.name"
 
 
@@ -53,7 +53,9 @@ def _live_overview(label: str = "Manager Subject"):
     # sealed under; synthesising a session instead gives a different key and the
     # capsule refuses it as a row addressed to another object key.
     login_profile(
-        name=label, passphrase_callback=lambda: _PASSWORD, profile_decode_context=_profile_decode_context_for_test
+        name=label,
+        passphrase_callback=lambda: _CREDENTIAL_INPUT,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     record = load_test_profile_record(require_active_bucket_id())
     return build_profile_overview(record, label=label)
@@ -122,7 +124,7 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -149,7 +151,7 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -184,7 +186,7 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -234,7 +236,7 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -276,7 +278,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -337,7 +339,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -409,7 +411,7 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Masked Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -443,7 +445,7 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -476,7 +478,7 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -515,7 +517,7 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Manager Subject",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )

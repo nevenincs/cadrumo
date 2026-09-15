@@ -26,6 +26,7 @@ from .ledger_action_persistence_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 @contextmanager
 def _ledger_ports(transaction_repository, event_repository, profile):
     with bundled_indexed_authority().operation() as operation:
@@ -79,23 +80,25 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
     transaction_repository, event_repository = _repositories(secure_objects)
     category = SpendingCategory._from_registry("telefonia_movil")
 
-    with pytest.raises(TransactionValidationError, match="not configured"):
-        with _ledger_ports(transaction_repository, event_repository, UsageRatioProfile()) as ports:
-            create_manual_transaction(
-                ManualLedgerTransactionCommand(
-                    bucket_id=_BUCKET_ID,
-                    booked_date=date(2026, 5, 2),
-                    amount=Decimal("50.00"),
-                    direction=TransactionDirection.OUTGOING,
-                    description="telefono movil",
-                    business_classification=BusinessClassification.MIXED,
-                    business_pct=Decimal("0.60"),
-                    category_id=category.value,
-                    usage_ratio_id=category.value,
-                ),
-                ports=ports,
-                occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-            )
+    with (
+        pytest.raises(TransactionValidationError, match="not configured"),
+        _ledger_ports(transaction_repository, event_repository, UsageRatioProfile()) as ports,
+    ):
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="telefono movil",
+                business_classification=BusinessClassification.MIXED,
+                business_pct=Decimal("0.60"),
+                category_id=category.value,
+                usage_ratio_id=category.value,
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
 
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
@@ -108,41 +111,45 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
     category = SpendingCategory._from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
-    with pytest.raises(TransactionValidationError, match="concrete eligible spending category"):
-        with _ledger_ports(transaction_repository, event_repository, profile) as ports:
-            create_manual_transaction(
-                ManualLedgerTransactionCommand(
-                    bucket_id=_BUCKET_ID,
-                    booked_date=date(2026, 5, 2),
-                    amount=Decimal("50.00"),
-                    direction=TransactionDirection.OUTGOING,
-                    description="telefono movil",
-                    business_classification=BusinessClassification.MIXED,
-                    business_pct=Decimal("0.60"),
-                    category_id=category.value,
-                    usage_ratio_id="home_office_area",
-                ),
-                ports=ports,
-                occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-            )
+    with (
+        pytest.raises(TransactionValidationError, match="concrete eligible spending category"),
+        _ledger_ports(transaction_repository, event_repository, profile) as ports,
+    ):
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="telefono movil",
+                business_classification=BusinessClassification.MIXED,
+                business_pct=Decimal("0.60"),
+                category_id=category.value,
+                usage_ratio_id="home_office_area",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
 
-    with pytest.raises(TransactionValidationError, match="must match"):
-        with _ledger_ports(transaction_repository, event_repository, profile) as ports:
-            create_manual_transaction(
-                ManualLedgerTransactionCommand(
-                    bucket_id=_BUCKET_ID,
-                    booked_date=date(2026, 5, 2),
-                    amount=Decimal("50.00"),
-                    direction=TransactionDirection.OUTGOING,
-                    description="telefono movil",
-                    business_classification=BusinessClassification.MIXED,
-                    business_pct=Decimal("0.60"),
-                    category_id=SpendingCategory._from_registry("suministros_home_office_luz").value,
-                    usage_ratio_id=category.value,
-                ),
-                ports=ports,
-                occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
-            )
+    with (
+        pytest.raises(TransactionValidationError, match="must match"),
+        _ledger_ports(transaction_repository, event_repository, profile) as ports,
+    ):
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="telefono movil",
+                business_classification=BusinessClassification.MIXED,
+                business_pct=Decimal("0.60"),
+                category_id=SpendingCategory._from_registry("suministros_home_office_luz").value,
+                usage_ratio_id=category.value,
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
+        )
 
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}
@@ -155,23 +162,25 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     category = SpendingCategory._from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
-    with pytest.raises(TransactionValidationError, match="does not match"):
-        with _ledger_ports(transaction_repository, event_repository, profile) as ports:
-            create_manual_transaction(
-                ManualLedgerTransactionCommand(
-                    bucket_id=_BUCKET_ID,
-                    booked_date=date(2026, 5, 2),
-                    amount=Decimal("50.00"),
-                    direction=TransactionDirection.OUTGOING,
-                    description="telefono movil",
-                    business_classification=BusinessClassification.MIXED,
-                    business_pct=Decimal("0.50"),
-                    category_id=category.value,
-                    usage_ratio_id=category.value,
-                ),
-                ports=ports,
-                occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-            )
+    with (
+        pytest.raises(TransactionValidationError, match="does not match"),
+        _ledger_ports(transaction_repository, event_repository, profile) as ports,
+    ):
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 2),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="telefono movil",
+                business_classification=BusinessClassification.MIXED,
+                business_pct=Decimal("0.50"),
+                category_id=category.value,
+                usage_ratio_id=category.value,
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        )
 
     assert transaction_repository.load().transactions == {}
     assert event_repository.load().events == {}

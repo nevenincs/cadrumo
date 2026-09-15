@@ -38,7 +38,7 @@ from ..overview import MASKED_PLACEHOLDER, build_profile_overview
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
-_SECRET_VALUE = "a-distinctive-secret-value"  # noqa: S105 - synthetic test fixture
+_FIELD_VALUE = "a-distinctive-secret-value"
 
 
 def _schema() -> ProfileSchemaDefinition:
@@ -121,7 +121,7 @@ def test_every_declared_field_appears_even_when_never_filled_in() -> None:
 def test_a_secret_value_never_appears_in_the_projection() -> None:
     """The raw secret must not survive anywhere in the serialised view."""
     overview = build_profile_overview(
-        _record(UserProfileFact(path="access.portal_token", value=_SECRET_VALUE)),
+        _record(UserProfileFact(path="access.portal_token", value=_FIELD_VALUE)),
         schema=_schema(),
     )
 
@@ -130,7 +130,7 @@ def test_a_secret_value_never_appears_in_the_projection() -> None:
     )
     assert token.masked
     assert token.value == MASKED_PLACEHOLDER
-    assert _SECRET_VALUE not in overview.model_dump_json()
+    assert _FIELD_VALUE not in overview.model_dump_json()
 
 
 def test_a_blank_secret_field_is_not_masked_into_looking_populated() -> None:

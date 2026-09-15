@@ -22,7 +22,7 @@ from ....domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
-from ...wizard import catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
+from ...wizard import catalogue as _wizard_catalogue
 from ..projections import (
     facts_to_values,
     projection_for_taxpayer,
@@ -30,6 +30,8 @@ from ..projections import (
     record_to_path_values,
     record_to_values,
 )
+
+__all__ = ["_wizard_catalogue"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

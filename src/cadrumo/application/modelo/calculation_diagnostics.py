@@ -120,6 +120,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
             inspected.
         bucket_id: Bucket identifier used by profile-backed advisory
             collectors.
+        observation_repository: Required bucket-bound observation repository used
+            by prior-payment advisory collectors.
         prorrata_register_repository: Required bucket-bound prorrata register
             capability used by the Modelo 303 regularización advisory.
         bienes_inversion_repository: Required bucket-bound capital-goods register

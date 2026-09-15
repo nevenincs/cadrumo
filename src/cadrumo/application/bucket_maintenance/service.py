@@ -74,6 +74,7 @@ class BucketMaintenanceService:
     """Expose only non-mutating maintenance operations for current capsules."""
 
     def __init__(self, *, bucket_storage: ProfileBucketStoragePort) -> None:
+        """Bind the bucket storage used by maintenance operations."""
         self._bucket_storage = bucket_storage
 
     @contextmanager

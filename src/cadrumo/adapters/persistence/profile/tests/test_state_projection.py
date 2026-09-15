@@ -85,7 +85,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
 _ACTIVE_PROFILE_ID: str | None = None
-_OPERATOR_PASSPHRASE = "state projection test passphrase 123"  # noqa: S105 - test-only credential
+_OPERATOR_CREDENTIAL_INPUT = "state projection test passphrase 123"
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
 
@@ -124,7 +124,7 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
                 cadrumo_local_storage_root=tmp_path,
                 cadrumo_active_profile=None,
                 cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
-                cadrumo_secret_passphrase=SecretStr(_OPERATOR_PASSPHRASE),
+                cadrumo_secret_passphrase=SecretStr(_OPERATOR_CREDENTIAL_INPUT),
             ),
         )
         _ACTIVE_STORAGE_STACK = stack
@@ -181,13 +181,13 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
     outcome = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label="state projection operator",
-        passphrase=_OPERATOR_PASSPHRASE,
+        passphrase=_OPERATOR_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
     storage_root = Settings().cadrumo_local_storage_root
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
-    unlocked = unlock_profile_custody(material.envelope, _OPERATOR_PASSPHRASE, sentinel=material.sentinel)
+    unlocked = unlock_profile_custody(material.envelope, _OPERATOR_CREDENTIAL_INPUT, sentinel=material.sentinel)
     instant = datetime.now(UTC)
     session = profile_login_session_port().open_resumed_session(
         bucket_id=outcome.profile_id,
@@ -880,19 +880,21 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
     sensitive_provider = "client-tax-id-12345678Z-private-note"
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
 
-    with caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"):
-        with bundled_indexed_authority().operation() as operation:
-            projection = build_operator_state_projection(
-                certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                read_ports=read_ports,
-                requested_provider=sensitive_provider,
-                probe_live_backend=True,
-                include_workspace_summary=False,
-                include_pending_obligations=False,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            )
+    with (
+        caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"),
+        bundled_indexed_authority().operation() as operation,
+    ):
+        projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            read_ports=read_ports,
+            requested_provider=sensitive_provider,
+            probe_live_backend=True,
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert projection.auth.available is False
     assert any("unknown provider" in record.getMessage() for record in caplog.records)

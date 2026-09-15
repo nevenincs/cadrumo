@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.tests.audited_process import run_audited_process
 
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....core.bucket_pointer import pointer_path
@@ -46,7 +47,7 @@ def _profile_storage_env(*, storage_root: Path, tmp_path: Path) -> dict[str, str
 
 def _run_cli(*args: str, storage_root: Path, tmp_path: Path) -> subprocess.CompletedProcess[str]:
     """Execute the production entry point in a fresh interpreter."""
-    return subprocess.run(  # noqa: S603
+    return run_audited_process(
         [
             sys.executable,
             "-c",

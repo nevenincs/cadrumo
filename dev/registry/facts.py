@@ -2433,17 +2433,14 @@ def _module_literal_mapping_keys(tree: ast.AST, name: str) -> tuple[str, ...] | 
     assignments: list[ast.Dict] = []
     for statement in tree.body:
         if (
-            (
-                isinstance(statement, ast.Assign)
-                and name in _simple_assignment_names(statement.targets)
-                and isinstance(statement.value, ast.Dict)
-            )
-            or (
-                isinstance(statement, ast.AnnAssign)
-                and isinstance(statement.target, ast.Name)
-                and statement.target.id == name
-                and isinstance(statement.value, ast.Dict)
-            )
+            isinstance(statement, ast.Assign)
+            and name in _simple_assignment_names(statement.targets)
+            and isinstance(statement.value, ast.Dict)
+        ) or (
+            isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+            and statement.target.id == name
+            and isinstance(statement.value, ast.Dict)
         ):
             assignments.append(statement.value)
     writes = sum(

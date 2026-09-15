@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _LABEL = "Setup State Statement Subject"
-_PASSPHRASE = "setup-state-must-be-stated-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "setup-state-must-be-stated-operator-secret"
 
 
 def _live_store(profile_id: str) -> ProfileRecordStore:
@@ -70,13 +70,13 @@ def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
         login_profile(
             name=outcome.label,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
 

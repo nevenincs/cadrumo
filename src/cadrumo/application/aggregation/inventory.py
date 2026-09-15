@@ -47,7 +47,9 @@ if set(_VALUE_ATTRIBUTE_BY_OPERATION) != set(_CANONICAL_OPERATIONS):
 class InventoryLedgerRepositoryProtocol(Protocol):
     """Read boundary required by the inventory source resolver."""
 
-    def load(self) -> InventoryLedgerDocument: ...
+    def load(self) -> InventoryLedgerDocument:
+        """Load the encrypted inventory ledger document."""
+        ...
 
 
 def _inventory_bindings(context: CalculationSourceContext) -> tuple[BindingDefinition, ...]:
@@ -327,9 +329,11 @@ class InventorySourceResolver:
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
     def __init__(self, *, inventory_repository: InventoryLedgerRepositoryProtocol | None = None) -> None:
+        """Bind the optional repository used to read inventory facts."""
         self._inventory_repository = inventory_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve inventory bindings for the selected calculation context."""
         bindings = _inventory_bindings(context)
         if not bindings:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)

@@ -25,12 +25,14 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....application.wizard.models import WizardFlow
 from ....application.wizard.tests._support import registry_setup_flow as registry_setup_flow
 from .._root_support import _prefer_complete_verb_path
 from .cli_runner import invoke_cached_cli
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

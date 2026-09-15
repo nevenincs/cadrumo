@@ -58,9 +58,7 @@ _EXEMPT_SLOT = IvaRate._from_registry("EXEMPT")
 _DEFAULT_RATE = IvaRate._from_registry("RATE_21")
 
 
-def _recargo_invoice(
-    *, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate = _DEFAULT_RATE
-) -> Invoice:
+def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate = _DEFAULT_RATE) -> Invoice:
     """A retailer's purchase invoice bearing recargo de equivalencia.
 
     The cuota follows the slot rather than being fixed: an exempt line must

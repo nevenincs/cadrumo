@@ -421,7 +421,7 @@ class TestIvaRemoteStateCliSurface:
         assert canary not in _live_process_command_lines()
 
     def test_watchdog_reaps_new_playwright_temp_profile_process(self) -> None:
-        baseline_inventory = _process_command_inventory()
+        baseline_inventory = asyncio.run(_process_command_inventory())
         assert baseline_inventory is not None, (
             "the OS process table must be readable for this proof to mean anything; "
             "an unreadable baseline makes the reaper refuse by design"
@@ -445,7 +445,9 @@ class TestIvaRemoteStateCliSurface:
             else:
                 raise AssertionError("canary process command line was not visible to process inventory")
 
-            killed, inventory_available = _reap_new_playwright_profile_processes(preexisting_profiles=preexisting)
+            killed, inventory_available = asyncio.run(
+                _reap_new_playwright_profile_processes(preexisting_profiles=preexisting),
+            )
             assert inventory_available, (
                 "the reaper could not read the process table, so a zero count would say nothing about leaks"
             )
@@ -481,7 +483,9 @@ class TestIvaRemoteStateCliSurface:
             else:
                 raise AssertionError("canary process command line was not visible to process inventory")
 
-            killed, inventory_available = _reap_new_playwright_profile_processes(preexisting_profiles=None)
+            killed, inventory_available = asyncio.run(
+                _reap_new_playwright_profile_processes(preexisting_profiles=None),
+            )
 
             assert killed == 0
             assert inventory_available is False

@@ -232,7 +232,7 @@ def review_package_build(
     )
 
 
-setattr(review_package_build, "__input_model__", ModeloReviewPackageBuildOperatorInput)  # noqa: B010
+review_package_build.__input_model__ = ModeloReviewPackageBuildOperatorInput
 
 
 def review_package_verify(ctx: typer.Context, package: Path) -> None:

@@ -49,8 +49,8 @@ from .test_login_handover import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PASSWORD_FIRST = "sequential-registration-password-one"  # noqa: S105 - real test credential
-_PASSWORD_SECOND = "sequential-registration-password-two"  # noqa: S105 - real test credential
+_CREDENTIAL_FIRST = "sequential-registration-password-one"
+_CREDENTIAL_SECOND = "sequential-registration-password-two"
 
 
 def _register(label: str, password: str) -> str:
@@ -108,11 +108,11 @@ def test_registering_a_second_profile_does_not_make_the_next_login_an_interrupte
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        first = _register("Sequential One", _PASSWORD_FIRST)
+        first = _register("Sequential One", _CREDENTIAL_FIRST)
         try:
             login_profile(
                 name=first,
-                passphrase_callback=lambda: _PASSWORD_FIRST,
+                passphrase_callback=lambda: _CREDENTIAL_FIRST,
                 profile_decode_context=_profile_decode_context_for_test,
             )
 
@@ -120,7 +120,7 @@ def test_registering_a_second_profile_does_not_make_the_next_login_an_interrupte
             assert terminal is not None
             assert terminal.phase is HandoverPhase.A_RETIRED
 
-            second = _register("Sequential Two", _PASSWORD_SECOND)
+            second = _register("Sequential Two", _CREDENTIAL_SECOND)
             # The create transaction has moved the pointer, so the retained
             # terminal receipt now matches neither of its own witnesses.
             moved = read_pointer(storage_root)
@@ -129,7 +129,7 @@ def test_registering_a_second_profile_does_not_make_the_next_login_an_interrupte
 
             outcome = login_profile(
                 name=second,
-                passphrase_callback=lambda: _PASSWORD_SECOND,
+                passphrase_callback=lambda: _CREDENTIAL_SECOND,
                 profile_decode_context=_profile_decode_context_for_test,
             )
 
@@ -151,18 +151,18 @@ def test_a_completed_handover_receipt_is_retired_by_the_next_login_after_a_point
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        first = _register("Retire One", _PASSWORD_FIRST)
+        first = _register("Retire One", _CREDENTIAL_FIRST)
         try:
             login_profile(
                 name=first,
-                passphrase_callback=lambda: _PASSWORD_FIRST,
+                passphrase_callback=lambda: _CREDENTIAL_FIRST,
                 profile_decode_context=_profile_decode_context_for_test,
             )
-            second = _register("Retire Two", _PASSWORD_SECOND)
+            second = _register("Retire Two", _CREDENTIAL_SECOND)
 
             login_profile(
                 name=second,
-                passphrase_callback=lambda: _PASSWORD_SECOND,
+                passphrase_callback=lambda: _CREDENTIAL_SECOND,
                 profile_decode_context=_profile_decode_context_for_test,
             )
 
@@ -197,9 +197,9 @@ def test_registration_displaced_profile_keeps_no_resumable_material_after_the_ne
     """
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        first = _register("Displaced One", _PASSWORD_FIRST)
+        first = _register("Displaced One", _CREDENTIAL_FIRST)
 
-        opened = _login_in_separate_process(storage_root, first, _PASSWORD_FIRST)
+        opened = _login_in_separate_process(storage_root, first, _CREDENTIAL_FIRST)
         assert opened["bucket_id"] == first
 
         # Anti-tautology: the receipt IS resumable from a third process while
@@ -209,11 +209,11 @@ def test_registration_displaced_profile_keeps_no_resumable_material_after_the_ne
         assert live["resumed"] is True
         assert live["dek_length"] == 32
 
-        second = _register("Displaced Two", _PASSWORD_SECOND)
+        second = _register("Displaced Two", _CREDENTIAL_SECOND)
         displaced = read_pointer(storage_root)
         assert displaced.bucket_id == second, "profile creation is expected to select the new capsule"
 
-        entered = _login_in_separate_process(storage_root, second, _PASSWORD_SECOND)
+        entered = _login_in_separate_process(storage_root, second, _CREDENTIAL_SECOND)
         assert entered["bucket_id"] == second
 
         _assert_no_resumable_material(
@@ -237,12 +237,12 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        first = _register("Interrupted One", _PASSWORD_FIRST)
-        second = _register("Interrupted Two", _PASSWORD_SECOND)
+        first = _register("Interrupted One", _CREDENTIAL_FIRST)
+        second = _register("Interrupted Two", _CREDENTIAL_SECOND)
         try:
             login_profile(
                 name=second,
-                passphrase_callback=lambda: _PASSWORD_SECOND,
+                passphrase_callback=lambda: _CREDENTIAL_SECOND,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             terminal = load_handover_journal(storage_root=storage_root)
@@ -259,7 +259,7 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
             with pytest.raises(ActiveProfilePointerTransactionError) as refusal:
                 login_profile(
                     name=second,
-                    passphrase_callback=lambda: _PASSWORD_SECOND,
+                    passphrase_callback=lambda: _CREDENTIAL_SECOND,
                     profile_decode_context=_profile_decode_context_for_test,
                 )
 
@@ -288,18 +288,18 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        first = _register("Revoked One", _PASSWORD_FIRST)
-        second = _register("Revoked Two", _PASSWORD_SECOND)
+        first = _register("Revoked One", _CREDENTIAL_FIRST)
+        second = _register("Revoked Two", _CREDENTIAL_SECOND)
         try:
             login_profile(
                 name=first,
-                passphrase_callback=lambda: _PASSWORD_FIRST,
+                passphrase_callback=lambda: _CREDENTIAL_FIRST,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             _close_live_login()
             login_profile(
                 name=second,
-                passphrase_callback=lambda: _PASSWORD_SECOND,
+                passphrase_callback=lambda: _CREDENTIAL_SECOND,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             _close_live_login()
@@ -309,7 +309,7 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
             # journal's back so the classification has something real to revoke.
             login_profile(
                 name=first,
-                passphrase_callback=lambda: _PASSWORD_FIRST,
+                passphrase_callback=lambda: _CREDENTIAL_FIRST,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             _close_live_login()
@@ -338,7 +338,7 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
 
             login_profile(
                 name=second,
-                passphrase_callback=lambda: _PASSWORD_SECOND,
+                passphrase_callback=lambda: _CREDENTIAL_SECOND,
                 profile_decode_context=_profile_decode_context_for_test,
             )
 

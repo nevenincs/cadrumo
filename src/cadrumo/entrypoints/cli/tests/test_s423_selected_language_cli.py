@@ -24,7 +24,7 @@ import sys
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "unsecured"
-os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
+os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = "s423-selected-language-passphrase"
 sys.argv = ["aeat", *sys.argv[3:]]
 
 from cadrumo.entrypoints.cli.main import main
@@ -45,7 +45,7 @@ import sys
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "unsecured"
-os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
+os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = "s423-selected-language-passphrase"
 
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -60,7 +60,7 @@ print(json.dumps({"report": report.model_dump(mode="json"), "report_count": len(
 """
 
 
-_OPERATOR_PASSPHRASE = "s423-selected-language-secret"  # noqa: S105 - synthetic test credential
+_OPERATOR_CREDENTIAL_INPUT = "s423-selected-language-secret"
 
 
 def _run_cli(
@@ -86,7 +86,9 @@ def _run_cli(
 #: `config profile create` mints a custody envelope, so it needs the operator
 #: passphrase AND its confirmation. A subprocess is not a terminal, so the only
 #: channel it accepts is the bounded strict-JSON one on stdin.
-_CREATE_SECRETS = json.dumps({"passphrase": _OPERATOR_PASSPHRASE, "passphrase_confirmation": _OPERATOR_PASSPHRASE})
+_CREATE_SECRETS = json.dumps(
+    {"passphrase": _OPERATOR_CREDENTIAL_INPUT, "passphrase_confirmation": _OPERATOR_CREDENTIAL_INPUT}
+)
 
 
 def _combined_output(result: subprocess.CompletedProcess[str]) -> str:

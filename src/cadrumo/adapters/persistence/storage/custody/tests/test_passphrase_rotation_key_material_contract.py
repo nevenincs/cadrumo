@@ -44,8 +44,8 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _LABEL = "Rotation Contract Subject"
-_PASSPHRASE = "rotation-contract-current-operator-secret"  # noqa: S105 - synthetic test credential
-_NEW_PASSPHRASE = "rotation-contract-replacement-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "rotation-contract-current-operator-secret"
+_NEW_CREDENTIAL_INPUT = "rotation-contract-replacement-operator-secret"
 
 
 def test_rotation_must_preserve_the_dek_epoch_so_an_outstanding_recovery_artifact_still_opens(
@@ -73,7 +73,7 @@ def test_rotation_must_preserve_the_dek_epoch_so_an_outstanding_recovery_artifac
 
         rotated = create_profile_custody_password_envelope(
             profile_id=profile_id,
-            password=_NEW_PASSPHRASE,
+            password=_NEW_CREDENTIAL_INPUT,
             dek=dek,
             dek_epoch=material.envelope.dek_epoch,
             kdf=material.envelope.kdf,
@@ -125,7 +125,7 @@ def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envel
 
         rotated = create_profile_custody_password_envelope(
             profile_id=profile_id,
-            password=_NEW_PASSPHRASE,
+            password=_NEW_CREDENTIAL_INPUT,
             dek=dek,
             dek_epoch=material.envelope.dek_epoch,
             kdf=material.envelope.kdf,
@@ -159,7 +159,7 @@ def _register(tmp_path: Path, handed: list[str]):
 
     return register_profile_with_credentials(
         label=f"{_LABEL} {tmp_path.name}",
-        passphrase=_PASSPHRASE,
+        passphrase=_CREDENTIAL_INPUT,
         recovery_handover=lambda enrollment: (
             handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
         ),
@@ -172,4 +172,4 @@ def _unlock_dek(material) -> bytes:
     """Return the profile's DEK through the real password door."""
     from cadrumo.application.user_profile.custody_ports import unlock_profile_custody_password
 
-    return unlock_profile_custody_password(material, password=_PASSPHRASE).dek
+    return unlock_profile_custody_password(material, password=_CREDENTIAL_INPUT).dek

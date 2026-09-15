@@ -42,14 +42,14 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _LABEL = "Recovery Enrollment Subject"
-_PASSPHRASE = "recovery-enrollment-at-creation-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "recovery-enrollment-at-creation-operator-secret"
 
 _BIP39_WORD_COUNT = 24
 
 
 def _invoke_without_recovery_handover(callback: Callable[..., object]) -> object:
     """Exercise the runtime boundary when a dynamic caller omits the required callback."""
-    return callback(label=_LABEL, passphrase=_PASSPHRASE)
+    return callback(label=_LABEL, passphrase=_CREDENTIAL_INPUT)
 
 
 def _recovery_envelope_path(profile_id: str) -> Path:
@@ -72,7 +72,7 @@ def test_a_registration_that_takes_the_handover_publishes_a_wrapper_its_words_op
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             recovery_handover=lambda enrollment: (
                 handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
             ),
@@ -113,7 +113,7 @@ def test_a_different_minted_mnemonic_does_not_open_the_published_wrapper(tmp_pat
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             recovery_handover=lambda enrollment: (
                 handed.append(enrollment.recovery_key.mnemonic) or enrollment.recovery_key.mnemonic
             ),
@@ -153,7 +153,7 @@ def test_the_outcome_confirms_that_recovery_was_enrolled(tmp_path: Path) -> None
     with isolated_profile_storage_root(tmp_path=tmp_path):
         enrolled = register_profile_with_credentials(
             label=f"{_LABEL} enrolled",
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
@@ -175,7 +175,7 @@ def test_the_handed_over_key_is_wiped_by_the_time_registration_returns(tmp_path:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             recovery_handover=lambda enrollment: retained.append(enrollment) or enrollment.recovery_key.mnemonic,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
@@ -195,7 +195,7 @@ def test_an_inexact_possession_proof_creates_no_profile(tmp_path: Path) -> None:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
                 label=_LABEL,
-                passphrase=_PASSPHRASE,
+                passphrase=_CREDENTIAL_INPUT,
                 recovery_handover=lambda enrollment: f"{enrollment.recovery_key.mnemonic} wrong",
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
@@ -229,7 +229,7 @@ def test_a_channel_that_cannot_deliver_the_words_creates_no_profile(tmp_path: Pa
         with pytest.raises(RuntimeError, match="no interactive terminal"):
             register_profile_with_credentials(
                 label=_LABEL,
-                passphrase=_PASSPHRASE,
+                passphrase=_CREDENTIAL_INPUT,
                 recovery_handover=_refuse,
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,

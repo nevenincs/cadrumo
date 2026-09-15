@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import de
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.storage_path_definitions import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.storage_taxonomy import StorageCategory
@@ -80,7 +81,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=None,
-        cadrumo_secret_store_backend="auto",  # noqa: S106 - settings selector, not a credential
+        cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
         cadrumo_secret_passphrase=passphrase,
         cadrumo_profile_kdf_measure_calibration=False,
         **{secret_location.settings_field: tmp_path / secret_location.relative_path()},

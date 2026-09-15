@@ -11,7 +11,7 @@ CLI action from those observations.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from enum import StrEnum
+from enum import StrEnum, auto
 from typing import TYPE_CHECKING
 
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -23,6 +23,16 @@ if TYPE_CHECKING:
 class LLMPreconditionCondition(StrEnum):
     """Closed failed-condition identities owned by LLM dispatch and readers."""
 
+    @staticmethod
+    def _generate_next_value_(
+        name: str,
+        _start: int,
+        _count: int,
+        _last_values: list[str],
+    ) -> str:
+        category, detail = name.lower().split("_", 1)
+        return f"llm.{category}.{detail}"
+
     COLUMN_MAPPING_HEADERS_PRESENT = "llm.column_mapping.headers_present"
     COLUMN_MAPPING_RESPONSE_PARSEABLE = "llm.column_mapping.response_parseable"
     COLUMN_MAPPING_RESPONSE_SCHEMA_VALID = "llm.column_mapping.response_schema_valid"
@@ -31,8 +41,8 @@ class LLMPreconditionCondition(StrEnum):
     EVIDENCE_RESPONSE_JSON_OBJECT = "llm.evidence.response_json_object"
     EVIDENCE_RESPONSE_SCHEMA_VALID = "llm.evidence.response_schema_valid"
     EVIDENCE_TEXT_PRESENT = "llm.evidence.text_present"
-    EVIDENCE_TOKEN_BOUND = "llm.evidence.token_bound"  # noqa: S105
-    EVIDENCE_TOKEN_EPHEMERAL = "llm.evidence.token_ephemeral"  # noqa: S105
+    EVIDENCE_TOKEN_BOUND = auto()
+    EVIDENCE_TOKEN_EPHEMERAL = auto()
     EVIDENCE_TRANSCRIPTION_NONEMPTY = "llm.evidence.transcription_nonempty"
     LOCAL_INFERENCE_SLOT_AVAILABLE = "llm.local_inference.slot_available"
     OFF_HOST_MODEL_NAMED = "llm.off_host_model.named"

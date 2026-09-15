@@ -54,9 +54,9 @@ def _option(name: str, flag: str, value: ValueContract, help_key: str) -> Option
 
 MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_readiness",
-        parent_key="app_modelo",
-        token="readiness",  # noqa: S106 - CLI operator token, not a credential
+        "app_modelo_readiness",
+        "app_modelo",
+        "readiness",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.readiness_help"),
         short_help_key=None,

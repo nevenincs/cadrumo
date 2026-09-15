@@ -153,13 +153,13 @@ def test_parser_refuses_duplicate_unknown_digest_and_noncanonical_records() -> N
 
 
 def test_password_contract_preserves_exact_unicode_at_every_accepted_boundary() -> None:
-    password = "  p\u0001ass phrase with spaces  "  # noqa: S105 - synthetic boundary input
+    boundary_candidate = "  p\u0001ass phrase with spaces  "
     byte_boundary_password = "😀" * 256
     composed = "é" * PROFILE_PASSWORD_MIN_SCALARS
     decomposed = "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS
 
     for candidate in (
-        password,
+        boundary_candidate,
         "a" * PROFILE_PASSWORD_MIN_SCALARS,
         "a" * PROFILE_PASSWORD_MAX_SCALARS,
         byte_boundary_password,

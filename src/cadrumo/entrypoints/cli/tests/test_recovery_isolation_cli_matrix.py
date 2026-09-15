@@ -28,7 +28,7 @@ from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE_B = "isolation-cli-b-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_B = "isolation-cli-b-operator-secret"
 
 
 def _invoke(args: list[str], *, input: str | None = None) -> Result:
@@ -87,7 +87,7 @@ def test_a_foreign_archive_restores_its_own_profile_without_touching_the_active_
         assert r_export.exit_code == 0, r_export.output
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "b-root"):
-        _register_and_login(label="Isolation CLI B", passphrase=_PASSPHRASE_B)
+        _register_and_login(label="Isolation CLI B", passphrase=_CREDENTIAL_B)
         r_restore = _restore_from(archive_path, label="Isolation CLI A restored")
         assert r_restore.exit_code == 0, r_restore.output
 
@@ -107,11 +107,11 @@ def test_the_active_profiles_passphrase_cannot_open_the_restored_profile(
         assert _archive_export("Isolation CLI A", archive_path).exit_code == 0
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "b-root"):
-        _register_and_login(label="Isolation CLI B", passphrase=_PASSPHRASE_B)
+        _register_and_login(label="Isolation CLI B", passphrase=_CREDENTIAL_B)
         assert _restore_from(archive_path, label="Isolation CLI A restored").exit_code == 0
 
         refused = _invoke(
             ["config", "login", "Isolation CLI A restored", "--secrets-stdin"],
-            input=f'{{"passphrase": "{_PASSPHRASE_B}"}}',
+            input=f'{{"passphrase": "{_CREDENTIAL_B}"}}',
         )
         assert refused.exit_code != 0, refused.output

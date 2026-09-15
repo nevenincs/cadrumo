@@ -268,13 +268,14 @@ def _classify_impatriado_income_transaction(
             detail=f"transaction currency {transaction.raw.currency!r} is not supported for impatriado income",
         )
 
-    source_issue = _impatriado_source_issue(
+    source_jurisdiction_result = _normalize_impatriado_source_jurisdiction(
         transaction,
         transaction_id=transaction_id,
         source_jurisdictions=source_jurisdictions,
     )
-    if source_issue is not None:
-        return source_issue
+    if isinstance(source_jurisdiction_result, ImpatriadoIncomeLedgerAggregationIssue):
+        return source_jurisdiction_result
+    normalized_jurisdiction = source_jurisdiction_result
 
     proportion = _impatriado_income_proportion(transaction, eligible_income_categories)
     if proportion is None:
@@ -305,7 +306,6 @@ def _classify_impatriado_income_transaction(
     if taxable_base_amount is not None:
         taxable_base_amount *= proportion
 
-    normalized_jurisdiction = transaction.source_jurisdiction.strip().upper()
     return ImpatriadoIncomeObservation(
         transaction_id=transaction_id,
         target_casilla_id=target_casilla_id,
@@ -326,13 +326,13 @@ def _impatriado_transaction_is_in_scope(transaction: Transaction) -> bool:
     return transaction.direction is TransactionDirection.INCOMING
 
 
-def _impatriado_source_issue(
+def _normalize_impatriado_source_jurisdiction(
     transaction: Transaction,
     *,
     transaction_id: str,
     source_jurisdictions: frozenset[str],
-) -> ImpatriadoIncomeLedgerAggregationIssue | None:
-    """Return the selected-registry source-jurisdiction issue, if any."""
+) -> str | ImpatriadoIncomeLedgerAggregationIssue:
+    """Return an in-scope normalized jurisdiction or its typed refusal issue."""
     declared_jurisdiction = transaction.source_jurisdiction
     if declared_jurisdiction is None:
         return ImpatriadoIncomeLedgerAggregationIssue(
@@ -347,7 +347,7 @@ def _impatriado_source_issue(
     normalized_jurisdiction = declared_jurisdiction.strip().upper()
     normalized_source_jurisdictions = {value.strip().upper() for value in source_jurisdictions}
     if normalized_jurisdiction in normalized_source_jurisdictions:
-        return None
+        return normalized_jurisdiction
     return ImpatriadoIncomeLedgerAggregationIssue(
         transaction_id=transaction_id,
         reason=ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED,

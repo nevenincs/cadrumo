@@ -28,7 +28,9 @@ class EvidenceConsentProof(Protocol):
     """Minimum consent fact the use case needs to bind evidence bytes."""
 
     @property
-    def evidence_content_address(self) -> str: ...
+    def evidence_content_address(self) -> str:
+        """Return the content address covered by the consent proof."""
+        ...
 
 
 @dataclass(frozen=True)
@@ -47,6 +49,7 @@ class InvoiceDraftReaderUnavailableError(CadrumoError):
     """Selected reader or its runtime was unavailable; preserve its cause."""
 
     def __init__(self, cause: Exception) -> None:
+        """Create an unavailable-reader error while preserving its cause."""
         super().__init__(str(cause))
         self.cause = cause
 

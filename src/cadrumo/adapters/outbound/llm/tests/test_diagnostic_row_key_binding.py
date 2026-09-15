@@ -29,7 +29,9 @@ from ..errors import LLMCacheError
 from ..models import UsageRecord
 from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ..usage import UsageRecorder
-from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
+from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine
+
+__all__ = ["_ENGINE_HOLDER", "_bind_engine"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

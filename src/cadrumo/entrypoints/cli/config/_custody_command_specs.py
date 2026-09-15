@@ -56,9 +56,9 @@ _MACHINE_SECRET_OPTIONS: tuple[OptionSpec, OptionSpec] = (
 
 CONFIG_CUSTODY_COMMAND_SPECS = (
     CommandSpec(
-        key="config_passphrase",
-        parent_key="config",
-        token="passphrase",  # noqa: S106 - CLI token, not a credential.
+        "config_passphrase",
+        "config",
+        "passphrase",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.passphrase.help"),
         short_help_key=None,
@@ -69,9 +69,9 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="config_passphrase_change",
-        parent_key="config_passphrase",
-        token="change",  # noqa: S106 - CLI token, not a credential.
+        "config_passphrase_change",
+        "config_passphrase",
+        "change",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.passphrase.change_help"),
         short_help_key=None,
@@ -103,9 +103,9 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         profile_authentication=ProfileAuthenticationPosture.SELF_AUTHENTICATING,
     ),
     CommandSpec(
-        key="config_login",
-        parent_key="config",
-        token="login",  # noqa: S106 - CLI token, not a credential.
+        "config_login",
+        "config",
+        "login",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.login.help"),
         short_help_key=None,
@@ -134,9 +134,9 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
         ),
     ),
     CommandSpec(
-        key="config_logout",
-        parent_key="config",
-        token="logout",  # noqa: S106 - CLI token, not a credential.
+        "config_logout",
+        "config",
+        "logout",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.logout.help"),
         short_help_key=None,

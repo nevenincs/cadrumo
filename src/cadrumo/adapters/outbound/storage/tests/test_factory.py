@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import subprocess
 import sys
 import textwrap
 from pathlib import Path
@@ -22,6 +21,7 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....tests.audited_process import run_audited_process
 from .....tests.env_scope import scoped_env_var
 from ...google.impersonation import (
     GoogleAuthAdcUnavailableError,
@@ -64,7 +64,7 @@ def _hash(payload: bytes) -> str:
 
 
 def test_factory_import_does_not_import_concrete_backends() -> None:
-    probe = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+    probe = run_audited_process(
         [
             sys.executable,
             "-c",

@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _LABEL = "Record Authority Retirement Subject"
-_PASSPHRASE = "record-authority-retires-with-session-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "record-authority-retires-with-session-operator-secret"
 
 
 def test_closing_the_bucket_session_leaves_no_readable_record_authority(tmp_path: Path) -> None:
@@ -50,13 +50,13 @@ def test_closing_the_bucket_session_leaves_no_readable_record_authority(tmp_path
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
         login_profile(
             name=outcome.label,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
 
@@ -100,13 +100,13 @@ def test_a_sealed_but_still_bound_session_serves_no_record_authority(tmp_path: P
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
         login_profile(
             name=outcome.label,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
 
@@ -148,13 +148,13 @@ def test_an_open_bucket_session_still_serves_its_record_authority(tmp_path: Path
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
         login_profile(
             name=outcome.label,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
 

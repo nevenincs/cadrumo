@@ -14,7 +14,7 @@ asserting it would prove only that one file was consulted twice.
 
 from __future__ import annotations
 
-import subprocess
+import asyncio
 import sys
 from pathlib import Path
 
@@ -31,22 +31,29 @@ _STARTUP_GRACE_SECONDS = 45.0
 _REPO_ROOT = Path(__file__).parents[5]
 
 
-def _run_module(*, timeout: float) -> tuple[int | None, bytes]:
-    """Execute the module as a real process and return its status and output."""
-    process = subprocess.Popen(  # noqa: S603 - fixed argv, no shell, repo-local module
-        [sys.executable, "-m", _MODULE],
+async def _run_module_async(*, timeout: float) -> tuple[int | None, bytes]:
+    """Execute the module through the audited async process boundary."""
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-m",
+        _MODULE,
         cwd=_REPO_ROOT,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stdin=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
     )
     try:
-        output, _ = process.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
+        output, _ = await asyncio.wait_for(process.communicate(), timeout=timeout)
+    except TimeoutError:
         process.kill()
-        output, _ = process.communicate()
+        output, _ = await process.communicate()
         return None, output
     return int(process.returncode), output
+
+
+def _run_module(*, timeout: float) -> tuple[int | None, bytes]:
+    """Execute the module as a real process and return its status and output."""
+    return asyncio.run(_run_module_async(timeout=timeout))
 
 
 def test_module_execution_starts_a_session_rather_than_raising() -> None:

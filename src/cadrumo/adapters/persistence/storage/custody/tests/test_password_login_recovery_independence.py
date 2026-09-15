@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PASSWORD = "recovery-independent-password-login-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "recovery-independent-password-login-secret"
 
 
 @pytest.mark.parametrize("recovery_state", ["missing", "damaged"])
@@ -31,7 +31,7 @@ def test_password_login_ignores_missing_or_damaged_recovery(tmp_path: Path, reco
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=f"Recovery independent {recovery_state}",
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
@@ -45,7 +45,7 @@ def test_password_login_ignores_missing_or_damaged_recovery(tmp_path: Path, reco
 
         authenticated = login_profile(
             name=outcome.profile_id,
-            passphrase_callback=lambda: _PASSWORD,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
         try:

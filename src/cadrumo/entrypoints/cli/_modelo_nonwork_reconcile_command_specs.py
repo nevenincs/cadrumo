@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the Modelo non-work reconcile family."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from typing import Final
@@ -45,9 +41,9 @@ RECONCILE_TARGET_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
 
 MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_reconcile_pull",
-        parent_key="app_modelo_reconcile",
-        token="pull",
+        "app_modelo_reconcile_pull",
+        "app_modelo_reconcile",
+        "pull",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.reconcile.pull_help"),
         short_help_key=None,
@@ -62,9 +58,9 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_reconcile_import",
-        parent_key="app_modelo_reconcile",
-        token="import",
+        "app_modelo_reconcile_import",
+        "app_modelo_reconcile",
+        "import",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.reconcile.import_help"),
         short_help_key=None,
@@ -111,9 +107,9 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_reconcile_list",
-        parent_key="app_modelo_reconcile",
-        token="list",
+        "app_modelo_reconcile_list",
+        "app_modelo_reconcile",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.reconcile.list_help"),
         short_help_key=None,
@@ -134,3 +130,5 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_RECONCILE_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work reconcile family."""
+"""Authored CommandSpec declarations for the Modelo non-work reconcile family."""

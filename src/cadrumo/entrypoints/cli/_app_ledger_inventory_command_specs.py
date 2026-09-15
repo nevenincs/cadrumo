@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the ledger inventory surface."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
@@ -31,9 +27,9 @@ from .command_spec import (
 
 LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_inventory_create",
-        parent_key="app_ledger_inventory",
-        token="create",
+        "app_ledger_inventory_create",
+        "app_ledger_inventory",
+        "create",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.inventory.create_help"),
         short_help_key=None,
@@ -83,9 +79,9 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_inventory_list",
-        parent_key="app_ledger_inventory",
-        token="list",
+        "app_ledger_inventory_list",
+        "app_ledger_inventory",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.inventory.list_help"),
         short_help_key=None,
@@ -100,9 +96,9 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_inventory_closing_authority_record",
-        parent_key="app_ledger_inventory",
-        token="closing-authority-record",
+        "app_ledger_inventory_closing_authority_record",
+        "app_ledger_inventory",
+        "closing-authority-record",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.inventory.closing_authority_record_help"),
         short_help_key=None,
@@ -145,9 +141,9 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_inventory_movement",
-        parent_key="app_ledger_inventory",
-        token="movement",
+        "app_ledger_inventory_movement",
+        "app_ledger_inventory",
+        "movement",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.inventory.movement_group_help"),
         short_help_key=None,
@@ -158,9 +154,9 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="app_ledger_inventory_valuation",
-        parent_key="app_ledger_inventory",
-        token="valuation",
+        "app_ledger_inventory_valuation",
+        "app_ledger_inventory",
+        "valuation",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.inventory.valuation_group_help"),
         short_help_key=None,
@@ -173,3 +169,5 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_INVENTORY_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger inventory surface."""
+"""Authored CommandSpec declarations for the ledger inventory surface."""

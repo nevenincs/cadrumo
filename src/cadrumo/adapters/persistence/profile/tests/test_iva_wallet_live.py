@@ -35,6 +35,7 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.bucket_pointer import require_active_bucket_id
 from cadrumo.core.config import load_settings
 from cadrumo.core.period import Period
+from cadrumo.entrypoints.live_state_composition import compose_live_state
 from cadrumo.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
@@ -58,15 +59,20 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
     target_period = _quarter_period(today.month)
     target_filing_period = Period.from_year_and_code(target_year, target_period)
     settings = load_settings()
+    composition = compose_live_state(
+        output_root=settings.cadrumo_live_state_dir / "iva-wallet",
+        bucket_id=bucket_id,
+    )
     report = asyncio.run(
         capture_iva_compensation_wallet(
+            ports=composition.iva_remote_state_port,
             target_year=target_year,
             target_period=target_filing_period,
-            output_root=settings.cadrumo_live_state_dir / "iva-wallet",
+            output_root=composition.output_root,
         ),
     )
     observation = FiledDeclaracionObservationStore(
-        settings.cadrumo_live_state_dir / "iva-wallet",
+        composition.output_root,
     ).load_iva_wallet_observation(Path(report.observation_path))
     decision = IvaWalletDecisionRepository().load_decision(taxpayer_nif, target_filing_period)
     history = IvaWalletDecisionRepository().load_decision_history(taxpayer_nif, target_filing_period)

@@ -19,6 +19,7 @@ subprocess rebinds *its own* stdin — the code under test is never patched.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import pathlib
 import subprocess
@@ -27,18 +28,38 @@ import textwrap
 
 import pytest
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from .....core.i18n.render import tr
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ECHO_KEY = "cli.config.custody.errors.echo_suppression_unavailable"
 _NON_INTERACTIVE_KEY = "cli.config.custody.errors.non_interactive_secret_required"
-_PLANTED_SECRET = "correct-horse-battery-staple"  # noqa: S105 - probe input, not a credential
+_PLANTED_INPUT = "correct-horse-battery-staple"
+
+
+async def _wait_for_prompt_probe(*, command: list[str], creationflags: int = 0) -> None:
+    """Run a fixed prompt probe with an explicit bounded process lifecycle."""
+    options = {} if creationflags == 0 else {"creationflags": creationflags}
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdin=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL,
+        **options,
+    )
+    try:
+        await asyncio.wait_for(process.wait(), timeout=90)
+    except TimeoutError:
+        process.kill()
+        await process.wait()
+        raise
 
 
 def _run_probe(body: str) -> dict[str, object]:
     """Run ``body`` in a real interpreter and return its JSON verdict."""
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
+    completed = run_audited_process(
         [sys.executable, "-c", textwrap.dedent(body)],
         capture_output=True,
         text=True,
@@ -71,7 +92,7 @@ def test_stdlib_getpass_really_falls_back_to_an_echoing_read() -> None:
         import io, json, sys, warnings
         # An upstream layer rebinds stdin - the precondition win_getpass uses
         # to choose fallback_getpass. Nothing in the app is patched.
-        sys.stdin = io.StringIO({_PLANTED_SECRET!r} + chr(10))
+        sys.stdin = io.StringIO({_PLANTED_INPUT!r} + chr(10))
         import getpass
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
@@ -87,7 +108,7 @@ def test_stdlib_getpass_really_falls_back_to_an_echoing_read() -> None:
     )
 
     assert verdict["stdin_rebound"] is True, "probe failed to construct the precondition"
-    assert verdict["returned"] == _PLANTED_SECRET, (
+    assert verdict["returned"] == _PLANTED_INPUT, (
         f"expected the unguarded stdlib to read the secret through the echoing fallback; got {verdict['returned']!r}"
     )
     assert verdict["warned_about_echo"] is True, (
@@ -141,7 +162,7 @@ def test_prompt_secret_no_echo_refuses_a_character_device_with_no_console() -> N
 
 def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
     """A redirected (non-tty) stdin refuses without consuming the planted secret."""
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
+    completed = run_audited_process(
         [
             sys.executable,
             "-c",
@@ -161,7 +182,7 @@ def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
                 """,
             ),
         ],
-        input=f"{_PLANTED_SECRET}\n",
+        input=f"{_PLANTED_INPUT}\n",
         capture_output=True,
         text=True,
         timeout=120,
@@ -171,8 +192,8 @@ def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
 
     assert verdict["outcome"] == "refused", f"expected a refusal on redirected stdin; got {verdict!r}"
     assert verdict["key"] == _NON_INTERACTIVE_KEY
-    assert _PLANTED_SECRET not in completed.stdout, "the planted secret must never be echoed to stdout"
-    assert _PLANTED_SECRET not in completed.stderr, "the planted secret must never be echoed to stderr"
+    assert _PLANTED_INPUT not in completed.stdout, "the planted secret must never be echoed to stdout"
+    assert _PLANTED_INPUT not in completed.stderr, "the planted secret must never be echoed to stderr"
 
 
 def test_console_less_host_refuses_instead_of_blocking_forever(tmp_path: pathlib.Path) -> None:
@@ -212,17 +233,9 @@ def test_console_less_host_refuses_instead_of_blocking_forever(tmp_path: pathlib
     creationflags = 0
     if sys.platform == "win32":
         creationflags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW
-    process = subprocess.Popen(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
-        [sys.executable, "-c", probe],
-        creationflags=creationflags,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
     try:
-        process.wait(timeout=90)
-    except subprocess.TimeoutExpired:
-        process.kill()
+        asyncio.run(_wait_for_prompt_probe(command=[sys.executable, "-c", probe], creationflags=creationflags))
+    except TimeoutError:
         pytest.fail(
             "the no-echo prompt BLOCKED on a console-less host instead of refusing; "
             "the real-console precondition has regressed",
@@ -291,14 +304,14 @@ def test_real_console_with_rebound_stdin_refuses_the_echo_fallback(tmp_path: pat
         """,
     )
 
-    process = subprocess.Popen(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
-        [sys.executable, "-c", probe],
-        creationflags=subprocess.CREATE_NEW_CONSOLE,
-    )
     try:
-        process.wait(timeout=90)
-    except subprocess.TimeoutExpired:
-        process.kill()
+        asyncio.run(
+            _wait_for_prompt_probe(
+                command=[sys.executable, "-c", probe],
+                creationflags=subprocess.CREATE_NEW_CONSOLE,
+            ),
+        )
+    except TimeoutError:
         pytest.fail("the prompt blocked on a real console with rebound stdin instead of refusing")
 
     assert verdict_path.exists(), "the console probe produced no verdict"
@@ -343,7 +356,7 @@ def test_the_predicate_predicts_the_refusal_it_names() -> None:
     Both halves are asserted from the one probe, which is what makes this
     a claim about their agreement rather than two separate facts.
     """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
+    completed = run_audited_process(
         [
             sys.executable,
             "-c",
@@ -367,7 +380,7 @@ def test_the_predicate_predicts_the_refusal_it_names() -> None:
                 """,
             ),
         ],
-        input=f"{_PLANTED_SECRET}\n",
+        input=f"{_PLANTED_INPUT}\n",
         capture_output=True,
         text=True,
         timeout=120,

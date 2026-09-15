@@ -42,9 +42,9 @@ _ROOT_STATUS = ExecutionPolicySpec(
 
 ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="root",
-        parent_key=None,
-        token="aeat",  # noqa: S106 - CLI operator token, not a credential
+        "root",
+        None,
+        "aeat",
         kind=CommandNodeKind.ROOT,
         help_key=TranslationKey("cli.root.app_help"),
         short_help_key=None,
@@ -164,9 +164,9 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app",
-        parent_key="root",
-        token="app",  # noqa: S106 - CLI operator token, not a credential
+        "app",
+        "root",
+        "app",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.root.app_app_help"),
         short_help_key=None,
@@ -196,9 +196,9 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_tui",
-        parent_key="app",
-        token="tui",  # noqa: S106 - command token, not a credential
+        "app_tui",
+        "app",
+        "tui",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.root.app_help"),
         short_help_key=None,
@@ -209,9 +209,9 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="config",
-        parent_key="root",
-        token="config",  # noqa: S106 - CLI operator token, not a credential
+        "config",
+        "root",
+        "config",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.app_help"),
         short_help_key=None,

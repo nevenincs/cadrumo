@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import subprocess
 import sys
@@ -10,6 +11,8 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from .test_config_reset import (
     _OVERRIDE_REASON,
@@ -228,7 +231,7 @@ def _run_child(
     check: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     _release_parent_bucket_handles(root)
-    return subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned harness
+    return run_audited_process(
         [sys.executable, "-c", harness, str(root), *args],
         cwd=Path.cwd(),
         env=_child_env(root),
@@ -241,7 +244,8 @@ def _run_child(
     )
 
 
-def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
+@pytest.mark.asyncio
+async def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
     tmp_path: Path,
 ) -> None:
     from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
@@ -261,53 +265,44 @@ def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
         profile_a_before = read_profile_bucket_by_id(_PROFILE_A_ID)
         assert profile_a_before is not None
         profile_a_lock = lock_path(bucket_paths(root, _PROFILE_A_ID))
-        holder = subprocess.Popen(  # noqa: S603 - fixed interpreter and repository-owned harness
-            [
-                sys.executable,
-                "-c",
-                _LOCK_HOLDER_HARNESS,
-                str(root),
-                _PROFILE_B_ID,
-            ],
+        holder = await asyncio.create_subprocess_exec(
+            sys.executable,
+            "-c",
+            _LOCK_HOLDER_HARNESS,
+            str(root),
+            _PROFILE_B_ID,
             cwd=Path.cwd(),
             env=_child_env(root),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
-        reset: subprocess.Popen[str] | None = None
+        reset: asyncio.subprocess.Process | None = None
         try:
             assert holder.stdout is not None
-            assert holder.stdout.readline().strip() == "READY"
+            assert (await asyncio.wait_for(holder.stdout.readline(), timeout=20)).strip() == b"READY"
             reset_started = time.monotonic()
-            reset = subprocess.Popen(  # noqa: S603 - fixed interpreter and repository-owned harness
-                [
-                    sys.executable,
-                    "-c",
-                    _BLOCKED_RESET_HARNESS,
-                    str(root),
-                    str(_LOCK_TIMEOUT_SECONDS),
-                ],
+            reset = await asyncio.create_subprocess_exec(
+                sys.executable,
+                "-c",
+                _BLOCKED_RESET_HARNESS,
+                str(root),
+                str(_LOCK_TIMEOUT_SECONDS),
                 cwd=Path.cwd(),
                 env=_child_env(root),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
             deadline = time.monotonic() + 20
             while not profile_a_lock.is_file() and time.monotonic() < deadline:
-                if reset.poll() is not None:
+                if reset.returncode is not None:
                     break
-                time.sleep(0.01)
+                await asyncio.sleep(0.01)
             assert profile_a_lock.is_file()
-            assert reset.poll() is None
+            assert reset.returncode is None
 
-            writer = _run_child(
+            writer = await asyncio.to_thread(
+                _run_child,
                 root,
                 _WRITER_HARNESS,
                 _PROFILE_A_ID,
@@ -318,27 +313,28 @@ def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
             assert writer_payload["bucket_id"] == _PROFILE_A_ID
             assert writer_payload["elapsed"] >= _MUTATION_TIMEOUT_SECONDS
             assert writer_payload["elapsed"] < _LOCK_TIMEOUT_SECONDS
-            assert reset.poll() is None
+            assert reset.returncode is None
 
-            reset_stdout, reset_stderr = reset.communicate(timeout=30)
+            reset_stdout, reset_stderr = await asyncio.wait_for(reset.communicate(), timeout=30)
             reset_payload = json.loads(reset_stdout)
             observed_reset_elapsed = time.monotonic() - reset_started
-            assert reset.returncode == _BUSY_EXIT_CODE, reset_stderr
+            assert reset.returncode == _BUSY_EXIT_CODE, reset_stderr.decode("utf-8", errors="replace")
             assert reset_payload["bucket_id"] == _PROFILE_B_ID
             assert reset_payload["elapsed"] >= _LOCK_TIMEOUT_SECONDS
             assert observed_reset_elapsed >= _LOCK_TIMEOUT_SECONDS
         finally:
-            if reset is not None and reset.poll() is None:
+            if reset is not None and reset.returncode is None:
                 reset.terminate()
-                reset.wait(timeout=15)
-            if holder.stdin is not None and holder.poll() is None:
-                holder.stdin.write("\n")
-                holder.stdin.flush()
+                await asyncio.wait_for(reset.wait(), timeout=15)
+            if holder.stdin is not None and holder.returncode is None:
+                holder.stdin.write(b"\n")
+                await holder.stdin.drain()
+                holder.stdin.close()
             try:
-                holder.communicate(timeout=15)
-            except subprocess.TimeoutExpired:
+                await asyncio.wait_for(holder.communicate(), timeout=15)
+            except TimeoutError:
                 holder.terminate()
-                holder.wait(timeout=15)
+                await asyncio.wait_for(holder.wait(), timeout=15)
 
         assert profile_a_lock.exists() is False
         assert ConfigResetJournalRepository().latest() is None

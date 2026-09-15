@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import StrEnum, auto
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -52,7 +52,7 @@ class AccountRecomposeReasonV1(StrEnum):
     """Why the current profile-bound workbench must be discarded."""
 
     CHANGE_USER = "change_user"
-    PASSWORD_CHANGED = "password_changed"  # noqa: S105 - stable non-secret lifecycle token
+    PASSWORD_CHANGED = auto()
     SIGNED_OUT = "signed_out"
     EXPIRED = "expired"
 

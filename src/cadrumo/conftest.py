@@ -54,6 +54,7 @@ _COLLECTION_STORAGE_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.ge
 os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 """Process-private local-storage root set before child conftests import Cadrumo."""
 
+
 # The other half of what apply_collection_storage_root(overwrite=True) used
 # to do in one call: register the atexit cleanup and stale-sibling sweep for
 # the root set above. Splitting the env-var write from this registration is

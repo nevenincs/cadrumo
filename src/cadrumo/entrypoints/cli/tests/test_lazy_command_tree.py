@@ -111,7 +111,7 @@ def test_the_probe_detects_a_registry_import() -> None:
     completed = _run_python(
         f"""
         import sys
-        import cadrumo.domain.calculations.registry  # noqa: F401
+        import cadrumo.domain.calculations.registry
         {_LEAK_SCAN_MARKER}
         print("\\n".join(leaked))
         """,

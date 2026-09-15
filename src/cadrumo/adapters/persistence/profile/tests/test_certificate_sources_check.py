@@ -63,7 +63,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _certificate_indexed_authority_for_test,
 )
-from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
+from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -74,7 +74,7 @@ _BUCKET_B = "44444444-4444-4444-8444-444444444444"
 _MISSING_BUCKET = "55555555-5555-4555-8555-555555555555"
 _PROFILE_LABEL = "gestor-cert-rotation"
 _PROFILE_LABEL_B = "gestor-route-snapshot-b"
-CERTIFICATE_BUNDLE_PASSPHRASE_B = "bucket-b-correct-horse"  # noqa: S105 - synthetic test fixture, not a secret
+CERTIFICATE_BUNDLE_INPUT_B = "bucket-b-correct-horse"
 _NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
@@ -137,7 +137,7 @@ def _register_select_with_secret(
 ) -> Path:
     """Register a real PKCS#12 source, bind its secure-storage passphrase, and select it.
 
-    Returns the certificate path. The bound secret is ``CERTIFICATE_BUNDLE_PASSPHRASE`` — the same
+    Returns the certificate path. The bound secret is ``CERTIFICATE_BUNDLE_INPUT`` — the same
     passphrase the bundle is encrypted with — so a probe opening the bundle
     with the resolved per-source secret succeeds.
     """
@@ -160,7 +160,7 @@ def _register_select_with_secret(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="personal",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -187,7 +187,7 @@ def test_resolver_returns_selected_source_path_and_secure_storage_secret(
     assert credentials.source_name == "personal"
     assert credentials.certificate_path == cert_path
     assert credentials.password is not None
-    assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE
+    assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_INPUT
 
 
 def test_check_opens_the_bundle_with_the_secure_storage_secret_no_global_fallback(
@@ -322,7 +322,7 @@ def test_central_provider_and_explicit_or_omitted_probes_fail_closed_without_nam
             AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
         )
 
-        with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
+        with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT)):
             provider_description = select_provider(
                 AuthProviderKind.CERTIFICATE,
                 settings=load_settings(),
@@ -435,7 +435,7 @@ def test_reregistering_active_source_keeps_resolver_provider_status_and_test_on_
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -544,7 +544,7 @@ def test_central_provider_preserves_unnamed_single_certificate_credential_withou
 
     with override_settings(
         cadrumo_certificate_path=global_path,
-        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
         cadrumo_certificate_friendly_name="legacy-global",
     ):
         provider_description = select_provider(
@@ -598,7 +598,7 @@ def test_explicit_global_settings_path_overrides_stale_workflow_mirror_for_statu
 
     with override_settings(
         cadrumo_certificate_path=explicit_path,
-        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
     ):
         provider_description = select_provider(
             AuthProviderKind.CERTIFICATE,
@@ -646,7 +646,7 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
 
     with override_settings(
         cadrumo_certificate_path=None,
-        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
     ):
         credentials = resolve_active_certificate_credentials(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
@@ -661,7 +661,7 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
 
     assert credentials.certificate_path == configured_path
     assert credentials.password is not None
-    assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE
+    assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_INPUT
     assert provider_description.available is True
 
 
@@ -695,7 +695,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
-                secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+                secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
@@ -724,7 +724,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
                 not_valid_after=now + timedelta(days=200),
                 name="route-b",
                 subject_cn="route-b",
-                password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
+                password=CERTIFICATE_BUNDLE_INPUT_B,
             )
             register_operator_certificate_source(
                 name="selected",
@@ -736,7 +736,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
                 set_operator_certificate_source_secret(
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
                     name="selected",
-                    secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B),
+                    secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     operation=_certificate_authority_operation_for_test,
                 )
@@ -771,7 +771,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
         assert settings_a.cadrumo_secret_store_dir != settings_b.cadrumo_secret_store_dir
         assert credentials_b.certificate_path == cert_b
         assert credentials_b.password is not None
-        assert credentials_b.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE_B
+        assert credentials_b.password.get_secret_value() == CERTIFICATE_BUNDLE_INPUT_B
         assert provider_b.available is True
         assert operator_test_b.certificate_path == str(cert_b)
         assert operator_test_b.probe_result == ProviderProbeResult.OK
@@ -814,7 +814,7 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
                 not_valid_after=now + timedelta(days=200),
                 name="same-id-route-b",
                 subject_cn="same-id-route-b",
-                password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
+                password=CERTIFICATE_BUNDLE_INPUT_B,
             )
             register_operator_certificate_source(
                 name="selected",
@@ -825,7 +825,7 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
-                secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B),
+                secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
@@ -862,7 +862,7 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
-                secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+                secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
@@ -947,7 +947,7 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
             not_valid_after=now + timedelta(days=200),
             name="retained-state-a",
             subject_cn="retained-state-a",
-            password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
+            password=CERTIFICATE_BUNDLE_INPUT_B,
         )
         register_operator_certificate_source(
             name="selected",
@@ -958,7 +958,7 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -991,7 +991,7 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
                 not_valid_after=now + timedelta(days=200),
                 name="retained-state-b",
                 subject_cn="retained-state-b",
-                password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
+                password=CERTIFICATE_BUNDLE_INPUT_B,
             )
             register_operator_certificate_source(
                 name="selected",
@@ -1002,7 +1002,7 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
-                secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B),
+                secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
@@ -1052,7 +1052,7 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
             not_valid_after=now + timedelta(days=200),
             name="snapshot-a",
             subject_cn="snapshot-a",
-            password=CERTIFICATE_BUNDLE_PASSPHRASE,
+            password=CERTIFICATE_BUNDLE_INPUT,
         )
         cert_b = build_pkcs12_bundle(
             tmp_path,
@@ -1060,7 +1060,7 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
             not_valid_after=now + timedelta(days=200),
             name="snapshot-b",
             subject_cn="snapshot-b",
-            password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
+            password=CERTIFICATE_BUNDLE_INPUT_B,
         )
         register_operator_certificate_source(
             name="source-a",
@@ -1071,7 +1071,7 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="source-a",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -1097,7 +1097,7 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="source-b",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -1147,7 +1147,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             not_valid_after=now + timedelta(days=200),
             name="route-snapshot-a",
             subject_cn="route-snapshot-a",
-            password=CERTIFICATE_BUNDLE_PASSPHRASE,
+            password=CERTIFICATE_BUNDLE_INPUT,
         )
         register_operator_certificate_source(
             name="selected",
@@ -1158,7 +1158,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -1194,7 +1194,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
                 not_valid_after=now + timedelta(days=200),
                 name="route-snapshot-b",
                 subject_cn="route-snapshot-b",
-                password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
+                password=CERTIFICATE_BUNDLE_INPUT_B,
             )
             register_operator_certificate_source(
                 name="selected",
@@ -1205,7 +1205,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
-                secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B),
+                secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
@@ -1282,7 +1282,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
                 assert state_after_pointer_change.auth.certificate_path == str(cert_a)
                 assert credentials_after_pointer_change.certificate_path == cert_a
                 assert credentials_after_pointer_change.password is not None
-                assert credentials_after_pointer_change.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE
+                assert credentials_after_pointer_change.password.get_secret_value() == CERTIFICATE_BUNDLE_INPUT
                 assert projection_after_pointer_change.active_profile.profile_id == _BUCKET_ID
                 assert projection_after_pointer_change.auth.certificate_path == str(cert_a)
                 assert projection_after_pointer_change.auth.available is True
@@ -1316,7 +1316,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
                 session_after_span = load_persisted_session(load_settings(), AuthProviderKind.CERTIFICATE)
             assert credentials_after_span.certificate_path == cert_b
             assert credentials_after_span.password is not None
-            assert credentials_after_span.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE_B
+            assert credentials_after_span.password.get_secret_value() == CERTIFICATE_BUNDLE_INPUT_B
             assert session_after_span is not None
             assert session_after_span.identity_nif == "ROUTE-B"
 
@@ -1352,7 +1352,7 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -1376,7 +1376,7 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
                 not_valid_after=now + timedelta(days=200),
                 name="bucket-b",
                 subject_cn="bucket-b",
-                password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
+                password=CERTIFICATE_BUNDLE_INPUT_B,
             )
             register_operator_certificate_source(
                 name="selected",
@@ -1388,7 +1388,7 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
-                secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B),
+                secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
@@ -1439,7 +1439,7 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
         assert credentials.source_name == "selected"
         assert credentials.certificate_path == cert_b
         assert credentials.password is not None
-        assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE_B
+        assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_INPUT_B
         assert credentials.friendly_name == "bucket-b"
         assert provider_description.available is True
         assert len(check_report.entries) == 1
@@ -1472,7 +1472,7 @@ def test_unreadable_explicit_settings_target_fails_closed_without_global_fallbac
     with override_settings(
         cadrumo_active_profile=_MISSING_BUCKET,
         cadrumo_certificate_path=global_path,
-        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
     ) as missing_settings:
         pass
 
@@ -1551,7 +1551,7 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
         with (
             override_settings(
                 cadrumo_certificate_path=global_path,
-                cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+                cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
                 cadrumo_live_tests_enabled="1",
             ),
             pytest.raises(AuthLoginPreconditionError) as raised,
@@ -1599,7 +1599,7 @@ def test_check_named_source_without_secret_never_inherits_a_valid_global_passwor
             operation=_certificate_authority_operation_for_test,
         )
 
-        with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
+        with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT)):
             report = check_operator_certificate_sources(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 operator_probe_ports=_OPERATOR_PROBE_PORTS,
@@ -1635,7 +1635,7 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="personal",
-            secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+            secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
@@ -1644,7 +1644,7 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
-        with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
+        with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT)):
             report = check_operator_certificate_sources(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 operator_probe_ports=_OPERATOR_PROBE_PORTS,

@@ -47,9 +47,11 @@ def test_catalogue_lookup_returns_canonical_record() -> None:
 
 
 def test_catalogue_lookup_raises_keyerror_for_unknown_key() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with pytest.raises(KeyError, match=r"unknown profile key"):
-            profile_key("not.a.profile.key", operation=_authority_operation_for_test)
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(KeyError, match=r"unknown profile key"),
+    ):
+        profile_key("not.a.profile.key", operation=_authority_operation_for_test)
 
 
 def test_every_entry_carries_authoritative_profile_description() -> None:

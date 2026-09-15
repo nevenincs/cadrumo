@@ -56,11 +56,8 @@ def test_profile_schema_identities_preserve_compound_leaf_tokens() -> None:
         for spec in leaves
         if spec.parent_key is not None
     )
-    complete_setup = next(
-        spec
-        for spec in leaves
-        if spec.token == "complete-setup"  # noqa: S105 - public CLI token
-    )
+    expected_setup_command = "complete-setup"
+    complete_setup = next(spec for spec in leaves if spec.token == expected_setup_command)
     assert complete_setup.result_schema.identity == "config.profile.complete_setup"
 
 

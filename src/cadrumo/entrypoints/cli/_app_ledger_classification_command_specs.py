@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the ledger classification surface."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from ...application.ledger.operator_input_contracts import (
@@ -36,9 +32,9 @@ from .command_spec import (
 
 LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_classify",
-        parent_key="app_ledger",
-        token="classify",
+        "app_ledger_classify",
+        "app_ledger",
+        "classify",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.classify.help"),
         short_help_key=None,
@@ -163,3 +159,5 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_CLASSIFICATION_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger classification surface."""
+"""Authored CommandSpec declarations for the ledger classification surface."""

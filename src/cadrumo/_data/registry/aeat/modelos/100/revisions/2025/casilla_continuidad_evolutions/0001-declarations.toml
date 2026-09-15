@@ -19455,3 +19455,236 @@ to_revision = "2025"
 evolution_kind = "legal_refs_evolved"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0456-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0457-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0458-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0459-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0527-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-total"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1741-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-importe"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1742-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-otro-progenitor-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1743-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-otro-progenitor-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1744-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-importe"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1745-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-otro-progenitor-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1746-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-otro-progenitor-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1747-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1748-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1749-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-importe"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1750-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-otro-progenitor-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1751-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-otro-progenitor-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1752-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1753-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1754-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-importe"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1755-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-otro-progenitor-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1756-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-otro-progenitor-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1757-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1758-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1759-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-importe"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1760-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-otro-progenitor-nif"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1761-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-otro-progenitor-nif-ausente"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]

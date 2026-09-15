@@ -35,7 +35,7 @@ from ..clave_movil_support import ClaveMovilApprovalTimeoutError, ClaveMovilFail
 from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ..clave_permanente_support import ClavePermanenteFailureMode
 from ..provider_selection import select_provider
-from ._auth_fixtures import SECRET_PASSPHRASE
+from ._auth_fixtures import CERTIFICATE_INPUT
 from ._authenticator_support import _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -52,14 +52,14 @@ def _settings(tmp_path: Path, kind: AuthProviderKind) -> Settings:
     if kind is AuthProviderKind.CERTIFICATE:
         values.update(
             cadrumo_certificate_path=_build_bundle(tmp_path),
-            cadrumo_certificate_password_secret=SecretStr(SECRET_PASSPHRASE),
+            cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
         )
     elif kind is AuthProviderKind.CLAVE_MOVIL:
         values["cadrumo_clave_movil_dni_nie"] = SecretStr(_IDENTITY)
     else:
         values.update(
             cadrumo_clave_permanente_dni_nie=SecretStr(_IDENTITY),
-            cadrumo_clave_permanente_password=SecretStr(SECRET_PASSPHRASE),
+            cadrumo_clave_permanente_password=SecretStr(CERTIFICATE_INPUT),
         )
     return Settings.model_validate(values)
 

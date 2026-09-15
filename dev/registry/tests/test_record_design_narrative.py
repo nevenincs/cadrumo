@@ -361,8 +361,7 @@ class TestSinglePositionCorrection:
             corrected_type="Alfabético",
             description="TIPO DE SOPORTE",
             reason=(
-                "AEAT omitted the naturaleza column at a page break; the continuation declares the single value "
-                "'T'."
+                "AEAT omitted the naturaleza column at a page break; the continuation declares the single value 'T'."
             ),
             editions_read=("DR_280_2022.pdf pages 4-5",),
         )

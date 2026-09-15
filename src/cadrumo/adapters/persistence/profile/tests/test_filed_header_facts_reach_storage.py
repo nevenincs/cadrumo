@@ -28,12 +28,13 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import (
     _prior_303_observation,
-    _secure_backend,
 )
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.live.filed_observation_persistence import filed_observation_source_metadata
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.entrypoints.live_state_composition import compose_filed_observation_persistence_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,14 +80,23 @@ def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) 
         update={"headers": _FACTS},
     )
 
-    with _secure_backend(tmp_path):
-        persist_filed_calculation_observation(observation)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        ports = compose_filed_observation_persistence_ports(
+            bucket_id=profile.bucket_id,
+            output_root=tmp_path,
+            objects=profile.repository,
+        )
+        persist_filed_calculation_observation(observation, ports=ports)
 
-        stored = CalculationObservationRepository().load_observation(
+        stored = CalculationObservationRepository(
+            bucket_id=profile.bucket_id, objects=profile.repository
+        ).load_observation(
             "303",
             Period.from_year_and_code(observation.ejercicio, "1T"),
         )
-        history_state = IvaCompensationHistoryRepository().load_period(
+        history_state = IvaCompensationHistoryRepository(
+            bucket_id=profile.bucket_id, objects=profile.repository
+        ).load_period(
             Period.from_year_and_code(observation.ejercicio, "1T"),
         )
 

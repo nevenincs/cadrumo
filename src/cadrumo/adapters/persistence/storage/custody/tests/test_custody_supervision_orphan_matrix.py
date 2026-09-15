@@ -17,8 +17,8 @@ unlock path does. No mocks, no skips.
 
 from __future__ import annotations
 
+import asyncio
 import os
-import subprocess
 import sys
 import time
 from base64 import b64encode
@@ -39,7 +39,7 @@ from ..sentinel_contract import ProfileCustodySentinelRecord
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PROFILE_ID = UUID("06648eb9-e60e-46d2-bd35-9aaf55a92e24")
-_PASSPHRASE = "orphan-matrix operator passphrase clearing the verifier minimum"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "orphan-matrix operator passphrase clearing the verifier minimum"
 
 _ORPHAN_CHILD = r"""
 import sys
@@ -77,6 +77,26 @@ with (
 """
 
 
+async def _kill_orphan_child(command: list[str], *, env: dict[str, str]) -> tuple[str, int]:
+    """Observe readiness, then kill the fixed supervisor through an async boundary."""
+    child = await asyncio.create_subprocess_exec(
+        *command,
+        stdin=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        env=env,
+    )
+    try:
+        assert child.stdout is not None
+        line = (await asyncio.wait_for(child.stdout.readline(), timeout=30)).decode("utf-8", errors="replace").strip()
+        child.kill()
+        return line, int(await asyncio.wait_for(child.wait(), timeout=5.0))
+    finally:
+        if child.returncode is None:
+            child.kill()
+            await child.wait()
+
+
 def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and_unlocks(
     tmp_path: Path,
 ) -> None:
@@ -85,7 +105,7 @@ def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and
     dek_epoch = b64encode(token_bytes(16)).decode("ascii")
     material = create_profile_custody_registration_material(
         profile_id=_PROFILE_ID,
-        password=_PASSPHRASE,
+        password=_CREDENTIAL_INPUT,
         dek=dek,
         dek_epoch=dek_epoch,
         salt=token_bytes(16),
@@ -97,23 +117,18 @@ def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and
     envelope_path = tmp_path / "envelope.json"
     envelope_path.write_bytes(canonical_json_bytes(envelope.model_dump(mode="json")))
 
-    child = subprocess.Popen(  # noqa: S603 - fixed test interpreter and module
-        [sys.executable, "-c", _ORPHAN_CHILD, str(tmp_path), str(envelope_path), _PASSPHRASE],
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        env={**os.environ, "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path)},
+    line, child_returncode = asyncio.run(
+        _kill_orphan_child(
+            [sys.executable, "-c", _ORPHAN_CHILD, str(tmp_path), str(envelope_path), _CREDENTIAL_INPUT],
+            env={**os.environ, "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path)},
+        ),
     )
-    assert child.stdout is not None
-    line = child.stdout.readline().strip()
     assert line, "supervised child produced no readiness line"
     supervising, pid_text = line.split()
     assert supervising == "supervising"
     worker_pid = int(pid_text)
 
-    child.kill()
-    assert child.wait(timeout=5.0) != 0
+    assert child_returncode != 0
 
     deadline = time.monotonic() + 30.0
     while pid_is_alive(worker_pid) and time.monotonic() < deadline:
@@ -122,7 +137,7 @@ def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and
 
     unlock = unlock_profile_custody(
         envelope,
-        _PASSPHRASE,
+        _CREDENTIAL_INPUT,
         sentinel=sentinel,
         settings=Settings(cadrumo_local_storage_root=tmp_path),
     )

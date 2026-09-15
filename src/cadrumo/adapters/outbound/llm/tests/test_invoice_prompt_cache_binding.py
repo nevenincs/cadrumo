@@ -65,10 +65,10 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
     prompt-compilation code names the cache.
     """
 
-    def test_two_periods_compile_to_two_distinct_cache_keys(self) -> None:
+    def test_two_periods_compile_to_two_distinct_cache_keys(self, *, operation: PinnedAuthorityOperation) -> None:
         cache = LLMCache()
-        annual = build_invoice_extraction_prompt(period=_ANNUAL_2026)
-        q4 = build_invoice_extraction_prompt(period=_Q4_2024)
+        annual = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        q4 = build_invoice_extraction_prompt(period=_Q4_2024, operation=operation)
 
         assert annual.text != q4.text
 
@@ -85,17 +85,17 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
 
         assert annual_key.prompt_hash != q4_key.prompt_hash
 
-    def test_the_same_compiled_prompt_derives_the_same_key(self) -> None:
+    def test_the_same_compiled_prompt_derives_the_same_key(self, *, operation: PinnedAuthorityOperation) -> None:
         """The key is deterministic, so an unchanged registry still hits cache."""
         cache = LLMCache()
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
+        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
 
         first = cache.build_key(LLMRequest(prompt=text), LLMProvider.LOCAL, "vision-model")
         second = cache.build_key(LLMRequest(prompt=text), LLMProvider.LOCAL, "vision-model")
 
         assert first == second
 
-    def test_changing_one_enumerated_rate_moves_the_key(self) -> None:
+    def test_changing_one_enumerated_rate_moves_the_key(self, *, operation: PinnedAuthorityOperation) -> None:
         """The discriminating control: the binding reacts to the RATES specifically.
 
         The nudge edits exactly the substring the registry produced, so a pass
@@ -104,7 +104,7 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
         nudge would be normalised away and prove nothing.
         """
         cache = LLMCache()
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
         enumerated = ", ".join(format(pct.normalize(), "f") for pct in compiled.iva_rate_pcts)
         assert enumerated in compiled.text
 
@@ -136,7 +136,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
             operation=operation,
             authority_values=_ANNUAL_2026_VALUES,
         )
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
         assert extractor.decided_by == f"llm:local-text-extract:some-text-model:rates-{compiled.rate_provenance}"
         assert "2026-0A" in extractor.decided_by

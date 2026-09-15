@@ -438,7 +438,7 @@ def _forge_refs(endpoint: str, jq: str) -> tuple[str, ...]:
     try:
         returncode, stdout, stderr = asyncio.run(
             _run_forge_command(
-            [gh, "api", endpoint, "--paginate", "--jq", jq],
+                [gh, "api", endpoint, "--paginate", "--jq", jq],
             ),
         )
     except TimeoutError as exc:

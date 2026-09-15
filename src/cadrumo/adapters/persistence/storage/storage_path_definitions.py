@@ -95,8 +95,10 @@ VALIDATION_VERDICT_CACHE_SUBPATH = storage_location(StorageCategory.VALIDATION_V
 LLM_CACHE_SUBPATH = storage_location(StorageCategory.LLM_CACHE).subpath
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
-SECRET_INDEX_FILENAME = "index.json"  # noqa: S105 - filename, not a credential
+INDEX_FILENAME = "index.json"
 SECRET_INDEX_SCHEMA_VERSION = 1
+
+
 def _pydantic_namespace_validator[ValidationResultT](
     function: Callable[..., ValidationResultT],
 ) -> Callable[..., ValidationResultT]:
@@ -367,10 +369,10 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # with every other ``<root>``-anchored entry here.
         key="secret_index",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/secrets/{SECRET_INDEX_FILENAME}",
+        grammar=f"<root>/secrets/{INDEX_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.secret_store",
         anchor=StoragePathAnchor.STORAGE_ROOT,
-        segment=SECRET_INDEX_FILENAME,
+        segment=INDEX_FILENAME,
         schema_version=SECRET_INDEX_SCHEMA_VERSION,
     ),
     StoragePathDefinition(

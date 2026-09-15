@@ -408,4 +408,3 @@ def _secure_object_namespace_count(database_path: Path, namespace: str) -> int:
             (namespace,),
         ).fetchone()
     return int(row[0])
-

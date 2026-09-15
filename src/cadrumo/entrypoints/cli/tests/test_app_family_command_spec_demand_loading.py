@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -78,7 +79,7 @@ print(json.dumps({{
     ),
 }}))
 """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and authored test program
+    completed = run_audited_process(
         [sys.executable, "-c", source],
         check=True,
         capture_output=True,
@@ -138,7 +139,7 @@ print(json.dumps({
     "foreign_handlers": foreign_handlers,
 }))
 """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and authored test program
+    completed = run_audited_process(
         [sys.executable, "-c", source],
         check=True,
         capture_output=True,

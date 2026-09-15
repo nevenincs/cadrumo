@@ -277,7 +277,7 @@ def _calculate_quarter(
         clock=_CLOCK,
         operation=operation,
     )
-    return _calculate_modelo_revision(
+    revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
@@ -286,6 +286,8 @@ def _calculate_quarter(
         bucket_event_repository=bv_repo,
         clock=_CLOCK,
     )
+    assert isinstance(revision, CalculationRevision)
+    return revision
 
 
 def _observation_from_revision(revision: CalculationRevision, *, period: str) -> RegistryModeloObservation:

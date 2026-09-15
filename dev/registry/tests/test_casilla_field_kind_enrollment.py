@@ -308,5 +308,3 @@ def _minimal_revision(
         bindings=bindings,
         export_layouts=export_layouts,
     )
-
-

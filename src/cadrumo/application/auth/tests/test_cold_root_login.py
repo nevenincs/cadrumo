@@ -13,7 +13,7 @@ from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_op
 
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
-from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
+from ....tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 from ..credentials import active_auth_projection_span
 from ..operator import login_operator_auth
 from ..operator_results import AuthConfigureNoActiveBucketError
@@ -41,7 +41,7 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
         cadrumo_local_storage_root=cold_root,
         cadrumo_active_profile=None,
         cadrumo_certificate_path=certificate_path,
-        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
         cadrumo_live_tests_enabled="1",
     ) as settings:
         with active_auth_projection_span(

@@ -14,6 +14,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.tests.audited_process import run_audited_process
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo.work_lifecycle import get_work_unit
@@ -50,7 +51,7 @@ def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
 def _run_console(environment: dict[str, str], arguments: list[str]) -> subprocess.CompletedProcess[str]:
     """Run the installed console executable, never the in-process Click app."""
     assert _CONSOLE.is_file(), f"installed console is absent: {_CONSOLE}"
-    return subprocess.run(  # noqa: S603 -- the installed test console and schema-derived argv are fixed test inputs.
+    return run_audited_process(
         [_CONSOLE, "--format", "json", *arguments],
         cwd=_CONSOLE.parents[2],
         env=environment,

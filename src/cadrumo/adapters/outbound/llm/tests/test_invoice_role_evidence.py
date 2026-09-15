@@ -28,6 +28,8 @@ import json
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.period import Period
 from ..invoice_field_contract import (
@@ -108,14 +110,18 @@ class TestTheContractDeclaresRoleEvidenceExactlyWhereItIsMeaningful:
 class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
     """The instruction must demand a copy, never the reader's own account."""
 
-    def test_the_prompt_asks_for_the_role_evidence_key_of_every_identity_field(self) -> None:
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
+    def test_the_prompt_asks_for_the_role_evidence_key_of_every_identity_field(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
 
         for field_name in _identity_field_names():
             assert f'"{role_evidence_key_for_field(field_name)}"' in text
 
-    def test_the_prompt_never_asks_a_non_identity_field_to_evidence_a_role(self) -> None:
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
+    def test_the_prompt_never_asks_a_non_identity_field_to_evidence_a_role(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
         identity = set(_identity_field_names())
 
         for contract in INVOICE_FIELD_CONTRACTS:
@@ -123,26 +129,30 @@ class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
                 continue
             assert role_evidence_key_for_field(contract.field_name) not in text
 
-    def test_the_instruction_demands_a_printed_copy_and_forbids_a_decision(self) -> None:
+    def test_the_instruction_demands_a_printed_copy_and_forbids_a_decision(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The distinction the whole mechanism turns on, stated to the model.
 
         A reader told to explain its choice writes an unfalsifiable sentence; a
         reader told to copy what is printed writes something the document can
         contradict. Only the second can ever be dropped.
         """
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
+        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
 
         assert "Never write what you decided; write what the document shows." in text
         assert "copy the printed heading, label or line" in text
 
-    def test_the_suffix_the_prompt_renders_is_the_one_the_parser_reads(self) -> None:
+    def test_the_suffix_the_prompt_renders_is_the_one_the_parser_reads(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """One declaration, two derivations: a suffix spelled twice fails silently.
 
         Silently is the operative word -- a key the parser does not recognise is
         indistinguishable from a model that returned nothing for it, so the
         counterparty path would simply stop working with no error anywhere.
         """
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
+        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
         assert ROLE_EVIDENCE_KEY_SUFFIX in text
 
         parsed = parse_invoice_extraction_response(

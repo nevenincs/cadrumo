@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the live notifications service."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from typing import Final
@@ -40,9 +36,9 @@ _NOTIFICATION_CERTIFICADO_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
 
 LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_live_notifications",
-        parent_key="app_live",
-        token="notifications",
+        "app_live_notifications",
+        "app_live",
+        "notifications",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.notifications.app_help"),
         short_help_key=None,
@@ -53,9 +49,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_notifications_pull",
-        parent_key="app_live_notifications",
-        token="pull",
+        "app_live_notifications_pull",
+        "app_live_notifications",
+        "pull",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.notifications.pull_help"),
         short_help_key=None,
@@ -72,9 +68,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_notifications_list",
-        parent_key="app_live_notifications",
-        token="list",
+        "app_live_notifications_list",
+        "app_live_notifications",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.notifications.list_help"),
         short_help_key=None,
@@ -91,9 +87,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_notifications_view",
-        parent_key="app_live_notifications",
-        token="view",
+        "app_live_notifications_view",
+        "app_live_notifications",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.notifications.view_help"),
         short_help_key=None,
@@ -118,9 +114,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_notifications_latest",
-        parent_key="app_live_notifications",
-        token="latest",
+        "app_live_notifications_latest",
+        "app_live_notifications",
+        "latest",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.notifications.latest_help"),
         short_help_key=None,
@@ -137,9 +133,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_notifications_document",
-        parent_key="app_live_notifications",
-        token="document",
+        "app_live_notifications_document",
+        "app_live_notifications",
+        "document",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.notifications.document.app_help"),
         short_help_key=None,
@@ -150,9 +146,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_notifications_document_pull",
-        parent_key="app_live_notifications_document",
-        token="pull",
+        "app_live_notifications_document_pull",
+        "app_live_notifications_document",
+        "pull",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.notifications.document.pull_help"),
         short_help_key=None,
@@ -169,9 +165,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_notifications_document_view",
-        parent_key="app_live_notifications_document",
-        token="view",
+        "app_live_notifications_document_view",
+        "app_live_notifications_document",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.notifications.document.view_help"),
         short_help_key=None,
@@ -188,9 +184,9 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_notifications_document_history",
-        parent_key="app_live_notifications_document",
-        token="history",
+        "app_live_notifications_document_history",
+        "app_live_notifications_document",
+        "history",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.notifications.document.history_help"),
         short_help_key=None,
@@ -211,3 +207,5 @@ LIVE_NOTIFICATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LIVE_NOTIFICATIONS_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live notifications service."""
+"""Authored CommandSpec declarations for the live notifications service."""

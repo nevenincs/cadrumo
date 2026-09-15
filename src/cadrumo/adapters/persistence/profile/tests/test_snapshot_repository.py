@@ -154,8 +154,8 @@ def test_borrador100_snapshot_repository_conforms_to_protocol(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """The real secure adapter satisfies the application Borrador port structurally."""
-    repo = _borrador_repository(secure_objects)
-    assert isinstance(repo, Borrador100SnapshotRepository)
+    repo: Borrador100SnapshotRepository = _borrador_repository(secure_objects)
+    assert isinstance(repo, SecureSnapshotRepository)
     assert Borrador100SnapshotRepository not in type(repo).__mro__
 
 

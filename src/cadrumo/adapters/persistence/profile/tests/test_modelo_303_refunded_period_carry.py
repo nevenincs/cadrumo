@@ -206,6 +206,7 @@ def _revision_from_result(
         filed_at=_CLOCK,
         filed_by="refund-carry-test",
         filing_instance_evidence=filing_instance_evidence,
+        registry_snapshot_ref=operation.snapshot("303", filing_year=2025, period="4T").snapshot_ref,
         source_provenance=(),
     )
 

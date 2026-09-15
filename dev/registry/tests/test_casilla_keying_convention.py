@@ -121,4 +121,3 @@ def test_noncanonical_reference_targets_expose_ambiguous_reused_printed_number(
         f"{ecpn_casilla.number!r} is ambiguous; candidate casilla.id values: "
         f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
     )
-

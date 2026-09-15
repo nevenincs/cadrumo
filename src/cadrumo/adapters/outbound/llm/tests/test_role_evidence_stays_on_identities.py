@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from .....application.ledger.party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
 from .....core.period import Period
 from ..invoice_field_contract import (
@@ -46,13 +48,13 @@ def test_every_role_evidence_key_belongs_to_a_party_identity_field() -> None:
     assert _role_evidence_bearing() == {party.tax_id_field for party in party_addresses()}
 
 
-def test_the_prompt_never_names_an_address_role_evidence_key() -> None:
+def test_the_prompt_never_names_an_address_role_evidence_key(*, operation: PinnedAuthorityOperation) -> None:
     """The rendered prompt is checked, not only the contracts that build it.
 
     A contract table can stay honest while the prompt template hardcodes an extra
     instruction, and the prompt is what the model's context actually pays for.
     """
-    compiled = build_invoice_extraction_prompt(period=Period(filing_year=2026, code="1T"))
+    compiled = build_invoice_extraction_prompt(period=Period(filing_year=2026, code="1T"), operation=operation)
     rendered = compiled.model_dump_json()
 
     for field in sorted(PARTY_ATTRIBUTED_ADDRESS_FIELDS):

@@ -47,9 +47,9 @@ def _schema(name: str, identity: str) -> ResultSchemaSpec:
 
 CONFIG_PROVISION_COMMAND_SPECS = (
     CommandSpec(
-        key="config_provision",
-        parent_key="config",
-        token="provision",  # noqa: S106 - CLI token, not a credential.
+        "config_provision",
+        "config",
+        "provision",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.provision.help"),
         short_help_key=None,
@@ -60,9 +60,9 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="config_provision_report",
-        parent_key="config_provision",
-        token="report",  # noqa: S106 - CLI token, not a credential.
+        "config_provision_report",
+        "config_provision",
+        "report",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.provision.report.help"),
         short_help_key=None,
@@ -73,9 +73,9 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         result_schema=_schema("ProvisionReportResult", "config.provision.report"),
     ),
     CommandSpec(
-        key="config_provision_pull",
-        parent_key="config_provision",
-        token="pull",  # noqa: S106 - CLI token, not a credential.
+        "config_provision_pull",
+        "config_provision",
+        "pull",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.provision.pull.help"),
         short_help_key=None,
@@ -86,9 +86,9 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         result_schema=_schema("ProvisionPullResult", "config.provision.pull"),
     ),
     CommandSpec(
-        key="config_provision_verify",
-        parent_key="config_provision",
-        token="verify",  # noqa: S106 - CLI token, not a credential.
+        "config_provision_verify",
+        "config_provision",
+        "verify",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.provision.verify.help"),
         short_help_key=None,

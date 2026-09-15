@@ -770,17 +770,16 @@ def test_amend_refuses_no_op_overrides(repos: _Repos, *, operation: PinnedAuthor
         repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
     )
 
-    with pytest.raises(CalculationRevisionStateError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            amend_modelo_revision(
-                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-                from_filing_record_id=baseline.filing_record_id,
-                overrides={_AMEND_INCOME_CASILLA: Decimal("1000")},
-                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-                reason="duplicate filing attempt",
-                actor="operator-A",
-                clock=_T4,
-            )
+    with pytest.raises(CalculationRevisionStateError) as exc_info, bundled_indexed_authority().operation() as operation:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1000")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="duplicate filing attempt",
+            actor="operator-A",
+            clock=_T4,
+        )
     assert exc_info.value.translated_message == "errors.error.error_modelo_calculation_revision_state"
 
 
@@ -797,17 +796,16 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(
         repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
     )
 
-    with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            amend_modelo_revision(
-                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-                from_filing_record_id=baseline.filing_record_id,
-                overrides={_UNKNOWN_AMEND_CASILLA: Decimal("100")},
-                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-                reason="fabricated casilla rejected",
-                actor="operator-A",
-                clock=_T4,
-            )
+    with pytest.raises(AmendmentOverrideCasillaError) as exc_info, bundled_indexed_authority().operation() as operation:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_UNKNOWN_AMEND_CASILLA: Decimal("100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="fabricated casilla rejected",
+            actor="operator-A",
+            clock=_T4,
+        )
     assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
     assert exc_info.value.context is not None
     casillas_obj = exc_info.value.context.get("casillas", [])
@@ -834,17 +832,19 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos, *, operation
         operation=operation,
     )
 
-    with pytest.raises(AmendmentOverrideCasillaError, match="non-canonical reference tokens") as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            amend_modelo_revision(
-                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-                from_filing_record_id=baseline.filing_record_id,
-                overrides={_M303_PRINTED_RESULT_TOKEN: Decimal("50")},
-                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-                reason="printed number override rejected",
-                actor="operator-A",
-                clock=_T4,
-            )
+    with (
+        pytest.raises(AmendmentOverrideCasillaError, match="non-canonical reference tokens") as exc_info,
+        bundled_indexed_authority().operation() as operation,
+    ):
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_PRINTED_RESULT_TOKEN: Decimal("50")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="printed number override rejected",
+            actor="operator-A",
+            clock=_T4,
+        )
 
     assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
     assert exc_info.value.context is not None
@@ -862,17 +862,16 @@ def test_amend_refuses_non_string_override_casilla_keys_without_coercion(
         repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")}, operation=operation
     )
 
-    with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            amend_modelo_revision(
-                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-                from_filing_record_id=baseline.filing_record_id,
-                overrides={1: Decimal("100")},
-                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-                reason="malformed casilla rejected",
-                actor="operator-A",
-                clock=_T4,
-            )
+    with pytest.raises(AmendmentOverrideCasillaError) as exc_info, bundled_indexed_authority().operation() as operation:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={1: Decimal("100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="malformed casilla rejected",
+            actor="operator-A",
+            clock=_T4,
+        )
     assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
     assert exc_info.value.context is not None
     assert exc_info.value.context.get("casillas") == ["1"]

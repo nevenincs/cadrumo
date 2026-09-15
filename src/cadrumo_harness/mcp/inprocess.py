@@ -26,7 +26,6 @@ in-process.
 from __future__ import annotations
 
 import json
-import subprocess
 import threading
 import time
 from collections.abc import Sequence
@@ -36,7 +35,7 @@ from pydantic import BaseModel, ConfigDict
 from cadrumo.application.operator_surface.command_ports import VerbInputSchema, cli_argv_for
 from cadrumo.core.json_contract import OutputSchemaError, validate_registered_envelope_document
 
-from ._call_runtime import CallTier
+from ._call_runtime import CallTier, run_captured
 from ._cli_executable import installed_cli_executable
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -158,13 +157,10 @@ def run_cli_in_process(
         _HOLDER_SINCE = time.monotonic()
     try:
         executable = installed_cli_executable(purpose="command dispatch")
-        completed = subprocess.run(  # noqa: S603 - fixed installed executable and validated argv projection
+        completed = run_captured(
             [executable, *argv_tail],
-            check=False,
-            capture_output=True,
-            input=stdin_payload,
-            text=True,
             encoding="utf-8",
+            stdin_payload=stdin_payload,
         )
         return CompletedCliRun(
             stdout=completed.stdout,

@@ -339,8 +339,10 @@ def _tamper_stored_column(repository: SecureObjectRepository, *, namespace: str,
     rather than by a forged one.
     """
     engine = repository._engine
-    select = text(f"SELECT {column} FROM secure_objects WHERE namespace = :ns")  # noqa: S608 - column is a module constant
-    update = text(f"UPDATE secure_objects SET {column} = :value WHERE namespace = :ns")  # noqa: S608
+    if column != "payload_hash":
+        raise ValueError(f"unsupported test tamper column: {column}")
+    select = text("SELECT payload_hash FROM secure_objects WHERE namespace = :ns")
+    update = text("UPDATE secure_objects SET payload_hash = :value WHERE namespace = :ns")
     with engine.begin() as connection:
         before = connection.execute(select, {"ns": namespace}).scalar_one()
         connection.execute(update, {"value": value, "ns": namespace})

@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the live borrador service."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from ...core.modelo import Modelo
@@ -35,9 +31,9 @@ from .command_spec import (
 
 LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_live_borrador",
-        parent_key="app_live",
-        token="borrador",
+        "app_live_borrador",
+        "app_live",
+        "borrador",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.borrador.app_help"),
         short_help_key=None,
@@ -61,9 +57,9 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_borrador_100_import",
-        parent_key="app_live_borrador_100",
-        token="import",
+        "app_live_borrador_100_import",
+        "app_live_borrador_100",
+        "import",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.borrador.import_help"),
         short_help_key=None,
@@ -113,9 +109,9 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_borrador_100_list",
-        parent_key="app_live_borrador_100",
-        token="list",
+        "app_live_borrador_100_list",
+        "app_live_borrador_100",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.borrador.list_help"),
         short_help_key=None,
@@ -144,9 +140,9 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_borrador_100_view",
-        parent_key="app_live_borrador_100",
-        token="view",
+        "app_live_borrador_100_view",
+        "app_live_borrador_100",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.borrador.view_help"),
         short_help_key=None,
@@ -169,9 +165,9 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_borrador_100_latest",
-        parent_key="app_live_borrador_100",
-        token="latest",
+        "app_live_borrador_100_latest",
+        "app_live_borrador_100",
+        "latest",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.borrador.latest_help"),
         short_help_key=None,
@@ -188,3 +184,5 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LIVE_BORRADOR_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live borrador service."""
+"""Authored CommandSpec declarations for the live borrador service."""

@@ -32,13 +32,14 @@ the substrate, and it must hold on a host where custody is unavailable.
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 from typing import Final
 
 import pytest
 from pydantic import TypeAdapter
+
+from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -63,7 +64,7 @@ atexit.register(_observe_after_the_substrate_hook)
 # Imported only now, so the substrate's hook is registered after the observer.
 from datetime import UTC, datetime
 
-from cadrumo.adapters.persistence.storage.master_key import active_session as _substrate  # noqa: F401
+from cadrumo.adapters.persistence.storage.master_key import active_session as _substrate
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 
 session = BucketSession.open(
@@ -81,7 +82,7 @@ observed["sealed_before_exit"] = session.sealed
 def _run_child(tmp_path: Path, *, source: str) -> dict[str, object]:
     """Run one child interpreter to completion and return what it recorded."""
     evidence = tmp_path / "exit-observation.json"
-    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell, test-owned source
+    completed = run_audited_process(
         [sys.executable, "-c", source, str(evidence)],
         capture_output=True,
         text=True,

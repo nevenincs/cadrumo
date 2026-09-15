@@ -59,9 +59,9 @@ def _handler(name: str) -> LazyBinding:
 
 CONFIG_RESET_COMMAND_SPECS = (
     CommandSpec(
-        key="config_reset",
-        parent_key="config",
-        token="reset",  # noqa: S106 - CLI token, not a credential.
+        "config_reset",
+        "config",
+        "reset",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.reset.help"),
         short_help_key=None,
@@ -72,9 +72,9 @@ CONFIG_RESET_COMMAND_SPECS = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="config_reset_start",
-        parent_key="config_reset",
-        token="start",  # noqa: S106 - CLI token, not a credential.
+        "config_reset_start",
+        "config_reset",
+        "start",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.reset.start_help"),
         short_help_key=None,
@@ -85,9 +85,9 @@ CONFIG_RESET_COMMAND_SPECS = (
         result_schema=_schema("ConfigResetStartResult", "config.reset.start"),
     ),
     CommandSpec(
-        key="config_reset_status",
-        parent_key="config_reset",
-        token="status",  # noqa: S106 - CLI token, not a credential.
+        "config_reset_status",
+        "config_reset",
+        "status",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.reset.status_help"),
         short_help_key=None,
@@ -98,9 +98,9 @@ CONFIG_RESET_COMMAND_SPECS = (
         result_schema=_schema("ConfigResetStatusResult", "config.reset.status"),
     ),
     CommandSpec(
-        key="config_reset_resume",
-        parent_key="config_reset",
-        token="resume",  # noqa: S106 - CLI token, not a credential.
+        "config_reset_resume",
+        "config_reset",
+        "resume",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.reset.resume_help"),
         short_help_key=None,

@@ -7,10 +7,10 @@ only a successful production mint may create a resumable receipt.
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import os
 import secrets
-import subprocess
 import sys
 import time
 from datetime import UTC, datetime, timedelta
@@ -19,6 +19,8 @@ from uuid import UUID, uuid4
 
 import keyring
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ......core.errors.hierarchy import CoreValidationError
 from ......core.profile_session import ProfileSessionRefusalReason
@@ -232,7 +234,8 @@ class TestAnchoredReceiptBoundary:
             if candidate.is_file()
         } == before
 
-    def test_independent_resume_observes_concurrent_mint_after_root_lock_release(self, tmp_path: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_independent_resume_observes_concurrent_mint_after_root_lock_release(self, tmp_path: Path) -> None:
         """An independent resume is linearized with a concurrent real mint.
 
         The child enters the production resume path and announces immediately
@@ -271,31 +274,28 @@ finally:
     if dek is not None:
         dek.clear()
 """
-        child: subprocess.Popen[str] | None = None
+        child: asyncio.subprocess.Process | None = None
         minted = False
         try:
             with profile_custody_root_lock(tmp_path):
-                child = subprocess.Popen(  # noqa: S603 - fixed interpreter and production mint driver
-                    [
-                        sys.executable,
-                        "-c",
-                        script,
-                        str(tmp_path),
-                        str(profile_id),
-                        str(started),
-                        str(finished),
-                    ],
+                child = await asyncio.create_subprocess_exec(
+                    sys.executable,
+                    "-c",
+                    script,
+                    str(tmp_path),
+                    str(profile_id),
+                    str(started),
+                    str(finished),
                     cwd=Path.cwd(),
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
                 deadline = time.monotonic() + 30.0
                 while not started.exists() and time.monotonic() < deadline:
-                    assert child.poll() is None, "independent production resume exited before its call"
-                    time.sleep(0.01)
+                    assert child.returncode is None, "independent production resume exited before its call"
+                    await asyncio.sleep(0.01)
                 assert started.exists(), "independent production resume did not reach its call"
-                time.sleep(0.1)
+                await asyncio.sleep(0.1)
                 assert not finished.exists(), "independent production resume bypassed the custody-root lock"
 
                 try:
@@ -317,14 +317,17 @@ finally:
         finally:
             if child is not None:
                 try:
-                    stdout, stderr = child.communicate(timeout=60)
-                except subprocess.TimeoutExpired:
+                    stdout, stderr = await asyncio.wait_for(child.communicate(), timeout=60)
+                except TimeoutError:
                     child.kill()
-                    stdout, stderr = child.communicate(timeout=60)
+                    stdout, stderr = await asyncio.wait_for(child.communicate(), timeout=60)
                     raise AssertionError(
                         "independent production resume did not finish after root-lock release"
                     ) from None
-                assert child.returncode == 0, f"independent production resume failed: {stdout}\n{stderr}"
+                assert child.returncode == 0, (
+                    "independent production resume failed: "
+                    f"{stdout.decode(errors='replace')}\n{stderr.decode(errors='replace')}"
+                )
         assert finished.read_text(encoding="utf-8") == ("resumed" if minted else "refused")
         if minted:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
@@ -451,7 +454,7 @@ outcome, _ = resume_profile_session(
 )
 print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
 """
-        completed = subprocess.run(  # noqa: S603 - fixed interpreter and test-owned recovery driver
+        completed = run_audited_process(
             [sys.executable, "-c", script, str(tmp_path), str(profile_id)],
             cwd=Path.cwd(),
             check=False,

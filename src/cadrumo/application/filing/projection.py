@@ -183,6 +183,7 @@ def project_filing_record(
     refs: tuple[FilingProjectionRef, ...],
     producer_snapshot: FilingProducerSnapshot,
 ) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    """Project one filing record into render contexts and typed field values."""
     facts = _require_m303_projection_facts(producer_snapshot)
     ref_types = {type(ref) for ref in refs}
     if ref_types == {M303ProrrataActivityProjectionRef, M303DifferentiatedDeductionProjectionRef}:

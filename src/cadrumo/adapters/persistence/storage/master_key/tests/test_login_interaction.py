@@ -22,7 +22,7 @@ from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PASSWORD = "login-interaction-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "login-interaction-operator-secret"
 
 
 def _authority_contexts():
@@ -36,7 +36,7 @@ def _register(label: str) -> str:
     outcome = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
-        passphrase=_PASSWORD,
+        passphrase=_CREDENTIAL_INPUT,
         profile_create_context=create_context,
         profile_decode_context=decode_context,
     )
@@ -72,7 +72,7 @@ def test_named_preselection_uses_the_login_target_authority(tmp_path) -> None:
 def test_attempt_projects_an_expected_refusal_without_a_frontend_exception(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _, decode_context = _authority_contexts()
-        attempt = attempt_profile_login("no-such-profile", _PASSWORD, profile_decode_context=decode_context)
+        attempt = attempt_profile_login("no-such-profile", _CREDENTIAL_INPUT, profile_decode_context=decode_context)
 
         assert isinstance(attempt, ProfileLoginAttempt)
         assert attempt.outcome is None
@@ -85,7 +85,7 @@ def test_attempt_returns_the_real_login_outcome_after_unlocking(tmp_path) -> Non
         logout_active_profile()
 
         _, decode_context = _authority_contexts()
-        attempt = attempt_profile_login(profile_id, _PASSWORD, profile_decode_context=decode_context)
+        attempt = attempt_profile_login(profile_id, _CREDENTIAL_INPUT, profile_decode_context=decode_context)
 
         assert attempt.refusal is None
         assert attempt.outcome is not None

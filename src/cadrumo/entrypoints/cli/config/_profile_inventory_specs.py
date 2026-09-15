@@ -29,9 +29,9 @@ _OUTPUT_LANGUAGE_OPTION = OptionSpec(
 
 PROFILE_INVENTORY_COMMAND_SPECS = (
     CommandSpec(
-        key="config_profile_list",
-        parent_key="config_profile",
-        token="list",  # noqa: S106 - CLI token, not a credential.
+        "config_profile_list",
+        "config_profile",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.list.help"),
         short_help_key=None,
@@ -46,9 +46,9 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         ),
     ),
     CommandSpec(
-        key="config_profile_status",
-        parent_key="config_profile",
-        token="status",  # noqa: S106 - CLI token, not a credential.
+        "config_profile_status",
+        "config_profile",
+        "status",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.status.help"),
         short_help_key=None,

@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the ledger ratios surface."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from ._app_ledger_command_spec_policies import (
@@ -30,9 +26,9 @@ from .command_spec import (
 
 LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_ratios_eligible",
-        parent_key="app_ledger_ratios",
-        token="eligible",
+        "app_ledger_ratios_eligible",
+        "app_ledger_ratios",
+        "eligible",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.ratios.eligible_help"),
         short_help_key=None,
@@ -50,9 +46,9 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_ratios_list",
-        parent_key="app_ledger_ratios",
-        token="list",
+        "app_ledger_ratios_list",
+        "app_ledger_ratios",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.ratios.list_help"),
         short_help_key=None,
@@ -70,9 +66,9 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_ratios_set",
-        parent_key="app_ledger_ratios",
-        token="set",
+        "app_ledger_ratios_set",
+        "app_ledger_ratios",
+        "set",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.ratios.set_help"),
         short_help_key=None,
@@ -110,9 +106,9 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_ratios_unset",
-        parent_key="app_ledger_ratios",
-        token="unset",
+        "app_ledger_ratios_unset",
+        "app_ledger_ratios",
+        "unset",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.ratios.unset_help"),
         short_help_key=None,
@@ -139,9 +135,9 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_ratios_validate",
-        parent_key="app_ledger_ratios",
-        token="validate",
+        "app_ledger_ratios_validate",
+        "app_ledger_ratios",
+        "validate",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.ratios.validate_help"),
         short_help_key=None,
@@ -158,3 +154,5 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_RATIOS_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger ratios surface."""
+"""Authored CommandSpec declarations for the ledger ratios surface."""

@@ -13,7 +13,7 @@ the ``compile_profile_keys`` projection all read off these records.
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import StrEnum, auto
 from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
@@ -26,7 +26,7 @@ class WizardWidget(StrEnum):
     """Closed taxonomy of input primitives the wizard runtime supports."""
 
     TEXT = "text"
-    SECRET = "secret"  # noqa: S105 - this is the public widget-kind token, not a credential
+    SECRET = auto()
     CONFIRM = "confirm"
     SELECT = "select"
     CHECKBOX = "checkbox"

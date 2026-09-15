@@ -43,9 +43,9 @@ _METADATA = ExecutionPolicySpec(
 )
 
 MODELO_ROOT_COMMAND_SPEC = CommandSpec(
-    key="app_modelo",
-    parent_key="app",
-    token="modelo",  # noqa: S106 - CLI operator token, not a credential
+    "app_modelo",
+    "app",
+    "modelo",
     kind=CommandNodeKind.GROUP,
     help_key=TranslationKey("cli.app.modelo.app_help"),
     short_help_key=None,
@@ -95,9 +95,9 @@ _BUNDLE_ID = ArgumentSpec(
 
 MODELO_AUDIT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_audit",
-        parent_key="app_modelo",
-        token="audit",  # noqa: S106 - CLI operator token, not a credential
+        "app_modelo_audit",
+        "app_modelo",
+        "audit",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.audit.group_help"),
         short_help_key=None,

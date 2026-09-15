@@ -123,8 +123,7 @@ def _assert_address_absent_refusal(
     return message
 
 
-def test_verify_and_file_mistaken_work_unit_selectors_project_canonical_localized_actions(
-) -> None:
+def test_verify_and_file_mistaken_work_unit_selectors_project_canonical_localized_actions() -> None:
     """Both verbs preserve the application verdict across all supported locales and lifecycle states."""
     _create_profile()
     work_unit_id = _create_m130_work_unit()
@@ -152,8 +151,7 @@ def test_verify_and_file_mistaken_work_unit_selectors_project_canonical_localize
     assert len({message for message in terminal_messages.values()}) == len(_LOCALES)
 
 
-def test_verify_and_file_absent_targets_report_declared_no_action_envelopes_in_all_locales(
-) -> None:
+def test_verify_and_file_absent_targets_report_declared_no_action_envelopes_in_all_locales() -> None:
     """Natural and exact absent addresses are application verdicts, not CLI hints."""
     _create_profile()
 

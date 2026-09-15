@@ -1,4 +1,3 @@
-# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Behavior handlers for modelo registry discovery commands."""
 
 from __future__ import annotations
@@ -207,7 +206,8 @@ def list_modelos(ctx: typer.Context, year: int | None = None, domain: TaxDomain 
     lines = [
         "code\ttitle\tcadence\tdomain\trevisions\tlocal_work\tlocal_work_guidance",
         *[
-            f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t{row.revision_count}\t{row.local_work_status}\t{row.local_work_guidance or '-'}"
+            f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t"
+            f"{row.revision_count}\t{row.local_work_status}\t{row.local_work_guidance or '-'}"
             for row in modelos
         ],
     ]
@@ -706,10 +706,16 @@ def support_matrix(ctx: typer.Context) -> None:
     entries = [discovery_rendering.support_matrix_entry_payload(entry) for entry in report.entries]
     result = ModeloSupportMatrixResult(modelo_count=len(entries), entries=entries)
     lines = [
-        f"{'modelo':>6}  {'revs':>4}  {'latest':<12}  {'calc':>4}  {'manifest':>8}  {'boe':>3}  {'xml':>3}  {'extractor':>9}  {'renames':>7}"
+        f"{'modelo':>6}  {'revs':>4}  {'latest':<12}  {'calc':>4}  {'manifest':>8}  "
+        f"{'boe':>3}  {'xml':>3}  {'extractor':>9}  {'renames':>7}"
     ]
     for entry in entries:
         lines.append(
-            f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  {discovery_rendering.mark(entry.calc_grade):>4}  {discovery_rendering.mark(entry.has_completeness_manifest):>8}  {discovery_rendering.mark(entry.has_fixed_width_export):>3}  {discovery_rendering.mark(entry.has_xml_dictionary_export):>3}  {discovery_rendering.mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
+            f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  "
+            f"{discovery_rendering.mark(entry.calc_grade):>4}  "
+            f"{discovery_rendering.mark(entry.has_completeness_manifest):>8}  "
+            f"{discovery_rendering.mark(entry.has_fixed_width_export):>3}  "
+            f"{discovery_rendering.mark(entry.has_xml_dictionary_export):>3}  "
+            f"{discovery_rendering.mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
         )
     emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)

@@ -471,6 +471,7 @@ def reconcile_parsed_justificante(
     justificante: Justificante,
     operation: PinnedAuthorityOperation,
 ) -> ModeloReconciliationReport:
+    """Reconcile parsed justificante evidence with the selected work unit."""
     active_bucket_id = work_unit.bucket_id
 
     diffs: list[ModeloReconciliationDiff] = []
@@ -515,6 +516,7 @@ def reconcile_parsed_declaracion(
     declaracion: ReconciliationDeclaracionObservation,
     operation: PinnedAuthorityOperation,
 ) -> ModeloReconciliationReport:
+    """Reconcile parsed declaration evidence with the selected work unit."""
     active_bucket_id = work_unit.bucket_id
     if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
         raise ReconciliationDeclaracionSourceUnsupportedError(

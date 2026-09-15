@@ -28,7 +28,7 @@ class ModeloEditReceiptPersistenceError(CadrumoError):
 class ModeloEditReceiptRepositoryPort(Protocol):
     """Required co-commit preparation capability for one Modelo edit."""
 
-    def to_secure_object_write(self, receipt: ModeloEditMutationResultReceiptV1) -> SecureObjectWrite:
+    def to_secure_object_write(self, payload: ModeloEditMutationResultReceiptV1) -> SecureObjectWrite:
         """Prepare the receipt write without committing it."""
         ...
 

@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.storage.tests.secure_sql import (
-    isolated_storage_root as _isolated_storage,  # noqa: F401 - autouse fixture
+    isolated_storage_root as _isolated_storage,
 )
 from .....core.bucket_pointer import resolve_repository_bucket_id
 from .....core.config import override_settings
@@ -17,6 +17,8 @@ from ...storage.runtime_readiness import StorageRuntimeReadinessCode
 from ...storage.runtime_repository import secure_object_repository_for_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+__all__ = ["_isolated_storage"]
 
 _EXPLICIT_BUCKET_ID = "5bfb9265-6886-4067-8d27-138978e71d95"
 _ACTIVE_BUCKET_ID = "9cc2d040-7e90-4f88-8f83-8d6bf63c4e65"

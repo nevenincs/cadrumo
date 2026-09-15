@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import stat
-import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ...core.bucket_pointer import BucketPointer
 from ...core.directory_scan import scan_directory
@@ -282,6 +284,18 @@ def test_repository_refuses_linked_root_redirected_into_bucket(
     assert scan_directory(bucket_dir, pattern="*.json") == ()
 
 
+async def _wait_for_writer_processes(commands: list[list[str]], *, cwd: Path) -> list[int]:
+    """Launch all fixed writer commands, then await each child with a budget."""
+    processes = [await asyncio.create_subprocess_exec(*command, cwd=cwd) for command in commands]
+    try:
+        return list(await asyncio.gather(*(asyncio.wait_for(process.wait(), timeout=60) for process in processes)))
+    finally:
+        for process in processes:
+            if process.returncode is None:
+                process.kill()
+        await asyncio.gather(*(process.wait() for process in processes), return_exceptions=True)
+
+
 def test_concurrent_fresh_process_writers_leave_one_complete_document(
     tmp_path: Path,
 ) -> None:
@@ -298,15 +312,9 @@ def test_concurrent_fresh_process_writers_leave_one_complete_document(
         "op=repo.load('" + _OPERATION_ID + "');"
         "repo.save(op.model_copy(update={'updated_at':op.started_at+timedelta(seconds=offset)}))"
     )
-    processes = [
-        subprocess.Popen(  # noqa: S603 - fixed interpreter and repository-owned inline script
-            [sys.executable, "-c", script, str(tmp_path), str(offset)],
-            cwd=Path.cwd(),
-        )
-        for offset in range(1, 5)
-    ]
+    commands = [[sys.executable, "-c", script, str(tmp_path), str(offset)] for offset in range(1, 5)]
 
-    assert [process.wait(timeout=60) for process in processes] == [0, 0, 0, 0]
+    assert asyncio.run(_wait_for_writer_processes(commands, cwd=Path.cwd())) == [0, 0, 0, 0]
     loaded = repository.load(_OPERATION_ID)
     assert loaded.operation_id == _OPERATION_ID
     assert loaded.updated_at in {loaded.started_at + timedelta(seconds=offset) for offset in range(1, 5)}
@@ -327,7 +335,7 @@ def test_fresh_process_reloads_exact_journal(
         "print(op.model_dump_json())"
     )
 
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned inline script
+    completed = run_audited_process(
         [sys.executable, "-c", script, str(tmp_path), _OPERATION_ID],
         cwd=Path.cwd(),
         check=True,

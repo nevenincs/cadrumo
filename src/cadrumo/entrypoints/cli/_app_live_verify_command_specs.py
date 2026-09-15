@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the live verify service."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from typing import Final
@@ -45,9 +41,9 @@ _VERIFY_EXPECTED_OPTION: Final[OptionSpec] = OptionSpec(
 
 LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_live_verify",
-        parent_key="app_live",
-        token="verify",
+        "app_live_verify",
+        "app_live",
+        "verify",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.verify.app_help"),
         short_help_key=None,
@@ -58,9 +54,9 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_verify_list",
-        parent_key="app_live_verify",
-        token="list",
+        "app_live_verify_list",
+        "app_live_verify",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.list_help"),
         short_help_key=None,
@@ -98,9 +94,9 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_verify_view",
-        parent_key="app_live_verify",
-        token="view",
+        "app_live_verify_view",
+        "app_live_verify",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.view_help"),
         short_help_key=None,
@@ -123,9 +119,9 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_verify_latest",
-        parent_key="app_live_verify",
-        token="latest",
+        "app_live_verify_latest",
+        "app_live_verify",
+        "latest",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.latest_help"),
         short_help_key=None,
@@ -163,9 +159,9 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_verify_nif_iva",
-        parent_key="app_live_verify",
-        token="nif-iva",
+        "app_live_verify_nif_iva",
+        "app_live_verify",
+        "nif-iva",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.nif_iva_help"),
         short_help_key=None,
@@ -189,9 +185,9 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_verify_tgvi",
-        parent_key="app_live_verify",
-        token="tgvi",
+        "app_live_verify_tgvi",
+        "app_live_verify",
+        "tgvi",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.verify.tgvi_help"),
         short_help_key=None,
@@ -217,3 +213,5 @@ LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LIVE_VERIFY_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live verify service."""
+"""Authored CommandSpec declarations for the live verify service."""

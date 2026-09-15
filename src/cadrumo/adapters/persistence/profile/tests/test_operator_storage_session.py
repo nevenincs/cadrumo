@@ -189,88 +189,90 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Certificate logout removes only the persisted session, not its configured custody."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        with isolated_profile_storage_root(tmp_path=tmp_path):
-            certificate_path = tmp_path / "personal.p12"
-            certificate_path.write_bytes(b"real-storage-certificate-fixture")
-            _create_profile(_PROFILE_A, provider="certificate", operation=operation)
+    with (
+        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
+        certificate_path = tmp_path / "personal.p12"
+        certificate_path.write_bytes(b"real-storage-certificate-fixture")
+        _create_profile(_PROFILE_A, provider="certificate", operation=operation)
 
-            with open_test_profile_session(_PROFILE_A):
-                register_operator_certificate_source(
-                    name="personal",
-                    certificate_path=certificate_path,
-                    friendly_name="Personal certificate",
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=_certificate_authority_operation_for_test,
-                )
-                select_operator_certificate_source(
-                    name="personal",
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=_certificate_authority_operation_for_test,
-                )
-                set_operator_certificate_source_secret(
-                    name="personal",
-                    secret=SecretStr("certificate-passphrase"),
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=_certificate_authority_operation_for_test,
-                    certificate_secret_backend_factory=build_certificate_secret_backend,
-                )
-                repository = workflow_state_repository()
-                before = repository.load()
-                session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-                authenticated_at = datetime.now(UTC)
-                session_store.save(
-                    session_path,
-                    storage_state={"cookies": [], "origins": []},
-                    metadata={
-                        "provider_kind": "certificate",
-                        "identity_nif": "12345678Z",
-                        "authenticated_at": authenticated_at.isoformat(),
-                        "idle_deadline": (authenticated_at + timedelta(minutes=30)).isoformat(),
-                    },
-                )
-                assert session_store.exists(session_path)
-                persisted_before = load_persisted_session(
-                    load_settings(),
-                    AuthProviderKind.CERTIFICATE,
-                )
-                secret_before = resolve_certificate_source_secret(
-                    name="personal",
-                    bucket_id=_PROFILE_A,
-                    certificate_secret_backend_factory=build_certificate_secret_backend,
-                )
-
-            assert persisted_before is not None
-            assert persisted_before.provider_kind is AuthProviderKind.CERTIFICATE
-            assert persisted_before.identity_nif == "12345678Z"
-            assert secret_before is not None
-            provider_configuration_before = (
-                before.auth.provider,
-                before.auth.configured_at,
+        with open_test_profile_session(_PROFILE_A):
+            register_operator_certificate_source(
+                name="personal",
+                certificate_path=certificate_path,
+                friendly_name="Personal certificate",
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
             )
-            certificate_path_before = before.auth.certificate_path
-            active_source_before = before.auth.active_certificate_source
-            source_registration_before = before.auth.certificate_sources["personal"]
-            secret_value_before = secret_before.get_secret_value()
+            select_operator_certificate_source(
+                name="personal",
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
+            )
+            set_operator_certificate_source_secret(
+                name="personal",
+                secret=SecretStr("certificate-passphrase"),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            )
+            repository = workflow_state_repository()
+            before = repository.load()
+            session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
+            authenticated_at = datetime.now(UTC)
+            session_store.save(
+                session_path,
+                storage_state={"cookies": [], "origins": []},
+                metadata={
+                    "provider_kind": "certificate",
+                    "identity_nif": "12345678Z",
+                    "authenticated_at": authenticated_at.isoformat(),
+                    "idle_deadline": (authenticated_at + timedelta(minutes=30)).isoformat(),
+                },
+            )
+            assert session_store.exists(session_path)
+            persisted_before = load_persisted_session(
+                load_settings(),
+                AuthProviderKind.CERTIFICATE,
+            )
+            secret_before = resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_PROFILE_A,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            )
 
-            result = _logout(provider="certificate")
+        assert persisted_before is not None
+        assert persisted_before.provider_kind is AuthProviderKind.CERTIFICATE
+        assert persisted_before.identity_nif == "12345678Z"
+        assert secret_before is not None
+        provider_configuration_before = (
+            before.auth.provider,
+            before.auth.configured_at,
+        )
+        certificate_path_before = before.auth.certificate_path
+        active_source_before = before.auth.active_certificate_source
+        source_registration_before = before.auth.certificate_sources["personal"]
+        secret_value_before = secret_before.get_secret_value()
 
-            with open_test_profile_session(_PROFILE_A):
-                after = workflow_state_repository().load()
-                secret_after = resolve_certificate_source_secret(
-                    name="personal",
-                    bucket_id=_PROFILE_A,
-                    certificate_secret_backend_factory=build_certificate_secret_backend,
-                )
-                assert session_store.exists(session_path) is False
+        result = _logout(provider="certificate")
 
-            assert result.removed_sessions == 1
-            assert (after.auth.provider, after.auth.configured_at) == provider_configuration_before
-            assert after.auth.certificate_path == certificate_path_before
-            assert after.auth.active_certificate_source == active_source_before
-            assert after.auth.certificate_sources["personal"] == source_registration_before
-            assert secret_after is not None
-            assert secret_after.get_secret_value() == secret_value_before
+        with open_test_profile_session(_PROFILE_A):
+            after = workflow_state_repository().load()
+            secret_after = resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_PROFILE_A,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            )
+            assert session_store.exists(session_path) is False
+
+        assert result.removed_sessions == 1
+        assert (after.auth.provider, after.auth.configured_at) == provider_configuration_before
+        assert after.auth.certificate_path == certificate_path_before
+        assert after.auth.active_certificate_source == active_source_before
+        assert after.auth.certificate_sources["personal"] == source_registration_before
+        assert secret_after is not None
+        assert secret_after.get_secret_value() == secret_value_before
 
 
 def test_logout_all_emits_events_only_for_affected_providers(
@@ -300,53 +302,55 @@ def test_reset_removes_certificate_registry_and_secure_secret(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Certificate reset removes registrations and canonical secure-storage secrets."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        with isolated_profile_storage_root(tmp_path=tmp_path):
-            cert_path = tmp_path / "operator.p12"
-            cert_path.write_bytes(b"placeholder")
-            _create_profile(_PROFILE_A, provider="certificate", operation=operation)
-            with open_test_profile_session(_PROFILE_A):
-                register_operator_certificate_source(
-                    name="personal",
-                    certificate_path=cert_path,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=_certificate_authority_operation_for_test,
-                )
-                set_operator_certificate_source_secret(
-                    name="personal",
-                    secret=SecretStr("do-not-leak"),
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=_certificate_authority_operation_for_test,
-                    certificate_secret_backend_factory=build_certificate_secret_backend,
-                )
-                assert (
-                    resolve_certificate_source_secret(
-                        name="personal",
-                        bucket_id=_PROFILE_A,
-                        certificate_secret_backend_factory=build_certificate_secret_backend,
-                    )
-                    is not None
-                )
-
-            first = _reset(provider="certificate")
-            second = _reset(provider="certificate")
-            with open_test_profile_session(_PROFILE_A):
-                state = workflow_state_repository().load()
-                secret = resolve_certificate_source_secret(
+    with (
+        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
+        cert_path = tmp_path / "operator.p12"
+        cert_path.write_bytes(b"placeholder")
+        _create_profile(_PROFILE_A, provider="certificate", operation=operation)
+        with open_test_profile_session(_PROFILE_A):
+            register_operator_certificate_source(
+                name="personal",
+                certificate_path=cert_path,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
+            )
+            set_operator_certificate_source_secret(
+                name="personal",
+                secret=SecretStr("do-not-leak"),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=_certificate_authority_operation_for_test,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            )
+            assert (
+                resolve_certificate_source_secret(
                     name="personal",
                     bucket_id=_PROFILE_A,
                     certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
+                is not None
+            )
 
-            assert first.cleared_provider_configuration is True
-            assert first.removed_certificate_sources == 1
-            assert first.removed_certificate_secrets == 1
-            assert second.cleared_provider_configuration is False
-            assert second.removed_certificate_sources == 0
-            assert second.removed_certificate_secrets == 0
-            assert state.auth.provider is None
-            assert state.auth.certificate_sources == {}
-            assert secret is None
+        first = _reset(provider="certificate")
+        second = _reset(provider="certificate")
+        with open_test_profile_session(_PROFILE_A):
+            state = workflow_state_repository().load()
+            secret = resolve_certificate_source_secret(
+                name="personal",
+                bucket_id=_PROFILE_A,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+            )
+
+        assert first.cleared_provider_configuration is True
+        assert first.removed_certificate_sources == 1
+        assert first.removed_certificate_secrets == 1
+        assert second.cleared_provider_configuration is False
+        assert second.removed_certificate_sources == 0
+        assert second.removed_certificate_secrets == 0
+        assert state.auth.provider is None
+        assert state.auth.certificate_sources == {}
+        assert secret is None
 
 
 def test_certificate_reset_clears_path_without_removing_other_provider(
@@ -456,7 +460,11 @@ def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(
             assert build_inward_operator_scope_ports(session=None).session.current() is None
 
             with pytest.raises(AuthOperationRequiresCustodySessionError) as raised:
-                logout_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+                logout_operator_auth(
+                    provider="certificate",
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
+                )
 
     message = resolve_error_message(raised.value)
     assert _PROFILE_A in message

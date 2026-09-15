@@ -179,6 +179,7 @@ def record_render_rows(
     binding_values: dict[tuple[BindingId, int | None], object],
     casilla_values: dict[CasillaId, object],
 ) -> tuple[RecordRenderRow, ...]:
+    """Return the render rows admitted by a record's repeat policy."""
     if record.repeat != "binding_rows":
         return _single_record_render_row(record, binding_values, casilla_values)
     return _binding_record_render_rows(record, binding_values)

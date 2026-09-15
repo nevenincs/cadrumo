@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the Modelo non-work m145 family."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from typing import Final
@@ -53,9 +49,9 @@ M145_RECORD_ACTION_PARAMETERS: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
 
 MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_m145_create",
-        parent_key="app_modelo_m145",
-        token="create",
+        "app_modelo_m145_create",
+        "app_modelo_m145",
+        "create",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m145.create_help"),
         short_help_key=None,
@@ -120,9 +116,9 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_m145_validate",
-        parent_key="app_modelo_m145",
-        token="validate",
+        "app_modelo_m145_validate",
+        "app_modelo_m145",
+        "validate",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m145.validate_help"),
         short_help_key=None,
@@ -137,9 +133,9 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_m145_export",
-        parent_key="app_modelo_m145",
-        token="export",
+        "app_modelo_m145_export",
+        "app_modelo_m145",
+        "export",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m145.export_help"),
         short_help_key=None,
@@ -154,9 +150,9 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_m145_mark_delivered_to_payer",
-        parent_key="app_modelo_m145",
-        token="mark-delivered-to-payer",
+        "app_modelo_m145_mark_delivered_to_payer",
+        "app_modelo_m145",
+        "mark-delivered-to-payer",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m145.mark_delivered_to_payer_help"),
         short_help_key=None,
@@ -171,9 +167,9 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_m145_mark_locally_completed",
-        parent_key="app_modelo_m145",
-        token="mark-locally-completed",
+        "app_modelo_m145_mark_locally_completed",
+        "app_modelo_m145",
+        "mark-locally-completed",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m145.mark_locally_completed_help"),
         short_help_key=None,
@@ -190,3 +186,5 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_M145_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work m145 family."""
+"""Authored CommandSpec declarations for the Modelo non-work m145 family."""

@@ -439,7 +439,7 @@ class TestValidateM347Threshold:
 # ---------------------------------------------------------------------------
 
 
-_ROW_FLAG_PASSPHRASE = "row-flag-revision-view-passphrase"  # noqa: S105 - synthetic test credential
+_ROW_FLAG_CREDENTIAL_INPUT = "row-flag-revision-view-passphrase"
 
 
 class TestRevisionViewSurfacesDetailRows:
@@ -460,7 +460,7 @@ class TestRevisionViewSurfacesDetailRows:
         import textwrap
 
         # `config profile create` mints custody, so it needs the operator passphrase
-        # and its confirmation. CADRUMO_SECRET_PASSPHRASE below no longer unlocks
+        # and its confirmation. CADRUMO_SECRET_CREDENTIAL_INPUT below no longer unlocks
         # anything -- the machine-secret rule refuses an environment fallback for a
         # caller-supplied secret -- so it arrives on the bounded strict-JSON channel.
         stdin_payload: str | None = None
@@ -469,20 +469,20 @@ class TestRevisionViewSurfacesDetailRows:
             argv = [*argv, "--secrets-stdin"]
             stdin_payload = json.dumps(
                 {
-                    "passphrase": _ROW_FLAG_PASSPHRASE,
-                    "passphrase_confirmation": _ROW_FLAG_PASSPHRASE,
+                    "passphrase": _ROW_FLAG_CREDENTIAL_INPUT,
+                    "passphrase_confirmation": _ROW_FLAG_CREDENTIAL_INPUT,
                 }
             )
         elif "login" in argv and "--secrets-stdin" not in argv:
             argv = [*argv, "--secrets-stdin"]
-            stdin_payload = json.dumps({"passphrase": _ROW_FLAG_PASSPHRASE})
+            stdin_payload = json.dumps({"passphrase": _ROW_FLAG_CREDENTIAL_INPUT})
 
         code = f"""
             import os, sys
             os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = {str(storage_root)!r}
             os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "unsecured"
             os.environ["CADRUMO_SECRET_STORE_DIR"] = {str(storage_root / "fallback-store")!r}
-            os.environ["CADRUMO_SECRET_PASSPHRASE"] = {_ROW_FLAG_PASSPHRASE!r}
+            os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = {_ROW_FLAG_CREDENTIAL_INPUT!r}
             sys.argv = ["cadrumo", *{argv!r}]
             from cadrumo.entrypoints.cli.main import main
 

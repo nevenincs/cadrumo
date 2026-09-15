@@ -20,17 +20,17 @@ sibling undeclared-advisory treats it as, not a fault.
 from __future__ import annotations
 
 from datetime import date
-from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
-    advisory_profile_bucket,  # noqa: F401
+    advisory_profile_bucket,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from cadrumo.application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
@@ -38,6 +38,8 @@ from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+__all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "9a9a9a9a-9a9a-4a9a-8a9a-9a9a9a9a9a9a"
 _FILING_YEAR = 2024
@@ -65,6 +67,7 @@ def _two_descendants() -> tuple[UserProfileFact, ...]:
 
 
 def _diagnostics(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourceDiagnostic, ...]:
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     return collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
         {},
@@ -72,10 +75,10 @@ def _diagnostics(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourc
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
-        observation_repository=SimpleNamespace(),
-        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=SimpleNamespace(),
-        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
     )
 
 

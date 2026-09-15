@@ -21,18 +21,18 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
-    advisory_profile_bucket,  # noqa: F401
+    advisory_profile_bucket,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from cadrumo.application.modelo.tests.advisory_diagnostic_assertions import operator_text as _operator_text
+from cadrumo.application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -42,6 +42,8 @@ from cadrumo.domain.contribuyente.renta_codes import RentaMaritalStatus
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+__all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "3d3d3d3d-3d3d-4d3d-8d3d-3d3d3d3d3d3d"
 _FILING_YEAR = 2024
@@ -90,6 +92,7 @@ def _collect(
     *,
     modelo: str = Modelo("100").value,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
         _CLAIMED if casilla_values is None else casilla_values,
@@ -97,10 +100,10 @@ def _collect(
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
-        observation_repository=SimpleNamespace(),
-        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=SimpleNamespace(),
-        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
     )
     return tuple(diagnostic for diagnostic in diagnostics if diagnostic.source_kind == _KIND)
 

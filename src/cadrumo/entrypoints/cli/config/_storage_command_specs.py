@@ -42,9 +42,9 @@ def _handler(name: str) -> LazyBinding:
 
 CONFIG_STORAGE_COMMAND_SPECS = (
     CommandSpec(
-        key="config_storage",
-        parent_key="config",
-        token="storage",  # noqa: S106 - CLI token, not a credential.
+        "config_storage",
+        "config",
+        "storage",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.storage.help"),
         short_help_key=None,
@@ -55,9 +55,9 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="config_storage_list",
-        parent_key="config_storage",
-        token="list",  # noqa: S106 - CLI token, not a credential.
+        "config_storage_list",
+        "config_storage",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.list.area_help"),
         short_help_key=None,
@@ -68,9 +68,9 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         result_schema=_schema("ConfigStorageListResult", "config.storage.list"),
     ),
     CommandSpec(
-        key="config_storage_view",
-        parent_key="config_storage",
-        token="view",  # noqa: S106 - CLI token, not a credential.
+        "config_storage_view",
+        "config_storage",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.view.area_help"),
         short_help_key=None,
@@ -89,9 +89,9 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         result_schema=_schema("ConfigStorageViewResult", "config.storage.view"),
     ),
     CommandSpec(
-        key="config_storage_check",
-        parent_key="config_storage",
-        token="check",  # noqa: S106 - CLI token, not a credential.
+        "config_storage_check",
+        "config_storage",
+        "check",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.check.help"),
         short_help_key=None,
@@ -102,9 +102,9 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         result_schema=_schema("ConfigStorageCheckResult", "config.storage.check"),
     ),
     CommandSpec(
-        key="config_storage_init",
-        parent_key="config_storage",
-        token="init",  # noqa: S106 - CLI token, not a credential.
+        "config_storage_init",
+        "config_storage",
+        "init",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.init.help"),
         short_help_key=None,
@@ -115,9 +115,9 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         result_schema=_schema("ConfigStorageInitResult", "config.storage.init"),
     ),
     CommandSpec(
-        key="config_storage_reclaim",
-        parent_key="config_storage",
-        token="reclaim",  # noqa: S106 - CLI token, not a credential.
+        "config_storage_reclaim",
+        "config_storage",
+        "reclaim",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.storage.reclaim.area_help"),
         short_help_key=None,

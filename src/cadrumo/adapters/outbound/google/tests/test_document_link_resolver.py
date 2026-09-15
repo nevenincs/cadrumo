@@ -246,18 +246,12 @@ class _NonBytesMediaRequest:
 class _NonBytesMediaFiles:
     """Drive files resource supplying the invalid media request."""
 
-    def get_media(self, *, fileId: str) -> _NonBytesMediaRequest:  # noqa: N803 - Drive API kwarg name
-        assert fileId == _FILE_ID
+    def get_media(self, **request: object) -> _NonBytesMediaRequest:
+        file_id = request["fileId"]
+        assert file_id == _FILE_ID
         return _NonBytesMediaRequest()
 
-    def list(
-        self,
-        *,
-        q: str,
-        fields: str,
-        pageSize: int,  # noqa: N803 - Drive API kwarg name
-        pageToken: str = "",  # noqa: N803 - Drive API kwarg name
-    ) -> Never:
+    def list(self, **request: object) -> Never:
         raise AssertionError("non-bytes media fixture does not support files.list")
 
 

@@ -190,15 +190,14 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
         operation=operation,
     )
 
-    with pytest.raises(ModeloAggregationBindingError) as excinfo:
-        with bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator-A",
-                binding_values={binding_id: Decimal("99.00")},
-                clock=_T1,
-            ).revision
+    with pytest.raises(ModeloAggregationBindingError) as excinfo, bundled_indexed_authority().operation() as operation:
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            binding_values={binding_id: Decimal("99.00")},
+            clock=_T1,
+        )
     assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
 
     assert cr_repo.load().revisions == {}
@@ -219,14 +218,13 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     intracom_sale = _intracom_ledger_transaction("intracom-sale-de")
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator-A",
-                clock=_T1,
-            ).revision
+    with pytest.raises(ModeloAggregationBindingError) as exc_info, bundled_indexed_authority().operation() as operation:
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            clock=_T1,
+        )
 
     assert "no declarable operator rows" in str(exc_info.value)
     assert exc_info.value.context is not None
@@ -259,14 +257,13 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
     intracom_sale = _intracom_ledger_transaction("intracom-sale-march-20", booked_date=date(2026, 3, 20))
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator-A",
-                clock=_T1,
-            ).revision
+    with pytest.raises(ModeloAggregationBindingError) as exc_info, bundled_indexed_authority().operation() as operation:
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            clock=_T1,
+        )
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["period"] == "03"
@@ -306,15 +303,14 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
         operation=operation,
     )
 
-    with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                actor="operator-A",
-                casilla_inputs={casilla_id: Decimal("99.00")},
-                clock=_T1,
-            ).revision
+    with pytest.raises(ModeloAggregationBindingError) as exc_info, bundled_indexed_authority().operation() as operation:
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator-A",
+            casilla_inputs={casilla_id: Decimal("99.00")},
+            clock=_T1,
+        )
     assert exc_info.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
     assert exc_info.value.context is not None
     casillas = exc_info.value.context["casillas"]

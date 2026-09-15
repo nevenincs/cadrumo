@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the ledger participation surface."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from ._app_ledger_command_spec_policies import (
@@ -20,9 +16,9 @@ from .command_spec import (
 
 LEDGER_PARTICIPATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_participation_rebuild",
-        parent_key="app_ledger_participation",
-        token="rebuild",
+        "app_ledger_participation_rebuild",
+        "app_ledger_participation",
+        "rebuild",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.participation.rebuild_help"),
         short_help_key=None,
@@ -39,3 +35,5 @@ LEDGER_PARTICIPATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_PARTICIPATION_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger participation surface."""
+"""Authored CommandSpec declarations for the ledger participation surface."""

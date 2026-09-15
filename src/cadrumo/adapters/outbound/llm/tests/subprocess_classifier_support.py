@@ -23,9 +23,9 @@ deletion, and this was simply their only injection point.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import shutil
-import subprocess
 from dataclasses import dataclass, field
 
 from cadrumo.domain.transactions.errors import LLMClassifierError
@@ -136,16 +136,8 @@ class SubprocessLLMClassifier:
 
         _logger.debug("llm classify: spawning %s argv=%s transaction_id=%s", self.name, argv[0], transaction_id)
         try:
-            completed = subprocess.run(
-                argv,
-                input=stdin_input,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                timeout=self.timeout_seconds,
-                check=False,
-            )
-        except subprocess.TimeoutExpired as exc:
+            return asyncio.run(self._run_cli_process(argv, stdin_input, transaction_id))
+        except TimeoutError as exc:
             _logger.warning(
                 "llm classify: %s timed out after %ss for transaction %s",
                 self.name,
@@ -160,17 +152,35 @@ class SubprocessLLMClassifier:
             # skip this one transaction and continue on the next.
             _logger.error("llm classify: %s spawn failed", self.name, exc_info=True)
             raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
-        if completed.returncode != 0:
+
+    async def _run_cli_process(self, argv: list[str], stdin_input: str | None, transaction_id: str) -> str:
+        """Run the fixed executable vector with bounded, pipe-only I/O."""
+        process = await asyncio.create_subprocess_exec(
+            *argv,
+            stdin=asyncio.subprocess.PIPE if stdin_input is not None else None,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(None if stdin_input is None else stdin_input.encode()),
+                timeout=self.timeout_seconds,
+            )
+        except TimeoutError:
+            process.kill()
+            await process.wait()
+            raise
+        if process.returncode != 0:
             _logger.warning(
                 "llm classify: %s exited with returncode=%d for transaction %s",
                 self.name,
-                completed.returncode,
+                process.returncode,
                 transaction_id,
             )
             raise LLMClassifierError(
-                f"{self.name} CLI exited with {completed.returncode}: {(completed.stderr or completed.stdout)[:400]!r}",
+                f"{self.name} CLI exited with {process.returncode}: {(stderr or stdout)[:400]!r}",
             )
-        return completed.stdout
+        return stdout.decode()
 
 
 # ── builders + registry ───────────────────────────────────────────

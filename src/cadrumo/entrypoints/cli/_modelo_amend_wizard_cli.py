@@ -1,4 +1,3 @@
-# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Behavior handler for the guided ``aeat app modelo work amend-wizard`` command.
 
 An operator discovers a mistake in an already-filed return and knows "casilla 01 was
@@ -117,7 +116,19 @@ class _AmendWizardAnswers(BaseModel):
 
 _COPY_NAMESPACE = "modelo-amend"
 _ACTIVE_RUNS: dict[str, dict[str, str]] = {}
-"Per-run registry-derived copy tables, keyed by an opaque run token.\n\nEach wizard invocation owns one table for its whole lifetime — both the\nselection round and the values/kind/reason round append into the same\ntable. Every reference embeds its run token\n(``modelo-amend:<run-token>:<slot>``), so the registered resolver reads only\nthe addressed run's table: two interleaved runs in one embedding process never\nclear each other's entries, and each table is dropped at its own run end rather\nthan accumulating for the process lifetime. Values are the registry snapshot's\nlocalized labels and help plus the baseline casilla figures; the resolver\nreturns ``None`` outside the namespace so other domains' schema-field resolvers\nget their turn.\n"
+(
+    "Per-run registry-derived copy tables, keyed by an opaque run token.\n\n"
+    "Each wizard invocation owns one table for its whole lifetime — both the\n"
+    "selection round and the values/kind/reason round append into the same\n"
+    "table. Every reference embeds its run token\n"
+    "(``modelo-amend:<run-token>:<slot>``), so the registered resolver reads only\n"
+    "the addressed run's table: two interleaved runs in one embedding process never\n"
+    "clear each other's entries, and each table is dropped at its own run end rather\n"
+    "than accumulating for the process lifetime. Values are the registry snapshot's\n"
+    "localized labels and help plus the baseline casilla figures; the resolver\n"
+    "returns ``None`` outside the namespace so other domains' schema-field resolvers\n"
+    "get their turn.\n"
+)
 _SELECTION_PAGE_ID = "selection"
 _KIND_PAGE_ID = "amendment-kind"
 _MOTIVE_PAGE_ID = "m303-rectificativa-motive"

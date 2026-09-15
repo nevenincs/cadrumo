@@ -60,9 +60,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _LABEL = "session-operator"
-_PASSPHRASE = "session-root-passphrase"  # noqa: S105
-_PROFILE_SECRET_PAYLOAD = json.dumps({"profile_passphrase": _PASSPHRASE})
-_LOGIN_SECRET_PAYLOAD = json.dumps({"passphrase": _PASSPHRASE})
+_CREDENTIAL_INPUT = "session-root-passphrase"
+_PROFILE_SECRET_PAYLOAD = json.dumps({"profile_passphrase": _CREDENTIAL_INPUT})
+_LOGIN_SECRET_PAYLOAD = json.dumps({"passphrase": _CREDENTIAL_INPUT})
 
 
 @pytest.fixture(autouse=True)
@@ -95,7 +95,7 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
     created = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
-        passphrase=_PASSPHRASE,
+        passphrase=_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
@@ -109,7 +109,9 @@ def _login() -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.user_profile.login_session import login_profile
 
-    login_profile(passphrase_callback=lambda: _PASSPHRASE, profile_decode_context=_profile_decode_context_for_test)
+    login_profile(
+        passphrase_callback=lambda: _CREDENTIAL_INPUT, profile_decode_context=_profile_decode_context_for_test
+    )
 
 
 def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:

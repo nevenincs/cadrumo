@@ -32,7 +32,7 @@ from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..certificate import CertificateBundle, LoadedCertificate, extract_nif_from_subject, load_certificate
 from ..errors import AeatSessionExpiredError, AuthConfigurationError
-from ._auth_fixtures import SECRET_PASSPHRASE
+from ._auth_fixtures import CERTIFICATE_INPUT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -90,7 +90,7 @@ def _serialise_pkcs12(
         key=key,
         cert=cert,
         cas=None,
-        encryption_algorithm=serialization.BestAvailableEncryption(SECRET_PASSPHRASE.encode()),
+        encryption_algorithm=serialization.BestAvailableEncryption(CERTIFICATE_INPUT.encode()),
     )
 
 
@@ -153,7 +153,7 @@ def _load_cert(
     )
     bundle = CertificateBundle(
         path=bundle_path,
-        password=SecretStr(SECRET_PASSPHRASE),
+        password=SecretStr(CERTIFICATE_INPUT),
         friendly_name=None,
     )
     return load_certificate(bundle)
@@ -218,7 +218,7 @@ def _settings_factory():
         ) -> Settings:
             overrides: dict[str, object] = {
                 "cadrumo_certificate_path": path,
-                "cadrumo_certificate_password_secret": SECRET_PASSPHRASE,
+                "cadrumo_certificate_password_secret": CERTIFICATE_INPUT,
                 "cadrumo_token_dir": path.parent / ".tokens",
             }
             overrides.update(extra_overrides)

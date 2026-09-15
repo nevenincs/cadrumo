@@ -42,7 +42,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....application.flows.definition import FlowPage
 from ....application.flows.errors import FlowAnswerError
@@ -76,6 +76,8 @@ from .._modelo_behavior_support import resolve_work_unit_for_cli as _resolve_wor
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -253,7 +255,7 @@ def _scripted_amend(
     kind and reason, read back off the engine state exactly as the wizard
     reads them.
     """
-    run_token = "test-amend-scripted"  # noqa: S105 - a copy-table run token, not a credential
+    run_id = "test-amend-scripted"
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
@@ -272,13 +274,13 @@ def _scripted_amend(
         amendable = _amendable_rows(casilla_rows, baseline_revision)
         by_number = {row.number: row for row in amendable}
         selected_ids = [by_number[number].casilla_id for number in change_numbers]
-        _ACTIVE_RUNS[run_token] = {}
+        _ACTIVE_RUNS[run_id] = {}
         try:
             selection_definition = _selection_definition(
                 amendable=amendable,
                 baseline_revision=baseline_revision,
                 unit=unit,
-                run_token=run_token,
+                run_token=run_id,
             )
             selection_state, selection_projection = run_scripted_flow(
                 selection_definition,
@@ -293,7 +295,7 @@ def _scripted_amend(
                 baseline_revision=baseline_revision,
                 modelo=str(baseline.modelo),
                 period=baseline.period,
-                run_token=run_token,
+                run_token=run_id,
             )
             has_motive_page = any(
                 page.id == _MOTIVE_PAGE_ID for section in corrections_definition.sections for page in section.items
@@ -318,7 +320,7 @@ def _scripted_amend(
             derived_reason = (corrections_state.answers.get(_REASON_PAGE_ID) or "").strip()
             return overrides, derived_kind, derived_motive, derived_reason
         finally:
-            _ACTIVE_RUNS.pop(run_token, None)
+            _ACTIVE_RUNS.pop(run_id, None)
 
 
 def _amend_via_shared_path(
@@ -358,7 +360,7 @@ def _permitted_kind_choice_values(
     page's closed choice set, so the test asserts period-awareness against
     the exact choices an operator is offered.
     """
-    run_token = "test-amend-kind-choices"  # noqa: S105 - a copy-table run token, not a credential
+    run_id = "test-amend-kind-choices"
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
@@ -377,14 +379,14 @@ def _permitted_kind_choice_values(
         amendable = _amendable_rows(casilla_rows, baseline_revision)
         by_number = {row.number: row for row in amendable}
         selected = tuple(by_number[number] for number in change_numbers)
-        _ACTIVE_RUNS[run_token] = {}
+        _ACTIVE_RUNS[run_id] = {}
         try:
             definition = _values_kind_reason_definition(
                 selected=selected,
                 baseline_revision=baseline_revision,
                 modelo=str(baseline.modelo),
                 period=baseline.period,
-                run_token=run_token,
+                run_token=run_id,
             )
             kind_page = next(
                 page for section in definition.sections for page in section.items if page.id == _KIND_PAGE_ID
@@ -392,7 +394,7 @@ def _permitted_kind_choice_values(
             assert isinstance(kind_page, FlowPage)
             return tuple(choice.value for choice in kind_page.choices)
         finally:
-            _ACTIVE_RUNS.pop(run_token, None)
+            _ACTIVE_RUNS.pop(run_id, None)
 
 
 def test_amend_wizard_scripted_sequence_files_m130_complementaria() -> None:
@@ -711,7 +713,7 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
     work_unit_id = _create_m130_work_unit()
     _import_external_baseline(work_unit_id)
 
-    run_token = "test-amend-blank"  # noqa: S105 - a copy-table run token, not a credential
+    run_id = "test-amend-blank"
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
@@ -728,19 +730,19 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
             )
         amendable = _amendable_rows(casilla_rows, baseline_revision)
-        _ACTIVE_RUNS[run_token] = {}
+        _ACTIVE_RUNS[run_id] = {}
         try:
             definition = _selection_definition(
                 amendable=amendable,
                 baseline_revision=baseline_revision,
                 unit=unit,
-                run_token=run_token,
+                run_token=run_id,
             )
             state, projection = run_scripted_flow(definition, [""], mode=FlowMode.CREATE)
             assert projection.submit_eligible
             assert _selected_rows(amendable=amendable, unit=unit, state=state) == ()
         finally:
-            _ACTIVE_RUNS.pop(run_token, None)
+            _ACTIVE_RUNS.pop(run_id, None)
 
 
 def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error() -> None:

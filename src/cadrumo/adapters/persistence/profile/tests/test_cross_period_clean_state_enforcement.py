@@ -404,22 +404,24 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(
             operation=operation,
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            with bundled_indexed_authority().operation() as operation:
-                export_modelo_revision(
-                    ModeloExportCommand(
-                        calculation_revision_id=revision_id,
-                        output_path=tmp_path / "modelo-180.txt",
-                        actor="operator-test",
-                    ),
-                    workflow_profile=workflow_profile(),
-                    export_ports=modelo_export_ports_for_test(
-                        bucket_id=profile.bucket_id,
-                        taxpayer_tax_id=workflow_profile().tax_id,
-                    ),
-                    operation=operation,
-                    clock=_CLOCK,
-                )
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=revision_id,
+                    output_path=tmp_path / "modelo-180.txt",
+                    actor="operator-test",
+                ),
+                workflow_profile=workflow_profile(),
+                export_ports=modelo_export_ports_for_test(
+                    bucket_id=profile.bucket_id,
+                    taxpayer_tax_id=workflow_profile().tax_id,
+                ),
+                operation=operation,
+                clock=_CLOCK,
+            )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
@@ -436,18 +438,20 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
             operation=operation,
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            with bundled_indexed_authority().operation() as operation:
-                file_modelo_revision(
-                    revision_id,
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    ports=build_filing_action_ports(bucket_id=profile.bucket_id),
-                    actor="operator-test",
-                    workflow_profile=workflow_profile(),
-                    operation=operation,
-                    clock=_CLOCK,
-                )
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
+            file_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                actor="operator-test",
+                workflow_profile=workflow_profile(),
+                operation=operation,
+                clock=_CLOCK,
+            )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
@@ -477,18 +481,20 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
             operation=operation,
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            with bundled_indexed_authority().operation() as operation:
-                file_modelo_revision(
-                    revision_id,
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    ports=build_filing_action_ports(bucket_id=profile.bucket_id),
-                    actor="operator-test",
-                    workflow_profile=workflow_profile(),
-                    operation=operation,
-                    clock=_CLOCK,
-                )
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
+            file_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                actor="operator-test",
+                workflow_profile=workflow_profile(),
+                operation=operation,
+                clock=_CLOCK,
+            )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
@@ -891,26 +897,28 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
             operation=operation,
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            with bundled_indexed_authority().operation() as operation:
-                file_modelo_revision(
-                    revision_id,
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    ports=build_filing_action_ports(bucket_id=profile.bucket_id),
-                    actor="operator-test",
-                    workflow_profile=workflow_profile(),
-                    operation=operation,
-                    cross_period_expected_member_sets=(
-                        CrossPeriodExpectedMemberSet(
-                            source_modelo="322",
-                            filing_year=2026,
-                            period=Period.from_year_and_code(2026, "12"),
-                            member_nifs=("A00000000", "B00000001"),
-                        ),
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
+            file_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                actor="operator-test",
+                workflow_profile=workflow_profile(),
+                operation=operation,
+                cross_period_expected_member_sets=(
+                    CrossPeriodExpectedMemberSet(
+                        source_modelo="322",
+                        filing_year=2026,
+                        period=Period.from_year_and_code(2026, "12"),
+                        member_nifs=("A00000000", "B00000001"),
                     ),
-                    clock=_CLOCK,
-                )
+                ),
+                clock=_CLOCK,
+            )
 
     failure = exc_info.value.precondition_failure
     assert failure is not None
@@ -984,18 +992,20 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
             },
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            with bundled_indexed_authority().operation() as operation:
-                file_modelo_revision(
-                    revision_id,
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    ports=build_filing_action_ports(bucket_id=profile.bucket_id),
-                    actor="operator-test",
-                    workflow_profile=filing_profile,
-                    operation=operation,
-                    clock=_CLOCK,
-                )
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
+            file_modelo_revision(
+                revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                ports=build_filing_action_ports(bucket_id=profile.bucket_id),
+                actor="operator-test",
+                workflow_profile=filing_profile,
+                operation=operation,
+                clock=_CLOCK,
+            )
 
     failure = exc_info.value.precondition_failure
     assert failure is not None

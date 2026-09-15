@@ -54,6 +54,8 @@ from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from ....tests.inventory import SRC_CADRUMO
 
 if TYPE_CHECKING:
@@ -155,7 +157,7 @@ def run_subprocess_cli_harness(
     :data:`_CONTEXTVAR_HARNESS_SOURCE`) controls how those positions are
     interpreted.
     """
-    return subprocess.run(  # noqa: S603 - the test harness owns its generated child source.
+    return run_audited_process(
         [sys.executable, "-c", harness_source, *args],
         cwd=cwd or SRC_CADRUMO,
         env=subprocess_cli_env(strip_prefixes=env_strip_prefixes, extra=extra_env),

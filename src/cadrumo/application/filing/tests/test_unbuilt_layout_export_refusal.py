@@ -62,7 +62,12 @@ def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: 
     # firing and this test silently stopped testing anything. Stripping the
     # layouts off the yielded subview keeps modelo 111's fixtures and makes the
     # subject the state under test, immune to any modelo later being authored.
-    provider = _schema_provider(modelos=("111",))
+    draft = _approved_modelo_111_registry_draft()
+    provider = _schema_provider(
+        filing_year=draft.period.filing_year,
+        period=draft.period.code,
+        modelos=("111",),
+    )
     subview = provider.get_subview("111")
     assert subview.export_layouts, "fixture precondition: modelo 111 must have a layout to strip"
     unbuilt = replace(
@@ -75,7 +80,7 @@ def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: 
     # sentence. The regex that used to match here pinned presentation.
     with pytest.raises(FilingExportError) as refusal:
         export_draft(
-            _approved_modelo_111_registry_draft(),
+            draft,
             output_path=output,
             producer_snapshot=snapshot,
             schema_provider=unbuilt,

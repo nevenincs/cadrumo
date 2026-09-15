@@ -16,13 +16,13 @@ from __future__ import annotations
 import inspect
 import json
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
 import yaml
 
 from .._workspace import _PluginPythonCohort, materialise_plugin
+from ..mcp._call_runtime import run_captured
 from ..resources import harness_root, iter_personas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -237,11 +237,9 @@ def test_emitted_plugin_passes_claude_validate_strict_when_cli_present(
 
     claude = shutil.which("claude")
     if claude is not None:
-        completed = subprocess.run(  # noqa: S603 - claude resolved from PATH, fixed args
+        completed = run_captured(
             [claude, "plugin", "validate", "--strict", str(output)],
-            capture_output=True,
-            text=True,
-            check=False,
+            encoding=_UTF_8,
         )
         assert completed.returncode == 0, (
             f"claude plugin validate --strict failed:\n{completed.stdout}\n{completed.stderr}"

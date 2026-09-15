@@ -502,15 +502,17 @@ def test_interactive_profile_create_remains_custody_refused_before_console_handl
     *, registry_setup_flow: WizardFlow
 ) -> None:
     """Current custody rejects create; neither status nor wizard offers it as recovery."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with pytest.raises(ProfileRegistrationError):
-            _run_full_flow(
-                registry_setup_flow,
-                {},
-                quiet=False,
-                accept_defaults=False,
-                profile_name="New profile",
-                profile_id="profile-id",
-                mode="create",
-                operation=_authority_operation_for_test,
-            )
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(ProfileRegistrationError),
+    ):
+        _run_full_flow(
+            registry_setup_flow,
+            {},
+            quiet=False,
+            accept_defaults=False,
+            profile_name="New profile",
+            profile_id="profile-id",
+            mode="create",
+            operation=_authority_operation_for_test,
+        )

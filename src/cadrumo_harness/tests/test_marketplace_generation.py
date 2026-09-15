@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -22,6 +21,7 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from .._workspace import _PluginPythonCohort, materialise_marketplace, materialise_plugin
+from ..mcp._call_runtime import run_captured
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -141,11 +141,9 @@ def test_emitted_marketplace_passes_claude_validate_strict_when_cli_present(
 
     claude = shutil.which("claude")
     if claude is not None:
-        completed = subprocess.run(  # noqa: S603 - claude resolved from PATH, fixed args
+        completed = run_captured(
             [claude, "plugin", "validate", "--strict", str(output)],
-            capture_output=True,
-            text=True,
-            check=False,
+            encoding=_UTF_8,
         )
         assert completed.returncode == 0, (
             f"claude plugin validate --strict failed:\n{completed.stdout}\n{completed.stderr}"

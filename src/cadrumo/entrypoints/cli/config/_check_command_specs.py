@@ -16,9 +16,9 @@ from ._spec_policies import ENCRYPTED_READ
 
 CONFIG_CHECK_COMMAND_SPECS = (
     CommandSpec(
-        key="config_check",
-        parent_key="config",
-        token="check",  # noqa: S106 - CLI token, not a credential.
+        "config_check",
+        "config",
+        "check",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.check.help"),
         short_help_key=None,

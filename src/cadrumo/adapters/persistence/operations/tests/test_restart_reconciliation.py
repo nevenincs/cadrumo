@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -286,7 +285,7 @@ def run_until_killed(storage_root: str, operation_id: str, subject_ref: str, pol
     asyncio.run(reach_checkpoint())
 
 
-def _crash_an_owner_at_its_checkpoint(
+async def _crash_an_owner_at_its_checkpoint_async(
     *,
     storage_root: Path,
     operation_id: str,
@@ -299,28 +298,25 @@ def _crash_an_owner_at_its_checkpoint(
     is pinned at submission: an owner that recovered under a different policy
     would be refused for contract drift, which is a different proof.
     """
-    child = subprocess.Popen(  # noqa: S603
-        [
-            sys.executable,
-            "-c",
-            "import sys;"
-            "from cadrumo.adapters.persistence.operations.tests.test_restart_reconciliation import run_until_killed;"
-            "run_until_killed(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])",
-            str(storage_root),
-            operation_id,
-            subject_ref,
-            policy.value,
-        ],
-        stdout=subprocess.PIPE,
-        text=True,
+    child = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        "import sys;"
+        "from cadrumo.adapters.persistence.operations.tests.test_restart_reconciliation import run_until_killed;"
+        "run_until_killed(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])",
+        str(storage_root),
+        operation_id,
+        subject_ref,
+        policy.value,
+        stdout=asyncio.subprocess.PIPE,
     )
     try:
         stdout = child.stdout
         assert stdout is not None
-        announced = stdout.readline()
+        announced = await asyncio.wait_for(stdout.readline(), timeout=_CHILD_READY_CEILING)
         if not announced:
             child.kill()
-            child.wait(timeout=_CHILD_READY_CEILING)
+            await asyncio.wait_for(child.wait(), timeout=_CHILD_READY_CEILING)
             pytest.fail("the owner process exited before publishing a durable checkpoint")
         published = json.loads(announced)
         assert published["marker"] == _READY_MARKER
@@ -328,10 +324,29 @@ def _crash_an_owner_at_its_checkpoint(
     finally:
         # Kill, never terminate: the owner gets no chance to release its lease
         # or unwind, which is the whole point of the crash.
-        child.kill()
-        child.wait(timeout=_CHILD_READY_CEILING)
+        if child.returncode is None:
+            child.kill()
+            await asyncio.wait_for(child.wait(), timeout=_CHILD_READY_CEILING)
 
     assert child.returncode is not None
+
+
+def _crash_an_owner_at_its_checkpoint(
+    *,
+    storage_root: Path,
+    operation_id: str,
+    subject_ref: str,
+    policy: OperationReconciliationPolicy,
+) -> None:
+    """Drive a real owner process to a durable checkpoint, then kill it."""
+    asyncio.run(
+        _crash_an_owner_at_its_checkpoint_async(
+            storage_root=storage_root,
+            operation_id=operation_id,
+            subject_ref=subject_ref,
+            policy=policy,
+        )
+    )
 
 
 def _read_journal(storage_root: Path, operation_id: str) -> OperationJournalRepository:

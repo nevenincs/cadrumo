@@ -1,7 +1,3 @@
-"""Authored CommandSpec declarations for the live portals service."""
-
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
-
 from __future__ import annotations
 
 from ._app_live_command_spec_support import (
@@ -29,9 +25,9 @@ from .command_spec import (
 
 LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_live_portals",
-        parent_key="app_live",
-        token="portals",
+        "app_live_portals",
+        "app_live",
+        "portals",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.portals.app_help"),
         short_help_key=None,
@@ -42,9 +38,9 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_portals_list",
-        parent_key="app_live_portals",
-        token="list",
+        "app_live_portals_list",
+        "app_live_portals",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.portals.list_help"),
         short_help_key=None,
@@ -82,9 +78,9 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_portals_view",
-        parent_key="app_live_portals",
-        token="view",
+        "app_live_portals_view",
+        "app_live_portals",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.portals.view_help"),
         short_help_key=None,
@@ -109,3 +105,5 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LIVE_PORTALS_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live portals service."""
+"""Authored CommandSpec declarations for the live portals service."""

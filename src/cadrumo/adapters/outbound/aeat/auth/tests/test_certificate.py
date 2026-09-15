@@ -26,7 +26,7 @@ from ..certificate import (
     load_certificate,
 )
 from ..providers import CertificateContextProvisioner
-from ._auth_fixtures import SECRET_PASSPHRASE
+from ._auth_fixtures import CERTIFICATE_INPUT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _VALID_NOT_BEFORE = datetime(2026, 5, 28, 14, 0, 0, tzinfo=UTC)
@@ -38,7 +38,7 @@ _EXPIRED_NOT_AFTER = datetime(2026, 5, 27, 14, 0, 0, tzinfo=UTC)
 def _build_pkcs12_bundle(
     tmp_path: Path,
     *,
-    password: str = SECRET_PASSPHRASE,
+    password: str = CERTIFICATE_INPUT,
     not_valid_before: datetime | None = None,
     not_valid_after: datetime | None = None,
     friendly_name: bytes = b"test-cert",
@@ -76,21 +76,21 @@ def _build_pkcs12_bundle(
 def test_bundle_is_strict_frozen_and_secret_safe(tmp_path: Path) -> None:
     bundle = CertificateBundle(
         path=tmp_path / "x.p12",
-        password=SecretStr(SECRET_PASSPHRASE),
+        password=SecretStr(CERTIFICATE_INPUT),
     )
 
     with pytest.raises(ValueError, match=r"Extra inputs are not permitted|not_a_field"):
         CertificateBundle.model_validate(
             {
                 "path": tmp_path / "x.p12",
-                "password": SecretStr(SECRET_PASSPHRASE),
+                "password": SecretStr(CERTIFICATE_INPUT),
                 "not_a_field": 1,
             },
         )
     with pytest.raises(ValueError, match=r"frozen|Instance is frozen"):
         bundle.path = tmp_path / "y.p12"
-    assert SECRET_PASSPHRASE not in repr(bundle)
-    assert SECRET_PASSPHRASE not in bundle.model_dump_json()
+    assert CERTIFICATE_INPUT not in repr(bundle)
+    assert CERTIFICATE_INPUT not in bundle.model_dump_json()
 
 
 def test_load_certificate_uses_real_pkcs12_and_keeps_secrets_private(tmp_path: Path) -> None:
@@ -98,7 +98,7 @@ def test_load_certificate_uses_real_pkcs12_and_keeps_secrets_private(tmp_path: P
     loaded = load_certificate(
         CertificateBundle(
             path=p12,
-            password=SecretStr(SECRET_PASSPHRASE),
+            password=SecretStr(CERTIFICATE_INPUT),
         ),
     )
 
@@ -115,9 +115,9 @@ def test_load_certificate_uses_real_pkcs12_and_keeps_secrets_private(tmp_path: P
         repr(loaded),
         str(loaded),
     ):
-        assert SECRET_PASSPHRASE not in rendered
+        assert CERTIFICATE_INPUT not in rendered
     assert loaded._pkcs12_bytes
-    assert loaded._password.get_secret_value() == SECRET_PASSPHRASE
+    assert loaded._password.get_secret_value() == CERTIFICATE_INPUT
     assert loaded._private_key_handle is not None
 
 
@@ -148,7 +148,7 @@ def test_load_certificate_rejects_expired_and_malformed_bundles(tmp_path: Path) 
         load_certificate(
             CertificateBundle(
                 path=expired,
-                password=SecretStr(SECRET_PASSPHRASE),
+                password=SecretStr(CERTIFICATE_INPUT),
             ),
         )
 
@@ -158,7 +158,7 @@ def test_load_certificate_rejects_expired_and_malformed_bundles(tmp_path: Path) 
         load_certificate(
             CertificateBundle(
                 path=malformed,
-                password=SecretStr(SECRET_PASSPHRASE),
+                password=SecretStr(CERTIFICATE_INPUT),
             ),
         )
 
@@ -168,7 +168,7 @@ def test_context_provisioner_pins_exact_origin_and_materialises_secret(tmp_path:
     loaded = load_certificate(
         CertificateBundle(
             path=p12,
-            password=SecretStr(SECRET_PASSPHRASE),
+            password=SecretStr(CERTIFICATE_INPUT),
         ),
     )
     validated_bytes = loaded._pkcs12_bytes
@@ -179,7 +179,7 @@ def test_context_provisioner_pins_exact_origin_and_materialises_secret(tmp_path:
             {
                 "origin": AEAT_CERTIFICATE_PROTECTED_ORIGIN,
                 "pfx": validated_bytes,
-                "passphrase": SECRET_PASSPHRASE,
+                "passphrase": CERTIFICATE_INPUT,
             },
         ],
     }
@@ -192,7 +192,7 @@ async def test_context_provisioner_constructs_real_playwright_context(tmp_path: 
     loaded = load_certificate(
         CertificateBundle(
             path=p12,
-            password=SecretStr(SECRET_PASSPHRASE),
+            password=SecretStr(CERTIFICATE_INPUT),
         ),
     )
     session = await create_browser_session(

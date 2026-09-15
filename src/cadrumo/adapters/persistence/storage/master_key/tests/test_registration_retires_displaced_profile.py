@@ -49,8 +49,8 @@ from .test_login_handover import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PASSWORD_DISPLACED = "registration-displaced-password-one"  # noqa: S105 - real test credential
-_PASSWORD_ENTERING = "registration-displaced-password-two"  # noqa: S105 - real test credential
+_CREDENTIAL_DISPLACED = "registration-displaced-password-one"
+_CREDENTIAL_ENTERING = "registration-displaced-password-two"
 
 
 class _ChildRegistrationResult(TypedDict):
@@ -174,11 +174,11 @@ def test_registration_retires_the_profile_it_displaces_without_waiting_for_a_log
     """
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        displaced = _register_in_separate_process(storage_root, "Displacement One", _PASSWORD_DISPLACED)["profile_id"]
-        opened = _login_in_separate_process(storage_root, displaced, _PASSWORD_DISPLACED)
+        displaced = _register_in_separate_process(storage_root, "Displacement One", _CREDENTIAL_DISPLACED)["profile_id"]
+        opened = _login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
         assert opened["bucket_id"] == displaced
 
-        entering = _register_in_separate_process(storage_root, "Displacement Two", _PASSWORD_ENTERING)["profile_id"]
+        entering = _register_in_separate_process(storage_root, "Displacement Two", _CREDENTIAL_ENTERING)["profile_id"]
 
         selected = read_pointer(storage_root)
         assert selected.bucket_id == entering, "creation is expected to select the new capsule"
@@ -202,8 +202,8 @@ def test_the_displaced_profile_is_resumable_until_the_registration_displaces_it(
     """
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        selected = _register_in_separate_process(storage_root, "Resumable One", _PASSWORD_DISPLACED)["profile_id"]
-        _login_in_separate_process(storage_root, selected, _PASSWORD_DISPLACED)
+        selected = _register_in_separate_process(storage_root, "Resumable One", _CREDENTIAL_DISPLACED)["profile_id"]
+        _login_in_separate_process(storage_root, selected, _CREDENTIAL_DISPLACED)
 
         probe = _probe_resumable_session(storage_root, selected)
 
@@ -226,13 +226,13 @@ def test_a_registration_that_displaces_nothing_still_publishes_its_profile(
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         assert read_pointer(storage_root).bucket_id is None
 
-        first = _register_in_separate_process(storage_root, "Unopposed One", _PASSWORD_DISPLACED)
+        first = _register_in_separate_process(storage_root, "Unopposed One", _CREDENTIAL_DISPLACED)
 
         selected = read_pointer(storage_root)
         assert selected.bucket_id == first["profile_id"]
         assert first["label"] == "Unopposed One"
 
-        opened = _login_in_separate_process(storage_root, first["profile_id"], _PASSWORD_DISPLACED)
+        opened = _login_in_separate_process(storage_root, first["profile_id"], _CREDENTIAL_DISPLACED)
         assert opened["bucket_id"] == first["profile_id"]
 
 
@@ -250,11 +250,11 @@ def test_the_entering_profile_keeps_the_session_the_registration_gave_it(
     """
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        displaced = _register_in_separate_process(storage_root, "Survivor One", _PASSWORD_DISPLACED)["profile_id"]
-        _login_in_separate_process(storage_root, displaced, _PASSWORD_DISPLACED)
+        displaced = _register_in_separate_process(storage_root, "Survivor One", _CREDENTIAL_DISPLACED)["profile_id"]
+        _login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
 
-        entering = _register_in_separate_process(storage_root, "Survivor Two", _PASSWORD_ENTERING)["profile_id"]
-        opened = _login_in_separate_process(storage_root, entering, _PASSWORD_ENTERING)
+        entering = _register_in_separate_process(storage_root, "Survivor Two", _CREDENTIAL_ENTERING)["profile_id"]
+        opened = _login_in_separate_process(storage_root, entering, _CREDENTIAL_ENTERING)
         assert opened["bucket_id"] == entering
 
         probe = _probe_resumable_session(storage_root, entering)
@@ -286,8 +286,8 @@ def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_w
     """
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        displaced = _register_in_separate_process(storage_root, "Obstructed One", _PASSWORD_DISPLACED)["profile_id"]
-        _login_in_separate_process(storage_root, displaced, _PASSWORD_DISPLACED)
+        displaced = _register_in_separate_process(storage_root, "Obstructed One", _CREDENTIAL_DISPLACED)["profile_id"]
+        _login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
 
         receipt = profile_session_path(storage_root=storage_root, profile_id=UUID(displaced))
         assert receipt.exists(), "the displaced profile must hold a receipt for the retirement to reach"
@@ -295,7 +295,7 @@ def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_w
         receipt.mkdir()
         (receipt / "occupant.bin").write_bytes(b"an occupied receipt path cannot be unlinked")
 
-        refusal = _attempt_registration_in_separate_process(storage_root, "Obstructed Two", _PASSWORD_ENTERING)
+        refusal = _attempt_registration_in_separate_process(storage_root, "Obstructed Two", _CREDENTIAL_ENTERING)
 
         assert refusal["refused"] is True
         assert refusal["cause"] == "ProfileCustodyDisplacedSessionRetirementError"

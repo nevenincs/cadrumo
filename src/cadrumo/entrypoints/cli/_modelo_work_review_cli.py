@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Behavior for the canonical modelo work review read surface."""
 
 from __future__ import annotations
@@ -31,9 +30,11 @@ def _review_lines(result: WorkReviewResult) -> list[str]:
         f"work_unit_id\t{review.work_unit_id}",
         f"calculation_revision_id\t{review.calculation_revision_id or ''}",
         f"lifecycle_state\t{(review.lifecycle_state.value if review.lifecycle_state is not None else '')}",
-        f"verification_outcome\t{(review.verification_outcome.value if review.verification_outcome is not None else '')}",
+        "verification_outcome\t"
+        f"{(review.verification_outcome.value if review.verification_outcome is not None else '')}",
         f"progress_state\t{review.progress.state.value}",
-        f"materialised_count\t{(review.progress.materialised_count if review.progress.materialised_count is not None else '')}",
+        "materialised_count\t"
+        f"{(review.progress.materialised_count if review.progress.materialised_count is not None else '')}",
         f"target_count\t{(review.progress.target_count if review.progress.target_count is not None else '')}",
         f"casilla_count\t{review.casilla_count}",
         f"finding_count\t{len(review.findings)}",
