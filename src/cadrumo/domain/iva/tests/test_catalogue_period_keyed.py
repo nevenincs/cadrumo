@@ -26,7 +26,14 @@ def test_the_grounded_years_are_derived_from_the_citation_windows() -> None:
 
         assert grounded, "the catalogue grounds no year at all; every assertion below would be vacuous"
         for year in sorted(grounded):
-            assert resolve_catalogue(on=date(year, 6, 15), operation=_authority_operation_for_test) is not None
+            assert (
+                resolve_catalogue(
+                    on=date(year, 6, 15),
+                    operation=_authority_operation_for_test,
+                    projected_year=year,
+                )
+                is not None
+            )
 
 
 def test_a_resolved_catalogue_carries_only_citations_asserted_over_that_year() -> None:
@@ -34,7 +41,11 @@ def test_a_resolved_catalogue_carries_only_citations_asserted_over_that_year() -
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         year = min(iva_catalogue_years(operation=_authority_operation_for_test))
 
-        catalogue = resolve_catalogue(on=date(year, 6, 15), operation=_authority_operation_for_test)
+        catalogue = resolve_catalogue(
+            on=date(year, 6, 15),
+            operation=_authority_operation_for_test,
+            projected_year=year,
+        )
 
         citations = [citation for regulation in catalogue for citation in regulation.citations]
         assert citations, "the resolved catalogue carries no citations; the projection dropped everything"
@@ -43,8 +54,16 @@ def test_a_resolved_catalogue_carries_only_citations_asserted_over_that_year() -
 
 def test_resolving_the_same_year_twice_uses_one_authority_without_a_projection_cache() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        first = resolve_catalogue(on=date(2025, 6, 15), operation=_authority_operation_for_test)
-        second = resolve_catalogue(on=date(2025, 1, 1), operation=_authority_operation_for_test)
+        first = resolve_catalogue(
+            on=date(2025, 6, 15),
+            operation=_authority_operation_for_test,
+            projected_year=2025,
+        )
+        second = resolve_catalogue(
+            on=date(2025, 1, 1),
+            operation=_authority_operation_for_test,
+            projected_year=2025,
+        )
 
         assert first == second
         assert first is not second
@@ -61,6 +80,7 @@ def test_the_undated_corpus_carries_every_citation_regardless_of_span() -> None:
             for regulation in resolve_catalogue(
                 on=date(max(iva_catalogue_years(operation=_authority_operation_for_test)), 1, 1),
                 operation=_authority_operation_for_test,
+                projected_year=max(iva_catalogue_years(operation=_authority_operation_for_test)),
             )
         )
 
@@ -68,10 +88,16 @@ def test_the_undated_corpus_carries_every_citation_regardless_of_span() -> None:
 
 
 def test_resolve_catalogue_requires_a_grounded_year() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        # The witness year is deliberately OUTSIDE the registry's supported filing
-        # window. A supported year used here would assert that a year the product
-        # claims to file is permanently ungrounded, pinning today's coverage gap as
-        # the contract and reddening the moment that year is correctly added.
-        with pytest.raises(RegistrySnapshotError, match="filing year 1990"):
-            resolve_catalogue(on=date(1990, 6, 15), operation=_authority_operation_for_test)
+    # The witness year is deliberately OUTSIDE the registry's supported filing
+    # window. A supported year used here would assert that a year the product
+    # claims to file is permanently ungrounded, pinning today's coverage gap as
+    # the contract and reddening the moment that year is correctly added.
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(RegistrySnapshotError, match="filing year 1990"),
+    ):
+        resolve_catalogue(
+            on=date(1990, 6, 15),
+            operation=_authority_operation_for_test,
+            projected_year=1990,
+        )

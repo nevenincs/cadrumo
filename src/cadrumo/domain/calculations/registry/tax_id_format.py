@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from typing import Annotated, Final, Protocol
+from typing import Annotated, Final
 
 from pydantic import AfterValidator
 
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, SpanishTaxIdFormat
 from ....core.identity.tax_id import validate_spanish_tax_id
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .facts.resolution import MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from .facts.schema import GovernedFactCatalogue, GovernedFactFamily, MappingFactPayload
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
@@ -18,11 +18,18 @@ from .schema_base import DateAxis
 TAX_ID_FORMAT_FACT_ID: Final = "spanish-tax-identifier-format"
 
 
-class _FactAuthority(Protocol):
-    def resolve_governed_fact(self, query: MappingFactQuery) -> object: ...
+def _declarations_from_payload(payload: MappingFactPayload) -> dict[str, str]:
+    declarations: dict[str, str] = {}
+    for entry in payload.entries:
+        key = entry.key
+        value = entry.value
+        if not isinstance(key, str) or not isinstance(value, str):
+            raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} declarations must all be strings")
+        declarations[key] = value
+    return declarations
 
 
-def tax_id_format_from_declarations(declarations: Mapping[str, object]) -> SpanishTaxIdFormat:
+def tax_id_format_from_declarations(declarations: Mapping[str, str]) -> SpanishTaxIdFormat:
     """Build the typed format from a complete fact mapping, without defaults."""
     if any(not isinstance(key, str) or not isinstance(value, str) for key, value in declarations.items()):
         raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} declarations must all be strings")
@@ -75,10 +82,10 @@ def tax_id_format_from_declarations(declarations: Mapping[str, object]) -> Spani
     )
 
 
-def _format_from_resolved(resolved: object) -> SpanishTaxIdFormat:
+def _format_from_resolved(resolved: ResolvedGovernedFact) -> SpanishTaxIdFormat:
     if not isinstance(resolved, ResolvedMappingFact):
         raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} did not resolve as a mapping")
-    return tax_id_format_from_declarations({entry.key: entry.value for entry in resolved.payload.entries})
+    return tax_id_format_from_declarations(_declarations_from_payload(resolved.payload))
 
 
 def tax_id_format_from_catalogue(catalogue: GovernedFactCatalogue) -> SpanishTaxIdFormat:
@@ -90,14 +97,14 @@ def tax_id_format_from_catalogue(catalogue: GovernedFactCatalogue) -> SpanishTax
     for variant in fact.variants:
         if not isinstance(variant.payload, MappingFactPayload):
             raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} contains a non-mapping variant")
-        declarations = {entry.key: entry.value for entry in variant.payload.entries}
+        declarations = _declarations_from_payload(variant.payload)
         formats.add(tax_id_format_from_declarations(declarations))
     if len(formats) != 1:
         raise ValueError(f"{TAX_ID_FORMAT_FACT_ID} must declare one invariant bootstrap format")
     return formats.pop()
 
 
-def tax_id_format(authority: _FactAuthority, *, effective_date: date) -> SpanishTaxIdFormat:
+def tax_id_format(authority: GovernedFactSource, *, effective_date: date) -> SpanishTaxIdFormat:
     """Resolve the format from one explicitly supplied established authority."""
     return _format_from_resolved(
         authority.resolve_governed_fact(
@@ -108,7 +115,7 @@ def tax_id_format(authority: _FactAuthority, *, effective_date: date) -> Spanish
     )
 
 
-def validate_authoritative_spanish_tax_id(value: str, authority: _FactAuthority, *, effective_date: date) -> str:
+def validate_authoritative_spanish_tax_id(value: str, authority: GovernedFactSource, *, effective_date: date) -> str:
     """Validate one identifier against an explicitly supplied authority."""
     return validate_spanish_tax_id(value, tax_id_format(authority, effective_date=effective_date))
 

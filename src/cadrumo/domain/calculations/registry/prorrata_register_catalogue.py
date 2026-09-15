@@ -111,7 +111,7 @@ class ProrrataRegisterCatalogue:
         return tuple(definition.token for definition in self.provenances if definition.election_allowed)
 
     def require_regime(self, value: object) -> ProrrataRegisterRegime:
-        token = _coerce_token(value, ProrrataRegisterRegime, "prorrata register regime")
+        token = _coerce_regime(value)
         if token not in self.all_regimes:
             raise RegistryValidationError(
                 f"prorrata register regime {str(token)!r} is not declared by the facts registry",
@@ -119,7 +119,7 @@ class ProrrataRegisterCatalogue:
         return token
 
     def require_transition(self, value: object) -> ProrrataEspecialTransitionKind:
-        token = _coerce_token(value, ProrrataEspecialTransitionKind, "prorrata especial transition")
+        token = _coerce_transition(value)
         if token not in self.all_transition_kinds:
             raise RegistryValidationError(
                 f"prorrata especial transition {str(token)!r} is not declared by the facts registry",
@@ -127,7 +127,7 @@ class ProrrataRegisterCatalogue:
         return token
 
     def require_provenance(self, value: object) -> ProrrataProvisionalProvenance:
-        token = _coerce_token(value, ProrrataProvisionalProvenance, "prorrata provisional provenance")
+        token = _coerce_provenance(value)
         if token not in self.all_provenances:
             raise RegistryValidationError(
                 f"prorrata provisional provenance {str(token)!r} is not declared by the facts registry",
@@ -135,7 +135,7 @@ class ProrrataRegisterCatalogue:
         return token
 
     def require_sector_letter(self, value: object) -> SectorDiferenciadoLetra:
-        token = _coerce_token(value, SectorDiferenciadoLetra, "differentiated-sector letter")
+        token = _coerce_sector_letter(value)
         if token not in self.all_sector_letters:
             raise RegistryValidationError(
                 f"differentiated-sector letter {str(token)!r} is not declared by the facts registry",
@@ -189,18 +189,63 @@ class ProrrataRegisterCatalogue:
         return tuple(definition.token for definition in self.provenances)
 
 
-def _coerce_token(value: object, token_type: type[str], label: str) -> str:
-    if isinstance(value, token_type):
+def _coerce_regime(value: object) -> ProrrataRegisterRegime:
+    if isinstance(value, ProrrataRegisterRegime):
         token = value
     elif isinstance(value, str):
         try:
-            token = token_type._from_registry(value.strip())  # type: ignore[attr-defined]
+            token = ProrrataRegisterRegime._from_registry(value.strip())
         except (TypeError, ValueError) as exc:
-            raise RegistryValidationError(f"{label} must be a non-empty registry token") from exc
+            raise RegistryValidationError("prorrata register regime must be a non-empty registry token") from exc
     else:
-        raise RegistryValidationError(f"{label} must be a registry-projected string token")
+        raise RegistryValidationError("prorrata register regime must be a registry-projected string token")
     if not str(token):
-        raise RegistryValidationError(f"{label} must not be blank")
+        raise RegistryValidationError("prorrata register regime must not be blank")
+    return token
+
+
+def _coerce_transition(value: object) -> ProrrataEspecialTransitionKind:
+    if isinstance(value, ProrrataEspecialTransitionKind):
+        token = value
+    elif isinstance(value, str):
+        try:
+            token = ProrrataEspecialTransitionKind._from_registry(value.strip())
+        except (TypeError, ValueError) as exc:
+            raise RegistryValidationError("prorrata especial transition must be a non-empty registry token") from exc
+    else:
+        raise RegistryValidationError("prorrata especial transition must be a registry-projected string token")
+    if not str(token):
+        raise RegistryValidationError("prorrata especial transition must not be blank")
+    return token
+
+
+def _coerce_provenance(value: object) -> ProrrataProvisionalProvenance:
+    if isinstance(value, ProrrataProvisionalProvenance):
+        token = value
+    elif isinstance(value, str):
+        try:
+            token = ProrrataProvisionalProvenance._from_registry(value.strip())
+        except (TypeError, ValueError) as exc:
+            raise RegistryValidationError("prorrata provisional provenance must be a non-empty registry token") from exc
+    else:
+        raise RegistryValidationError("prorrata provisional provenance must be a registry-projected string token")
+    if not str(token):
+        raise RegistryValidationError("prorrata provisional provenance must not be blank")
+    return token
+
+
+def _coerce_sector_letter(value: object) -> SectorDiferenciadoLetra:
+    if isinstance(value, SectorDiferenciadoLetra):
+        token = value
+    elif isinstance(value, str):
+        try:
+            token = SectorDiferenciadoLetra._from_registry(value.strip())
+        except (TypeError, ValueError) as exc:
+            raise RegistryValidationError("differentiated-sector letter must be a non-empty registry token") from exc
+    else:
+        raise RegistryValidationError("differentiated-sector letter must be a registry-projected string token")
+    if not str(token):
+        raise RegistryValidationError("differentiated-sector letter must not be blank")
     return token
 
 

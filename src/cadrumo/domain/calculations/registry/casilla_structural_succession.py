@@ -183,9 +183,9 @@ def structural_succession_failures(modelo: ModeloDefinition) -> tuple[str, ...]:
 def validated_structural_targets(modelo: ModeloDefinition, revision_id: str) -> frozenset[str]:
     """Only valid relationship membership resolves a successor's origin totality."""
     if not modelo.revisions[revision_id].casilla_structural_successions:
-        return frozenset()
+        return frozenset[str]()
     if structural_succession_failures(modelo):
-        return frozenset()
+        return frozenset[str]()
     return frozenset(
         lineage
         for relation in modelo.revisions[revision_id].casilla_structural_successions

@@ -106,7 +106,7 @@ def _contains_elider(node: ast.AST, aliases: set[str]) -> bool:
     return any(_contains_elider(child, aliases) for child in ast.iter_child_nodes(node))
 
 
-def _capped_prose_fields() -> Mapping[tuple[str, str], object]:
+def _capped_prose_fields() -> Mapping[tuple[str, str], _StaticField]:
     """Return ``(model name, field name) -> field`` for every capped prose field.
 
     Walks the live package rather than a list, so a model added tomorrow is
@@ -115,6 +115,8 @@ def _capped_prose_fields() -> Mapping[tuple[str, str], object]:
     caps = _prose_caps()
     eliding: set[tuple[str, str]] = set()
     for _path, tree in production_ast_items():
+        if not isinstance(tree, ast.Module):
+            continue
         aliases: set[str] = set()
         for statement in tree.body:
             if isinstance(statement, (ast.Assign, ast.AnnAssign)) and statement.value is not None:
@@ -201,7 +203,7 @@ def _elides(field: FieldInfo | _StaticField) -> bool:
 
 
 @pytest.fixture(scope="module")
-def capped_prose_fields() -> Mapping[tuple[str, str], FieldInfo]:
+def capped_prose_fields() -> Mapping[tuple[str, str], _StaticField]:
     """Every capped prose field in the tree, discovered once."""
     return _capped_prose_fields()
 
@@ -218,7 +220,7 @@ def system_built_fields(source_tree_ast: Mapping[Path, ast.AST]) -> frozenset[tu
 # ---------------------------------------------------------------------------
 
 
-def test_the_capped_prose_corpus_is_populated(capped_prose_fields: Mapping[tuple[str, str], FieldInfo]) -> None:
+def test_the_capped_prose_corpus_is_populated(capped_prose_fields: Mapping[tuple[str, str], _StaticField]) -> None:
     """The model walk finds real fields.
 
     Without this the gate passes vacuously the moment the walk breaks, an
@@ -231,7 +233,7 @@ def test_the_capped_prose_corpus_is_populated(capped_prose_fields: Mapping[tuple
 
 
 def test_the_corpus_agrees_with_the_companion_gate(
-    capped_prose_fields: Mapping[tuple[str, str], FieldInfo],
+    capped_prose_fields: Mapping[tuple[str, str], _StaticField],
 ) -> None:
     """Two independent walks must see the same fields.
 
@@ -243,7 +245,7 @@ def test_the_corpus_agrees_with_the_companion_gate(
 
 
 def test_the_discriminator_selects_a_proper_subset(
-    capped_prose_fields: Mapping[tuple[str, str], FieldInfo],
+    capped_prose_fields: Mapping[tuple[str, str], _StaticField],
     system_built_fields: frozenset[tuple[str, str]],
 ) -> None:
     """System-built is narrower than capped-prose, and not empty.
@@ -357,7 +359,7 @@ def test_the_discriminator_rejects_prose_it_did_not_compose() -> None:
 
 
 def test_every_system_built_prose_field_elides_rather_than_refusing(
-    capped_prose_fields: Mapping[tuple[str, str], FieldInfo],
+    capped_prose_fields: Mapping[tuple[str, str], _StaticField],
     system_built_fields: frozenset[tuple[str, str]],
 ) -> None:
     """Prose assembled from taxpayer data must shorten, never block.

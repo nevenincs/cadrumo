@@ -203,6 +203,7 @@ from .schema_revision_members import (
 )
 from .schema_surfaces import (
     CalculationCompletenessManifest,
+    CasillaConstraints,
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
     validate_family_identity_uniqueness,
@@ -614,15 +615,41 @@ class CasillaFieldOverride(RegistryModel):
     @model_validator(mode="after")
     def _validate_patch(self) -> CasillaFieldOverride:
         patchable = set(CasillaDefinition.model_fields) | {"additional_source_refs"}
-        unknown = sorted((set(self.fields) | set(self.removed_fields)) - patchable)
+        constraint_patchable = set(CasillaConstraints.model_fields) | {"additional_source_refs"}
+        malformed = sorted(
+            path
+            for path in self.removed_fields
+            if not path or any(not segment for segment in path.split(".")) or len(path.split(".")) > 2
+        )
+        if malformed:
+            raise RegistryValidationError(f"casilla field override has malformed removed fields {malformed!r}")
+        unknown_removed = {
+            path
+            for path in self.removed_fields
+            if (
+                (len(segments := path.split(".")) == 1 and segments[0] not in patchable)
+                or (len(segments) == 2 and (segments[0] != "constraints" or segments[1] not in constraint_patchable))
+            )
+        }
+        unknown = sorted((set(self.fields) - patchable) | unknown_removed)
         if unknown:
             raise RegistryValidationError(f"casilla field override names unknown fields {unknown!r}")
-        overlap = sorted(set(self.fields) & set(self.removed_fields))
+        overlap = set(self.fields) & set(self.removed_fields)
+        constraint_fields = self.fields.get("constraints")
+        for path in self.removed_fields:
+            segments = path.split(".")
+            if len(segments) != 2 or segments[0] != "constraints" or "constraints" not in self.fields:
+                continue
+            if not isinstance(constraint_fields, Mapping) or segments[1] in constraint_fields:
+                overlap.add(path)
+        overlap = sorted(overlap)
         if overlap:
             raise RegistryValidationError(f"casilla field override both sets and removes fields {overlap!r}")
         if not self.fields and not self.removed_fields and not self.restate_provenance:
             raise RegistryValidationError("casilla field override must set or remove at least one field")
-        if "inherited_from" in self.fields or "inherited_from" in self.removed_fields:
+        if "inherited_from" in self.fields or any(
+            path.split(".")[0] == "inherited_from" for path in self.removed_fields
+        ):
             raise RegistryValidationError("inherited_from is loader-owned and cannot be overridden")
         return self
 

@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
+from typing import overload
 
 from ....domain.iva.prorrata import InputClassification, ProrrataKind
 from .errors import RegistryValidationError
@@ -113,7 +114,19 @@ class InputClassificationCatalogue:
         return next(definition for definition in self.definitions if definition.token == token)
 
 
-def _coerce_token(value: object, token_type: type[str], label: str) -> str:
+@overload
+def _coerce_token(value: object, token_type: type[ProrrataKind], label: str) -> ProrrataKind: ...
+
+
+@overload
+def _coerce_token(value: object, token_type: type[InputClassification], label: str) -> InputClassification: ...
+
+
+def _coerce_token(
+    value: object,
+    token_type: type[ProrrataKind] | type[InputClassification],
+    label: str,
+) -> ProrrataKind | InputClassification:
     if isinstance(value, token_type):
         token = value
     elif isinstance(value, str):
@@ -121,7 +134,7 @@ def _coerce_token(value: object, token_type: type[str], label: str) -> str:
         if not raw:
             raise RegistryValidationError(f"{label} must be a non-empty string token")
         try:
-            token = token_type._from_registry(raw)  # type: ignore[attr-defined]
+            token = token_type._from_registry(raw)
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError(f"{label} must be a non-empty registry token") from exc
     else:

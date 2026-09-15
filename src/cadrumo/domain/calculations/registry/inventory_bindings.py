@@ -23,7 +23,6 @@ from pydantic import BaseModel, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model
 from .binding_temporal import BindingTemporalSelector, SameTargetContext
@@ -67,7 +66,7 @@ class InventoryProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.INVENTORY] = BindingSourceKind.INVENTORY
 
-    modelo: Literal[Modelo("100")]
+    modelo: Literal["100"]
     # The source year is the TARGET's year, never an authored constant: the
     # declaration states timeless intent and the filing context supplies the
     # year. The casilla-renumbering hazard the former absolute ``filing_year``

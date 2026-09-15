@@ -23,7 +23,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
         (SectorDiferenciadoLetra, "a"),
     ),
 )
-def test_registry_tokens_are_opaque_and_structurally_non_empty(token_type: type[str], value: str) -> None:
+def test_registry_tokens_are_opaque_and_structurally_non_empty(
+    token_type: type[
+        ProrrataRegisterRegime
+        | ProrrataEspecialTransitionKind
+        | ProrrataProvisionalProvenance
+        | SectorDiferenciadoLetra
+    ],
+    value: str,
+) -> None:
     """Core constructs tokens only through the explicit registry projection."""
     token = token_type._from_registry(value)
     assert token.value == value

@@ -2,15 +2,26 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from datetime import date
+
 import pytest
 
 from ....core.identity.documents import IdentityError
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.nif_iva_catalogue import nif_iva_format_for_country, nif_iva_prefix_for_country
 from ...calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
-from ...iva.schema import EUMemberState
 from ..validators import validate_country_code, validate_iva_number
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
+    with validating_governed_facts(operation):
+        yield
 
 
 def test_validate_spanish_tax_id_accepts_known_valid_nif() -> None:
@@ -278,7 +289,9 @@ def test_validate_iva_number_non_eu_generic_still_rejects_bad_shape() -> None:
         validate_iva_number("USxx", "US")  # body too short
 
 
-def test_every_eu_member_state_except_spain_has_a_nif_iva_format() -> None:
+def test_every_eu_member_state_except_spain_has_a_nif_iva_format(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The format table covers every EU Member State (Greece via EL), excluding Spain.
 
     Anchored to :class:`cadrumo.domain.iva.EUMemberState` so a future Member State
@@ -286,8 +299,10 @@ def test_every_eu_member_state_except_spain_has_a_nif_iva_format() -> None:
     Spain is intentionally absent — Spanish identifiers use the checksum
     validator, not a structural pattern.
     """
-    for member in EUMemberState:
-        if member is EUMemberState._from_registry("es"):
+    catalogue = resolve_eu_member_state_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    spain = catalogue.require("es")
+    for member in catalogue.choices:
+        if member == spain:
             assert nif_iva_prefix_for_country(member.value) is None
             continue
         prefix = nif_iva_prefix_for_country(member.value.upper())

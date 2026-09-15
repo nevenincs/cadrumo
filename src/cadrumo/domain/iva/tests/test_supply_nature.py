@@ -25,6 +25,7 @@ import pytest
 
 from ....core.corpus_text import resolve_anchored_extracted_unit
 from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..schema import IvaCategory
 from ..supply_nature import (
     StatutoryCitation,
@@ -357,7 +358,8 @@ def test_a_category_the_catalogue_names_a_service_derives_services() -> None:
     Discovered from the catalogue rather than listed, so a member added later is
     covered without editing this file.
     """
-    service_named = tuple(category for category in IvaCategory if "SERVICE" in category.name)
+    category_catalogue = resolve_iva_category_catalogue(effective_date=date.today())
+    service_named = tuple(category for category in category_catalogue.all_categories if "service" in category.value)
     assert service_named, "the catalogue names no service member, so this case cannot discriminate"
 
     for category in service_named:
@@ -394,7 +396,8 @@ def test_no_shipped_category_is_grounded_in_articles_that_disagree() -> None:
     operator can be asked about. Stated as a property so it keeps holding as
     articles and members are added.
     """
-    for category in IvaCategory:
+    category_catalogue = resolve_iva_category_catalogue(effective_date=date.today())
+    for category in category_catalogue.all_categories:
         derivation = supply_nature_implied_by_category(category)
         assert derivation.outcome is not SupplyNatureDerivationOutcome.CONTRADICTED, (
             f"{category.value} is grounded in articles establishing different natures: {derivation.note}"

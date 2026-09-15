@@ -44,7 +44,12 @@ def test_replaced_names_both_identifiers() -> None:
 def test_replacement_by_itself_is_refused() -> None:
     with pytest.raises(ValidationError, match="cannot be replaced by itself"):
         ReplacedIdentifierEvolution(
-            family="bindings", identifier="same", replaced_by="same", to_revision="2025", **_REFS
+            family="bindings",
+            identifier="same",
+            replaced_by="same",
+            to_revision="2025",
+            legal_refs=_REFS["legal_refs"],
+            source_refs=_REFS["source_refs"],
         )
 
 
@@ -63,4 +68,10 @@ def test_revision_enrolls_one_identifier_evolution_section() -> None:
 
 def test_family_name_is_a_collection_token() -> None:
     with pytest.raises(ValidationError):
-        RetiredIdentifierEvolution(family="Bindings!", identifier="x", to_revision="2025", **_REFS)
+        RetiredIdentifierEvolution(
+            family="Bindings!",
+            identifier="x",
+            to_revision="2025",
+            legal_refs=_REFS["legal_refs"],
+            source_refs=_REFS["source_refs"],
+        )

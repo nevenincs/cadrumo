@@ -86,7 +86,7 @@ devengada / cuota deducible total?".
 
 from __future__ import annotations
 
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
@@ -95,6 +95,9 @@ from ...core.errors.hierarchy import CoreValidationError
 from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue, resolve_iva_category_catalogue
 from .classification import InvoiceKind
 from .schema import IvaCategory
+
+if TYPE_CHECKING:
+    from ..calculations.registry.iva_flow_catalogue import IvaFlowDirectionCatalogue
 
 
 class IvaFlowDirection(str):
@@ -174,7 +177,7 @@ def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind) -> IvaFlowDirecti
     return flow_catalogue.issued_token if invoice_kind is InvoiceKind.ISSUED else flow_catalogue.received_token
 
 
-def _flow_direction_catalogue():
+def _flow_direction_catalogue() -> IvaFlowDirectionCatalogue:
     """Resolve the selected 0083 flow catalogue without an import cycle."""
     from ..calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
 

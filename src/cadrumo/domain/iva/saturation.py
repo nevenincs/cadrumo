@@ -81,9 +81,7 @@ def _ambiguous_tier_reason(
     Names every rate actually in force so the operator can pick, rather than
     reporting a bare "not derivable" for a tier that plainly has a rate.
     """
-    ordinary = ", ".join(
-        f"{record.pct} %" for record in _ordinary_tier_rates(rate_kind, on_date, operation=operation)
-    )
+    ordinary = ", ".join(f"{record.pct} %" for record in _ordinary_tier_rates(rate_kind, on_date, operation=operation))
     temporary = ", ".join(f"{record.pct} %" for record in coexisting)
     return (
         f"the {rate_kind.value.replace('_', '-')} tier carries more than one rate on "

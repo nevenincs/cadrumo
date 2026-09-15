@@ -5,8 +5,10 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..descendant import DescendantInfo
+from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..family_types import GuarderiaMonthSpend
 
@@ -23,6 +25,11 @@ _FILING_YEAR = 2025
 _OFFICIAL_CHILD_BIRTH_DATE = date(2023, 1, 1)
 _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS = 500
 _OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS = 2_290
+_FACT_CONTEXT = FamilyFactResolutionContext(
+    compiled_bundled_authority(),
+    date(_FILING_YEAR, 12, 31),
+    date(_FILING_YEAR, 12, 31),
+)
 
 
 def _monthly_spend(amounts: tuple[int, ...]) -> tuple[GuarderiaMonthSpend, ...]:
@@ -38,7 +45,7 @@ def test_2025_full_period_monthly_spend_is_retained_by_family_aggregation() -> N
 
     profile = RentaFamilyProfile(descendientes=(child,))
 
-    assert profile.gastos_guarderia_reales(_FILING_YEAR) == 1_800
+    assert profile.gastos_guarderia_reales(_FILING_YEAR, context=_FACT_CONTEXT) == 1_800
 
 
 def test_2025_turning_three_child_counts_every_declared_month() -> None:
@@ -57,7 +64,7 @@ def test_2025_turning_three_child_counts_every_declared_month() -> None:
 
     profile = RentaFamilyProfile(descendientes=(child,))
 
-    assert profile.gastos_guarderia_reales(_FILING_YEAR) == 2_800
+    assert profile.gastos_guarderia_reales(_FILING_YEAR, context=_FACT_CONTEXT) == 2_800
 
 
 def test_2025_spend_outside_the_qualifying_period_yields_zero() -> None:
@@ -68,7 +75,7 @@ def test_2025_spend_outside_the_qualifying_period_yields_zero() -> None:
 
     profile = RentaFamilyProfile(descendientes=(child,))
 
-    assert profile.gastos_guarderia_reales(_FILING_YEAR) == 0
+    assert profile.gastos_guarderia_reales(_FILING_YEAR, context=_FACT_CONTEXT) == 0
 
 
 @pytest.mark.parametrize(
@@ -115,5 +122,10 @@ def test_2025_manual_examples_retain_raw_months_and_effective_spend_inputs(
     )
     effective_profile = RentaFamilyProfile(descendientes=(effective_child,))
 
-    assert raw_profile.gastos_guarderia_reales(_FILING_YEAR) == sum(amount for _month, amount in qualifying_month_spend)
-    assert effective_profile.gastos_guarderia_reales(_FILING_YEAR) == _OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS
+    assert raw_profile.gastos_guarderia_reales(_FILING_YEAR, context=_FACT_CONTEXT) == sum(
+        amount for _month, amount in qualifying_month_spend
+    )
+    assert (
+        effective_profile.gastos_guarderia_reales(_FILING_YEAR, context=_FACT_CONTEXT)
+        == _OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS
+    )

@@ -376,7 +376,7 @@ def selector_as_dict(binding: BindingDefinition) -> dict[str, object]:
     :func:`_restore_nested_discriminators`.
     """
     provider = binding.provider
-    dumped: dict[str, object] = provider.model_dump(exclude_none=True, exclude_unset=True)
+    dumped = STR_KEYED_MAPPING_ADAPTER.validate_python(provider.model_dump(exclude_none=True, exclude_unset=True))
     restored = _restore_nested_discriminators(provider, dumped)
     restored.pop("kind", None)
     return STR_KEYED_MAPPING_ADAPTER.validate_python(restored)

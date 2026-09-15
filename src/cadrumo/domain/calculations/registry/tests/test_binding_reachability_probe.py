@@ -42,8 +42,8 @@ from ..ledger_renta_gastos_pago_fraccionado_bindings import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CATEGORY = next(iter(IvaCategory))
-_RATE_KIND = next(iter(IvaRateKind))
+_CATEGORY = IvaCategory("domestic_general")
+_RATE_KIND = IvaRateKind("general")
 
 
 def _iva_selector(

@@ -19,6 +19,18 @@ from ...domain.calculations.registry.governed_fact_scope import GovernedFactSour
 from ...domain.calculations.registry.schema_base import DateAxis
 
 
+def _category_name(member: object) -> str:
+    if isinstance(member, Enum):
+        return member.name
+    return str(member).upper()
+
+
+def _require_category_type[CategoryT](member: object, category_type: type[CategoryT]) -> CategoryT:
+    if not isinstance(member, category_type):
+        raise TypeError("first-slice routing category member has an unexpected type")
+    return member
+
+
 def resolve_first_slice_expense_routing[CategoryT](
     *,
     category_type: type[CategoryT],
@@ -49,17 +61,23 @@ def resolve_first_slice_expense_routing[CategoryT](
         raise RegistryValidationError(
             "first-slice routing requires an explicit authority operation or scope",
         )
+    typed_category_type: type[CategoryT] = category_type
+    members_by_name: dict[str, CategoryT]
     if issubclass(category_type, Enum):
-        members_by_name = {member.name: member for member in category_type}
-        expected = set(category_type)
+        enum_members: dict[str, object] = {}
+        for member in category_type:
+            enum_members[member.name] = member
+        members_by_name = {
+            name: _require_category_type(member, typed_category_type) for name, member in enum_members.items()
+        }
     else:
         if category_tokens is None:
             raise TypeError("non-Enum first-slice routing requires a registry category projection")
         projected = tuple(category_tokens(selected_authority, effective_date))
-        members_by_name = {str(member.value).upper(): member for member in projected}
+        members_by_name = {_category_name(member): member for member in projected}
         if len(members_by_name) != len(projected):
             raise TypeError("first-slice routing category projection contains duplicate member names")
-        expected = set(projected)
+    expected = set(members_by_name.values())
     revision_for_context = getattr(selected_authority, "revision_for_context", None)
     if revision_for_context is None:
         raise RegistryValidationError(
@@ -128,8 +146,8 @@ def resolve_first_slice_expense_routing[CategoryT](
         raise RegistryValidationError("first-slice routing declares an unsupported source kind")
 
     if set(routing) != expected:
-        missing = sorted(getattr(member, "name", member.value) for member in expected - set(routing))
-        extra = sorted(getattr(member, "name", member.value) for member in set(routing) - expected)
+        missing = sorted(_category_name(member) for member in expected - set(routing))
+        extra = sorted(_category_name(member) for member in set(routing) - expected)
         raise RegistryValidationError(f"registry routing coverage mismatch; missing={missing!r}, extra={extra!r}")
     return routing
 

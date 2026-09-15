@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Any, Literal, override
+from typing import Any, Literal, Self, override
 
 from pydantic import Field, ValidationInfo, model_validator
 
@@ -48,7 +48,7 @@ class _IvaRegistryToken(str):
     def _token_label(cls) -> str:
         return "IVA component registry token"
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False):
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
         if not _registry_validated:
             raise TypeError(f"{cls._token_label()} must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -56,11 +56,11 @@ class _IvaRegistryToken(str):
         return str.__new__(cls, value)
 
     @classmethod
-    def _from_registry(cls, value: str):
+    def _from_registry(cls, value: str) -> Self:
         return cls(value, _registry_validated=True)
 
     @classmethod
-    def _require_registry_token(cls, value: object):
+    def _require_registry_token(cls, value: object) -> Self:
         if isinstance(value, cls):
             return value
         raise IvaValidationError(f"{cls._token_label()} must be a registry-projected token")
@@ -191,12 +191,12 @@ class IvaComponentVocabulary:
     kind_applicability: frozenset[IvaKindApplicability]
 
     @staticmethod
-    def _require(
+    def _require[IvaRegistryTokenT: _IvaRegistryToken](
         value: object,
-        token_type: type[_IvaRegistryToken],
-        declared: frozenset[_IvaRegistryToken],
+        token_type: type[IvaRegistryTokenT],
+        declared: frozenset[IvaRegistryTokenT],
         label: str,
-    ) -> _IvaRegistryToken:
+    ) -> IvaRegistryTokenT:
         if isinstance(value, token_type):
             token = value
         elif isinstance(value, str):
@@ -219,7 +219,7 @@ class IvaComponentVocabulary:
             IvaComponentPresence,
             self.component_presence,
             "IVA component-presence token",
-        )  # type: ignore[return-value]
+        )
 
     def require_retencion_expectation(self, value: object) -> IvaRetencionExpectation:
         return self._require(
@@ -227,7 +227,7 @@ class IvaComponentVocabulary:
             IvaRetencionExpectation,
             self.retencion_expectation,
             "IVA retención-expectation token",
-        )  # type: ignore[return-value]
+        )
 
     def require_retencion_role(self, value: object) -> IvaRetencionRole:
         return self._require(
@@ -235,7 +235,7 @@ class IvaComponentVocabulary:
             IvaRetencionRole,
             self.retencion_role,
             "IVA retención-role token",
-        )  # type: ignore[return-value]
+        )
 
     def require_kind_applicability(self, value: object) -> IvaKindApplicability:
         return self._require(
@@ -243,7 +243,7 @@ class IvaComponentVocabulary:
             IvaKindApplicability,
             self.kind_applicability,
             "IVA kind-applicability token",
-        )  # type: ignore[return-value]
+        )
 
 
 class IvaGroundingConfidence(StrEnum):
@@ -655,14 +655,14 @@ def _ordered_component_rows(entries: Mapping[str, str]) -> tuple[str, ...]:
     return ordered_keys
 
 
-def _component_axis_membership(
+def _component_axis_membership[IvaRegistryTokenT: _IvaRegistryToken](
     entries: Mapping[str, str],
     *,
     key: str,
-    token_type: type[_IvaRegistryToken],
+    token_type: type[IvaRegistryTokenT],
     observed: set[str],
     label: str,
-) -> frozenset[_IvaRegistryToken]:
+) -> frozenset[IvaRegistryTokenT]:
     order_text = entries.get(key)
     if order_text is None or not order_text.strip():
         raise IvaValidationError(f"IVA component mapping is missing {key!r}")

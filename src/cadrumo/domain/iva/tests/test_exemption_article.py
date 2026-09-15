@@ -11,9 +11,13 @@ discriminator cannot reach the calculation chain.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.iva_schema_vocabulary import resolve_iva_exemption_article_catalogue
 from ..classification import IvaClassificationResult
 from ..schema import IvaCategory, IvaExemptionArticle
 
@@ -66,7 +70,9 @@ def test_classification_result_rejects_exemption_article_on_non_exempt_category(
         assert non_exempt_category.value in message
 
 
-def test_exemption_article_enum_membership_matches_accepted_correction() -> None:
+def test_exemption_article_catalogue_membership_matches_accepted_correction(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The closed enum carries only the accepted generic-exemption slots.
 
     This test fails when the removed Article 20.Uno.26 route is
@@ -77,5 +83,6 @@ def test_exemption_article_enum_membership_matches_accepted_correction() -> None
         IvaExemptionArticle("art_20_uno_14").value,
         IvaExemptionArticle("art_20_other").value,
     }
-    actual = {member.value for member in IvaExemptionArticle}
+    catalogue = resolve_iva_exemption_article_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    actual = {member.value for member in catalogue.all_articles}
     assert actual == expected

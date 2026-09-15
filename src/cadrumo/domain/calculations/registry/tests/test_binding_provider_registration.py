@@ -59,6 +59,7 @@ from ..ledger_iva_bindings import LedgerIvaProvider
 from ..profile_bindings import ProfileProvider
 from ..relation_prefill_bindings import RelationPrefillProvider
 from ..schema import BindingDefinition
+from ..schema_base import CasillaDataType
 from ..withholding_bindings import WithholdingProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -98,7 +99,7 @@ _WITHHOLDING_ROW_PROVIDER = WithholdingProvider(
     row_field="perceptor_tax_id",
     grouping="per_perceptor_clave",
     record="perceptor",
-    data_type="text",
+    data_type=CasillaDataType.TEXT,
 )
 
 _PAYABLE_INVOICE_ROW_PROVIDER = PayableInvoiceProvider(fact="row_field", row_field="party_tax_id")
@@ -392,30 +393,67 @@ def test_every_live_provider_member_stays_relative_to_the_filing_context() -> No
 
 
 @pytest.mark.parametrize(
-    ("field_name", "annotation"),
+    ("field_name", "member"),
     [
-        ("filing_year", int),
-        ("source_revision", RevisionId),
-        ("as_of", date),
-        ("edition_year", Literal[2024, 2025]),
-        ("max_year", int | None),
+        pytest.param(
+            "filing_year",
+            create_model("_FabricatedProviderFilingYear", filing_year=(int, ...)),
+            id="int",
+        ),
+        pytest.param(
+            "source_revision",
+            create_model("_FabricatedProviderSourceRevision", source_revision=(RevisionId, ...)),
+            id="revision_id",
+        ),
+        pytest.param(
+            "as_of",
+            create_model("_FabricatedProviderAsOf", as_of=(date, ...)),
+            id="date",
+        ),
+        pytest.param(
+            "edition_year",
+            create_model("_FabricatedProviderEditionYear", edition_year=(Literal[2024, 2025], ...)),
+            id="int_literal",
+        ),
+        pytest.param(
+            "max_year",
+            create_model("_FabricatedProviderMaxYear", max_year=(int | None, ...)),
+            id="optional_int",
+        ),
     ],
-    ids=["int", "revision_id", "date", "int_literal", "optional_int"],
 )
-def test_a_provider_field_pinning_a_filing_coordinate_is_detected(field_name: str, annotation: object) -> None:
+def test_a_provider_field_pinning_a_filing_coordinate_is_detected(
+    field_name: str,
+    member: type[BaseModel],
+) -> None:
     """Each of the four coordinate shapes is refused on its type, not on its name."""
-    member = create_model("_FabricatedProvider", **{field_name: (annotation, ...)})
-
     offenders = absolute_coordinate_offenders("provider 'fabricated'", member)
 
     assert offenders == (f"provider 'fabricated' declares absolute coordinate field {field_name!r}",)
 
 
-@pytest.mark.parametrize("field_name", ["offset", "length", "decimals"])
-def test_an_authored_layout_integer_earns_no_offender(field_name: str) -> None:
+@pytest.mark.parametrize(
+    ("field_name", "member"),
+    [
+        pytest.param(
+            "offset",
+            create_model("_LayoutProviderOffset", offset=(int, ...)),
+            id="offset",
+        ),
+        pytest.param(
+            "length",
+            create_model("_LayoutProviderLength", length=(int, ...)),
+            id="length",
+        ),
+        pytest.param(
+            "decimals",
+            create_model("_LayoutProviderDecimals", decimals=(int, ...)),
+            id="decimals",
+        ),
+    ],
+)
+def test_an_authored_layout_integer_earns_no_offender(field_name: str, member: type[BaseModel]) -> None:
     """Anti-tautology: the allow-listed record-layout integers stay permitted."""
-    member = create_model("_LayoutProvider", **{field_name: (int, ...)})
-
     assert absolute_coordinate_offenders("provider 'fabricated'", member) == ()
 
 

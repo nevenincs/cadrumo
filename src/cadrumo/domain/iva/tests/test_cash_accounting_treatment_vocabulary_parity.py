@@ -26,13 +26,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_cash_accounting_treatment
-
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...calculations.registry.iva_schema_vocabulary import resolve_iva_cash_accounting_catalogue
 from ...calculations.registry.schema_base import DateAxis
-from ..schema import IvaCashAccountingTreatment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,8 +39,8 @@ _PREFIX = "cash_accounting."
 _VALUE_SUFFIX = ".value"
 
 
-def _vocabulary_entries() -> dict[str, str]:
-    resolved = compiled_bundled_authority().resolve_governed_fact(
+def _vocabulary_entries(operation: PinnedAuthorityOperation) -> dict[str, str]:
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-statutory-schema-vocabulary",
             date_axis=DateAxis.FILING_PERIOD,
@@ -53,21 +51,25 @@ def _vocabulary_entries() -> dict[str, str]:
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
-def test_declared_cash_accounting_states_match_the_enum_in_both_directions() -> None:
-    entries = _vocabulary_entries()
+def test_declared_cash_accounting_states_match_the_catalogue_in_both_directions(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    entries = _vocabulary_entries(operation)
     declared = {value for key, value in entries.items() if key.startswith(_PREFIX) and key.endswith(_VALUE_SUFFIX)}
 
-    assert declared == {member.value for member in IvaCashAccountingTreatment}
+    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=operation)
+    assert declared == {member.value for member in catalogue.all_treatments}
 
 
-def test_the_acogido_state_is_grounded_on_its_own_article() -> None:
+def test_the_acogido_state_is_grounded_on_its_own_article(operation: PinnedAuthorityOperation) -> None:
     """The acogido state is the one art. 163 terdecies governs, and it must say so.
 
     Without this the parity above would survive a migration that kept the token
     while attaching it to the destinatario's article, which would file an
     operation under a rule that does not govern it.
     """
-    entries = _vocabulary_entries()
-    refs = entries[f"{_PREFIX}{require_iva_cash_accounting_treatment('taxpayer_regime').value}.legal_refs"].split(",")
+    entries = _vocabulary_entries(operation)
+    catalogue = resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=operation)
+    refs = entries[f"{_PREFIX}{catalogue.supplier_regime_token.value}.legal_refs"].split(",")
 
     assert "ley-37-1992:art-163-terdecies" in refs

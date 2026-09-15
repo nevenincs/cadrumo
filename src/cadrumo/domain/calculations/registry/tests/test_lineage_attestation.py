@@ -25,7 +25,7 @@ def _claim() -> LineageAttestation:
 
 @pytest.mark.parametrize("ambiguous_revision", ["2024", "2025"])
 def test_ambiguous_attestation_target_is_refused(ambiguous_revision: str) -> None:
-    members = {
+    members: dict[str, dict[str, tuple[str, ...]]] = {
         "2024": {"casillas": ("test-chain",)},
         "2025": {"casillas": ("test-chain",)},
     }

@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Protocol, runtime_checkable
 
 import pytest
-from pydantic import BaseModel
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ..binding_provider_registration import provider_model_for
 from ..binding_selector_utils import BindingRowSetSelector, binding_row_set_selector, selector_as_dict
 from ..binding_temporal import (
+    BindingTemporalSelector,
     FiledCurrentPeriod,
     FilingYearOffset,
     PriorQuarterExpandingSpan,
@@ -133,12 +133,17 @@ _SCALAR_VALUE: dict[str, Any] = {"data_type": "money", "channel": "decimal"}
 _ROW_VALUE: dict[str, Any] = {"data_type": "money", "channel": "row_set"}
 
 
+@runtime_checkable
+class _TemporalProvider(Protocol):
+    temporal: BindingTemporalSelector
+
+
 class _TemporalCase(NamedTuple):
     """One temporal union member on a provider whose own invariants admit it."""
 
     source: BindingSourceKind
     fields: dict[str, Any]
-    temporal: BaseModel
+    temporal: BindingTemporalSelector
     value: dict[str, Any]
     op: BindingAggregationOp
 
@@ -170,7 +175,7 @@ def _temporal_cases() -> tuple[_TemporalCase, ...]:
     lose.
     """
 
-    def previous_filing(temporal: BaseModel) -> _TemporalCase:
+    def previous_filing(temporal: BindingTemporalSelector) -> _TemporalCase:
         return _TemporalCase(
             BindingSourceKind.PREVIOUS_FILING,
             _PREVIOUS_FILING_FIELDS,
@@ -219,4 +224,6 @@ def test_selector_projection_round_trips_every_temporal_member(case: _TemporalCa
 
     projected = selector_as_dict(binding)
 
-    assert provider_model_for(case.source).model_validate(projected).temporal == case.temporal
+    projected_provider = provider_model_for(case.source).model_validate(projected)
+    assert isinstance(projected_provider, _TemporalProvider)
+    assert projected_provider.temporal == case.temporal

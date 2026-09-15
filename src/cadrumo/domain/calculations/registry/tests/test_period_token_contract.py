@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ..binding_temporal import SameFilingYearPeriods
 from ..bindings_previous_filing import PreviousFilingProvider
 from ..schema_references import PeriodSelector, RegistrySnapshotRef
 
@@ -23,7 +24,10 @@ def test_registry_period_boundaries_normalize_administrative_tokens() -> None:
         year_from=2025,
         periods=("alta", "modificacion", "baja", "comunicacion", "variacion"),
     )
-    previous_filing = PreviousFilingProvider(source_modelo="036", period="modificacion")
+    previous_filing = PreviousFilingProvider(
+        source_modelo="036",
+        temporal=SameFilingYearPeriods(source_periods=("modificacion",)),
+    )
 
     assert snapshot.period == "ALTA"
     assert selector.periods == ("alta", "modificacion", "baja", "comunicacion", "variacion")
@@ -43,4 +47,7 @@ def test_registry_period_boundaries_refuse_unknown_or_display_tokens(invalid_per
     with pytest.raises(ValidationError):
         PeriodSelector(years=(2025,), periods=(invalid_period,))
     with pytest.raises(ValidationError):
-        PreviousFilingProvider(source_modelo="303", period=invalid_period)
+        PreviousFilingProvider(
+            source_modelo="303",
+            temporal=SameFilingYearPeriods(source_periods=(invalid_period,)),
+        )

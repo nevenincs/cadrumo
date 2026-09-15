@@ -12,6 +12,8 @@ from datetime import date
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ...domain.calculations.registry.convenio import resolve_convenio_override
 from ...domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ...domain.transactions.m210_income_classification import resolve_m210_payer_mode
@@ -38,7 +40,7 @@ def test_payer_mode_is_projected_by_the_selected_detail_catalogue() -> None:
     assert payer_mode.value == str(payer_mode)
 
 
-def test_convenio_kind_is_projected_by_the_validated_fact_authority() -> None:
+def test_convenio_kind_is_projected_by_the_validated_fact_authority(*, operation: PinnedAuthorityOperation) -> None:
     convenio = compiled_bundled_authority().catalogues.convenio
     treaty = next(iter(convenio.treaties.values()))
     row = treaty.overrides[0]
@@ -46,6 +48,7 @@ def test_convenio_kind_is_projected_by_the_validated_fact_authority() -> None:
         country_code=treaty.country_code,
         tipo_renta=row.tipo_renta,
         devengo_date=row.valid_from,
+        operation=operation,
     )
 
     assert override is not None

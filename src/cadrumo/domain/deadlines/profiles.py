@@ -423,19 +423,35 @@ def _resolve_profile_corporate_fields(canonical: Mapping[str, str]) -> _ProfileC
     """Resolve corporate option declarations and their dates."""
     from ..calculations.registry.setup_profile_bindings import profile_field_bindings
 
-    resolved: dict[str, object] = {}
-    for field, path in profile_field_bindings().items():
-        raw = canonical.get(path)
-        if field == "new_entity_first_two_profit_periods" or field.endswith("_declared"):
-            resolved[field] = _parse_optional_bool(raw)
-        elif field.endswith("_date"):
-            resolved[field] = _parse_date(raw)
+    corporate_bindings = {
+        field: path
+        for field, path in profile_field_bindings().items()
+        if field == "new_entity_first_two_profit_periods"
+        or field.endswith("_declared")
+        or field.endswith("_date")
+    }
     expected = set(_ProfileCorporateFields.__annotations__)
-    if set(resolved) != expected:
+    if set(corporate_bindings) != expected:
         raise ProfileError(
             "registry setup profile catalogue does not declare the complete corporate field set",
         )
-    return resolved  # type: ignore[return-value]
+    return _ProfileCorporateFields(
+        new_entity_first_two_profit_periods=_parse_optional_bool(
+            canonical.get(corporate_bindings["new_entity_first_two_profit_periods"]),
+        ),
+        ley_49_2002_special_regime_option_declared=_parse_optional_bool(
+            canonical.get(corporate_bindings["ley_49_2002_special_regime_option_declared"]),
+        ),
+        ley_49_2002_special_regime_option_date=_parse_date(
+            canonical.get(corporate_bindings["ley_49_2002_special_regime_option_date"]),
+        ),
+        ley_49_2002_special_regime_renunciation_declared=_parse_optional_bool(
+            canonical.get(corporate_bindings["ley_49_2002_special_regime_renunciation_declared"]),
+        ),
+        ley_49_2002_special_regime_renunciation_date=_parse_date(
+            canonical.get(corporate_bindings["ley_49_2002_special_regime_renunciation_date"]),
+        ),
+    )
 
 
 def _resolve_profile_establishment_fields(

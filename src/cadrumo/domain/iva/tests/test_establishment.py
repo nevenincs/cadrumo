@@ -24,10 +24,10 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 
 from ..classification import IvaTerritorialScope
 from ..establishment import SPAIN_COUNTRY_CODE, territorial_scope_for_country
-from ..schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -71,8 +71,9 @@ class TestTheResolverNeverInventsASpanishScope:
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             probes: list[str | None] = [None, "", "  ", "E", "DEU", "D1", "??", "ZZ", "US", "CH", "JP", "GB"]
-            probes += [member.value for member in EUMemberState]
-            probes += [member.value.upper() for member in EUMemberState]
+            member_states = resolve_eu_member_state_catalogue(authority=_authority_operation_for_test).all_states
+            probes += [member.value for member in member_states]
+            probes += [member.value.upper() for member in member_states]
 
             resolved = {
                 territorial_scope_for_country(probe, operation=_authority_operation_for_test) for probe in probes
@@ -87,7 +88,9 @@ class TestTheResolverNeverInventsASpanishScope:
         contain, and the test would keep passing while the real Spanish code
         resolved straight through the EU branch.
         """
-        assert SPAIN_COUNTRY_CODE in {member.value.upper() for member in EUMemberState}
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            member_states = resolve_eu_member_state_catalogue(authority=_authority_operation_for_test).all_states
+            assert SPAIN_COUNTRY_CODE in {member.value.upper() for member in member_states}
 
 
 class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
@@ -111,7 +114,8 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
     def test_every_member_state_except_spain_resolves_to_the_eu_scope(self) -> None:
         """Derived from the catalogue, so a State joining or leaving is covered."""
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            for member in EUMemberState:
+            member_states = resolve_eu_member_state_catalogue(authority=_authority_operation_for_test).all_states
+            for member in member_states:
                 code = member.value.upper()
                 expected = None if code == SPAIN_COUNTRY_CODE else IvaTerritorialScope._from_registry("eu_member")
 

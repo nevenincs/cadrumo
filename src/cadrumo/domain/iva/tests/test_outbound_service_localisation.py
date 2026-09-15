@@ -28,6 +28,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
+from ...calculations.registry.iva_schema_vocabulary import resolve_iva_art69_dos_service_catalogue
 from ..classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -56,6 +57,15 @@ _SUBJECT_AT_A_SPANISH_RATE = frozenset(
         IvaCategory("domestic_super_reduced"),
     },
 )
+
+
+def _art_69_dos_services() -> tuple[IvaArt69DosService, ...]:
+    with _indexed_authority_for_test().operation() as operation:
+        catalogue = resolve_iva_art69_dos_service_catalogue(effective_date=date(2025, 6, 15), authority=operation)
+    return tuple(definition.token for definition in catalogue.definitions)
+
+
+_ART_69_DOS_SERVICES = _art_69_dos_services()
 
 
 def _outbound_service(
@@ -200,7 +210,7 @@ def test_the_b2c_branch_demands_the_tier_that_selects_its_category() -> None:
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("service", list(IvaArt69DosService), ids=lambda item: item.value)
+@pytest.mark.parametrize("service", _ART_69_DOS_SERVICES, ids=lambda item: item.value)
 def test_every_listed_service_to_a_third_country_consumer_leaves_the_tai(
     service: IvaArt69DosService,
 ) -> None:
@@ -229,7 +239,7 @@ def test_every_listed_service_to_a_third_country_consumer_leaves_the_tai(
     [IvaTerritorialScope._from_registry("es_canarias"), IvaTerritorialScope._from_registry("es_ceuta_melilla")],
     ids=lambda scope: scope.value,
 )
-@pytest.mark.parametrize("service", list(IvaArt69DosService), ids=lambda item: item.value)
+@pytest.mark.parametrize("service", _ART_69_DOS_SERVICES, ids=lambda item: item.value)
 def test_the_same_listed_service_stays_taxed_for_the_spanish_territories(
     service: IvaArt69DosService,
     customer_residency: IvaTerritorialScope,

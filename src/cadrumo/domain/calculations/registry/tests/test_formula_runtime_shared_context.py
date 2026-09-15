@@ -117,10 +117,6 @@ def _build_case(
             operand_refs.append(leaf.binding)
             operand_values.append(binding_values[leaf.binding])
             max_leaf_depth = max(max_leaf_depth, depth)
-        elif leaf.relation is not None:
-            relation_values.setdefault(leaf.relation, supplied)
-            operand_refs.append(leaf.relation)
-            operand_values.append(relation_values[leaf.relation])
             max_leaf_depth = max(max_leaf_depth, depth)
 
     return _TreeCase(

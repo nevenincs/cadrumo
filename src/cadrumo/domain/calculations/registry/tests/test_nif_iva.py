@@ -50,9 +50,15 @@ def test_nif_iva_patterns_match_examples_and_country_cases() -> None:
 
 
 def test_country_prefix_resolution_handles_greece_spain_and_unknown_codes() -> None:
-    assert nif_iva_prefix_for_country("GR").value == "EL"
-    assert nif_iva_prefix_for_country("gr").value == "EL"
-    assert nif_iva_prefix_for_country("EL").value == "EL"
+    greek_prefix = nif_iva_prefix_for_country("GR")
+    assert greek_prefix is not None
+    assert greek_prefix.value == "EL"
+    lower_greek_prefix = nif_iva_prefix_for_country("gr")
+    assert lower_greek_prefix is not None
+    assert lower_greek_prefix.value == "EL"
+    el_prefix = nif_iva_prefix_for_country("EL")
+    assert el_prefix is not None
+    assert el_prefix.value == "EL"
     assert nif_iva_format_for_country("ES") is None
     assert nif_iva_format_for_country("US") is None
     assert nif_iva_format_for_country("JP") is None
