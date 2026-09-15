@@ -35,6 +35,8 @@ SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
+
+
 def _pydantic_namespace_validator[ValidationResultT](
     function: Callable[..., ValidationResultT],
 ) -> Callable[..., ValidationResultT]:

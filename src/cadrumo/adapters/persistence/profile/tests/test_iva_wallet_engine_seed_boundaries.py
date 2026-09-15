@@ -192,24 +192,27 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                 operation=_authority_operation_for_test,
             )
 
-            with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info, calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-            ) as _calculation_ports_175:
-                    calculate_modelo_revision(
-                        work_unit.work_unit_id,
-                        actor="operator",
-                        casilla_inputs={},
-                        binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                        backend_binding_values=_modelo_303_engine_inputs(),
-                        iva_compensation_decision=None,
-                        filing_instance_evidence=_filing_instance_evidence(work_unit.period, operation=operation),
-                        filing_period_date=date(2026, 3, 31),
-                        ports=_calculation_ports_175,
-                        clock=_DECIDED_AT,
-                    )
+            with (
+                pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info,
+                calculation_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    work_unit_repository=work_repo,
+                    calculation_repository=calc_repo,
+                    bucket_event_repository=event_repo,
+                ) as _calculation_ports_175,
+            ):
+                calculate_modelo_revision(
+                    work_unit.work_unit_id,
+                    actor="operator",
+                    casilla_inputs={},
+                    binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                    backend_binding_values=_modelo_303_engine_inputs(),
+                    iva_compensation_decision=None,
+                    filing_instance_evidence=_filing_instance_evidence(work_unit.period, operation=operation),
+                    filing_period_date=date(2026, 3, 31),
+                    ports=_calculation_ports_175,
+                    clock=_DECIDED_AT,
+                )
 
             assert exc_info.value.context is not None
             assert exc_info.value.context["divergence"] == "filed_history_only"

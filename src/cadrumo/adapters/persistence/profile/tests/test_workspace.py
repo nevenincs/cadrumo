@@ -647,7 +647,9 @@ def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas
         assert record.legal_refs is not None
 
 
-def test_static_inspection_schema_records_project_four_reference_kinds_and_relation_endpoints_deterministically() -> None:
+def test_static_inspection_schema_records_project_four_reference_kinds_and_relation_endpoints_deterministically() -> (
+    None
+):
     from cadrumo.core.external_constants import OutputLanguage
 
     inspection = _real_303_inspection()

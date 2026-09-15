@@ -125,7 +125,7 @@ def test_value_contract_refuses_competing_choice_authority(field: str) -> None:
     ("specs", "message"),
     [
         (
-        (_root(), dataclasses.replace(_root(), key="second_root", token=_OTHER_COMMAND)),
+            (_root(), dataclasses.replace(_root(), key="second_root", token=_OTHER_COMMAND)),
             "exactly one root",
         ),
         ((_root(), dataclasses.replace(_group(), parent_key="missing")), "unknown parent"),

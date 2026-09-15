@@ -141,7 +141,9 @@ async def _read_child_lines(
     try:
         assert process.stdout is not None
         lines = [
-            (await asyncio.wait_for(process.stdout.readline(), timeout=timeout)).decode("utf-8", errors="replace").strip()
+            (await asyncio.wait_for(process.stdout.readline(), timeout=timeout))
+            .decode("utf-8", errors="replace")
+            .strip()
             for _ in range(line_count)
         ]
         _, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)

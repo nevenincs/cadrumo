@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 from ._modelo_nonwork_command_spec_policies import _CALCULATION_READ

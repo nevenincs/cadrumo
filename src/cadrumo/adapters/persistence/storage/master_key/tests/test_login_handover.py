@@ -447,10 +447,14 @@ def _crash_after_b_handover_child(storage_root: Path, profile_a: str, profile_b:
     settings, _token, _composition = _child_settings(storage_root)
     _ = settings
     login_profile(
-        name=profile_a, passphrase_callback=lambda: _CREDENTIAL_A, profile_decode_context=_profile_decode_context_for_test
+        name=profile_a,
+        passphrase_callback=lambda: _CREDENTIAL_A,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     login_profile(
-        name=profile_b, passphrase_callback=lambda: _CREDENTIAL_B, profile_decode_context=_profile_decode_context_for_test
+        name=profile_b,
+        passphrase_callback=lambda: _CREDENTIAL_B,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     os._exit(0)
 
@@ -466,7 +470,9 @@ def _recover_selected_profile_child(
     _ = settings
     try:
         result = login_profile(
-            name=None, passphrase_callback=lambda: _CREDENTIAL_B, profile_decode_context=_profile_decode_context_for_test
+            name=None,
+            passphrase_callback=lambda: _CREDENTIAL_B,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         active = current_active_bucket_session()
         assert active is not None

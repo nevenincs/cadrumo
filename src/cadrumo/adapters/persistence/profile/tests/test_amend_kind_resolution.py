@@ -249,7 +249,10 @@ def test_rectificativa_kind_refused_for_pre_boundary_period(
         operation=operation,
     )
 
-    with pytest.raises(AmendmentKindNotPermittedError) as exc_info, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(AmendmentKindNotPermittedError) as exc_info,
+        bundled_indexed_authority().operation() as operation,
+    ):
         amend_modelo_revision(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
@@ -306,7 +309,10 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(
         operation=operation,
     )
 
-    with pytest.raises(AmendmentComplementariaLiabilityDecreaseError) as exc_info, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(AmendmentComplementariaLiabilityDecreaseError) as exc_info,
+        bundled_indexed_authority().operation() as operation,
+    ):
         amend_modelo_revision(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
@@ -335,7 +341,10 @@ def test_complementaria_kind_refused_for_post_boundary_period(
         operation=operation,
     )
 
-    with pytest.raises(AmendmentKindNotPermittedError) as exc_info, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(AmendmentKindNotPermittedError) as exc_info,
+        bundled_indexed_authority().operation() as operation,
+    ):
         amend_modelo_revision(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,

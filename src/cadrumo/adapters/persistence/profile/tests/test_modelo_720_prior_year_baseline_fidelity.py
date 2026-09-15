@@ -574,7 +574,10 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
 def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grown_cuentas(tmp_path: Path) -> None:
     obs_n = _year_n_observation_with_explicit_inmuebles_zero()
     assert obs_n.casilla_values[_INMUEBLES_VALORACION_CASILLA] == _INMUEBLES_N
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path),
+    ):
         repo = CalculationObservationRepository()
         repo.save(
             repo.prepare_observation_envelope(
@@ -649,7 +652,10 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
         _INMUEBLES_BASELINE_BINDING: _INMUEBLES_N,
     }
 
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime,
+    ):
         primary_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         secondary_repository = CalculationObservationRepository(objects=runtime.secondary.repository)
         primary_repository.save(
@@ -716,7 +722,10 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
         )
         snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"):
+        with (
+            _indexed_authority_for_test().operation() as _authority_operation_for_test,
+            pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"),
+        ):
             resolve_bindings_from_local_store(
                 snapshot_n1,
                 repository=repo,

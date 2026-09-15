@@ -76,7 +76,10 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
             ports=_calculation_ports_70,
             clock=T1,
         )
-    with pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED") as raised, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED") as raised,
+        bundled_indexed_authority().operation() as operation,
+    ):
         file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",

@@ -53,7 +53,9 @@ def _live_overview(label: str = "Manager Subject"):
     # sealed under; synthesising a session instead gives a different key and the
     # capsule refuses it as a row addressed to another object key.
     login_profile(
-        name=label, passphrase_callback=lambda: _CREDENTIAL_INPUT, profile_decode_context=_profile_decode_context_for_test
+        name=label,
+        passphrase_callback=lambda: _CREDENTIAL_INPUT,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     record = load_test_profile_record(require_active_bucket_id())
     return build_profile_overview(record, label=label)

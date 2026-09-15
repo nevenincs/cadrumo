@@ -12,7 +12,6 @@ means; the verb names what the operator asked for, and the transport it performs
 on the way is declared on its parameters rather than in its name.
 """
 
-
 from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape

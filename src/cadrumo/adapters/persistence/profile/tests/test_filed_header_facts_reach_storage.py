@@ -88,11 +88,15 @@ def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) 
         )
         persist_filed_calculation_observation(observation, ports=ports)
 
-        stored = CalculationObservationRepository(bucket_id=profile.bucket_id, objects=profile.repository).load_observation(
+        stored = CalculationObservationRepository(
+            bucket_id=profile.bucket_id, objects=profile.repository
+        ).load_observation(
             "303",
             Period.from_year_and_code(observation.ejercicio, "1T"),
         )
-        history_state = IvaCompensationHistoryRepository(bucket_id=profile.bucket_id, objects=profile.repository).load_period(
+        history_state = IvaCompensationHistoryRepository(
+            bucket_id=profile.bucket_id, objects=profile.repository
+        ).load_period(
             Period.from_year_and_code(observation.ejercicio, "1T"),
         )
 

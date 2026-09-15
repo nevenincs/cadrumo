@@ -545,9 +545,7 @@ class TestFieldExtractionPromptShowsWellFormedJson:
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The shown skeleton is valid JSON whose keys are the schema's keys."""
-        compiled = build_invoice_extraction_prompt(
-            period=default_extraction_period(), operation=operation
-        ).text
+        compiled = build_invoice_extraction_prompt(period=default_extraction_period(), operation=operation).text
         template = compiled[compiled.index("{") : compiled.rindex("}") + 1]
         # The prompt documents each value as a `<string or null, ...>` annotation
         # rather than a literal; substituting null leaves the SHAPE under test.
@@ -575,8 +573,6 @@ class TestFieldExtractionPromptShowsWellFormedJson:
 
     def test_prompt_carries_no_doubled_brace(self, *, operation: PinnedAuthorityOperation) -> None:
         """No ``{{``/``}}`` survives into the COMPILED text the model receives."""
-        compiled = build_invoice_extraction_prompt(
-            period=default_extraction_period(), operation=operation
-        ).text
+        compiled = build_invoice_extraction_prompt(period=default_extraction_period(), operation=operation).text
         assert "{{" not in compiled
         assert "}}" not in compiled

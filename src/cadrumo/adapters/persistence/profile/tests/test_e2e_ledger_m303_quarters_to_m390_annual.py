@@ -831,7 +831,10 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
         assert report.granted_verificado_completo is True, report.findings
 
         quarter_output = tmp_path / f"modelo-303-{_IRENE_YEAR}-{period}.boe"
-        with pytest.raises(ModeloExportUnsupportedError) as exc_info, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloExportUnsupportedError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=revision.calculation_revision_id,

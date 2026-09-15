@@ -457,8 +457,7 @@ def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: P
         )
     except subprocess.TimeoutExpired:
         raise AssertionError(
-            f"recovery bootstrap stalled at {supervisor_state[0]}; "
-            f"supervisor_failure={supervisor_failure!r}"
+            f"recovery bootstrap stalled at {supervisor_state[0]}; supervisor_failure={supervisor_failure!r}"
         ) from None
     supervisor.join(timeout=5)
     assert not supervisor.is_alive()

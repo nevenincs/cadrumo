@@ -945,13 +945,16 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
 def test_modelo_303_export_refuses_legacy_verified_deductible_iva_missing_evidence(
     secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    revision, _sale, _purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
-        _calculate_irene_revision(secure_objects, operation=operation)
+    revision, _sale, _purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _calculate_irene_revision(
+        secure_objects, operation=operation
     )
     legacy = _persist_legacy_verified_revision(revision, cr_repo=cr_repo, tx_repo=tx_repo)
     output_path = tmp_path / "modelo-303.txt"
 
-    with pytest.raises(ModeloExportEvidenceMissingError) as exc_info, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(ModeloExportEvidenceMissingError) as exc_info,
+        bundled_indexed_authority().operation() as operation,
+    ):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=legacy.calculation_revision_id,
@@ -994,7 +997,10 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing
     )
     legacy = _persist_legacy_verified_revision(revision, cr_repo=cr_repo, tx_repo=tx_repo)
 
-    with pytest.raises(ModeloFilingEvidenceMissingError) as exc_info, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(ModeloFilingEvidenceMissingError) as exc_info,
+        bundled_indexed_authority().operation() as operation,
+    ):
         file_modelo_revision(
             legacy.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),

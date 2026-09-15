@@ -310,7 +310,10 @@ def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric(
 
 
 def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONFLICT_BUCKET_ID):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONFLICT_BUCKET_ID),
+    ):
         seed_iva_compensation_period(
             taxpayer_nif=_TAXPAYER_REF,
             period=Period.from_year_and_code(2024, "2T"),

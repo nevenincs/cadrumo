@@ -53,9 +53,7 @@ def _emitted_field_count(text: str) -> int:
     return len([line for line in block.splitlines() if line.startswith("- ")])
 
 
-def test_the_default_prompt_is_byte_identical_to_the_unselected_one(
-    *, operation: PinnedAuthorityOperation
-) -> None:
+def test_the_default_prompt_is_byte_identical_to_the_unselected_one(*, operation: PinnedAuthorityOperation) -> None:
     """No selection and the complete selection must produce the same bytes.
 
     The comparability guarantee. If these ever diverge, every measurement taken
@@ -77,9 +75,7 @@ def test_the_full_prompt_still_carries_every_declared_contract(*, operation: Pin
 
 
 @pytest.mark.parametrize("size", (1, 3, 7))
-def test_a_subset_emits_exactly_that_many_contracts(
-    size: int, *, operation: PinnedAuthorityOperation
-) -> None:
+def test_a_subset_emits_exactly_that_many_contracts(size: int, *, operation: PinnedAuthorityOperation) -> None:
     """The capability itself, asserted on the emitted count rather than the call.
 
     A parameter accepted and ignored yields a green suite and a full prompt, so
@@ -163,9 +159,7 @@ def test_the_selector_returns_declaration_order_whatever_it_is_given() -> None:
     assert selected_invoice_field_contracts(None) == INVOICE_FIELD_CONTRACTS
 
 
-def test_a_subset_is_not_a_route_around_the_empty_rate_refusal(
-    *, operation: PinnedAuthorityOperation
-) -> None:
+def test_a_subset_is_not_a_route_around_the_empty_rate_refusal(*, operation: PinnedAuthorityOperation) -> None:
     """A period with no in-force rates must refuse whether or not fields are selected.
 
     The fail-closed path guards a prompt that would enumerate no rate at all.

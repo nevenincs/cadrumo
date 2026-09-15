@@ -880,7 +880,10 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
     sensitive_provider = "client-tax-id-12345678Z-private-note"
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
 
-    with caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"), bundled_indexed_authority().operation() as operation:
+    with (
+        caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"),
+        bundled_indexed_authority().operation() as operation,
+    ):
         projection = build_operator_state_projection(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,

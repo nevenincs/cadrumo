@@ -404,7 +404,10 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(
             operation=operation,
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=revision_id,
@@ -435,7 +438,10 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
             operation=operation,
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
             file_modelo_revision(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -475,7 +481,10 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
             operation=operation,
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
             file_modelo_revision(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -888,7 +897,10 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
             operation=operation,
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
             file_modelo_revision(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -980,7 +992,10 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
             },
         )
 
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
             file_modelo_revision(
                 revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),

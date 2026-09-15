@@ -42,6 +42,7 @@ _KEY = "absent-revision-subject"
 _PAYLOAD = b"absent-revision-payload"
 _LINEAGE_REASON = "revision lineage self-consistency check failed"
 
+
 def _seed(db_path: Path) -> None:
     """Write one genuine row through the public repository."""
     with _repo_at(db_path) as repo:

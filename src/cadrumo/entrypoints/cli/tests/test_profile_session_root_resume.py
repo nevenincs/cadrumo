@@ -109,7 +109,9 @@ def _login() -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.user_profile.login_session import login_profile
 
-    login_profile(passphrase_callback=lambda: _CREDENTIAL_INPUT, profile_decode_context=_profile_decode_context_for_test)
+    login_profile(
+        passphrase_callback=lambda: _CREDENTIAL_INPUT, profile_decode_context=_profile_decode_context_for_test
+    )
 
 
 def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:

@@ -189,7 +189,10 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Certificate logout removes only the persisted session, not its configured custody."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test, isolated_profile_storage_root(tmp_path=tmp_path):
+    with (
+        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
         certificate_path = tmp_path / "personal.p12"
         certificate_path.write_bytes(b"real-storage-certificate-fixture")
         _create_profile(_PROFILE_A, provider="certificate", operation=operation)
@@ -299,7 +302,10 @@ def test_reset_removes_certificate_registry_and_secure_secret(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Certificate reset removes registrations and canonical secure-storage secrets."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test, isolated_profile_storage_root(tmp_path=tmp_path):
+    with (
+        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
         cert_path = tmp_path / "operator.p12"
         cert_path.write_bytes(b"placeholder")
         _create_profile(_PROFILE_A, provider="certificate", operation=operation)

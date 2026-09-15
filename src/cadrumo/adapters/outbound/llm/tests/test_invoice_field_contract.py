@@ -129,9 +129,7 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         assert q4_2024.text != annual_2026.text
         assert q4_2024.fingerprint != annual_2026.fingerprint
 
-    def test_the_enumeration_is_a_hint_and_never_a_constraint(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
+    def test_the_enumeration_is_a_hint_and_never_a_constraint(self, *, operation: PinnedAuthorityOperation) -> None:
         """Documents in scope are international; a foreign rate must not be coerced.
 
         A model told "the rate is one of these" would move a German 19 % onto
@@ -156,9 +154,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
     commit the mutation.
     """
 
-    def test_moving_a_registry_rate_moves_the_compiled_prompt(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
+    def test_moving_a_registry_rate_moves_the_compiled_prompt(self, *, operation: PinnedAuthorityOperation) -> None:
         """Direction one: the compiled text FOLLOWS the rate authority.
 
         The mutation adds one record to the table the compiler reads and asserts
@@ -288,9 +284,7 @@ class TestContractParityAcrossBothDerivations:
 
         assert declared == set(ExtractedInvoiceFields.model_fields)
 
-    def test_every_declared_field_appears_in_the_compiled_prompt(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
+    def test_every_declared_field_appears_in_the_compiled_prompt(self, *, operation: PinnedAuthorityOperation) -> None:
         text = _compiled(operation=operation)
 
         for contract in INVOICE_FIELD_CONTRACTS:
@@ -440,9 +434,7 @@ class TestTheSafetyPropertiesSurviveCompilation:
         assert "its value is null" in lowered
         assert "never substitute a plausible value for a missing one" in lowered
 
-    def test_the_compiled_prompt_forbids_deriving_any_value(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
+    def test_the_compiled_prompt_forbids_deriving_any_value(self, *, operation: PinnedAuthorityOperation) -> None:
         lowered = _compiled(operation=operation).lower()
 
         for forbidden in ("calculate", "infer", "estimate", "guess"):
@@ -538,9 +530,7 @@ class TestTheDefaultPeriodIsDerivedNotGuessed:
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
         """An annual span never omits a rate a mid-year statute introduced."""
-        annual = build_invoice_extraction_prompt(
-            period=Period.from_year_and_code(2024, "0A"), operation=operation
-        )
+        annual = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "0A"), operation=operation)
         q3 = build_invoice_extraction_prompt(period=Period.from_year_and_code(2024, "3T"), operation=operation)
 
         assert set(q3.iva_rate_pcts) <= set(annual.iva_rate_pcts)

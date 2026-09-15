@@ -471,7 +471,10 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
         observation_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
 
-        with pytest.raises(IvaCompensationReconciliationInputError) as excinfo, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(IvaCompensationReconciliationInputError) as excinfo,
+            bundled_indexed_authority().operation() as operation,
+        ):
             reconcile_modelo_303_iva_compensation(
                 snapshot,
                 taxpayer_nif=_TAXPAYER_REF,

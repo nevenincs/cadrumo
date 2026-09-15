@@ -666,9 +666,7 @@ class TestTheTemplateIsRegisteredRatherThanOnlyAConstant:
         assert compiled.text.startswith(definition.template[: definition.template.index("{")])
         assert compiled.template_version == definition.version
 
-    def test_the_version_and_the_fingerprint_are_different_facts(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
+    def test_the_version_and_the_fingerprint_are_different_facts(self, *, operation: PinnedAuthorityOperation) -> None:
         """Two periods share one template version but must not share a fingerprint.
 
         This is why registering the template does not retire the fingerprint: the

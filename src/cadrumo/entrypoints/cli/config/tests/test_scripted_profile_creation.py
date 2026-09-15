@@ -509,7 +509,9 @@ def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_
     (
         "not-json",
         json.dumps({"passphrase": _CREDENTIAL_INPUT}),
-        json.dumps({"passphrase": _CREDENTIAL_INPUT, "passphrase_confirmation": _CREDENTIAL_INPUT, "extra": "forbidden"}),
+        json.dumps(
+            {"passphrase": _CREDENTIAL_INPUT, "passphrase_confirmation": _CREDENTIAL_INPUT, "extra": "forbidden"}
+        ),
         json.dumps({"passphrase": "x" * 9000, "passphrase_confirmation": "x" * 9000}),
     ),
 )

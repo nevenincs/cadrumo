@@ -164,6 +164,7 @@ def test_the_installed_session_never_pulls_the_cli_into_the_child_process() -> N
     still caught.
     """
     from .. import installed_session
+
     del installed_session
 
     assert not [name for name in sys.modules if name.startswith(_CLI_PACKAGE)]

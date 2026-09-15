@@ -233,8 +233,7 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     assert all(notice["action"] is None for notice in readiness_notices)
 
 
-def test_pipeline_distinguishes_persisted_incomplete_from_never_verified(
-) -> None:
+def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> None:
     """The latest persisted completeness outcome, not findings or revision state,
     decides readiness.
 

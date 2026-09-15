@@ -146,8 +146,7 @@ def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
         assert entry["user_state"] == "late"
 
 
-def test_backlog_default_surface_includes_created_historical_m130_m303_work_units(
-) -> None:
+def test_backlog_default_surface_includes_created_historical_m130_m303_work_units() -> None:
     created = _seed_historical_m130_m303_work()
 
     result = _invoke(
@@ -172,8 +171,7 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
         assert item["user_state"] == "late"
 
 
-def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late(
-) -> None:
+def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None:
     _create_profile()
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None

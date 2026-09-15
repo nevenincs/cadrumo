@@ -832,7 +832,10 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos, *, operation
         operation=operation,
     )
 
-    with pytest.raises(AmendmentOverrideCasillaError, match="non-canonical reference tokens") as exc_info, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(AmendmentOverrideCasillaError, match="non-canonical reference tokens") as exc_info,
+        bundled_indexed_authority().operation() as operation,
+    ):
         amend_modelo_revision(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,

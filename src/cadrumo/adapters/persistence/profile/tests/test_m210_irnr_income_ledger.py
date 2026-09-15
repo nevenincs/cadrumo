@@ -181,60 +181,60 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
             database_name="m210-injected.db",
         ) as injected_objects,
     ):
-            injected_transaction_repository = TransactionCatalogueRepository(
-                bucket_id=_BUCKET_ID,
-                objects=injected_objects,
-            )
-            injected_event_repository = BucketEventHistoryRepository(objects=injected_objects)
-            injected_id = _create_income(
-                objects=injected_objects,
-                label="injected-store-only",
-                source_jurisdiction="ES",
-                classification=_classification("01", Decimal("1234.56")),
-                transaction_repository=injected_transaction_repository,
-                event_repository=injected_event_repository,
-            )
+        injected_transaction_repository = TransactionCatalogueRepository(
+            bucket_id=_BUCKET_ID,
+            objects=injected_objects,
+        )
+        injected_event_repository = BucketEventHistoryRepository(objects=injected_objects)
+        injected_id = _create_income(
+            objects=injected_objects,
+            label="injected-store-only",
+            source_jurisdiction="ES",
+            classification=_classification("01", Decimal("1234.56")),
+            transaction_repository=injected_transaction_repository,
+            event_repository=injected_event_repository,
+        )
 
-            ambient_transaction_repository = TransactionCatalogueRepository(
-                bucket_id=_BUCKET_ID,
-                objects=runtime.repository,
-            )
-            assert ambient_transaction_repository.exists() is False
-            _seed_m210_profile()
-            work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
-            CalculationRevisionCatalogueRepository(objects=runtime.repository)
-            BucketEventHistoryRepository(objects=runtime.repository)
-            snapshot = compiled_bundled_authority().snapshot("210", filing_year=2025, period="0A")
-            work_unit = create_work_unit(
-                bucket_id=_BUCKET_ID,
-                modelo="210",
-                filing_year=2025,
-                period=_PERIOD,
-                revision_id=snapshot.revision.id,
-                ports=WorkLifecyclePorts(
-                    work_unit_repository=work_repository,
-                    bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
-                ),
+        ambient_transaction_repository = TransactionCatalogueRepository(
+            bucket_id=_BUCKET_ID,
+            objects=runtime.repository,
+        )
+        assert ambient_transaction_repository.exists() is False
+        _seed_m210_profile()
+        work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
+        CalculationRevisionCatalogueRepository(objects=runtime.repository)
+        BucketEventHistoryRepository(objects=runtime.repository)
+        snapshot = compiled_bundled_authority().snapshot("210", filing_year=2025, period="0A")
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="210",
+            filing_year=2025,
+            period=_PERIOD,
+            revision_id=snapshot.revision.id,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repository,
+                bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
+            ),
+            clock=_CLOCK,
+            operation=operation,
+        )
+
+        with bundled_indexed_authority().operation() as operation:
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator",
+                casilla_inputs={},
+                text_casilla_inputs={"tipo_renta": "general"},
+                m210_official_tipo_renta_code="01",
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
                 clock=_CLOCK,
-                operation=operation,
-            )
+            ).revision
 
-            with bundled_indexed_authority().operation() as operation:
-                revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                    work_unit.work_unit_id,
-                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                    actor="operator",
-                    casilla_inputs={},
-                    text_casilla_inputs={"tipo_renta": "general"},
-                    m210_official_tipo_renta_code="01",
-                    m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
-                    clock=_CLOCK,
-                ).revision
-
-            assert revision.casilla_values["rendimientos_integros"] == Decimal("1234.56")
-            assert revision.source_transaction_ids == (injected_id,)
-            assert {source.source_ref for source in revision.source_provenance} == {f"transaction:{injected_id}"}
-            assert ambient_transaction_repository.exists() is False
+        assert revision.casilla_values["rendimientos_integros"] == Decimal("1234.56")
+        assert revision.source_transaction_ids == (injected_id,)
+        assert {source.source_ref for source in revision.source_provenance} == {f"transaction:{injected_id}"}
+        assert ambient_transaction_repository.exists() is False
 
 
 def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_admission(tmp_path: Path) -> None:

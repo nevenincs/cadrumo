@@ -125,7 +125,10 @@ def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(t
 
 def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses(tmp_path: Path) -> None:
     """Optional candidates cannot turn a structurally unrelated observation into a silent zero."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path),
+    ):
         snapshot = _m130_snapshot()
         repository = CalculationObservationRepository()
         unrelated_observation = registry_grounded_modelo_observation(

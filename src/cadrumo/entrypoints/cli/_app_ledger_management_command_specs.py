@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape

@@ -152,6 +152,7 @@ class SubprocessLLMClassifier:
             # skip this one transaction and continue on the next.
             _logger.error("llm classify: %s spawn failed", self.name, exc_info=True)
             raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
+
     async def _run_cli_process(self, argv: list[str], stdin_input: str | None, transaction_id: str) -> str:
         """Run the fixed executable vector with bounded, pipe-only I/O."""
         process = await asyncio.create_subprocess_exec(

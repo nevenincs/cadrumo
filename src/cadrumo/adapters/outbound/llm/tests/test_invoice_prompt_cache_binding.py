@@ -65,9 +65,7 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
     prompt-compilation code names the cache.
     """
 
-    def test_two_periods_compile_to_two_distinct_cache_keys(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
+    def test_two_periods_compile_to_two_distinct_cache_keys(self, *, operation: PinnedAuthorityOperation) -> None:
         cache = LLMCache()
         annual = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
         q4 = build_invoice_extraction_prompt(period=_Q4_2024, operation=operation)
@@ -87,9 +85,7 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
 
         assert annual_key.prompt_hash != q4_key.prompt_hash
 
-    def test_the_same_compiled_prompt_derives_the_same_key(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
+    def test_the_same_compiled_prompt_derives_the_same_key(self, *, operation: PinnedAuthorityOperation) -> None:
         """The key is deterministic, so an unchanged registry still hits cache."""
         cache = LLMCache()
         text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
@@ -99,9 +95,7 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
 
         assert first == second
 
-    def test_changing_one_enumerated_rate_moves_the_key(
-        self, *, operation: PinnedAuthorityOperation
-    ) -> None:
+    def test_changing_one_enumerated_rate_moves_the_key(self, *, operation: PinnedAuthorityOperation) -> None:
         """The discriminating control: the binding reacts to the RATES specifically.
 
         The nudge edits exactly the substring the registry produced, so a pass

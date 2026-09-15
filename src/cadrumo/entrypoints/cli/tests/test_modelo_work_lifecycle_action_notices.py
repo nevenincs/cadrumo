@@ -92,8 +92,7 @@ def _discarded_natural_target() -> list[str]:
     ]
 
 
-def test_work_list_and_status_resolve_canonical_actions_with_localized_messages(
-) -> None:
+def test_work_list_and_status_resolve_canonical_actions_with_localized_messages() -> None:
     """The application continuation drives a live, locale-neutral action envelope."""
     _create_profile()
     work_unit_id = _create_m130_work_unit()
@@ -182,8 +181,7 @@ def test_work_list_and_status_resolve_canonical_actions_with_localized_messages(
     assert len(rendered_messages) == len(_LOCALES) * 2
 
 
-def test_discarded_work_status_exposes_terminal_state_without_calculate_action(
-) -> None:
+def test_discarded_work_status_exposes_terminal_state_without_calculate_action() -> None:
     """A discarded unit has an explicit closed continuation and real calculate refusal."""
     _create_profile()
     work_unit_id = _create_m130_work_unit()
@@ -212,8 +210,7 @@ def test_discarded_work_status_exposes_terminal_state_without_calculate_action(
     )
 
 
-def test_discarded_work_transport_guards_preserve_terminal_schema_and_state(
-) -> None:
+def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() -> None:
     """Every rejected discarded-state verb retains facts and terminal outcome on its real transport."""
     _create_profile()
     work_unit_id = _create_m130_work_unit()

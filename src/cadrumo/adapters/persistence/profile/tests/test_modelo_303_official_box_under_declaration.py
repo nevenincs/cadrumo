@@ -433,26 +433,29 @@ def test_calculate_rejects_caller_override_of_projected_box(
     work_unit = _seed_work_unit(wu_repo, event_repo, operation=operation)
     tx_repo.save(TransactionCatalogue.from_transactions((sale,)))
 
-    with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"), calculation_ports_for_test(
-        bucket_id=_BUCKET,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=event_repo,
-        transaction_repository=tx_repo,
-    ) as _calculation_ports_436:
-            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                actor="operator-A",
-                casilla_inputs={_OFFICIAL_DEVENGADO_GENERAL_CUOTA: _SALE_CUOTA},
-                binding_values={
-                    "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-                    "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-                },
-                iva_compensation_decision=_wallet_decision(),
-                ports=_calculation_ports_436,
-                filing_instance_evidence=_filing_evidence(work_unit.period, operation=operation),
-                clock=_T1,
-            )
+    with (
+        pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"),
+        calculation_ports_for_test(
+            bucket_id=_BUCKET,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+        ) as _calculation_ports_436,
+    ):
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            casilla_inputs={_OFFICIAL_DEVENGADO_GENERAL_CUOTA: _SALE_CUOTA},
+            binding_values={
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            iva_compensation_decision=_wallet_decision(),
+            ports=_calculation_ports_436,
+            filing_instance_evidence=_filing_evidence(work_unit.period, operation=operation),
+            clock=_T1,
+        )
 
 
 # ---------------------------------------------------------------------------

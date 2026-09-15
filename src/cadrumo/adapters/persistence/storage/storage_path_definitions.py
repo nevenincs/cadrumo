@@ -97,6 +97,8 @@ BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 INDEX_FILENAME = "index.json"
 SECRET_INDEX_SCHEMA_VERSION = 1
+
+
 def _pydantic_namespace_validator[ValidationResultT](
     function: Callable[..., ValidationResultT],
 ) -> Callable[..., ValidationResultT]:

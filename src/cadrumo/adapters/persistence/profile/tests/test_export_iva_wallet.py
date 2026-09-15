@@ -77,7 +77,10 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
     IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
 
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"), bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"),
+        bundled_indexed_authority().operation() as operation,
+    ):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=calc_rev_id,
@@ -109,7 +112,10 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
     IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"), bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"),
+        bundled_indexed_authority().operation() as operation,
+    ):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=calc_rev_id,
@@ -144,7 +150,10 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"), bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"),
+            bundled_indexed_authority().operation() as operation,
+        ):
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=calc_rev_id,
@@ -267,7 +276,10 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"), bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"),
+            bundled_indexed_authority().operation() as operation,
+        ):
             file_modelo_revision(
                 calc_rev_id,
                 actor="operator",

@@ -26,6 +26,7 @@ from .ledger_action_persistence_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 @contextmanager
 def _ledger_ports(transaction_repository, event_repository, profile):
     with bundled_indexed_authority().operation() as operation:
@@ -79,7 +80,10 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
     transaction_repository, event_repository = _repositories(secure_objects)
     category = SpendingCategory._from_registry("telefonia_movil")
 
-    with pytest.raises(TransactionValidationError, match="not configured"), _ledger_ports(transaction_repository, event_repository, UsageRatioProfile()) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="not configured"),
+        _ledger_ports(transaction_repository, event_repository, UsageRatioProfile()) as ports,
+    ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,
@@ -107,7 +111,10 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
     category = SpendingCategory._from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
-    with pytest.raises(TransactionValidationError, match="concrete eligible spending category"), _ledger_ports(transaction_repository, event_repository, profile) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="concrete eligible spending category"),
+        _ledger_ports(transaction_repository, event_repository, profile) as ports,
+    ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,
@@ -124,7 +131,10 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
-    with pytest.raises(TransactionValidationError, match="must match"), _ledger_ports(transaction_repository, event_repository, profile) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="must match"),
+        _ledger_ports(transaction_repository, event_repository, profile) as ports,
+    ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,
@@ -152,7 +162,10 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     category = SpendingCategory._from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
-    with pytest.raises(TransactionValidationError, match="does not match"), _ledger_ports(transaction_repository, event_repository, profile) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="does not match"),
+        _ledger_ports(transaction_repository, event_repository, profile) as ports,
+    ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,

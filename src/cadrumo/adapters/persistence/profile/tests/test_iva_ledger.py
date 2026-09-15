@@ -268,7 +268,10 @@ def _transaction(
 def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(AggregationValidationError, match="bucket_mismatch"):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(AggregationValidationError, match="bucket_mismatch"),
+    ):
         aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_Q2_2026,
@@ -290,7 +293,10 @@ def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository
     tmp_path: Path,
 ) -> None:
     """IVA aggregation never combines a primary ledger with another bucket's register."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime,
+    ):
         TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id).save(
             TransactionCatalogue.from_transactions((_transaction("primary-ledger-row"),))
         )

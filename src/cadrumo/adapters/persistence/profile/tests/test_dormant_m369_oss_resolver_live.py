@@ -433,116 +433,116 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             database_name="m369-injected.db",
         ) as injected_objects,
     ):
-            _seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET)
-            wu_repo = WorkUnitCatalogueRepository(objects=runtime.repository)
-            cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)
-            tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=runtime.repository)
-            ambient_invoice_repo = InvoiceCatalogueRepository(objects=runtime.repository)
-            invoice_repo = InvoiceCatalogueRepository(objects=injected_objects)
-            invoice_repo.save(
-                InvoiceCatalogue.from_invoices(
-                    (
-                        _m369_invoice(
-                            invoice_number="OSS-DE-SERV-001",
-                            issued_at=date(2026, 2, 15),
-                            counterparty_name="DE Consumer",
-                            counterparty_tax_id="DE123456789",
-                            counterparty_country="DE",
-                            transaction_kind=TransactionKind("oss_union_services"),
-                            base_amount=Decimal("100.00"),
-                            iva_amount=Decimal("19.00"),
-                        ),
-                        _m369_invoice(
-                            invoice_number="OSS-FR-SERV-001",
-                            issued_at=date(2026, 2, 16),
-                            counterparty_name="FR Consumer",
-                            counterparty_tax_id="FR12345678901",
-                            counterparty_country="FR",
-                            transaction_kind=TransactionKind("oss_union_services"),
-                            base_amount=Decimal("200.00"),
-                            iva_amount=Decimal("40.00"),
-                        ),
-                        _m369_invoice(
-                            invoice_number="OSS-DE-GOODS-001",
-                            issued_at=date(2026, 2, 17),
-                            counterparty_name="DE Consumer Goods",
-                            counterparty_tax_id="DE987654321",
-                            counterparty_country="DE",
-                            transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
-                            base_amount=Decimal("300.00"),
-                            iva_amount=Decimal("57.00"),
-                        ),
+        _seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET)
+        wu_repo = WorkUnitCatalogueRepository(objects=runtime.repository)
+        cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)
+        tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=runtime.repository)
+        ambient_invoice_repo = InvoiceCatalogueRepository(objects=runtime.repository)
+        invoice_repo = InvoiceCatalogueRepository(objects=injected_objects)
+        invoice_repo.save(
+            InvoiceCatalogue.from_invoices(
+                (
+                    _m369_invoice(
+                        invoice_number="OSS-DE-SERV-001",
+                        issued_at=date(2026, 2, 15),
+                        counterparty_name="DE Consumer",
+                        counterparty_tax_id="DE123456789",
+                        counterparty_country="DE",
+                        transaction_kind=TransactionKind("oss_union_services"),
+                        base_amount=Decimal("100.00"),
+                        iva_amount=Decimal("19.00"),
+                    ),
+                    _m369_invoice(
+                        invoice_number="OSS-FR-SERV-001",
+                        issued_at=date(2026, 2, 16),
+                        counterparty_name="FR Consumer",
+                        counterparty_tax_id="FR12345678901",
+                        counterparty_country="FR",
+                        transaction_kind=TransactionKind("oss_union_services"),
+                        base_amount=Decimal("200.00"),
+                        iva_amount=Decimal("40.00"),
+                    ),
+                    _m369_invoice(
+                        invoice_number="OSS-DE-GOODS-001",
+                        issued_at=date(2026, 2, 17),
+                        counterparty_name="DE Consumer Goods",
+                        counterparty_tax_id="DE987654321",
+                        counterparty_country="DE",
+                        transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
+                        base_amount=Decimal("300.00"),
+                        iva_amount=Decimal("57.00"),
                     ),
                 ),
-            )
-            assert ambient_invoice_repo.exists() is False
+            ),
+        )
+        assert ambient_invoice_repo.exists() is False
 
-            work_unit = create_work_unit(
-                bucket_id=_M369_BUCKET,
-                modelo="369",
-                filing_year=_M369_YEAR,
-                period=Period.from_year_and_code(_M369_YEAR, "1T"),
-                revision_id=_M369_REVISION,
-                ports=WorkLifecyclePorts(
-                    work_unit_repository=wu_repo,
-                    bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
-                ),
-                clock=_T0,
+        work_unit = create_work_unit(
+            bucket_id=_M369_BUCKET,
+            modelo="369",
+            filing_year=_M369_YEAR,
+            period=Period.from_year_and_code(_M369_YEAR, "1T"),
+            revision_id=_M369_REVISION,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=wu_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
+            ),
+            clock=_T0,
+            operation=operation,
+        )
+        with calculation_ports_for_test(
+            bucket_id=_M369_BUCKET,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ) as _calculation_ports_488:
+            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=_calculation_ports_488,
+                clock=_T1,
+            )
+
+        assert isinstance(result, BucketAggregationCalculationResult)
+        casilla_values = result.revision.casilla_values
+        component_cuotas = (
+            Decimal(casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]),
+            Decimal(casilla_values[_M369_FR_SERVICES_BINDING_CASILLA]),
+            Decimal(casilla_values[_M369_DE_GOODS_BINDING_CASILLA]),
+        )
+        assert component_cuotas == (Decimal("19.00"), Decimal("40.00"), Decimal("57.00"))
+        assert Decimal(casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == sum(component_cuotas, Decimal("0"))
+        assert not any(
+            diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
+            for diag in result.source_diagnostics
+        )
+        assert not any(
+            diag.source_kind == "ledger_oss_aggregation" and diag.reason == "unhandled_binding_source"
+            for diag in result.source_diagnostics
+        )
+
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                result.revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=build_test_verification_repository_bundle(),
+                actor="m369-live-operator",
+                workflow_profile=workflow_profile(),
+                clock=_T1,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
             )
-            with calculation_ports_for_test(
-                bucket_id=_M369_BUCKET,
-                work_unit_repository=wu_repo,
-                calculation_repository=cr_repo,
-                bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
-                transaction_repository=tx_repo,
-                invoice_repository=invoice_repo,
-            ) as _calculation_ports_488:
-                result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                    work_unit.work_unit_id,
-                    ports=_calculation_ports_488,
-                    clock=_T1,
-                )
-
-            assert isinstance(result, BucketAggregationCalculationResult)
-            casilla_values = result.revision.casilla_values
-            component_cuotas = (
-                Decimal(casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]),
-                Decimal(casilla_values[_M369_FR_SERVICES_BINDING_CASILLA]),
-                Decimal(casilla_values[_M369_DE_GOODS_BINDING_CASILLA]),
-            )
-            assert component_cuotas == (Decimal("19.00"), Decimal("40.00"), Decimal("57.00"))
-            assert Decimal(casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == sum(component_cuotas, Decimal("0"))
-            assert not any(
-                diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"
-                for diag in result.source_diagnostics
-            )
-            assert not any(
-                diag.source_kind == "ledger_oss_aggregation" and diag.reason == "unhandled_binding_source"
-                for diag in result.source_diagnostics
-            )
-
-            with bundled_indexed_authority().operation() as operation:
-                report = verify_modelo_revision(
-                    result.revision.calculation_revision_id,
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    verification_repositories=build_test_verification_repository_bundle(),
-                    actor="m369-live-operator",
-                    workflow_profile=workflow_profile(),
-                    clock=_T1,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=operation,
-                )
-            assert ambient_invoice_repo.exists() is False
-            assert any(
-                ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
-                for ref in result.revision.source_provenance
-            ), result.revision.source_provenance
-            assert result.revision.source_issues == ()
-            assert report.granted_verificado_completo is True, report.findings
-            assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
-                result.revision.calculation_revision_id
-            )
+        assert ambient_invoice_repo.exists() is False
+        assert any(
+            ref.resolved_binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION
+            for ref in result.revision.source_provenance
+        ), result.revision.source_provenance
+        assert result.revision.source_issues == ()
+        assert report.granted_verificado_completo is True, report.findings
+        assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
+            result.revision.calculation_revision_id
+        )
 
 
 def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(

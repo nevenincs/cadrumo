@@ -364,7 +364,10 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
             operation=operation,
         )
 
-        with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloRequiredBindingsMissingError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -416,7 +419,10 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         )
         profile = workflow_profile(Decimal("500000"))
 
-        with pytest.raises(ModeloRequiredBindingsMissingError) as verify_error, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloRequiredBindingsMissingError) as verify_error,
+            bundled_indexed_authority().operation() as operation,
+        ):
             verify_modelo_revision(
                 draft.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -449,7 +455,10 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
             calculation_repository=calc_repo,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )
-        with pytest.raises(ModeloRequiredBindingsMissingError) as file_error, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloRequiredBindingsMissingError) as file_error,
+            bundled_indexed_authority().operation() as operation,
+        ):
             file_modelo_revision(
                 verified.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -474,7 +483,10 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         assert isinstance(file_missing_bindings, tuple)
         assert _M202_PRIOR_PAYMENTS_BINDING in file_missing_bindings
         export_path = tmp_path / "modelo-202-2026-1P.txt"
-        with pytest.raises(ModeloExportUnsupportedError) as export_error, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloExportUnsupportedError) as export_error,
+            bundled_indexed_authority().operation() as operation,
+        ):
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=verified.calculation_revision_id,
@@ -564,7 +576,10 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(
             operation=operation,
         )
 
-        with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info, bundled_indexed_authority().operation() as operation:
+        with (
+            pytest.raises(ModeloRequiredBindingsMissingError) as exc_info,
+            bundled_indexed_authority().operation() as operation,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),

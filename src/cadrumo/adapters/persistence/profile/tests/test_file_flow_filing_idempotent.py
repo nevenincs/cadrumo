@@ -115,7 +115,7 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
             clock=T4,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         )
 
@@ -161,7 +161,10 @@ def test_file_of_unverified_revision_still_hard_refuses(repos: Repos) -> None:
             ports=_calculation_ports_146,
             clock=T1,
         )
-    with pytest.raises(CalculationRevisionStateError, match=r"state|VERIFICADO_COMPLETO"), bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(CalculationRevisionStateError, match=r"state|VERIFICADO_COMPLETO"),
+        bundled_indexed_authority().operation() as operation,
+    ):
         file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
@@ -171,4 +174,4 @@ def test_file_of_unverified_revision_still_hard_refuses(repos: Repos) -> None:
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-            )
+        )

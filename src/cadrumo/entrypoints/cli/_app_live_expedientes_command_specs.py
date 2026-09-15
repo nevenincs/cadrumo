@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 from ._app_live_command_spec_support import (

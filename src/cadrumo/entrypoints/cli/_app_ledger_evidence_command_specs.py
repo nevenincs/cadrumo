@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 from ...application.ledger.operator_input_contracts import (

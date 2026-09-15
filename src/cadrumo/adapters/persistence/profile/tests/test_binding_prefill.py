@@ -203,7 +203,10 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
     resolve through :func:`resolve_relations_from_local_store` and that the
     annual reconciliation casillas equal the ledger-derived annual totals.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path) as profile,
+    ):
         quarterly_observations = {
             "1T": (
                 _observation(ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),

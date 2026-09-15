@@ -74,7 +74,9 @@ def _ensure_logged_in() -> None:
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     login_profile(
-        name=_LABEL, passphrase_callback=lambda: _CREDENTIAL_INPUT, profile_decode_context=_profile_decode_context_for_test
+        name=_LABEL,
+        passphrase_callback=lambda: _CREDENTIAL_INPUT,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
 

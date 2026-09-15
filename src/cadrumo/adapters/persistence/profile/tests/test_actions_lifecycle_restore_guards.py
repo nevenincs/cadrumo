@@ -24,6 +24,8 @@ from .ledger_action_persistence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
 def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository, created = _create_manual_row(
         secure_objects,

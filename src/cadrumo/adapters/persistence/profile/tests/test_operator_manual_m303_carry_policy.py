@@ -26,7 +26,10 @@ def test_operator_manual_m303_carry_policy_refuses_without_persisting(
     tmp_path: Path,
 ) -> None:
     """M303 has one canonical filing write door; operator-manual rows are refused."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path),
+    ):
         repository = CalculationObservationRepository()
         period = Period.from_year_and_code(_FILING_YEAR, "1T")
         with pytest.raises(ModeloLocalObservationError, match="require canonical filed or official evidence"):

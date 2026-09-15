@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 from ._app_ledger_command_spec_policies import (
