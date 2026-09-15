@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.audited_process import run_audited_process
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SRC_ROOT = Path(__file__).resolve().parents[4]
@@ -35,7 +37,7 @@ def _run_cold(body: str) -> subprocess.CompletedProcess[str]:
         "from cadrumo.application.user_profile.keys_validation import ("
         "profile_keys, validate_profile_values)\n" + body + "\n"
     )
-    return subprocess.run(  # noqa: S603 - fixed argv, no shell, test-local source
+    return run_audited_process(
         [sys.executable, "-c", source],
         capture_output=True,
         text=True,

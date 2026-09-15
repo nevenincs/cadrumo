@@ -169,6 +169,7 @@ def resolve_profile_export_values(
         bindings: The revision's export-addressed profile bindings, as
             projected onto the schema subview by ``profile_export_bindings``.
         bucket_id: Active profile bucket whose persisted facts are read.
+        operation: Authority operation supplying the profile read and schema.
         profile_record: Pre-loaded profile record; loaded from the bucket when
             omitted.
         schema: Pre-loaded profile schema; loaded when omitted.
@@ -270,6 +271,7 @@ def resolve_declaration_contact(
 
     Args:
         bucket_id: Active profile bucket.
+        operation: Authority operation supplying the profile read and schema.
         profile_record: Already-loaded record, when the caller holds one.
         schema: Already-loaded schema, when the caller holds one.
 

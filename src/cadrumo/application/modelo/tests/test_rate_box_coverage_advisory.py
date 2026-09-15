@@ -23,7 +23,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 import pytest
 
@@ -43,6 +42,7 @@ from ....domain.iva.schema import (
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
 from ..calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .advisory_diagnostic_repositories import advisory_diagnostic_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -121,6 +121,7 @@ def _split_revision() -> ModeloRevision:
 
 def _coordinator_diagnostics(values: dict[CasillaId, Decimal]) -> tuple[CalculationSourceDiagnostic, ...]:
     """Every advisory the COORDINATOR raises, not the collector called directly."""
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     return collect_bucket_aggregation_advisory_diagnostics(
         _split_revision(),
         values,
@@ -128,10 +129,10 @@ def _coordinator_diagnostics(values: dict[CasillaId, Decimal]) -> tuple[Calculat
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
-        observation_repository=SimpleNamespace(),
-        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=SimpleNamespace(),
-        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
     )
 
 

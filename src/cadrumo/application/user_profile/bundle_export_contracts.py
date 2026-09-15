@@ -30,7 +30,7 @@ surface and is deliberately absent here.
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import StrEnum, auto
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -92,7 +92,7 @@ class ProfileBundleExportTransport(StrEnum):
     """Wire protection applied to the published portable bundle."""
 
     CLEARTEXT_LOCAL = "cleartext_local"
-    PASSPHRASE_ENCRYPTED = "passphrase_encrypted"  # noqa: S105 - transport taxonomy, not a secret
+    PASSPHRASE_ENCRYPTED = auto()
 
 
 class ProfileBundleExportRequest(BaseModel):

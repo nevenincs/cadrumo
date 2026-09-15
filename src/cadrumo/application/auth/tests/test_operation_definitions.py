@@ -11,7 +11,7 @@ from cadrumo.application.auth.operation_definitions import (
     AUTH_RESET_OPERATION_DEFINITION_ID,
     AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
     PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-    PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+    PROFILE_ROTATION_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
 from cadrumo.application.operations.registry import OperationRegistry
@@ -28,7 +28,7 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
         AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
         AUTH_LOGOUT_OPERATION_DEFINITION_ID,
         AUTH_RESET_OPERATION_DEFINITION_ID,
-        PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+        PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     )
     assert len(set(definition_ids)) == len(definition_ids)
     assert {
@@ -46,11 +46,11 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
             AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
             AUTH_LOGOUT_OPERATION_DEFINITION_ID,
             AUTH_RESET_OPERATION_DEFINITION_ID,
-            PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+            PROFILE_ROTATION_OPERATION_DEFINITION_ID,
         )
     )
     assert registry.lookup(PROFILE_LOGIN_OPERATION_DEFINITION_ID).ephemeral_secret is not None
-    assert registry.lookup(PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID).ephemeral_secret is not None
+    assert registry.lookup(PROFILE_ROTATION_OPERATION_DEFINITION_ID).ephemeral_secret is not None
     assert all(
         registry.lookup(definition_id).ephemeral_secret is None
         for definition_id in (

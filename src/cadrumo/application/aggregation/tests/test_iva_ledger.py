@@ -263,13 +263,12 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
     )
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with pytest.raises(TypeError, match="investment_asset_register"):
-            cast(Any, _aggregate_iva_ledger_observations_with_authority)(
-                catalogue,
-                period=_Q2_2026,
-                operation=_authority_operation_for_test,
-            )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(TypeError, match="investment_asset_register"):
+        cast(Any, _aggregate_iva_ledger_observations_with_authority)(
+            catalogue,
+            period=_Q2_2026,
+            operation=_authority_operation_for_test,
+        )
 
 
 def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> None:

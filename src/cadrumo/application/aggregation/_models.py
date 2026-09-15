@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Annotated, Generic, Self, TypeVar
+from typing import Annotated, Self
 
 from pydantic import (
     BaseModel,
@@ -122,22 +122,12 @@ class CasillaAggregation(BaseModel):
         return tuple(value)
 
 
-ObservationT = TypeVar("ObservationT", bound=BaseModel)
-IssueT = TypeVar("IssueT", bound=BaseModel)
-
-
-class LedgerAggregationResultBase(BaseModel, Generic[ObservationT, IssueT]):  # noqa: UP046 -- see docstring: PEP 695 type params are unresolvable across modules here
+class LedgerAggregationResultBase[ObservationT: BaseModel, IssueT: BaseModel](BaseModel):
     """Shared envelope for one ledger-projection aggregation result.
 
-    Declared with classic :class:`~typing.TypeVar` / :class:`~typing.Generic`
-    rather than PEP 695 ``class Foo[T]`` syntax: a PEP 695 type parameter is
-    scoped to the class statement only and is not a resolvable module-level
-    name, so a concrete subclass parametrising this base FROM ANOTHER MODULE
-    (every one of the five known subclasses does) fails to build
-    (``PydanticUndefinedAnnotation: name 'ObservationT' is not defined``) the
-    moment this module also carries ``from __future__ import annotations``.
-    ``TypeVar`` names are real module attributes pydantic's forward-ref
-    resolver can always find, so this form has no such gap.
+    The PEP 695 type parameters are bounded to strict pydantic models, and
+    concrete projection subclasses specialise this envelope in their own
+    modules.
 
     Every ledger-projection family (renta income, renta gasto, IRNR income,
     impatriado income, and the Modelo 100 first-slice expense aggregation)

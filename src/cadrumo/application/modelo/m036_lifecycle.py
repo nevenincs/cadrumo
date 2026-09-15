@@ -368,6 +368,8 @@ def record_m036_declaration(
             declared-on date, and optional electronic justificante.
         bucket_id: The bucket to persist into; checked against
             ``command.profile_id`` before anything is derived or stored.
+        ports: Bucket-bound persistence and event capabilities used by the
+            declaration lifecycle.
 
     Raises:
         LiveApplicationInputError: If ``command.profile_id`` names a different

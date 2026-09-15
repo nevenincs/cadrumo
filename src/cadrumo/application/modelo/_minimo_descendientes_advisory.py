@@ -460,6 +460,7 @@ def collect_guarderia_spend_shape_diagnostics(
         filing_year: Filing year used to select the descendant fact coordinate.
         period_token: Registry period token used to confirm the selected scope.
         bucket_id: Bucket whose profile carries the descendant facts.
+        operation: Authority operation supplying the profile and registry reads.
 
     Returns:
         A one-element tuple carrying the advisory, or an empty tuple.
@@ -594,6 +595,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
         filing_year: Filing year used to select the descendant fact coordinate.
         period_token: Registry period token used to confirm the selected scope.
         bucket_id: Bucket whose profile carries the descendant facts.
+        operation: Authority operation supplying the profile and registry reads.
 
     Returns:
         A one-element tuple carrying the advisory, or an empty tuple.

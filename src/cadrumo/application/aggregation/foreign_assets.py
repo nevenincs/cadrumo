@@ -349,10 +349,12 @@ class ForeignAssetsAggregationSourceResolver:
         observations: Iterable[ForeignAssetIngestObservation] = (),
         row_observations: Iterable[Modelo720RowObservation] = (),
     ) -> None:
+        """Bind typed observations for one foreign-assets resolution pass."""
         self._observations = tuple(observations)
         self._row_observations = tuple(row_observations)
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the owned foreign-assets bindings for the calculation context."""
         if not _foreign_asset_source_for_revision(context):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 

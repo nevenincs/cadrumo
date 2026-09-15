@@ -1003,6 +1003,7 @@ async def verify_capture_authenticity(
         snapshot: The already-persisted capture whose CSV is checked.
         service: Snapshot service owning ``snapshot``'s bucket; it performs
             the encrypted write of the stamped record.
+        verifier: Port that submits the capture CSV to the authenticity surface.
         browser: An already-constructed browser session to borrow. When
             ``None``, the verifier builds and closes its own.
         browser_session_factory: Optional no-argument factory for the

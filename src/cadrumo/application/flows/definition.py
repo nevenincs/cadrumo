@@ -21,7 +21,7 @@ gates) so existing catalogues migrate by extension.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Union, cast
+from typing import cast
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -189,7 +189,7 @@ class FlowRepeatingGroup(BaseModel):
     max_instances: int = Field(default=50, ge=1)
 
 
-type FlowItem = Union[FlowPage, FlowRepeatingGroup]  # noqa: UP007 - pydantic discriminates the runtime union
+type FlowItem = FlowPage | FlowRepeatingGroup
 
 
 class FlowSection(BaseModel):

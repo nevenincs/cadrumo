@@ -62,6 +62,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
+from .binding_prefill import BindingPrefillReport as _BindingPrefillReport
 
 if TYPE_CHECKING:
     from .binding_prefill import BindingPrefillReport, LocalIvaCompensationRecurrence
@@ -82,10 +83,6 @@ class IvaCompensationReconciliationReport(BaseModel):
     decision: IvaCompensationReconciliationDecision
     prefill_report: BindingPrefillReport
 
-
-# The report's annotation is deliberately resolved in its defining module so
-# importing this public service does not depend on a package initializer.
-from .binding_prefill import BindingPrefillReport as _BindingPrefillReport  # noqa: E402
 
 IvaCompensationReconciliationReport.model_rebuild(
     _types_namespace={"BindingPrefillReport": _BindingPrefillReport},

@@ -24,6 +24,7 @@ called them sectoral; the declaration says otherwise and now wins.
 from __future__ import annotations
 
 from types import SimpleNamespace
+
 import pytest
 
 from ....domain.user_profile.values import UserProfileFact

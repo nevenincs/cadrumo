@@ -29,11 +29,12 @@ process isolation, not by patching ``get_setup_flow``).
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -202,7 +203,7 @@ def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: 
     COMPUTES; pre-#30 the swallowed ``WizardCatalogueNotRegisteredError`` left the
     flag False, the date None, and the casilla ABSENT.
     """
-    child = subprocess.run(  # noqa - fixed executable and in-module script constant
+    child = run_audited_process(
         [sys.executable, "-c", _CHILD_SCRIPT, str(tmp_path)],
         capture_output=True,
         text=True,

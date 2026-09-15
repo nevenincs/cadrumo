@@ -347,6 +347,7 @@ def _spanish_iva_was_charged(
             unit is named in both places because a percentage handed to that
             lookup silently matches nothing and reads as "no Spanish rate".
         on_date: The date the rate must have been in force.
+        operation: Pinned authority operation supplying the dated rate catalogue.
     """
     if on_date is None:
         return False
@@ -445,6 +446,7 @@ def _taxed_under_the_registration_state(
             printed -- the only State whose schedule is relevant, because the
             claim being corroborated is that the party is established THERE.
         on_date: The date the rate must have been in force.
+        operation: Pinned authority operation supplying the dated rate catalogues.
 
     Returns:
         Whether some charged rate is one that State schedule carries.

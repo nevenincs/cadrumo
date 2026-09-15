@@ -740,9 +740,10 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() ->
 
 
 def test_service_surface_has_no_cli_dependency() -> None:
-    import subprocess
     import sys
     import textwrap
+
+    from cadrumo.tests.audited_process import run_audited_process
 
     script = textwrap.dedent("""\
         import importlib
@@ -761,7 +762,7 @@ def test_service_surface_has_no_cli_dependency() -> None:
         )
         assert leaked == [], leaked
     """)
-    result = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+    result = run_audited_process(
         [sys.executable, "-c", script],
         capture_output=True,
         text=True,

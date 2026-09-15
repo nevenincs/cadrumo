@@ -38,6 +38,7 @@ from ....application.invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPorts,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from .._modelo_bindings_invoice_iva import (
@@ -128,13 +129,15 @@ def test_the_silence_guard_carries_the_degradation_to_its_caller() -> None:
     judgement at all, and returning quietly is the outcome that reads as "checked
     and fine".
     """
-    report = raise_if_invoice_iva_would_be_silent(
-        context=_context(),
-        period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
-        transaction_binding_values={},
-        ports=_read_ports(_UnreadableInvoiceCatalogue()),
-        prorrata_apportionment=None,
-    )
+    with _indexed_authority_for_test().operation() as operation:
+        report = raise_if_invoice_iva_would_be_silent(
+            context=_context(),
+            period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
+            operation=operation,
+            transaction_binding_values={},
+            ports=_read_ports(_UnreadableInvoiceCatalogue()),
+            prorrata_apportionment=None,
+        )
 
     assert report.storage_degraded is True, (
         "the guard returned as though it had compared the invoice catalogue against the ledger"

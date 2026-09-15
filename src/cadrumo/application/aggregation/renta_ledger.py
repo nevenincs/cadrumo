@@ -320,6 +320,7 @@ def _resolve_residence_ccaa(
             when ``None`` the record is loaded from the bucket.
         profile_decode_context: Optional decode context from the caller-held
             authority operation used when the record is loaded.
+        operation: Pinned authority operation supplying the profile decode context.
     """
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()

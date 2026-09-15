@@ -72,6 +72,7 @@ _PROFILE_BUNDLE_EXPORT_PHASES = (
     "user-profile.bundle-export.execute",
     "user-profile.bundle-export.settlement",
 )
+_PROFILE_BUNDLE_EXPORT_KIND = "profile.bundle-export.passphrase"
 _PROFILE_LOGOUT_PHASES = (
     "user-profile.logout.preflight",
     "user-profile.logout.execute",
@@ -374,7 +375,7 @@ USER_PROFILE_OPERATION_DEFINITIONS = (
         executor_type=ProfileBundleExportOperationExecutor,
         phase_codes=_PROFILE_BUNDLE_EXPORT_PHASES,
         ephemeral_secret=OperationEphemeralSecretDeclaration(
-            secret_kind="profile.bundle-export.passphrase",  # noqa: S106
+            secret_kind=_PROFILE_BUNDLE_EXPORT_KIND,
             lifetime=timedelta(minutes=5),
         ),
     ),

@@ -225,17 +225,18 @@ def test_checkpoint_missing_a_mode_raises() -> None:
 
 
 def test_fingerprint_is_stable_across_identical_builds() -> None:
-    build = lambda: _definition(  # noqa: E731 - inline builder keeps the two builds byte-identical
-        (
-            _section(
-                "s1",
-                (
-                    _page("name"),
-                    _page("home", widget=FlowWidgetKind.PATH, answer_type=Path),
+    def build() -> FlowDefinition:
+        return _definition(
+            (
+                _section(
+                    "s1",
+                    (
+                        _page("name"),
+                        _page("home", widget=FlowWidgetKind.PATH, answer_type=Path),
+                    ),
                 ),
             ),
-        ),
-    )
+        )
     assert build().fingerprint == build().fingerprint
 
 

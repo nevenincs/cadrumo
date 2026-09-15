@@ -247,6 +247,9 @@ def aggregate_renta_gasto_ledger(
             records so the resulting aggregation cannot be silently misattributed.
         period: The quarterly :class:`Period` whose year anchors the cumulative
             window.
+        modelo: Selected model identifier receiving the aggregation.
+        target_casilla_id: Registry-selected output casilla for deductible expenses.
+        accept_activity_marker: Whether activity-marked transactions are eligible.
         iva_deduction_ratio: Optional activity-wide IVA-deduction fraction (LIVA
             arts. 94/104), joining the non-recoverable share of a row's
             ``iva_amount`` to its deductible base (PGC NRV 12.ª). ``None`` (the

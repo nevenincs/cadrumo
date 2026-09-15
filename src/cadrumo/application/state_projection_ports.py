@@ -57,6 +57,7 @@ class StateProjectionReadError(CadrumoError):
     """Stable application error raised when a projection read cannot complete."""
 
     def __init__(self, operation: str) -> None:
+        """Create a read error identified by the failed projection operation."""
         self.operation = operation
         super().__init__(f"state projection {operation} read failed")
 

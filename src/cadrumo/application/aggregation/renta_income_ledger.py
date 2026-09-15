@@ -339,6 +339,10 @@ def aggregate_renta_income_ledger(
             records so the resulting aggregation cannot be silently misattributed.
         period: The quarterly :class:`Period` whose year anchors the cumulative
             window.
+        modelo: Selected model identifier receiving the aggregation.
+        target_casilla_id: Registry-selected output casilla for professional income.
+        activity_category_matcher: Predicate for activity-category transactions.
+        employment_category_matcher: Predicate for employment-category transactions.
 
     Returns a :class:`RentaIncomeLedgerAggregation` covering the
     cumulative fiscal window. ``period`` must be quarterly. The cumulative
@@ -584,6 +588,8 @@ def aggregate_renta_m131_agrario_income_ledger(
         modelo: Selected model identifier supplied by the registry boundary.
         target_casilla_id: Selected output target supplied by the registry boundary.
         agrarian_activity_codes: Selected activity-code set supplied by the registry.
+        activity_category_matcher: Predicate for activity-category transactions.
+        employment_category_matcher: Predicate for employment-category transactions.
 
     Returns:
         The :class:`RentaIncomeLedgerAggregation` for the selected target.
@@ -718,6 +724,8 @@ def _project_income_onto_casilla(
         window_start: First day the classifier treats as in-window.
         window_end: Last day the classifier treats as in-window.
         target_casilla_id: The casilla every eligible observation is re-targeted to.
+        activity_category_matcher: Predicate for activity-category transactions.
+        employment_category_matcher: Predicate for employment-category transactions.
         admits: Optional row filter deciding which rows reach the casilla.
             ``None`` admits every active row, which is what an un-narrowed path
             wants. A rejected row is still CLASSIFIED, so its income can be

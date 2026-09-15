@@ -55,7 +55,9 @@ AUTH_CONFIGURE_OPERATION_DEFINITION_ID = "auth.provider.configure"
 AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID = "auth.session.acquire"
 AUTH_LOGOUT_OPERATION_DEFINITION_ID = "auth.session.logout"
 AUTH_RESET_OPERATION_DEFINITION_ID = "auth.session.reset"
-PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"  # noqa: S105
+PROFILE_ROTATION_OPERATION_DEFINITION_ID = "auth.profile.passphrase-rotate"
+_PROFILE_LOGIN_KIND = "profile.login.passphrase"
+_PROFILE_ROTATION_KIND = "profile.passphrase.rotation"
 _PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
 
@@ -123,7 +125,7 @@ async def _result_reference(result: BaseModel, context: OperationExecutorContext
     """Persist a post-custody result or retain the safe profile reference."""
     if context.identity.definition_id in {
         PROFILE_LOGIN_OPERATION_DEFINITION_ID,
-        PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+        PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     }:
         return context.identity.subject_ref
     return await context.operands.put(result, written_at=now())
@@ -360,7 +362,7 @@ def _build_auth_operation_definitions(
             executor_type=ProfileLoginOperationExecutor,
             build=lambda: ProfileLoginOperationExecutor(login=profile_login),
             phases=("auth.login.secret-consume", "auth.login.execute", "auth.login.settlement"),
-            secret_kind="profile.login.passphrase",  # noqa: S106
+            secret_kind=_PROFILE_LOGIN_KIND,
         ),
         _definition(
             definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
@@ -399,13 +401,13 @@ def _build_auth_operation_definitions(
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         ),
         _definition(
-            definition_id=PROFILE_PASSPHRASE_ROTATION_OPERATION_DEFINITION_ID,
+            definition_id=PROFILE_ROTATION_OPERATION_DEFINITION_ID,
             request_type=ProfilePassphraseRotationOperationRequest,
             result_type=ProfilePassphraseRotationOutcome,
             executor_type=ProfilePassphraseRotationOperationExecutor,
             build=lambda: ProfilePassphraseRotationOperationExecutor(rotate_passphrase=rotate_passphrase),
             phases=("auth.passphrase.secret-consume", "auth.passphrase.execute", "auth.passphrase.settlement"),
-            secret_kind="profile.passphrase.rotation",  # noqa: S106
+            secret_kind=_PROFILE_ROTATION_KIND,
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         ),
     )

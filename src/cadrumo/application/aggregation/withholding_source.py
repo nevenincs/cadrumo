@@ -85,6 +85,7 @@ class WithholdingSourceResolver:
         self._ports = ports
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve withholding totals from the bucket-scoped observation store."""
         if not _revision_declares_withholding_scalar(context.revision):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         repository = self._ports.repository
