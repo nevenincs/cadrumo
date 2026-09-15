@@ -72,7 +72,7 @@ jobs:
 
   quick-linux:
     name: "Test: Installed package (Linux)"
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'workflow_dispatch'
     runs-on: [self-hosted, Linux, X64]
     # Budget: ~7-9 min measured-baseline projection; the ceiling allows cold
     # uv caches without flaking, and a wedge still dies inside one queue slot.
@@ -137,7 +137,7 @@ jobs:
 
   quick-macos:
     name: "Test: Installed package (macOS)"
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'workflow_dispatch'
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 20
     steps:

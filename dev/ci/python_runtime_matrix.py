@@ -271,17 +271,37 @@ def github_matrix(inventory: RuntimeInventory) -> dict[str, list[dict[str, objec
     }
 
 
+def github_next_matrix(inventory: RuntimeInventory) -> dict[str, list[dict[str, object]]]:
+    """Project only the rolling prerelease diagnostic row."""
+    row = inventory.next
+    return {
+        "include": [
+            {
+                "runtime-id": row.identifier,
+                "python-version": row.selector,
+                "python-minor": row.minor,
+                "implementation": row.implementation,
+                "phase": row.phase.value,
+                "blocking": row.blocking,
+                "classifier-eligible": row.classifier_eligible,
+            }
+        ],
+    }
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Validate the inventory and print a compact GitHub matrix document."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--inventory", type=Path, default=_INVENTORY_PATH)
+    parser.add_argument("--phase", choices=("all", "next"), default="all")
     args = parser.parse_args(argv)
     try:
         inventory = load_runtime_inventory(args.inventory)
     except RuntimeMatrixError as exc:
         print(f"runtime inventory invalid: {exc}", file=sys.stderr)
         return 2
-    print(json.dumps(github_matrix(inventory), indent=2, sort_keys=True))
+    matrix = github_next_matrix(inventory) if args.phase == "next" else github_matrix(inventory)
+    print(json.dumps(matrix, indent=2, sort_keys=True))
     return 0
 
 

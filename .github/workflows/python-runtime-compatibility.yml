@@ -65,9 +65,11 @@ jobs:
       - name: Validate inventory and emit matrix
         id: emit-matrix
         shell: bash
+        env:
+          RUNTIME_PHASE: ${{ github.event_name == 'schedule' && 'next' || 'all' }}
         run: |
           set -euo pipefail
-          matrix="$(uv run --no-sync python -m dev.ci.python_runtime_matrix)"
+          matrix="$(uv run --no-sync python -m dev.ci.python_runtime_matrix --phase "$RUNTIME_PHASE")"
           test -n "$matrix"
           {
             echo 'matrix<<RUNTIME_MATRIX'
@@ -88,7 +90,7 @@ jobs:
     # This is the only cohort construction in this workflow.  Runtime rows
     # consume its sealed bytes; they never rebuild or restamp a per-runtime
     # replacement.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name != 'schedule'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 90
     steps:
@@ -213,7 +215,7 @@ jobs:
   compatibility-binary:
     name: "Test: Binary compatibility ${{ matrix.python-minor }} ${{ matrix.phase }} (Linux)"
     needs: [runtime-inventory, build-packaging-cohort]
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name != 'schedule'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 120
     strategy:
