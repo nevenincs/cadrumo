@@ -23,10 +23,11 @@ if TYPE_CHECKING:
         OperationDefinition,
         OperationPublicDefinitionContractV1,
         OperationPublicDefinitionRegistrationV1,
+        OperationSchemaIdentityV1,
     )
 
 
-def schema_identity_key(identity: Any) -> tuple[str, int, ContentDigest]:
+def schema_identity_key(identity: OperationSchemaIdentityV1) -> tuple[str, int, ContentDigest]:
     """Return the complete identity tuple, including its fingerprint."""
     return identity.schema_id, identity.schema_version, identity.schema_fingerprint
 

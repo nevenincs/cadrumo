@@ -591,7 +591,8 @@ class GovernedFact(RegistryModel):
 
     def materialized_windows(self) -> Mapping[RegistryRevisionNodeId, RegistryValidityWindow]:
         """Resolve delta-authored bounds independently per exact temporal track."""
-        if self.support is None:
+        support = self.support
+        if support is None:
             return {
                 variant.variant_id: RegistryValidityWindow(valid_from=variant.valid_from, valid_to=variant.valid_to)
                 for variant in self.variants
@@ -604,12 +605,12 @@ class GovernedFact(RegistryModel):
         for variants in tracks.values():
             ordered = sorted(
                 variants,
-                key=lambda item: (item.valid_from is not None, item.valid_from or self.support.floor, item.variant_id),
+                key=lambda item: (item.valid_from is not None, item.valid_from or support.floor, item.variant_id),
             )
             materialized.update(
                 materialize_date_window_series(
                     tuple((variant.variant_id, variant) for variant in ordered),
-                    support=self.support,
+                    support=support,
                 )
             )
         return materialized

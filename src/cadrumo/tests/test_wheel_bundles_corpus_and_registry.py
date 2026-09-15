@@ -61,7 +61,15 @@ def _wheel_exclusion_patterns() -> tuple[str, ...]:
     """Return Hatch's declared non-runtime source patterns once per test run."""
 
     config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    return tuple(config["tool"]["hatch"]["build"]["targets"]["wheel"].get("exclude", []))
+    raw_patterns = config["tool"]["hatch"]["build"]["targets"]["wheel"].get("exclude", [])
+    if not isinstance(raw_patterns, list):
+        raise TypeError("Hatch wheel exclusion patterns must be declared as an array")
+    patterns: list[str] = []
+    for pattern in raw_patterns:
+        if not isinstance(pattern, str):
+            raise TypeError("Hatch wheel exclusion patterns must be strings")
+        patterns.append(pattern)
+    return tuple(patterns)
 
 
 def _wheel_excludes(source_relative: str) -> bool:

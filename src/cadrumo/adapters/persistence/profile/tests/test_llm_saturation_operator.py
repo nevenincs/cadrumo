@@ -112,12 +112,15 @@ def test_operator_derive_refuses_non_business_row(
     repository, events = repositories
     tx_id = _seed_unclassified(repository)
 
-    with pytest.raises(TransactionValidationError, match="business transaction"), ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=repository._objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="business transaction"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            objects=repository._objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports,
+    ):
         derive_operator_iva_substrate(
             bucket_id=_BUCKET,
             transaction_id=tx_id,

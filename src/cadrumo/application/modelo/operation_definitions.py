@@ -747,6 +747,7 @@ class ModeloWorkFileExecutor:
                 notes=payload.notes,
                 refund_election=payload.refund_election,
                 payment_election=payload.payment_election,
+                operation=context.authority_operation,
             )
         )
         await context.events.effect(OperationEffect.UPDATED)

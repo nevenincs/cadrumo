@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
@@ -34,6 +34,9 @@ from ..iva.errors import IvaRateNotFoundError
 from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, resolve_iva_rate
 from ..iva.rates import iva_rate_record_from_fact
 from ..iva.schema import IvaRateKind, spanish_eu_member_state
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 
 class IvaRate(str):
@@ -66,7 +69,8 @@ class IvaRate(str):
             return value
         if isinstance(value, str):
             try:
-                return resolve_iva_rate_token(value, date.today())
+                resolved = resolve_iva_rate_token(value, date.today())
+                return cls._from_registry(str(resolved))
             except RegistryValidationError as exc:
                 raise ValueError("IvaRate token is not declared by the scoped facts registry") from exc
         raise TypeError("IvaRate must be a registry-projected token or string")
@@ -307,7 +311,8 @@ class InvoiceLegalMention(str):
             return value
         if isinstance(value, str):
             try:
-                return resolve_invoice_legal_mention(value, date.today())
+                resolved = resolve_invoice_legal_mention(value, date.today())
+                return cls._from_registry(str(resolved))
             except RegistryValidationError as exc:
                 raise ValueError("InvoiceLegalMention is not declared by the scoped facts registry") from exc
         raise TypeError("InvoiceLegalMention must be a registry-projected token or string")
@@ -489,6 +494,16 @@ def _iva_rate_slot_kind(declarations: Mapping[str, str], on_date: date) -> IvaRa
         raise RegistryValidationError("IVA rate slot catalogue has an invalid substrate kind") from exc
 
 
+def _pinned_iva_rate_operation() -> PinnedAuthorityOperation:
+    """Require the enclosing rate projection to use one pinned generation."""
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+
+    operation = governed_facts_in_scope()
+    if not isinstance(operation, PinnedAuthorityOperation):
+        raise RegistryValidationError("IVA rate resolution requires a generation-pinned authority operation")
+    return operation
+
+
 def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
     """Resolve a numeric slot's exact authority fact with its provenance.
 
@@ -500,14 +515,16 @@ def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
     declarations = _iva_rate_slot_registry_declarations(rate, on_date)
     if declarations["numeric"] != "true":
         return None
+    operation = _pinned_iva_rate_operation()
     kind = _iva_rate_slot_kind(declarations, on_date)
-    if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date).zero_token:
+    if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token:
         return None
     return resolve_iva_rate(
-        spanish_eu_member_state(effective_date=on_date),
+        spanish_eu_member_state(effective_date=on_date, authority=operation),
         kind,
         on_date,
         rate_role=declarations["rate_role"],
+        operation=operation,
     )
 
 
@@ -555,10 +572,14 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
     declarations = _iva_rate_slot_registry_declarations(rate, on_date)
     if declarations["numeric"] != "true":
         return None
+    operation = _pinned_iva_rate_operation()
     kind = _iva_rate_slot_kind(declarations, on_date)
-    if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date).zero_token:
+    if kind == resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token:
         if kind not in rate_kinds_for_declared_rate(
-            spanish_eu_member_state(effective_date=on_date), Decimal("0"), on_date
+            spanish_eu_member_state(effective_date=on_date, authority=operation),
+            Decimal("0"),
+            on_date,
+            operation=operation,
         ):
             raise IvaRateNotFoundError("zero IVA slot is not accepted by the IVA authority")
         return Decimal("0")
@@ -566,7 +587,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         resolved = resolve_iva_rate_slot_fact(rate, on_date)
         if resolved is None:
             raise RegistryValidationError("numeric IVA slot resolved without an authority fact")
-        return iva_rate_record_from_fact(resolved).pct / Decimal("100")
+        return iva_rate_record_from_fact(resolved, authority=operation).pct / Decimal("100")
     except RegistryValidationError as exc:
         # Coverage and legality are different facts and must not share a
         # message. The registry's reach differs PER TIER -- the general and
@@ -575,13 +596,18 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         # tiers that same day. Saying "not in force" there sends a filer to
         # correct a figure that was right, and invites widening the table with
         # a guessed value rather than an authored, corpus-backed one.
-        if not rate_table_covers(spanish_eu_member_state(effective_date=on_date), on_date, kind):
+        if not rate_table_covers(
+            spanish_eu_member_state(effective_date=on_date, authority=operation),
+            on_date,
+            kind,
+            operation=operation,
+        ):
             raise IvaRateNotFoundError(
                 translated_message="errors.iva.rate_registry_coverage_gap",
                 context={
                     "iva_rate_slot": rate.name,
                     "rate_kind": kind.value,
-                    "member_state": spanish_eu_member_state(effective_date=on_date).value,
+                    "member_state": spanish_eu_member_state(effective_date=on_date, authority=operation).value,
                     "on_date": on_date.isoformat(),
                     "rate_registry_covers_date": False,
                 },
@@ -591,7 +617,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
             context={
                 "iva_rate_slot": rate.name,
                 "rate_kind": kind.value,
-                "member_state": spanish_eu_member_state(effective_date=on_date).value,
+                "member_state": spanish_eu_member_state(effective_date=on_date, authority=operation).value,
                 "on_date": on_date.isoformat(),
                 "rate_registry_covers_date": True,
                 "rate_in_force": False,

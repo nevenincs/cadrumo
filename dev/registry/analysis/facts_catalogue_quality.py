@@ -90,12 +90,14 @@ def _selector_key(variant: GovernedFactVariant) -> tuple[tuple[str, str, str], .
     return tuple(sorted((item.name, type(item.value).__name__, repr(item.value)) for item in variant.selectors))
 
 
-def _overlap(left: GovernedFactVariant, right: GovernedFactVariant) -> bool:
+def _overlap(fact: GovernedFact, left: GovernedFactVariant, right: GovernedFactVariant) -> bool:
     if left.date_axis != right.date_axis or _selector_key(left) != _selector_key(right):
         return False
-    left_end = left.valid_to or date.max
-    right_end = right.valid_to or date.max
-    return left.valid_from <= right_end and right.valid_from <= left_end
+    left_window = fact.validity_window(left)
+    right_window = fact.validity_window(right)
+    left_end = left_window.valid_to or date.max
+    right_end = right_window.valid_to or date.max
+    return left_window.valid_from <= right_end and right_window.valid_from <= left_end
 
 
 def _reaches(start: str, target: str, edges: Mapping[str, tuple[str, ...]]) -> bool:
@@ -143,7 +145,7 @@ def _fact_findings(provider_id: str, fact: GovernedFact) -> list[FactQualityFind
             )
     for index, left in enumerate(fact.variants):
         for right in fact.variants[index + 1 :]:
-            overlaps = _overlap(left, right)
+            overlaps = _overlap(fact, left, right)
             ordered = _reaches(left.variant_id, right.variant_id, edges) or _reaches(
                 right.variant_id, left.variant_id, edges
             )
@@ -280,7 +282,11 @@ def _resolved_variants(facts: Iterable[GovernedFact]) -> tuple[ResolvedGovernedF
 
 def _open_plan_steps(plan_text: str) -> frozenset[str]:
     """Return the exact open step ids from the active facts-registry plan."""
-    step_ids = re.findall(r"^- \[ \] `([^`]+)`", plan_text, flags=re.MULTILINE)
+    step_ids: set[str] = set()
+    for match in re.finditer(r"^- \[ \] `([^`]+)`", plan_text, flags=re.MULTILINE):
+        step_id = match.group(1)
+        if isinstance(step_id, str):
+            step_ids.add(step_id)
     return frozenset(step_ids)
 
 

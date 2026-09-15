@@ -9,6 +9,7 @@ with the profile-persistence adapter tests.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
@@ -16,8 +17,15 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from cadrumo.core.secure_object_write import SecureObjectWrite
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from cadrumo.domain.prorrata_register.register import (
+    ProrrataActivityRow,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    SectorDefinition,
+)
 
 from ..service import ProrrataRegisterService
 
@@ -37,6 +45,19 @@ class _InMemoryProrrataRegisterRepository:
     def load(self) -> ProrrataRegister:
         return self._register
 
+    def load_revisioned(self) -> tuple[ProrrataRegister, str]:
+        return self._register, "test-revision"
+
+    def to_secure_object_write(
+        self,
+        register: ProrrataRegister,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        del register
+        del expected_revision_id
+        raise AssertionError("secure-object writes are not part of this application-policy test")
+
     def upsert_entry(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
         retained = tuple(
             existing
@@ -50,17 +71,49 @@ class _InMemoryProrrataRegisterRepository:
         )
         return self._register
 
+    def upsert_sector_definition(self, definition: SectorDefinition) -> ProrrataRegister:
+        retained = tuple(
+            existing for existing in self._register.sector_definitions if existing.sector_id != definition.sector_id
+        )
+        self._register = ProrrataRegister(
+            entries=self._register.entries,
+            sector_definitions=(*retained, definition),
+            activity_rows=self._register.activity_rows,
+        )
+        return self._register
 
-def _service() -> ProrrataRegisterService:
-    return ProrrataRegisterService(repository=_InMemoryProrrataRegisterRepository())
+    def upsert_activity_row(self, row: ProrrataActivityRow) -> ProrrataRegister:
+        retained = tuple(
+            existing
+            for existing in self._register.activity_rows
+            if (existing.ejercicio, existing.activity_id) != (row.ejercicio, row.activity_id)
+        )
+        self._register = ProrrataRegister(
+            entries=self._register.entries,
+            sector_definitions=self._register.sector_definitions,
+            activity_rows=(*retained, row),
+        )
+        return self._register
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+def _service(operation: PinnedAuthorityOperation) -> ProrrataRegisterService:
+    return ProrrataRegisterService(repository=_InMemoryProrrataRegisterRepository(), operation=operation)
 
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
     return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
 
 
-def test_record_aeat_autorizada_preserves_sector_and_regime() -> None:
-    service = _service()
+def test_record_aeat_autorizada_preserves_sector_and_regime(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    service = _service(authority_operation)
 
     updated = service.record_aeat_autorizada(
         ejercicio=2026,
@@ -78,8 +131,10 @@ def test_record_aeat_autorizada_preserves_sector_and_regime() -> None:
     assert entry.authorisation_reference == "AEAT-AUTH-2026-SECTOR-02"
 
 
-def test_record_inicio_actividad_preserves_sector_and_regime() -> None:
-    service = _service()
+def test_record_inicio_actividad_preserves_sector_and_regime(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    service = _service(authority_operation)
 
     updated = service.record_inicio_actividad(
         ejercicio=2026,
@@ -97,8 +152,10 @@ def test_record_inicio_actividad_preserves_sector_and_regime() -> None:
     assert entry.authorisation_reference == "INICIO-036-2026-SECTOR-04"
 
 
-def test_resolve_provisional_uses_ladder_for_authorised_candidate() -> None:
-    service = _service()
+def test_resolve_provisional_uses_ladder_for_authorised_candidate(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    service = _service(authority_operation)
     service.declare(
         ProrrataRegisterEntry(
             ejercicio=2026,
@@ -127,8 +184,10 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate() -> None:
     assert resolution.provenance is ProrrataProvisionalProvenance._from_registry("aeat_autorizada")
 
 
-def test_resolve_provisional_uses_ladder_for_inicio_candidate() -> None:
-    service = _service()
+def test_resolve_provisional_uses_ladder_for_inicio_candidate(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    service = _service(authority_operation)
     service.declare(
         ProrrataRegisterEntry(
             ejercicio=2026,
@@ -157,8 +216,10 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate() -> None:
     assert resolution.provenance is ProrrataProvisionalProvenance._from_registry("inicio_actividad")
 
 
-def test_resolve_provisional_filters_candidates_to_requested_sector() -> None:
-    service = _service()
+def test_resolve_provisional_filters_candidates_to_requested_sector(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    service = _service(authority_operation)
     service.declare(
         ProrrataRegisterEntry(
             ejercicio=2026,

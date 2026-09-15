@@ -187,6 +187,7 @@ def prepare_calculation(
         backend_binding_values=backend_binding_values,
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
+        operation=operation,
     )
     period_date = filing_period_date or calculation_filing_date(work_unit.period)
     caller_binding_values = dict(binding_values or {})

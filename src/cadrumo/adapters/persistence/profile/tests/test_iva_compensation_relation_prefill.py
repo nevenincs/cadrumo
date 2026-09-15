@@ -175,18 +175,20 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
             )
 
         snapshot = _modelo_390_annual_snapshot()
-        resolution = IvaCompensationAnnualPartitionSourceResolver(
-            repository=observation_repo,
-            registry_snapshot=snapshot,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=_FIFO_BUCKET_ID,
-                modelo="390",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "0A"),
-                revision=snapshot.revision,
-            ),
-        )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            resolution = IvaCompensationAnnualPartitionSourceResolver(
+                repository=observation_repo,
+                registry_snapshot=snapshot,
+                operation=_authority_operation_for_test,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id=_FIFO_BUCKET_ID,
+                    modelo="390",
+                    filing_year=2025,
+                    period=Period.from_year_and_code(2025, "0A"),
+                    revision=snapshot.revision,
+                ),
+            )
 
     _4t_disponible = quarter_chain[-1][5]
     assert resolution.binding_values[_BOX_97_BINDING] == _4t_disponible
@@ -248,6 +250,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
             annual_partition = IvaCompensationAnnualPartitionSourceResolver(
                 repository=observation_repo,
                 registry_snapshot=snapshot,
+                operation=_authority_operation_for_test,
             ).resolve(
                 CalculationSourceContext(
                     bucket_id=_HISTORY_BUCKET_ID,
@@ -359,19 +362,21 @@ def test_annual_partition_reader_refuses_a_persisted_available_generated_pair_mi
         repository.save(envelope.model_copy(update={"observation": mismatched_observation}))
         snapshot = _modelo_390_annual_snapshot()
 
-        with pytest.raises(M303CarryIngressError):
-            IvaCompensationAnnualPartitionSourceResolver(
-                repository=repository,
-                registry_snapshot=snapshot,
-            ).resolve(
-                CalculationSourceContext(
-                    bucket_id=_FIFO_BUCKET_ID,
-                    modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
-                    revision=snapshot.revision,
-                ),
-            )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            with pytest.raises(M303CarryIngressError):
+                IvaCompensationAnnualPartitionSourceResolver(
+                    repository=repository,
+                    registry_snapshot=snapshot,
+                    operation=_authority_operation_for_test,
+                ).resolve(
+                    CalculationSourceContext(
+                        bucket_id=_FIFO_BUCKET_ID,
+                        modelo="390",
+                        filing_year=2025,
+                        period=Period.from_year_and_code(2025, "0A"),
+                        revision=snapshot.revision,
+                    ),
+                )
 
 
 def test_annual_partition_keeps_refunded_credit_out_of_both_m390_carry_boxes(tmp_path: Path) -> None:

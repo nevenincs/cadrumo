@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.period import Period
 from ...tests.period_override_authority import (
     DROPPED_PERIOD,
     OVERRIDE_MODELO,
@@ -27,7 +28,12 @@ def test_the_provider_snapshot_uses_the_period_the_override_year_serves() -> Non
     authority = override_authority()
     modelo = authority.modelo(OVERRIDE_MODELO)
 
-    snapshot = _snapshot_for_provider(authority, modelo, filing_year=None, period=None)
+    snapshot = _snapshot_for_provider(
+        authority,
+        modelo,
+        filing_year=OVERRIDE_YEAR,
+        period=Period.from_year_and_code(OVERRIDE_YEAR, OVERRIDE_PERIODS[0]),
+    )
 
     assert snapshot.filing_year == OVERRIDE_YEAR
     assert snapshot.revision.id == OVERRIDE_REVISION

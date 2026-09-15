@@ -22,7 +22,7 @@ from ...core.identity.hex_ids import SnapshotId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -100,9 +100,13 @@ class Borrador100Snapshot(BaseModel):
         return self
 
 
-def require_borrador_100_snapshot_coordinates_current(snapshot: Borrador100Snapshot) -> Borrador100Snapshot:
+def require_borrador_100_snapshot_coordinates_current(
+    snapshot: Borrador100Snapshot,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Borrador100Snapshot:
     """Return a persisted borrador only when its producing coordinate re-confirms."""
-    outcome = revision_carry_outcome(snapshot.registry_snapshot_ref)
+    outcome = revision_carry_outcome(snapshot.registry_snapshot_ref, operation=operation)
     if outcome.refused:
         raise RegistrySnapshotError(
             "borrador registry coordinate cannot be re-confirmed: "
@@ -240,8 +244,23 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         filing_year: int | None = None,
         state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
     ) -> tuple[Borrador100Snapshot, ...]:
+        with bundled_indexed_authority().operation() as operation:
+            return self._list_snapshots_current(
+                operation=operation,
+                filing_year=filing_year,
+                state=state,
+            )
+
+    def _list_snapshots_current(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+        filing_year: int | None = None,
+        state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
+    ) -> tuple[Borrador100Snapshot, ...]:
         snapshots = tuple(
-            require_borrador_100_snapshot_coordinates_current(snapshot) for snapshot in super().list_snapshots()
+            require_borrador_100_snapshot_coordinates_current(snapshot, operation=operation)
+            for snapshot in super().list_snapshots()
         )
         if filing_year is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.filing_year == filing_year)
@@ -249,15 +268,23 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.state is state)
         return snapshots
 
-    def show(self, snapshot_id: str) -> Borrador100Snapshot:
+    def show(self, snapshot_id: str, *, operation: PinnedAuthorityOperation) -> Borrador100Snapshot:
         """Execute this public contract operation."""
-        return require_borrador_100_snapshot_coordinates_current(self.resolve_snapshot(snapshot_id))
+        return require_borrador_100_snapshot_coordinates_current(
+            self.resolve_snapshot(snapshot_id), operation=operation
+        )
 
-    def latest_for_year(self, *, filing_year: int, period: Period | None = None) -> Borrador100Snapshot | None:
+    def latest_for_year(
+        self,
+        *,
+        filing_year: int,
+        operation: PinnedAuthorityOperation,
+        period: Period | None = None,
+    ) -> Borrador100Snapshot | None:
         """Execute this public contract operation."""
         snapshots = [
             snapshot
-            for snapshot in self.list_snapshots(filing_year=filing_year)
+            for snapshot in self._list_snapshots_current(filing_year=filing_year, operation=operation)
             if period is None or snapshot.period == period
         ]
         if not snapshots:

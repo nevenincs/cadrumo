@@ -291,24 +291,23 @@ def _calculate_m100_annual(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _M100_ANNUAL_PERIOD),
         revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo
-        ),
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values={**_non_relation_zero_bindings(), **(binding_values or {})},
-        ports=calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bucket_event_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bucket_event_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_302:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            binding_values={**_non_relation_zero_bindings(), **(binding_values or {})},
+            ports=_calculation_ports_302,
+            clock=_T1,
+        )
 
 
 def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(secure_objects: SecureObjectRepository) -> None:

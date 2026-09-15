@@ -15,6 +15,7 @@ They read the real model and the real enum directly, with no tautological mirror
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
@@ -22,14 +23,24 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import RetencionClave
-from ..withholding_bindings import WithholdingObservation
+from ..authority import PinnedAuthorityOperation
+from ..governed_fact_scope import validating_governed_facts
+from ..withholding_bindings import WithholdingObservation, _retencion_clave_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# The authoritative Modelo 190 perceptor clave set, campo CLAVE DE PERCEPCIÓN of the
-# bundled Diseño de Registros (Orden EHA/3127/2009, actualizada por Orden
-# HAC/1431/2025): twelve consecutive letters A-L. Modelo 193 reuses the A-D subset.
-_M190_DR_CLAVES = frozenset("ABCDEFGHIJKL")
+_ON = date(2024, 3, 15)
+
+
+@pytest.fixture(autouse=True)
+def _authority_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
+    with validating_governed_facts(operation):
+        yield
+
+
+def _m190_dr_claves(operation: PinnedAuthorityOperation) -> frozenset[str]:
+    order = _retencion_clave_declarations(_ON, authority=operation)["clave_order"]
+    return frozenset(token.strip() for token in order.split(",") if token.strip())
 
 
 def _observation(*, clave: RetencionClave | str, subclave: str = "") -> WithholdingObservation:
@@ -45,22 +56,24 @@ def _observation(*, clave: RetencionClave | str, subclave: str = "") -> Withhold
     )
 
 
-def test_retencion_clave_enum_matches_m190_dr_clave_set() -> None:
+def test_retencion_clave_projection_matches_m190_dr_clave_set(operation: PinnedAuthorityOperation) -> None:
     """The enum is exactly the M190 DR clave set A-L (the parity gate).
 
     A new registry clave with no enum member -- or an enum member with no DR clave --
     fails here, keeping the catalogue grounded in the bundled Diseño de Registros.
     """
-    assert {member.value for member in RetencionClave} == _M190_DR_CLAVES
+    declared = _m190_dr_claves(operation)
+    projected = {RetencionClave._from_registry(value).value for value in declared}
+    assert projected == declared
     # value byte-identical to the stored token (behaviour-preserving lift).
-    assert all(member.value == member.name for member in RetencionClave)
+    assert all(RetencionClave._from_registry(value).name == value for value in declared)
 
 
-def test_withholding_observation_accepts_every_valid_clave() -> None:
+def test_withholding_observation_accepts_every_valid_clave(operation: PinnedAuthorityOperation) -> None:
     """Every A-L clave constructs and hydrates to its typed enum member."""
-    for clave in sorted(_M190_DR_CLAVES):
+    for clave in sorted(_m190_dr_claves(operation)):
         observation = _observation(clave=clave)
-        assert observation.clave is RetencionClave(clave), clave
+        assert observation.clave.value == clave, clave
 
 
 def test_withholding_observation_refuses_invalid_clave() -> None:

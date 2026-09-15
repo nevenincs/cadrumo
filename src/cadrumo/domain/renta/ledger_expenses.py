@@ -294,7 +294,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     source_kind: Literal[BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION] = (
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
-    modelo: Literal[Modelo("100")] = Modelo("100")
+    modelo: Literal["100"] = "100"
     period: Literal["0A"] = "0A"
     tax_year: FilingYear
     activity_key: str = Field(min_length=1, max_length=128)

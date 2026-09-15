@@ -38,7 +38,12 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -100,9 +105,11 @@ def _injected_decimal(facts: dict[str, UserProfileFactValue], key: str) -> Decim
     return value
 
 
-def _aggregates(facts: dict[str, UserProfileFactValue]) -> tuple[Decimal, Decimal]:
+def _aggregates(
+    facts: dict[str, UserProfileFactValue], *, operation: PinnedAuthorityOperation
+) -> tuple[Decimal, Decimal]:
     narrowed: Any = facts
-    inject_derived_minimo_descendientes_facts(narrowed, _snapshot())
+    inject_derived_minimo_descendientes_facts(narrowed, _snapshot(), operation=operation)
     return (
         _injected_decimal(facts, f"renta_family.descendientes_minimos_aggregate_{_ORACLE_YEAR}"),
         _injected_decimal(facts, f"renta_family.descendientes_minimos_aggregate_autonomico_{_ORACLE_YEAR}"),
@@ -158,14 +165,16 @@ def _asturias_children() -> dict[str, UserProfileFactValue]:
     }
 
 
-def test_asturias_individual_matches_the_printed_prorated_total() -> None:
+def test_asturias_individual_matches_the_printed_prorated_total(*, operation: PinnedAuthorityOperation) -> None:
     """AEAT prints 4.550 for each spouse filing individually, each tranche at 50 %."""
-    estatal, autonomico = _aggregates({**_asturias_children(), "renta_filing.declaration_type": "1"})
+    estatal, autonomico = _aggregates(
+        {**_asturias_children(), "renta_filing.declaration_type": "1"}, operation=operation
+    )
     assert estatal == _expected(_ASTURIAS_ORACLE, "0513")
     assert autonomico == _expected(_ASTURIAS_ORACLE, "0514")
 
 
-def test_asturias_conjunta_matches_the_printed_full_total() -> None:
+def test_asturias_conjunta_matches_the_printed_full_total(*, operation: PinnedAuthorityOperation) -> None:
     """AEAT prints 9.100 for the joint return, at the full tranches.
 
     Anti-tautology pair for the test above, with an AEAT-printed figure on BOTH
@@ -173,7 +182,7 @@ def test_asturias_conjunta_matches_the_printed_full_total() -> None:
     second contribuyente remains to prorate with and the tranches are whole.
     """
     facts = {**_asturias_children(), "renta_filing.declaration_type": "2"}
-    estatal, autonomico = _aggregates(facts)
+    estatal, autonomico = _aggregates(facts, operation=operation)
     assert estatal == Decimal("9100")
     assert autonomico == Decimal("9100")
     # The two printed totals stand in the 2:1 relation norma 1a describes.
@@ -216,20 +225,20 @@ def _valenciana_children(*, youngest_files_own_return: bool) -> dict[str, UserPr
     return facts
 
 
-def test_valenciana_individual_matches_the_printed_estatal_total() -> None:
+def test_valenciana_individual_matches_the_printed_estatal_total(*, operation: PinnedAuthorityOperation) -> None:
     """AEAT prints 2.550 estatal: 1.200 + 1.350 + 0 for the excluded youngest."""
-    estatal, _ = _aggregates(_valenciana_children(youngest_files_own_return=True))
+    estatal, _ = _aggregates(_valenciana_children(youngest_files_own_return=True), operation=operation)
     assert estatal == _expected(_VALENCIANA_ORACLE, "0513")
 
 
-def test_the_youngest_child_is_excluded_by_norma_2a_and_not_by_the_cap() -> None:
+def test_the_youngest_child_is_excluded_by_norma_2a_and_not_by_the_cap(*, operation: PinnedAuthorityOperation) -> None:
     """Anti-tautology pair isolating WHICH condition excludes.
 
     4.050 is below the Art. 58.1 ceiling, so removing only the own-return flag
     must restore that child's full tranche. If the cap were doing the work the
     total would not move, and this test would fail.
     """
-    without_own_return, _ = _aggregates(_valenciana_children(youngest_files_own_return=False))
+    without_own_return, _ = _aggregates(_valenciana_children(youngest_files_own_return=False), operation=operation)
     printed_with_exclusion = _expected(_VALENCIANA_ORACLE, "0513")
     assert without_own_return > printed_with_exclusion
     # The restored child is the third by birth order, so it takes the 4.000
@@ -298,7 +307,9 @@ def test_the_manual_itself_shows_an_unmarried_conjunta_is_prorated() -> None:
     assert _expected(_ASTURIAS_ORACLE, "0513") * 2 == _PRINTED_THREE_CHILD_WHOLE_TRANCHES
 
 
-def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not() -> None:
+def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The campaign's most consequential correction, pinned on its own input.
 
     Before it, every conjunta return took whole tranches: the derivation read
@@ -315,9 +326,10 @@ def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not() -> 
     """
     whole = _PRINTED_THREE_CHILD_WHOLE_TRANCHES
 
-    unmarried, _ = _aggregates(_valenciana_conjunta())
+    unmarried, _ = _aggregates(_valenciana_conjunta(), operation=operation)
     married, _ = _aggregates(
-        {**_valenciana_conjunta(), "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value}
+        {**_valenciana_conjunta(), "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value},
+        operation=operation,
     )
 
     # Married: both progenitores inside the one unit, nobody to share with.
@@ -371,15 +383,15 @@ def test_the_printed_conjunta_total_is_a_recorded_gap_not_an_expectation() -> No
 # ---------------------------------------------------------------------------
 
 
-def test_the_same_predicate_change_moves_both_aggregates_together() -> None:
+def test_the_same_predicate_change_moves_both_aggregates_together(*, operation: PinnedAuthorityOperation) -> None:
     """Estatal and autonómico are driven by one predicate, proven on a real oracle.
 
     Asturias exercised no normative competence, so the two casillas must agree
     exactly — both when the prorrateo applies and when it does not. A predicate
     wired into only one of the two injectors fails this.
     """
-    individual = _aggregates({**_asturias_children(), "renta_filing.declaration_type": "1"})
-    conjunta = _aggregates({**_asturias_children(), "renta_filing.declaration_type": "2"})
+    individual = _aggregates({**_asturias_children(), "renta_filing.declaration_type": "1"}, operation=operation)
+    conjunta = _aggregates({**_asturias_children(), "renta_filing.declaration_type": "2"}, operation=operation)
     assert individual[0] == individual[1]
     assert conjunta[0] == conjunta[1]
     assert individual[0] != conjunta[0]
@@ -439,7 +451,7 @@ def _rioja_adopted_child(*, adoption_year: int) -> dict[str, UserProfileFactValu
     }
 
 
-def test_an_adopted_child_over_three_takes_the_printed_supplement() -> None:
+def test_an_adopted_child_over_three_takes_the_printed_supplement(*, operation: PinnedAuthorityOperation) -> None:
     """AEAT grants the bajo-3-anos increase to a FIVE-year-old, and prints the figure.
 
     The whole point of Art. 58.2's second sentence: adoption suspends the age
@@ -447,11 +459,11 @@ def test_an_adopted_child_over_three_takes_the_printed_supplement() -> None:
     only ``age_at_year_end < 3`` before this, so it returned the bare tranche
     and the 2.800 was silently lost for three consecutive years.
     """
-    estatal, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR))
+    estatal, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR), operation=operation)
     assert estatal == _expected(_RIOJA_ORACLE, "0513")
 
 
-def test_both_rioja_casillas_carry_the_printed_descendientes_figure() -> None:
+def test_both_rioja_casillas_carry_the_printed_descendientes_figure(*, operation: PinnedAuthorityOperation) -> None:
     """La Rioja diverged on the discapacidad minimo only, so 0514 equals 0513 here.
 
     Asserted rather than assumed: the manual's nota (3) puts the 3.000/3.300
@@ -459,25 +471,27 @@ def test_both_rioja_casillas_carry_the_printed_descendientes_figure() -> None:
     descendientes rows identically. If a future revision wired a Rioja
     descendientes table this would fail rather than quietly diverge.
     """
-    estatal, autonomico = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR))
+    estatal, autonomico = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR), operation=operation)
     assert autonomico == _expected(_RIOJA_ORACLE, "0514")
     assert autonomico == estatal
 
 
-def test_the_supplement_lapses_once_the_third_period_has_passed() -> None:
+def test_the_supplement_lapses_once_the_third_period_has_passed(*, operation: PinnedAuthorityOperation) -> None:
     """Anti-tautology pair: the window is bounded, so a stale adoption grants nothing.
 
     Art. 58.2 gives the inscription period "y en los dos siguientes" -- three
     periods, not indefinitely. A predicate that granted on the mere presence of
     an adoption date would pass the test above and fail this one.
     """
-    inside, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR - 2))
-    outside, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR - 3))
+    inside, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR - 2), operation=operation)
+    outside, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR - 3), operation=operation)
     assert inside == _expected(_RIOJA_ORACLE, "0513")
     assert outside < inside
 
 
-def test_a_child_over_three_without_an_adoption_date_takes_no_supplement() -> None:
+def test_a_child_over_three_without_an_adoption_date_takes_no_supplement(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The tutela guard, and the reason this limb keys on the inscription date.
 
     Art. 58.1 assimilates "tutela y acogimiento"; Art. 58.2's age-independent
@@ -490,16 +504,19 @@ def test_a_child_over_three_without_an_adoption_date_takes_no_supplement() -> No
     """
     facts = _rioja_adopted_child(adoption_year=_ORACLE_YEAR)
     del facts["renta_family.descendiente.0.inscripcion_registro_civil"]
-    estatal, _ = _aggregates(facts)
+    estatal, _ = _aggregates(facts, operation=operation)
     assert estatal < _expected(_RIOJA_ORACLE, "0513")
 
 
-def test_the_ordinary_under_three_limb_still_grants_without_any_adoption() -> None:
+def test_the_ordinary_under_three_limb_still_grants_without_any_adoption(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The first limb is untouched: a biological under-three keeps the increase."""
     estatal, _ = _aggregates(
         {
             "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 1}-01-01",
             "renta_family.descendiente.0.convivencia": "true",
         },
+        operation=operation,
     )
     assert estatal == _expected(_RIOJA_ORACLE, "0513")

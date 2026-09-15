@@ -46,6 +46,12 @@ from cadrumo.application.aggregation.iva_ledger import (
 from cadrumo.application.aggregation.renta_income_ledger import (
     aggregate_renta_income_ledger,
 )
+from cadrumo.application.aggregation.tests.renta_income_aggregation_support import (
+    _M130_INGRESOS_CASILLA,
+    _M130_MODELO,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+)
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
@@ -322,7 +328,15 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130() -> None:
     catalogue = _catalogue()
     emitted: set[str] = set()
     for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_renta_income_ledger(catalogue, bucket_id="corpus", period=period)
+        result = aggregate_renta_income_ledger(
+            catalogue,
+            bucket_id="corpus",
+            period=period,
+            modelo=_M130_MODELO,
+            target_casilla_id=_M130_INGRESOS_CASILLA,
+            activity_category_matcher=_m130_activity_category_matcher,
+            employment_category_matcher=_m130_employment_category_matcher,
+        )
         emitted.update(o.transaction_id for o in result.observations)
     leaked = emitted & excluded_ids
     assert not leaked, f"{len(leaked)} trabajo/capital rows leaked into M130 income"

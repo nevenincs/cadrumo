@@ -49,7 +49,7 @@ def test_budget_accounts_shared_values_once_and_does_not_retain_oversize() -> No
 
 def test_decoded_graph_estimate_counts_shared_members_once_and_callers_survive_eviction() -> None:
     shared = ("grounded", "authority")
-    value = {"left": shared, "right": shared}
+    value: dict[str, tuple[str, ...]] = {"left": shared, "right": shared}
     distinct = {"left": (*shared,), "right": (*shared,)}
     assert retained_object_size(value) < retained_object_size(distinct)
 

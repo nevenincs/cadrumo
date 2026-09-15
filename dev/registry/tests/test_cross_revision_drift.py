@@ -22,7 +22,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
-from cadrumo.domain.calculations.registry.ids import LegalRefId
+from cadrumo.domain.calculations.registry.ids import LEGAL_REFS_ADAPTER, LegalRefId
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
@@ -81,6 +81,42 @@ def _casilla(
     if continuidad_id is not None:
         payload["continuidad_id"] = continuidad_id
     return CasillaDefinition.model_validate(payload)
+
+
+def _casilla_with_changed_field(
+    *,
+    field: str,
+    value: str | tuple[str, ...],
+    section: tuple[str, ...] = ("test",),
+    data_type: str = "money",
+) -> CasillaDefinition:
+    if field == "label":
+        if not isinstance(value, str):
+            raise TypeError("label changes must be strings")
+        return _casilla(cid="0700", continuidad_id="base", section=section, data_type=data_type, label=value)
+    if field == "data_type":
+        if not isinstance(value, str):
+            raise TypeError("data_type changes must be strings")
+        return _casilla(cid="0700", continuidad_id="base", section=section, data_type=value)
+    if field == "semantic_role":
+        if not isinstance(value, str):
+            raise TypeError("semantic_role changes must be strings")
+        return _casilla(cid="0700", continuidad_id="base", section=section, data_type=data_type, semantic_role=value)
+    if field == "section":
+        if isinstance(value, str):
+            raise TypeError("section changes must be tuples")
+        return _casilla(cid="0700", continuidad_id="base", section=value, data_type=data_type)
+    if field == "legal_refs":
+        if isinstance(value, str):
+            raise TypeError("legal_refs changes must be tuples")
+        return _casilla(
+            cid="0700",
+            continuidad_id="base",
+            section=section,
+            data_type=data_type,
+            legal_refs=LEGAL_REFS_ADAPTER.validate_python(value),
+        )
+    raise ValueError(f"unsupported synthetic casilla field: {field}")
 
 
 def _modelo(
@@ -541,9 +577,13 @@ class TestCrossRevisionConsistency:
             ("legal_refs", ("ley-58-2003:art-30",)),
         ],
     )
-    def test_section_evolution_does_not_cover_other_changes(self, field: str, value: object) -> None:
+    def test_section_evolution_does_not_cover_other_changes(
+        self,
+        field: str,
+        value: str | tuple[str, ...],
+    ) -> None:
         predecessor = _casilla(cid="0700", continuidad_id="base", section=("old",))
-        successor = _casilla(cid="0700", continuidad_id="base", section=("new",), **{field: value})
+        successor = _casilla_with_changed_field(field=field, value=value, section=("new",))
         modelo = _annual_modelo(
             predecessor,
             successor,
@@ -573,9 +613,13 @@ class TestCrossRevisionConsistency:
             ("legal_refs", ("ley-58-2003:art-30",)),
         ],
     )
-    def test_representation_evolution_refuses_unrelated_axes(self, field: str, value: object) -> None:
+    def test_representation_evolution_refuses_unrelated_axes(
+        self,
+        field: str,
+        value: str | tuple[str, ...],
+    ) -> None:
         predecessor = _casilla(cid="0700", continuidad_id="base", data_type="money")
-        successor = _casilla(cid="0700", continuidad_id="base", data_type="text", **{field: value})
+        successor = _casilla_with_changed_field(field=field, value=value, data_type="text")
         modelo = _annual_modelo(
             predecessor,
             successor,

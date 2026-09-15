@@ -39,6 +39,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from cadrumo.domain.iva.classification import IvaTerritorialScope
 
 from ..country_vocabulary import country_codes_by_printed_name, normalise_printed_country_name
@@ -46,7 +47,6 @@ from ..establishment import (
     country_code_for_printed_country_name,
     territorial_scope_for_country,
 )
-from ..schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -271,7 +271,8 @@ class TestTheVocabularyCoversWhatTheClassifierTurnsOn:
             covered = {
                 code.upper() for code in country_codes_by_printed_name(operation=_authority_operation_for_test).values()
             }
-            expected = {member.value.upper() for member in EUMemberState} - {_NORTHERN_IRELAND}
+            member_states = resolve_eu_member_state_catalogue(authority=_authority_operation_for_test).all_states
+            expected = {member.value.upper() for member in member_states} - {_NORTHERN_IRELAND}
             assert expected <= covered, sorted(expected - covered)
 
     def test_no_printed_name_maps_to_northern_ireland(self) -> None:

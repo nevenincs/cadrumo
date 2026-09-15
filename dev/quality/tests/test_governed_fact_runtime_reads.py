@@ -235,7 +235,7 @@ def _enclosing_reader_symbols(node: ast.AST, parents: Mapping[int, ast.AST]) -> 
             class_name = current.name
         current = parents.get(id(current))
     if function is None:
-        return frozenset()
+        return frozenset[str]()
     symbols = {function.name}
     if class_name is not None:
         symbols.add(f"{class_name}.{function.name}")

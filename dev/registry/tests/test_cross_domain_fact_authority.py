@@ -10,7 +10,8 @@ import pytest
 
 from cadrumo.core.concepto_ingreso import ConceptoIngreso
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.facts.resolution import ResolvedEventFact, ResolvedMappingFact
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
@@ -66,18 +67,19 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
 
     iva_rate = registry_authority.resolve_governed_fact(_probe("iva-rate").query)
     assert isinstance(iva_rate, ResolvedMappingFact)
-    projected_rate = iva_rate_record_from_fact(iva_rate)
+    projected_rate = iva_rate_record_from_fact(iva_rate, authority=registry_authority)
     assert projected_rate.pct == Decimal("21")
     assert projected_rate.legal_refs == iva_rate.legal_refs
     assert projected_rate.source_refs == iva_rate.source_refs
 
-    recargo = resolve_recargo_rate_for_applied_rate(
-        Decimal("0.05"),
-        date(2024, 5, 1),
-        authority=registry_authority,
-    )
-    assert recargo == registry_authority.resolve_governed_fact(_probe("iva-recargo").query)
-    assert recargo_rate_record_from_fact(recargo).recargo_rate == Decimal("0.0062")
+    with bundled_indexed_authority().operation() as operation:
+        recargo = resolve_recargo_rate_for_applied_rate(
+            Decimal("0.05"),
+            date(2024, 5, 1),
+            operation=operation,
+        )
+        assert recargo == operation.resolve_governed_fact(_probe("iva-recargo").query)
+        assert recargo_rate_record_from_fact(recargo).recargo_rate == Decimal("0.0062")
 
     income_exclusion = registry_authority.resolve_governed_fact(_probe("modelo-131-income-exclusion").query)
     assert counts_toward_volumen_de_ingresos(
@@ -102,11 +104,10 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
     assert convenio_row.rate == Decimal(convenio.payload.value)
     assert convenio_row.legal_refs == convenio.legal_refs
 
-    # The public function is cached by authority instance, whose mutable cache
-    # state intentionally makes it unhashable.  Exercise its real body with
-    # the development authority rather than replacing it with a mock.
-    calendar = holiday_calendar_from_authority.__wrapped__(2025, authority=registry_authority)
-    deadline_event = registry_authority.resolve_governed_fact(_probe("deadline-holiday").query)
+    with bundled_indexed_authority().operation() as operation:
+        calendar = holiday_calendar_from_authority(2025, operation=operation)
+        deadline_event = operation.resolve_governed_fact(_probe("deadline-holiday").query)
+        assert isinstance(deadline_event, ResolvedEventFact)
     assert deadline_event.payload.event_date in {holiday.holiday_date for holiday in calendar.national}
 
 

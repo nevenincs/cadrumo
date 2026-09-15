@@ -40,21 +40,35 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
-from ....domain.iva.regime_legend import REGIME_LEGENDS, RegimeLegend
+from ....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
 from ..invoice_draft_records import InvoiceDraft
+from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DECLARING = tuple(legend for legend in REGIME_LEGENDS if legend.declares is not None)
-_SILENT = tuple(legend for legend in REGIME_LEGENDS if legend.declares is None)
-_REVERSE_CHARGE_MENTION = _DECLARING[0].phrase
+
+@pytest.fixture
+def registry_legends() -> tuple[RegimeLegend, ...]:
+    """Resolve the registry vocabulary on one pinned authority lease."""
+    period = default_invoice_extraction_period()
+    with _indexed_authority_for_test().operation() as operation:
+        return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
-def test_only_one_contradiction_shape_is_reachable() -> None:
+def _reverse_charge_mention(legends: tuple[RegimeLegend, ...]) -> str:
+    """Return the sole registry legend that declares an IVA category."""
+    declaring = tuple(legend for legend in legends if legend.declares is not None)
+    assert len(declaring) == 1
+    return declaring[0].phrase
+
+
+def test_only_one_contradiction_shape_is_reachable(registry_legends: tuple[RegimeLegend, ...]) -> None:
     """The premise this module's scope rests on, asserted rather than claimed in prose.
 
     Two facts collapse the two nominal shapes into one. A contradiction needs a
@@ -67,22 +81,27 @@ def test_only_one_contradiction_shape_is_reachable() -> None:
     would be contradicted by a document printing NONE -- the shape this suite
     deliberately does not cover, since no such row exists.
     """
-    assert len(_DECLARING) == 1
-    assert _DECLARING[0].expects_repercutido_line is False
-    assert not [legend for legend in REGIME_LEGENDS if legend.declares is not None and legend.expects_repercutido_line]
+    declaring = tuple(legend for legend in registry_legends if legend.declares is not None)
+    assert len(declaring) == 1
+    assert declaring[0].expects_repercutido_line is False
+    assert not [
+        legend for legend in registry_legends if legend.declares is not None and legend.expects_repercutido_line
+    ]
 
 
-def test_a_reverse_charge_mention_beside_a_charged_cuota_is_a_finding() -> None:
+def test_a_reverse_charge_mention_beside_a_charged_cuota_is_a_finding(
+    registry_legends: tuple[RegimeLegend, ...],
+) -> None:
     """The reachable shape: the words say no Spanish IVA, the figures charge it."""
     draft = InvoiceDraft(
-        regime_legend=_REVERSE_CHARGE_MENTION,
+        regime_legend=_reverse_charge_mention(registry_legends),
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("210.00"),
         grand_total=Decimal("1210.00"),
     )
 
-    finding = regime_contradiction_finding(draft)
+    finding = regime_contradiction_finding(draft, legends=registry_legends)
 
     assert finding is not None
     assert finding.kind is DraftDiscrepancyKind.REGIME_CONTRADICTED
@@ -93,29 +112,35 @@ def test_a_reverse_charge_mention_beside_a_charged_cuota_is_a_finding() -> None:
     assert finding.detail
 
 
-def test_a_stated_rate_alone_contradicts_even_with_no_legible_cuota() -> None:
+def test_a_stated_rate_alone_contradicts_even_with_no_legible_cuota(
+    registry_legends: tuple[RegimeLegend, ...],
+) -> None:
     """A printed "IVA 21%" is a claim that tax was charged, cuota or not."""
     draft = InvoiceDraft(
-        regime_legend=_REVERSE_CHARGE_MENTION,
+        regime_legend=_reverse_charge_mention(registry_legends),
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("21"),
     )
 
-    assert regime_contradiction_finding(draft) is not None
+    assert regime_contradiction_finding(draft, legends=registry_legends) is not None
 
 
-def test_the_coherent_reverse_charge_document_raises_nothing() -> None:
+def test_the_coherent_reverse_charge_document_raises_nothing(
+    registry_legends: tuple[RegimeLegend, ...],
+) -> None:
     """The positive control. Without it every case above passes on a gate that always refuses."""
     draft = InvoiceDraft(
-        regime_legend=_REVERSE_CHARGE_MENTION,
+        regime_legend=_reverse_charge_mention(registry_legends),
         taxable_base=Decimal("1000.00"),
         grand_total=Decimal("1000.00"),
     )
 
-    assert regime_contradiction_finding(draft) is None
+    assert regime_contradiction_finding(draft, legends=registry_legends) is None
 
 
-def test_a_zero_rate_beside_the_mention_is_the_ordinary_presentation_not_a_conflict() -> None:
+def test_a_zero_rate_beside_the_mention_is_the_ordinary_presentation_not_a_conflict(
+    registry_legends: tuple[RegimeLegend, ...],
+) -> None:
     """A reverse-charge invoice may print zeroes to SHOW no tax was charged.
 
     Reading a printed zero as tax charged would fire on exactly the documents
@@ -123,30 +148,36 @@ def test_a_zero_rate_beside_the_mention_is_the_ordinary_presentation_not_a_confl
     strict and is simply wrong.
     """
     draft = InvoiceDraft(
-        regime_legend=_REVERSE_CHARGE_MENTION,
+        regime_legend=_reverse_charge_mention(registry_legends),
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0.00"),
         grand_total=Decimal("1000.00"),
     )
 
-    assert regime_contradiction_finding(draft) is None
+    assert regime_contradiction_finding(draft, legends=registry_legends) is None
 
 
-@pytest.mark.parametrize("legend", _SILENT, ids=lambda legend: legend.provision)
-def test_a_mention_that_declares_no_category_cannot_contradict(legend: RegimeLegend) -> None:
+def test_a_mention_that_declares_no_category_cannot_contradict(
+    registry_legends: tuple[RegimeLegend, ...],
+) -> None:
     """Six mentions are real obligations that fix no category, so there is nothing to conflict with."""
-    draft = InvoiceDraft(
-        regime_legend=legend.phrase,
-        taxable_base=Decimal("1000.00"),
-        iva_rate=Decimal("21"),
-        iva_amount=Decimal("210.00"),
-    )
+    silent = tuple(legend for legend in registry_legends if legend.declares is None)
+    assert len(silent) == 6
+    for legend in silent:
+        draft = InvoiceDraft(
+            regime_legend=legend.phrase,
+            taxable_base=Decimal("1000.00"),
+            iva_rate=Decimal("21"),
+            iva_amount=Decimal("210.00"),
+        )
 
-    assert regime_contradiction_finding(draft) is None
+        assert regime_contradiction_finding(draft, legends=registry_legends) is None
 
 
-def test_an_ordinary_invoice_with_no_mention_raises_nothing() -> None:
+def test_an_ordinary_invoice_with_no_mention_raises_nothing(
+    registry_legends: tuple[RegimeLegend, ...],
+) -> None:
     """Most invoices print no mandated mention and state no regime to check."""
     draft = InvoiceDraft(
         taxable_base=Decimal("1000.00"),
@@ -155,7 +186,7 @@ def test_an_ordinary_invoice_with_no_mention_raises_nothing() -> None:
         grand_total=Decimal("1210.00"),
     )
 
-    assert regime_contradiction_finding(draft) is None
+    assert regime_contradiction_finding(draft, legends=registry_legends) is None
 
 
 class TestTheRepercutidoSignal:
@@ -188,23 +219,29 @@ class TestTheFindingIsEnrolledAsBlocking:
         """Asserted against the enum rather than a copy, so it cannot be defeated in one edit."""
         assert set(BLOCKING_REASON_BY_DISCREPANCY_KIND) == set(DraftDiscrepancyKind)
 
-    def test_a_contradicted_draft_produces_a_blocker(self) -> None:
+    def test_a_contradicted_draft_produces_a_blocker(
+        self,
+        registry_legends: tuple[RegimeLegend, ...],
+    ) -> None:
         """The finding reaches the gate, which is the property the mapping exists for."""
         draft = InvoiceDraft(
-            regime_legend=_REVERSE_CHARGE_MENTION,
+            regime_legend=_reverse_charge_mention(registry_legends),
             taxable_base=Decimal("1000.00"),
             iva_rate=Decimal("21"),
             iva_amount=Decimal("210.00"),
             grand_total=Decimal("1210.00"),
         )
-        finding = regime_contradiction_finding(draft)
+        finding = regime_contradiction_finding(draft, legends=registry_legends)
         assert finding is not None
 
         blockers = confirmation_blockers(draft=draft.model_copy(update={"discrepancies": (finding,)}))
 
         assert any(blocker.reason is ConfirmationBlockReason.CONTRADICTED_REGIME for blocker in blockers)
 
-    def test_a_coherent_draft_produces_no_contradiction_blocker(self) -> None:
+    def test_a_coherent_draft_produces_no_contradiction_blocker(
+        self,
+        registry_legends: tuple[RegimeLegend, ...],
+    ) -> None:
         """The negative case carried through the same producer-to-gate wire as the positive.
 
         The gate reads findings off the draft; it does not run the producer. So a
@@ -222,11 +259,11 @@ class TestTheFindingIsEnrolledAsBlocking:
         production.
         """
         draft = InvoiceDraft(
-            regime_legend=_REVERSE_CHARGE_MENTION,
+            regime_legend=_reverse_charge_mention(registry_legends),
             taxable_base=Decimal("1000.00"),
             grand_total=Decimal("1000.00"),
         )
-        finding = regime_contradiction_finding(draft)
+        finding = regime_contradiction_finding(draft, legends=registry_legends)
         stamped = draft.model_copy(update={"discrepancies": () if finding is None else (finding,)})
 
         blockers = confirmation_blockers(draft=stamped)

@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
@@ -35,6 +36,7 @@ from .renta_income_aggregation_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
+_M100_MODELO = Modelo("100").value
 
 
 # Source-jurisdiction provenance pass-through.
@@ -150,7 +152,15 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
     prior = _income_transaction("m100-prior", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, dec, prior))
 
-    result = aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
+    result = aggregate_renta_m100_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2024,
+        modelo=_M100_MODELO,
+        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
 
     assert all(o.target_casilla_id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "100"
@@ -182,6 +192,10 @@ def test_partitioned_m100_aggregation_reports_out_of_period_catalogue_transactio
     result = aggregate_renta_m100_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2024,
+        modelo=_M100_MODELO,
+        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
@@ -211,12 +225,24 @@ def test_partitioned_m100_aggregation_matches_full_scan() -> None:
     partitioned = aggregate_renta_m100_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2024,
+        modelo=_M100_MODELO,
+        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
         ),
     )
-    full_scan = aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
+    full_scan = aggregate_renta_m100_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2024,
+        modelo=_M100_MODELO,
+        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
 
     assert set(partitioned.observations) == set(full_scan.observations)
     assert partitioned.casilla_aggregation.casilla_values == full_scan.casilla_aggregation.casilla_values
@@ -238,7 +264,15 @@ def test_m100_annual_income_rejects_non_annual_period() -> None:
 
     catalogue = TransactionCatalogue.from_transactions(())
     with pytest.raises(AggregationPeriodError):
-        aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+        aggregate_renta_m100_income_ledger(
+            catalogue,
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
+            period=_Q1_2024,
+            modelo=_M100_MODELO,
+            target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+            activity_category_matcher=_m130_activity_category_matcher,
+            employment_category_matcher=_m130_employment_category_matcher,
+        )
 
 
 def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
@@ -258,7 +292,15 @@ def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
     base = Decimal("4200.00")
     tx = _income_transaction("m100-res", value_date=date(2024, 6, 1), amount=base)
     catalogue = TransactionCatalogue.from_transactions((tx,))
-    aggregation = aggregate_renta_m100_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
+    aggregation = aggregate_renta_m100_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2024,
+        modelo=_M100_MODELO,
+        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     assert resolved[binding.id] == base

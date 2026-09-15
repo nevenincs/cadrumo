@@ -16,6 +16,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.binding_temporal import SameFilingYearPeriods
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
     RegistryFoldRequirement,
@@ -112,8 +113,12 @@ def test_historical_pagos_fraccionados_relation_contract_and_fold(
     assert provider_130.declared_source_casilla_ids == (_M130_SOURCE_CASILLA,)
     assert provider_131.source_modelo == "131"
     assert provider_131.declared_source_casilla_ids == (_M131_SOURCE_CASILLA,)
+    assert isinstance(provider_130.temporal, SameFilingYearPeriods)
+    assert isinstance(provider_131.temporal, SameFilingYearPeriods)
     assert provider_130.temporal.source_periods == ("1T", "2T", "3T", "4T")
     assert provider_131.temporal.source_periods == ("1T", "2T", "3T", "4T")
+    assert binding_130.aggregation is not None
+    assert binding_131.aggregation is not None
     assert binding_130.aggregation.op == "sum"
     assert binding_131.aggregation.op == "sum"
 

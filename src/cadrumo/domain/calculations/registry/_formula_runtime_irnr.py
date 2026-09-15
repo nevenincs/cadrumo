@@ -247,11 +247,15 @@ def _resolve_convenio_override(
     devengo_date = ctx.date_context.get("filing_period")
     if not isinstance(devengo_date, date):
         raise RegistryValidationError("IRNR convenio override requires a filing_period devengo date")
-    resolved = resolve_convenio_override(
-        country_code=country,
-        tipo_renta=tipo_enum,
-        devengo_date=devengo_date,
-    )
+    from .authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        resolved = resolve_convenio_override(
+            country_code=country,
+            tipo_renta=tipo_enum,
+            devengo_date=devengo_date,
+            operation=operation,
+        )
     if resolved is None:
         return None
     ctx.operand_refs.append(f"{resolved.fact.fact_id}:{resolved.fact.variant_id}")

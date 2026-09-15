@@ -187,12 +187,14 @@ def seed_iva_compensation_period_for_bucket(
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
         raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.seed")
-    return seed_iva_compensation_period(
-        taxpayer_nif=taxpayer_nif,
-        period=period,
-        amount=amount,
-        repository=ports.iva_compensation_history_repository,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return seed_iva_compensation_period(
+            taxpayer_nif=taxpayer_nif,
+            period=period,
+            amount=amount,
+            repository=ports.iva_compensation_history_repository,
+            operation=operation,
+        )
 
 
 def _sealed_modelo_303_blocker_for_period(
@@ -316,12 +318,14 @@ def correct_iva_compensation_period_for_bucket(
             },
         )
 
-    state = correct_iva_compensation_period(
-        taxpayer_nif=taxpayer_nif,
-        period=period,
-        amount=amount,
-        repository=history_repository,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        state = correct_iva_compensation_period(
+            taxpayer_nif=taxpayer_nif,
+            period=period,
+            amount=amount,
+            repository=history_repository,
+            operation=operation,
+        )
 
     _emit_iva_wallet_corrected_event(
         bucket_id=bucket_id,

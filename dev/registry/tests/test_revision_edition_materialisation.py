@@ -18,12 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import CasillaFieldOverride, ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
@@ -221,6 +221,63 @@ def test_field_delta_distinguishes_inherit_delete_and_meaningful_empty_false_zer
     assert patched.required is False
     assert patched.constraints is not None and patched.constraints.min_value == 0
     assert patched.segmento is None  # explicit field deletion reaches the schema default
+
+
+def test_field_delta_removes_a_nested_constraint_storage_field(tmp_path: Path) -> None:
+    modelo_dir = _modelo_root(tmp_path)
+    _write_edition(
+        modelo_dir,
+        "2024",
+        year=2024,
+        manifest_extra='casilla_source_refs = ["aeat-old"]\n',
+        casillas=_casilla(
+            "2024",
+            "0001",
+            number="1",
+            lineage=None,
+            extra=(
+                f'constraints = {{ sign = "non_negative", legal_refs = ["{_LEGAL_REF}"], '
+                'additional_source_refs = ["boe-form"] }\n'
+            ),
+        ),
+    )
+    _write_edition(
+        modelo_dir,
+        "2025",
+        year=2025,
+        manifest_extra=(
+            'predecessor = "2024"\n'
+            '[[revisions."2025".casilla_overrides]]\n'
+            'selector = { revision = "2024", id = "0001" }\n'
+            'fields = { constraints = { source_refs = ["aeat-new", "boe-form"] } }\n'
+            'removed_fields = ["constraints.additional_source_refs"]\n'
+        ),
+        casillas="",
+    )
+
+    patched = load_modelo_directory(modelo_dir).revisions["2025"].casillas[0]
+
+    assert patched.constraints is not None
+    assert patched.constraints.source_refs == ("aeat-new", "boe-form")
+
+
+@pytest.mark.parametrize(
+    ("fields", "removed"),
+    (
+        ({}, "constraints.additional_source_refs.extra"),
+        ({}, "constraints.unknown"),
+        ({"constraints": {"source_refs": ["aeat-new"]}}, "constraints.source_refs"),
+    ),
+)
+def test_nested_constraint_removal_contract_fails_closed(fields: object, removed: str) -> None:
+    with pytest.raises(RegistryValidationError):
+        CasillaFieldOverride.model_validate(
+            {
+                "selector": {"revision": "2024", "id": "0001"},
+                "fields": fields,
+                "removed_fields": (removed,),
+            }
+        )
 
 
 def test_a_source_only_change_authors_only_source_refs_and_the_selector(tmp_path: Path) -> None:

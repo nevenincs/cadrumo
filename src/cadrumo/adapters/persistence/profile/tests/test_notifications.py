@@ -30,6 +30,7 @@ from cadrumo.application.live.notifications import (
     notifications_snapshot_object_key,
 )
 from cadrumo.core.config import Settings
+from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,7 +43,7 @@ _BUCKET_B_ID = "59595959-5959-4959-8959-595959595959"
 
 
 def _service(profile: TestRuntimeProfile) -> NotificationsService:
-    return NotificationsService(settings=profile.settings)
+    return NotificationsService(ports=compose_notifications_ports(settings=profile.settings))
 
 
 def _row(*, certificado_id: str = "2596230606502", concepto: str = "Sample") -> RemoteNotification:

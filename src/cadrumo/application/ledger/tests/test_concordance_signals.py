@@ -41,7 +41,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ..establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, _printed_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -70,6 +73,7 @@ def _walk(
     regime_legend: str | None = None,
     charged_iva_rates: tuple[Decimal, ...] = (),
     on_date: date | None = _DATE,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[IvaTerritorialScope | None, EstablishmentRung | None, RegistrationEstablishmentConflict | None]:
     """Walk the rungs with this file's population pinned, overriding one axis at a time.
 
@@ -82,44 +86,48 @@ def _walk(
         tax_identifier=tax_identifier,
         country_code=country_code,
         postal_code=postal_code,
+        legends=resolve_regime_legends(operation=operation, effective_date=_DATE),
         regime_legend=regime_legend,
         charged_iva_rates=charged_iva_rates,
         on_date=on_date,
+        operation=operation,
     )
 
 
-def test_a_registration_alone_still_settles_nothing() -> None:
+def test_a_registration_alone_still_settles_nothing(*, operation: PinnedAuthorityOperation) -> None:
     """The precondition. Without it every case below could pass on the number alone."""
-    scope, rung, conflict = _walk()
+    scope, rung, conflict = _walk(operation=operation)
 
     assert scope is None
     assert rung is None
     assert conflict is None
 
 
-def test_the_issuers_own_rate_corroborates_the_registration() -> None:
+def test_the_issuers_own_rate_corroborates_the_registration(*, operation: PinnedAuthorityOperation) -> None:
     """The widening: what the issuer DID is evidence, not only what it said.
 
     A German-registered supplier charging German IVA has taxed under the law it
     is established under, which is precisely the claim the registration makes and
     the paper could not previously confirm.
     """
-    scope, rung, conflict = _walk(charged_iva_rates=(Decimal("19"),))
+    scope, rung, conflict = _walk(charged_iva_rates=(Decimal("19"),), operation=operation)
 
     assert scope is IvaTerritorialScope._from_registry("eu_member")
     assert rung is EstablishmentRung.CONCORDANT_REGISTRATION
     assert conflict is None
 
 
-def test_the_reverse_charge_mention_still_corroborates() -> None:
+def test_the_reverse_charge_mention_still_corroborates(*, operation: PinnedAuthorityOperation) -> None:
     """The pre-existing signal is not collateral damage of the widening."""
-    scope, rung, _ = _walk(regime_legend=_REVERSE_CHARGE)
+    scope, rung, _ = _walk(regime_legend=_REVERSE_CHARGE, operation=operation)
 
     assert scope is IvaTerritorialScope._from_registry("eu_member")
     assert rung is EstablishmentRung.CONCORDANT_REGISTRATION
 
 
-def test_a_rate_spain_also_carries_raises_a_conflict_rather_than_corroborating() -> None:
+def test_a_rate_spain_also_carries_raises_a_conflict_rather_than_corroborating(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The discriminating case, and the reason the widening is not simply looser.
 
     A Dutch issuer charging 21% has printed a rate both Spain and the Netherlands
@@ -128,7 +136,7 @@ def test_a_rate_spain_also_carries_raises_a_conflict_rather_than_corroborating()
     declining: the charged Spanish registry rate is itself Spain-indicating, so
     the disagreement reaches an operator as a conflict.
     """
-    scope, rung, conflict = _walk(tax_identifier=_DUTCH_IVA, charged_iva_rates=(Decimal("21"),))
+    scope, rung, conflict = _walk(tax_identifier=_DUTCH_IVA, charged_iva_rates=(Decimal("21"),), operation=operation)
 
     assert scope is None
     assert rung is None
@@ -136,34 +144,34 @@ def test_a_rate_spain_also_carries_raises_a_conflict_rather_than_corroborating()
     assert "the document charges IVA at a Spanish registry rate" in conflict.spain_indicating
 
 
-def test_an_unverifiable_rate_corroborates_nothing() -> None:
+def test_an_unverifiable_rate_corroborates_nothing(*, operation: PinnedAuthorityOperation) -> None:
     """No date means no schedule, and inconclusive contributes in neither direction.
 
     The same posture the Spanish-rate check states: a rate nobody could verify is
     not a second signal. Reading it as agreement would settle a territory from a
     number whose lawfulness was never checked.
     """
-    scope, rung, conflict = _walk(charged_iva_rates=(Decimal("19"),), on_date=None)
+    scope, rung, conflict = _walk(charged_iva_rates=(Decimal("19"),), on_date=None, operation=operation)
 
     assert scope is None
     assert rung is None
     assert conflict is None
 
 
-def test_a_zero_rated_line_places_the_party_nowhere() -> None:
+def test_a_zero_rated_line_places_the_party_nowhere(*, operation: PinnedAuthorityOperation) -> None:
     """Zero charges no tax under anybody's law, so it corroborates no establishment.
 
     Excluded before the schedule lookup rather than by it, because a registry
     will answer that zero is a legitimate tier -- which is true and is the wrong
     question.
     """
-    scope, rung, _ = _walk(charged_iva_rates=(Decimal("0"),))
+    scope, rung, _ = _walk(charged_iva_rates=(Decimal("0"),), operation=operation)
 
     assert scope is None
     assert rung is None
 
 
-def test_a_rate_no_schedule_carries_corroborates_nothing() -> None:
+def test_a_rate_no_schedule_carries_corroborates_nothing(*, operation: PinnedAuthorityOperation) -> None:
     """The negative control over the widening itself.
 
     Without this, a rule that corroborated on ANY non-Spanish positive rate would
@@ -176,21 +184,21 @@ def test_a_rate_no_schedule_carries_corroborates_nothing() -> None:
     lawful German rate while claiming it was carried by nobody. The rate below
     was measured against both schedules rather than assumed.
     """
-    scope, rung, _ = _walk(charged_iva_rates=(Decimal("23"),))
+    scope, rung, _ = _walk(charged_iva_rates=(Decimal("23"),), operation=operation)
 
     assert scope is None
     assert rung is None
 
 
-def test_the_corroborated_scope_is_the_registration_states_own() -> None:
+def test_the_corroborated_scope_is_the_registration_states_own(*, operation: PinnedAuthorityOperation) -> None:
     """The rung reports where the registration says the party is, not a default.
 
     Asserted through a second State so the answer cannot be a constant that
     happens to match Germany: both resolve to the member scope, and neither
     resolves to a Spanish one, which is the failure this axis refuses everywhere.
     """
-    german, _, _ = _walk(charged_iva_rates=(Decimal("19"),))
-    dutch, _, _ = _walk(tax_identifier=_DUTCH_IVA, regime_legend=_REVERSE_CHARGE)
+    german, _, _ = _walk(charged_iva_rates=(Decimal("19"),), operation=operation)
+    dutch, _, _ = _walk(tax_identifier=_DUTCH_IVA, regime_legend=_REVERSE_CHARGE, operation=operation)
 
     assert german is IvaTerritorialScope._from_registry("eu_member")
     assert dutch is IvaTerritorialScope._from_registry("eu_member")

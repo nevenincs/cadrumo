@@ -107,8 +107,10 @@ def _sociedades_annual_manual_statuses() -> dict[int, SociedadesAnnualManualCove
     catalogues = compiled_bundled_authority().catalogues
     coverage = catalogues.sociedades_annual_manual_coverage
     assert coverage is not None, "the registry declares no Sociedades annual-manual coverage catalogue"
+    supported_filing_years = catalogues.supported_filing_years
+    assert supported_filing_years is not None, "the registry declares no supported filing years"
     statuses = {disposition.year: disposition.status for disposition in coverage.dispositions}
-    assert tuple(statuses) == catalogues.supported_filing_years.years, (
+    assert tuple(statuses) == supported_filing_years.years, (
         "Sociedades annual-manual coverage must declare every supported filing year"
     )
     return statuses

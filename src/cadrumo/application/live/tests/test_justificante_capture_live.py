@@ -15,13 +15,23 @@ import hashlib
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
+from cadrumo.entrypoints.cli._app_live_justificante_composition import (
+    build_justificante_authenticity_verifier,
+    build_justificante_capture_service,
+    build_justificante_live_read_port,
+    build_justificante_registration_ports,
+)
+
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.period import Period
 from ....tests.live_gate import requires_live_enabled
 from ..errors import LiveApplicationInputError
 from ..expedientes import capture_expedientes
 from ..justificante import (
-    JustificanteCaptureSnapshotService,
     capture_justificante_snapshot,
 )
 from ..snapshot_base import SnapshotLifecycleState
@@ -39,7 +49,13 @@ _LIVE_MODELO = "130"
 
 async def _discover_filed_period(*, bucket_id: str, modelo: str, year: int) -> Period | None:
     snapshot = await capture_expedientes(
-        bucket_id=bucket_id, modelo=modelo, year=year, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        bucket_id=bucket_id,
+        modelo=modelo,
+        year=year,
+        ports=build_expedientes_ports(bucket_id=bucket_id),
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        browser_session_factory=default_browser_session_factory,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     for declaration in snapshot.declarations:
         if declaration.modelo == modelo:
@@ -66,14 +82,23 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
         )
 
     try:
-        persisted = asyncio.run(
-            capture_justificante_snapshot(
-                bucket_id=bucket_id,
-                modelo=_LIVE_MODELO,
-                year=year,
-                period=period,
-            ),
-        )
+        with bundled_indexed_authority().operation() as operation:
+            persisted = asyncio.run(
+                capture_justificante_snapshot(
+                    bucket_id=bucket_id,
+                    modelo=_LIVE_MODELO,
+                    year=year,
+                    period=period,
+                    service=build_justificante_capture_service(bucket_id),
+                    read_port=build_justificante_live_read_port(
+                        build_certificate_secret_backend,
+                        _OPERATOR_SCOPE_PORTS,
+                        operation,
+                    ),
+                    registration_ports=build_justificante_registration_ports(),
+                    verifier=build_justificante_authenticity_verifier(),
+                ),
+            )
     except LiveApplicationInputError as exc:
         pytest.fail(f"live justificante capture could not resolve/pull the receipt: {exc}")
 
@@ -88,7 +113,7 @@ def test_live_justificante_capture_persists_and_is_retrievable() -> None:
     assert hashlib.sha256(persisted.decoded_pdf_bytes()).hexdigest() == persisted.pdf_sha256
 
     # The persisted snapshot is retrievable as the ACTIVE capture for the period.
-    service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
+    service = build_justificante_capture_service(bucket_id)
     latest = service.latest_for_work_unit(modelo=_LIVE_MODELO, filing_year=year, period=period)
     assert latest is not None
     assert latest.snapshot_id == persisted.snapshot_id

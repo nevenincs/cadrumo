@@ -10,11 +10,13 @@ lives at the profile-persistence adapter boundary.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import hashlib
 from datetime import UTC, datetime
 
 import pytest
 
+from ....core.classification.policies import SensitivityClass
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -35,12 +37,10 @@ _AT = datetime(2026, 7, 1, 9, 0, tzinfo=UTC)
 _MARKERS = frozenset({"co-committed", "interloper"})
 
 
-@dataclass(frozen=True)
-class _PreparedEventWrite:
+class _PreparedEventWrite(SecureObjectWrite):
     """Small in-memory equivalent of the event port's prepared write."""
 
     catalogue: BucketEventHistoryCatalogue
-    expected_revision_id: str | None
 
 
 class _EventRepository:
@@ -48,7 +48,7 @@ class _EventRepository:
 
     def __init__(self) -> None:
         self.catalogue = BucketEventHistoryCatalogue()
-        self.revision = "0"
+        self.revision = "0" * 64
 
     def exists(self) -> bool:
         return bool(self.catalogue.events)
@@ -58,7 +58,7 @@ class _EventRepository:
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         self.catalogue = catalogue
-        self.revision = str(int(self.revision) + 1)
+        self.revision = hashlib.sha256(self.revision.encode()).hexdigest()
 
     def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
         return self.catalogue, self.revision
@@ -69,7 +69,16 @@ class _EventRepository:
         *,
         expected_revision_id: str | None = None,
     ) -> _PreparedEventWrite:
-        return _PreparedEventWrite(catalogue, expected_revision_id)
+        return _PreparedEventWrite(
+            namespace="test",
+            object_key="event-history",
+            classification=SensitivityClass.AUDIT,
+            schema_version=1,
+            written_at=_AT,
+            payload=b"event-history",
+            expected_revision_id=expected_revision_id,
+            catalogue=catalogue,
+        )
 
     def commit(self, write: _PreparedEventWrite) -> None:
         if write.expected_revision_id != self.revision:
@@ -88,12 +97,17 @@ class _TransactionRepository:
     def save_with_secure_object_writes(
         self,
         _catalogue: TransactionCatalogue,
-        extra_writes: tuple[_PreparedEventWrite, ...],
+        extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
         self.attempts += 1
         if self.interloper and self.attempts == 1:
             self.events.save(append_bucket_event(self.events.load(), _event("interloper")))
-        self.events.commit(extra_writes[0])
+        if not extra_writes:
+            raise AssertionError("co-commit requires one prepared event write")
+        write = extra_writes[0]
+        if not isinstance(write, _PreparedEventWrite):
+            raise TypeError("co-commit fake received an unexpected secure-object write")
+        self.events.commit(write)
 
 
 def _event(object_id: str) -> BucketEvent:

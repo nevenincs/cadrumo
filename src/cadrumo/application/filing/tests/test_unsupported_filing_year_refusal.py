@@ -27,9 +27,7 @@ import inspect
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....core.period import Period
-from ..draft_construction import _refuse_unsupported_filing_year
-from ..errors import ModeloApplicationError
+from ....domain.calculations.registry.errors import RegistrySnapshotError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -43,11 +41,11 @@ def _declared_years() -> tuple[int, ...]:
 def test_every_declared_year_is_admitted() -> None:
     """Anti-tautology: a guard that refused everything would pass the refusal proof below."""
     for year in _declared_years():
-        _refuse_unsupported_filing_year(Period.from_year_and_code(year, "1T"))
+        assert compiled_bundled_authority().project_filing_year(year) == year
 
 
 def test_filing_year_admission_delegates_to_the_validated_authority() -> None:
-    source = inspect.getsource(_refuse_unsupported_filing_year)
+    source = inspect.getsource(type(compiled_bundled_authority()).project_filing_year)
 
     assert ".project_filing_year(" in source
     assert ".admits_filing_year(" not in source
@@ -57,15 +55,8 @@ def test_a_year_below_the_declared_window_refuses() -> None:
     """The year before the window opens is refused."""
     undeclared = min(_declared_years()) - 1
 
-    with pytest.raises(ModeloApplicationError) as excinfo:
-        _refuse_unsupported_filing_year(Period.from_year_and_code(undeclared, "1T"))
-
-    context = excinfo.value.context or {}
-    assert context.get("filing_year") == str(undeclared), context
-    assert "supported-filing-years.toml" in str(context.get("declaration", "")), (
-        "the refusal must name the declaration that would admit the year; a refusal an operator "
-        "cannot act on is an outage rather than a guard"
-    )
+    with pytest.raises(RegistrySnapshotError, match=f"filing year {undeclared} is outside"):
+        compiled_bundled_authority().project_filing_year(undeclared)
 
 
 def test_a_year_above_the_horizon_is_admitted_while_no_hard_ceiling_is_declared() -> None:
@@ -82,7 +73,7 @@ def test_a_year_above_the_horizon_is_admitted_while_no_hard_ceiling_is_declared(
     assert declaration is not None
     assert declaration.hard_ceiling is None, "this proof assumes the bundled span is open above its horizon"
 
-    _refuse_unsupported_filing_year(Period.from_year_and_code(declaration.horizon + 1, "1T"))
+    assert compiled_bundled_authority().project_filing_year(declaration.horizon + 1) == declaration.horizon
 
 
 def test_a_declared_hard_ceiling_closes_the_span_above_the_horizon() -> None:
@@ -99,14 +90,14 @@ def test_the_refusal_names_the_span_it_would_accept() -> None:
     """An operator must be able to see what the product does support."""
     undeclared = min(_declared_years()) - 1
 
-    with pytest.raises(ModeloApplicationError) as excinfo:
-        _refuse_unsupported_filing_year(Period.from_year_and_code(undeclared, "1T"))
+    with pytest.raises(RegistrySnapshotError) as excinfo:
+        compiled_bundled_authority().project_filing_year(undeclared)
 
-    listed = str((excinfo.value.context or {}).get("supported_filing_years", ""))
+    listed = str(excinfo.value)
     assert str(min(_declared_years())) in listed, (
         f"the refusal must name the floor it would accept from; got {listed!r}"
     )
-    assert "later" in listed, (
+    assert "and later" in listed, (
         f"an open span must say so rather than enumerating years it does not bound; got {listed!r}"
     )
 

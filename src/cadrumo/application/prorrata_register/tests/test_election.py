@@ -23,6 +23,7 @@ import pytest
 from ....core.prorrata_register import ProrrataProvisionalProvenance
 from ....domain.calculations.registry.prorrata_register_catalogue import (
     prorrata_electable_provenances,
+    prorrata_provenance_precedence,
     prorrata_referenced_provenances,
 )
 from ..election import ProrrataElectionError, ProrrataElectionRefusal, validate_prorrata_election
@@ -114,7 +115,7 @@ def test_a_reference_against_an_undocumented_provenance_is_refused() -> None:
 
 def test_every_electable_provenance_is_a_real_art_105_provenance() -> None:
     """The declarable set is a subset of the regulated one, never an extension."""
-    assert set(prorrata_electable_provenances()) <= set(ProrrataProvisionalProvenance)
+    assert set(prorrata_electable_provenances()) <= set(prorrata_provenance_precedence())
 
 
 def test_every_referenced_provenance_is_itself_electable() -> None:

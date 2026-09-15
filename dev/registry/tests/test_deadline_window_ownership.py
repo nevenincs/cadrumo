@@ -161,7 +161,7 @@ def test_periodic_deadline_completeness_bites_on_one_planted_missing_cell() -> N
     ]
 
     catalogues = minimal_catalogues().model_copy(
-        update={"supported_filing_years": SupportedFilingYearsCatalogue(years=(2024,))},
+        update={"supported_filing_years": SupportedFilingYearsCatalogue(floor=2024, horizon=2024)},
     )
     with pytest.raises(RegistryValidationError, match=r"coordinate \(2024, '02'\) has no deadline window"):
         RegistryValidator(catalogues).validate_modelo(modelo)

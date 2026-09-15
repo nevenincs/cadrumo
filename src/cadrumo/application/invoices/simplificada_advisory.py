@@ -129,15 +129,20 @@ def _active_taxpayer_profile() -> TaxpayerProfile | None:
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         return None
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
-        return None
-    except (OSError, ValueError):
-        # A degraded profile read must not fail an invoice that is already
-        # recorded. It must also not be reported as "nothing to advise".
-        return None
-    return projection_for_taxpayer(record)
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            profile_decode_context = operation.profile_decode_context()
+            record = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=profile_decode_context,
+            ).load(bucket_id)
+        except ProfileNotFoundError:
+            return None
+        except (OSError, ValueError):
+            # A degraded profile read must not fail an invoice that is already
+            # recorded. It must also not be reported as "nothing to advise".
+            return None
+        return projection_for_taxpayer(record, schema=profile_decode_context.schema)
 
 
 def resolve_simplificada_tax_id_advisory(

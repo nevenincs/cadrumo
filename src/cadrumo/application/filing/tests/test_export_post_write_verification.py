@@ -82,7 +82,6 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     parsed = parse_export_payload(
         layout,
         payload,
-        source_root=provider.source_root,
         sources=provider.sources,
     )
     casilla = next(value for value in parsed.casillas if value.casilla_id == "03")

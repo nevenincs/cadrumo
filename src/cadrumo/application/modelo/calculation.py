@@ -28,29 +28,38 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from ...core.casilla_id import CasillaId
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.bindings import CasillaObservation
     from ...domain.modelos.calculation_revision import CalculationRevision
 
 
-def visible_calculation_casilla_values(revision: CalculationRevision) -> Mapping[CasillaId, Decimal]:
+def visible_calculation_casilla_values(
+    revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Mapping[CasillaId, Decimal]:
     """Return the casilla values of a persisted revision that an operator should see.
 
     The write path has already removed registry-declared row templates. The read
     path first re-confirms the persisted canonical coordinate and never guesses
     semantic membership from an identifier prefix.
     """
-    require_calculation_revision_coordinates_current(revision)
+    require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision.casilla_values
 
 
-def visible_calculation_observations(revision: CalculationRevision) -> tuple[CasillaObservation, ...]:
+def visible_calculation_observations(
+    revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[CasillaObservation, ...]:
     """Return the observations of a persisted revision that an operator should see.
 
     This is the observation-stream counterpart of
     :func:`visible_calculation_casilla_values` and applies the same canonical
     revision re-confirmation before returning the write-time materialization.
     """
-    require_calculation_revision_coordinates_current(revision)
+    require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision.observations
 
 

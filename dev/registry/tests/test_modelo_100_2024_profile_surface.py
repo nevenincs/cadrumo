@@ -130,7 +130,7 @@ def test_modelo_100_2024_profile_family_rows_are_repeating_profile_collections()
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
     for binding_id, (collection, field) in _EXPECTED_ROW_BINDING_TARGETS.items():
-        selector = _profile_selector(bindings[binding_id].selector)
+        selector = _profile_selector(bindings[binding_id].provider)
         assert selector.profile_model == "RentaFamilyProfile"
         assert selector.collection == collection
         assert selector.field == field

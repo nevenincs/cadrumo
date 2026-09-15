@@ -286,17 +286,18 @@ def test_s08_atribucion_member_profile_source_resolves_m184_rows(
     _seed_attribution_entity_profile()
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2025-y-siguientes")
-
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            calculation_repository=cr_repo,
-            invoice_repository=invoice_repo,
-            transaction_repository=tx_repo,
-            work_unit_repository=wu_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        calculation_repository=cr_repo,
+        invoice_repository=invoice_repo,
+        transaction_repository=tx_repo,
+        work_unit_repository=wu_repo,
+    ) as _calculation_ports_292:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_292,
+            clock=_T1,
+        )
 
     assert isinstance(result, BucketAggregationCalculationResult)
     unrouted = [
@@ -370,15 +371,19 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
             ),
         )
 
-        with pytest.raises(ModeloProfileReadinessError) as refusal:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as refusal,
+            calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                calculation_repository=cr_repo,
+                invoice_repository=invoice_repo,
+                transaction_repository=tx_repo,
+                work_unit_repository=wu_repo,
+            ) as _calculation_ports_376,
+        ):
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
-                ports=calculation_ports_for_test(
-                    calculation_repository=cr_repo,
-                    invoice_repository=invoice_repo,
-                    transaction_repository=tx_repo,
-                    work_unit_repository=wu_repo,
-                ),
+                ports=_calculation_ports_376,
                 clock=_T1,
             )
 
@@ -513,17 +518,18 @@ def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
     """
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="369", filing_year=2026, period="1T", revision_id="esquema-union")
-
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            calculation_repository=cr_repo,
-            invoice_repository=invoice_repo,
-            transaction_repository=tx_repo,
-            work_unit_repository=wu_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        calculation_repository=cr_repo,
+        invoice_repository=invoice_repo,
+        transaction_repository=tx_repo,
+        work_unit_repository=wu_repo,
+    ) as _calculation_ports_519:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_519,
+            clock=_T1,
+        )
 
     assert isinstance(result, BucketAggregationCalculationResult)
     unrouted_oss = [
@@ -551,17 +557,18 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
     """
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     work_unit = _seed(wu_repo, modelo="349", filing_year=2026, period="1T", revision_id="2020-y-siguientes")
-
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            calculation_repository=cr_repo,
-            invoice_repository=invoice_repo,
-            transaction_repository=tx_repo,
-            work_unit_repository=wu_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        calculation_repository=cr_repo,
+        invoice_repository=invoice_repo,
+        transaction_repository=tx_repo,
+        work_unit_repository=wu_repo,
+    ) as _calculation_ports_557:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_557,
+            clock=_T1,
+        )
 
     assert isinstance(result, BucketAggregationCalculationResult)
     unrouted_invoice = [
@@ -638,17 +645,19 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
             ),
             clock=_T0,
         )
-        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            ports=calculation_ports_for_test(
-                calculation_repository=cr_repo,
-                invoice_repository=invoice_repo,
-                transaction_repository=tx_repo,
-                work_unit_repository=wu_repo,
-            ),
-            foreign_asset_observations=observations,
-            clock=_T1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            calculation_repository=cr_repo,
+            invoice_repository=invoice_repo,
+            transaction_repository=tx_repo,
+            work_unit_repository=wu_repo,
+        ) as _calculation_ports_643:
+            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=_calculation_ports_643,
+                foreign_asset_observations=observations,
+                clock=_T1,
+            )
 
     assert not [
         diagnostic

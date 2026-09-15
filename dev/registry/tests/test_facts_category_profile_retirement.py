@@ -13,13 +13,17 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
+    ResolvedMappingFact,
+    ResolvedScalarFact,
     ScalarFactQuery,
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import FactOwnership, FactSelector, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.categories.registry import CATEGORY_PROFILE_FACT_ID, CATEGORY_STATUTORY_CAP_FACT_ID
 from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.categories.spending_category_catalogue import spending_category_tokens
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
@@ -40,11 +44,19 @@ def _master_supported_filing_years() -> frozenset[int]:
     return frozenset(declaration.years)
 
 
+def _category_tokens(catalogue: GovernedFactCatalogue) -> tuple[SpendingCategory, ...]:
+    """Project the category vocabulary from the candidate facts under test."""
+    return spending_category_tokens(
+        effective_date=date(2025, 12, 31),
+        authority=CandidateFactAuthority(catalogue),
+    )
+
+
 def _assert_category_profile_exact_coverage(facts_dir: Path, years: frozenset[int]) -> None:
-    facts = {fact.fact_id: fact for fact in load_governed_facts(facts_dir)}
-    profile_fact = facts[CATEGORY_PROFILE_FACT_ID]
+    catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in load_governed_facts(facts_dir)})
+    profile_fact = catalogue.facts[CATEGORY_PROFILE_FACT_ID]
     failures: list[str] = []
-    for category in SpendingCategory:
+    for category in _category_tokens(catalogue):
         for year in years:
             matching = [
                 variant
@@ -52,6 +64,7 @@ def _assert_category_profile_exact_coverage(facts_dir: Path, years: frozenset[in
                 if any(
                     selector.name == "category" and selector.value == category.value for selector in variant.selectors
                 )
+                and variant.valid_from is not None
                 and variant.valid_from <= date(year, 12, 31) <= (variant.valid_to or date.max)
             ]
             if len(matching) != 1:
@@ -64,17 +77,18 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
     profile_fact = catalogue.facts[CATEGORY_PROFILE_FACT_ID]
 
     assert profile_fact.variants
+    categories = _category_tokens(catalogue)
     declared_categories = {
         selector.value
         for variant in profile_fact.variants
         for selector in variant.selectors
         if selector.name == "category"
     }
-    assert declared_categories == {category.value for category in SpendingCategory}
+    assert declared_categories == {category.value for category in categories}
     assert all(variant.ownership is FactOwnership.AUTHORED for variant in profile_fact.variants)
     assert all(variant.source_citations for variant in profile_fact.variants)
 
-    for category in SpendingCategory:
+    for category in categories:
         resolved = resolve_governed_fact(
             catalogue,
             MappingFactQuery(
@@ -85,6 +99,7 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
             ),
             authority_digest="a" * 64,
         )
+        assert isinstance(resolved, ResolvedMappingFact)
         assert resolved.payload.entries
 
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
@@ -141,6 +156,7 @@ def test_authored_category_profile_fact_preserves_citation_identity_window_and_g
         ),
         authority_digest="a" * 64,
     )
+    assert isinstance(resolved, ResolvedMappingFact)
     values = {entry.key: entry.value for entry in resolved.payload.entries}
 
     assert values["citation.0.source"] == "aeat_help"
@@ -165,6 +181,7 @@ def test_authored_category_cap_fact_preserves_the_dated_mutualidad_amount() -> N
         authority_digest="b" * 64,
     )
 
+    assert isinstance(resolved, ResolvedScalarFact)
     assert resolved.payload.value == Decimal("16672.66")
     assert resolved.ownership is FactOwnership.AUTHORED
     assert resolved.source_citations

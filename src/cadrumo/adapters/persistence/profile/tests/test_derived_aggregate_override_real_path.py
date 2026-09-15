@@ -68,7 +68,7 @@ from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -187,6 +187,7 @@ def _calculate_estatal_minimo() -> Decimal:
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD_CODE),
         revision_id=snapshot.revision.id,
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET),
         clock=_T0,
     )
     with bundled_indexed_authority().operation() as operation:

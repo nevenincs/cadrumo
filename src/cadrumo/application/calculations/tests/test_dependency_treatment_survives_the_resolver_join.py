@@ -131,6 +131,7 @@ def test_the_prefilled_binding_treatment_defaults_to_undeclared() -> None:
         source_modelo="130",
         source_filing_year=2024,
         source_periods=("4T",),
+        source_registry_snapshot_refs=(),
         resolved_at=datetime(2026, 8, 8, 12, 0, tzinfo=UTC),
     )
 
@@ -195,6 +196,7 @@ def test_carrying_the_treatment_does_not_withhold_the_value() -> None:
             source_modelo="193",
             source_filing_year=2024,
             source_periods=("0A",),
+            source_registry_snapshot_refs=(),
             resolved_at=datetime(2026, 8, 8, 12, 0, tzinfo=UTC),
         )
         assert binding.value == amount, f"{treatment} withheld the value"

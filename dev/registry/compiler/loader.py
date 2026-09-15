@@ -176,11 +176,17 @@ def inherit_keyed_family(
     subject: str,
     *,
     revision_id: str,
+    predecessor_id: str,
+    predecessor: Mapping[str, object],
+    storage_only: bool,
     section: str,
     identity: str,
     identity_fields: tuple[str, ...] = (),
+    casilla_identity_fields: tuple[str, ...] = (),
     period_scoped: bool = False,
     inherited: tuple[object, ...],
+    inherited_casillas: tuple[object, ...] = (),
+    successor_casillas: tuple[object, ...] = (),
     successor: Mapping[str, object],
 ) -> tuple[object, ...]:
     """Apply the compiler's canonical keyed-family inheritance semantics.
@@ -192,15 +198,19 @@ def inherit_keyed_family(
     return _inherit_keyed_family(
         subject,
         revision_id=revision_id,
+        predecessor_id=predecessor_id,
+        predecessor=predecessor,
+        storage_only=storage_only,
         family=KeyedFamilySpec(
             section=section,
             identity=identity,
             identity_fields=identity_fields,
+            casilla_identity_fields=casilla_identity_fields,
             period_scoped=period_scoped,
         ),
         inherited=inherited,
-        inherited_casillas=(),
-        successor_casillas=(),
+        inherited_casillas=inherited_casillas,
+        successor_casillas=successor_casillas,
         successor=successor,
     )
 
@@ -262,7 +272,14 @@ def load_modelo_locale_key_projection(root: Path) -> frozenset[str]:
 
 def _raw_table(value: object) -> Mapping[str, object] | None:
     """Return a TOML table without coercing malformed values."""
-    return value if isinstance(value, Mapping) else None
+    if not isinstance(value, Mapping):
+        return None
+    table: dict[str, object] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            return None
+        table[key] = item
+    return table
 
 
 def _required_identity(value: object, subject: str) -> str:

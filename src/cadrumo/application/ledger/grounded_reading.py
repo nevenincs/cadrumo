@@ -230,6 +230,7 @@ def ground_draft_against_transcription(
             candidates=_identity_candidates(draft=draft, envelopes=envelopes, transcription=transcription),
             taxpayer_tax_id=taxpayer_tax_id,
             origin=_reading_origin(envelopes),
+            operation=operation,
         )
         findings.extend(resolution.findings)
         envelopes = _with_replaced_envelope(envelopes, resolution.provenance)

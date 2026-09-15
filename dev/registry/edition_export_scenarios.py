@@ -99,7 +99,6 @@ from cadrumo.application.filing.producer_snapshot import (
 )
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
-from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
@@ -111,7 +110,12 @@ from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import resolve_bienes_inversion_regularizacion_parameters
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    ValidatedRegistryAuthority,
+    bundled_indexed_authority,
+)
+from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
@@ -458,9 +462,16 @@ def m303_export_scenario(period: Period) -> EditionExportScenario:
 
 def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
     authority = compiled_bundled_authority()
-    registry_snapshot = authority.snapshot(
-        str(Modelo("303")), filing_year=period.filing_year, period=period.registry_token
-    )
+    with bundled_indexed_authority().operation() as operation:
+        registry_snapshot = authority.snapshot(
+            str(Modelo("303")), filing_year=period.filing_year, period=period.registry_token
+        )
+        m303_filing_facts = _m303_filing_facts(
+            period,
+            authority=authority,
+            registry_snapshot=registry_snapshot,
+            operation=operation,
+        )
     profile = ModeloIVAProfile(
         tax_territory=M303TaxTerritory._from_registry("common_regime"),
         regime_composition=M303RegimeComposition._from_registry("general"),
@@ -485,14 +496,23 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         amendment_evidence=None,
         refund_account=None,
         charge_account=profile.charge_account,
-        m303_filing_facts=_m303_filing_facts(period, authority=authority, registry_snapshot=registry_snapshot),
+        m303_filing_facts=m303_filing_facts,
     )
 
 
 def _m303_filing_facts(
-    period: Period, *, authority: ValidatedRegistryAuthority, registry_snapshot: RegistrySnapshot
+    period: Period,
+    *,
+    authority: ValidatedRegistryAuthority,
+    registry_snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
 ) -> M303FilingFacts:
-    regimen = _m303_regimen_simplificado_evidence(period, authority=authority, registry_snapshot=registry_snapshot)
+    regimen = _m303_regimen_simplificado_evidence(
+        period,
+        authority=authority,
+        registry_snapshot=registry_snapshot,
+        operation=operation,
+    )
     parameters = resolve_bienes_inversion_regularizacion_parameters(
         registry_snapshot.revision, modelo_id=str(Modelo("303")), filing_period_date=period.end_date
     )
@@ -525,7 +545,7 @@ def _m303_filing_facts(
         ),
         prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
         prorrata_register=_m303_prorrata_register(period, authority=authority),
-        differentiated_contributions=_m303_differentiated_contributions(),
+        differentiated_contributions=_m303_differentiated_contributions(period=period, authority=authority),
         bienes_register=BienesInversionIvaRegister(),
         regularisation_result=RegistroRegularizacionResult(
             regularizacion_year=period.filing_year,
@@ -541,7 +561,11 @@ def _m303_filing_facts(
 
 
 def _m303_regimen_simplificado_evidence(
-    period: Period, *, authority: ValidatedRegistryAuthority, registry_snapshot: RegistrySnapshot
+    period: Period,
+    *,
+    authority: ValidatedRegistryAuthority,
+    registry_snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
 ) -> M303RegimenSimplificadoFilingEvidence:
     """One non-agricultural activity from the edition's own Orden, so the repeated record emits once."""
     scope = M303RegimenSimplificadoScopeDecision(
@@ -593,7 +617,7 @@ def _m303_regimen_simplificado_evidence(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            authority=authority,
+            operation=operation,
         ),
     )
 
@@ -634,12 +658,13 @@ def _m303_prorrata_register(period: Period, *, authority: ValidatedRegistryAutho
     )
 
 
-def _m303_differentiated_contributions() -> tuple[IvaDifferentiatedDeductionContribution, ...]:
+def _m303_differentiated_contributions(
+    *, period: Period, authority: ValidatedRegistryAuthority
+) -> tuple[IvaDifferentiatedDeductionContribution, ...]:
     """One contribution per deduction kind the differentiated sectors declare, in each sector."""
-    kinds = tuple(
-        kind
-        for kind in IvaDeductionFactKind
-        if kind is not IvaDeductionFactKind._from_registry("investment_goods_regularisation")
+    kinds = iva_deduction_fact_kinds(
+        effective_date=period.end_date,
+        authority=authority,
     )
     return tuple(
         IvaDifferentiatedDeductionContribution(

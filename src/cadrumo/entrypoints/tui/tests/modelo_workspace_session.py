@@ -33,6 +33,7 @@ from dev.registry.tests.profile_schema_support import (
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -148,7 +149,7 @@ def real_workspace_inspection_result(
             filing_year=filing_year,
             period=period,
             revision_id=selected_revision,
-            repository=repository,
+            ports=build_work_lifecycle_ports(bucket_id=profile.bucket_id),
             clock=_T0,
         )
 

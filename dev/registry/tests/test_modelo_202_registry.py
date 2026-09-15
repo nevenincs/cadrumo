@@ -10,8 +10,12 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_temporal import FilingYearOffsetByTargetPeriod, TargetPeriods
 from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
-from cadrumo.domain.calculations.registry.relations import relation_source_requirements
+from cadrumo.domain.calculations.registry.relations import (
+    relation_prefill_bindings_for_period,
+    relation_source_requirements,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
@@ -223,14 +227,19 @@ def test_committed_modelo_202_static_cross_reference_and_construct_are_declared(
 def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_declared() -> None:
     modelo, _catalogues = _load_modelo_202()
     revision = modelo.revisions["2025-y-siguientes"]
-    binding = next(item for item in revision.bindings if item.id == "modelo-202-cuota-base-ejercicio-anterior")
-    provider = binding.provider
+    binding, provider = next(
+        item
+        for item in relation_prefill_bindings_for_period(revision)
+        if item[0].id == "modelo-202-cuota-base-ejercicio-anterior"
+    )
     assert provider.source_modelo == "200"
     assert provider.declared_source_casilla_ids == ("DP200014B:00592",)
     assert provider.relation_kind == "cross_model_output"
     assert provider.dependency_role == "direct_calculation"
+    assert isinstance(provider.temporal, FilingYearOffsetByTargetPeriod)
     assert provider.temporal.source_periods == ("0A",)
     assert provider.temporal.offsets == {"1P": -2, "2P": -1, "3P": -1}
+    assert isinstance(binding.applicability, TargetPeriods)
     assert binding.applicability.periods == ("1P", "2P", "3P")
 
     expected_source_years = {"1P": 2023, "2P": 2024, "3P": 2024}
@@ -305,13 +314,12 @@ def test_committed_modelo_202_2025_guards_b2_tipo_3_and_tipo_4_under_declaration
     assert "ley-27-2014:art-29" in tuple(str(r) for r in tipo_4.legal_refs)
 
 
-def _casilla_refs_in_expression(expression: object) -> set[str]:
+def _casilla_refs_in_expression(expression: FormulaExpression) -> set[str]:
     """Recursively collect every ``casilla_id`` referenced by a formula expression tree."""
     refs: set[str] = set()
-    casilla_id = getattr(expression, "casilla_id", None)
-    if casilla_id is not None:
-        refs.add(str(casilla_id))
-    for arg in getattr(expression, "args", ()):
+    if expression.casilla_id is not None:
+        refs.add(str(expression.casilla_id))
+    for arg in expression.args:
         refs |= _casilla_refs_in_expression(arg)
     return refs
 
@@ -350,9 +358,9 @@ def test_committed_modelo_202_b2_resultado_previo_feeds_modalidad_40_3_resultado
         # precisely the clave 18 and clave 26 leaves (not, say, a "subtract" or
         # "max" that would zero or misstate one lane).
         combination_nodes = [node for node in _iter_expression_nodes(expression) if node.op == "add"]
-        assert any(
-            {getattr(arg, "casilla_id", None) for arg in node.args} == {"18", "26"} for node in combination_nodes
-        ), "expected an add(clave 18, clave 26) node combining the B1 and B2 resultado previo lanes"
+        assert any({arg.casilla_id for arg in node.args} == {"18", "26"} for node in combination_nodes), (
+            "expected an add(clave 18, clave 26) node combining the B1 and B2 resultado previo lanes"
+        )
 
         predicate_ids = {p.predicate_id for p in revision.verification_predicates}
         assert _M202_B2_RESULTADO_PREVIO_ADVISORY_PREDICATE_ID not in predicate_ids

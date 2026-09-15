@@ -19,12 +19,14 @@ if TYPE_CHECKING:
 
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.work_addressing import ModeloVisibleFilingTarget
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.modelo.workspace import (
     STATIC_INSPECTION_WORK_REVIEW_FACET,
     ModeloWorkspaceStaleCursorError,
@@ -124,7 +126,10 @@ def _seed_work_unit(
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id=revision_id,
-        repository=repository,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repository,
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
         clock=_T0,
     )
 

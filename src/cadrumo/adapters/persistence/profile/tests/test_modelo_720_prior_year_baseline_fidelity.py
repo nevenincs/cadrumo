@@ -95,7 +95,12 @@ _CONTEXT_LABEL = "720-bienes-extranjero-prior-year-asset-baseline-two-annual-cyc
 
 #: Initial declaration threshold per RD 1065/2007 art. 2.1 (registry parameter
 #: ``modelo-720-asset-declaration-threshold-eur`` = €50,000).
-_M720_THRESHOLDS = foreign_asset_declaration_thresholds(modelo=_MODELO, filing_year=_YEAR_N_PLUS_1)
+with _indexed_authority_for_test().operation() as _module_authority_operation_for_test:
+    _M720_THRESHOLDS = foreign_asset_declaration_thresholds(
+        modelo=_MODELO,
+        filing_year=_YEAR_N_PLUS_1,
+        operation=_module_authority_operation_for_test,
+    )
 _INITIAL_THRESHOLD_EUR = _M720_THRESHOLDS[
     ForeignAssetObligationGroup._from_registry("cuentas")
 ].initial_declaration_floor_eur
@@ -569,23 +574,25 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
 def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grown_cuentas(tmp_path: Path) -> None:
     obs_n = _year_n_observation_with_explicit_inmuebles_zero()
     assert obs_n.casilla_values[_INMUEBLES_VALORACION_CASILLA] == _INMUEBLES_N
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repo = CalculationObservationRepository()
+            repo.save(
+                repo.prepare_observation_envelope(
+                    obs_n,
+                    source_kind="app_filing",
+                    captured_at=_CLOCK_N,
+                    stamped_revision_id=revision_id_for_observation(obs_n),
+                )
             )
-        )
-        snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-        report = resolve_bindings_from_local_store(
-            snapshot_n1,
-            repository=repo,
-            captured_at=_CLOCK_N_PLUS_1,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        )
+            snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+            report = resolve_bindings_from_local_store(
+                snapshot_n1,
+                repository=repo,
+                captured_at=_CLOCK_N_PLUS_1,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
     assert dict(report.binding_values) == {
         _CUENTAS_BASELINE_BINDING: _CUENTAS_N,
@@ -599,11 +606,13 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     assert {item.dependency_treatment for item in report.prefilled} == {"factual_evidence"}
 
     prior_baseline = _prior_baseline_observation_from_bindings(dict(report.binding_values))
-    findings = modelo_720_redeclaration_advisory_findings(
-        prior_observation=prior_baseline,
-        current_observation=_year_n_plus_1_advisory_observation(),
-        current_declaration_observation=_year_n_plus_1_advisory_without_cuentas(),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        findings = modelo_720_redeclaration_advisory_findings(
+            prior_observation=prior_baseline,
+            current_observation=_year_n_plus_1_advisory_observation(),
+            current_declaration_observation=_year_n_plus_1_advisory_without_cuentas(),
+            operation=_authority_operation_for_test,
+        )
 
     assert len(findings) == 1
     finding = findings[0]
@@ -641,46 +650,49 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
         _INMUEBLES_BASELINE_BINDING: _INMUEBLES_N,
     }
 
-    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        primary_repository = CalculationObservationRepository(objects=runtime.primary.repository)
-        secondary_repository = CalculationObservationRepository(objects=runtime.secondary.repository)
-        primary_repository.save(
-            primary_repository.prepare_observation_envelope(
-                prior_observation,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(prior_observation),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+            primary_repository = CalculationObservationRepository(objects=runtime.primary.repository)
+            secondary_repository = CalculationObservationRepository(objects=runtime.secondary.repository)
+            primary_repository.save(
+                primary_repository.prepare_observation_envelope(
+                    prior_observation,
+                    source_kind="app_filing",
+                    captured_at=_CLOCK_N,
+                    stamped_revision_id=revision_id_for_observation(prior_observation),
+                )
             )
-        )
-        primary_resolution = PreviousFilingSourceResolver(
-            repository=primary_repository,
-            registry_snapshot=snapshot,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-            profile_read_ports=empty_profile_read_ports(),
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=runtime.primary.bucket_id,
-                modelo=_MODELO,
-                filing_year=_YEAR_N_PLUS_1,
-                period=Period.from_year_and_code(_YEAR_N_PLUS_1, "0A"),
-                revision=snapshot.revision,
-            )
-        )
-        with runtime.switch_to_secondary():
-            secondary_resolution = PreviousFilingSourceResolver(
-                repository=secondary_repository,
+            primary_resolution = PreviousFilingSourceResolver(
+                repository=primary_repository,
                 registry_snapshot=snapshot,
                 iva_history_repository=IvaCompensationHistoryRepository(),
                 profile_read_ports=empty_profile_read_ports(),
+                operation=_authority_operation_for_test,
             ).resolve(
                 CalculationSourceContext(
-                    bucket_id=runtime.secondary.bucket_id,
+                    bucket_id=runtime.primary.bucket_id,
                     modelo=_MODELO,
                     filing_year=_YEAR_N_PLUS_1,
                     period=Period.from_year_and_code(_YEAR_N_PLUS_1, "0A"),
                     revision=snapshot.revision,
                 )
             )
+            with runtime.switch_to_secondary():
+                secondary_resolution = PreviousFilingSourceResolver(
+                    repository=secondary_repository,
+                    registry_snapshot=snapshot,
+                    iva_history_repository=IvaCompensationHistoryRepository(),
+                    profile_read_ports=empty_profile_read_ports(),
+                    operation=_authority_operation_for_test,
+                ).resolve(
+                    CalculationSourceContext(
+                        bucket_id=runtime.secondary.bucket_id,
+                        modelo=_MODELO,
+                        filing_year=_YEAR_N_PLUS_1,
+                        period=Period.from_year_and_code(_YEAR_N_PLUS_1, "0A"),
+                        revision=snapshot.revision,
+                    )
+                )
 
     assert dict(primary_resolution.binding_values) == expected_bindings
     assert primary_resolution.unresolved_binding_ids == ()
@@ -706,13 +718,15 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
         )
         snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
-        with pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"):
-            resolve_bindings_from_local_store(
-                snapshot_n1,
-                repository=repo,
-                captured_at=_CLOCK_N_PLUS_1,
-                iva_history_repository=IvaCompensationHistoryRepository(),
-            )
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            with pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"):
+                resolve_bindings_from_local_store(
+                    snapshot_n1,
+                    repository=repo,
+                    captured_at=_CLOCK_N_PLUS_1,
+                    iva_history_repository=IvaCompensationHistoryRepository(),
+                    operation=_authority_operation_for_test,
+                )
 
 
 def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_delta_is_below_threshold() -> None:

@@ -44,6 +44,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
@@ -64,11 +66,19 @@ from ..renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_m100_income_ledger,
 )
+from .renta_income_aggregation_support import (
+    _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
-_BASE_CASILLA = "impatriado.base-liquidable-general"
+_M151_MODELO = Modelo("151").value
+_BASE_CASILLA: CasillaId = validated_casilla_id("impatriado.base-liquidable-general")
+_M151_SOURCE_JURISDICTIONS = frozenset({"ES"})
+_M151_ELIGIBLE_INCOME_CATEGORIES = frozenset({"actividad_economica", "trabajo"})
 
 
 def _m151_revision_for(period: Period) -> ModeloRevision:
@@ -149,7 +159,15 @@ def test_es_source_income_folds_into_impatriado_base() -> None:
     tx = _impatriado_transaction("es-001", amount=Decimal("50000.00"), source_jurisdiction="ES")
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_impatriado_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+    result = aggregate_impatriado_income_ledger(
+        catalogue,
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        modelo=_M151_MODELO,
+        target_casilla_id=_BASE_CASILLA,
+        source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+        eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
+    )
 
     assert len(result.observations) == 1
     assert result.observations[0].transaction_id == tx.transaction_id
@@ -173,11 +191,19 @@ def test_foreign_source_row_is_segregated_and_excluded() -> None:
         TransactionCatalogue.from_transactions((es_row,)),
         bucket_id="test",
         period=_ANNUAL_2024,
+        modelo=_M151_MODELO,
+        target_casilla_id=_BASE_CASILLA,
+        source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+        eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
     )
     segregated = aggregate_impatriado_income_ledger(
         TransactionCatalogue.from_transactions((fr_row,)),
         bucket_id="test",
         period=_ANNUAL_2024,
+        modelo=_M151_MODELO,
+        target_casilla_id=_BASE_CASILLA,
+        source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+        eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
     )
 
     # ES admits; the identical foreign row is fully excluded from the base.
@@ -200,7 +226,15 @@ def test_none_jurisdiction_fails_loud_never_silently_es() -> None:
     tx = _impatriado_transaction("unresolved-001", amount=Decimal("70000.00"), source_jurisdiction=None)
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_impatriado_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+    result = aggregate_impatriado_income_ledger(
+        catalogue,
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        modelo=_M151_MODELO,
+        target_casilla_id=_BASE_CASILLA,
+        source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+        eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
+    )
 
     assert not result.observations
     assert _base_total(result) == Decimal("0")
@@ -227,12 +261,28 @@ def test_trabajo_income_admitted_into_m151_base_but_excluded_from_m130() -> None
     )
     catalogue = TransactionCatalogue.from_transactions((nomina,))
 
-    m151 = aggregate_impatriado_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+    m151 = aggregate_impatriado_income_ledger(
+        catalogue,
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        modelo=_M151_MODELO,
+        target_casilla_id=_BASE_CASILLA,
+        source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+        eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
+    )
     assert _base_total(m151) == Decimal("90000.00")
     assert len(m151.observations) == 1
 
     # Same row through the M130 / M100 actividad-económica pipeline is excluded.
-    m130 = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+    m130 = aggregate_renta_m100_income_ledger(
+        catalogue,
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        modelo=Modelo("100").value,
+        target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
     assert not m130.observations
     assert any(issue.reason is RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME for issue in m130.issues)
 
@@ -249,6 +299,10 @@ def test_outgoing_row_is_not_owned_by_the_impatriado_base_pipeline() -> None:
         TransactionCatalogue.from_transactions((outgoing,)),
         bucket_id="test",
         period=_ANNUAL_2024,
+        modelo=_M151_MODELO,
+        target_casilla_id=_BASE_CASILLA,
+        source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+        eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
     )
     assert not result.observations
     assert not result.issues
@@ -267,7 +321,15 @@ def test_registry_binding_resolves_es_source_total_into_base() -> None:
     foreign_row = _impatriado_transaction("bind-de", amount=Decimal("55000.00"), source_jurisdiction="DE")
     catalogue = TransactionCatalogue.from_transactions((es_row, foreign_row))
 
-    aggregation = aggregate_impatriado_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+    aggregation = aggregate_impatriado_income_ledger(
+        catalogue,
+        bucket_id="test",
+        period=_ANNUAL_2024,
+        modelo=_M151_MODELO,
+        target_casilla_id=_BASE_CASILLA,
+        source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+        eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
+    )
     resolved = resolve_ledger_impatriado_income_aggregation_binding_values(revision, aggregation.observations)
 
     binding_id: BindingId = "modelo-151-impatriado-base-liquidable-general"
@@ -303,6 +365,10 @@ def _mixed_and_business_binding_values() -> tuple[Decimal, Decimal]:
             TransactionCatalogue.from_transactions((row,)),
             bucket_id="test",
             period=_ANNUAL_2024,
+            modelo=_M151_MODELO,
+            target_casilla_id=_BASE_CASILLA,
+            source_jurisdictions=_M151_SOURCE_JURISDICTIONS,
+            eligible_income_categories=_M151_ELIGIBLE_INCOME_CATEGORIES,
         )
         resolved.append(
             resolve_ledger_impatriado_income_aggregation_binding_values(revision, aggregation.observations)[binding_id],

@@ -130,6 +130,7 @@ def test_preclassified_candidate_preserves_exemption_article_on_observation_proj
             flow_direction=IvaFlowDirection._from_registry("repercutido"),
             base_amount=Decimal("400.00"),
             iva_amount=Decimal("0.00"),
+            cash_accounting_treatment=IvaCashAccountingTreatment("none"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
 
@@ -159,6 +160,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
                 flow_direction=IvaFlowDirection._from_registry("repercutido"),
                 base_amount=Decimal("400.00"),
                 iva_amount=Decimal("0.00"),
+                cash_accounting_treatment=IvaCashAccountingTreatment("none"),
                 observation_role=IvaLedgerObservationRole.SETTLEMENT,
             ),
             IvaLedgerCandidate(
@@ -171,6 +173,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
                 flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
                 base_amount=Decimal("200.00"),
                 iva_amount=Decimal("42.00"),
+                cash_accounting_treatment=IvaCashAccountingTreatment("none"),
                 observation_role=IvaLedgerObservationRole.SETTLEMENT,
             ),
             IvaLedgerCandidate(
@@ -181,6 +184,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
                 flow_direction=IvaFlowDirection._from_registry("soportado"),
                 base_amount=Decimal("100.00"),
                 iva_amount=Decimal("5.20"),
+                cash_accounting_treatment=IvaCashAccountingTreatment("none"),
                 observation_role=IvaLedgerObservationRole.SETTLEMENT,
             ),
             IvaLedgerCandidate(
@@ -191,6 +195,7 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
                 flow_direction=IvaFlowDirection._from_registry("repercutido"),
                 base_amount=Decimal("-50.00"),
                 iva_amount=Decimal("0.00"),
+                cash_accounting_treatment=IvaCashAccountingTreatment("none"),
                 observation_role=IvaLedgerObservationRole.SETTLEMENT,
             ),
         )
@@ -228,6 +233,7 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
                 flow_direction=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
                 base_amount=Decimal("200.00"),
                 iva_amount=Decimal("42.00"),
+                cash_accounting_treatment=IvaCashAccountingTreatment("none"),
                 observation_role=IvaLedgerObservationRole.SETTLEMENT,
             ),
             IvaLedgerCandidate(
@@ -238,6 +244,7 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
                 flow_direction=IvaFlowDirection._from_registry("soportado"),
                 base_amount=Decimal("100.00"),
                 iva_amount=Decimal("5.20"),
+                cash_accounting_treatment=IvaCashAccountingTreatment("none"),
                 observation_role=IvaLedgerObservationRole.SETTLEMENT,
             ),
         )
@@ -267,6 +274,7 @@ def test_preclassified_candidate_blocks_unsupported_modelo_390_regime() -> None:
             flow_direction=IvaFlowDirection._from_registry("soportado"),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("5.20"),
+            cash_accounting_treatment=IvaCashAccountingTreatment("none"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
 
@@ -297,6 +305,7 @@ def test_preclassified_candidate_rejects_non_declarable_sentinel_category() -> N
             flow_direction=IvaFlowDirection._from_registry("repercutido"),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
+            cash_accounting_treatment=IvaCashAccountingTreatment("none"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
 
@@ -315,6 +324,7 @@ def test_preclassified_candidate_outside_period_blocks_binding_resolution() -> N
             flow_direction=IvaFlowDirection._from_registry("soportado"),
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("5.20"),
+            cash_accounting_treatment=IvaCashAccountingTreatment("none"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
 

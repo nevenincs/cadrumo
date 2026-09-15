@@ -214,12 +214,19 @@ def collect_minimo_descendientes_undeclared_diagnostics(
     )
 
 
-def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
+def _profile_fact_strings(
+    bucket_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, str] | None:
     """Return every non-null profile fact as a ``{path: str-value}`` map, or ``None``."""
     from ..user_profile.profile_record_repository import ProfileRecordRepository
 
     try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ).load(bucket_id)
     except ProfileNotFoundError:
         return None
     return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
@@ -426,6 +433,7 @@ def collect_guarderia_spend_shape_diagnostics(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise when a declared guardería figure contributes nothing because of its SHAPE.
 
@@ -462,6 +470,7 @@ def collect_guarderia_spend_shape_diagnostics(
         filing_year=filing_year,
         period_token=period_token,
         bucket_id=bucket_id,
+        operation=operation,
     )
     if context is None:
         return ()
@@ -475,6 +484,7 @@ def _guarderia_descendants(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
 ) -> _GuarderiaContext | None:
     """Resolve the shared preconditions the two Art. 81.3 collectors below need.
 
@@ -503,7 +513,7 @@ def _guarderia_descendants(
     )
     if registry_scope is None:
         return None
-    facts = _profile_fact_strings(bucket_id)
+    facts = _profile_fact_strings(bucket_id, operation=operation)
     if facts is None:
         return None
     descendant_facts = facts
@@ -512,7 +522,7 @@ def _guarderia_descendants(
         filing_year=registry_scope.filing_year,
         descendants=tuple(descendant_list_from_facts(descendant_facts)),
         facts=facts,
-        family_context=_family_fact_context(registry_scope.filing_year),
+        family_context=_family_fact_context(registry_scope.filing_year, operation=operation),
         registry_scope=registry_scope,
     )
 
@@ -554,6 +564,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise when declared guardería spend yields nothing for want of the mother's months.
 
@@ -593,6 +604,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
         filing_year=filing_year,
         period_token=period_token,
         bucket_id=bucket_id,
+        operation=operation,
     )
     if context is None:
         return ()

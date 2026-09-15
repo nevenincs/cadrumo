@@ -22,6 +22,9 @@ from typing import Any, TypedDict, Unpack, cast
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
+
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
@@ -107,7 +110,9 @@ the only way any of this could start leaking.
 def _censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+        browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=build_censal_fetch_port(),
     )
 
 

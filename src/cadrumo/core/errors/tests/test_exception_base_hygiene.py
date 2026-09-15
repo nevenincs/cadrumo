@@ -275,14 +275,16 @@ def _production_exception_classes() -> tuple[_SourceExceptionClass, ...]:
         bases = tuple(_SourceBase(base_origin(module, base, bindings)) for base in node.bases)
         rationale: str | None = None
         for statement in node.body:
-            targets: list[ast.expr] = []
             if isinstance(statement, ast.Assign):
                 targets = list(statement.targets)
+                value = statement.value
             elif isinstance(statement, ast.AnnAssign):
                 targets = [statement.target]
+                value = statement.value
+            else:
+                continue
             if not any(isinstance(target, ast.Name) and target.id == _BARE_BASE_RATIONALE_ATTR for target in targets):
                 continue
-            value = statement.value
             if isinstance(value, ast.Constant) and isinstance(value.value, str) and value.value.strip():
                 rationale = value.value
         result.append(_SourceExceptionClass(module, qualname, bases, rationale))

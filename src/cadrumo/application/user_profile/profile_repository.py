@@ -147,11 +147,15 @@ class CommittedProfileRepository:
     def load_unlocked(self, profile_id: str | UUID) -> CommittedProfileView:
         """Project fact state and provenance only through the current authenticated session."""
         aggregate = self.load(profile_id)
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
         from .profile_record_repository import ProfileRecordRepository
 
-        record = ProfileRecordRepository.for_current_session(aggregate.profile_id, root=self._root).load(
-            aggregate.profile_id
-        )
+        with bundled_indexed_authority().operation() as operation:
+            record = ProfileRecordRepository.for_current_session(
+                aggregate.profile_id,
+                root=self._root,
+                profile_decode_context=operation.profile_decode_context(),
+            ).load(aggregate.profile_id)
         return aggregate.model_copy(
             update={
                 "fact_summary": UnlockedProfileFactSummary(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors.hierarchy import InternalInvariantError
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from .secret_submission import EphemeralSecretBroker
 
 
-class SupervisorHost:
+class SupervisorHost(Protocol):
     if TYPE_CHECKING:
         registry: OperationRegistry
         _journal: OperationJournal
@@ -87,11 +87,84 @@ class SupervisorHost:
             discard_ephemeral_secret: bool = False,
         ) -> OperationPersistedSnapshot: ...
 
+        def _validate_cancellation_request(self, snapshot: OperationPersistedSnapshot) -> timedelta: ...
 
-class SupervisorSettlementMixin(SupervisorHost):
+        async def _persist_cancellation_request(
+            self,
+            operation_id: OperationId,
+            snapshot: OperationPersistedSnapshot,
+            cleanup_timeout: timedelta,
+        ) -> OperationPersistedSnapshot: ...
+
+        async def request_cancel(
+            self,
+            operation_id: OperationId,
+            *,
+            expected_revision: int | None = None,
+        ) -> OperationPersistedSnapshot: ...
+
+        async def _acknowledge_cancellation(
+            self,
+            context_snapshot: OperationPersistedSnapshot,
+        ) -> OperationPersistedSnapshot: ...
+
+        async def _set_cancellation_deferred(
+            self,
+            context_snapshot: OperationPersistedSnapshot,
+            deferred: bool,
+        ) -> OperationPersistedSnapshot: ...
+
+        async def _escalate_cleanup_deadline(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+        def _validate_settlement_request(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            receipt: OperationTerminalReceipt,
+        ) -> None: ...
+
+        @staticmethod
+        def _settlement_events(
+            snapshot: OperationPersistedSnapshot,
+            receipt: OperationTerminalReceipt,
+            now: datetime,
+        ) -> tuple[OperationEvent, ...]: ...
+
+        @staticmethod
+        def _settlement_successor(
+            snapshot: OperationPersistedSnapshot,
+            receipt: OperationTerminalReceipt,
+            events: tuple[OperationEvent, ...],
+        ) -> OperationPersistedSnapshot: ...
+
+        async def _commit_settlement(
+            self,
+            operation_id: OperationId,
+            snapshot: OperationPersistedSnapshot,
+            receipt: OperationTerminalReceipt,
+            lease: OperationOwnerLease,
+        ) -> tuple[OperationPersistedSnapshot | None, bool]: ...
+
+        async def settle(
+            self,
+            operation_id: OperationId,
+            receipt: OperationTerminalReceipt,
+        ) -> OperationPersistedSnapshot: ...
+
+        def _validate_executor_stopped_for_settlement(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            condition: OperationTerminalCondition,
+        ) -> None: ...
+
+        def _validate_cancelled_settlement(self, snapshot: OperationPersistedSnapshot) -> None: ...
+
+        async def _complete_cleanup_before_settlement(self, snapshot: OperationPersistedSnapshot) -> None: ...
+
+
+class SupervisorSettlementMixin:
     """Own cancellation requests, cleanup, terminal receipts, and commits."""
 
-    def _validate_cancellation_request(self, snapshot: OperationPersistedSnapshot) -> timedelta:
+    def _validate_cancellation_request(self: SupervisorHost, snapshot: OperationPersistedSnapshot) -> timedelta:
         """Validate cancellation policy and return the configured cleanup window."""
         cancellation = self._require_pinned_definition(snapshot).capabilities.cancellation
         if cancellation is OperationCancellation.UNSUPPORTED:
@@ -107,7 +180,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         return cleanup_timeout
 
     async def _persist_cancellation_request(
-        self,
+        self: SupervisorHost,
         operation_id: OperationId,
         snapshot: OperationPersistedSnapshot,
         cleanup_timeout: timedelta,
@@ -126,7 +199,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         return successor
 
     async def request_cancel(
-        self,
+        self: SupervisorHost,
         operation_id: OperationId,
         *,
         expected_revision: int | None = None,
@@ -144,7 +217,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         return await self._persist_cancellation_request(operation_id, snapshot, cleanup_timeout)
 
     async def _acknowledge_cancellation(
-        self,
+        self: SupervisorHost,
         context_snapshot: OperationPersistedSnapshot,
     ) -> OperationPersistedSnapshot:
         """Persist an executor's safe-stop acknowledgement after its request."""
@@ -164,7 +237,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         )
 
     async def _set_cancellation_deferred(
-        self,
+        self: SupervisorHost,
         context_snapshot: OperationPersistedSnapshot,
         deferred: bool,
     ) -> OperationPersistedSnapshot:
@@ -188,7 +261,7 @@ class SupervisorSettlementMixin(SupervisorHost):
                 if latest.revision == current.revision:
                     raise
 
-    async def _escalate_cleanup_deadline(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+    async def _escalate_cleanup_deadline(self: SupervisorHost, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Retain uncertainty after the cleanup window without publishing a false terminal state."""
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
@@ -200,7 +273,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         return await self._advance(snapshot, lifecycle=OperationLifecycle.SETTLING)
 
     def _validate_settlement_request(
-        self,
+        self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         receipt: OperationTerminalReceipt,
     ) -> None:
@@ -269,7 +342,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         )
 
     async def _commit_settlement(
-        self,
+        self: SupervisorHost,
         operation_id: OperationId,
         snapshot: OperationPersistedSnapshot,
         receipt: OperationTerminalReceipt,
@@ -287,7 +360,11 @@ class SupervisorSettlementMixin(SupervisorHost):
         self._ephemeral_secrets.discard(operation_id)
         return successor, False
 
-    async def settle(self, operation_id: OperationId, receipt: OperationTerminalReceipt) -> OperationPersistedSnapshot:
+    async def settle(
+        self: SupervisorHost,
+        operation_id: OperationId,
+        receipt: OperationTerminalReceipt,
+    ) -> OperationPersistedSnapshot:
         """Persist one validated terminal receipt after owned cleanup completes."""
         snapshot = await self.inspect(operation_id)
         self._validate_settlement_request(snapshot, receipt)
@@ -315,7 +392,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         return successor
 
     def _validate_executor_stopped_for_settlement(
-        self,
+        self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         condition: OperationTerminalCondition,
     ) -> None:
@@ -326,7 +403,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         if executor_task is None or not executor_task.done():
             raise ValueError(f"{condition.value} settlement requires completed executor work")
 
-    def _validate_cancelled_settlement(self, snapshot: OperationPersistedSnapshot) -> None:
+    def _validate_cancelled_settlement(self: SupervisorHost, snapshot: OperationPersistedSnapshot) -> None:
         """Reject a cancellation terminal claim until the executor's safe stop is proven."""
         if snapshot.cancellation_acknowledged_at is None:
             raise ValueError("cancelled settlement requires durable executor acknowledgement")
@@ -336,7 +413,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         if self._clock() >= cleanup_deadline:
             raise ValueError("cleanup deadline elapsed; cancellation remains unsettled")
 
-    async def _complete_cleanup_before_settlement(self, snapshot: OperationPersistedSnapshot) -> None:
+    async def _complete_cleanup_before_settlement(self: SupervisorHost, snapshot: OperationPersistedSnapshot) -> None:
         """Close owned resources within the durable cleanup window before any terminal commit."""
         operation_id = snapshot.identity.operation_id
         cleanup_task = self._cleanup_tasks.get(operation_id)

@@ -162,24 +162,23 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo
-        ),
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values={},
-        ports=calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bucket_event_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bucket_event_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_173:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            binding_values={},
+            ports=_calculation_ports_173,
+            clock=_T1,
+        )
 
 
 def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(

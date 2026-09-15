@@ -32,7 +32,6 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
     M303RegimenSimplificadoFact,
 )
-from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.prorrata_register import (
@@ -46,6 +45,7 @@ from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
@@ -156,15 +156,13 @@ def _committed_tree_hashes(tree) -> tuple[tuple[str, str], ...]:
 def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     """Return one source-owned live DP30305 value arrival, without a test layout."""
     filing_year = snapshot.filing_year
-    prior_snapshot_ref = (
-        compiled_bundled_authority()
-        .snapshot(
-            "303",
-            filing_year=filing_year - 1,
-            period="4T",
-        )
-        .snapshot_ref
-    )
+    authority = compiled_bundled_authority()
+    period = Period.from_year_and_code(filing_year, "1T")
+    prior_snapshot_ref = authority.snapshot(
+        "303",
+        filing_year=filing_year - 1,
+        period="4T",
+    ).snapshot_ref
     register = ProrrataRegister(
         sector_definitions=(
             SectorDefinition(
@@ -201,10 +199,9 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
             for slot in range(1, 6)
         ),
     )
-    contribution_kinds = tuple(
-        kind
-        for kind in IvaDeductionFactKind
-        if kind is not IvaDeductionFactKind._from_registry("investment_goods_regularisation")
+    contribution_kinds = iva_deduction_fact_kinds(
+        effective_date=period.end_date,
+        authority=authority,
     )
     contributions = tuple(
         IvaDifferentiatedDeductionContribution(
@@ -218,7 +215,6 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
         for index, kind in enumerate(contribution_kinds, start=1)
     )
     regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot)
-    period = Period.from_year_and_code(filing_year, "1T")
     # From the module that owns the bundle rather than rebuilt here; the
     # projection refuses one resolved for another filing year, so it is asked
     # for THIS year, and the regularisation result below reuses its provenance.

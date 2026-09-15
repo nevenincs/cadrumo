@@ -14,15 +14,29 @@ that the value survives the projection.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from datetime import date
+
 import pytest
 
+from ...calculations.registry.activity_kind_catalogue import resolve_irpf_activity_kind_catalogue
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ..models import IrpfActivityKind, IrpfEstimationRegime, IVARegime, TaxpayerProfile
 from ..profiles import taxpayer_profile_from_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_the_axis_carries_exactly_the_two_members_the_rate_table_can_consume() -> None:
+@pytest.fixture(autouse=True)
+def _authority_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
+    with validating_governed_facts(operation):
+        yield
+
+
+def test_the_axis_carries_exactly_the_two_members_the_rate_table_can_consume(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Two members, because art. 95's seven provisions fix only four rates.
 
     Six of those seven sit in rate-identical pairs -- inicio and the colectivos
@@ -33,7 +47,8 @@ def test_the_axis_carries_exactly_the_two_members_the_rate_table_can_consume() -
     Pinned because a third member is the tempting change, and every candidate
     for one splits a pair that selects the same figure.
     """
-    assert {member.value for member in IrpfActivityKind} == {"profesional", "sectorial"}
+    catalogue = resolve_irpf_activity_kind_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    assert len(catalogue.all_activity_kinds) == 2
 
 
 def test_an_undeclared_activity_kind_is_neither_arm() -> None:
@@ -51,20 +66,21 @@ def test_an_undeclared_activity_kind_is_neither_arm() -> None:
     assert profile.irpf_activity_kind is not IrpfActivityKind._from_registry("sectorial")
 
 
-@pytest.mark.parametrize("declared", list(IrpfActivityKind))
-def test_a_declared_activity_kind_survives_the_projection(declared: IrpfActivityKind) -> None:
+def test_a_declared_activity_kind_survives_the_projection(operation: PinnedAuthorityOperation) -> None:
     """The operator's declaration reaches the profile the calculation reads.
 
     Exercised through the production mapping->profile path rather than the raw
     projection helper, so the assertion covers the route a stored profile
     actually takes.
     """
-    profile = taxpayer_profile_from_mapping(
-        {"irpf.activity_kind": declared.value},
-        tax_id_default="12345678Z",
-    )
+    catalogue = resolve_irpf_activity_kind_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    for declared in catalogue.all_activity_kinds:
+        profile = taxpayer_profile_from_mapping(
+            {"irpf.activity_kind": declared.value},
+            tax_id_default="12345678Z",
+        )
 
-    assert profile.irpf_activity_kind is declared
+        assert profile.irpf_activity_kind is declared
 
 
 def test_the_activity_axis_is_independent_of_the_estimation_regime() -> None:

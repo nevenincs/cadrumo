@@ -13,11 +13,14 @@ Authority: ``llm-ledger-classification-design``.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..saturation import IvaRateResolution, resolve_category_rate, split_gross_at_rate
 from ..schema import IvaCategory, IvaRateKind
 
@@ -26,7 +29,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _ON_DATE = date(2025, 6, 1)
 
 
-def test_domestic_positive_rate_resolves_to_registry_fraction() -> None:
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+def test_domestic_positive_rate_resolves_to_registry_fraction(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Domestic general/reduced/super-reduced resolve to the grounded fraction."""
     cases: tuple[tuple[IvaCategory, Decimal, IvaRateKind], ...] = (
         (IvaCategory("domestic_general"), Decimal("0.21"), IvaRateKind("general")),
@@ -35,7 +46,7 @@ def test_domestic_positive_rate_resolves_to_registry_fraction() -> None:
     )
 
     for category, expected_rate, expected_kind in cases:
-        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+        resolution = resolve_category_rate(category, on_date=_ON_DATE, operation=authority_operation)
         assert resolution.derivable is True, category
         assert resolution.reason == "", category
         assert resolution.rate_kind is expected_kind, category
@@ -43,7 +54,7 @@ def test_domestic_positive_rate_resolves_to_registry_fraction() -> None:
         assert resolution.rate == expected_rate, category
 
 
-def test_zero_and_exempt_derive_zero_rate() -> None:
+def test_zero_and_exempt_derive_zero_rate(authority_operation: PinnedAuthorityOperation) -> None:
     """Zero-rated and exempt categories derive a derivable zero fraction."""
     cases: tuple[tuple[IvaCategory, IvaRateKind], ...] = (
         (IvaCategory("domestic_zero"), IvaRateKind("zero")),
@@ -51,7 +62,7 @@ def test_zero_and_exempt_derive_zero_rate() -> None:
     )
 
     for category, expected_kind in cases:
-        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+        resolution = resolve_category_rate(category, on_date=_ON_DATE, operation=authority_operation)
         assert resolution.derivable is True, category
         assert resolution.rate == Decimal("0"), category
         assert resolution.rate_kind is expected_kind, category
@@ -76,17 +87,19 @@ _NON_DERIVABLE_CATEGORIES = [
 ]
 
 
-def test_non_domestic_categories_surface_not_derivable() -> None:
+def test_non_domestic_categories_surface_not_derivable(authority_operation: PinnedAuthorityOperation) -> None:
     """Every non-derivable category returns derivable=False with a reason, no rate."""
     for category in _NON_DERIVABLE_CATEGORIES:
-        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+        resolution = resolve_category_rate(category, on_date=_ON_DATE, operation=authority_operation)
         assert resolution.derivable is False, category
         assert resolution.rate is None, category
         assert resolution.rate_kind is None, category
         assert resolution.reason != "", category
 
 
-def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty() -> None:
+def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """EU IVA / reverse-charge reasons must not read like legal filing certainty."""
     cases: tuple[tuple[IvaCategory, tuple[str, ...]], ...] = (
         (
@@ -108,7 +121,7 @@ def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty() -> Non
     )
 
     for category, required_fragments in cases:
-        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+        resolution = resolve_category_rate(category, on_date=_ON_DATE, operation=authority_operation)
 
         assert resolution.derivable is False, category
         assert all(fragment in resolution.reason for fragment in required_fragments), category
@@ -116,7 +129,9 @@ def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty() -> Non
         assert "operator confirms" not in resolution.reason, category
 
 
-def test_export_non_derivable_reasons_remain_advisory_and_evidence_oriented() -> None:
+def test_export_non_derivable_reasons_remain_advisory_and_evidence_oriented(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     cases: tuple[tuple[IvaCategory, tuple[str, ...]], ...] = (
         (
             IvaCategory("export_third_country_zero_rated"),
@@ -129,7 +144,7 @@ def test_export_non_derivable_reasons_remain_advisory_and_evidence_oriented() ->
     )
 
     for category, required_fragments in cases:
-        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+        resolution = resolve_category_rate(category, on_date=_ON_DATE, operation=authority_operation)
 
         assert resolution.derivable is False, category
         assert all(fragment in resolution.reason for fragment in required_fragments), category
@@ -137,10 +152,14 @@ def test_export_non_derivable_reasons_remain_advisory_and_evidence_oriented() ->
         assert "filing certainty" not in resolution.reason, category
 
 
-def test_every_iva_category_is_resolvable_without_raising() -> None:
+def test_every_iva_category_is_resolvable_without_raising(authority_operation: PinnedAuthorityOperation) -> None:
     """The resolver covers the closed IvaCategory set with no KeyError."""
-    for category in IvaCategory:
-        resolution = resolve_category_rate(category, on_date=_ON_DATE)
+    categories = resolve_iva_category_catalogue(
+        effective_date=_ON_DATE,
+        authority=authority_operation,
+    ).all_categories
+    for category in categories:
+        resolution = resolve_category_rate(category, on_date=_ON_DATE, operation=authority_operation)
         assert isinstance(resolution, IvaRateResolution)
 
 
@@ -169,9 +188,9 @@ def test_split_gross_at_zero_rate_yields_whole_base_and_zero_iva() -> None:
     assert iva == Decimal("0.00")
 
 
-def test_resolve_then_split_round_trips_for_general_rate() -> None:
+def test_resolve_then_split_round_trips_for_general_rate(authority_operation: PinnedAuthorityOperation) -> None:
     """The two primitives compose: resolve a fraction, split a gross with it."""
-    resolution = resolve_category_rate(IvaCategory("domestic_general"), on_date=_ON_DATE)
+    resolution = resolve_category_rate(IvaCategory("domestic_general"), on_date=_ON_DATE, operation=authority_operation)
     assert resolution.rate is not None
     base, iva = split_gross_at_rate(Decimal("121.00"), resolution.rate)
     assert base == Decimal("100.00")
@@ -189,7 +208,9 @@ _SUPER_REDUCED_COEXISTENCE = date(2024, 10, 15)  # 4 % ordinary, 2 % temporary
 _REDUCED_COEXISTENCE = date(2024, 8, 15)  # 10 % ordinary, 5 % temporary
 
 
-def test_ambiguous_tier_refuses_instead_of_returning_the_ordinary_rate() -> None:
+def test_ambiguous_tier_refuses_instead_of_returning_the_ordinary_rate(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A tier carrying two in-force rates must not answer with the ordinary one.
 
     Returning 4 % for a super-reducido line that RDL 4/2024 art. 1 actually
@@ -202,7 +223,7 @@ def test_ambiguous_tier_refuses_instead_of_returning_the_ordinary_rate() -> None
         (IvaCategory("domestic_super_reduced"), _SUPER_REDUCED_COEXISTENCE),
         (IvaCategory("domestic_reduced"), _REDUCED_COEXISTENCE),
     ):
-        resolution = resolve_category_rate(category, on_date=on_date)
+        resolution = resolve_category_rate(category, on_date=on_date, operation=authority_operation)
         assert resolution.derivable is False, category
         assert resolution.rate is None, category
         # The refusal names the competing rates so the operator can choose,
@@ -211,7 +232,9 @@ def test_ambiguous_tier_refuses_instead_of_returning_the_ordinary_rate() -> None
         assert "more than one rate" in resolution.reason, category
 
 
-def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None:
+def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Only the affected tiers, and only inside the statute's own window.
 
     The guard must not become a blanket refusal: the general tier never moved,
@@ -221,7 +244,7 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None
     """
     # The general tier is untouched on the very dates the others are ambiguous.
     for on_date in (_SUPER_REDUCED_COEXISTENCE, _REDUCED_COEXISTENCE):
-        general = resolve_category_rate(IvaCategory("domestic_general"), on_date=on_date)
+        general = resolve_category_rate(IvaCategory("domestic_general"), on_date=on_date, operation=authority_operation)
         assert general.derivable is True
         assert general.rate == Decimal("0.21")
 
@@ -230,14 +253,16 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None
         (IvaCategory("domestic_super_reduced"), Decimal("0.04")),
         (IvaCategory("domestic_reduced"), Decimal("0.10")),
     ):
-        resolution = resolve_category_rate(category, on_date=date(2025, 6, 1))
+        resolution = resolve_category_rate(category, on_date=date(2025, 6, 1), operation=authority_operation)
         assert resolution.derivable is True, category
         assert resolution.rate == expected, category
 
     # The tiers moved on DIFFERENT dates, so "inside the window" is per tier.
     # Super-reducido only ever coexisted Oct-Dec 2024 (RD-ley 4/2024's 2 %), so
     # it still resolves in March 2024.
-    super_reduced = resolve_category_rate(IvaCategory("domestic_super_reduced"), on_date=date(2024, 3, 1))
+    super_reduced = resolve_category_rate(
+        IvaCategory("domestic_super_reduced"), on_date=date(2024, 3, 1), operation=authority_operation
+    )
     assert super_reduced.derivable is True
     assert super_reduced.rate == Decimal("0.04")
 
@@ -247,7 +272,9 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None
     # March 2024 is INSIDE a coexistence window, not before one. The earlier
     # assertion only held because those rate rows were absent from the registry;
     # the tier was ambiguous in law the whole time and the table could not say so.
-    reduced = resolve_category_rate(IvaCategory("domestic_reduced"), on_date=date(2024, 3, 1))
+    reduced = resolve_category_rate(
+        IvaCategory("domestic_reduced"), on_date=date(2024, 3, 1), operation=authority_operation
+    )
     assert reduced.derivable is False, (
         "reducido cannot be derived in March 2024: 5 % and 10 % both applied, to "
         "different goods, and no bundled surface carries the goods axis"

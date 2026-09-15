@@ -661,6 +661,7 @@ def _derive_iva_substrate(
     *,
     gross: Decimal,
     on_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
     """Derive ``(iva_rate, taxable_base, iva_amount, derivable, note)`` for a category.
 
@@ -675,7 +676,7 @@ def _derive_iva_substrate(
     ``derivable`` flag, and an operator-facing ``note`` explaining a
     non-derivable category.
     """
-    resolution = resolve_category_rate(iva_category, on_date=on_date)
+    resolution = resolve_category_rate(iva_category, on_date=on_date, operation=operation)
     if not resolution.derivable or resolution.rate is None:
         return None, None, None, False, resolution.reason
     taxable_base, iva_amount = split_gross_at_rate(abs(gross), resolution.rate)
@@ -687,11 +688,12 @@ def _saturation_iva_values(
     *,
     gross: Decimal,
     on_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
     """Derive the optional saturation substrate from the model's IVA category."""
     if response.iva_category is None:
         return None, None, None, False, ""
-    return _derive_iva_substrate(response.iva_category, gross=gross, on_date=on_date)
+    return _derive_iva_substrate(response.iva_category, gross=gross, on_date=on_date, operation=operation)
 
 
 def _iva_category_label(response: LLMClassificationResponse) -> str:
@@ -785,6 +787,7 @@ def saturate_llm_classification(
         response,
         gross=transaction.raw.amount,
         on_date=effective_date,
+        operation=operation,
     )
     _logger.info(
         "llm saturate: transaction=%s provider=%s classification=%s iva_category=%s derivable=%s",
@@ -967,6 +970,7 @@ def derive_operator_iva_substrate(
         iva_category,
         gross=transaction.raw.amount,
         on_date=effective_date,
+        operation=ports.operation,
     )
     if not derivable:
         return OperatorIvaDerivationResult(
@@ -1032,11 +1036,12 @@ def _split_child_iva_values(
     *,
     amount: Decimal,
     on_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
     """Derive one split child's optional IVA substrate."""
     if child.iva_category is None:
         return None, None, None, False, ""
-    return _derive_iva_substrate(child.iva_category, gross=amount, on_date=on_date)
+    return _derive_iva_substrate(child.iva_category, gross=amount, on_date=on_date, operation=operation)
 
 
 def _build_split_child_suggestion(
@@ -1045,12 +1050,14 @@ def _build_split_child_suggestion(
     index: int,
     amount: Decimal,
     effective_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> LLMSplitChildSuggestion:
     """Materialize one model child with system-derived amounts and tax values."""
     iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _split_child_iva_values(
         child,
         amount=amount,
         on_date=effective_date,
+        operation=operation,
     )
     return LLMSplitChildSuggestion(
         proportion=child.proportion,
@@ -1072,6 +1079,7 @@ def _materialize_split_children(
     *,
     transaction: Transaction,
     effective_date: date,
+    operation: PinnedAuthorityOperation,
 ) -> list[LLMSplitChildSuggestion]:
     """Derive exact child amounts and materialize them in model order."""
     proportions = tuple(child.proportion for child in response.children)
@@ -1084,6 +1092,7 @@ def _materialize_split_children(
                 index=index,
                 amount=amount,
                 effective_date=effective_date,
+                operation=operation,
             ),
         )
     return children
@@ -1175,6 +1184,7 @@ def suggest_evidence_split(
         response,
         transaction=transaction,
         effective_date=effective_date,
+        operation=operation,
     )
     _logger.info(
         "llm split suggest: transaction=%s provider=%s children=%d",

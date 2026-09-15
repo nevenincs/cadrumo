@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -54,6 +55,7 @@ from cadrumo.application.modelo.action_errors import StoredCalculationDriftError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -191,6 +193,25 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, filing, vr, bv
 
 
+def _verification_repositories_for_test(
+    repos: _Repos,
+    *,
+    observation_repository: CalculationObservationRepository | None = None,
+) -> VerificationRepositoryBundle:
+    """Compose verification capabilities while retaining fixture repositories."""
+    wu_repo, cr_repo, filing_repo, verification_repo, bucket_event_repo = repos
+    composed = build_test_verification_repository_bundle()
+    return replace(
+        composed,
+        calculation=cr_repo,
+        work_unit=wu_repo,
+        filing=filing_repo,
+        verification=verification_repo,
+        bucket_event=bucket_event_repo,
+        observation=(observation_repository if observation_repository is not None else composed.observation),
+    )
+
+
 def _seed_clean_cross_period_sources_for_m130(
     work_unit: WorkUnit,
     *,
@@ -245,6 +266,7 @@ def _seed_clean_cross_period_sources_for_m130(
             calculation_repository=calculation_repository,
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
+            observation_repository=observation_repository,
             expected_tax_id="X1234567L",
             clock=_T0,
         )
@@ -292,7 +314,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
     definition in ``test_missing_required_casilla_finding_carries_registry_provenance``.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        wu_repo, cr_repo, _filing_repo, vr_repo, bv_repo = repos
+        wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
         required = _required_manual_casillas_for_m130()
         assert required == (), (
             "M130 must have no required MANUAL casillas after the H1 gasto bind "
@@ -308,36 +330,37 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T0,
         )
-
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            casilla_inputs={
-                _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
-                _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-                _M130_RETENCIONES_CASILLA: Decimal("0"),
-                _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
-                _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
-                _M130_RESULTADO_CASILLA: Decimal("0"),
-            },
-            binding_values={
-                "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-            },
-            ports=calculation_ports_for_test(
-                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-            ),
-            clock=_T1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+        ) as _calculation_ports_348:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                casilla_inputs={
+                    _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
+                    _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
+                    _M130_RETENCIONES_CASILLA: Decimal("0"),
+                    _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
+                    _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
+                    _M130_RESULTADO_CASILLA: Decimal("0"),
+                },
+                binding_values={
+                    "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+                    "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+                },
+                ports=_calculation_ports_348,
+                clock=_T1,
+            )
 
         report = verify_modelo_revision(
             revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-test",
             workflow_profile=workflow_profile(),
             settings=ready_clave_settings("X1234567L"),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
+            verification_repositories=_verification_repositories_for_test(repos),
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
@@ -356,7 +379,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
 def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> None:
     """M130 revision with all required casillas present is granted verificado_completo."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
+        wu_repo, cr_repo, filing_repo, _vr_repo, bv_repo = repos
         required = _required_manual_casillas_for_m130()
 
         work_unit = create_work_unit(
@@ -383,19 +406,22 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
         assert set(required) <= set(casilla_inputs), (
             f"Test fixture missing required casillas: {set(required) - set(casilla_inputs)}"
         )
-
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            casilla_inputs=casilla_inputs,
-            binding_values={
-                "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-            },
-            ports=calculation_ports_for_test(
-                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-            ),
-            clock=_T1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+        ) as _calculation_ports_413:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                casilla_inputs=casilla_inputs,
+                binding_values={
+                    "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+                    "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+                },
+                ports=_calculation_ports_413,
+                clock=_T1,
+            )
         observation_repo = _seed_clean_cross_period_sources_for_m130(
             work_unit,
             work_unit_repository=wu_repo,
@@ -406,15 +432,14 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
 
         report = verify_modelo_revision(
             revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-test",
             workflow_profile=workflow_profile(),
             settings=ready_clave_settings("X1234567L"),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=filing_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
-            calculation_observation_repository=observation_repo,
+            verification_repositories=_verification_repositories_for_test(
+                repos,
+                observation_repository=observation_repo,
+            ),
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
@@ -461,28 +486,31 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T0,
         )
-
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            casilla_inputs={
-                _M130_INGRESOS_CASILLA: Decimal("10000"),
-                _M130_GASTOS_CASILLA: Decimal("3000"),
-                _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
-                _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
-                _M130_RETENCIONES_CASILLA: Decimal("0"),
-                _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
-                _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
-                _M130_RESULTADO_CASILLA: Decimal("0"),
-            },
-            binding_values={
-                "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-            },
-            ports=calculation_ports_for_test(
-                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-            ),
-            clock=_T1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+        ) as _calculation_ports_498:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                casilla_inputs={
+                    _M130_INGRESOS_CASILLA: Decimal("10000"),
+                    _M130_GASTOS_CASILLA: Decimal("3000"),
+                    _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
+                    _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
+                    _M130_RETENCIONES_CASILLA: Decimal("0"),
+                    _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
+                    _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
+                    _M130_RESULTADO_CASILLA: Decimal("0"),
+                },
+                binding_values={
+                    "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+                    "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+                },
+                ports=_calculation_ports_498,
+                clock=_T1,
+            )
 
         catalogue = cr_repo.load()
         original = catalogue.get(revision.calculation_revision_id)

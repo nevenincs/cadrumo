@@ -282,13 +282,13 @@ def test_declared_typed_enum_hydrates_to_binding_typed_enum_kind() -> None:
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
-                if binding.typed_enum is None:
+                if binding.value.typed_enum is None:
                     continue
-                assert isinstance(binding.typed_enum, BindingTypedEnumKind), (
-                    f"binding {binding.id!r} typed_enum {binding.typed_enum!r} is not a BindingTypedEnumKind"
+                assert isinstance(binding.value.typed_enum, BindingTypedEnumKind), (
+                    f"binding {binding.id!r} typed_enum {binding.value.typed_enum!r} is not a BindingTypedEnumKind"
                 )
-                assert binding.typed_enum == binding.typed_enum.value
-                seen.add(binding.typed_enum)
+                assert binding.value.typed_enum == binding.value.typed_enum.value
+                seen.add(binding.value.typed_enum)
     # The four substrate-bridge annotations are all exercised by the committed tree.
     assert seen == set(BindingTypedEnumKind), f"committed bindings cover only {seen!r} of the typed-enum set"
 
@@ -334,6 +334,6 @@ def _typed_enum_offence(
 ) -> str | None:
     """Return the typed_enum violation message for ``binding``, or ``None`` if it satisfies every bridge it matches."""
     for suffix, expected_enum in expectations:
-        if binding.id.endswith(suffix) and binding.typed_enum != expected_enum:
-            return f"binding {binding.id!r} expected typed_enum={expected_enum!r}, got {binding.typed_enum!r}"
+        if binding.id.endswith(suffix) and binding.value.typed_enum != expected_enum:
+            return f"binding {binding.id!r} expected typed_enum={expected_enum!r}, got {binding.value.typed_enum!r}"
     return None

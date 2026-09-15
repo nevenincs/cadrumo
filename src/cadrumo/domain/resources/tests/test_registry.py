@@ -7,6 +7,8 @@ from typing import override
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
 from ....core.resources.bundled_data import as_path, bundled_path, packaged_data
 from ....core.resources.errors import (
     ResourceBackendError,
@@ -158,24 +160,25 @@ def test_resources_registry_clear_leaves_authority_backed_repositories_cacheless
 
     resources.cache_clear()
     registry = resources()
-    before = (
-        registry.apoderamientos.singleton,
-        registry.recargo_bands.singleton,
-        registry.iva_catalogues.get(2025),
-    )
-    authority_repositories = (
-        registry.apoderamientos,
-        registry.recargo_bands,
-        registry.iva_catalogues,
-    )
-    assert all(not hasattr(repository, "_cache") for repository in authority_repositories)
+    with bundled_indexed_authority().operation() as operation:
+        before = (
+            registry.apoderamientos.singleton,
+            registry.recargo_bands.singleton,
+            registry.iva_catalogues.get(2025, operation=operation),
+        )
+        authority_repositories = (
+            registry.apoderamientos,
+            registry.recargo_bands,
+            registry.iva_catalogues,
+        )
+        assert all(not hasattr(repository, "_cache") for repository in authority_repositories)
 
-    registry.clear()
+        registry.clear()
 
-    after = (
-        registry.apoderamientos.singleton,
-        registry.recargo_bands.singleton,
-        registry.iva_catalogues.get(2025),
-    )
-    assert after == before
-    assert all(not hasattr(repository, "_cache") for repository in authority_repositories)
+        after = (
+            registry.apoderamientos.singleton,
+            registry.recargo_bands.singleton,
+            registry.iva_catalogues.get(2025, operation=operation),
+        )
+        assert after == before
+        assert all(not hasattr(repository, "_cache") for repository in authority_repositories)

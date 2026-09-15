@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from functools import cache
 
 from cadrumo.core.casilla_id import validated_casilla_id
@@ -35,7 +36,7 @@ _NUMERIC_CASILLA_01 = validated_casilla_id("01", surface="registry_schema_suppor
 
 
 def _keyed_bracket(key: str, rate: str) -> KeyedBracketEntry:
-    return KeyedBracketEntry(key=key, value=rate)
+    return KeyedBracketEntry(key=key, value=rate, valid_from=date(2025, 1, 1))
 
 
 def _as_communication_revision(revision):

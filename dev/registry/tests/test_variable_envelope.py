@@ -118,6 +118,7 @@ def test_real_m303_binaries_compile_the_typed_static_declaration_without_instanc
 ) -> None:
     """All five hash-pinned DP30300 sources yield one source-bound static grammar."""
     inspection = compiled_bundled_authority().inspect_revision("303", filing_year=filing_year, period=period)
+    assert inspection.source_root is not None
     intermediate = load_record_design_intermediate(
         inspection.source_root,
         inspection.sources,
@@ -173,6 +174,7 @@ def test_real_m303_binaries_compile_the_typed_static_declaration_without_instanc
 def test_m303_static_declaration_refuses_source_drift_and_reordered_body_definitions() -> None:
     """No later application authority can repair source or record-order drift."""
     inspection = compiled_bundled_authority().inspect_revision("303", filing_year=2026, period="4T")
+    assert inspection.source_root is not None
     intermediate = load_record_design_intermediate(
         inspection.source_root,
         inspection.sources,

@@ -109,11 +109,14 @@ def test_refused_link_appends_no_event(tmp_path: Path) -> None:
         events = BucketEventHistoryRepository(objects=profile.repository)
         baseline = set(events.load().events)
 
-        with pytest.raises(InvoiceLinkError), ledger_ports_for_test(
-            bucket_id=profile.bucket_id,
-            objects=profile.repository,
-            bucket_event_repository=events,
-        ) as ports:
+        with (
+            pytest.raises(InvoiceLinkError),
+            ledger_ports_for_test(
+                bucket_id=profile.bucket_id,
+                objects=profile.repository,
+                bucket_event_repository=events,
+            ) as ports,
+        ):
             link_manual_transaction_invoice(
                 bucket_id=profile.bucket_id,
                 transaction_id=transaction.transaction_id,

@@ -17,6 +17,7 @@ import pytest
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
@@ -144,7 +145,8 @@ def test_bundled_registry_export_edge_is_symmetric() -> None:
     findings alone, so its own population is not observable from its result.
     """
     authority = compiled_bundled_authority()
-    codes = tuple(sorted(registry_modelo_codes()))
+    with bundled_indexed_authority().operation() as operation:
+        codes = tuple(sorted(registry_modelo_codes(operation=operation)))
 
     assert len(codes) >= _MINIMUM_MODELO_CODES, (
         f"only {len(codes)} modelo code(s) were discovered; below this the screen is handed "

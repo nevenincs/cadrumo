@@ -2,25 +2,42 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
+from typing import override
 
 import pytest
 
 from ....domain.transactions.errors import TransactionValidationError
 from ..actions_import import LedgerProviderID, _resolve_financial_provider
 from ..import_ports import LedgerImportPorts
+from ..protocols import FinancialProviderProtocol, ParsedLedgerRowProtocol, ProviderValidationProtocol
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+class _FinancialProviderFake(FinancialProviderProtocol):
+    """Typed provider capability used only as the resolver's returned value."""
+
+    @override
+    def ingest(self, path: Path) -> Iterator[ParsedLedgerRowProtocol]:
+        del path
+        raise AssertionError("provider ingestion is outside this dispatch test")
+
+    @override
+    def validate_source(self, path: Path) -> ProviderValidationProtocol:
+        del path
+        raise AssertionError("provider validation is outside this dispatch test")
 
 
 class _ProviderResolverFake:
     """Record normalized IDs without constructing a concrete parser."""
 
-    def __init__(self, result: object | None = object()) -> None:
+    def __init__(self, result: FinancialProviderProtocol | None = _FinancialProviderFake()) -> None:
         self.result = result
         self.provider_ids: list[str] = []
 
-    def resolve(self, *, provider_id: str, path: Path) -> object | None:
+    def resolve(self, *, provider_id: str, path: Path) -> FinancialProviderProtocol | None:
         del path
         self.provider_ids.append(provider_id)
         return self.result

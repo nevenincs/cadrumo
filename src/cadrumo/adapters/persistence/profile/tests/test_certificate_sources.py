@@ -8,6 +8,7 @@ capabilities are bound explicitly at this outer seam.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -33,7 +34,11 @@ from cadrumo.application.auth.tests._operator_projection_support import (
     configure_operator_auth,
     inspect_operator_auth,
 )
-from cadrumo.application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
+from cadrumo.application.diagnostics_ports import (
+    DiagnosticSecureObjectNamespace,
+    DiagnosticSessionFailureClassifier,
+    DiagnosticsPorts,
+)
 from cadrumo.application.state_projection_ports import StateProjectionReadPorts
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.config import Settings
@@ -70,13 +75,22 @@ class _EmptyDiagnosticRepository:
         return ()
 
 
+class _EmptySessionFailureClassifier(DiagnosticSessionFailureClassifier):
+    """Classify the empty test repository without widening the diagnostics port."""
+
+    @override
+    def __call__(self, error: BaseException) -> bool:
+        del error
+        return False
+
+
 def _state_projection_read_ports() -> StateProjectionReadPorts:
     """Bind the real profile read adapter to application projection DTOs."""
 
     adapter = StateProjectionPersistenceAdapter(
         diagnostics_ports=DiagnosticsPorts(
             secure_object_repository=_EmptyDiagnosticRepository(),
-            session_failure_classifier=lambda _error: False,
+            session_failure_classifier=_EmptySessionFailureClassifier(),
         ),
     )
     return StateProjectionReadPorts(
@@ -303,7 +317,11 @@ def test_remove_source_clears_registration_and_active_selection(tmp_path: Path) 
             operation=_certificate_authority_operation_for_test,
         )
 
-        result = remove_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        result = remove_operator_certificate_source(
+            name="personal",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
+        )
 
         assert result.removed is True
         report = list_operator_certificate_sources()

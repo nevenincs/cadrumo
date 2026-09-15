@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.models import TransactionCatalogue
 from ..iva_ledger import (
     IvaLedgerAggregation,
@@ -24,14 +25,16 @@ def aggregate_iva_ledger_observations(
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
 ) -> IvaLedgerAggregation:
     """Delegate with a typed empty register owned by the same explicit profile."""
-    return _aggregate(
-        transactions,
-        period=period,
-        ledger_profile_id=_PROFILE_ID,
-        investment_asset_register=_EMPTY_REGISTER,
-        investment_asset_profile_id=_PROFILE_ID,
-        prorrata_apportionment=prorrata_apportionment,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return _aggregate(
+            transactions,
+            period=period,
+            ledger_profile_id=_PROFILE_ID,
+            investment_asset_register=_EMPTY_REGISTER,
+            investment_asset_profile_id=_PROFILE_ID,
+            prorrata_apportionment=prorrata_apportionment,
+            operation=operation,
+        )
 
 
 __all__ = ["aggregate_iva_ledger_observations"]

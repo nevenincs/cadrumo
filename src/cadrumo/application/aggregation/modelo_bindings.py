@@ -27,7 +27,7 @@ source diagnostics rather than silently blanking the filed calculation.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 from typing import ClassVar
 
@@ -37,6 +37,7 @@ from ...core.i18n.translatable import Translatable as t
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
+from ...core.tipos_actividad import TipoActividad
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
@@ -45,6 +46,7 @@ from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irnr_ledger_bindings import (
+    LedgerIrnrIncomeProvider,
     resolve_ledger_irnr_income_aggregation_binding_values,
     unsupported_ledger_irnr_income_observations,
 )
@@ -62,10 +64,12 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     unsupported_ledger_iva_observations,
 )
 from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
+    LedgerRentaGastosPagoFraccionadoProvider,
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
 )
 from ...domain.calculations.registry.ledger_renta_income_bindings import (
+    LedgerRentaIncomeProvider,
     UngroundedRentaIncome,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
@@ -79,7 +83,10 @@ from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
+from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
+from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from ._modelo_bindings_invoice_iva import (
     category_counterparty_mismatch_diagnostics,
@@ -171,6 +178,75 @@ _M210_RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
     "rendimientos_integros",
     surface="_M210_RENDIMIENTOS_INTEGROS_CASILLA",
 )
+_M131_AGRARIAN_ACTIVITY_SELECTOR = "modelo-131:selector-m036-volumen-ingresos-agrario"
+
+
+def _renta_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
+    providers = tuple(
+        binding.provider
+        for binding in context.revision.bindings
+        if isinstance(binding.provider, LedgerRentaIncomeProvider) and str(binding.provider.modelo) == context.modelo
+    )
+    targets = {provider.target_casilla_id for provider in providers}
+    if len(targets) != 1:
+        raise RegistryError(
+            "selected revision must declare exactly one renta-income aggregation target",
+            context={"modelo": context.modelo, "target_count": len(targets)},
+        )
+    return next(iter(targets))
+
+
+def _irnr_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
+    providers = tuple(
+        binding.provider
+        for binding in context.revision.bindings
+        if isinstance(binding.provider, LedgerIrnrIncomeProvider) and str(binding.provider.modelo) == context.modelo
+    )
+    targets = {provider.target_casilla_id for provider in providers}
+    if len(targets) != 1:
+        raise RegistryError(
+            "selected revision must declare exactly one IRNR income aggregation target",
+            context={"modelo": context.modelo, "target_count": len(targets)},
+        )
+    return next(iter(targets))
+
+
+def _renta_gasto_target_casilla(context: CalculationSourceContext) -> CasillaId:
+    providers = tuple(
+        binding.provider
+        for binding in context.revision.bindings
+        if isinstance(binding.provider, LedgerRentaGastosPagoFraccionadoProvider)
+        and str(binding.provider.modelo) == context.modelo
+    )
+    targets = {provider.target_casilla_id for provider in providers}
+    if len(targets) != 1:
+        raise RegistryError(
+            "selected revision must declare exactly one renta-gasto aggregation target",
+            context={"modelo": context.modelo, "target_count": len(targets)},
+        )
+    return next(iter(targets))
+
+
+def _activity_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+    def matcher(transaction: Transaction) -> bool:
+        return has_activity_irpf_category(
+            transaction.irpf_category,
+            direction=transaction.direction,
+            authority=operation,
+        )
+
+    return matcher
+
+
+def _employment_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+    def matcher(transaction: Transaction) -> bool:
+        return has_employment_irpf_category(
+            transaction.irpf_category,
+            direction=transaction.direction,
+            authority=operation,
+        )
+
+    return matcher
 
 
 class LedgerIvaAggregationSourceResolver:
@@ -208,29 +284,32 @@ class LedgerIvaAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
-        try:
-            aggregation = aggregate_iva_ledger_observations_from_repositories(
-                bucket_id=context.bucket_id,
-                period=aggregation_period,
-                transaction_repository=self._transaction_repository,
-                prorrata_register_repository=self._prorrata_register_repository,
-                investment_asset_register=self._investment_asset_register,
-                investment_asset_profile_id=self._investment_asset_profile_id,
+        with bundled_indexed_authority().operation() as operation:
+            try:
+                aggregation = aggregate_iva_ledger_observations_from_repositories(
+                    bucket_id=context.bucket_id,
+                    period=aggregation_period,
+                    transaction_repository=self._transaction_repository,
+                    prorrata_register_repository=self._prorrata_register_repository,
+                    investment_asset_register=self._investment_asset_register,
+                    investment_asset_profile_id=self._investment_asset_profile_id,
+                    operation=operation,
+                )
+            except STORAGE_DEGRADATION_ERRORS as exc:
+                return storage_degradation_resolution(
+                    resolver_id=self.resolver_id,
+                    owned_sources=self.owned_sources,
+                    source_kinds=self.owned_sources,
+                    error=exc,
+                )
+            transaction_ids = {observation.ledger_id for observation in aggregation.observations}
+            transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
+            binding_values = resolve_iva_ledger_binding_values(
+                context.revision,
+                aggregation.observations,
+                prorrata_apportionment=aggregation.prorrata_apportionment,
+                operation=operation,
             )
-        except STORAGE_DEGRADATION_ERRORS as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=self.owned_sources,
-                error=exc,
-            )
-        transaction_ids = {observation.ledger_id for observation in aggregation.observations}
-        transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
-        binding_values = resolve_iva_ledger_binding_values(
-            context.revision,
-            aggregation.observations,
-            prorrata_apportionment=aggregation.prorrata_apportionment,
-        )
         screened_bindings = invoice_ledger_screen_binding_ids(
             context.revision,
             modelo=str(context.modelo),
@@ -389,15 +468,6 @@ class LedgerIvaAggregationSourceResolver:
         )
 
 
-#: Which projection a renta-income binding's modelo routes to. Absent means the
-#: Modelo 130 cumulative-quarter path, which is the shape every other consumer of
-#: this source kind has.
-_RENTA_INCOME_AGGREGATOR_BY_MODELO = {
-    Modelo("100").value: aggregate_renta_m100_income_ledger_from_repositories,
-    Modelo("131").value: aggregate_renta_m131_agrario_income_ledger_from_repositories,
-}
-
-
 class LedgerRentaIncomeAggregationSourceResolver:
     """Resolve ``ledger_renta_income_aggregation`` actividad-income bindings.
 
@@ -430,23 +500,57 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # takes the quarter alone into casilla 05 and, unlike the other two,
         # narrows the rows first -- to the art. 110.1.c activity set, and away from
         # the subvenciones de capital and indemnizaciones that article excludes.
-        income_aggregator = _RENTA_INCOME_AGGREGATOR_BY_MODELO.get(
-            str(context.modelo),
-            aggregate_renta_income_ledger_from_repositories,
-        )
-        try:
-            aggregation = income_aggregator(
-                bucket_id=context.bucket_id,
-                period=aggregation_period,
-                ports=self._ports,
-            )
-        except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=self.owned_sources,
-                error=exc,
-            )
+        target_casilla_id = _renta_income_target_casilla(context)
+        with bundled_indexed_authority().operation() as operation:
+            activity_category_matcher = _activity_category_matcher(operation)
+            employment_category_matcher = _employment_category_matcher(operation)
+            try:
+                if str(context.modelo) == Modelo("100").value:
+                    aggregation = aggregate_renta_m100_income_ledger_from_repositories(
+                        bucket_id=context.bucket_id,
+                        period=aggregation_period,
+                        modelo=context.modelo,
+                        target_casilla_id=target_casilla_id,
+                        activity_category_matcher=activity_category_matcher,
+                        employment_category_matcher=employment_category_matcher,
+                        ports=self._ports,
+                    )
+                elif str(context.modelo) == Modelo("131").value:
+                    agrarian_activity_codes = frozenset(
+                        TipoActividad(code)
+                        for code in tipo_actividad_code_set(
+                            _M131_AGRARIAN_ACTIVITY_SELECTOR,
+                            effective_date=aggregation_period.end_date,
+                            authority=operation,
+                        )
+                    )
+                    aggregation = aggregate_renta_m131_agrario_income_ledger_from_repositories(
+                        bucket_id=context.bucket_id,
+                        period=aggregation_period,
+                        modelo=context.modelo,
+                        target_casilla_id=target_casilla_id,
+                        agrarian_activity_codes=agrarian_activity_codes,
+                        activity_category_matcher=activity_category_matcher,
+                        employment_category_matcher=employment_category_matcher,
+                        ports=self._ports,
+                    )
+                else:
+                    aggregation = aggregate_renta_income_ledger_from_repositories(
+                        bucket_id=context.bucket_id,
+                        period=aggregation_period,
+                        modelo=context.modelo,
+                        target_casilla_id=target_casilla_id,
+                        activity_category_matcher=activity_category_matcher,
+                        employment_category_matcher=employment_category_matcher,
+                        ports=self._ports,
+                    )
+            except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
+                return storage_degradation_resolution(
+                    resolver_id=self.resolver_id,
+                    owned_sources=self.owned_sources,
+                    source_kinds=self.owned_sources,
+                    error=exc,
+                )
         binding_values = resolve_ledger_renta_income_aggregation_binding_values(
             context.revision,
             aggregation.observations,
@@ -881,21 +985,26 @@ class LedgerIrnrIncomeAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
-        try:
-            aggregation = aggregate_irnr_income_ledger_from_repositories(
-                bucket_id=context.bucket_id,
-                period=aggregation_period,
-                revision=context.revision,
-                selected_official_tipo_renta_code=selected_official_tipo_renta_code,
-                transaction_repository=self._transaction_repository,
-            )
-        except STORAGE_DEGRADATION_ERRORS as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=self.owned_sources,
-                error=exc,
-            )
+        target_casilla_id = _irnr_income_target_casilla(context)
+        with bundled_indexed_authority().operation() as operation:
+            try:
+                aggregation = aggregate_irnr_income_ledger_from_repositories(
+                    bucket_id=context.bucket_id,
+                    period=aggregation_period,
+                    revision=context.revision,
+                    modelo=context.modelo,
+                    target_casilla_id=target_casilla_id,
+                    selected_official_tipo_renta_code=selected_official_tipo_renta_code,
+                    transaction_repository=self._transaction_repository,
+                    operation=operation,
+                )
+            except STORAGE_DEGRADATION_ERRORS as exc:
+                return storage_degradation_resolution(
+                    resolver_id=self.resolver_id,
+                    owned_sources=self.owned_sources,
+                    source_kinds=self.owned_sources,
+                    error=exc,
+                )
 
         binding_values = resolve_ledger_irnr_income_aggregation_binding_values(
             context.revision,
@@ -1009,10 +1118,14 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
+        target_casilla_id = _renta_gasto_target_casilla(context)
         try:
             aggregation = aggregate_renta_gasto_ledger_from_repositories(
                 bucket_id=context.bucket_id,
                 period=aggregation_period,
+                modelo=context.modelo,
+                target_casilla_id=target_casilla_id,
+                accept_activity_marker=str(context.modelo) == Modelo("130").value,
                 transaction_repository=self._transaction_repository,
                 prorrata_register_repository=self._prorrata_register_repository,
             )

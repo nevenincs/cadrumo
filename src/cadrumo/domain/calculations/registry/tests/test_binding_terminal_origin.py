@@ -4,9 +4,11 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, CalculationSourceLineageRole
-from ..binding_terminal_origin import TerminalOriginClass, TerminalOriginExpectation
+from ..binding_temporal import FilingYearOffset
+from ..binding_terminal_origin import TerminalOriginCardinality, TerminalOriginClass, TerminalOriginExpectation
 from ..relation_prefill_bindings import RelationPrefillProvider
 from ..schema import BindingDefinition
+from ..schema_base import CasillaDataType
 from ..withholding_bindings import WithholdingProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -87,7 +89,7 @@ def test_expectation_refuses_an_unknown_fingerprint_disposition() -> None:
         )
 
 
-def _row_binding(cardinality: str) -> BindingDefinition:
+def _row_binding(cardinality: TerminalOriginCardinality) -> BindingDefinition:
     """Build a grouped row-family binding resting on one terminal origin."""
     return BindingDefinition(
         id="test.row-binding",
@@ -96,7 +98,7 @@ def _row_binding(cardinality: str) -> BindingDefinition:
             row_field="perceptor_tax_id",
             grouping="per_perceptor_clave",
             record="perceptor",
-            data_type="text",
+            data_type=CasillaDataType.TEXT,
         ),
         value={"data_type": "text", "channel": "row_set", "row_grouping": "withholding"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
@@ -124,7 +126,7 @@ def test_a_row_set_binding_refuses_an_exactly_one_terminal_origin() -> None:
 
 
 @pytest.mark.parametrize("cardinality", ["at_least_one", "zero_or_more"])
-def test_a_row_set_binding_admits_the_open_cardinalities(cardinality: str) -> None:
+def test_a_row_set_binding_admits_the_open_cardinalities(cardinality: TerminalOriginCardinality) -> None:
     """Both open cardinalities are honest statements about a row family."""
     binding = _row_binding(cardinality)
 
@@ -135,7 +137,13 @@ def test_a_scalar_binding_still_admits_exactly_one() -> None:
     """The refusal is scoped to the row_set channel, not imposed on scalar values."""
     binding = BindingDefinition(
         id="test.scalar-binding",
-        provider=RelationPrefillProvider(source_modelo="303", source_casilla_id="iva.cuota-devengada"),
+        provider=RelationPrefillProvider(
+            relation_kind="cross_model_output",
+            dependency_role="direct_calculation",
+            source_modelo="303",
+            source_casilla_id="iva.cuota-devengada",
+            temporal=FilingYearOffset(years=-1, source_periods=("0A",)),
+        ),
         value={"data_type": "money", "channel": "decimal"},
         aggregation=BindingAggregation(op=BindingAggregationOp.COPY),
         terminal_origins=(

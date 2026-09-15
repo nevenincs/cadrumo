@@ -25,14 +25,18 @@ nothing proves.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.text_fold import fold_printed_phrase
 from ..legend_derivation import (
     index_regime_legends,
     match_regime_legend,
 )
-from ..regime_legend import REGIME_LEGENDS, RegimeLegend
+from ..regime_legend import RegimeLegend, resolve_regime_legends
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,6 +46,14 @@ _ACCENTED = "Inversión del sujeto pasivo"
 _UNACCENTED = "Inversion del sujeto pasivo"
 
 
+def _resolve_legends() -> tuple[RegimeLegend, ...]:
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_regime_legends(operation=operation, effective_date=date(2024, 1, 1))
+
+
+_LEGENDS = _resolve_legends()
+
+
 def test_the_shipped_vocabulary_folds_without_collision() -> None:
     """The blocking condition folding rests on, asserted against the real table.
 
@@ -49,12 +61,12 @@ def test_the_shipped_vocabulary_folds_without_collision() -> None:
     declares. The count comparison is what makes this more than a smoke test:
     an index that silently dropped a colliding row would still be non-empty.
     """
-    indexed = index_regime_legends(REGIME_LEGENDS)
+    indexed = index_regime_legends(_LEGENDS)
 
-    assert len(indexed) == len(REGIME_LEGENDS), (
+    assert len(indexed) == len(_LEGENDS), (
         "two mentions share a normalised form, so the vocabulary lost a row to folding"
     )
-    assert len(REGIME_LEGENDS) > 1, "a single-entry vocabulary cannot collide, so this proves nothing"
+    assert len(_LEGENDS) > 1, "a single-entry vocabulary cannot collide, so this proves nothing"
 
 
 def test_a_vocabulary_that_collides_under_folding_is_refused_whole() -> None:
@@ -92,8 +104,8 @@ def test_an_empty_vocabulary_is_refused() -> None:
 
 def test_the_mandated_mention_matches_with_and_without_its_accent() -> None:
     """The ruling itself: the same printed wording, degraded by our own reading."""
-    accented = match_regime_legend(_ACCENTED)
-    unaccented = match_regime_legend(_UNACCENTED)
+    accented = match_regime_legend(_ACCENTED, legends=_LEGENDS)
+    unaccented = match_regime_legend(_UNACCENTED, legends=_LEGENDS)
 
     assert accented is not None
     assert unaccented is not None
@@ -103,7 +115,7 @@ def test_the_mandated_mention_matches_with_and_without_its_accent() -> None:
 
 def test_a_mention_broken_across_a_line_still_matches() -> None:
     """Whitespace collapse: an invoice sets the mention as a line and it wraps."""
-    assert match_regime_legend("Inversion  del\n  sujeto   pasivo") is not None
+    assert match_regime_legend("Inversion  del\n  sujeto   pasivo", legends=_LEGENDS) is not None
 
 
 def test_every_mention_stays_a_multi_word_phrase_after_folding() -> None:
@@ -113,7 +125,7 @@ def test_every_mention_stays_a_multi_word_phrase_after_folding() -> None:
     mention is four words or more, and folding removes accents rather than
     words, so the phrase carries the distinctiveness both before and after.
     """
-    for legend in REGIME_LEGENDS:
+    for legend in _LEGENDS:
         assert len(fold_printed_phrase(legend.phrase).split()) >= 4, legend.provision
 
 
@@ -123,9 +135,11 @@ def test_no_single_token_of_a_mention_matches_on_its_own() -> None:
     A word count would pass against a matcher that had been loosened to compare
     tokens. This asks the matcher.
     """
-    for legend in REGIME_LEGENDS:
+    for legend in _LEGENDS:
         for token in fold_printed_phrase(legend.phrase).split():
-            assert match_regime_legend(token) is None, f"the lone token {token!r} matched a mandated mention"
+            assert match_regime_legend(token, legends=_LEGENDS) is None, (
+                f"the lone token {token!r} matched a mandated mention"
+            )
 
 
 def test_no_folded_mention_is_contained_in_another() -> None:
@@ -135,7 +149,7 @@ def test_no_folded_mention_is_contained_in_another() -> None:
     distinct forms can still nest. Asserted separately because the matcher
     returns the FIRST containment hit.
     """
-    folded = [fold_printed_phrase(legend.phrase) for legend in REGIME_LEGENDS]
+    folded = [fold_printed_phrase(legend.phrase) for legend in _LEGENDS]
     for outer in folded:
         for inner in folded:
             if inner != outer:
@@ -161,4 +175,4 @@ def test_folding_manufactures_no_match_it_did_not_have(printed: str) -> None:
     mandated Spanish mention, and this asserts it on the shapes that change most
     under the transform rather than on Latin text alone.
     """
-    assert match_regime_legend(printed) is None
+    assert match_regime_legend(printed, legends=_LEGENDS) is None

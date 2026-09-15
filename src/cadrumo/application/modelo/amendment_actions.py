@@ -166,7 +166,7 @@ def _load_amendment_baseline[CasillaKey](
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": baseline.calculation_revision_id},
         )
-    require_calculation_revision_coordinates_current(baseline_revision)
+    require_calculation_revision_coordinates_current(baseline_revision, operation=operation)
     if work_unit.modelo == Modelo("303").value and baseline_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
             translated_message="errors.error.error_modelo_amendment_evidence_missing",
@@ -451,6 +451,7 @@ def amend_modelo_revision[CasillaKey](
         evidence=baseline_revision.filing_instance_evidence,
         casilla_values=corrected_values,
         observations=amendment_observations,
+        operation=operation,
     )
     justificantes = tuple(ports.justificante_repository.iter_justificantes())
     aggregate_context = CalculationRevisionAggregateContext(

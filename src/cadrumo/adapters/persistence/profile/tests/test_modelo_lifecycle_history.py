@@ -163,8 +163,7 @@ class TestAssembly:
         discard_work_unit(
             created.work_unit_id,
             actor="test-operator",
-            repository=wu_repo,
-            bucket_event_repository=bv_repo,
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_T1,
         )
 

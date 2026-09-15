@@ -126,7 +126,7 @@ _TYPE_CODES = frozenset(
 #: non-breaking space reads as a space and matches nothing, which is how a
 #: citation screen once reported twenty-three absent quotations that were all
 #: present.
-_FORBIDDEN = {" ": "NBSP", "\t": "TAB", "\r": "CR"}
+_FORBIDDEN = {"\N{NO-BREAK SPACE}": "NBSP", "\t": "TAB", "\r": "CR"}
 _YEAR = re.compile(r"20\d\d")
 _PAGE_POINTER = re.compile(r"\(?p[aeiouáéíóú]*g\.?\s*[^)]*\)?", re.IGNORECASE)
 _BRACKET_TOKEN = re.compile(r"\[[0-9a-z]+\]", re.IGNORECASE)
@@ -165,7 +165,7 @@ class WaveSpec:
     #: Section vocabulary for records whose rows have no prior counterpart.
     #: A record absent from this mapping cannot adjudicate: its unmatched rows
     #: are refused, which is the correct outcome for a record nobody has judged.
-    adjudicated_sections: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+    adjudicated_sections: Mapping[str, tuple[str, ...]] = field(default_factory=dict[str, tuple[str, ...]])
     #: Records whose unnumbered rows are deliberately left undeclared, holding
     #: the scope line an earlier edition drew. Widening scope inside a
     #: carry-forward run is how an edition acquires rows nobody adjudicated.
@@ -196,7 +196,7 @@ class WaveSpec:
     #: ``Tipo 1 - Registro De Declarante`` while its corpus uses ``tipo1``, so
     #: the derived number would carry spaces and a hyphen and match nothing in
     #: the edition being carried forward.
-    record_stems: Mapping[str, str] = field(default_factory=dict)
+    record_stems: Mapping[str, str] = field(default_factory=dict[str, str])
     #: Carry each row's ``legal_refs`` from the prior edition instead of applying
     #: the wave-level list.
     #:
@@ -220,7 +220,9 @@ class WaveSpec:
     #: subdivide en dos" over 176-186, which is really three parts (176 SIGNO,
     #: 177-184 ENTERO, 185-186 DECIMAL), so the reader's count clause declines the
     #: repair and leaves the two grandchildren at the surface.
-    declared_desglose_parents: Mapping[str, Mapping[int, tuple[int, ...]]] = field(default_factory=dict)
+    declared_desglose_parents: Mapping[str, Mapping[int, tuple[int, ...]]] = field(
+        default_factory=dict[str, dict[int, tuple[int, ...]]]
+    )
     #: How the prior edition's shards are found, as a glob with ``{segmento}``.
     #:
     #: The record-oriented default narrows by record because a box number is only
@@ -237,7 +239,7 @@ class WaveSpec:
     #: ``tipo1.9-17``. No positional rule can produce that name, so matching it is
     #: an author's assertion that the slot at these bytes is that concept, and it
     #: is declared here rather than guessed by resemblance.
-    number_aliases: Mapping[str, Mapping[str, str]] = field(default_factory=dict)
+    number_aliases: Mapping[str, Mapping[str, str]] = field(default_factory=dict[str, dict[str, str]])
     #: Renumbered rows: the number to LOOK UP in the prior edition, per record.
     #:
     #: Distinct from ``number_aliases``, which rewrites the number a row is
@@ -251,14 +253,14 @@ class WaveSpec:
     #: edition, which is a relabelling rather than a concept moving. Aliasing the
     #: number outright would make this edition assert that its own design prints
     #: A3B, which is false. The row must say A3A and carry A3B's attributes.
-    carry_number_aliases: Mapping[str, Mapping[str, str]] = field(default_factory=dict)
+    carry_number_aliases: Mapping[str, Mapping[str, str]] = field(default_factory=dict[str, dict[str, str]])
     #: Offsets deliberately left undeclared, per record.
     #:
     #: ``scope_skip_unnumbered`` is useless on a design where NOTHING is numbered;
     #: this names the individual slots instead. Modelo 280's Tipo 2 echoes the
     #: declarante's ejercicio and NIF from Tipo 1 and its prior edition declares
     #: no casilla for either, which is a scope line to hold, not a gap to fill.
-    scope_skip_positions: Mapping[str, frozenset[int]] = field(default_factory=dict)
+    scope_skip_positions: Mapping[str, frozenset[int]] = field(default_factory=dict[str, frozenset[int]])
     #: The box-number grammar this design actually prints, as a regex with one
     #: capturing group, applied to the bracket token's INNER text.
     #:
@@ -294,7 +296,7 @@ class WaveSpec:
     #: Declining is a scope decision and belongs in the revision's own prose too;
     #: this field only stops the generator refusing what the author already
     #: judged.
-    scope_declined_numbers: Mapping[str, frozenset[str]] = field(default_factory=dict)
+    scope_declined_numbers: Mapping[str, frozenset[str]] = field(default_factory=dict[str, frozenset[str]])
     #: Numbers withheld because they need a judgement nobody has made yet.
     #:
     #: SEPARATE from ``scope_declined_numbers`` on purpose, and the distinction is
@@ -304,7 +306,7 @@ class WaveSpec:
     #: corpus refuses everywhere else. A declined number is a decision; a deferred
     #: one is an open question, and it is reported as such so it cannot quietly
     #: become permanent.
-    deferred_numbers: Mapping[str, frozenset[str]] = field(default_factory=dict)
+    deferred_numbers: Mapping[str, frozenset[str]] = field(default_factory=dict[str, frozenset[str]])
 
 
 @dataclass(frozen=True)
@@ -350,6 +352,7 @@ class GenerationReport:
 
     @property
     def total_emitted(self) -> int:
+        """Return the number of casillas emitted across all records."""
         return sum(outcome.emitted for outcome in self.outcomes)
 
 
@@ -432,12 +435,18 @@ def derive_number(
     # the transcription this corpus exists to preserve.
     flattened = _LINE_BREAK.sub(" ", description).strip()
     pattern = re.compile(grammar) if grammar else _NUMBERED
-    numbers = pattern.findall(flattened)
-    if numbers:
-        return numbers[-1], pattern.sub("", flattened).strip()
+    matches = tuple(pattern.finditer(flattened))
+    if matches:
+        number = matches[-1].group(1)
+        if not isinstance(number, str):
+            raise GenerationRefused("the number grammar did not capture a string")
+        return number, pattern.sub("", flattened).strip()
     lettered = _LETTERED.search(flattened)
     if lettered:
-        return lettered.group(1), _LETTERED.sub("", flattened).strip()
+        letter = lettered.group(1)
+        if not isinstance(letter, str):
+            raise GenerationRefused("the letter grammar did not capture a string")
+        return letter, _LETTERED.sub("", flattened).strip()
     prefix = stem or segmento.lower()
     slot = f"{offset}" if length == 1 else f"{offset}-{offset + length - 1}"
     return f"{prefix}.{slot}", flattened
@@ -948,7 +957,8 @@ def harvest_attestations(out_dir: Path, revision_id: str) -> dict[str, tuple[str
             if line.strip() == marker:
                 if casilla_id:
                     harvested[casilla_id] = (path.name, current)
-                current, casilla_id = [], None
+                current = []
+                casilla_id = None
                 continue
             if line.startswith("id = "):
                 casilla_id = line.split("=", 1)[1].strip().strip('"')
@@ -977,7 +987,10 @@ def reattach_attestations(body: str, harvested: dict[str, tuple[str, list[str]]]
         if casilla_id:
             emitted = {match.group(1) for line in block if (match := _KEY_LINE.match(line))}
             for line in harvested.get(casilla_id, ("", []))[1]:
-                key = _KEY_LINE.match(line).group(1)
+                key_match = _KEY_LINE.match(line)
+                if key_match is None:
+                    raise GenerationRefused(f"attestation line is not a key line: {line!r}")
+                key = key_match.group(1)
                 if key not in emitted:
                     block.append(line)
                     carried += 1

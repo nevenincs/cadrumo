@@ -165,6 +165,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ...core.secure_object_write import SecureObjectWrite
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -553,6 +554,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         evidence=filing_instance_evidence,
         casilla_values=casilla_values,
         observations=typed_observations,
+        operation=ports.operation,
     )
 
     now = _trusted_calculation_clock(clock)
@@ -733,6 +735,7 @@ def resolve_bucket_source_mesh(
                 calculation_repository=resolved_calculation_repository,
                 filing_repository=ports.filing_repository,
                 regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+                operation=ports.operation,
             ),
             stage="conditional",
         ),
@@ -849,6 +852,7 @@ def resolve_bucket_source_mesh(
                         modelo_id=str(snapshot.modelo.id),
                         revision_id=str(snapshot.revision.id),
                     ),
+                    operation=ports.operation,
                 )
             ),
             # Relation canonical for cross-modelo fold-in. The relation resolver
@@ -866,6 +870,7 @@ def resolve_bucket_source_mesh(
                     registry_snapshot=snapshot,
                     repository=ports.observation_repository,
                     profile_read_ports=ports.profile_read_ports,
+                    operation=ports.operation,
                 )
             ),
             # Modelo 390 annual compensation carry boxes 97 / 662 are one FIFO
@@ -875,6 +880,7 @@ def resolve_bucket_source_mesh(
                 IvaCompensationAnnualPartitionSourceResolver(
                     registry_snapshot=snapshot,
                     repository=ports.observation_repository,
+                    operation=ports.operation,
                 )
             ),
             *annual_summary_resolutions,
@@ -896,6 +902,7 @@ def resolve_bucket_source_mesh(
         prorrata_register_repository=prorrata_register_repository,
         bienes_inversion_repository=ports.bienes_inversion_repository,
         observation_repository=ports.observation_repository,
+        operation=ports.operation,
     )
     source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
     source_resolution = _add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
@@ -1861,7 +1868,7 @@ def list_calculation_revisions(
         revision for revision in catalogue if work_unit_id is None or revision.work_unit_id == work_unit_id
     )
     for revision in revisions:
-        require_calculation_revision_coordinates_current(revision)
+        require_calculation_revision_coordinates_current(revision, operation=ports.operation)
     return tuple(sorted(revisions, key=lambda r: (r.work_unit_id, r.created_at)))
 
 
@@ -1881,6 +1888,7 @@ def get_calculation_revision(
         catalogue=ports.calculation_repository.load(),
         calculation_repository=ports.calculation_repository,
         work_unit_repository=ports.work_unit_repository,
+        operation=ports.operation,
     )
     return revision
 
@@ -1891,6 +1899,7 @@ def _calculation_revision_in_repository_bucket(
     catalogue: CalculationRevisionCatalogue,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
     """Resolve a revision only when its work unit belongs to both repositories' bucket."""
     revision = catalogue.get(calculation_revision_id)
@@ -1899,7 +1908,7 @@ def _calculation_revision_in_repository_bucket(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
-    require_calculation_revision_coordinates_current(revision)
+    require_calculation_revision_coordinates_current(revision, operation=operation)
     work_unit = work_unit_repository.load().get(revision.work_unit_id)
     expected_buckets = {
         bucket_id

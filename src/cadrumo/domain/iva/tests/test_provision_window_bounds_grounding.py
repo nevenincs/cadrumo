@@ -27,6 +27,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.validity_window import ValidityWindow
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.schema_references import LegalReference
 from ..catalogue import bundled_iva_catalogue
 from ..place_of_supply import load_place_of_supply_table
@@ -72,18 +73,18 @@ def _violation(
     return ""
 
 
-def _catalogue_rows() -> list[tuple[str, tuple[str, ...], ValidityWindow]]:
+def _catalogue_rows(*, operation: PinnedAuthorityOperation) -> list[tuple[str, tuple[str, ...], ValidityWindow]]:
     return [
         (f"{regulation.category.value}/{citation.legal_reference}", (citation.legal_reference,), citation.window)
-        for regulation in bundled_iva_catalogue()
+        for regulation in bundled_iva_catalogue(operation=operation)
         for citation in regulation.citations
     ]
 
 
-def _place_of_supply_rows() -> list[tuple[str, tuple[str, ...], ValidityWindow]]:
+def _place_of_supply_rows(*, operation: PinnedAuthorityOperation) -> list[tuple[str, tuple[str, ...], ValidityWindow]]:
     return [
         (rule.rule_id, rule.legal_references, rule.window)
-        for rule in load_place_of_supply_table().values()
+        for rule in load_place_of_supply_table(operation=operation).values()
         if rule.window is not None
     ]
 
@@ -96,7 +97,8 @@ def test_every_grounded_iva_row_stays_inside_its_provisions_effective_span() -> 
     re-judges every row that cites it.
     """
     catalogue = _legal_catalogue()
-    rows = _catalogue_rows() + _place_of_supply_rows()
+    with bundled_indexed_authority().operation() as operation:
+        rows = _catalogue_rows(operation=operation) + _place_of_supply_rows(operation=operation)
     assert rows, "no grounded IVA rows were measured; this gate would pass vacuously"
 
     violations = []
@@ -158,11 +160,13 @@ def test_the_permitted_span_of_several_provisions_is_their_intersection() -> Non
 def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
     """Anchor: an unresolvable id would make the span check silently skip a row."""
     catalogue = _legal_catalogue()
-    cited = {
-        reference
-        for _label, references, _window in _catalogue_rows() + _place_of_supply_rows()
-        for reference in references
-    }
+    with bundled_indexed_authority().operation() as operation:
+        cited = {
+            reference
+            for _label, references, _window in _catalogue_rows(operation=operation)
+            + _place_of_supply_rows(operation=operation)
+            for reference in references
+        }
 
     assert cited, "no provisions were cited at all; the gate above would be vacuous"
     assert sorted(reference for reference in cited if reference not in catalogue) == []

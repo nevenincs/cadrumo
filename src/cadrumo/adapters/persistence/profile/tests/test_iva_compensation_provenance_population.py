@@ -84,6 +84,10 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+)
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.calculation_revision import (
@@ -325,7 +329,7 @@ def _aeat_captured_303_observation() -> FiledDeclaracionObservation:
     )
 
 
-def _persist_every_legitimate_row() -> None:
+def _persist_every_legitimate_row(*, operation: PinnedAuthorityOperation) -> None:
     """Drive all four persisting producers, one row each, through production code."""
     seed_iva_compensation_period(
         taxpayer_nif=_NIF,
@@ -333,6 +337,7 @@ def _persist_every_legitimate_row() -> None:
         amount=_SEED_AMOUNT,
         seeded_at=_SEEDED_AT,
         repository=IvaCompensationHistoryRepository(),
+        operation=operation,
     )
     # A correction is only reachable over an existing seed; the corrected period
     # therefore starts seeded and ends carrying OPERATOR_CORRECTION, which is
@@ -343,6 +348,7 @@ def _persist_every_legitimate_row() -> None:
         amount=_SUPERSEDED_SEED_AMOUNT,
         seeded_at=_SEEDED_AT,
         repository=IvaCompensationHistoryRepository(),
+        operation=operation,
     )
     correct_iva_compensation_period(
         taxpayer_nif=_NIF,
@@ -350,6 +356,7 @@ def _persist_every_legitimate_row() -> None:
         amount=_CORRECTION_AMOUNT,
         corrected_at=_CORRECTED_AT,
         repository=IvaCompensationHistoryRepository(),
+        operation=operation,
     )
     work_unit = _app_filed_work_unit()
     persist_filed_revision_observation(
@@ -379,7 +386,7 @@ def _wallet_balance_census() -> _PathCensus:
     )
 
 
-def _binding_prefill_census() -> _PathCensus:
+def _binding_prefill_census(*, operation: PinnedAuthorityOperation) -> _PathCensus:
     """Measure the rows the previous-filing prefill resolver projects and resolves.
 
     Each target is resolved end to end through
@@ -401,7 +408,7 @@ def _binding_prefill_census() -> _PathCensus:
                 f"{source_period.registry_token}: NO SOURCE ROW",
             )
             continue
-        projected = observation_from_iva_compensation_history(state)
+        projected = observation_from_iva_compensation_history(state, operation=operation)
         snapshot = compiled_bundled_authority().snapshot(
             Modelo("303").value,
             filing_year=target_year,
@@ -409,6 +416,7 @@ def _binding_prefill_census() -> _PathCensus:
         )
         recurrence, _report = extract_modelo_303_local_iva_compensation_recurrence(
             snapshot,
+            operation=operation,
             repository=observations,
             iva_history_repository=history,
         )
@@ -427,7 +435,7 @@ def _binding_prefill_census() -> _PathCensus:
     )
 
 
-def _carry_ingress_census() -> _PathCensus:
+def _carry_ingress_census(*, operation: PinnedAuthorityOperation) -> _PathCensus:
     """Measure the rows the Modelo 303 carry-ingress path builds.
 
     Two shapes reach the ingress: the persisted state the two filing boundaries
@@ -450,7 +458,7 @@ def _carry_ingress_census() -> _PathCensus:
         if payload is None:
             evidence.append(f"{period.filing_year}/{period.registry_token}: NO INGRESS ENVELOPE STORED")
             continue
-        reconstructed = period_state_from_303_envelope(payload)
+        reconstructed = period_state_from_303_envelope(payload, operation=operation)
         rows.append(reconstructed)
         partition = resolve_iva_compensation_annual_partition_binding_values(
             compiled_bundled_authority()
@@ -458,6 +466,7 @@ def _carry_ingress_census() -> _PathCensus:
             .revision,
             (payload,),
             filing_year=period.filing_year,
+            operation=operation,
         )
         evidence.append(
             f"{period.filing_year}/{period.registry_token} persisted={persisted.provenance.value} "
@@ -476,12 +485,13 @@ def _carry_ingress_census() -> _PathCensus:
 def population(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Population]:
     """Build the legitimate population once and measure all three paths over it."""
     with isolated_runtime_profile(tmp_path=tmp_path_factory.mktemp("iva-provenance-population")):
-        _persist_every_legitimate_row()
-        yield _Population(
-            wallet_balance=_wallet_balance_census(),
-            binding_prefill=_binding_prefill_census(),
-            carry_ingress=_carry_ingress_census(),
-        )
+        with bundled_indexed_authority().operation() as operation:
+            _persist_every_legitimate_row(operation=operation)
+            yield _Population(
+                wallet_balance=_wallet_balance_census(),
+                binding_prefill=_binding_prefill_census(operation=operation),
+                carry_ingress=_carry_ingress_census(operation=operation),
+            )
 
 
 def _provenance_token(provenance: object) -> str:

@@ -29,6 +29,7 @@ from cadrumo.core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,
     LedgerIncomeGrounding,
+    LedgerWithholdingDerivation,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -110,6 +111,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+        withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
     untagged = RentaIncomeObservation(
         transaction_id=_tx("1b"),
@@ -118,6 +120,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+        withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, (tagged, untagged))
@@ -154,6 +157,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
         withheld_amount=Decimal("300.00"),
         filing_date=date(2026, 3, 15),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+        withheld_derivation=LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
     )
     no_withholding = RentaIncomeObservation(
         transaction_id=_tx("2b"),
@@ -163,6 +167,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
         withheld_amount=Decimal("0.00"),
         filing_date=date(2026, 3, 20),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+        withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, (net_paid, no_withholding))
@@ -193,6 +198,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+        withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
     untagged = RentaIncomeObservation(
         transaction_id=_tx("3b"),
@@ -201,6 +207,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+        withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, (tagged, untagged))
@@ -246,6 +253,7 @@ def test_cash_received_sum_fact_sums_gross_amount_unconditionally() -> None:
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+        withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision_with_gross_binding, (tagged,))
@@ -312,6 +320,7 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
         taxable_base_amount=None,
         filing_date=date(2026, 2, 10),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+        withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
     unrouted = RentaIncomeObservation(
         transaction_id=_tx("5b"),
@@ -320,6 +329,7 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+        withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
 
     result = unsupported_ledger_renta_income_observations(revision, (routed, unrouted))
@@ -341,6 +351,7 @@ def test_unsupported_renta_income_does_not_flag_zero_income() -> None:
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+        withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
 
     result = unsupported_ledger_renta_income_observations(revision, (zero_unrouted,))
@@ -367,6 +378,7 @@ def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+        withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
     ungrounded = RentaIncomeObservation(
         transaction_id=_tx("7b"),
@@ -375,6 +387,7 @@ def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+        withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
 
     result = ungrounded_ledger_renta_income_observations(revision, (grounded, ungrounded))
@@ -399,6 +412,7 @@ def test_ungrounded_screen_reports_nothing_when_every_row_declares_its_base() ->
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+        withheld_derivation=LedgerWithholdingDerivation.NONE_WITHHELD,
     )
 
     result = ungrounded_ledger_renta_income_observations(revision, (grounded,))
@@ -424,6 +438,7 @@ def test_ungrounded_screen_ignores_rows_no_base_reading_binding_consumes() -> No
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+        withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
     )
 
     assert ungrounded_ledger_renta_income_observations(revision, (unrouted,)).observations == ()
@@ -472,4 +487,5 @@ def test_observation_refuses_a_grounding_marker_that_contradicts_its_base() -> N
             taxable_base_amount=None,
             filing_date=date(2026, 3, 5),
             grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+            withheld_derivation=LedgerWithholdingDerivation.NO_SUBSTRATE,
         )

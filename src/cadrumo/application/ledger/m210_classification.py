@@ -22,7 +22,7 @@ from ...core.irnr import M210PayerMode
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification, resolve_m210_payer_mode
-from .actions_common import resolve_transaction_repository
+from .actions_common import require_repository
 
 if TYPE_CHECKING:
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -73,7 +73,12 @@ def _require_incoming_m210_transaction(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None,
 ) -> None:
     """Refuse a missing or outgoing row before building its M210 declaration."""
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = require_repository(transaction_repository, reason="the M210 classification path")
+    if repository.bucket_id != bucket_id:
+        raise TransactionValidationError(
+            "transaction repository bucket_id does not match the M210 classification bucket",
+            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+        )
     transaction = repository.load().get(transaction_id)
     if transaction is None or transaction.direction is not TransactionDirection.INCOMING:
         raise TransactionValidationError(

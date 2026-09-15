@@ -9,6 +9,7 @@ Exercised against real SQLite persistence in an isolated profile, no mocks.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -18,6 +19,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.llm_classification import (
     apply_evidence_split,
     apply_llm_classification,
@@ -25,6 +27,7 @@ from cadrumo.application.ledger.llm_classification import (
     suggest_evidence_split,
 )
 from cadrumo.application.ledger.llm_classification_ports import (
+    LLMClassificationPorts,
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
@@ -36,6 +39,7 @@ from cadrumo.application.ledger.llm_review_workflow import (
     execute_reviewed_decision,
 )
 from cadrumo.application.ledger.models import ManualLedgerTransactionResult
+from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -45,6 +49,7 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.llm import LLMSplitResponse
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.entrypoints.cli._ledger_llm_composition import compose_ledger_llm
 
 from ._llm_evidence_split_support import (
     _single_line_proposal,
@@ -52,6 +57,7 @@ from ._llm_evidence_split_support import (
     _two_line_proposal,
 )
 from ._llm_saturation_support import _saturating_subprocess_classifier
+from .ledger_action_create_support import ledger_ports_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -129,6 +135,23 @@ def _events_of(events: BucketEventHistoryRepository, event_type: BucketEventType
     return events.load().for_bucket(_BUCKET, event_types=(event_type,))
 
 
+@contextmanager
+def _workflow_ports(
+    repository: TransactionCatalogueRepository,
+    events: BucketEventHistoryRepository,
+) -> Iterator[tuple[LedgerActionPorts, LLMClassificationPorts, Settings]]:
+    """Yield canonical ledger and LLM ports for one isolated profile action."""
+    with ledger_ports_for_test(
+        bucket_id=repository.bucket_id,
+        objects=repository._objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ledger_ports:
+        settings = load_settings()
+        llm_ports = compose_ledger_llm(bucket_id=repository.bucket_id, settings=settings).ports
+        yield ledger_ports, llm_ports, settings
+
+
 # Wall-clock stamps assigned by the write (independent of the injected
 # ``occurred_at`` event clock); excluded from the CLI-route parity comparison so
 # every substantive persisted field (classification, category, IVA substrate,
@@ -180,15 +203,15 @@ def test_apply_composes_classification_primitive_with_derived_source_command(
     repository, events = repositories
     tx_id = _seed_parent(repository)
 
-    result = execute_reviewed_decision(
-        _classification_suggestion(tx_id),
-        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
-        decision=LlmReviewDecision.APPLY,
-        bucket_id=_BUCKET,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
+    with _workflow_ports(repository, events) as (ports, _, _):
+        result = execute_reviewed_decision(
+            _classification_suggestion(tx_id),
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
+            decision=LlmReviewDecision.APPLY,
+            bucket_id=_BUCKET,
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     # Delegation happened: the transaction is now classified in real storage.
     assert isinstance(result, ManualLedgerTransactionResult)
@@ -208,16 +231,16 @@ def test_reject_composes_reject_primitive_and_mutates_nothing(
     repository, events = repositories
     tx_id = _seed_parent(repository)
 
-    execute_reviewed_decision(
-        _classification_suggestion(tx_id),
-        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
-        decision=LlmReviewDecision.REJECT,
-        bucket_id=_BUCKET,
-        reason="wrong category, this is personal",
-        transaction_repository=repository,
-        bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
+    with _workflow_ports(repository, events) as (ports, _, _):
+        execute_reviewed_decision(
+            _classification_suggestion(tx_id),
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
+            decision=LlmReviewDecision.REJECT,
+            bucket_id=_BUCKET,
+            reason="wrong category, this is personal",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     rejected = _events_of(events, BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED)
     assert len(rejected) == 1
@@ -229,13 +252,23 @@ def test_reject_composes_reject_primitive_and_mutates_nothing(
 # ── saturation / split matrix, origin attribution, CLI-route parity ──
 
 
-def _saturated_suggestion(repository: TransactionCatalogueRepository, tx_id: str) -> LLMSaturatedSuggestion:
+def _saturated_suggestion(
+    repository: TransactionCatalogueRepository,
+    tx_id: str,
+    *,
+    ledger_ports: LedgerActionPorts,
+    llm_ports: LLMClassificationPorts,
+    settings: Settings,
+) -> LLMSaturatedSuggestion:
     """Build a real saturated suggestion through the subprocess classifier boundary."""
     return saturate_llm_classification(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
+        operation=ledger_ports.operation,
         classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general")),
         transaction_repository=repository,
+        settings=settings,
+        ports=llm_ports,
     )
 
 
@@ -244,14 +277,20 @@ def _split_suggestion(
     tx_id: str,
     *,
     proposal: LLMSplitResponse,
+    ledger_ports: LedgerActionPorts,
+    llm_ports: LLMClassificationPorts,
+    settings: Settings,
 ) -> LLMSplitSuggestion:
     """Build a real split suggestion through the subprocess proposer boundary."""
     return suggest_evidence_split(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
+        operation=ledger_ports.operation,
         proposer=_split_subprocess_proposer(response=proposal),
         transaction_repository=repository,
         read_evidence=False,
+        settings=settings,
+        ports=llm_ports,
     )
 
 
@@ -261,15 +300,21 @@ def test_saturate_apply_composes_saturated_primitive_with_derived_source_command
     repository, events = repositories
     tx_id = _seed_parent(repository)
 
-    result = execute_reviewed_decision(
-        _saturated_suggestion(repository, tx_id),
-        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY,
-        decision=LlmReviewDecision.APPLY,
-        bucket_id=_BUCKET,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
+    with _workflow_ports(repository, events) as (ports, llm_ports, settings):
+        result = execute_reviewed_decision(
+            _saturated_suggestion(
+                repository,
+                tx_id,
+                ledger_ports=ports,
+                llm_ports=llm_ports,
+                settings=settings,
+            ),
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY,
+            decision=LlmReviewDecision.APPLY,
+            bucket_id=_BUCKET,
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     # Delegation to the saturated primitive: registry-derived IVA substrate lands.
     assert isinstance(result, ManualLedgerTransactionResult)
@@ -291,15 +336,22 @@ def test_multi_child_split_apply_stamps_the_auto_split_origin_label(
     repository, events = repositories
     tx_id = _seed_parent(repository)
 
-    applied = execute_reviewed_decision(
-        _split_suggestion(repository, tx_id, proposal=_two_line_proposal()),
-        origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
-        decision=LlmReviewDecision.SPLIT,
-        bucket_id=_BUCKET,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
+    with _workflow_ports(repository, events) as (ports, llm_ports, settings):
+        applied = execute_reviewed_decision(
+            _split_suggestion(
+                repository,
+                tx_id,
+                proposal=_two_line_proposal(),
+                ledger_ports=ports,
+                llm_ports=llm_ports,
+                settings=settings,
+            ),
+            origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
+            decision=LlmReviewDecision.SPLIT,
+            bucket_id=_BUCKET,
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     assert isinstance(applied, LLMSplitApplyResult)
     assert len(applied.child_transaction_ids) == 2
@@ -322,15 +374,22 @@ def test_split_llm_origin_stamps_its_own_distinct_source_command(
     repository, events = repositories
     tx_id = _seed_parent(repository)
 
-    applied = execute_reviewed_decision(
-        _split_suggestion(repository, tx_id, proposal=_two_line_proposal()),
-        origin=LlmReviewInvocationOrigin.SPLIT_LLM,
-        decision=LlmReviewDecision.SPLIT,
-        bucket_id=_BUCKET,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-        occurred_at=_NOW,
-    )
+    with _workflow_ports(repository, events) as (ports, llm_ports, settings):
+        applied = execute_reviewed_decision(
+            _split_suggestion(
+                repository,
+                tx_id,
+                proposal=_two_line_proposal(),
+                ledger_ports=ports,
+                llm_ports=llm_ports,
+                settings=settings,
+            ),
+            origin=LlmReviewInvocationOrigin.SPLIT_LLM,
+            decision=LlmReviewDecision.SPLIT,
+            bucket_id=_BUCKET,
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     assert isinstance(applied, LLMSplitApplyResult)
     child = repository.load().get(applied.child_transaction_ids[0])
@@ -353,15 +412,22 @@ def test_no_split_verdict_refuses_a_split_decision(
     tx_id = _seed_parent(repository)
 
     with pytest.raises(TransactionValidationError):
-        execute_reviewed_decision(
-            _split_suggestion(repository, tx_id, proposal=_single_line_proposal()),
-            origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
-            decision=LlmReviewDecision.SPLIT,
-            bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-            occurred_at=_NOW,
-        )
+        with _workflow_ports(repository, events) as (ports, llm_ports, settings):
+            execute_reviewed_decision(
+                _split_suggestion(
+                    repository,
+                    tx_id,
+                    proposal=_single_line_proposal(),
+                    ledger_ports=ports,
+                    llm_ports=llm_ports,
+                    settings=settings,
+                ),
+                origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
+                decision=LlmReviewDecision.SPLIT,
+                bucket_id=_BUCKET,
+                ports=ports,
+                occurred_at=_NOW,
+            )
 
     parent = repository.load().get(tx_id)
     assert parent is not None
@@ -396,15 +462,15 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
         repository: TransactionCatalogueRepository, events: BucketEventHistoryRepository
     ) -> tuple[dict[str, object], str]:
         tx_id = _seed_parent(repository)
-        result = execute_reviewed_decision(
-            _classification_suggestion(tx_id),
-            origin=origin,
-            decision=LlmReviewDecision.APPLY,
-            bucket_id=repository.bucket_id,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-            occurred_at=_NOW,
-        )
+        with _workflow_ports(repository, events) as (ports, _, _):
+            result = execute_reviewed_decision(
+                _classification_suggestion(tx_id),
+                origin=origin,
+                decision=LlmReviewDecision.APPLY,
+                bucket_id=repository.bucket_id,
+                ports=ports,
+                occurred_at=_NOW,
+            )
         assert isinstance(result, ManualLedgerTransactionResult)
         classified = events.load().for_bucket(
             repository.bucket_id,
@@ -432,26 +498,32 @@ def test_cli_route_parity_split_apply_matches_direct_primitive(tmp_path: Path) -
             events: BucketEventHistoryRepository,
         ) -> list[dict[str, object]]:
             tx_id = _seed_parent(repository)
-            suggestion = _split_suggestion(repository, tx_id, proposal=_two_line_proposal())
-            if use_workflow:
-                applied = execute_reviewed_decision(
-                    suggestion,
-                    origin=origin,
-                    decision=LlmReviewDecision.SPLIT,
-                    bucket_id=repository.bucket_id,
-                    transaction_repository=repository,
-                    bucket_event_repository=events,
-                    occurred_at=_NOW,
+            with _workflow_ports(repository, events) as (ports, llm_ports, settings):
+                suggestion = _split_suggestion(
+                    repository,
+                    tx_id,
+                    proposal=_two_line_proposal(),
+                    ledger_ports=ports,
+                    llm_ports=llm_ports,
+                    settings=settings,
                 )
-            else:
-                applied = apply_evidence_split(
-                    suggestion,
-                    bucket_id=repository.bucket_id,
-                    source_command=origin.source_command,
-                    transaction_repository=repository,
-                    bucket_event_repository=events,
-                    occurred_at=_NOW,
-                )
+                if use_workflow:
+                    applied = execute_reviewed_decision(
+                        suggestion,
+                        origin=origin,
+                        decision=LlmReviewDecision.SPLIT,
+                        bucket_id=repository.bucket_id,
+                        ports=ports,
+                        occurred_at=_NOW,
+                    )
+                else:
+                    applied = apply_evidence_split(
+                        suggestion,
+                        bucket_id=repository.bucket_id,
+                        source_command=origin.source_command,
+                        ports=ports,
+                        occurred_at=_NOW,
+                    )
             assert isinstance(applied, LLMSplitApplyResult)
             catalogue = repository.load()
             children: list[dict[str, object]] = []

@@ -16,6 +16,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -90,10 +92,13 @@ def _revision(
     *,
     source_ids: tuple[str, ...],
     snapshot: LedgerFilingSnapshot | None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
     filing_instance_evidence = (
-        general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage") if modelo == "303" else None
+        general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage", operation=operation)
+        if modelo == "303"
+        else None
     )
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
@@ -123,46 +128,46 @@ def _revision(
     )
 
 
-def test_ledger_fed_modelo_carries_nonempty_snapshot() -> None:
+def test_ledger_fed_modelo_carries_nonempty_snapshot(*, operation: PinnedAuthorityOperation) -> None:
     a, b = _tx("row-a"), _tx("row-b")
     cat = TransactionCatalogue.from_transactions((a, b))
     ids = (a.transaction_id, b.transaction_id)
     snap = compute_ledger_filing_snapshot(source_transaction_ids=ids, catalogue=cat, captured_at=_NOW)
-    rev = _revision("303", source_ids=ids, snapshot=snap)
+    rev = _revision("303", source_ids=ids, snapshot=snap, operation=operation)
     assert rev.ledger_filing_snapshot is not None
     assert len(rev.ledger_filing_snapshot.rows) == 2
 
 
-def test_non_ledger_modelo_carries_empty_uniform_snapshot() -> None:
+def test_non_ledger_modelo_carries_empty_uniform_snapshot(*, operation: PinnedAuthorityOperation) -> None:
     snap = compute_ledger_filing_snapshot(
         source_transaction_ids=(),
         catalogue=TransactionCatalogue.from_transactions(()),
         captured_at=_NOW,
     )
-    rev = _revision("347", source_ids=(), snapshot=snap)
+    rev = _revision("347", source_ids=(), snapshot=snap, operation=operation)
     assert rev.ledger_filing_snapshot is not None
     assert rev.ledger_filing_snapshot.rows == ()
     assert len(rev.ledger_filing_snapshot.snapshot_fingerprint) == 64
 
 
-def test_snapshot_is_excluded_from_revision_id() -> None:
+def test_snapshot_is_excluded_from_revision_id(*, operation: PinnedAuthorityOperation) -> None:
     a = _tx("row-a")
     cat = TransactionCatalogue.from_transactions((a,))
     ids = (a.transaction_id,)
     snap = compute_ledger_filing_snapshot(source_transaction_ids=ids, catalogue=cat, captured_at=_NOW)
-    with_snap = _revision("130", source_ids=ids, snapshot=snap)
-    without_snap = _revision("130", source_ids=ids, snapshot=None)
+    with_snap = _revision("130", source_ids=ids, snapshot=snap, operation=operation)
+    without_snap = _revision("130", source_ids=ids, snapshot=None, operation=operation)
     # Identical contributors -> identical content-addressed id regardless of the
     # snapshot, proving the snapshot does not perturb the revision identity.
     assert with_snap.calculation_revision_id == without_snap.calculation_revision_id
 
 
-def test_filed_revision_snapshot_is_immutable() -> None:
+def test_filed_revision_snapshot_is_immutable(*, operation: PinnedAuthorityOperation) -> None:
     a = _tx("row-a")
     cat = TransactionCatalogue.from_transactions((a,))
     ids = (a.transaction_id,)
     snap = compute_ledger_filing_snapshot(source_transaction_ids=ids, catalogue=cat, captured_at=_NOW)
-    rev = _revision("100", source_ids=ids, snapshot=snap)
+    rev = _revision("100", source_ids=ids, snapshot=snap, operation=operation)
     with pytest.raises(ValidationError):
         rev.ledger_filing_snapshot = None  # frozen model: attribute set is refused
 
@@ -172,10 +177,13 @@ def _verified_revision(
     *,
     source_ids: tuple[str, ...],
     snapshot: LedgerFilingSnapshot,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
     filing_instance_evidence = (
-        general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage") if modelo == "303" else None
+        general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage", operation=operation)
+        if modelo == "303"
+        else None
     )
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
@@ -207,12 +215,12 @@ def _verified_revision(
     )
 
 
-def test_stale_filed_revisions_flags_only_drifted_finalized_revisions() -> None:
+def test_stale_filed_revisions_flags_only_drifted_finalized_revisions(*, operation: PinnedAuthorityOperation) -> None:
     original = _tx("row-a", taxable_base=Decimal("100.00"), iva_amount=Decimal("21.00"))
     cat = TransactionCatalogue.from_transactions((original,))
     ids = (original.transaction_id,)
     snap = compute_ledger_filing_snapshot(source_transaction_ids=ids, catalogue=cat, captured_at=_NOW)
-    rev = _verified_revision("303", source_ids=ids, snapshot=snap)
+    rev = _verified_revision("303", source_ids=ids, snapshot=snap, operation=operation)
     revisions = {rev.calculation_revision_id: rev}
     # Unchanged ledger -> nothing flagged.
     assert stale_filed_revisions(revisions=revisions, catalogue=cat) == ()

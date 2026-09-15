@@ -10,15 +10,25 @@ chosen option.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
+from cadrumo.domain.calculations.registry.situacion_familiar_m145_catalogue import (
+    resolve_situacion_familiar_m145_catalogue,
+    situacion_familiar_m145_is_eligible_for_supplementary_reduction,
+)
 
 from ..renta_codes import SituacionFamiliarM145
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_AUTHORITY = compiled_bundled_authority()
+_M145_CATALOGUE = resolve_situacion_familiar_m145_catalogue(authority=_AUTHORITY)
+
 
 def test_three_form_numbered_values() -> None:
     """The enum mirrors the three numbered boxes on the M145 form."""
-    assert {member.value for member in SituacionFamiliarM145} == {
+    assert {member.value for member in _M145_CATALOGUE.choices} == {
         "familia_1",
         "familia_2",
         "familia_3",
@@ -27,17 +37,23 @@ def test_three_form_numbered_values() -> None:
 
 def test_familia_1_eligible_for_supplementary_reduction() -> None:
     """RIRPF art. 81.1.1° viudo/separado with descendientes -> eligible."""
-    assert SituacionFamiliarM145._from_registry("familia_1").is_eligible_for_supplementary_reduction()
+    assert situacion_familiar_m145_is_eligible_for_supplementary_reduction(
+        _M145_CATALOGUE.require("familia_1"), authority=_AUTHORITY
+    )
 
 
 def test_familia_2_eligible_for_supplementary_reduction() -> None:
     """RIRPF art. 81.1.2° casado with low-income spouse -> eligible."""
-    assert SituacionFamiliarM145._from_registry("familia_2").is_eligible_for_supplementary_reduction()
+    assert situacion_familiar_m145_is_eligible_for_supplementary_reduction(
+        _M145_CATALOGUE.require("familia_2"), authority=_AUTHORITY
+    )
 
 
 def test_familia_3_not_eligible_for_supplementary_reduction() -> None:
     """Default option -> no supplementary withholding reduction."""
-    assert not SituacionFamiliarM145._from_registry("familia_3").is_eligible_for_supplementary_reduction()
+    assert not situacion_familiar_m145_is_eligible_for_supplementary_reduction(
+        _M145_CATALOGUE.require("familia_3"), authority=_AUTHORITY
+    )
 
 
 def test_disjoint_from_situacion_familiar_art82() -> None:
@@ -48,10 +64,9 @@ def test_disjoint_from_situacion_familiar_art82() -> None:
     (declaracion). The grounding rule in the docstring depends on these
     enums being structurally distinct.
     """
-    from ..renta_codes import SituacionFamiliar
 
-    m145_values = {member.value for member in SituacionFamiliarM145}
-    art82_values = {member.value for member in SituacionFamiliar}
+    m145_values = {member.value for member in _M145_CATALOGUE.choices}
+    art82_values = {member.value for member in situacion_familiar_choices(authority=_AUTHORITY)}
     assert not (m145_values & art82_values)
 
 

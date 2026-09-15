@@ -39,6 +39,7 @@ from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..classification import InvoiceKind
 from ..components import (
     IvaCategoryComponents,
@@ -69,6 +70,7 @@ _SENTINEL_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {IvaCategory("unknown"), IvaCategory("erroneous_invoice")},
 )
 COMPONENT_CATALOGUE = registry_component_catalogue()
+CATEGORY_CATALOGUE = resolve_iva_category_catalogue()
 
 
 def _category_id(category: IvaCategory) -> str:
@@ -121,7 +123,7 @@ def test_every_iva_category_declares_its_components() -> None:
     rather than leaving each decomposition site to guess.
     """
     declared = {category for category, _kind in COMPONENT_CATALOGUE}
-    undeclared = sorted(category.value for category in IvaCategory if category not in declared)
+    undeclared = sorted(category.value for category in CATEGORY_CATALOGUE.all_categories if category not in declared)
     assert undeclared == [], f"IvaCategory members without an Axis-A row: {undeclared}"
 
 
@@ -136,7 +138,7 @@ def test_table_declares_no_category_outside_the_enum() -> None:
 
 def test_lookup_returns_the_keyed_row_for_every_member() -> None:
     """The public accessor resolves every member without falling through."""
-    for category in IvaCategory:
+    for category in CATEGORY_CATALOGUE.all_categories:
         for kind in InvoiceKind:
             assert category_components(category, kind) is COMPONENT_CATALOGUE[(category, kind)]
 
@@ -157,7 +159,7 @@ def test_derived_cuota_less_set_equals_the_canonical_frozenset() -> None:
     )
 
 
-@pytest.mark.parametrize("category", tuple(IvaCategory), ids=_category_id)
+@pytest.mark.parametrize("category", CATEGORY_CATALOGUE.all_categories, ids=_category_id)
 def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCategory) -> None:
     """Editing one row's cuota columns alone flips exactly this category's gate.
 
@@ -512,7 +514,7 @@ def test_every_category_kind_pair_declares_a_row() -> None:
     """
     missing = sorted(
         f"{category.value}/{kind.value}"
-        for category in IvaCategory
+        for category in CATEGORY_CATALOGUE.all_categories
         for kind in InvoiceKind
         if (category, kind) not in COMPONENT_CATALOGUE
     )
@@ -532,7 +534,7 @@ def test_the_kind_axis_actually_bifurcates_at_least_one_category() -> None:
     """
     bifurcated = [
         category.value
-        for category in IvaCategory
+        for category in CATEGORY_CATALOGUE.all_categories
         if _kind_distinguishing_columns(COMPONENT_CATALOGUE[(category, InvoiceKind.ISSUED)])
         != _kind_distinguishing_columns(COMPONENT_CATALOGUE[(category, InvoiceKind.RECEIVED)])
     ]

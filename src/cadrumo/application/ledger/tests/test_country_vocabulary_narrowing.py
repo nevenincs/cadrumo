@@ -55,12 +55,18 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import StatedCountryCodeStatus
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ....domain.iva.schema import IvaCategory
 from ....domain.iva.supply_nature import SupplyNature
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
@@ -75,6 +81,7 @@ from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmatio
 from ..country_vocabulary_advisory import country_vocabulary_advisory
 from ..deterministic_findings import deterministic_findings
 from ..invoice_draft_records import InvoiceDraft
+from ..invoice_extraction_authority import default_invoice_extraction_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -88,7 +95,7 @@ UNASSIGNED_PROBES = ("XX", "ZZ", "QQ")
 _UNREADABLE_POSTAL = "Calle Mayor 3, 28013 Madrid"
 
 
-def _as_read(draft: InvoiceDraft) -> InvoiceDraft:
+def _as_read(draft: InvoiceDraft, *, operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return the draft carrying its findings, exactly as a reading path hands it on.
 
     The gate reads ``draft.discrepancies``; it does not run the checks itself. A
@@ -96,10 +103,21 @@ def _as_read(draft: InvoiceDraft) -> InvoiceDraft:
     "the country condition does not block" against one would measure nothing.
     This is the same ``model_copy`` the structured reader performs.
     """
-    return draft.model_copy(update={"discrepancies": deterministic_findings(draft)})
+    return draft.model_copy(
+        update={
+            "discrepancies": deterministic_findings(
+                draft,
+                legends=resolve_regime_legends(
+                    operation=operation,
+                    effective_date=default_invoice_extraction_period().end_date,
+                ),
+                operation=operation,
+            )
+        }
+    )
 
 
-def _issued_goods_to(customer_country_code: str):
+def _issued_goods_to(customer_country_code: str, *, operation: PinnedAuthorityOperation):
     """Assemble a Spanish issuer's goods invoice to a customer in one country.
 
     Everything except the customer's territory is asserted, so the ONLY question
@@ -120,11 +138,14 @@ def _issued_goods_to(customer_country_code: str):
         direction=InvoiceKind.ISSUED,
         inputs=collect_classifier_inputs(InvoiceDraft(customer_tax_id="12345678Z")),
         customer_country_code=customer_country_code,
+        operation=operation,
     )
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
-def test_an_unassigned_code_never_reaches_a_zero_rated_category(code: str) -> None:
+def test_an_unassigned_code_never_reaches_a_zero_rated_category(
+    code: str, *, operation: PinnedAuthorityOperation
+) -> None:
     """The measured defect, asserted end to end on the side where it exempts.
 
     The classifier is unreachable rather than reachable-and-answering-otherwise,
@@ -136,7 +157,7 @@ def test_an_unassigned_code_never_reaches_a_zero_rated_category(code: str) -> No
     report beside it does not need to. Softening the report to an advisory leaves
     this assertion untouched.
     """
-    assembly = _issued_goods_to(code)
+    assembly = _issued_goods_to(code, operation=operation)
 
     assert not assembly.assembled
     assert assembly.criteria is None
@@ -144,20 +165,20 @@ def test_an_unassigned_code_never_reaches_a_zero_rated_category(code: str) -> No
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
-def test_the_refusal_names_the_string_the_document_stated(code: str) -> None:
+def test_the_refusal_names_the_string_the_document_stated(code: str, *, operation: PinnedAuthorityOperation) -> None:
     """A refusal an operator cannot act on is a dead end.
 
     The reason must quote the code and must say it names no country -- not that
     it is malformed, which would send the operator to re-read a field that reads
     perfectly.
     """
-    missing = next(m for m in _issued_goods_to(code).missing if m.field == "customer_residency")
+    missing = next(m for m in _issued_goods_to(code, operation=operation).missing if m.field == "customer_residency")
 
     assert repr(code) in missing.reason
     assert "reserved by ISO 3166-1" in missing.reason
 
 
-def test_a_catalogued_code_the_vocabulary_omits_refuses_as_a_gap() -> None:
+def test_a_catalogued_code_the_vocabulary_omits_refuses_as_a_gap(*, operation: PinnedAuthorityOperation) -> None:
     """A real jurisdiction we do not carry refuses, and says whose fault it is.
 
     The specimen is derived from the vocabulary, so this follows the boundary
@@ -165,13 +186,15 @@ def test_a_catalogued_code_the_vocabulary_omits_refuses_as_a_gap() -> None:
     which reports a fixture change as a behaviour change.
     """
     specimen = an_uncatalogued_alpha2()
-    missing = next(m for m in _issued_goods_to(specimen).missing if m.field == "customer_residency")
+    missing = next(
+        m for m in _issued_goods_to(specimen, operation=operation).missing if m.field == "customer_residency"
+    )
 
     assert repr(specimen) in missing.reason
     assert "country vocabulary" in missing.reason
 
 
-def test_a_genuine_third_country_still_classifies_as_the_export() -> None:
+def test_a_genuine_third_country_still_classifies_as_the_export(*, operation: PinnedAuthorityOperation) -> None:
     """The opposite direction, and the control on every refusal above.
 
     Without this, a narrowing that refused every country whatsoever would pass
@@ -179,7 +202,7 @@ def test_a_genuine_third_country_still_classifies_as_the_export() -> None:
     direction nothing else in this codebase watches.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        assembly = _issued_goods_to("US")
+        assembly = _issued_goods_to("US", operation=operation)
 
         assert assembly.assembled
         classification = classify_from_assembled_criteria(assembly, operation=_authority_operation_for_test)
@@ -271,7 +294,9 @@ def test_a_resolved_printed_name_suppresses_the_advisory() -> None:
 
 
 @pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, an_uncatalogued_alpha2()])
-def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(code: str) -> None:
+def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(
+    code: str, *, operation: PinnedAuthorityOperation
+) -> None:
     """The deliverable. An advised draft is still confirmable.
 
     Asserted on both channels at once, because either alone is escapable: a
@@ -280,7 +305,7 @@ def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(code: 
     raised from something other than a finding.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        draft = _as_read(InvoiceDraft(customer_stated_country_code=code))
+        draft = _as_read(InvoiceDraft(customer_stated_country_code=code), operation=operation)
 
         assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is not None
         assert draft.discrepancies == ()
@@ -288,7 +313,9 @@ def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(code: 
 
 
 @pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, an_uncatalogued_alpha2()])
-def test_an_unreadable_postal_code_on_the_same_draft_still_blocks(code: str) -> None:
+def test_an_unreadable_postal_code_on_the_same_draft_still_blocks(
+    code: str, *, operation: PinnedAuthorityOperation
+) -> None:
     """The positive control on the property above.
 
     Without it, a confirmation gate that had stopped raising blockers at all
@@ -298,7 +325,10 @@ def test_an_unreadable_postal_code_on_the_same_draft_still_blocks(code: str) -> 
     postal one.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        draft = _as_read(InvoiceDraft(customer_stated_country_code=code, customer_postal_code=_UNREADABLE_POSTAL))
+        draft = _as_read(
+            InvoiceDraft(customer_stated_country_code=code, customer_postal_code=_UNREADABLE_POSTAL),
+            operation=operation,
+        )
 
         blockers = confirmation_blockers(draft)
 

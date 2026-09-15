@@ -6,7 +6,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..applicability import MODELO_APPLICABILITY_RULES
-from ..facts.schema import GovernedFactCatalogue
+from ..facts.schema import GovernedFactCatalogue, MappingFactPayload
 from ..governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -17,6 +17,8 @@ def _candidate_with_mapping_value(fact_id: str, key: str, value: str) -> Candida
     fact = catalogue.facts[fact_id]
     variant = fact.variants[0]
     payload = variant.payload
+    if not isinstance(payload, MappingFactPayload):
+        raise TypeError(f"candidate fact {fact_id!r} must use a mapping payload")
     entries = tuple(
         entry.model_copy(update={"value": value}) if entry.key == key else entry for entry in payload.entries
     )

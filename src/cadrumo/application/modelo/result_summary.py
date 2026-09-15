@@ -31,6 +31,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -48,6 +49,9 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _log = get_logger(__name__)
 
@@ -106,6 +110,7 @@ class CalculationResultSummary(BaseModel):
 def calculation_result_summary(
     revision: CalculationRevision,
     *,
+    operation: PinnedAuthorityOperation,
     work_unit: WorkUnit | None = None,
     work_unit_resolver: Callable[[str], WorkUnit] | None = None,
 ) -> CalculationResultSummary | None:
@@ -128,7 +133,7 @@ def calculation_result_summary(
     ``revision.casilla_values``. Returns ``None`` when no candidate row
     survives.
     """
-    require_calculation_revision_coordinates_current(revision)
+    require_calculation_revision_coordinates_current(revision, operation=operation)
     casilla_values = revision.casilla_values
     if work_unit is None:
         if work_unit_resolver is None:
@@ -146,6 +151,7 @@ def calculation_result_summary(
         snapshot = _resolve_registry_snapshot_for_work_unit(
             work_unit,
             grade=RegistryAuthorityGrade.CALCULATION,
+            operation=operation,
         )
     except (LookupError, KeyError, AttributeError, CadrumoError) as exc:
         _log.warning(

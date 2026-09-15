@@ -26,8 +26,10 @@ from decimal import Decimal
 
 import pytest
 
+from ...domain.calculations.registry.amendment_regime_policy import resolve_amendment_regime_policy_for_period
 from ..amendment_kind_regime import (
     AmendmentLiabilityDirection,
+    AmendmentRegimePolicy,
     classify_amendment_liability_direction,
     permitted_amendment_kind_values,
     resolve_amendment_kind_regime,
@@ -82,23 +84,28 @@ _LIABILITY_DIRECTION_CASES: tuple[_LiabilityDirectionCase, ...] = (
 )
 
 
+def _policy(period: Period) -> AmendmentRegimePolicy:
+    """Project the registry-owned amendment policy for the tested period."""
+    return resolve_amendment_regime_policy_for_period(period)
+
+
 def test_rectificativa_effective_boundary() -> None:
     for case_id, modelo, year, code, expect_rectificativa_effective in _RECTIFICATIVA_BOUNDARY_CASES:
         period = Period.from_year_and_code(year, code)
-        regime = resolve_amendment_kind_regime(modelo, period)
+        regime = resolve_amendment_kind_regime(modelo, period, policy=_policy(period))
         assert regime.rectificativa_effective is expect_rectificativa_effective, case_id
 
 
 def test_pre_rectificativa_permits_only_complementaria_and_sustitutiva() -> None:
     period = Period.from_year_and_code(2024, "2T")
-    permitted = permitted_amendment_kind_values(Modelo("303"), period)
+    permitted = permitted_amendment_kind_values(Modelo("303"), period, policy=_policy(period))
     assert permitted == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
     assert _RECTIFICATIVA not in permitted
 
 
 def test_post_rectificativa_permits_only_rectificativa_and_sustitutiva() -> None:
     period = Period.from_year_and_code(2024, "3T")
-    permitted = permitted_amendment_kind_values(Modelo("303"), period)
+    permitted = permitted_amendment_kind_values(Modelo("303"), period, policy=_policy(period))
     assert permitted == frozenset({_RECTIFICATIVA, _SUSTITUTIVA})
     assert _COMPLEMENTARIA not in permitted
 
@@ -106,14 +113,16 @@ def test_post_rectificativa_permits_only_rectificativa_and_sustitutiva() -> None
 def test_modelo_with_no_codified_regime_never_permits_rectificativa() -> None:
     """M130 has zero bundled rectificativa grounding at any period tested."""
     for year, code in ((2024, "1T"), (2026, "4T"), (2030, "0A")):
-        permitted = permitted_amendment_kind_values(Modelo("130"), Period.from_year_and_code(year, code))
+        period = Period.from_year_and_code(year, code)
+        permitted = permitted_amendment_kind_values(Modelo("130"), period, policy=_policy(period))
         assert _RECTIFICATIVA not in permitted, f"{year} {code}"
         assert permitted == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
 
 
 def test_uncodified_modelo_defaults_to_pre_rectificativa_never_asserted() -> None:
     """A modelo entirely absent from the table (M390) is never asserted rectificativa-effective."""
-    regime = resolve_amendment_kind_regime(Modelo("390"), Period.from_year_and_code(2026, "0A"))
+    period = Period.from_year_and_code(2026, "0A")
+    regime = resolve_amendment_kind_regime(Modelo("390"), period, policy=_policy(period))
     assert regime.rectificativa_effective is False
     assert regime.permitted_kinds == frozenset({_COMPLEMENTARIA, _SUSTITUTIVA})
 

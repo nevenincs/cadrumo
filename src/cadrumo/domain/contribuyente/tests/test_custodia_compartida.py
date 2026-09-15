@@ -17,6 +17,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
@@ -24,6 +25,7 @@ from ..descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
+from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ._registry_thresholds import (
     registry_birth_order_amounts,
@@ -34,6 +36,11 @@ from ._registry_thresholds import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 FILING_YEAR = 2024
+_CONTEXT = FamilyFactResolutionContext(
+    compiled_bundled_authority(),
+    date(FILING_YEAR, 12, 31),
+    date(FILING_YEAR, 12, 31),
+)
 
 # Art. 58 amounts read from the registry, never restated as Python literals
 # (`aeat-registry-authority-flow`).
@@ -82,7 +89,7 @@ def test_custodia_compartida_field_cases() -> None:
 def test_custodia_compartida_count_cases() -> None:
     for case_id, descendants, expected in _CUSTODIA_COUNT_CASES:
         p = RentaFamilyProfile(descendientes=descendants)
-        assert p.custodia_compartida_count(FILING_YEAR, thresholds=_THRESHOLDS) == expected, case_id
+        assert p.custodia_compartida_count(FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -93,7 +100,9 @@ def test_custodia_compartida_count_cases() -> None:
 def test_prorrata_factor_cases() -> None:
     for case_id, descendant, expected in _PRORRATA_FACTOR_CASES:
         p = RentaFamilyProfile(descendientes=(descendant,))
-        assert p.minimo_prorrata_factor(descendant, FILING_YEAR, thresholds=_THRESHOLDS) == expected, case_id
+        assert (
+            p.minimo_prorrata_factor(descendant, FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT) == expected
+        ), case_id
 
 
 # ---------------------------------------------------------------------------
@@ -107,11 +116,13 @@ def _mínimo_primer_hijo_with_prorrata(family: RentaFamilyProfile, filing_year: 
     Each eligible descendant contributes _MINIMO_1 (full year) multiplied by
     the per-descendant prorrata factor (0.5 when custodia compartida).
     """
-    eligible = [d for d in family.descendientes if d.is_eligible_ordinary(filing_year, thresholds=_THRESHOLDS)]
+    eligible = [
+        d for d in family.descendientes if d.is_eligible_ordinary(filing_year, thresholds=_THRESHOLDS, context=_CONTEXT)
+    ]
     if not eligible:
         return Decimal("0")
     first = eligible[0]
-    prorrata = family.minimo_prorrata_factor(first, filing_year, thresholds=_THRESHOLDS)
+    prorrata = family.minimo_prorrata_factor(first, filing_year, thresholds=_THRESHOLDS, context=_CONTEXT)
     return _MINIMO_1 * prorrata
 
 
@@ -160,11 +171,11 @@ def test_advisory_antitautology_custodia_vs_no_custodia() -> None:
     without_custodia = RentaFamilyProfile(
         descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),),
     )
-    advisory = with_custodia.custodia_compartida_advisory(FILING_YEAR, thresholds=_THRESHOLDS)
+    advisory = with_custodia.custodia_compartida_advisory(FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT)
     assert advisory is not None
     assert isinstance(advisory, str)
     assert len(advisory) > 0
-    assert without_custodia.custodia_compartida_advisory(FILING_YEAR, thresholds=_THRESHOLDS) is None
+    assert without_custodia.custodia_compartida_advisory(FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT) is None
 
 
 # ---------------------------------------------------------------------------

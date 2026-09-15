@@ -1230,6 +1230,7 @@ def _load_modelo_export_authorities(
     *,
     active_bucket_id: str,
     export_ports: ModeloExportPorts,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
     revision = export_ports.calculation.load().get(command.calculation_revision_id)
     if revision is None:
@@ -1237,7 +1238,7 @@ def _load_modelo_export_authorities(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": command.calculation_revision_id},
         )
-    require_calculation_revision_coordinates_current(revision)
+    require_calculation_revision_coordinates_current(revision, operation=operation)
     work_unit = export_ports.work_unit.load().get(revision.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
@@ -1331,6 +1332,7 @@ def _resolve_modelo_exportprior_domiciliation(
     revision: CalculationRevision,
     schema_provider: RegistrySchemaAccessor,
     export_ports: ModeloExportPorts,
+    operation: PinnedAuthorityOperation,
 ) -> PriorDomiciliationElectionProjection:
     is_m303 = str(work_unit.modelo) == Modelo("303").value
     if is_m303 and command.prior_domiciliation_election is None:
@@ -1358,6 +1360,7 @@ def _resolve_modelo_exportprior_domiciliation(
         revision=revision,
         filing_repository=export_ports.filing,
         observation_repository=export_ports.observation,
+        operation=operation,
     )
     _requireprior_domiciliation_marker_layout(
         work_unit=work_unit,
@@ -1381,6 +1384,7 @@ def _prepare_modelo_export(
         command,
         active_bucket_id=active_bucket_id,
         export_ports=export_ports,
+        operation=operation,
     )
     amendment_evidence = resolve_persisted_amendment_export_evidence(
         command,
@@ -1428,6 +1432,7 @@ def _prepare_modelo_export(
         revision=revision,
         schema_provider=schema_provider,
         export_ports=export_ports,
+        operation=operation,
     )
     return _PreparedModeloExport(
         work_unit=work_unit,

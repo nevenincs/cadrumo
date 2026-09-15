@@ -184,6 +184,8 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
                 if not isinstance(statement, (ast.Assign, ast.AnnAssign)):
                     continue
                 value = statement.value
+                if value is None:
+                    continue
                 token_values = [
                     node.value
                     for node in ast.walk(value)
@@ -196,7 +198,7 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
                 target = statement.targets[0] if isinstance(statement, ast.Assign) else statement.target
                 if not isinstance(target, ast.Name):
                     continue
-                if isinstance(value, (ast.Tuple, ast.List, ast.Set, ast.Dict)):
+                if isinstance(value, (ast.Tuple, ast.List, ast.Set)):
                     entries = tuple(
                         item.value
                         if (
@@ -205,7 +207,7 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
                             and item.value in authority_by_token
                         )
                         else object()
-                        for item in (value.elts if hasattr(value, "elts") else ())
+                        for item in value.elts
                     )
                     setattr(static_module, target.id, entries)
                 else:

@@ -46,6 +46,7 @@ from cadrumo.application.live.expedientes import (
 )
 from cadrumo.application.live.expedientes_ports import ExpedientesDeclaration
 from cadrumo.core.period import Period
+from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -61,7 +62,7 @@ def test_capture_uses_expedientes_auth_operation_label() -> None:
 
 
 def _service(profile: TestRuntimeProfile) -> ExpedientesService:
-    return ExpedientesService(settings=profile.settings)
+    return ExpedientesService(ports=build_expedientes_ports(bucket_id=profile.bucket_id))
 
 
 def _declaration(

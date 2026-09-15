@@ -171,7 +171,14 @@ def _application_single_casilla_roles() -> Iterable[str]:
             "irpf_rendimiento_trabajo_importe_integro_dinerario",
             "filing_period",
             "filing_year",
-            taxation_comparison._CUOTA_RESULTANTE_ROLE,
-            taxation_comparison._RESULTADO_ROLE,
+            _require_semantic_role(taxation_comparison._CUOTA_RESULTANTE_ROLE),
+            _require_semantic_role(taxation_comparison._RESULTADO_ROLE),
         },
     )
+
+
+def _require_semantic_role(value: object) -> str:
+    """Narrow dynamically imported module attributes to the role contract."""
+    if not isinstance(value, str):
+        raise TypeError(f"semantic role must be a string, got {type(value).__name__}")
+    return value

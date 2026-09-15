@@ -12,6 +12,7 @@ from pydantic import AnyUrl, ValidationError
 from cadrumo.application.user_profile.profile_keys import profile_keys as catalogue_profile_keys
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
@@ -349,7 +350,8 @@ _FAMILY_ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
 
 def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> None:
     snapshot = _modelo_100_snapshot()
-    profile_keys = {entry.key for entry in catalogue_profile_keys()}
+    with bundled_indexed_authority().operation() as operation:
+        profile_keys = {entry.key for entry in catalogue_profile_keys(operation=operation)}
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings if binding.source == "profile"}
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
 
@@ -683,7 +685,6 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
     parsed = parse_export_payload(
         resolved.layout,
         payload,
-        source_root=_source_root(),
         sources=snapshot.sources,
     )
 
@@ -729,7 +730,6 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
     parsed = parse_export_payload(
         resolved.layout,
         payload,
-        source_root=_source_root(),
         sources=snapshot.sources,
     )
 

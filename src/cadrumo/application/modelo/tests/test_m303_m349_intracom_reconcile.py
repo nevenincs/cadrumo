@@ -15,15 +15,20 @@ registry formula, so they are not tautological calculation assertions.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -43,9 +48,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000349"
 _CLOCK = datetime(2025, 4, 15, tzinfo=UTC)
+_REPOSITORY_REVISION_ID = "0" * 64
 _M303_ADQUISICIONES: CasillaId = validated_casilla_id("10", surface="test")
 _M303_ENTREGAS: CasillaId = validated_casilla_id("59", surface="test")
 _M349_IMPORTE_OPERACIONES: CasillaId = validated_casilla_id("decl.importe-operaciones", surface="test")
+
+
+def _secure_write(
+    *,
+    namespace: str,
+    object_key: str,
+    payload: bytes,
+    expected_revision_id: str | None = None,
+) -> SecureObjectWrite:
+    return SecureObjectWrite(
+        namespace=namespace,
+        object_key=object_key,
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=_CLOCK,
+        payload=payload,
+        expected_revision_id=expected_revision_id,
+    )
 
 
 class _InMemoryWorkUnitRepository:
@@ -61,7 +85,40 @@ class _InMemoryWorkUnitRepository:
     def load(self) -> WorkUnitCatalogue:
         return self._catalogue
 
+    def exists(self) -> bool:
+        return bool(self._catalogue.work_units)
+
+    def load_revisioned(self) -> tuple[WorkUnitCatalogue, str]:
+        return self._catalogue, _REPOSITORY_REVISION_ID
+
     def save(self, catalogue: WorkUnitCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def mutate(self, mutation: Callable[[WorkUnitCatalogue], WorkUnitCatalogue]) -> WorkUnitCatalogue:
+        self._catalogue = mutation(self._catalogue)
+        return self._catalogue
+
+    def to_secure_object_write(
+        self,
+        catalogue: WorkUnitCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        return _secure_write(
+            namespace="application-test-work-units",
+            object_key="m303-m349-reconcile",
+            payload=catalogue.model_dump_json().encode("utf-8"),
+            expected_revision_id=expected_revision_id,
+        )
+
+    def save_with_secure_object_writes(
+        self,
+        catalogue: WorkUnitCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
+    ) -> None:
+        del extra_writes, expected_revision_id
         self._catalogue = catalogue
 
 
@@ -71,10 +128,43 @@ class _InMemoryCalculationRevisionRepository:
     def __init__(self) -> None:
         self._catalogue = CalculationRevisionCatalogue()
 
+    @property
+    def bucket_id(self) -> str | None:
+        return _BUCKET_ID
+
     def load(self) -> CalculationRevisionCatalogue:
         return self._catalogue
 
+    def exists(self) -> bool:
+        return bool(self._catalogue.revisions)
+
+    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+        return self._catalogue, _REPOSITORY_REVISION_ID
+
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
+        self._catalogue = catalogue
+
+    def to_secure_object_write(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        return _secure_write(
+            namespace="application-test-calculation-revisions",
+            object_key="m303-m349-reconcile",
+            payload=catalogue.model_dump_json().encode("utf-8"),
+            expected_revision_id=expected_revision_id,
+        )
+
+    def save_with_secure_object_writes(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
+    ) -> None:
+        del extra_writes, expected_revision_id
         self._catalogue = catalogue
 
 
@@ -120,9 +210,11 @@ def _seed_work_unit(
     return work_unit
 
 
-def _build_revision(work_unit: WorkUnit, casilla_values: dict[CasillaId, Decimal]) -> CalculationRevision:
+def _build_revision(
+    work_unit: WorkUnit, casilla_values: dict[CasillaId, Decimal], *, operation: PinnedAuthorityOperation
+) -> CalculationRevision:
     filing_instance_evidence = (
-        general_m303_filing_evidence(work_unit.period, reference="test:m303-m349-reconcile")
+        general_m303_filing_evidence(work_unit.period, reference="test:m303-m349-reconcile", operation=operation)
         if str(work_unit.modelo) == "303"
         else None
     )
@@ -162,8 +254,10 @@ def _persist_revision(
     work_unit: WorkUnit,
     casilla_values: dict[CasillaId, Decimal],
     repository: _InMemoryCalculationRevisionRepository,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
-    revision = _build_revision(work_unit, casilla_values)
+    revision = _build_revision(work_unit, casilla_values, operation=operation)
     repository.save(upsert_calculation_revision(repository.load(), revision))
     return revision
 
@@ -182,29 +276,36 @@ def _reconcile(
     *,
     work_unit_repository: _InMemoryWorkUnitRepository,
     calculation_repository: _InMemoryCalculationRevisionRepository,
+    operation: PinnedAuthorityOperation,
 ):
     return m303_m349_intracom_reconcile_findings(
         work_unit=work_unit,
         target=target,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
 
 
 def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
     m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
     m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
-    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
-    _persist_revision(m349, _m349_values(importe=Decimal("8000")), calculation_repository)
+    target = _build_revision(
+        m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
+    )
+    _persist_revision(m349, _m349_values(importe=Decimal("8000")), calculation_repository, operation=operation)
 
     findings = _reconcile(
         m303,
         target,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
 
     assert len(findings) == 1
@@ -221,12 +322,16 @@ def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen(
 
 def test_advisory_silent_when_totals_reconcile(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
     m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
     m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
-    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
-    _persist_revision(m349, _m349_values(importe=Decimal("10000")), calculation_repository)
+    target = _build_revision(
+        m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
+    )
+    _persist_revision(m349, _m349_values(importe=Decimal("10000")), calculation_repository, operation=operation)
 
     assert (
         _reconcile(
@@ -234,6 +339,7 @@ def test_advisory_silent_when_totals_reconcile(
             target,
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
+            operation=operation,
         )
         == []
     )
@@ -241,6 +347,8 @@ def test_advisory_silent_when_totals_reconcile(
 
 def test_advisory_fires_when_verifying_the_m349_side(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
     m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
@@ -249,14 +357,16 @@ def test_advisory_fires_when_verifying_the_m349_side(
         m303,
         _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")),
         calculation_repository,
+        operation=operation,
     )
-    target = _build_revision(m349, _m349_values(importe=Decimal("8000")))
+    target = _build_revision(m349, _m349_values(importe=Decimal("8000")), operation=operation)
 
     findings = _reconcile(
         m349,
         target,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
 
     assert len(findings) == 1
@@ -267,10 +377,14 @@ def test_advisory_fires_when_verifying_the_m349_side(
 
 def test_no_finding_when_sibling_declaration_absent(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
     m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
-    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
+    target = _build_revision(
+        m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
+    )
 
     assert (
         _reconcile(
@@ -278,6 +392,7 @@ def test_no_finding_when_sibling_declaration_absent(
             target,
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
+            operation=operation,
         )
         == []
     )
@@ -285,13 +400,17 @@ def test_no_finding_when_sibling_declaration_absent(
 
 def test_within_de_minimis_gap_is_silent(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
     m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
     m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
-    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")))
+    target = _build_revision(
+        m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
+    )
     # gap of 0.50 EUR <= 1.00 de-minimis tolerance -> no advisory.
-    _persist_revision(m349, _m349_values(importe=Decimal("9999.50")), calculation_repository)
+    _persist_revision(m349, _m349_values(importe=Decimal("9999.50")), calculation_repository, operation=operation)
 
     assert (
         _reconcile(
@@ -299,6 +418,7 @@ def test_within_de_minimis_gap_is_silent(
             target,
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
+            operation=operation,
         )
         == []
     )
@@ -306,12 +426,14 @@ def test_within_de_minimis_gap_is_silent(
 
 def test_no_finding_when_nothing_intracommunity_declared(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
     m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
     m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
-    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")))
-    _persist_revision(m349, _m349_values(importe=Decimal("0")), calculation_repository)
+    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")), operation=operation)
+    _persist_revision(m349, _m349_values(importe=Decimal("0")), calculation_repository, operation=operation)
 
     assert (
         _reconcile(
@@ -319,6 +441,7 @@ def test_no_finding_when_nothing_intracommunity_declared(
             target,
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
+            operation=operation,
         )
         == []
     )
@@ -326,12 +449,14 @@ def test_no_finding_when_nothing_intracommunity_declared(
 
 def test_reconcile_skipped_for_unrelated_modelo(
     repositories: tuple[_InMemoryWorkUnitRepository, _InMemoryCalculationRevisionRepository],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
     m130 = _seed_work_unit(modelo="130", filing_year=2024, period="1T", repository=work_unit_repository)
     # The reconcile short-circuits before reading any casilla for a non-303/349
     # modelo, so an empty-values draft (no grounded observations required) suffices.
-    target = _build_revision(m130, {})
+    target = _build_revision(m130, {}, operation=operation)
 
     assert (
         _reconcile(
@@ -339,6 +464,7 @@ def test_reconcile_skipped_for_unrelated_modelo(
             target,
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
+            operation=operation,
         )
         == []
     )

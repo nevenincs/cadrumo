@@ -65,6 +65,7 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from .review_package import assert_review_package_verifies
 
 if TYPE_CHECKING:
@@ -204,7 +205,8 @@ def sign_review_package(
             verification (propagated from
             :func:`~application.modelo.assert_review_package_verifies`).
     """
-    manifest = assert_review_package_verifies(package_path)
+    with bundled_indexed_authority().operation() as operation:
+        manifest = assert_review_package_verifies(package_path, operation=operation)
     manifest_sha256 = _package_manifest_sha256(package_path)
     signature_hex = sign_digest_hex(
         private_key_hex=keypair.private_key_hex,

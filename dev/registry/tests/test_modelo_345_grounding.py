@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import shift_deadline
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -80,8 +81,11 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     # statutory date.
     assert {window.closes_on for window in revision.deadline_windows} == {date(2026, 1, 31)}
     (window,) = revision.deadline_windows
-    with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
-        shift_deadline(window.closes_on, modelo="345", ccaa_code=None, authority=authority)
+    with (
+        pytest.raises(DeadlineValidationError, match="no variant for the exact query context"),
+        bundled_indexed_authority().operation() as operation,
+    ):
+        shift_deadline(window.closes_on, modelo="345", ccaa_code=None, operation=operation)
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-345-2025"}
     # "export" joined the surfaces when the modelo's export layout was authored;
     # the link set is a consequence of that, not a drift.

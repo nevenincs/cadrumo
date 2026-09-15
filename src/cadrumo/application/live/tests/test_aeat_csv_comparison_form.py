@@ -33,7 +33,9 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
@@ -48,6 +50,7 @@ from ..filed_observation_persistence import (
     _existing_justificante_evidence_matches,
     filed_observation_source_metadata,
 )
+from ..filed_observation_ports import FiledObservationArtefactProtocol, FiledObservedCasillaProtocol
 from ..justificante import _existing_capture_evidence_matches_current_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -79,6 +82,10 @@ class _PriorObservation:
     presented_at: datetime
     authenticated_identity: str
     metadata: Mapping[str, str]
+    artefacts: tuple[FiledObservationArtefactProtocol, ...]
+    casillas: tuple[FiledObservedCasillaProtocol, ...]
+    headers: tuple[ObservedHeaderFact, ...]
+    registry_snapshot_ref: RegistrySnapshotRef
 
 
 def _prior_303_observation(
@@ -97,6 +104,15 @@ def _prior_303_observation(
         presented_at=_CLOCK,
         authenticated_identity="12345678Z",
         metadata={},
+        artefacts=(),
+        casillas=(),
+        headers=(),
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2026",
+            modelo_year=2026,
+            period="1T",
+        ),
     )
 
 

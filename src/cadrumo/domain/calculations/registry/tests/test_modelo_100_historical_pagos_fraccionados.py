@@ -14,8 +14,10 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.aggregation import BindingAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import ValidatedRegistryAuthority
+from ..binding_aggregation import binding_aggregation_op
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relations import (
     RegistryFoldRequirement,
@@ -111,10 +113,10 @@ def test_historical_pagos_fraccionados_relation_contract_and_fold(
     assert provider_130.declared_source_casilla_ids == (_M130_SOURCE_CASILLA,)
     assert provider_131.source_modelo == "131"
     assert provider_131.declared_source_casilla_ids == (_M131_SOURCE_CASILLA,)
-    assert provider_130.temporal.source_periods == ("1T", "2T", "3T", "4T")
-    assert provider_131.temporal.source_periods == ("1T", "2T", "3T", "4T")
-    assert binding_130.aggregation.op == "sum"
-    assert binding_131.aggregation.op == "sum"
+    assert provider_130.required_source_periods == ("1T", "2T", "3T", "4T")
+    assert provider_131.required_source_periods == ("1T", "2T", "3T", "4T")
+    assert binding_aggregation_op(binding_130) is BindingAggregationOp.SUM
+    assert binding_aggregation_op(binding_131) is BindingAggregationOp.SUM
 
     construct = constructs[f"renta-{year}-dependent-modelos"]
     assert "renta-pagos-fraccionados-ingresados" in construct.formulas

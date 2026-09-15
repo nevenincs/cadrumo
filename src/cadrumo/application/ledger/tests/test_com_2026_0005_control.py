@@ -32,6 +32,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.directory_scan import (
     scan_directory,
 )
@@ -152,7 +154,7 @@ def test_the_layout_minimal_document_prints_both_identifiers() -> None:
     assert "SIN-NUMERO" in transcription.text
 
 
-def test_layout_minimal_never_yields_a_first_match_identifier() -> None:
+def test_layout_minimal_never_yields_a_first_match_identifier(operation: PinnedAuthorityOperation) -> None:
     """THE layout-minimal acceptance criterion, against the real control document.
 
     The defect returns ``B17283946`` as the supplier. On this document that
@@ -169,6 +171,7 @@ def test_layout_minimal_never_yields_a_first_match_identifier() -> None:
         ),
         taxpayer_tax_id=_RECIPIENT_CIF,
         origin=FieldOrigin.TEXT_LAYER,
+        operation=operation,
     )
 
     assert resolution.resolved is None
@@ -179,7 +182,7 @@ def test_layout_minimal_never_yields_a_first_match_identifier() -> None:
     assert DraftDiscrepancyKind.ROLE_UNRESOLVED in kinds
 
 
-def test_layout_minimal_still_refuses_when_the_filer_is_not_the_recipient() -> None:
+def test_layout_minimal_still_refuses_when_the_filer_is_not_the_recipient(operation: PinnedAuthorityOperation) -> None:
     """The refusal must not depend on the own-identifier guard alone.
 
     With an unrelated filer, ``B17283946`` survives verification -- and must
@@ -195,6 +198,7 @@ def test_layout_minimal_still_refuses_when_the_filer_is_not_the_recipient() -> N
         ),
         taxpayer_tax_id="12345678Z",
         origin=FieldOrigin.TEXT_LAYER,
+        operation=operation,
     )
 
     assert resolution.resolved is None

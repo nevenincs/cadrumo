@@ -22,6 +22,7 @@ See Also:
 from __future__ import annotations
 
 import tomllib
+from collections.abc import Iterator
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -29,7 +30,10 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.domain.iva.flow import IvaSettlementSide
 
 from ....core.resources.bundled_data import bundled_path
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.binding_selector_utils import selector_as_dict
+from ...calculations.registry.governed_fact_scope import validating_governed_facts
+from ...calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
 from ..classification import InvoiceKind
 from ..flow import (
     IvaFlowDirection,
@@ -43,6 +47,12 @@ from ..schema import IvaCategory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@pytest.fixture(scope="module", autouse=True)
+def _flow_authority_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        yield
+
+
 def test_iva_flow_direction_enum_has_four_closed_members() -> None:
     """The axis carries both sides of a reverse-charge operation, not just one.
 
@@ -51,7 +61,8 @@ def test_iva_flow_direction_enum_has_four_closed_members() -> None:
     reverse-charge invoice was routed to the recipient's member and self-assessed
     as though the supplier owed the cuota it had deliberately not charged.
     """
-    assert {m for m in IvaFlowDirection} == {
+    catalogue = resolve_iva_flow_direction_catalogue()
+    assert set(catalogue.choices) == {
         IvaFlowDirection._from_registry("repercutido"),
         IvaFlowDirection._from_registry("soportado"),
         IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
@@ -335,7 +346,8 @@ def test_iva_settlement_side_enum_has_two_closed_members() -> None:
     Treasury). The enum must be closed at exactly these two members."""
     from ..flow import IvaSettlementSide
 
-    assert {s for s in IvaSettlementSide} == {
+    catalogue = resolve_iva_flow_direction_catalogue()
+    assert set(catalogue.settlement_choices) == {
         IvaSettlementSide._from_registry("devengada"),
         IvaSettlementSide._from_registry("deducible"),
     }
@@ -388,7 +400,7 @@ def test_devengada_flow_predicate_matches_settlement_semantics() -> None:
         IvaFlowDirection._from_registry("repercutido"),
         IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
     }
-    for flow in IvaFlowDirection:
+    for flow in resolve_iva_flow_direction_catalogue().choices:
         assert is_devengada_flow(flow) == (flow in expected)
 
 
@@ -399,7 +411,7 @@ def test_deducible_flow_predicate_matches_settlement_semantics() -> None:
         IvaFlowDirection._from_registry("soportado"),
         IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
     }
-    for flow in IvaFlowDirection:
+    for flow in resolve_iva_flow_direction_catalogue().choices:
         assert is_deducible_flow(flow) == (flow in expected)
 
 
@@ -415,11 +427,12 @@ def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
     """
     from ..flow import settlement_sides_for_flow
 
-    assert len(list(IvaFlowDirection)) > 0
-    for flow in IvaFlowDirection:
+    catalogue = resolve_iva_flow_direction_catalogue()
+    assert len(catalogue.choices) > 0
+    for flow in catalogue.choices:
         settlement_sides_for_flow(flow)  # raises KeyError if the member is unmapped
-    sideless = {flow for flow in IvaFlowDirection if not settlement_sides_for_flow(flow)}
-    assert sideless == {IvaFlowDirection._from_registry("operacion_con_inversion")}, (
+    sideless = {flow for flow in catalogue.choices if not settlement_sides_for_flow(flow)}
+    assert sideless == {catalogue.supplier_reverse_charge_token}, (
         "exactly one flow settles on neither side — the supplier's own reverse-charge "
         f"supply. A second one appearing here is unreviewed: {sorted(f.value for f in sideless)}"
     )
@@ -430,7 +443,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     tiers) + INVERSION_SUJETO_PASIVO — the same flows as DEVENGADA_FLOW_DIRECTIONS.
     This test is a contract gate: if the substrate's devengada set ever
     changes, this test fires unless 303's formula updates in lockstep."""
-    from ..flow import IvaFlowDirection, is_devengada_flow
+    from ..flow import is_devengada_flow
 
     m303 = compiled_bundled_authority().modelo("303")
     revision = m303.revisions["2022"]
@@ -449,6 +462,6 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
         binding_id = casilla_to_binding[casilla_id]
         binding = next(b for b in revision.bindings if b.id == binding_id)
         flow_value = selector_as_dict(binding)["flow_direction"]
-        binding_flows.add(IvaFlowDirection(flow_value))
+        binding_flows.add(resolve_iva_flow_direction_catalogue().require(flow_value))
 
-    assert binding_flows == {flow for flow in IvaFlowDirection if is_devengada_flow(flow)}
+    assert binding_flows == {flow for flow in resolve_iva_flow_direction_catalogue().choices if is_devengada_flow(flow)}

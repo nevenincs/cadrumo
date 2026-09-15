@@ -38,6 +38,7 @@ from .profile_record_repository import ProfileRecordRepository
 from .validation import reject_invalid_profile_facts
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.values import UserProfileRecord
     from .censal_operation import CensalReviewedOperand
 
@@ -178,6 +179,7 @@ def apply_cotejo[StateT](
     adopted: Sequence[UserProfileFact] | None = None,
     divergences: Sequence[CensoDivergence] | None = None,
     reviewed_proposal: CensalReviewedOperand | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> StateT:
     """Commit a cotejo reconciliation: adopt certificate values, record divergences.
 
@@ -220,7 +222,10 @@ def apply_cotejo[StateT](
     from ...core.bucket_pointer import require_active_bucket_id
 
     profile_id = require_active_bucket_id()
-    repository = ProfileRecordRepository.for_current_session(profile_id)
+    repository = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    )
     record = repository.load(profile_id)
     profile_context = repository.session.profile_decode_context
     if reviewed_proposal is not None:

@@ -46,7 +46,7 @@ class _SchemaDrift(Enum):
 _UNPARSEABLE: Final = _SchemaDrift.UNPARSEABLE
 
 
-def _enum_or_none[EnumT: StrEnum](enum_type: type[EnumT], value: str | None) -> EnumT | None:
+def _enum_or_none[EnumT: str](enum_type: type[EnumT], value: str | None) -> EnumT | None:
     """Parse an OPTIONAL stored enum value, treating absent and unreadable alike.
 
     Kept for :attr:`LedgerEvidenceRow.iva_category`, whose absence is a real

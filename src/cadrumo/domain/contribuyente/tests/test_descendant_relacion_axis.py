@@ -20,14 +20,17 @@ structural coverage.
 from __future__ import annotations
 
 from datetime import date
-from typing import Any
+from functools import cache
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.descendant_relacion import DescendantRelacion
-from ...calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
+from ...calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_entitling_tokens,
+    descendant_relacion_tokens,
+)
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -46,6 +49,19 @@ _YEAR = 2024
 #: and only the age-independent entry-event limb can grant the increase. Every
 #: entitlement assertion below is therefore about the limb under test.
 _OLD_BIRTH = date(2010, 1, 1)
+
+
+@cache
+def _family_context(filing_year: int) -> FamilyFactResolutionContext:
+    coordinate = date(filing_year, 12, 31)
+    return FamilyFactResolutionContext(
+        authority=compiled_bundled_authority(),
+        filing_period=coordinate,
+        devengo_date=coordinate,
+    )
+
+
+_FACT_CONTEXT = _family_context(_YEAR)
 
 
 def _older_child(
@@ -78,19 +94,27 @@ def test_temporal_acogimiento_takes_the_tranche_and_not_the_increase() -> None:
     """
     carer = _older_child(DescendantRelacion._from_registry("acogimiento_temporal"))
 
-    assert carer.meets_non_income_conditions(_YEAR) is True
-    assert carer.is_eligible_minimo_incremento_menor_tres(_YEAR) is False
+    assert carer.meets_non_income_conditions(_YEAR, context=_FACT_CONTEXT) is True
+    assert carer.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
 
 
 def test_tutela_takes_the_tranche_and_not_the_increase() -> None:
     """Art. 58.1 names tutela; Art. 58.2 omits it. One word of scope difference."""
     guardian = _older_child(DescendantRelacion._from_registry("tutela"))
 
-    assert guardian.meets_non_income_conditions(_YEAR) is True
-    assert guardian.is_eligible_minimo_incremento_menor_tres(_YEAR) is False
+    assert guardian.meets_non_income_conditions(_YEAR, context=_FACT_CONTEXT) is True
+    assert guardian.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
 
 
-@pytest.mark.parametrize("relacion", sorted(descendant_relacion_entitling_tokens()))
+@pytest.mark.parametrize(
+    "relacion",
+    sorted(
+        descendant_relacion_entitling_tokens(
+            effective_date=_FACT_CONTEXT.filing_period,
+            authority=_FACT_CONTEXT.authority,
+        )
+    ),
+)
 def test_every_entitling_relacion_opens_the_window_with_its_own_anchor(
     relacion: DescendantRelacion,
 ) -> None:
@@ -102,7 +126,7 @@ def test_every_entitling_relacion_opens_the_window_with_its_own_anchor(
         else _older_child(relacion, acogimiento_resolucion_date=anchor)
     )
 
-    assert child.is_eligible_minimo_incremento_menor_tres(_YEAR) is True
+    assert child.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is True
 
 
 def test_the_increase_is_age_independent_for_an_entitling_relacion() -> None:
@@ -119,7 +143,7 @@ def test_the_increase_is_age_independent_for_an_entitling_relacion() -> None:
     )
 
     assert teenager.age_at_year_end(_YEAR) == 14
-    assert teenager.is_eligible_minimo_incremento_menor_tres(_YEAR) is True
+    assert teenager.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is True
 
 
 # ── the window is a CAP, not a restart ──────────────────────────────────────
@@ -142,7 +166,11 @@ def test_a_fostered_then_adopted_child_gets_three_periods_in_total_not_six() -> 
     )
 
     assert child.art_58_2_entry_date() == date(2019, 5, 1)
-    granted = [year for year in range(2019, 2026) if child.is_eligible_minimo_incremento_menor_tres(year)]
+    granted = [
+        year
+        for year in range(2019, 2026)
+        if child.is_eligible_minimo_incremento_menor_tres(year, context=_family_context(year))
+    ]
     assert granted == [2019, 2020, 2021]
 
 
@@ -234,11 +262,19 @@ def test_the_predicate_withholds_even_if_an_excluded_record_somehow_holds_a_date
     )
 
     assert smuggled.art_58_2_entry_date() is None
-    assert smuggled.is_eligible_minimo_incremento_menor_tres(_YEAR) is False
-    assert smuggled.art_58_2_window_anchor_missing(_YEAR) is False
+    assert smuggled.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
+    assert smuggled.art_58_2_window_anchor_missing(_YEAR, context=_FACT_CONTEXT) is False
 
 
-@pytest.mark.parametrize("relacion", sorted(descendant_relacion_entitling_tokens()))
+@pytest.mark.parametrize(
+    "relacion",
+    sorted(
+        descendant_relacion_entitling_tokens(
+            effective_date=_FACT_CONTEXT.filing_period,
+            authority=_FACT_CONTEXT.authority,
+        )
+    ),
+)
 def test_an_entitling_relacion_without_its_date_is_valid_and_withholds(
     relacion: DescendantRelacion,
 ) -> None:
@@ -253,8 +289,8 @@ def test_an_entitling_relacion_without_its_date_is_valid_and_withholds(
     child = _older_child(relacion)
 
     assert child.art_58_2_entry_date() is None
-    assert child.is_eligible_minimo_incremento_menor_tres(_YEAR) is False
-    assert child.art_58_2_window_anchor_missing(_YEAR) is True
+    assert child.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
+    assert child.art_58_2_window_anchor_missing(_YEAR, context=_FACT_CONTEXT) is True
 
 
 @pytest.mark.parametrize(
@@ -287,7 +323,7 @@ def test_the_missing_anchor_report_stays_silent_where_nothing_is_lost(
     reason: str,
 ) -> None:
     """A report that fires on states costing nothing trains the operator to ignore it."""
-    assert child.art_58_2_window_anchor_missing(_YEAR) is False, reason
+    assert child.art_58_2_window_anchor_missing(_YEAR, context=_FACT_CONTEXT) is False, reason
 
 
 def test_an_unstated_relacion_with_an_inscription_reads_as_adoptado() -> None:
@@ -302,7 +338,7 @@ def test_an_unstated_relacion_with_an_inscription_reads_as_adoptado() -> None:
     child = DescendantInfo(birth_date=_OLD_BIRTH, inscripcion_registro_civil_date=date(2024, 2, 1))
 
     assert child.relacion is DescendantRelacion._from_registry("adoptado")
-    assert child.is_eligible_minimo_incremento_menor_tres(_YEAR) is True
+    assert child.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is True
 
 
 def test_an_unstated_relacion_defaults_to_the_ordinary_descendant() -> None:
@@ -319,7 +355,10 @@ def test_the_flag_parser_reads_every_relacion_member() -> None:
     A member the CLI cannot express is a member the operator does not have, and
     the temporal carer would be back to choosing an entitling relación.
     """
-    for member in DescendantRelacion:
+    for member in descendant_relacion_tokens(
+        effective_date=_FACT_CONTEXT.filing_period,
+        authority=_FACT_CONTEXT.authority,
+    ):
         parsed = parse_descendiente_flag(f"NACIMIENTO=2010-01-01,RELACION={member.value}")
         assert parsed.relacion is member
 
@@ -429,7 +468,7 @@ def test_deleting_the_stored_relacion_changes_the_reloaded_record() -> None:
 
     assert reloaded != temporal
     assert reloaded.relacion is DescendantRelacion._from_registry("descendiente")
-    assert reloaded.is_eligible_minimo_incremento_menor_tres(_YEAR) is False
+    assert reloaded.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
 
 
 def test_corrupting_the_stored_relacion_refuses_rather_than_coercing() -> None:
@@ -467,11 +506,11 @@ class TestGuardaYCustodiaJudicial:
     """
 
     @staticmethod
-    def _child(**kwargs: Any) -> DescendantInfo:
+    def _child(*, acogimiento_resolucion_date: date | None = None) -> DescendantInfo:
         return DescendantInfo(
             birth_date=_OLD_BIRTH,
             relacion=DescendantRelacion._from_registry("guarda_y_custodia_judicial"),
-            **kwargs,  # type: ignore[arg-type]
+            acogimiento_resolucion_date=acogimiento_resolucion_date,
         )
 
     def test_art_58_1_assimilates_it_so_the_tranches_apply(self) -> None:
@@ -484,13 +523,22 @@ class TestGuardaYCustodiaJudicial:
         """
         from ._registry_thresholds import registry_thresholds
 
-        assert self._child().is_eligible_ordinary(_YEAR, thresholds=registry_thresholds(_YEAR)) is True
+        assert (
+            self._child().is_eligible_ordinary(
+                _YEAR,
+                thresholds=registry_thresholds(_YEAR),
+                context=_FACT_CONTEXT,
+            )
+            is True
+        )
 
     def test_it_never_opens_the_art_58_2_entry_event_window(self) -> None:
         """Absent from "adopción o acogimiento, tanto preadoptivo como permanente"."""
-        assert (
-            DescendantRelacion._from_registry("guarda_y_custodia_judicial")
-            not in descendant_relacion_entitling_tokens()
+        assert DescendantRelacion._from_registry(
+            "guarda_y_custodia_judicial"
+        ) not in descendant_relacion_entitling_tokens(
+            effective_date=_FACT_CONTEXT.filing_period,
+            authority=_FACT_CONTEXT.authority,
         )
 
     def test_it_cannot_carry_an_entry_event_date(self) -> None:
@@ -513,9 +561,8 @@ class TestGuardaYCustodiaJudicial:
         is a non-member, so a later reader does not admit it on the assumption
         that its omission was an oversight.
         """
-        context = FamilyFactResolutionContext(compiled_bundled_authority(), date(_YEAR, 12, 31), date(_YEAR, 12, 31))
         assert DescendantRelacion._from_registry("guarda_y_custodia_judicial") not in art_81_1_maternity_relations(
-            context=context
+            context=_FACT_CONTEXT
         )
 
     def test_the_entry_surface_ships_with_the_member(self) -> None:
@@ -550,6 +597,13 @@ def test_no_grandchild_member_exists_on_the_relacion_axis() -> None:
     reaching for the nearest-looking fix.
     """
     degree_tokens = ("nieto", "bisnieto", "grandchild")
-    offenders = [m.name for m in DescendantRelacion if any(tok in m.value for tok in degree_tokens)]
+    offenders = [
+        relation.name
+        for relation in descendant_relacion_tokens(
+            effective_date=_FACT_CONTEXT.filing_period,
+            authority=_FACT_CONTEXT.authority,
+        )
+        if any(token in relation.value for token in degree_tokens)
+    ]
 
     assert offenders == [], f"generational degree encoded on the relación axis: {offenders}"

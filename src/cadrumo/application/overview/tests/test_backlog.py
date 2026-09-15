@@ -40,7 +40,12 @@ def test_backlog_returns_typed_envelope() -> None:
     """The aggregator returns an OverviewBacklog envelope carrying the
     window, the items tuple, and the cached late_count."""
 
-    backlog = build_overview_backlog(_profile(), **_window_args())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        backlog = build_overview_backlog(
+            _profile(),
+            **_window_args(),
+            operation=_authority_operation_for_test,
+        )
 
     assert isinstance(backlog, OverviewBacklog)
     assert backlog.as_of == date(2026, 12, 31)
@@ -69,7 +74,12 @@ def test_backlog_items_are_strictly_past_due_and_late() -> None:
     """Every item in the backlog has adjusted_closes_on < as_of and
     user_state == LATE. Filed and future obligations are excluded."""
 
-    backlog = build_overview_backlog(_profile(), **_window_args())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        backlog = build_overview_backlog(
+            _profile(),
+            **_window_args(),
+            operation=_authority_operation_for_test,
+        )
 
     for entry in backlog.items:
         assert entry.adjusted_closes_on < backlog.as_of, (
@@ -84,7 +94,12 @@ def test_backlog_items_sorted_oldest_first() -> None:
     """Items must be sorted ascending by adjusted_closes_on so the
     operator triages the most-overdue obligation first."""
 
-    backlog = build_overview_backlog(_profile(), **_window_args())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        backlog = build_overview_backlog(
+            _profile(),
+            **_window_args(),
+            operation=_authority_operation_for_test,
+        )
 
     deadlines = [entry.adjusted_closes_on for entry in backlog.items]
     assert deadlines == sorted(deadlines)
@@ -94,7 +109,12 @@ def test_backlog_late_count_matches_items_length() -> None:
     """The cached late_count is the canonical source for header summaries.
     It must equal len(items) on every aggregator run."""
 
-    backlog = build_overview_backlog(_profile(), **_window_args())
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        backlog = build_overview_backlog(
+            _profile(),
+            **_window_args(),
+            operation=_authority_operation_for_test,
+        )
 
     assert backlog.late_count == len(backlog.items)
 

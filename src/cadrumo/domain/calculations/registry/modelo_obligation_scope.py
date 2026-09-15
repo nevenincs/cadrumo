@@ -115,5 +115,5 @@ class _NonRegistryModelos(Set[Modelo]):
 
 
 OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = _ScopeMapping()
-UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {}
+UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = dict[Modelo, str]()
 NON_REGISTRY_MODELOS: Set[Modelo] = _NonRegistryModelos()

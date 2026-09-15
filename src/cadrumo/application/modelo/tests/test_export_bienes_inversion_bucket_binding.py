@@ -7,6 +7,8 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
@@ -30,7 +32,7 @@ def _record(identifier: str, *, initial_percentage: Decimal) -> BienInversionIva
     )
 
 
-def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register() -> None:
+def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(*, operation: PinnedAuthorityOperation) -> None:
     """Primary evidence cannot bleed into the secondary M303 export arrival."""
     period = Period.from_year_and_code(2026, "4T")
     prorrata_register = ProrrataRegister(
@@ -59,6 +61,7 @@ def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register() -> None:
         prorrata_register=prorrata_register,
         iva_aggregation=IvaLedgerAggregation(period=period),
         bienes_register=secondary_register,
+        operation=operation,
     )
 
     assert contributions == ()

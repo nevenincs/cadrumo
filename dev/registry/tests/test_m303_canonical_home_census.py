@@ -98,6 +98,7 @@ def _authorities(epoch_name: str) -> _EpochAuthorities:
         sources=catalogues.sources,
         legal_ref_ids=frozenset(catalogues.legal),
     )
+    assert inspection.source_root is not None
     semantic_map = load_semantic_map(_MAPPING_ROOT / epoch.name)
     intermediate = load_record_design_intermediate(
         inspection.source_root,

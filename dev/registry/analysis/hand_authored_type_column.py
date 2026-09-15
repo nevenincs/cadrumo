@@ -157,6 +157,13 @@ def _object_mappings(value: object) -> tuple[dict[str, object], ...]:
     return tuple(mapping for item in value if (mapping := _object_mapping(item)) is not None)
 
 
+def _wire_integer(value: object, *, field_name: str) -> int:
+    """Return a wire-geometry integer, rejecting other TOML scalar types."""
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError(f"export field {field_name} must be an integer")
+    return value
+
+
 def _shipped_records(revision_root: Path) -> Iterator[tuple[str, dict[str, object]]]:
     for layout_file in sorted((revision_root / "export_layouts").glob("*.toml")):
         document = _object_mapping(tomllib.loads(layout_file.read_text(encoding="utf-8")))
@@ -189,7 +196,13 @@ def revision_findings(
         if design is None:
             alignments.append(RecordAlignment(modelo, revision, layout_file, record_id, Alignment.NO_DESIGN, None))
             continue
-        slots = {(int(item["offset"]), int(item["length"])) for item in fields}
+        slots = {
+            (
+                _wire_integer(item["offset"], field_name="offset"),
+                _wire_integer(item["length"], field_name="length"),
+            )
+            for item in fields
+        }
         covering = sorted(name for name, sheet_slots in design.items() if slots <= sheet_slots.keys())
         if len(covering) != 1:
             outcome = Alignment.AMBIGUOUS if covering else Alignment.UNMATCHED
@@ -198,7 +211,10 @@ def revision_findings(
         sheet = covering[0]
         alignments.append(RecordAlignment(modelo, revision, layout_file, record_id, Alignment.ALIGNED, sheet))
         for item in fields:
-            slot = (int(item["offset"]), int(item["length"]))
+            slot = (
+                _wire_integer(item["offset"], field_name="offset"),
+                _wire_integer(item["length"], field_name="length"),
+            )
             if design[sheet][slot] == _SIGNED_TYPE and not item.get("signed", False):
                 contradictions.append(
                     TypeColumnContradiction(

@@ -337,11 +337,13 @@ def test_remove_operator_certificate_source_secret_is_idempotent(
             certificate_secret_backend_factory=build_certificate_secret_backend,
             name="personal",
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
         )
         second = remove_operator_certificate_source_secret(
             certificate_secret_backend_factory=build_certificate_secret_backend,
             name="personal",
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=_certificate_authority_operation_for_test,
         )
 
         assert first.removed is True

@@ -44,7 +44,7 @@ from __future__ import annotations
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
@@ -64,6 +64,9 @@ from ...domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from .review_package_text import ReviewPackageNote
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 #: Wire-format version of the review-package descriptor. Bumped when the
 #: package-info schema changes shape.
@@ -203,6 +206,7 @@ def build_review_package(
     draft_bytes: bytes,
     output_path: Path,
     built_by: str,
+    operation: PinnedAuthorityOperation,
     notes: str = "",
     generated_at: datetime | None = None,
 ) -> ReviewPackageBuildResult:
@@ -271,7 +275,7 @@ def build_review_package(
             translated_message="application.modelo.errors.review_package_generic",
             context={"work_unit_id": work_unit.work_unit_id, "detail": "registry snapshot coordinate mismatch"},
         )
-    carry_outcome = revision_carry_outcome(revision.registry_snapshot_ref)
+    carry_outcome = revision_carry_outcome(revision.registry_snapshot_ref, operation=operation)
     if carry_outcome.refused:
         raise ReviewPackageError(
             translated_message="application.modelo.errors.review_package_generic",
@@ -352,7 +356,11 @@ def build_review_package(
     )
 
 
-def verify_review_package(package_path: Path) -> ReviewPackageVerification:
+def verify_review_package(
+    package_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ReviewPackageVerification:
     """Verify a review package's checksum manifest and recover its descriptor.
 
     Delegates the checksum layer entirely to
@@ -389,7 +397,7 @@ def verify_review_package(package_path: Path) -> ReviewPackageVerification:
         result_missing=result.missing,
         result_mismatched=result.mismatched,
     )
-    carry_outcome = revision_carry_outcome(manifest.registry_snapshot_ref)
+    carry_outcome = revision_carry_outcome(manifest.registry_snapshot_ref, operation=operation)
     if carry_outcome.refused:
         raise ReviewPackageIntegrityError(
             translated_message="application.modelo.errors.review_package_integrity",
@@ -447,14 +455,18 @@ def _recover_package_manifest(
         ) from exc
 
 
-def assert_review_package_verifies(package_path: Path) -> ReviewPackageManifest:
+def assert_review_package_verifies(
+    package_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ReviewPackageManifest:
     """Verify ``package_path`` and raise on any drift; return its descriptor on success.
 
     Mirrors :func:`~core.corpus_manifest.assert_corpus_bundle_verifies`
     for the review-package surface: the operator-facing assertion a receiving
     side calls before trusting a handed-over package.
     """
-    verification = verify_review_package(package_path)
+    verification = verify_review_package(package_path, operation=operation)
     if not verification.is_clean:
         raise ReviewPackageIntegrityError(
             translated_message="application.modelo.errors.review_package_integrity",

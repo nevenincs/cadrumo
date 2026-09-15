@@ -124,23 +124,24 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
         }
 
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-            backend_binding_values=_modelo_303_engine_inputs(),
-            iva_compensation_decision=report.decision,
-            filing_instance_evidence=_filing_instance_evidence(work_unit.period),
-            filing_period_date=date(2026, 6, 30),
-            ports=calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-            ),
-            clock=_DECIDED_AT,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_136:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                backend_binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=report.decision,
+                filing_instance_evidence=_filing_instance_evidence(work_unit.period),
+                filing_period_date=date(2026, 6, 30),
+                ports=_calculation_ports_136,
+                clock=_DECIDED_AT,
+            )
 
         assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("1200.00")
 
@@ -159,23 +160,24 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
 
         def _calculate() -> CalculationRevision:
-            return calculate_modelo_revision(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                backend_binding_values=_modelo_303_engine_inputs(),
-                iva_compensation_decision=None,
-                filing_instance_evidence=_filing_instance_evidence(work_unit.period),
-                filing_period_date=date(2026, 6, 30),
-                ports=calculation_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    work_unit_repository=work_repo,
-                    calculation_repository=calc_repo,
-                    bucket_event_repository=event_repo,
-                ),
-                clock=_DECIDED_AT,
-            )
+            with calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_171:
+                return calculate_modelo_revision(
+                    work_unit.work_unit_id,
+                    actor="operator",
+                    casilla_inputs={},
+                    binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                    backend_binding_values=_modelo_303_engine_inputs(),
+                    iva_compensation_decision=None,
+                    filing_instance_evidence=_filing_instance_evidence(work_unit.period),
+                    filing_period_date=date(2026, 6, 30),
+                    ports=_calculation_ports_171,
+                    clock=_DECIDED_AT,
+                )
 
         # NEGATIVE CONTROL: no override recorded and no wallet/local recurrence
         # exists for the in-scope prior period, so calculation fails closed.

@@ -10,6 +10,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
@@ -156,7 +158,7 @@ def _exonerado_evidence() -> M303Exonerado390FilingEvidence:
     )
 
 
-def _regimen_evidence(period: Period) -> M303RegimenSimplificadoFilingEvidence:
+def _regimen_evidence(period: Period, *, operation: PinnedAuthorityOperation) -> M303RegimenSimplificadoFilingEvidence:
     scope = _general_m303_scope()
     return regimen_simplificado_filing_evidence(
         period=period,
@@ -171,10 +173,13 @@ def _regimen_evidence(period: Period) -> M303RegimenSimplificadoFilingEvidence:
             scope_decision=scope,
         ),
         dana_2024_eligibility=None,
+        operation=operation,
     )
 
 
-def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_override(tmp_path: Path) -> None:
+def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_override(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Persisted A28 facts need no caller-authored export applicability envelope."""
     period = Period.from_year_and_code(2025, "4T")
     provider = build_runtime_schema_provider(filing_year=2025, period=period, modelos=("303",))
@@ -206,7 +211,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
         ),
     )
     bienes_register = BienesInversionIvaRegister()
-    regimen_evidence = _regimen_evidence(period)
+    regimen_evidence = _regimen_evidence(period, operation=operation)
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",

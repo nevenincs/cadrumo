@@ -40,7 +40,7 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
     BindingDefinition,
@@ -153,6 +153,7 @@ def _load_active_borrador_snapshot(
     *,
     snapshot_id: str,
     snapshot_repository: Borrador100SnapshotRepository | None,
+    operation: PinnedAuthorityOperation,
 ) -> Borrador100Snapshot:
     """Load the selected snapshot and enforce its axis and active lifecycle."""
     from ..live.borrador_100 import BorradorSnapshotNotFoundError
@@ -172,7 +173,7 @@ def _load_active_borrador_snapshot(
         period=command.period,
         snapshot=snapshot,
     )
-    if revision_carry_outcome(snapshot.registry_snapshot_ref).refused:
+    if revision_carry_outcome(snapshot.registry_snapshot_ref, operation=operation).refused:
         raise _borrador_snapshot_load_failure(command, snapshot_id=snapshot_id)
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise _borrador_snapshot_inactive_failure(command, snapshot, snapshot_id=snapshot_id)
@@ -256,6 +257,7 @@ def resolve_modelo_100_borrador_bindings(
     *,
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
     """Resolve eligible borrador values into a :class:`CalculationSourceResolution` for one Modelo 100 calculation.
 
@@ -264,6 +266,8 @@ def resolve_modelo_100_borrador_bindings(
         registry_snapshot: The :class:`RegistrySnapshot` used to verify the
             borrador capability and select ``aeat_prefilled`` bindings.
         snapshot_repository: Optional borrador snapshot repository override.
+        operation: Caller-owned authority operation used for all governed
+            revision reads and revision-carry re-confirmation.
 
     The function is deliberately inert when no snapshot is supplied:
     borrador values are never consumed implicitly. When a snapshot is
@@ -295,6 +299,7 @@ def resolve_modelo_100_borrador_bindings(
         command,
         snapshot_id=snapshot_id,
         snapshot_repository=snapshot_repository,
+        operation=operation,
     )
     eligible_bindings = _borrador_capable_bindings(registry_snapshot)
     _assert_borrador_bindings_allowed(snapshot, eligible_bindings)
@@ -330,7 +335,7 @@ class Modelo100BorradorSourceResolver:
         caller_enum_binding_values: Mapping[BindingId, str],
         registry_snapshot: RegistrySnapshot | None = None,
         snapshot_repository: Borrador100SnapshotRepository | None = None,
-        operation: PinnedAuthorityOperation | None = None,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """Bind the borrador snapshot and the caller-supplied binding values."""
         self._borrador_snapshot_id = borrador_snapshot_id
@@ -349,16 +354,6 @@ class Modelo100BorradorSourceResolver:
         """
         snapshot = self._registry_snapshot
         if snapshot is None:
-            if self._operation is None:
-                with bundled_indexed_authority().operation() as indexed_operation:
-                    return type(self)(
-                        borrador_snapshot_id=self._borrador_snapshot_id,
-                        caller_binding_values=self._caller_binding_values,
-                        caller_enum_binding_values=self._caller_enum_binding_values,
-                        registry_snapshot=self._registry_snapshot,
-                        snapshot_repository=self._snapshot_repository,
-                        operation=indexed_operation,
-                    ).resolve(context)
             snapshot = self._operation.snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
@@ -377,6 +372,7 @@ class Modelo100BorradorSourceResolver:
                 ),
                 registry_snapshot=snapshot,
                 snapshot_repository=self._snapshot_repository,
+                operation=self._operation,
             )
         except PersistenceDegradationError as exc:
             return storage_degradation_resolution(

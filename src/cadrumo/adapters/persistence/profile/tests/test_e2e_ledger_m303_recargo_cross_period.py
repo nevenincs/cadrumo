@@ -271,33 +271,32 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period).revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=event_repo
-        ),
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
     )
     decision = _wallet_decision(period=period)
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        actor="system",
-        binding_values={
-            "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-            "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-        },
-        iva_compensation_decision=decision,
-        ports=calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-        ),
-        clock=_FILE_AT,
-        filing_instance_evidence=general_m303_filing_evidence(
-            work_unit.period, reference="test:m303-recargo-cross-period"
-        ),
-    ).revision
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+    ) as _calculation_ports_289:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            actor="system",
+            binding_values={
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            iva_compensation_decision=decision,
+            ports=_calculation_ports_289,
+            clock=_FILE_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:m303-recargo-cross-period"
+            ),
+        ).revision
 
 
 def test_ledger_recargo_sales_populate_m303_recargo_casillas_per_quarter(

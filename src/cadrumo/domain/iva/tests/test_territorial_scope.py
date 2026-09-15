@@ -7,15 +7,19 @@ on-disk fixtures, registry TOML selectors, and locale keys.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from ..classification import IvaTerritorialScope
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ..classification import IvaTerritorialScope, resolve_iva_classification_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_member_names_preserved() -> None:
-    names = {member.name for member in IvaTerritorialScope}
+def test_member_names_preserved(operation: PinnedAuthorityOperation) -> None:
+    catalogue = resolve_iva_classification_catalogue(date(2025, 1, 1), operation=operation)
+    names = {member.value.upper() for member in catalogue.territorial_scopes}
     assert names == {
         "ES_MAINLAND",
         "ES_CANARIAS",
@@ -33,10 +37,12 @@ def test_string_values_preserved() -> None:
     assert IvaTerritorialScope._from_registry("third_country").value == "third_country"
 
 
-def test_strenum_value_lookup_round_trips() -> None:
-    for member in IvaTerritorialScope:
-        assert IvaTerritorialScope(member.value) is member
+def test_strenum_value_lookup_round_trips(operation: PinnedAuthorityOperation) -> None:
+    catalogue = resolve_iva_classification_catalogue(date(2025, 1, 1), operation=operation)
+    for member in catalogue.territorial_scopes:
+        assert catalogue.require_territorial_scope(member.value) == member
 
 
-def test_set_is_closed() -> None:
-    assert len(list(IvaTerritorialScope)) == 5
+def test_set_is_closed(operation: PinnedAuthorityOperation) -> None:
+    catalogue = resolve_iva_classification_catalogue(date(2025, 1, 1), operation=operation)
+    assert len(catalogue.territorial_scopes) == 5

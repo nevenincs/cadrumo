@@ -838,7 +838,7 @@ def verify_modelo_revision_with_preconditions(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
-    require_calculation_revision_coordinates_current(target)
+    require_calculation_revision_coordinates_current(target, operation=operation)
     work_units = wu_repo.load()
     work_unit = work_units.get(target.work_unit_id)
     if work_unit is None:
@@ -1281,6 +1281,7 @@ def _append_revision_advisory_findings(
             work_unit=work_unit,
             snapshot=snapshot,
             casilla_values=target.casilla_values,
+            profile_decode_context=operation.profile_decode_context(),
         )
     )
 

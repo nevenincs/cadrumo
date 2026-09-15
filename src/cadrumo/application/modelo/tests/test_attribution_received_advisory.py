@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -32,6 +33,9 @@ from ....domain.modelos.verification_report import (
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -94,6 +98,7 @@ def _received_facts(*, year: int = _FILING_YEAR, base: Decimal = _BASE, index: i
 def _run(
     snapshot: RegistrySnapshot,
     *,
+    operation: PinnedAuthorityOperation,
     facts: tuple[UserProfileFact, ...],
     casilla_1577: Decimal | None,
 ) -> tuple[ModeloVerificationFinding, ...]:
@@ -102,12 +107,15 @@ def _run(
         work_unit=_work_unit(),
         snapshot=snapshot,
         casilla_values=casilla_values,
+        profile_decode_context=operation.profile_decode_context(),
         profile_record=_profile(*facts),
     )
 
 
-def test_facts_present_casilla_empty_fires_advisory(snapshot: RegistrySnapshot) -> None:
-    findings = _run(snapshot, facts=_received_facts(), casilla_1577=None)
+def test_facts_present_casilla_empty_fires_advisory(
+    snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
+) -> None:
+    findings = _run(snapshot, operation=operation, facts=_received_facts(), casilla_1577=None)
 
     assert len(findings) == 1
     finding = findings[0]
@@ -120,8 +128,10 @@ def test_facts_present_casilla_empty_fires_advisory(snapshot: RegistrySnapshot) 
     assert {"ley-35-2006:art-86", "ley-35-2006:art-89"} <= set(finding.legal_refs)
 
 
-def test_casilla_present_no_facts_fires_capture_advisory(snapshot: RegistrySnapshot) -> None:
-    findings = _run(snapshot, facts=(), casilla_1577=_BASE)
+def test_casilla_present_no_facts_fires_capture_advisory(
+    snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
+) -> None:
+    findings = _run(snapshot, operation=operation, facts=(), casilla_1577=_BASE)
 
     assert len(findings) == 1
     finding = findings[0]
@@ -137,31 +147,32 @@ def test_casilla_present_no_facts_fires_capture_advisory(snapshot: RegistrySnaps
     assert "next_action" not in finding.model_dump(mode="json")
 
 
-def test_both_present_is_silent(snapshot: RegistrySnapshot) -> None:
-    assert _run(snapshot, facts=_received_facts(), casilla_1577=_BASE) == ()
+def test_both_present_is_silent(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:
+    assert _run(snapshot, operation=operation, facts=_received_facts(), casilla_1577=_BASE) == ()
 
 
-def test_both_absent_is_silent(snapshot: RegistrySnapshot) -> None:
-    assert _run(snapshot, facts=(), casilla_1577=None) == ()
+def test_both_absent_is_silent(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:
+    assert _run(snapshot, operation=operation, facts=(), casilla_1577=None) == ()
 
 
-def test_facts_for_other_year_do_not_count(snapshot: RegistrySnapshot) -> None:
+def test_facts_for_other_year_do_not_count(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:
     # Facts stamped for 2023 must not satisfy a 2024 verification: casilla empty +
     # no 2024 facts is the clean "not a member this year" state, not an omission.
-    assert _run(snapshot, facts=_received_facts(year=2023), casilla_1577=None) == ()
+    assert _run(snapshot, operation=operation, facts=_received_facts(year=2023), casilla_1577=None) == ()
 
 
-def test_non_m100_modelo_is_scoped_out(snapshot: RegistrySnapshot) -> None:
+def test_non_m100_modelo_is_scoped_out(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:
     findings = _attribution_received_omission_advisory_findings(
         work_unit=_work_unit(ModeloCode(Modelo("130").value)),
         snapshot=snapshot,
         casilla_values={},
+        profile_decode_context=operation.profile_decode_context(),
         profile_record=_profile(*_received_facts()),
     )
     assert findings == ()
 
 
-def test_advisory_is_not_tautological(snapshot: RegistrySnapshot) -> None:
+def test_advisory_is_not_tautological(snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation) -> None:
     """Flipping exactly one input flips the outcome — the advisory reads both.
 
     A broken always-fire advisory would fire on the clean states; a broken
@@ -172,9 +183,9 @@ def test_advisory_is_not_tautological(snapshot: RegistrySnapshot) -> None:
     facts = _received_facts()
 
     # Hold facts present; flip only the casilla (empty -> present): fire -> silent.
-    assert len(_run(snapshot, facts=facts, casilla_1577=None)) == 1
-    assert _run(snapshot, facts=facts, casilla_1577=_BASE) == ()
+    assert len(_run(snapshot, operation=operation, facts=facts, casilla_1577=None)) == 1
+    assert _run(snapshot, operation=operation, facts=facts, casilla_1577=_BASE) == ()
 
     # Hold casilla empty; flip only the facts (present -> absent): fire -> silent.
-    assert len(_run(snapshot, facts=facts, casilla_1577=None)) == 1
-    assert _run(snapshot, facts=(), casilla_1577=None) == ()
+    assert len(_run(snapshot, operation=operation, facts=facts, casilla_1577=None)) == 1
+    assert _run(snapshot, operation=operation, facts=(), casilla_1577=None) == ()

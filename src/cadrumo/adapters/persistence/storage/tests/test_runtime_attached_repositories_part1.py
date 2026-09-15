@@ -4,17 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.review_package_recipient_registry import RecipientFingerprintRegistryAdapter
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 
 from .....adapters.persistence.profile.apoderado import build_apoderado_config_repository
@@ -34,9 +34,10 @@ from .....application.diagnostics import (
     secure_object_unreadable_total,
 )
 from .....application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
+from .....entrypoints.adapter_composition import build_borrador_100_snapshot_repository
 from .....application.filing.history_ports import FilingHistoryPorts
 from .....application.filing.history_repository import ModeloHistoryRepository
-from .....application.live.borrador_100 import Borrador100SnapshotRepository
+from .....application.workflow.review_models import WorkflowEvent
 from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....core.config import load_settings, override_settings
 from .....core.config_support import LLMProvider
@@ -69,6 +70,8 @@ from ..runtime_repository import (
     secure_object_repository_for_active_bucket_or_default_route,
     secure_object_repository_for_bucket,
 )
+from ..sql.secure_object_records import SecureObjectNamespaceIntegrity
+from ..sql.secure_objects import SecureObjectRepository
 from ..secure_object_namespaces import LLM_USAGE_NAMESPACE
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,
@@ -143,6 +146,11 @@ def _diagnostics_ports() -> DiagnosticsPorts:
     )
 
 
+def _load_usage_ratios_for_test(*, bucket_id: str) -> UsageRatioProfile:
+    with bundled_indexed_authority().operation() as operation:
+        return load_usage_ratios(bucket_id=bucket_id, operation=operation)
+
+
 _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("workflow_state", lambda: WorkflowStateRepository().load()),
     ("workflow_runs", lambda: WorkflowRunRepository().list()),
@@ -213,7 +221,7 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
         ),
     ),
     ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()),
-    ("usage_ratios", lambda: load_usage_ratios(bucket_id=_BUCKET_A_ID)),
+    ("usage_ratios", lambda: _load_usage_ratios_for_test(bucket_id=_BUCKET_A_ID)),
     ("borrador_100_snapshot", lambda: Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).list_snapshots()),
     ("profile_inventory", lambda: InventoryLedgerRepository().load()),
 )
@@ -544,7 +552,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             == ()
         )
         assert IvaCompensationHistoryRepository(bucket_id=_BUCKET_B_ID).list_periods() == ()
-        assert load_usage_ratios(bucket_id=_BUCKET_B_ID) == UsageRatioProfile()
+        assert _load_usage_ratios_for_test(bucket_id=_BUCKET_B_ID) == UsageRatioProfile()
         ModeloHistoryRepository(
             ports=FilingHistoryPorts(
                 repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_B_ID)),
@@ -579,7 +587,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         decisions = wallet_repo.list_decisions()
         decision_history = wallet_repo.load_decision_history(_WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T"))
         iva_periods = IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()
-        usage = load_usage_ratios(bucket_id=_BUCKET_A_ID)
+        usage = _load_usage_ratios_for_test(bucket_id=_BUCKET_A_ID)
 
     assert modelo_ids == ("303",)
     assert observed is not None

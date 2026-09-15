@@ -5,12 +5,16 @@ from __future__ import annotations
 import pytest
 import typer
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....entrypoints.adapter_composition import build_calculation_action_ports
 from ._modelo_fixtures import active_cli_profile_fixture
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["active_cli_profile_fixture"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_TEST_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 
 
 @pytest.mark.parametrize(
@@ -48,32 +52,38 @@ def test_optional_cli_period_requires_year() -> None:
     assert "1T" in str(raised.value)
 
 
-def test_exportable_revision_resolution_keeps_raw_revision_and_selector_errors_distinct() -> None:
+def test_exportable_revision_resolution_keeps_raw_revision_and_selector_errors_distinct(
+    _active_cli_profile: None,
+) -> None:
     """Raw revision ids fail their own validation before selector parsing."""
     from .._modelo_behavior_support import resolve_exportable_revision_for_cli
 
-    with pytest.raises(typer.BadParameter) as raw_revision:
-        resolve_exportable_revision_for_cli(
-            revision="not-a-revision-id",
-            work_unit_id=None,
-            modelo=None,
-            year=None,
-            period=None,
-            registry_revision=None,
-            bucket_id=None,
-            select="not-a-selector",
-        )
-    with pytest.raises(typer.BadParameter) as selector:
-        resolve_exportable_revision_for_cli(
-            revision=None,
-            work_unit_id=None,
-            modelo=None,
-            year=None,
-            period=None,
-            registry_revision=None,
-            bucket_id=None,
-            select="not-a-selector",
-        )
+    with bundled_indexed_authority().operation() as operation:
+        calculation_ports = build_calculation_action_ports(bucket_id=_TEST_BUCKET_ID, operation=operation)
+        with pytest.raises(typer.BadParameter) as raw_revision:
+            resolve_exportable_revision_for_cli(
+                revision="not-a-revision-id",
+                work_unit_id=None,
+                modelo=None,
+                year=None,
+                period=None,
+                registry_revision=None,
+                bucket_id=None,
+                select="not-a-selector",
+                calculation_ports=calculation_ports,
+            )
+        with pytest.raises(typer.BadParameter) as selector:
+            resolve_exportable_revision_for_cli(
+                revision=None,
+                work_unit_id=None,
+                modelo=None,
+                year=None,
+                period=None,
+                registry_revision=None,
+                bucket_id=None,
+                select="not-a-selector",
+                calculation_ports=calculation_ports,
+            )
 
     assert "not-a-revision-id" in str(raw_revision.value)
     assert "not-a-selector" in str(selector.value)

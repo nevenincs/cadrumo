@@ -14,6 +14,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -29,20 +30,31 @@ from cadrumo.core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one published authority generation across each service operation."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
     return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
 
 
-def test_declare_especial_transition_persists_typed_option(tmp_path: Path) -> None:
+def test_declare_especial_transition_persists_typed_option(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = ProrrataRegisterRepository(objects=profile.repository)
-        service = ProrrataRegisterService(repository=repository)
+        service = ProrrataRegisterService(repository=repository, operation=authority_operation)
         entry = ProrrataRegisterEntry(
             ejercicio=2026,
             regime=ProrrataRegisterRegime._from_registry("especial"),
@@ -66,10 +78,13 @@ def test_declare_especial_transition_persists_typed_option(tmp_path: Path) -> No
     assert persisted.especial_transition.evidence_reference == "modelo-303-2026-prorrata-opcion"
 
 
-def test_record_aeat_autorizada_persists_authorised_override(tmp_path: Path) -> None:
+def test_record_aeat_autorizada_persists_authorised_override(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = ProrrataRegisterRepository(objects=profile.repository)
-        service = ProrrataRegisterService(repository=repository)
+        service = ProrrataRegisterService(repository=repository, operation=authority_operation)
         service.declare(
             ProrrataRegisterEntry(
                 ejercicio=2026,
@@ -100,10 +115,13 @@ def test_record_aeat_autorizada_persists_authorised_override(tmp_path: Path) -> 
     assert entry.source_observation_ref is None
 
 
-def test_record_inicio_actividad_persists_proposed_override(tmp_path: Path) -> None:
+def test_record_inicio_actividad_persists_proposed_override(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = ProrrataRegisterRepository(objects=profile.repository)
-        service = ProrrataRegisterService(repository=repository)
+        service = ProrrataRegisterService(repository=repository, operation=authority_operation)
         service.declare(
             ProrrataRegisterEntry(
                 ejercicio=2026,

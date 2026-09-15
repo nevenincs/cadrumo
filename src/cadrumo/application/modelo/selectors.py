@@ -13,7 +13,7 @@ falling back to an unambiguous verified-complete revision.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
@@ -24,6 +24,9 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class ModeloCalculationRevisionSelector(StrEnum):
@@ -107,6 +110,7 @@ def select_modelo_calculation_revision(
     selector: ModeloCalculationRevisionSelector,
     calculation_revision_id: CalculationRevisionId | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCalculationRevisionSelection:
     """Select one persisted calculation revision as :class:`ModeloCalculationRevisionSelection`.
 
@@ -116,7 +120,11 @@ def select_modelo_calculation_revision(
     latest state, and refuse missing or mismatched state instead of falling back
     to another revision.
     """
-    revisions = _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
+    revisions = _revisions_for_work_unit(
+        work_unit,
+        calculation_repository=calculation_repository,
+        operation=operation,
+    )
     if selector is ModeloCalculationRevisionSelector.EXPLICIT:
         if calculation_revision_id is None:
             raise ModeloCalculationRevisionSelectorNotFoundError(
@@ -127,6 +135,7 @@ def select_modelo_calculation_revision(
             work_unit=work_unit,
             calculation_revision_id=calculation_revision_id,
             calculation_repository=calculation_repository,
+            operation=operation,
         )
         return ModeloCalculationRevisionSelection(
             selector=selector,
@@ -145,6 +154,7 @@ def select_modelo_calculation_revision(
             work_unit.current_calculation_revision_id,
             calculation_repository=calculation_repository,
             pointer_name="current_calculation_revision_id",
+            operation=operation,
         ),
         ModeloCalculationRevisionSelector.LATEST_DRAFT: lambda: _latest_revision_with_state(
             revisions,
@@ -159,6 +169,7 @@ def select_modelo_calculation_revision(
             work_unit.filed_calculation_revision_id,
             calculation_repository=calculation_repository,
             pointer_name="filed_calculation_revision_id",
+            operation=operation,
         ),
     }[selector]()
     return ModeloCalculationRevisionSelection(
@@ -176,6 +187,7 @@ def resolve_modelo_calculation_revision_pick(
     calculation_revision_id: CalculationRevisionId | None = None,
     default_for: ModeloCalculationRevisionDefault | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCalculationRevisionSelection:
     """Resolve a command-specific :class:`ModeloCalculationRevisionSelection` pick under one work unit.
 
@@ -193,15 +205,25 @@ def resolve_modelo_calculation_revision_pick(
             selector=ModeloCalculationRevisionSelector.EXPLICIT,
             calculation_revision_id=calculation_revision_id,
             calculation_repository=calculation_repository,
+            operation=operation,
         )
     if default_for == "file" and selector is ModeloCalculationRevisionSelector.CURRENT:
-        return select_current_verified_revision(work_unit, calculation_repository=calculation_repository)
+        return select_current_verified_revision(
+            work_unit,
+            calculation_repository=calculation_repository,
+            operation=operation,
+        )
     if default_for == "export" and selector is ModeloCalculationRevisionSelector.CURRENT:
-        return select_exportable_revision(work_unit, calculation_repository=calculation_repository)
+        return select_exportable_revision(
+            work_unit,
+            calculation_repository=calculation_repository,
+            operation=operation,
+        )
     return select_modelo_calculation_revision(
         work_unit,
         selector=selector,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
 
 
@@ -209,6 +231,7 @@ def select_current_verified_revision(
     work_unit: WorkUnit,
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCalculationRevisionSelection:
     """Select the current verified-complete revision for filing.
 
@@ -218,6 +241,7 @@ def select_current_verified_revision(
         work_unit,
         selector=ModeloCalculationRevisionSelector.CURRENT,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
     if selection.revision.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise ModeloCalculationRevisionSelectorStateError(
@@ -244,6 +268,8 @@ def _selection_for_revision(
 def _current_exportable_revision(
     work_unit: WorkUnit,
     current_revision: CalculationRevision | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCalculationRevisionSelection | None:
     """Resolve the current-pointer branch of the export policy."""
     if current_revision is None:
@@ -265,11 +291,16 @@ def _verified_exportable_fallback(
     work_unit: WorkUnit,
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCalculationRevisionSelection:
     """Resolve the unambiguous verified-revision fallback for export."""
     verified = tuple(
         revision
-        for revision in _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
+        for revision in _revisions_for_work_unit(
+            work_unit,
+            calculation_repository=calculation_repository,
+            operation=operation,
+        )
         if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
     )
     if len(verified) == 1:
@@ -292,6 +323,7 @@ def select_exportable_revision(
     work_unit: WorkUnit,
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCalculationRevisionSelection:
     """Select the default exportable :class:`ModeloCalculationRevisionSelection` for a work unit.
 
@@ -304,6 +336,7 @@ def select_exportable_revision(
         work_unit,
         work_unit.filed_calculation_revision_id,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
     if filed_revision is not None and filed_revision.state is CalculationRevisionState.PRESENTADO:
         return _selection_for_revision(
@@ -316,13 +349,15 @@ def select_exportable_revision(
         work_unit,
         work_unit.current_calculation_revision_id,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
-    current_selection = _current_exportable_revision(work_unit, current_revision)
+    current_selection = _current_exportable_revision(work_unit, current_revision, operation=operation)
     if current_selection is not None:
         return current_selection
     return _verified_exportable_fallback(
         work_unit,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
 
 
@@ -330,11 +365,12 @@ def _revisions_for_work_unit(
     work_unit: WorkUnit,
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, ...]:
     catalogue = calculation_repository.load()
     revisions = tuple(sorted(catalogue.for_work_unit(work_unit.work_unit_id), key=lambda revision: revision.created_at))
     for revision in revisions:
-        require_calculation_revision_coordinates_current(revision)
+        require_calculation_revision_coordinates_current(revision, operation=operation)
     return revisions
 
 
@@ -343,6 +379,7 @@ def _explicit_revision_for_work_unit(
     work_unit: WorkUnit,
     calculation_revision_id: CalculationRevisionId,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     catalogue = calculation_repository.load()
     revision = catalogue.get(calculation_revision_id)
@@ -355,7 +392,7 @@ def _explicit_revision_for_work_unit(
         raise ModeloCalculationRevisionSelectorStateError(
             translated_message="errors.refused.modelo_calculation_revision_selector_state",
         )
-    require_calculation_revision_coordinates_current(revision)
+    require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision
 
 
@@ -365,11 +402,13 @@ def _revision_by_pointer(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     pointer_name: str,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     revision = _optional_revision_by_pointer(
         work_unit,
         pointer_value,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
     if revision is None:
         raise ModeloCalculationRevisionSelectorNotFoundError(
@@ -384,6 +423,7 @@ def _optional_revision_by_pointer(
     pointer_value: str | None,
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision | None:
     if pointer_value is None:
         return None
@@ -391,6 +431,7 @@ def _optional_revision_by_pointer(
         work_unit=work_unit,
         calculation_revision_id=pointer_value,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
 
 

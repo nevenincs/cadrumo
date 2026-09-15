@@ -28,7 +28,10 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.prorrata_register import (
     ProrrataRegisterRegime,
 )
-from ....domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
+from ....domain.calculations.registry.prorrata_register_catalogue import (
+    regime_apportions_deduction,
+    resolve_prorrata_register_catalogue,
+)
 from ....domain.prorrata_register.register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
@@ -63,14 +66,22 @@ def _register(regime: ProrrataRegisterRegime) -> ProrrataRegister:
     )
 
 
-@pytest.mark.parametrize("regime", list(ProrrataRegisterRegime))
+def _registry_regimes() -> tuple[ProrrataRegisterRegime, ...]:
+    """Return the registry-declared regimes in their authoritative order."""
+    with _indexed_authority_for_test().operation() as operation:
+        catalogue = resolve_prorrata_register_catalogue(authority=operation)
+        return tuple(definition.token for definition in catalogue.regimes)
+
+
+@pytest.mark.parametrize("regime", _registry_regimes())
 def test_the_iva_gate_follows_the_shared_predicate_for_every_regime(
     regime: ProrrataRegisterRegime,
 ) -> None:
     """The IVA apportionment resolves exactly when the regime apportions.
 
-    Parametrised over the whole enum rather than the two interesting members, so
-    a regime added later is exercised here without anyone remembering to add it.
+    Parametrised over the whole registry vocabulary rather than the two
+    interesting members, so a regime added later is exercised here without
+    anyone remembering to add it.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         apportionment = _sector_scoped_apportionment(

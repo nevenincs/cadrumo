@@ -41,6 +41,7 @@ from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.authority_state import source_root_for
 
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
 from ..compiler.validator import RegistryValidator
@@ -122,7 +123,7 @@ def test_m303_public_registry_validation_still_refuses_the_partial_shape() -> No
     with pytest.raises(RegistryValidationError, match="verification_source is not set"):
         RegistryValidator(
             authority.catalogues,
-            source_root=authority.source_root,
+            source_root=source_root_for(authority),
             justificante_corpus_root=_JUSTIFICANTE_CORPUS_ROOT,
         ).validate_modelo(partial_modelo)
 

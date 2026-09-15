@@ -165,7 +165,7 @@ def _casilla_legal_refs(revision: ModeloRevision, casilla_id: CasillaId | None) 
     if casilla is None:
         return ()
     binding = next((candidate for candidate in revision.bindings if candidate.id == casilla.binding), None)
-    binding_refs = getattr(binding, "legal_refs", ()) if binding is not None else ()
+    binding_refs = binding.legal_refs if binding is not None else ()
     return tuple(dict.fromkeys((*casilla.legal_refs, *binding_refs)))
 
 

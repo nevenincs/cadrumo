@@ -40,14 +40,14 @@ def test_the_tax_id_field_label_differs_from_both_its_path_and_its_token() -> No
 
 
 def test_the_wizard_refusal_names_the_tax_identifier_by_its_operator_label() -> None:
-    rendered = _grounded_tax_id_requirement()
+    rendered = _grounded_tax_id_requirement(schema=load_user_profile_schema())
 
     assert _label(_TAX_ID_PATH) in rendered
 
 
 def test_the_wizard_refusal_carries_no_raw_identifier_for_the_field() -> None:
     """Neither the dotted path nor the selector token may reach the operator."""
-    rendered = _grounded_tax_id_requirement()
+    rendered = _grounded_tax_id_requirement(schema=load_user_profile_schema())
 
     assert _TAX_ID_PATH not in rendered
     assert _LEGACY_TAX_ID_SELECTOR not in rendered

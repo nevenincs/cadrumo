@@ -27,8 +27,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.aggregation import BindingSourceKind
 from ....core.operator_action_enums import OperatorActionAxis
+from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
@@ -103,7 +106,9 @@ def _transaction(
     )
 
 
-def _observed_counterparty_gate_reasons() -> frozenset[IvaLedgerAggregationIssueReason]:
+def _observed_counterparty_gate_reasons(
+    *, operation: PinnedAuthorityOperation
+) -> frozenset[IvaLedgerAggregationIssueReason]:
     """Return every reason the real counterparty gate emits across its inputs.
 
     Exercises the shipped screen rather than restating its branches, so the
@@ -116,7 +121,11 @@ def _observed_counterparty_gate_reasons() -> frozenset[IvaLedgerAggregationIssue
         EUMemberState._from_registry("de"),
     )
     observed: set[IvaLedgerAggregationIssueReason] = set()
-    for category in (*IvaCategory, None):
+    categories = resolve_iva_category_catalogue(
+        effective_date=date(2026, 4, 5),
+        authority=operation,
+    ).all_categories
+    for category in (*categories, None):
         for eu_member_state in states:
             for identification_state in states:
                 issue = validate_iva_ledger_counterparty_category(
@@ -132,6 +141,7 @@ def _observed_counterparty_gate_reasons() -> frozenset[IvaLedgerAggregationIssue
                         iva_rate=Decimal("0"),
                         iva_amount=Decimal("0"),
                     ),
+                    operation=operation,
                 )
                 if issue is not None:
                     observed.add(issue.reason)
@@ -163,7 +173,7 @@ def test_the_shipped_module_imports_with_every_member_classified() -> None:
     )
 
 
-def test_declared_emission_sets_match_the_shipped_screens() -> None:
+def test_declared_emission_sets_match_the_shipped_screens(*, operation: PinnedAuthorityOperation) -> None:
     """The declared emission sets equal what the real screens actually emit.
 
     The half no import-time check can carry, because it has to run the screens
@@ -173,7 +183,7 @@ def test_declared_emission_sets_match_the_shipped_screens() -> None:
     subscript with no entry.
     """
     assert _observed_missing_fact_reasons() == IVA_LEDGER_MISSING_FACT_REASONS
-    assert _observed_counterparty_gate_reasons() == IVA_LEDGER_COUNTERPARTY_GATE_REASONS
+    assert _observed_counterparty_gate_reasons(operation=operation) == IVA_LEDGER_COUNTERPARTY_GATE_REASONS
 
 
 def test_every_not_reaching_entry_states_its_reason() -> None:

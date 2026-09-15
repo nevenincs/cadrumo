@@ -57,7 +57,7 @@ def validate_m303_filing_instance_evidence_for_revision(
     evidence: FilingInstanceEvidence | None,
     casilla_values: Mapping[CasillaId, Decimal],
     observations: Sequence[CasillaObservation],
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> FilingInstanceEvidence | None:
     """Validate the complete revision evidence against every canonical owner."""
     if work_unit.modelo != Modelo("303"):
@@ -110,7 +110,7 @@ def _validate_m303_simplified_filing_evidence(
     work_unit: WorkUnit,
     registry_snapshot: RegistrySnapshot,
     evidence: M303FilingInstanceEvidence,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Validate the simplified-regime evidence against profile and rows."""
     regimen = evidence.regimen_simplificado

@@ -100,22 +100,40 @@ def test_every_family_declaring_a_source_casilla_is_one_the_accessor_narrows() -
 
 
 @pytest.mark.parametrize(
-    ("fields", "names_casilla", "names_modelo"),
+    ("member", "names_casilla", "names_modelo"),
     [
-        ({"source_casilla_id": (str, ...)}, True, False),
-        ({"source_casilla_ids": (tuple[str, ...], ())}, True, False),
-        ({"source_modelo": (str, ...)}, False, True),
-        ({"profile_key": (str, ...)}, False, False),
+        pytest.param(
+            create_model("_FabricatedProviderSingular", source_casilla_id=(str, ...)),
+            True,
+            False,
+            id="singular",
+        ),
+        pytest.param(
+            create_model("_FabricatedProviderPlural", source_casilla_ids=(tuple[str, ...], ())),
+            True,
+            False,
+            id="plural",
+        ),
+        pytest.param(
+            create_model("_FabricatedProviderModelo", source_modelo=(str, ...)),
+            False,
+            True,
+            id="modelo_only",
+        ),
+        pytest.param(
+            create_model("_FabricatedProviderProfile", profile_key=(str, ...)),
+            False,
+            False,
+            id="neither",
+        ),
     ],
-    ids=["singular", "plural", "modelo_only", "neither"],
 )
 def test_the_registration_reads_the_source_facts_off_the_member(
-    fields: dict[str, object],
+    member: type[BaseModel],
     names_casilla: bool,
     names_modelo: bool,
 ) -> None:
     """The declared facts are derived from a fabricated member's own fields."""
-    member: type[BaseModel] = create_model("_FabricatedProvider", **fields)
     profile = registration_for(BindingSourceKind.PROFILE)
     fabricated = type(profile)(
         kind=profile.kind,

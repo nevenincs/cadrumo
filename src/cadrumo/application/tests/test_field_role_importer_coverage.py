@@ -23,7 +23,7 @@ from ...core.field_role import FieldRole
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_BULK_INVOICE_IMPORT_COLUMNS = frozenset(BulkInvoiceImportRow.model_fields)
+_BULK_INVOICE_IMPORT_COLUMNS = frozenset(str(name) for name in BulkInvoiceImportRow.model_fields)
 _IMPORTER_COLUMNS: frozenset[str] = _BULK_INVOICE_IMPORT_COLUMNS | BULK_CLASSIFY_ALLOWED_COLUMNS
 
 

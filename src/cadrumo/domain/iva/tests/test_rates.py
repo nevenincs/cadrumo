@@ -13,6 +13,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate
@@ -25,9 +26,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_rate_table_covers_all_27_member_states() -> None:
     """The rate table carries entries for EU member states, not the XI prefix."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        expected = {member for member in EUMemberState if member is not EUMemberState._from_registry("xi")}
+        catalogue = resolve_eu_member_state_catalogue(
+            effective_date=date(2025, 6, 1),
+            authority=_authority_operation_for_test,
+        )
+        northern_ireland = catalogue.require("xi")
+        expected = set(catalogue.all_states) - {northern_ireland}
         assert set(load_iva_rate_table(operation=_authority_operation_for_test).keys()) == expected
-        assert EUMemberState._from_registry("xi") not in load_iva_rate_table(operation=_authority_operation_for_test)
+        assert northern_ireland not in load_iva_rate_table(operation=_authority_operation_for_test)
 
 
 def test_lookup_rate_raises_for_northern_ireland_prefix() -> None:

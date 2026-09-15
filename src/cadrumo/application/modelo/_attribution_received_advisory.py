@@ -54,6 +54,7 @@ from .semantic_role_resolution import casilla_id_for_unique_revision_semantic_ro
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos.work_unit import WorkUnit
@@ -67,6 +68,7 @@ def _attribution_received_omission_advisory_findings(
     work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
     casilla_values: Mapping[CasillaId, Decimal],
+    profile_decode_context: ProfileDecodeContext,
     profile_record: UserProfileRecord | None = None,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return the non-blocking M100 régimen-de-atribución handoff advisories.
@@ -78,6 +80,9 @@ def _attribution_received_omission_advisory_findings(
             atribución casilla resolved structurally by semantic role.
         casilla_values: The resolved casilla values from the calculation
             revision under verification.
+        profile_decode_context: The pinned authority context that authorizes
+            decoding the current profile when no explicit record override is
+            supplied.
         profile_record: Optional :class:`UserProfileRecord` override for testing;
             loaded from the work unit's bucket when omitted.
 
@@ -105,7 +110,10 @@ def _attribution_received_omission_advisory_findings(
     record = profile_record
     if record is None:
         try:
-            record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
+            record = ProfileRecordRepository.for_current_session(
+                work_unit.bucket_id,
+                profile_decode_context=profile_decode_context,
+            ).load(work_unit.bucket_id)
         except ProfileNotFoundError:
             return ()
 
@@ -199,7 +207,10 @@ def _received_fact_parts(fact: UserProfileFact) -> tuple[int, str, object] | Non
     match = _RECEIVED_FACT_RE.match(fact.path)
     if match is None or fact.value is None:
         return None
-    return int(match.group("index")), match.group("field"), fact.value
+    field = match.group("field")
+    if not isinstance(field, str):
+        return None
+    return int(match.group("index")), field, fact.value
 
 
 def _group_received_facts(facts: tuple[UserProfileFact, ...]) -> dict[int, dict[str, object]]:

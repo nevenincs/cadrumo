@@ -55,6 +55,7 @@ from typing import TYPE_CHECKING, cast, override
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ..modelo.reconciliation import ModeloReconciliationReport
@@ -669,6 +670,7 @@ def reconcile_capture(
     work_unit_id: str,
     snapshot: JustificanteCaptureSnapshot,
     actor: str = "operator",
+    operation: PinnedAuthorityOperation,
 ) -> ModeloReconciliationReport:
     """Reconcile a work unit against a persisted live capture.
 
@@ -695,6 +697,7 @@ def reconcile_capture(
             source_ref=_capture_secure_reference(snapshot),
             actor=actor,
         ),
+        operation=operation,
     )
 
 
@@ -878,25 +881,31 @@ def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
     if filing.member_nif is not None and filing.member_nif.strip():
         return tax_id_identity_token(filing.member_nif)
     from ...core.errors.hierarchy import CadrumoError
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_values
 
-    try:
-        record = ProfileRecordRepository.for_current_session(filing.bucket_id).load(filing.bucket_id)
-    except (CadrumoError, OSError) as exc:
-        raise LiveApplicationInputError(
-            translated_message="application.live.justificante.errors.filing_identity_unresolved",
-            context={"filing_record_id": filing.filing_record_id, "profile_record_readable": False},
-            precondition_verdict=live_read_no_recovery_verdict(
-                LiveReadPrecondition.JUSTIFICANTE_FILING_IDENTITY_RESOLVED,
-                facts={
-                    "filing_record_id": filing.filing_record_id,
-                    "profile_record_readable": False,
-                    "tax_id_resolved": False,
-                },
-            ),
-        ) from exc
-    values = record_to_values(record)
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            profile_decode_context = operation.profile_decode_context()
+            record = ProfileRecordRepository.for_current_session(
+                filing.bucket_id,
+                profile_decode_context=profile_decode_context,
+            ).load(filing.bucket_id)
+        except (CadrumoError, OSError) as exc:
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.filing_identity_unresolved",
+                context={"filing_record_id": filing.filing_record_id, "profile_record_readable": False},
+                precondition_verdict=live_read_no_recovery_verdict(
+                    LiveReadPrecondition.JUSTIFICANTE_FILING_IDENTITY_RESOLVED,
+                    facts={
+                        "filing_record_id": filing.filing_record_id,
+                        "profile_record_readable": False,
+                        "tax_id_resolved": False,
+                    },
+                ),
+            ) from exc
+        values = record_to_values(record, schema=profile_decode_context.schema)
     tax_id = tax_id_identity_token(str(values.get("identity.tax_id") or values.get("tax.id") or ""))
     if not tax_id:
         raise LiveApplicationInputError(

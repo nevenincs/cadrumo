@@ -17,7 +17,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.outbound.llm.tests.subprocess_classifier_support import SubprocessLLMClassifier
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
@@ -27,6 +26,8 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+from cadrumo.entrypoints.cli._ledger_llm_composition import compose_ledger_llm
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -89,15 +90,16 @@ def _transaction(evidence_id: str | None, *, attachment_ids: tuple[str, ...] = (
 
 
 def _add_evidence_record(profile: TestRuntimeProfile, tmp_path: Path) -> PurchaseInvoiceEvidence:
-    svc = PurchaseInvoiceEvidenceService(
-        settings=profile.settings,
-        bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
-    )
+    svc = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=profile.bucket_id))
     return svc.add(bucket_id=_BUCKET_ID, source_path=_text_pdf(tmp_path, _INVOICE)).record
 
 
 def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
     return _add_evidence_record(profile, tmp_path).evidence_id
+
+
+def _llm_ports(profile: TestRuntimeProfile):
+    return compose_ledger_llm(bucket_id=profile.bucket_id, settings=profile.settings).ports
 
 
 def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
@@ -106,6 +108,7 @@ def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
         txn,
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
+        ports=_llm_ports(profile),
     )
     assert resolved is None
 
@@ -129,7 +132,7 @@ def test_text_layer_evidence_resolves_with_no_consent_posture_at_all(
     evidence_id = _add_evidence(profile, tmp_path)
     txn = _transaction(evidence_id=evidence_id)
 
-    resolved = resolve_llm_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings)
+    resolved = resolve_llm_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings, ports=_llm_ports(profile))
 
     assert resolved is not None, "a text-layer read no longer needs a consent posture"
 
@@ -148,6 +151,7 @@ def test_text_layer_read_returns_on_host_extracted_text(profile: TestRuntimeProf
         txn,
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
+        ports=_llm_ports(profile),
     )
     assert resolved is not None
     assert resolved.text is not None
@@ -175,6 +179,7 @@ def test_invoice_space_reference_reads_the_rows_own_attachment(
         txn,
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
+        ports=_llm_ports(profile),
     )
 
     assert resolved is not None
@@ -195,7 +200,7 @@ def test_reference_without_bytes_or_attachments_refuses_naming_the_reference(
     txn = _transaction("INV-2026-002-not-in-the-evidence-store")
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
-        resolve_llm_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings)
+        resolve_llm_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings, ports=_llm_ports(profile))
 
     assert excinfo.value.context == {"evidence_id": "INV-2026-002-not-in-the-evidence-store"}
 
@@ -233,6 +238,7 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
             transaction_repository=repository,
             read_evidence=True,
             settings=profile.settings,
+            ports=_llm_ports(profile),
             operation=_authority_operation_for_test,
         )
 

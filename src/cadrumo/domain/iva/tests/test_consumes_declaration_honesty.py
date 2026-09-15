@@ -48,11 +48,13 @@ import ast
 import inspect
 import sys
 from collections.abc import Callable
+from datetime import date
 from types import ModuleType
 from typing import Any
 
 import pytest
 
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from .. import classification
 from ..classification import IvaInvoiceClassificationCriteria, PartyFact
 from ..schema import EUMemberState
@@ -83,10 +85,19 @@ _FACT_BY_CRITERIA_ATTRIBUTE: dict[str, PartyFact | None] = {
 #: a collapse to a handful of rows means the extraction found the wrong object;
 #: an ordinary new rule must not have to edit this number.
 _MINIMUM_RULES = 15
+_RULES_EFFECTIVE_DATE = date(2025, 1, 1)
 
 
 class _PredicateUnreadableError(AssertionError):
     """Raised when a predicate's reads cannot be determined from its source."""
+
+
+def _classification_rules(operation: PinnedAuthorityOperation) -> tuple[classification.IvaClassificationRule, ...]:
+    """Project the registry-owned rules used by the classification evaluator."""
+    return classification.resolve_iva_classification_inputs(
+        effective_date=_RULES_EFFECTIVE_DATE,
+        operation=operation,
+    ).rules
 
 
 def _criteria_attributes_read(
@@ -199,23 +210,24 @@ def test_the_fact_mapping_covers_the_criteria_model_exactly() -> None:
     assert set(_FACT_BY_CRITERIA_ATTRIBUTE) == set(IvaInvoiceClassificationCriteria.model_fields)
 
 
-def test_the_rule_table_is_populated() -> None:
+def test_the_rule_table_is_populated(operation: PinnedAuthorityOperation) -> None:
     """Non-vacuity: the comparison below is over nothing if the table is empty."""
-    assert len(classification._CLASSIFICATION_RULES) >= _MINIMUM_RULES, (
-        f"the rule table exposes only {len(classification._CLASSIFICATION_RULES)} row(s), below the "
+    rules = _classification_rules(operation)
+    assert len(rules) >= _MINIMUM_RULES, (
+        f"the rule table exposes only {len(rules)} row(s), below the "
         f"floor of {_MINIMUM_RULES}; the extraction is looking at the wrong object rather than at a "
         f"table that shrank"
     )
 
 
-def test_every_rule_reads_at_least_one_criteria_attribute() -> None:
+def test_every_rule_reads_at_least_one_criteria_attribute(operation: PinnedAuthorityOperation) -> None:
     """Non-vacuity per row, which the table-level floor cannot give.
 
     A row contributing an empty attribute set would satisfy the equality below
     against an empty declaration and pass while asserting nothing about itself.
     This makes that state an error rather than a silent pass.
     """
-    for rule in classification._CLASSIFICATION_RULES:
+    for rule in _classification_rules(operation):
         try:
             attributes = _criteria_attributes_read(rule.predicate)
         except _PredicateUnreadableError as exc:
@@ -223,11 +235,11 @@ def test_every_rule_reads_at_least_one_criteria_attribute() -> None:
         assert attributes, f"{rule.rule_id}: no criteria attribute extracted from its predicate"
 
 
-def test_every_rule_declares_exactly_the_facts_its_predicate_reads() -> None:
+def test_every_rule_declares_exactly_the_facts_its_predicate_reads(operation: PinnedAuthorityOperation) -> None:
     """Both directions at once: nothing declared unread, nothing read undeclared."""
     undeclared: list[str] = []
     unread: list[str] = []
-    for rule in classification._CLASSIFICATION_RULES:
+    for rule in _classification_rules(operation):
         try:
             actual = _facts_read_by(rule.predicate)
         except _PredicateUnreadableError as exc:
@@ -248,7 +260,7 @@ def test_every_rule_declares_exactly_the_facts_its_predicate_reads() -> None:
     )
 
 
-def test_the_identification_reads_are_actually_reached() -> None:
+def test_the_identification_reads_are_actually_reached(operation: PinnedAuthorityOperation) -> None:
     """An anchor on the extractor itself, not on the table.
 
     Every assertion above would pass identically if the extractor never found an
@@ -270,7 +282,7 @@ def test_the_identification_reads_are_actually_reached() -> None:
     """
     identifying = {
         rule.rule_id
-        for rule in classification._CLASSIFICATION_RULES
+        for rule in _classification_rules(operation)
         if PartyFact.IVA_IDENTIFICATION_STATE in _facts_read_by(rule.predicate)
     }
     assert identifying, (

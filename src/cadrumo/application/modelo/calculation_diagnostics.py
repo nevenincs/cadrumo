@@ -38,6 +38,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
@@ -139,6 +140,26 @@ def collect_bucket_aggregation_advisory_diagnostics(
             Appends this tuple to the source mesh diagnostics on the returned
             bucket aggregation result.
     """
+    with bundled_indexed_authority().operation() as operation:
+        guarderia_spend_shape_diagnostics = collect_guarderia_spend_shape_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+            operation=operation,
+        )
+        guarderia_madre_meses_undeclared_diagnostics = collect_guarderia_madre_meses_undeclared_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+            operation=operation,
+        )
+
     return (
         collect_official_box_unpopulated_diagnostics(revision, casilla_values)
         + collect_prior_payment_not_deducted_diagnostics(
@@ -197,22 +218,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
             filing_year=filing_year,
             bucket_id=bucket_id,
         )
-        + collect_guarderia_spend_shape_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-        )
-        + collect_guarderia_madre_meses_undeclared_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-        )
+        + guarderia_spend_shape_diagnostics
+        + guarderia_madre_meses_undeclared_diagnostics
         + collect_descendientes_count_desync_diagnostics(
             revision,
             modelo=modelo,

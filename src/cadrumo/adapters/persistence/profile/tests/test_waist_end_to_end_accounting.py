@@ -43,6 +43,7 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
@@ -369,6 +370,7 @@ class TestHop5ConfirmAndHop6Invoice:
     @staticmethod
     def _confirm(runtime_profile: TestRuntimeProfile) -> Invoice:
         draft = _structured_draft()
+        catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
         return create_catalogue_invoice(
             invoice=build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
@@ -381,7 +383,9 @@ class TestHop5ConfirmAndHop6Invoice:
                 taxable_base=draft.taxable_base or Decimal("0"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
+                rate_provider=catalogue_ports.rate_provider,
             ),
+            ports=catalogue_ports,
         ).invoice
 
     def test_the_invoice_carries_the_facts_the_draft_carried(self, runtime_profile: TestRuntimeProfile) -> None:

@@ -10,6 +10,7 @@ import pytest
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
@@ -359,6 +360,11 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
     would emit rather than an impossible combination.
     """
     revision = _modelo_303_revision()
+    with _indexed_authority_for_test().operation() as operation:
+        categories = resolve_iva_category_catalogue(
+            effective_date=revision.valid_from,
+            authority=operation,
+        ).all_categories
     non_declarable = {
         IvaCategory("recargo_equivalencia"),
         IvaCategory("unknown"),
@@ -392,7 +398,7 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
     }
 
     flagged: list[tuple[str, str]] = []
-    for category in IvaCategory:
+    for category in categories:
         if category in non_declarable or category in registry_category_projection("cuota_less_m303"):
             continue
         invoice_direction = InvoiceKind.RECEIVED if category in received_categories else InvoiceKind.ISSUED

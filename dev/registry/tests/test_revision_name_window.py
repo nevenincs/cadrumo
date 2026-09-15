@@ -12,7 +12,7 @@ import datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 
 from ..analysis.revision_name_window import name_window_findings
 from ..compiler.authority import compiled_bundled_authority
@@ -290,9 +290,11 @@ def test_every_condition_the_screen_documents_is_declared_and_reachable(
         f"declared but undocumented: {sorted(set(KINDS) - documented)}"
     )
 
+    with bundled_indexed_authority().operation() as operation:
+        modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes(operation=operation)))
     live = {
         finding.kind
-        for modelo in sorted(str(code) for code in registry_modelo_codes())
+        for modelo in modelo_ids
         for revision in authority.modelo(modelo).revisions.values()
         for finding in name_window_findings(revision, modelo_id=modelo)
     }

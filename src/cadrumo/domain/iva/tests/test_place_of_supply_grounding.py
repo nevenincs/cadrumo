@@ -26,6 +26,7 @@ from datetime import date
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.resources.bundled_data import bundled_path
@@ -66,8 +67,8 @@ _DOMESTIC_RULE_IDS = frozenset(
 )
 
 
-def _rules() -> Mapping[str, IvaPlaceOfSupplyRule]:
-    return load_place_of_supply_table()
+def _rules(*, operation: PinnedAuthorityOperation) -> Mapping[str, IvaPlaceOfSupplyRule]:
+    return load_place_of_supply_table(operation=operation)
 
 
 def _grounded_row_fields() -> dict[str, object]:
@@ -116,7 +117,8 @@ def test_every_declared_rule_is_grounded_and_every_row_grounds_a_rule() -> None:
     investigated the next time a rule is added.
     """
     declared = _declared_rule_ids()
-    grounded = frozenset(_rules())
+    with _indexed_authority_for_test().operation() as operation:
+        grounded = frozenset(_rules(operation=operation))
 
     assert declared - grounded == frozenset(), "classification rules ship with no provision behind their placement"
     assert grounded - declared == frozenset(), "grounding rows name rules the decision table does not declare"
@@ -128,11 +130,12 @@ def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
     flow = (bundled_path() / "registry/aeat/legal/iva-flow.toml").read_text(encoding="utf-8", errors="replace")
     defined = catalogue + flow
 
-    for rule in _rules().values():
-        for reference in rule.legal_references:
-            assert f'[legal."{reference}"]' in defined, (
-                f"{rule.rule_id} cites {reference}, which no legal catalogue entry defines"
-            )
+    with _indexed_authority_for_test().operation() as operation:
+        for rule in _rules(operation=operation).values():
+            for reference in rule.legal_references:
+                assert f'[legal."{reference}"]' in defined, (
+                    f"{rule.rule_id} cites {reference}, which no legal catalogue entry defines"
+                )
 
 
 def test_the_establishing_provision_is_one_the_row_actually_reads() -> None:
@@ -142,7 +145,8 @@ def test_the_establishing_provision_is_one_the_row_actually_reads() -> None:
     and the exclusion is asserted rather than assumed, so this case cannot quietly
     become vacuous if every row were one day exempted.
     """
-    grounded = [rule for rule in _rules().values() if not rule.legal_basis_exempt]
+    with _indexed_authority_for_test().operation() as operation:
+        grounded = [rule for rule in _rules(operation=operation).values() if not rule.legal_basis_exempt]
 
     assert grounded, "every row is legal-basis exempt; this case would pass over an ungrounded table"
     for rule in grounded:
@@ -229,7 +233,15 @@ def test_a_domestic_rule_is_silent_on_the_nature(rule_id: str) -> None:
     ignores.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        assert place_of_supply_rule(rule_id, on=_ON, operation=_authority_operation_for_test).supply_nature is None
+        assert (
+            place_of_supply_rule(
+                rule_id,
+                on=_ON,
+                operation=_authority_operation_for_test,
+                projected_year=_YEAR,
+            ).supply_nature
+            is None
+        )
 
 
 def test_the_cross_border_branches_are_where_the_fork_appears() -> None:
@@ -239,12 +251,14 @@ def test_the_cross_border_branches_are_where_the_fork_appears() -> None:
     cross-border rule fixes goods and at least one fixes services, and no
     domestic rule fixes anything.
     """
-    cross_border = {rule_id: rule for rule_id, rule in _rules().items() if rule_id not in _DOMESTIC_RULE_IDS}
-    fixed = {rule.supply_nature for rule in cross_border.values()}
+    with _indexed_authority_for_test().operation() as operation:
+        rules = _rules(operation=operation)
+        cross_border = {rule_id: rule for rule_id, rule in rules.items() if rule_id not in _DOMESTIC_RULE_IDS}
+        fixed = {rule.supply_nature for rule in cross_border.values()}
 
-    assert SupplyNature.GOODS in fixed
-    assert SupplyNature.SERVICES in fixed
-    assert all(_rules()[rule_id].supply_nature is None for rule_id in _DOMESTIC_RULE_IDS)
+        assert SupplyNature.GOODS in fixed
+        assert SupplyNature.SERVICES in fixed
+        assert all(rules[rule_id].supply_nature is None for rule_id in _DOMESTIC_RULE_IDS)
 
 
 def test_a_row_fixing_goods_rests_on_an_article_the_statute_writes_for_goods() -> None:
@@ -261,15 +275,16 @@ def test_a_row_fixing_goods_rests_on_an_article_the_statute_writes_for_goods() -
     goods_placement = "ley-37-1992:art-68"
     services_placement = {"ley-37-1992:art-69", "ley-37-1992:art-70"}
 
-    for rule in _rules().values():
-        if rule.supply_nature is SupplyNature.GOODS:
-            assert not (set(rule.legal_references) & services_placement) or goods_placement in rule.legal_references, (
-                f"{rule.rule_id} fixes GOODS while reading only the services placement articles"
-            )
-        if rule.supply_nature is SupplyNature.SERVICES:
-            assert goods_placement not in rule.legal_references, (
-                f"{rule.rule_id} fixes SERVICES while reading the goods placement article"
-            )
+    with _indexed_authority_for_test().operation() as operation:
+        for rule in _rules(operation=operation).values():
+            if rule.supply_nature is SupplyNature.GOODS:
+                assert (
+                    not (set(rule.legal_references) & services_placement) or goods_placement in rule.legal_references
+                ), f"{rule.rule_id} fixes GOODS while reading only the services placement articles"
+            if rule.supply_nature is SupplyNature.SERVICES:
+                assert goods_placement not in rule.legal_references, (
+                    f"{rule.rule_id} fixes SERVICES while reading the goods placement article"
+                )
 
 
 def test_the_union_scheme_article_never_fixes_the_nature_on_its_own() -> None:
@@ -280,7 +295,8 @@ def test_the_union_scheme_article_never_fixes_the_nature_on_its_own() -> None:
     rules that ride it must fix the nature on a placement article instead.
     """
     union_scheme = "ley-37-1992:art-163-unvicies"
-    riders = [rule for rule in _rules().values() if union_scheme in rule.legal_references]
+    with _indexed_authority_for_test().operation() as operation:
+        riders = [rule for rule in _rules(operation=operation).values() if union_scheme in rule.legal_references]
 
     assert riders, "no rule cites the Union scheme; this guard would pass vacuously"
     for rule in riders:
@@ -332,9 +348,11 @@ def test_the_enum_prose_does_not_attribute_a_nature_to_the_union_scheme_article(
     misattribution = re.compile(r"locat\w*[^.]*163\s+unvicies", re.IGNORECASE)
     offender = misattribution.search(flattened)
 
-    assert offender is None, (
-        f"the enum prose attributes placement to art. 163 unvicies: {offender.group(0)!r}" if offender else ""
-    )
+    if offender is None:
+        message = ""
+    else:
+        message = f"the enum prose attributes placement to art. 163 unvicies: {offender.group(0)!r}"
+    assert offender is None, message
 
     assert "Admitted to the scheme by" in doc or "Admitted by" in doc, (
         "the enum no longer distinguishes admission to the Union scheme from placement, "
@@ -348,9 +366,17 @@ def test_an_ungrounded_rule_refuses_rather_than_returning_a_default() -> None:
         from ..errors import IvaCatalogueError
 
         with pytest.raises(IvaCatalogueError, match="not grounded"):
-            place_of_supply_rule("RZZ_no_such_rule", on=_ON, operation=_authority_operation_for_test)
+            place_of_supply_rule(
+                "RZZ_no_such_rule",
+                on=_ON,
+                operation=_authority_operation_for_test,
+                projected_year=_YEAR,
+            )
 
         with pytest.raises(IvaCatalogueError, match="no place-of-supply grounding for year"):
             place_of_supply_rule(
-                "R05_domestic_at_rate_tier", on=date(1990, 1, 1), operation=_authority_operation_for_test
+                "R05_domestic_at_rate_tier",
+                on=date(1990, 1, 1),
+                operation=_authority_operation_for_test,
+                projected_year=1990,
             )

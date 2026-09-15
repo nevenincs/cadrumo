@@ -61,6 +61,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_order_key
@@ -113,6 +114,7 @@ def _prior_year_definitiva_pct(
     *,
     filing_year: int,
     porcentaje_id: CasillaId,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
     """Return the prior ejercicio's persisted definitive prorrata percentage.
 
@@ -128,7 +130,7 @@ def _prior_year_definitiva_pct(
     prior_year = filing_year - 1
     candidates: list[tuple[tuple[int, datetime], Decimal]] = []
     for payload in repository.iter_modelo(Modelo("303").value):
-        require_observation_envelope_coordinates_current(payload)
+        require_observation_envelope_coordinates_current(payload, operation=operation)
         observation = payload.observation
         if observation.filing_year != prior_year:
             continue
@@ -238,6 +240,7 @@ def _settlement_prorrata_diagnostics(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     bucket_id: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Append settlement-only prorrata diagnostics in their canonical order."""
     especial_diagnostics = _especial_mandatory_diagnostics(
@@ -247,6 +250,7 @@ def _settlement_prorrata_diagnostics(
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=transaction_repository,
         bucket_id=bucket_id,
+        operation=operation,
     )
     current_inputs = _current_regularizacion_inputs(
         revision,
@@ -263,6 +267,7 @@ def _settlement_prorrata_diagnostics(
         observation_repository,
         filing_year=filing_year,
         porcentaje_id=porcentaje_id,
+        operation=operation,
     )
     if prorrata_provisional_pct is None:
         pending_diagnostic = _pending_regularizacion_diagnostic(
@@ -343,31 +348,33 @@ def collect_prorrata_regularizacion_diagnostics(
     if modelo != Modelo("303").value:
         return ()
 
-    missing_carry_diagnostics = _missing_carry_diagnostics(
-        revision,
-        casilla_values,
-        modelo=modelo,
-        filing_year=filing_year,
-        prorrata_register_repository=prorrata_register_repository,
-        transaction_repository=transaction_repository,
-        bucket_id=bucket_id,
-    )
-    if not is_m303_annual_settlement_period(Period.from_year_and_code(filing_year, period_token)):
-        return missing_carry_diagnostics
+    with bundled_indexed_authority().operation() as operation:
+        missing_carry_diagnostics = _missing_carry_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            filing_year=filing_year,
+            prorrata_register_repository=prorrata_register_repository,
+            bucket_id=bucket_id,
+            operation=operation,
+        )
+        if not is_m303_annual_settlement_period(Period.from_year_and_code(filing_year, period_token)):
+            return missing_carry_diagnostics
 
-    # Settlement-only checks keep their own canonical order: the regularización
-    # advisory (or pending carry) precedes the mandatory-especial diagnostic.
-    return _settlement_prorrata_diagnostics(
-        revision,
-        casilla_values,
-        modelo=modelo,
-        filing_year=filing_year,
-        missing_carry_diagnostics=missing_carry_diagnostics,
-        observation_repository=observation_repository,
-        prorrata_register_repository=prorrata_register_repository,
-        transaction_repository=transaction_repository,
-        bucket_id=bucket_id,
-    )
+        # Settlement-only checks keep their own canonical order: the regularización
+        # advisory (or pending carry) precedes the mandatory-especial diagnostic.
+        return _settlement_prorrata_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            filing_year=filing_year,
+            missing_carry_diagnostics=missing_carry_diagnostics,
+            observation_repository=observation_repository,
+            prorrata_register_repository=prorrata_register_repository,
+            transaction_repository=transaction_repository,
+            bucket_id=bucket_id,
+            operation=operation,
+        )
 
 
 def _especial_mandatory_diagnostics(
@@ -378,6 +385,7 @@ def _especial_mandatory_diagnostics(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     bucket_id: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return the LIVA art. 103.Dos.2.º mandatory-especial settlement diagnostic.
 
@@ -408,6 +416,7 @@ def _especial_mandatory_diagnostics(
         revision=revision,
         prorrata_register_repository=prorrata_register_repository,
         transaction_repository=transaction_repository,
+        operation=operation,
     )
     if totals is None:
         return ()
@@ -436,6 +445,7 @@ def _especial_mandatory_diagnostics(
             deduction_under_especial=totals.deduction_under_especial,
             ejercicio=filing_year,
             parameters=especial_parameters,
+            operation=operation,
         )
         if notice is None:
             return ()
@@ -487,6 +497,7 @@ def _missing_carry_diagnostics(
     filing_year: int,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     bucket_id: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     if bucket_id is None:
         return ()
@@ -507,7 +518,10 @@ def _missing_carry_diagnostics(
     )
 
     try:
-        register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())
+        register = require_prorrata_register_coordinates_current(
+            prorrata_register_repository.load(),
+            operation=operation,
+        )
     except ProrrataRegisterError as exc:
         return (
             CalculationSourceDiagnostic(

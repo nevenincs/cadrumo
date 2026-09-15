@@ -14,6 +14,7 @@ import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ...user_profile.profile_keys import profile_keys as catalogue_profile_keys
 from ..compiler import compile_profile_keys
@@ -41,7 +42,8 @@ def test_every_visible_when_resolves_to_an_earlier_question(*, registry_setup_fl
 
 
 def test_every_profile_key_appears_in_profile_keys(*, registry_setup_flow: WizardFlow) -> None:
-    catalogue = {entry.key for entry in catalogue_profile_keys()}
+    with bundled_indexed_authority().operation() as operation:
+        catalogue = {entry.key for entry in catalogue_profile_keys(operation=operation)}
     for question in _setup_questions(registry_setup_flow=registry_setup_flow):
         if question.profile_key is not None:
             assert question.profile_key in catalogue
@@ -71,7 +73,8 @@ def test_compile_profile_keys_returns_one_entry_per_profile_bound_question(*, re
 def test_tax_residence_ccaa_is_a_descriptor_bound_profile_key(*, registry_setup_flow: WizardFlow) -> None:
     profile_keys = {question.profile_key for question in _setup_questions(registry_setup_flow=registry_setup_flow)}
     assert "tax_residence.ccaa" in profile_keys
-    catalogue = {entry.key for entry in catalogue_profile_keys()}
+    with bundled_indexed_authority().operation() as operation:
+        catalogue = {entry.key for entry in catalogue_profile_keys(operation=operation)}
     assert "tax_residence.ccaa" in catalogue
 
 

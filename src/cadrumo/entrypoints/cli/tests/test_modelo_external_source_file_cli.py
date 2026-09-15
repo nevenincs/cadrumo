@@ -9,6 +9,8 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from ....application.modelo.calculation_actions import get_calculation_revision
@@ -79,7 +81,11 @@ def test_filing_record_import_file_uses_real_csv_parser_and_persists_lexicals(
     payload = unwrap_schema_envelope(result.output)
 
     with open_test_profile_session(profile_id):
-        revision = get_calculation_revision(payload["calculation_revision_id"])
+        with bundled_indexed_authority().operation() as operation:
+            revision = get_calculation_revision(
+                payload["calculation_revision_id"],
+                ports=build_calculation_action_ports(bucket_id=profile_id, operation=operation),
+            )
         assert revision.input_values_by_casilla_id == {"01": " 001500.00 ", "02": "300,0"}
     assert json.loads(result.output)["status"] == "success"
 

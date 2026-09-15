@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
@@ -21,6 +22,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -47,7 +49,15 @@ from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profil
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -> None:
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     period = Period.from_year_and_code(2026, "1T")
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     scope = M303RegimenSimplificadoScopeDecision(
@@ -103,7 +113,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            authority=compiled_bundled_authority(),
+            operation=authority_operation,
         ),
     )
 
@@ -188,6 +198,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
 def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
     filing_year: int,
     period_code: str,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """All five live epochs preserve their calculated module endpoint values."""
     period = Period.from_year_and_code(filing_year, period_code)
@@ -255,7 +266,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            authority=compiled_bundled_authority(),
+            operation=authority_operation,
         ),
     )
     module_refs = tuple(

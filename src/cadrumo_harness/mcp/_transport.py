@@ -89,7 +89,7 @@ def _terminal_transport_projection(
 
     from .command_surface import resolve_precondition_action
 
-    return resolve_precondition_action(
+    resolved = resolve_precondition_action(
         no_action_precondition_verdict(
             condition_id=condition_id,
             facts=facts,
@@ -97,6 +97,9 @@ def _terminal_transport_projection(
             outcome=outcome,
         ),
     )
+    if not isinstance(resolved, ResolvedPreconditionAction):
+        raise TypeError("MCP command-surface resolver returned an unexpected action type")
+    return resolved
 
 
 def _transport_error_envelope(

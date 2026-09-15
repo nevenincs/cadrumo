@@ -57,13 +57,16 @@ def test_m100_2024_uses_the_official_xml_dictionary_and_requires_its_authority()
     authority = compiled_bundled_authority()
     revision = authority.snapshot("100", filing_year=2024, period="0A").revision
 
-    with pytest.raises(RegistryValidationError, match="requires source_root and sources"):
+    with pytest.raises(RegistryValidationError, match="requires published sources and source payloads"):
         clasificar_casillas_oficiales(revision)
 
     statuses = clasificar_casillas_oficiales(
         revision,
-        source_root=authority.source_root,
         sources=authority.catalogues.sources,
+        source_payloads={
+            str(source_id): authority.evidence.source_bytes(str(source_id))
+            for source_id in authority.catalogues.sources
+        },
     )
 
     assert statuses[validated_casilla_id("0001", surface="M100 official box 0001")] is EstadoCasillaOficial.ADDRESSED

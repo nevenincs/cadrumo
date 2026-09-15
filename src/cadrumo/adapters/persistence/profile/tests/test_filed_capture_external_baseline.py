@@ -31,6 +31,7 @@ from cadrumo.application.modelo.calculation_actions import get_calculation_revis
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -97,18 +98,22 @@ def test_live_capture_creates_exact_immediately_amendable_baseline(
         )
     )
     assert filing is not None
-    revision = get_calculation_revision(filing.calculation_revision_id, ports=calculation_ports_for_test())
+    with calculation_ports_for_test(bucket_id=_PROFILE_ID) as _calculation_ports_100:
+        revision = get_calculation_revision(filing.calculation_revision_id, ports=_calculation_ports_100)
     assert filing.filed_at == _CAPTURED_AT
     assert revision.input_values_by_casilla_id == {_INCOME: " 001500.00 ", _EXPENSE: "300,0"}
-
-    amended = amend_modelo_revision(
-        from_filing_record_id=filing.filing_record_id,
-        overrides={_INCOME: Decimal("1600")},
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-        reason="live imported baseline correction",
-        actor="operator",
-        ports=calculation_ports_for_test(),
-    )
+    with calculation_ports_for_test(bucket_id=_PROFILE_ID) as _calculation_ports_110:
+        amended = amend_modelo_revision(
+            from_filing_record_id=filing.filing_record_id,
+            overrides={_INCOME: Decimal("1600")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="live imported baseline correction",
+            actor="operator",
+            ports=build_amendment_action_ports(
+                bucket_id=_PROFILE_ID,
+                operation=_calculation_ports_110.operation,
+            ),
+        )
     assert amended.amends_filing_record_id == filing.filing_record_id
 
 

@@ -215,6 +215,8 @@ def _reconcile_revision_priority(revision: CalculationRevision) -> tuple[int, da
 def _reconcile_revision_for_work_unit(
     unit: WorkUnit,
     revisions: CalculationRevisionCatalogue,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision | None:
     """Resolve the strongest current calculation revision for a work unit."""
     for pointer in (unit.filed_calculation_revision_id, unit.current_calculation_revision_id):
@@ -223,7 +225,7 @@ def _reconcile_revision_for_work_unit(
             if revision is not None:
                 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
-                require_calculation_revision_coordinates_current(revision)
+                require_calculation_revision_coordinates_current(revision, operation=operation)
                 return revision
     candidates = revisions.for_work_unit(unit.work_unit_id)
     if not candidates:
@@ -231,7 +233,7 @@ def _reconcile_revision_for_work_unit(
     revision = max(candidates, key=_reconcile_revision_priority)
     from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
-    require_calculation_revision_coordinates_current(revision)
+    require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision
 
 
@@ -262,7 +264,11 @@ def m303_m349_intracom_reconcile_findings(
     )
     if sibling_unit is None:
         return []
-    sibling_revision = _reconcile_revision_for_work_unit(sibling_unit, calculation_repository.load())
+    sibling_revision = _reconcile_revision_for_work_unit(
+        sibling_unit,
+        calculation_repository.load(),
+        operation=operation,
+    )
     if sibling_revision is None:
         return []
 

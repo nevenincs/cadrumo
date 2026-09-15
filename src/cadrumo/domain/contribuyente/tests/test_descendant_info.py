@@ -21,6 +21,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.core.descendant_relacion import DescendantRelacion
@@ -31,6 +32,7 @@ from ..descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
+from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ._registry_thresholds import (
     registry_birth_order_amounts,
@@ -42,6 +44,11 @@ from ._registry_thresholds import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 FILING_YEAR = 2024
+_FACT_CONTEXT = FamilyFactResolutionContext(
+    compiled_bundled_authority(),
+    date(FILING_YEAR, 12, 31),
+    date(FILING_YEAR, 12, 31),
+)
 
 # Art. 58 figures for the exercised filing year, read from the registry rather
 # than restated: a literal here would decouple these cases from the parameters
@@ -116,6 +123,7 @@ def _minimo_descendientes_estatal(profile: RentaFamilyProfile) -> Decimal:
         menor_tres_supplement=_MENOR_TRES,
         fallecimiento_amount=_FALLECIMIENTO,
         thresholds=_THRESHOLDS,
+        context=_FACT_CONTEXT,
     )
 
 
@@ -222,23 +230,23 @@ class TestDescendantInfoAgeCalculation:
         cases = ((date(2000, 1, 1), True), (date(1999, 1, 1), False))
         for birth_date, expected in cases:
             d = DescendantInfo(birth_date=birth_date)
-            assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is expected, birth_date
+            assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) is expected, birth_date
 
     def test_is_eligible_ordinary_over_25_with_discapacidad_is_true(self) -> None:
         d = DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33)
-        assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is True
+        assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) is True
 
     def test_is_eligible_ordinary_non_cohabiting_is_false(self) -> None:
         d = DescendantInfo(birth_date=date(2020, 1, 1), convive_con_contribuyente=False)
-        assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is False
+        assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) is False
 
     def test_is_eligible_menor_tres_age_1_is_true(self) -> None:
         d = DescendantInfo(birth_date=date(2023, 1, 15))
-        assert d.is_eligible_menor_tres(2024) is True
+        assert d.is_eligible_menor_tres(2024, context=_FACT_CONTEXT) is True
 
     def test_is_eligible_menor_tres_age_3_is_false(self) -> None:
         d = DescendantInfo(birth_date=date(2021, 12, 31))
-        assert d.is_eligible_menor_tres(2024) is False
+        assert d.is_eligible_menor_tres(2024, context=_FACT_CONTEXT) is False
 
 
 # ---------------------------------------------------------------------------
@@ -267,7 +275,7 @@ class TestRentaFamilyProfileDerivedProperties:
                 DescendantInfo(birth_date=date(2019, 6, 1)),  # age 5 at year-end 2024
             ),
         )
-        assert p.descendientes_menores_3_year_end(2024) == 1
+        assert p.descendientes_menores_3_year_end(2024, context=_FACT_CONTEXT) == 1
 
     def test_descendientes_eligible_minimum_count(self) -> None:
         p = RentaFamilyProfile(
@@ -277,7 +285,7 @@ class TestRentaFamilyProfileDerivedProperties:
                 DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33),  # disabled, eligible
             ),
         )
-        assert p.descendientes_eligible_minimum(2024, thresholds=_THRESHOLDS) == 2
+        assert p.descendientes_eligible_minimum(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -315,6 +323,7 @@ class TestArt58MinimoDescendientesEstatalOracleCases:
                 menor_tres_supplement=_MENOR_TRES,
                 fallecimiento_amount=_FALLECIMIENTO,
                 thresholds=_THRESHOLDS,
+                context=_FACT_CONTEXT,
             )
 
 

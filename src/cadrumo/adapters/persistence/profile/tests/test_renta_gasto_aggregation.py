@@ -23,12 +23,12 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.aggregation.renta_gasto_ledger import (
     aggregate_renta_gasto_ledger,
     aggregate_renta_gasto_ledger_from_repositories,
 )
 from cadrumo.application.aggregation.renta_ledger import aggregate_renta_ledger_expenses_from_repositories
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
@@ -457,9 +457,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=Period.from_year_and_code(2025, "0A"),
         ports=InvoiceCatalogueReadPorts(
-            invoice_reader=InvoiceCatalogueRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
-            ),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
             transaction_reader=TransactionCatalogueRepository(
                 bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
             ),

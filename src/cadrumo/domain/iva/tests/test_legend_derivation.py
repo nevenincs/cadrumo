@@ -1,7 +1,7 @@
 """The legend axis derives only what the issuer wrote, and defaults to nothing.
 
 Every expected value here comes from RD 1619/2012 art. 6.1 as carried in
-:data:`~domain.iva.REGIME_LEGENDS` -- the phrases are quoted from the bundled
+:func:`~domain.iva.resolve_regime_legends` -- the phrases are quoted from the bundled
 consolidated text, and the category each one declares is the regulation's, not
 this suite's. Nothing is computed from the code under test.
 
@@ -14,31 +14,41 @@ carry a category the issuer never stated.
 See Also:
     :func:`~domain.iva.derive_category_from_regime_legend`
         The derivation under test.
-    :data:`~domain.iva.REGIME_LEGENDS`
+    :func:`~domain.iva.resolve_regime_legends`
         The statutory vocabulary the expectations are read from.
 """
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry.authority import bundled_indexed_authority
 from ..legend_derivation import (
     LegendDerivation,
     LegendDerivationOutcome,
     derive_category_from_regime_legend,
     match_regime_legend,
 )
-from ..regime_legend import REGIME_LEGENDS, RegimeLegend
+from ..regime_legend import RegimeLegend, resolve_regime_legends
 from ..schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
 # The one mention that fixes a category, per art. 6.1.m. Read from the table
 # rather than restated, so a change to the regulation's encoding reaches these
 # cases instead of leaving them asserting a value the table no longer carries.
-_DECLARING = tuple(legend for legend in REGIME_LEGENDS if legend.declares is not None)
-_SILENT = tuple(legend for legend in REGIME_LEGENDS if legend.declares is None)
+def _resolve_legends() -> tuple[RegimeLegend, ...]:
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_regime_legends(operation=operation, effective_date=date(2024, 1, 1))
+
+
+_LEGENDS = _resolve_legends()
+_DECLARING = tuple(legend for legend in _LEGENDS if legend.declares is not None)
+_SILENT = tuple(legend for legend in _LEGENDS if legend.declares is None)
 
 
 def test_the_table_still_has_exactly_one_declaring_mention() -> None:
@@ -61,6 +71,7 @@ def test_the_reverse_charge_mention_derives_the_category_the_regulation_fixes() 
     derivation = derive_category_from_regime_legend(
         printed_legend=legend.phrase,
         has_repercutido_line=False,
+        legends=_LEGENDS,
     )
 
     assert derivation.outcome is LegendDerivationOutcome.DERIVED
@@ -80,6 +91,7 @@ def test_a_repercutido_line_beside_the_reverse_charge_mention_is_a_contradiction
     derivation = derive_category_from_regime_legend(
         printed_legend=_DECLARING[0].phrase,
         has_repercutido_line=True,
+        legends=_LEGENDS,
     )
 
     assert derivation.outcome is LegendDerivationOutcome.CONTRADICTED
@@ -99,7 +111,11 @@ def test_a_mandated_mention_that_declares_nothing_derives_nothing(legend: Regime
     phrase = legend.phrase
 
     for has_line in (True, False):
-        derivation = derive_category_from_regime_legend(printed_legend=phrase, has_repercutido_line=has_line)
+        derivation = derive_category_from_regime_legend(
+            printed_legend=phrase,
+            has_repercutido_line=has_line,
+            legends=_LEGENDS,
+        )
         assert derivation.outcome is LegendDerivationOutcome.ABSENT
         assert derivation.category is None
 
@@ -122,7 +138,11 @@ def test_the_ordinary_invoice_derives_nothing_rather_than_defaulting(printed: st
     an exempt operation, so there is nothing to match and nothing to derive. That
     absence is the regulation's, not an omission in the table.
     """
-    derivation = derive_category_from_regime_legend(printed_legend=printed, has_repercutido_line=True)
+    derivation = derive_category_from_regime_legend(
+        printed_legend=printed,
+        has_repercutido_line=True,
+        legends=_LEGENDS,
+    )
 
     assert derivation.outcome is LegendDerivationOutcome.ABSENT
     assert derivation.category is None
@@ -136,7 +156,7 @@ def test_the_ordinary_invoice_derives_nothing_rather_than_defaulting(printed: st
 )
 def test_the_match_is_case_folded_and_survives_surrounding_text(printed: str) -> None:
     """Art. 6.1 fixes the wording, not the typography or the layout."""
-    matched = match_regime_legend(printed)
+    matched = match_regime_legend(printed, legends=_LEGENDS)
 
     assert matched is not None
     assert matched.declares == IvaCategory("domestic_reverse_charge")
@@ -148,7 +168,7 @@ def test_a_paraphrase_is_not_a_mandated_mention() -> None:
     The counterpart of the case above: case folding is a typography allowance,
     not a licence to recognise wording the regulation does not fix.
     """
-    assert match_regime_legend("el sujeto pasivo se invierte en esta operación") is None
+    assert match_regime_legend("el sujeto pasivo se invierte en esta operación", legends=_LEGENDS) is None
 
 
 class TestTheRecordCannotMisreportItsOwnState:
@@ -186,4 +206,4 @@ def test_the_axis_needs_no_counterparty_facts_at_all() -> None:
 
     parameters = set(inspect.signature(derive_category_from_regime_legend).parameters)
 
-    assert parameters == {"printed_legend", "has_repercutido_line"}
+    assert parameters == {"printed_legend", "has_repercutido_line", "legends"}

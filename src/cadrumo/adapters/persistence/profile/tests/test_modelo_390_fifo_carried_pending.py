@@ -251,19 +251,20 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository):
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values={},
-        ports=calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_257:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            binding_values={},
+            ports=_calculation_ports_257,
+            clock=_T1,
+        )
 
 
 def test_m390_carry_boxes_are_the_fifo_partition_not_the_naive_split(

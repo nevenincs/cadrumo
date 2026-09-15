@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
@@ -25,10 +27,11 @@ from ..action_errors import StoredCalculationDriftError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _m303_revision() -> CalculationRevision:
+def _m303_revision(*, operation: PinnedAuthorityOperation) -> CalculationRevision:
     evidence = general_m303_filing_evidence(
         Period.from_year_and_code(2026, "1T"),
         reference="test:revision-integrity:m303",
+        operation=operation,
     )
     work_unit_id = "a" * 64
     input_id = validated_casilla_id("01", surface="integrity test input")
@@ -63,12 +66,12 @@ def _m303_revision() -> CalculationRevision:
     )
 
 
-def test_evidence_bearing_m303_revision_passes_content_integrity() -> None:
-    assert_revision_content_integrity(_m303_revision())
+def test_evidence_bearing_m303_revision_passes_content_integrity(*, operation: PinnedAuthorityOperation) -> None:
+    assert_revision_content_integrity(_m303_revision(operation=operation))
 
 
-def test_changed_m303_evidence_with_stored_identity_is_rejected() -> None:
-    original = _m303_revision()
+def test_changed_m303_evidence_with_stored_identity_is_rejected(*, operation: PinnedAuthorityOperation) -> None:
+    original = _m303_revision(operation=operation)
     assert original.filing_instance_evidence is not None
     assert original.filing_instance_evidence.m303 is not None
     changed = original.model_copy(

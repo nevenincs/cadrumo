@@ -58,7 +58,11 @@ def test_activity_selector_preserves_provenance_and_refuses_pre_source_coordinat
         effective_date=effective_date,
         authority=authority,
     )
-    selectors = load_tipo_actividad_selectors(effective_date=effective_date, authority=authority)
+    selectors = load_tipo_actividad_selectors(
+        (_PROFESSIONAL_SELECTOR,),
+        effective_date=effective_date,
+        authority=authority,
+    )
 
     assert selector.effective_date == effective_date
     assert selector.legal_refs == ("rd-439-2007:art-95", "orden-eha-1274-2007:art-1")

@@ -51,7 +51,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
     undeclared_casilla_ids,
@@ -393,7 +392,7 @@ def m145_communication_record_object_key(bucket_id: str, communication_record_id
 def _snapshot_for_command(
     command: M145CommunicationCreateCommand,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ):
     return _snapshot_for_scope(
         communication_year=command.communication_year,
@@ -406,15 +405,8 @@ def _snapshot_for_scope(
     *,
     communication_year: int,
     period_token: M145CommunicationPeriod,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot:
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _snapshot_for_scope(
-                communication_year=communication_year,
-                period_token=period_token,
-                operation=indexed_operation,
-            )
     contract = build_m145_communication_service_contract(filing_year=communication_year, operation=operation)
 
     snapshot = operation.snapshot(
@@ -439,9 +431,13 @@ def _snapshot_for_scope(
     return snapshot
 
 
-def _require_m145_record_coordinates_current(record: M145CommunicationRecord) -> M145CommunicationRecord:
+def _require_m145_record_coordinates_current(
+    record: M145CommunicationRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> M145CommunicationRecord:
     """Return a persisted M145 record only after shared-gate re-confirmation."""
-    outcome = revision_carry_outcome(record.registry_snapshot_ref)
+    outcome = revision_carry_outcome(record.registry_snapshot_ref, operation=operation)
     if outcome.refused:
         raise M145CommunicationRecordValidationError(
             "Modelo 145 record registry coordinate cannot be re-confirmed: "
@@ -455,6 +451,7 @@ def read_m145_communication_record(
     *,
     bucket_id: BucketId,
     ports: M145CommunicationRecordsPorts,
+    operation: PinnedAuthorityOperation,
 ) -> M145CommunicationRecord:
     """Return one Modelo 145 communication record by id or unambiguous prefix."""
     try:
@@ -471,7 +468,7 @@ def read_m145_communication_record(
             communication_record_id,
         )
         raise
-    return _require_m145_record_coordinates_current(record)
+    return _require_m145_record_coordinates_current(record, operation=operation)
 
 
 def _m145_communication_event_payload(
@@ -668,12 +665,19 @@ def validate_m145_communication_record(
     *,
     bucket_id: BucketId,
     ports: M145CommunicationRecordsPorts,
+    operation: PinnedAuthorityOperation,
 ) -> M145CommunicationValidationResult:
     """Validate one persisted Modelo 145 communication record against registry authority."""
-    record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id, ports=ports)
+    record = read_m145_communication_record(
+        communication_record_id,
+        bucket_id=bucket_id,
+        ports=ports,
+        operation=operation,
+    )
     snapshot = _snapshot_for_scope(
         communication_year=record.communication_year,
         period_token=record.period_token,
+        operation=operation,
     )
     revision = snapshot.revision
     revision_legal_refs = tuple(sorted(str(ref) for ref in revision.legal_refs))
@@ -856,6 +860,7 @@ def export_m145_communication_record(
     bucket_id: BucketId,
     renderer: FicheroBoeRecordRenderer,
     ports: M145CommunicationRecordsPorts,
+    operation: PinnedAuthorityOperation,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
 ) -> M145CommunicationExportResult:
     """Render one Modelo 145 communication record through the registry export layout.
@@ -864,7 +869,12 @@ def export_m145_communication_record(
     the fixed-width AEAT wire format is an adapter concern, and importing it
     from this layer is what the port exists to avoid.
     """
-    validation = validate_m145_communication_record(communication_record_id, bucket_id=bucket_id, ports=ports)
+    validation = validate_m145_communication_record(
+        communication_record_id,
+        bucket_id=bucket_id,
+        ports=ports,
+        operation=operation,
+    )
     if not validation.valid:
         _LOGGER.warning(
             "m145 communication record export refused communication_record_id=%s issue_count=%d",
@@ -880,10 +890,16 @@ def export_m145_communication_record(
                 "issue_kinds": tuple(issue.kind.value for issue in validation.issues),
             },
         )
-    record = read_m145_communication_record(communication_record_id, bucket_id=bucket_id, ports=ports)
+    record = read_m145_communication_record(
+        communication_record_id,
+        bucket_id=bucket_id,
+        ports=ports,
+        operation=operation,
+    )
     snapshot = _snapshot_for_scope(
         communication_year=record.communication_year,
         period_token=record.period_token,
+        operation=operation,
     )
     resolved_layout = resolve_export_layout(snapshot)
     layout = resolved_layout.layout
@@ -958,11 +974,15 @@ def mark_m145_communication_record_delivered_to_payer(
     *,
     bucket_id: BucketId,
     ports: M145CommunicationRecordsPorts,
+    operation: PinnedAuthorityOperation,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
 ) -> M145CommunicationRecord:
     """Mark one valid local communication record as delivered to the payer."""
     repository = ports.record_repository
-    record = _require_m145_record_coordinates_current(repository.resolve(communication_record_id))
+    record = _require_m145_record_coordinates_current(
+        repository.resolve(communication_record_id),
+        operation=operation,
+    )
     if record.state in {
         M145CommunicationRecordState.DELIVERED_TO_PAYER,
         M145CommunicationRecordState.LOCALLY_COMPLETED,
@@ -977,6 +997,7 @@ def mark_m145_communication_record_delivered_to_payer(
         record.communication_record_id,
         bucket_id=bucket_id,
         ports=ports,
+        operation=operation,
     )
     if not validation.valid:
         _LOGGER.warning(
@@ -1023,11 +1044,15 @@ def mark_m145_communication_record_locally_completed(
     *,
     bucket_id: BucketId,
     ports: M145CommunicationRecordsPorts,
+    operation: PinnedAuthorityOperation,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
 ) -> M145CommunicationRecord:
     """Mark one payer-delivered local communication record as locally completed."""
     repository = ports.record_repository
-    record = _require_m145_record_coordinates_current(repository.resolve(communication_record_id))
+    record = _require_m145_record_coordinates_current(
+        repository.resolve(communication_record_id),
+        operation=operation,
+    )
     if record.state is M145CommunicationRecordState.LOCALLY_COMPLETED:
         _LOGGER.debug(
             "m145 communication record completion reused state communication_record_id=%s state=%s",
@@ -1075,6 +1100,7 @@ def create_m145_communication_record(
     *,
     bucket_id: BucketId,
     ports: M145CommunicationRecordsPorts,
+    operation: PinnedAuthorityOperation,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
 ) -> M145CommunicationRecord:
     """Persist a bucket-local Modelo 145 communication record.
@@ -1084,7 +1110,7 @@ def create_m145_communication_record(
     casilla declared in the active Modelo 145 registry revision, persists the
     local record, and emits the communication-created bucket event.
     """
-    snapshot = _snapshot_for_command(command)
+    snapshot = _snapshot_for_command(command, operation=operation)
     field_values = dict(sorted(command.field_values.items()))
     unknown = tuple(sorted(undeclared_casilla_ids(snapshot.revision, field_values)))
     if unknown:
@@ -1110,7 +1136,7 @@ def create_m145_communication_record(
             "m145 communication record create reused existing communication_record_id=%s",
             record_id,
         )
-        return _require_m145_record_coordinates_current(repository.load(record_id))
+        return _require_m145_record_coordinates_current(repository.load(record_id), operation=operation)
 
     record = M145CommunicationRecord(
         communication_record_id=record_id,

@@ -105,6 +105,7 @@ def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
     """
 
     option = SETUP_OPTION_INFOS["tax-residence-ccaa"]
+    assert isinstance(option, typer.models.OptionInfo)
 
     assert option.metavar == "CCAA"
     assert option.show_choices is False

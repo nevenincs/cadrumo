@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, override
 
 from pydantic import BaseModel
 
@@ -69,7 +69,7 @@ if TYPE_CHECKING:
     from .secret_submission import EphemeralSecretBroker
 
 
-class SupervisorHost:
+class SupervisorHost(Protocol):
     if TYPE_CHECKING:
         registry: OperationRegistry
         _authority_operation: PinnedAuthorityOperation
@@ -170,6 +170,103 @@ class SupervisorHost:
 
         def _continuation_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None: ...
 
+        async def submit[RequestPayloadT: BaseModel](
+            self,
+            request: OperationRequest[RequestPayloadT],
+            *,
+            operation_id: OperationId | None = None,
+        ) -> OperationId: ...
+
+        def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition: ...
+
+        async def _load_pinned_snapshot(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+        async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+        async def submit_transient_financial_operand(
+            self,
+            requirement: OperationTransientFinancialOperandRequirement,
+            amount: Decimal,
+        ) -> OperationTransientFinancialOperandDelivery: ...
+
+        async def submit_ephemeral_secret(
+            self,
+            requirement: OperationSecretRequirement,
+            secret: bytearray,
+        ) -> None: ...
+
+        async def _resolve_request_payload(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            definition: OperationDefinition,
+        ) -> BaseModel: ...
+
+        async def _settle_pre_entry_secret_wait(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            condition: OperationTerminalCondition,
+        ) -> OperationPersistedSnapshot: ...
+
+        async def _settle_executor_failure(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            error: Exception,
+        ) -> OperationPersistedSnapshot: ...
+
+        async def _advance(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            *,
+            lifecycle: OperationLifecycle,
+            events: tuple[OperationEvent, ...] = (),
+            pending: OperationPendingInteraction | None = None,
+            consumed: tuple[OperationConsumedInteraction, ...] | None = None,
+            effect: OperationEffect | None = None,
+            execution_deadline: datetime | None = None,
+            cleanup_deadline: datetime | None = None,
+            cancellation_requested_at: datetime | None = None,
+            cancellation_acknowledged_at: datetime | None = None,
+            cancellation_deferred: bool | None = None,
+            executor_entered_at: datetime | None = None,
+            discard_ephemeral_secret: bool = False,
+        ) -> OperationPersistedSnapshot: ...
+
+        @staticmethod
+        def _executor_failure_diagnostic_reference(
+            snapshot: OperationPersistedSnapshot,
+            error: Exception,
+        ) -> str: ...
+
+        def _execution_deadline_for(self, deadline_capability: OperationDeadline) -> datetime | None: ...
+
+        async def _execute_with_deadlines(
+            self,
+            *,
+            identity: OperationIdentity,
+            context: DefinitionBoundContext,
+            executor: Coroutine[None, None, OperationReference | None],
+        ) -> OperationReference | None: ...
+
+        async def _settle_returned_result(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            result_ref: OperationReference | None,
+        ) -> OperationPersistedSnapshot: ...
+
+        async def await_terminal(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+        async def respond(
+            self,
+            response: OperationApplyResponse | OperationRejectResponse,
+        ) -> OperationConsumedInteraction: ...
+
+        def _schedule_continuation(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            definition: OperationDefinition,
+            continuation: OperationConsumedInteraction,
+        ) -> None: ...
+
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
@@ -243,8 +340,9 @@ def _advanced_snapshot(
 class SupervisorExecutionMixin(SupervisorHost):
     """Own request binding, executor execution, and durable interaction stages."""
 
+    @override
     async def submit[RequestPayloadT: BaseModel](
-        self,
+        self: SupervisorHost,
         request: OperationRequest[RequestPayloadT],
         *,
         operation_id: OperationId | None = None,
@@ -328,7 +426,8 @@ class SupervisorExecutionMixin(SupervisorHost):
             await self._release_exact_lease(lease, observed_at=self._clock())
         return created_operation_id
 
-    def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition:
+    @override
+    def _require_pinned_definition(self: SupervisorHost, snapshot: OperationPersistedSnapshot) -> OperationDefinition:
         definition_id = snapshot.identity.definition_id
         definition = self.registry.lookup(definition_id)
         current_contract = self.registry.lookup_public_contract(definition_id)
@@ -336,13 +435,15 @@ class SupervisorExecutionMixin(SupervisorHost):
             raise ValueError("operation definition contract no longer reproduces its invocation digest")
         return definition
 
-    async def _load_pinned_snapshot(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+    @override
+    async def _load_pinned_snapshot(self: SupervisorHost, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Load one invocation only after its immutable registry contract reproduces."""
         snapshot = await self._journal.load(operation_id)
         self._require_pinned_definition(snapshot)
         return snapshot
 
-    async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+    @override
+    async def start(self: SupervisorHost, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Start one owned registered executor from its declared request storage."""
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is not OperationLifecycle.CREATED:
@@ -411,8 +512,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             await self._settle_financial_operand_custody(operation_id)
         return await self._settle_returned_result(context.snapshot, result_ref)
 
+    @override
     async def submit_transient_financial_operand(
-        self,
+        self: SupervisorHost,
         requirement: OperationTransientFinancialOperandRequirement,
         amount: Decimal,
     ) -> OperationTransientFinancialOperandDelivery:
@@ -429,8 +531,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             raise ValueError("a transient financial operand may only answer a running invocation")
         return await self._financial_operands.deliver(requirement, amount, observed_at=self._clock())
 
+    @override
     async def submit_ephemeral_secret(
-        self,
+        self: SupervisorHost,
         requirement: OperationSecretRequirement,
         secret: bytearray,
     ) -> None:
@@ -456,8 +559,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             zeroize_secret_buffer(secret)
             raise
 
+    @override
     async def _resolve_request_payload(
-        self,
+        self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         definition: OperationDefinition,
     ) -> BaseModel:
@@ -473,8 +577,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             raise ValueError("credential-free operation request digest does not match durable content")
         return payload
 
+    @override
     async def _settle_pre_entry_secret_wait(
-        self,
+        self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         condition: OperationTerminalCondition,
     ) -> OperationPersistedSnapshot:
@@ -491,8 +596,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             ),
         )
 
+    @override
     async def _settle_executor_failure(
-        self,
+        self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         error: Exception,
     ) -> OperationPersistedSnapshot:
@@ -526,6 +632,7 @@ class SupervisorExecutionMixin(SupervisorHost):
             )
         return await self.settle(snapshot.identity.operation_id, receipt)
 
+    @override
     @staticmethod
     def _executor_failure_diagnostic_reference(
         snapshot: OperationPersistedSnapshot,
@@ -550,7 +657,8 @@ class SupervisorExecutionMixin(SupervisorHost):
         )
         return f"sha256:{digest}"
 
-    def _execution_deadline_for(self, deadline_capability: OperationDeadline) -> datetime | None:
+    @override
+    def _execution_deadline_for(self: SupervisorHost, deadline_capability: OperationDeadline) -> datetime | None:
         if deadline_capability is OperationDeadline.ABSENT:
             return None
         if self._execution_timeout is None:
@@ -559,8 +667,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             raise ValueError("deadline-capable operation requires a configured cleanup timeout")
         return self._clock() + self._execution_timeout
 
+    @override
     async def _execute_with_deadlines(
-        self,
+        self: SupervisorHost,
         *,
         identity: OperationIdentity,
         context: DefinitionBoundContext,
@@ -595,8 +704,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             await self._wait_for_executor_or_deadline(executor_task, cleanup_deadline, now)
         return await executor_task
 
+    @override
     async def _settle_returned_result(
-        self,
+        self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         result_ref: OperationReference | None,
     ) -> OperationPersistedSnapshot:
@@ -634,7 +744,8 @@ class SupervisorExecutionMixin(SupervisorHost):
             ),
         )
 
-    async def await_terminal(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+    @override
+    async def await_terminal(self: SupervisorHost, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Await local commits promptly and bounded durable rechecks after detachment."""
         backoff_seconds = _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS
         while True:
@@ -658,8 +769,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             else:
                 backoff_seconds = _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS
 
+    @override
     async def _advance(
-        self,
+        self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         *,
         lifecycle: OperationLifecycle,
@@ -703,7 +815,11 @@ class SupervisorExecutionMixin(SupervisorHost):
         self._notify_durable_change(successor)
         return successor
 
-    async def respond(self, response: OperationApplyResponse | OperationRejectResponse) -> OperationConsumedInteraction:
+    @override
+    async def respond(
+        self: SupervisorHost,
+        response: OperationApplyResponse | OperationRejectResponse,
+    ) -> OperationConsumedInteraction:
         """Consume one pending response and resume it when its policy permits."""
         snapshot = await self.inspect(response.operation_id)
         pending = snapshot.pending_interaction
@@ -731,8 +847,9 @@ class SupervisorExecutionMixin(SupervisorHost):
             self._schedule_continuation(successor, definition, consumed)
         return consumed
 
+    @override
     def _schedule_continuation(
-        self,
+        self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         definition: OperationDefinition,
         continuation: OperationConsumedInteraction,

@@ -2,56 +2,101 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Callable, Generator, Iterator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.period import Period
+from ....domain.buckets.event import BucketEventHistoryCatalogue
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.justificante.schema import Justificante
+from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
+from ...calculations.observations_repository import (
+    ObservationEnvelopePayload,
+    ObservationSourceKind,
+)
 from ..errors import LiveApplicationError
-from ..filed_data_ports import FiledDataCapturePort
-from ..filed_observation_ports import FiledObservationPersistencePorts
+from ..filed_data_ports import (
+    FiledArtefactSink,
+    FiledDataCapturePort,
+    FiledDataRegisterPort,
+    FiledDeclarationAvailabilityReportProtocol,
+    FiledRegisterDeclarationProtocol,
+)
+from ..filed_observation_ports import (
+    FiledCalculationObservationRepositoryPort,
+    FiledIvaHistoryRepositoryPort,
+    FiledObservationArtefactProtocol,
+    FiledObservationPersistencePorts,
+    FiledObservationProtocol,
+    FiledObservationSkipProtocol,
+)
 from ..iva_remote_state_ports import IvaRemoteStatePort
 
+if TYPE_CHECKING:
+    from ....core.config import Settings
+    from ....core.secure_object_write import SecureObjectWrite
+    from ....domain.calculations.registry.schema import ModeloRevision
+    from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+    from ...auth.session_types import AeatSession
+    from ...auth.sessions import AuthenticatedAeatSessionResult
+    from ...modelo.external_import_actions import ExternalFilingBaselineSource
+    from ..remote_state_models import (
+        IvaCompensationHistoryCaptureReport,
+        IvaCompensationHistoryReport,
+        IvaRemoteStateAcquisitionManifest,
+        IvaWalletCaptureReport,
+    )
+
 
 @dataclass(frozen=True, slots=True)
-class _RegistryObservation:
-    """Small registry-row shape consumed by the calculation persistence port."""
+class _InMemoryObservationArtefact:
+    """Persisted artefact view returned by the in-memory custody fake."""
 
-    modelo: str
-    filing_year: int
-    period: str
-
-
-@dataclass(frozen=True, slots=True)
-class _PreparedObservationEnvelope:
-    """Opaque calculation payload accepted by the in-memory repository."""
-
-    observation: object
+    kind: str
+    source_url: str
+    byte_count: int
+    sha256: str
+    captured_at: datetime
+    storage_ref: str | None
 
 
 @dataclass(slots=True)
 class _InMemoryObservationPersistence:
     """Keep captured manifests and artefacts in process memory."""
 
-    observations: list[object] = field(default_factory=list)
+    observations: list[FiledObservationProtocol] = field(default_factory=list)
     artefacts: dict[str, bytes] = field(default_factory=dict)
     _next_ref: int = 0
 
-    def persist_observation(self, observation: object) -> Path:
+    def persist_observation(self, observation: FiledObservationProtocol) -> Path:
         """Record one manifest and return a deterministic logical path."""
         self.observations.append(observation)
         return Path(f"memory-observations/{len(self.observations)}/manifest.json")
 
-    def persist_artefact(self, observation_key: tuple[object, ...], artefact: object, body: bytes) -> object:
-        """Keep one artefact body and attach its in-memory reference when possible."""
+    def persist_artefact(
+        self,
+        observation_key: tuple[str, int, Period, str],
+        artefact: FiledObservationArtefactProtocol,
+        body: bytes,
+    ) -> FiledObservationArtefactProtocol:
+        """Keep one artefact body and return its typed in-memory manifest."""
         del observation_key
         self._next_ref += 1
         storage_ref = f"memory-artefact:{self._next_ref}"
         self.artefacts[storage_ref] = body
-        model_copy = getattr(artefact, "model_copy", None)
-        if model_copy is None:
-            return artefact
-        return model_copy(update={"storage_ref": storage_ref})
+        return _InMemoryObservationArtefact(
+            kind=artefact.kind,
+            source_url=str(artefact.source_url),
+            byte_count=artefact.byte_count,
+            sha256=artefact.sha256,
+            captured_at=artefact.captured_at,
+            storage_ref=storage_ref,
+        )
 
     def load_artefact(self, storage_ref: str) -> bytes:
         """Load an artefact body previously retained by this fake."""
@@ -61,7 +106,7 @@ class _InMemoryObservationPersistence:
 class _InMemoryParser:
     """Receipt parser surface with no external-document implementation."""
 
-    def parse_justificante(self, body: bytes) -> object:
+    def parse_justificante(self, body: bytes) -> Justificante:
         """Refuse receipt parsing because these tests do not supply receipt bytes."""
         del body
         raise ValueError("test bundle has no justificante parser")
@@ -75,15 +120,16 @@ class _InMemoryParser:
 class _InMemoryTransformation:
     """Translate only the coordinates needed by the finalizer's calculation path."""
 
-    def registry_observation(self, observation: object) -> _RegistryObservation:
+    def registry_observation(self, observation: FiledObservationProtocol) -> RegistryModeloObservation:
         """Project the filed observation's identity and fiscal coordinates."""
-        return _RegistryObservation(
+        return RegistryModeloObservation(
             modelo=observation.modelo,
             filing_year=observation.ejercicio,
             period=observation.period.registry_token,
+            filing_period=observation.period,
         )
 
-    def non_numeric_casillas(self, observation: object) -> tuple[object, ...]:
+    def non_numeric_casillas(self, observation: FiledObservationProtocol) -> tuple[FiledObservationSkipProtocol, ...]:
         """Return no skips; no operator projection is under test here."""
         del observation
         return ()
@@ -93,59 +139,143 @@ class _InMemoryCalculationRepository:
     """Retain prepared calculation payloads without secure-storage concerns."""
 
     def __init__(self) -> None:
-        self.payloads: list[_PreparedObservationEnvelope] = []
+        self.payloads: list[ObservationEnvelopePayload] = []
 
-    def prepare_observation_envelope(self, observation: object, **_: object) -> _PreparedObservationEnvelope:
-        """Build the opaque payload accepted by this test repository."""
-        payload = _PreparedObservationEnvelope(observation=observation)
+    def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
+        """Return a prepared payload for one filed observation coordinate."""
+        return next(
+            (
+                payload
+                for payload in self.payloads
+                if str(payload.observation.modelo) == modelo and payload.observation.filing_period == period
+            ),
+            None,
+        )
+
+    def prepare_observation_envelope(
+        self,
+        observation: RegistryModeloObservation,
+        *,
+        source_kind: ObservationSourceKind | str,
+        stamped_revision_id: str,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+        source_headers: tuple[ObservedHeaderFact, ...] = (),
+    ) -> ObservationEnvelopePayload:
+        """Build one validated payload accepted by this test repository."""
+        if captured_at is None:
+            raise ValueError("in-memory calculation repository requires captured_at")
+        payload = ObservationEnvelopePayload(
+            observation=observation,
+            source_kind=source_kind,
+            stamped_revision_id=stamped_revision_id,
+            captured_at=captured_at,
+            source_metadata=dict(source_metadata or {}),
+            source_headers=source_headers,
+        )
         self.payloads.append(payload)
         return payload
 
-    def save(self, payload: _PreparedObservationEnvelope) -> None:
+    def save(self, payload: ObservationEnvelopePayload) -> None:
         """Keep the prepared payload in memory."""
         if payload not in self.payloads:
             self.payloads.append(payload)
 
 
 class _InMemoryIvaHistoryRepository:
-    """Answer the strict history reload check after an in-memory co-commit."""
+    """Keep no IVA history because this bundle does not provide M303 ingress."""
 
-    def load_period(self, period: object) -> object:
-        """Return a marker for every period accepted by the fake persistence."""
+    def load_period(self, period: Period) -> IvaCompensationPeriodState | None:
+        """Report that no IVA history is available in this application-only fake."""
         del period
-        return object()
+        return None
 
 
 class _InMemoryIvaObservationPersistence:
-    """Accept calculation/history co-commits without a storage adapter."""
+    """Refuse M303 co-commits that need the canonical carry-ingress adapter."""
 
-    def persist(self, **_: object) -> None:
-        """Record no additional state; the history fake answers reload checks."""
+    def persist(
+        self,
+        *,
+        observation_repository: FiledCalculationObservationRepositoryPort,
+        history_repository: FiledIvaHistoryRepositoryPort,
+        envelope: ObservationEnvelopePayload,
+        taxpayer_nif: str,
+        source_observation_key: str,
+        expediente_id: str | None,
+        status: str | None,
+        source_artefact_sha256: str | None,
+    ) -> IvaCompensationPeriodState:
+        """Refuse instead of manufacturing a disposition-aware history state."""
+        del (
+            observation_repository,
+            history_repository,
+            envelope,
+            taxpayer_nif,
+            source_observation_key,
+            expediente_id,
+            status,
+            source_artefact_sha256,
+        )
+        raise RuntimeError("test bundle does not provide IVA history co-commit")
 
 
 class _InMemoryJustificanteRepository:
     """Minimal receipt repository for the application contract."""
 
-    def load(self, csv: str) -> None:
+    def __init__(self) -> None:
+        self.records: list[Justificante] = []
+
+    def load(self, csv: str, /) -> Justificante | None:
         """No receipt has been enrolled by this bundle."""
         del csv
         return None
 
-    def save(self, justificante: object) -> None:
+    def save(self, justificante: Justificante, /) -> None:
         """Accept a parsed receipt if a test supplies one."""
-        del justificante
+        self.records.append(justificante)
 
-    def iter_justificantes(self) -> Iterator[object]:
+    def iter_justificantes(self) -> Iterator[Justificante]:
         """Yield no receipts."""
-        return iter(())
+        return iter(tuple(self.records))
 
 
 class _InMemoryFilingCatalogue:
     """Empty filing catalogue sufficient for evidence-stamping lookups."""
 
-    def current_for(self, **_: object) -> None:
+    def __init__(self) -> None:
+        self._catalogue = ModeloRecordCatalogue()
+
+    def current_for(
+        self,
+        *,
+        bucket_id: str,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        member_nif: str | None = None,
+    ) -> ModeloRecord | None:
         """Report that no current local filing exists."""
-        return None
+        return self._catalogue.current_for(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            member_nif=member_nif,
+        )
+
+    @property
+    def records(self) -> Mapping[str, ModeloRecord]:
+        """Expose the real catalogue records for repository bookkeeping."""
+        return self._catalogue.records
+
+    def replace(self, catalogue: ModeloRecordCatalogue) -> None:
+        """Replace the in-memory catalogue with a validated catalogue."""
+        self._catalogue = catalogue
+
+    def as_model(self) -> ModeloRecordCatalogue:
+        """Return the validated catalogue held by this fake."""
+        return self._catalogue
 
 
 class _InMemoryFilingRepository:
@@ -154,40 +284,82 @@ class _InMemoryFilingRepository:
     def __init__(self) -> None:
         self.catalogue = _InMemoryFilingCatalogue()
 
-    def load(self) -> _InMemoryFilingCatalogue:
-        """Return the current empty catalogue."""
-        return self.catalogue
+    @property
+    def bucket_id(self) -> str | None:
+        """Report that this application-only fake is not profile-bound."""
+        return None
 
-    def mutate(self, mutation):
+    def exists(self) -> bool:
+        """Report whether a filing record has been retained."""
+        return bool(self.catalogue.records)
+
+    def load(self) -> ModeloRecordCatalogue:
+        """Return the current empty catalogue."""
+        return self.catalogue.as_model()
+
+    def load_revisioned(self) -> tuple[ModeloRecordCatalogue, str]:
+        """Refuse revisioned reads because this fake has no secure object revision."""
+        raise RuntimeError("test bundle does not provide filing catalogue revisions")
+
+    def save(self, catalogue: ModeloRecordCatalogue) -> None:
+        """Retain a validated filing catalogue in memory."""
+        self.catalogue.replace(catalogue)
+
+    def mutate(self, mutation: Callable[[ModeloRecordCatalogue], ModeloRecordCatalogue]) -> ModeloRecordCatalogue:
         """Apply one catalogue mutation in memory."""
-        self.catalogue = mutation(self.catalogue)
-        return self.catalogue
+        updated = mutation(self.catalogue.as_model())
+        self.catalogue.replace(updated)
+        return updated
+
+    def to_secure_object_write(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Refuse secure writes because this fake has no encrypted backend."""
+        del catalogue, expected_revision_id
+        raise RuntimeError("test bundle does not provide secure filing writes")
+
+    def save_with_secure_object_writes(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
+    ) -> None:
+        """Refuse atomic secure writes because this fake has no encrypted backend."""
+        del catalogue, extra_writes, expected_revision_id
+        raise RuntimeError("test bundle does not provide secure filing writes")
 
 
 class _InMemoryBucketEventRepository:
     """Small event-history repository used only if a fake filing is supplied."""
 
     def __init__(self) -> None:
-        self.events: list[object] = []
+        self.catalogue = BucketEventHistoryCatalogue()
 
     def exists(self) -> bool:
         """Report whether an event has been accepted."""
-        return bool(self.events)
+        return bool(self.catalogue.events)
 
-    def load(self):
-        """Return an object exposing the event mapping expected by append logic."""
-        return _InMemoryEventCatalogue(events={str(index): event for index, event in enumerate(self.events)})
+    def load(self) -> BucketEventHistoryCatalogue:
+        """Return the validated event catalogue expected by append logic."""
+        return self.catalogue
 
-    def save(self, catalogue: _InMemoryEventCatalogue) -> None:
+    def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         """Retain the catalogue's events in memory."""
-        self.events = list(catalogue.events.values())
+        self.catalogue = catalogue
 
-
-@dataclass(frozen=True, slots=True)
-class _InMemoryEventCatalogue:
-    """Minimal event catalogue shape for the shared bucket-event primitive."""
-
-    events: dict[str, object]
+    def to_secure_object_write(
+        self,
+        catalogue: BucketEventHistoryCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Refuse secure writes because this fake has no encrypted backend."""
+        del catalogue, expected_revision_id
+        raise RuntimeError("test bundle does not provide secure event writes")
 
 
 class _UnavailableIvaRemoteStatePort:
@@ -199,37 +371,62 @@ class _UnavailableIvaRemoteStatePort:
         return "https://test.invalid/iva-wallet"
 
     @contextmanager
-    def active_storage_span(self):
+    def active_storage_span(self) -> Generator[None]:
         """Provide the storage span without opening a secure backend."""
         yield
 
-    def list_history(self, *, as_of_year: int | None):
+    def list_history(self, *, as_of_year: int | None) -> IvaCompensationHistoryReport:
         """The operation tests do not query IVA history through this fake."""
         del as_of_year
         raise RuntimeError("test bundle does not provide IVA history")
 
-    def persist_manifest(self, manifest: object) -> None:
+    def persist_manifest(self, manifest: IvaRemoteStateAcquisitionManifest) -> None:
         """Accept no remote-state manifest because no remote state is read."""
         del manifest
 
-    async def active_verified_session(self, *, operation: str, target_url: str | None):
+    async def active_verified_session(self, *, operation: str, target_url: str | None) -> tuple[AeatSession, Settings]:
         """Refuse before any live session or network can be requested."""
         del operation, target_url
         raise RuntimeError("test bundle does not provide live IVA access")
 
-    async def ensure_authenticated_session(self, settings: object, *, operation: str, target_url: str | None):
+    async def ensure_authenticated_session(
+        self,
+        settings: Settings,
+        *,
+        operation: str,
+        target_url: str | None,
+    ) -> AuthenticatedAeatSessionResult:
         """Refuse before any live authentication can be requested."""
         del settings, operation, target_url
         raise RuntimeError("test bundle does not provide live IVA access")
 
-    async def capture_history(self, session: object, **_: object):
+    async def capture_history(
+        self,
+        session: AeatSession,
+        *,
+        settings: Settings,
+        year_from: int,
+        year_to: int,
+        output_root: Path,
+        progress_context: dict[str, object] | None,
+    ) -> IvaCompensationHistoryCaptureReport:
         """Refuse direct IVA history capture in application tests."""
-        del session
+        del session, settings, year_from, year_to, output_root, progress_context
         raise RuntimeError("test bundle does not provide live IVA access")
 
-    async def capture_wallet(self, session: object, **_: object):
+    async def capture_wallet(
+        self,
+        session: AeatSession,
+        *,
+        settings: Settings,
+        target_year: int,
+        target_period: Period,
+        taxpayer_nif: str | None,
+        output_root: Path | None,
+        progress_context: dict[str, object] | None,
+    ) -> IvaWalletCaptureReport:
         """Refuse direct IVA wallet capture in application tests."""
-        del session
+        del session, settings, target_year, target_period, taxpayer_nif, output_root, progress_context
         raise RuntimeError("test bundle does not provide live IVA access")
 
 
@@ -241,16 +438,21 @@ class _UnavailableFiledDataRegister:
         """Return the deterministic timeout used by application-only tests."""
         return 1
 
-    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[object, ...]:
+    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[FiledRegisterDeclarationProtocol, ...]:
         """Raise the application boundary refusal for every requested pair."""
         raise LiveApplicationError(
             translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
             context={"operation": "test_filed_register_walk", "modelo": modelo, "ejercicio": ejercicio},
         )
 
-    async def capture_observation(self, declaration: object, **_: object) -> object:
+    async def capture_observation(
+        self,
+        declaration: FiledRegisterDeclarationProtocol,
+        *,
+        artefact_sink: FiledArtefactSink | None = None,
+    ) -> FiledObservationProtocol:
         """Refuse capture because no live register row exists in this fake."""
-        del declaration
+        del declaration, artefact_sink
         raise LiveApplicationError(
             translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
         )
@@ -260,21 +462,29 @@ class _UnavailableFiledDataCapturePort:
     """Application-only filed-data port that never opens a real Sede session."""
 
     @asynccontextmanager
-    async def open_register(self, *, operation: str):
+    async def open_register(self, *, operation: str) -> AsyncIterator[FiledDataRegisterPort]:
         """Yield the per-pair refusal register used by composition tests."""
         del operation
         yield _UnavailableFiledDataRegister()
 
-    async def discover_availability(self, *, operation: str) -> object:
+    async def discover_availability(self, *, operation: str) -> FiledDeclarationAvailabilityReportProtocol:
         """Refuse direct register discovery in this in-memory bundle."""
         del operation
         raise LiveApplicationError(
             translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
         )
 
-    async def capture_source_observations(self, *args: object, **kwargs: object) -> tuple[object, ...]:
+    async def capture_source_observations(
+        self,
+        revision: ModeloRevision,
+        *,
+        filing_year: int,
+        period: Period,
+        artefact_sink: FiledArtefactSink | None = None,
+        operation: str,
+    ) -> tuple[FiledObservationProtocol, ...]:
         """Return no source rows because source capture is outside these tests."""
-        del args, kwargs
+        del revision, filing_year, period, artefact_sink, operation
         return ()
 
 
@@ -312,10 +522,17 @@ def in_memory_filed_observation_test_bundle() -> InMemoryFiledObservationTestBun
 class _InMemoryBaselineImport:
     """Decline complete-baseline import because it is outside these tests."""
 
-    def import_source(self, source: object, *, bucket_id: str, actor: str, clock: object) -> None:
-        """Return no filing record from the test-only baseline surface."""
+    def import_source(
+        self,
+        source: ExternalFilingBaselineSource,
+        *,
+        bucket_id: str,
+        actor: str,
+        clock: datetime,
+    ) -> ModeloRecord:
+        """Refuse rather than fabricate a filing record on the test-only surface."""
         del source, bucket_id, actor, clock
-        return None
+        raise RuntimeError("test bundle does not provide baseline import")
 
 
 __all__ = ["InMemoryFiledObservationTestBundle", "in_memory_filed_observation_test_bundle"]

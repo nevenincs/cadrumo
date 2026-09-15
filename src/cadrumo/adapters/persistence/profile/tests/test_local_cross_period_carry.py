@@ -183,15 +183,19 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
     """
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos_
     work_unit = _seed_130(repos_, period="1T", clock=_T1)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=_NEGATIVE_1T_INPUTS,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_190:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=_NEGATIVE_1T_INPUTS,
+            binding_values=_DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_190,
+            clock=_T1,
+        )
     saldo = Decimal(revision.casilla_values[_M130_SALDO_NEGATIVO_CASILLA])
     assert saldo > 0, "1T inputs must produce a positive carry-forward seed for the test to be meaningful"
     # 1T's casilla-05 expanding-span and casilla-15 single-offset previous_filing
@@ -334,15 +338,19 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
     carried_seed = _file_1t_with_negative_result(repos)
 
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit_2t.work_unit_id,
-        casilla_inputs=_2T_INPUTS_WITHOUT_15,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T4,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_341:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_2t.work_unit_id,
+            casilla_inputs=_2T_INPUTS_WITHOUT_15,
+            binding_values=_DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_341,
+            clock=_T4,
+        )
 
     carried_casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
     c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
@@ -358,15 +366,19 @@ def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(repo
     carried_seed = _file_1t_with_negative_result(repos)
 
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit_2t.work_unit_id,
-        casilla_inputs=_2T_INPUTS_WITHOUT_15,
-        binding_values={},
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T4,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_365:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_2t.work_unit_id,
+            casilla_inputs=_2T_INPUTS_WITHOUT_15,
+            binding_values={},
+            ports=_calculation_ports_365,
+            clock=_T4,
+        )
 
     assert Decimal(result.revision.binding_overrides["irpf.previous_year_economic_activity_net_income"]) == Decimal(
         "0",
@@ -424,15 +436,19 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     assert stored.source_kind == APP_FILING_SOURCE_KIND
 
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
-    revision_2t = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit_2t.work_unit_id,
-        casilla_inputs=_2T_INPUTS_WITHOUT_15,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T4,
-    ).revision
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_431:
+        revision_2t = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_2t.work_unit_id,
+            casilla_inputs=_2T_INPUTS_WITHOUT_15,
+            binding_values=_DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_431,
+            clock=_T4,
+        ).revision
     # The 2T cross-period state is deliberately UNCLEAN (the only upstream 1T
     # evidence is the non-official app_filing carry), so the verify pipeline cannot
     # legitimately grant VERIFICADO_COMPLETO and the direct mark-complete shortcut is
@@ -493,15 +509,19 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
 
     override_value = carried_seed + Decimal("250")
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit_2t.work_unit_id,
-        casilla_inputs=_2T_INPUTS_WITHOUT_15,
-        binding_values={**_DEFAULT_130_BINDING_VALUES, _CARRY_BINDING_ID: override_value},
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T4,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_500:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_2t.work_unit_id,
+            casilla_inputs=_2T_INPUTS_WITHOUT_15,
+            binding_values={**_DEFAULT_130_BINDING_VALUES, _CARRY_BINDING_ID: override_value},
+            ports=_calculation_ports_500,
+            clock=_T4,
+        )
 
     casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
     c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
@@ -603,15 +623,18 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     _persist_prior_303(CalculationObservationRepository())
 
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
-    resolution = resolve_bucket_source_mesh(
-        snapshot,
-        work_unit_303,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()
-        ),
-        foreign_asset_observations=(),
-        foreign_asset_row_observations=(),
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        bucket_event_repository=BucketEventHistoryRepository(),
+    ) as _calculation_ports_609:
+        resolution = resolve_bucket_source_mesh(
+            snapshot,
+            work_unit_303,
+            ports=_calculation_ports_609,
+            foreign_asset_observations=(),
+            foreign_asset_row_observations=(),
+        )
 
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
     assert "modelo-303-compensacion-pendiente-anteriores" not in resolution.relation_values
@@ -650,12 +673,18 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
         clock=_T1,
     )
 
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+    with (
+        pytest.raises(ModeloIvaWalletReconciliationBlocked),
+        calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+        ) as _calculation_ports_656,
+    ):
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            ports=calculation_ports_for_test(
-                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-            ),
+            ports=_calculation_ports_656,
             clock=_T1,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:m303-local-cross-period-carry"
@@ -676,17 +705,20 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
-
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T1,
-        filing_instance_evidence=general_m303_filing_evidence(
-            work_unit.period, reference="test:m303-local-cross-period-carry"
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_682:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_682,
+            clock=_T1,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:m303-local-cross-period-carry"
+            ),
+        )
     revision = result.revision
     assert Decimal(revision.binding_overrides[MODELO_303_IVA_COMPENSATION_BINDING_ID]) == Decimal("0")
     assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
@@ -758,12 +790,18 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
         clock=_T1,
     )
 
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as blocked:
+    with (
+        pytest.raises(ModeloIvaWalletReconciliationBlocked) as blocked,
+        calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+        ) as _calculation_ports_764,
+    ):
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            ports=calculation_ports_for_test(
-                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-            ),
+            ports=_calculation_ports_764,
             clock=_T1,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:m303-local-cross-period-carry"
@@ -840,15 +878,19 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     _seed_first_year_activity_profile(repos)
     _file_1t_with_negative_result(repos)
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit_2t.work_unit_id,
-        casilla_inputs=_2T_INPUTS_WITHOUT_15,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T4,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_847:
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_2t.work_unit_id,
+            casilla_inputs=_2T_INPUTS_WITHOUT_15,
+            binding_values=_DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_847,
+            clock=_T4,
+        )
 
     verdict = cross_period_clean_state_verdict_for_work_unit(
         work_unit_2t,

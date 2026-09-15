@@ -20,8 +20,12 @@ import sys
 import tempfile
 from collections.abc import Iterator, Mapping
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from .domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # Child conftests import command-line interface (CLI) and internationalization
 # (`i18n`) modules while pytest is collecting tests. Those imports initialise
@@ -66,6 +70,22 @@ register_collection_storage_root_cleanup(_COLLECTION_STORAGE_ROOT)
 
 _SRC_CADRUMO_ROOT: Path = Path(__file__).resolve().parent
 """Root of the ``src/cadrumo/`` source tree (the directory hosting this conftest)."""
+
+
+@pytest.fixture(scope="session")
+def operation() -> PinnedAuthorityOperation:
+    """Expose canonical authored facts without requiring a published package."""
+    from dev.registry.compiler.authority import compiled_bundled_authority
+
+    from .domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
+    from .domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
+
+    authority = compiled_bundled_authority()
+    reader = FakeAuthorityComponentReader(
+        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
+    )
+    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 @pytest.fixture(scope="session")

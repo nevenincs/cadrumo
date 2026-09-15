@@ -6,6 +6,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope, TransactionKind
 from cadrumo.domain.iva.schema import require_eu_member_state
@@ -15,18 +16,17 @@ from ..classification import (
     IvaInvoiceClassificationCriteria,
     classify_iva,
 )
-from ..oss import OssIossRegime
+from ..oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
 from ..schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_oss_ioss_regime_enum_covers_all_three_esquemas() -> None:
-    assert {r for r in OssIossRegime} == {
-        OssIossRegime("external_scheme"),
-        OssIossRegime("union_scheme"),
-        OssIossRegime("import_scheme"),
-    }
+def test_oss_ioss_regime_catalogue_covers_all_three_esquemas(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    catalogue = resolve_oss_ioss_regime_catalogue(effective_date=date(2025, 6, 15), authority=operation)
+    assert len(catalogue.all_regimes) == 3
 
 
 def test_oss_ioss_regime_string_values_match_registry_selector_keys() -> None:

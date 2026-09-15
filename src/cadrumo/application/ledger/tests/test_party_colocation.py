@@ -26,6 +26,7 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.confirmation_gate import ConfirmationBlockReason
@@ -33,9 +34,11 @@ from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..grounded_reading import ground_draft_against_transcription
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..party_attribution import party_attribution_advisory
 from ..party_colocation import (
     PartyAttributionOutcome,
@@ -81,6 +84,12 @@ def _transcription(text: str = _PAGE) -> DocumentTranscription:
             revision="1",
         ),
     )
+
+
+def _registry_legends(operation):
+    """Resolve the registry vocabulary on the test's pinned authority lease."""
+    period = default_invoice_extraction_period()
+    return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
 def _envelope(field: str, anchor: str, *, role_evidence: str | None = None) -> FieldProvenance:
@@ -166,7 +175,10 @@ def test_the_interim_stamp_is_absent_on_a_co_located_value() -> None:
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_straight(), transcription=_transcription(), operation=_authority_operation_for_test
+            draft=_straight(),
+            transcription=_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
@@ -178,7 +190,10 @@ def test_a_transposed_value_keeps_the_stamp_rather_than_reading_as_attributed() 
     """A contradiction must never clear the stamp -- it is the opposite of a clean bill."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_transposed(), transcription=_transcription(), operation=_authority_operation_for_test
+            draft=_transposed(),
+            transcription=_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
@@ -251,7 +266,10 @@ def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
         from ..confirmation_gate import confirmation_blockers
 
         grounded = ground_draft_against_transcription(
-            draft=_transposed(), transcription=_transcription(), operation=_authority_operation_for_test
+            draft=_transposed(),
+            transcription=_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         kinds = [finding.kind for finding in grounded.discrepancies]
@@ -270,7 +288,10 @@ def test_a_correctly_filed_document_raises_no_attribution_blocker() -> None:
         from ..confirmation_gate import confirmation_blockers
 
         grounded = ground_draft_against_transcription(
-            draft=_straight(), transcription=_transcription(), operation=_authority_operation_for_test
+            draft=_straight(),
+            transcription=_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
@@ -291,7 +312,10 @@ def test_an_unresolvable_document_advises_rather_than_refuses() -> None:
         )
 
         grounded = ground_draft_against_transcription(
-            draft=unanchorable, transcription=_transcription(), operation=_authority_operation_for_test
+            draft=unanchorable,
+            transcription=_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
@@ -358,7 +382,9 @@ def test_the_stacked_header_still_partitions_so_the_zero_is_about_layout() -> No
     assert set(regions) == {"supplier", "customer"}
 
 
-def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_advisory() -> None:
+def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_advisory(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """On the real layout the unverified-attribution stamp IS the mechanism.
 
     The honest state made executable. On a document the resolver cannot
@@ -376,7 +402,10 @@ def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_adviso
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_straight(), transcription=_transcription(_TWO_COLUMN_PAGE), operation=_authority_operation_for_test
+            draft=_straight(),
+            transcription=_transcription(_TWO_COLUMN_PAGE),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
@@ -384,4 +413,11 @@ def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_adviso
         assert stamps["customer_postal_code"] is True
         # Advisory, never blocker: an unpartitionable layout is not a contradiction.
         assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
-        assert party_attribution_advisory(grounded) is not None
+        assert (
+            party_attribution_advisory(
+                grounded,
+                legends=_registry_legends(operation),
+                operation=operation,
+            )
+            is not None
+        )

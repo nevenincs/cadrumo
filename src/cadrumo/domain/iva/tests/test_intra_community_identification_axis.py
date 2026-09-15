@@ -47,7 +47,12 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ..classification import (
     CustomerTaxStatus,
@@ -433,7 +438,9 @@ def test_the_checksum_is_what_admits_the_spanish_number() -> None:
 # defines "territorio tercero" as anything else -- so art. 21 reaches them.
 
 
-def _outbound(customer: IvaTerritorialScope, kind: TransactionKind) -> IvaCategory:
+def _outbound(
+    customer: IvaTerritorialScope, kind: TransactionKind, *, operation: PinnedAuthorityOperation
+) -> IvaCategory:
     return classify_iva(
         IvaInvoiceClassificationCriteria(
             issuer_residency=IvaTerritorialScope._from_registry("es_mainland"),
@@ -443,6 +450,7 @@ def _outbound(customer: IvaTerritorialScope, kind: TransactionKind) -> IvaCatego
             customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
             transaction_date=date(2026, 3, 11),
         ),
+        operation=operation,
     ).category
 
 
@@ -452,7 +460,7 @@ def _outbound(customer: IvaTerritorialScope, kind: TransactionKind) -> IvaCatego
     ids=["canarias", "ceuta-y-melilla"],
 )
 def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
-    customer: IvaTerritorialScope,
+    customer: IvaTerritorialScope, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Art. 21 reaches all three third territories, so the two share an answer.
 
@@ -460,7 +468,9 @@ def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
     and Melilla sit outside the customs union and Canarias does not -- which
     separates them for a customs question and not for this one.
     """
-    assert _outbound(customer, TransactionKind("goods")) == IvaCategory("export_third_country_zero_rated")
+    assert _outbound(customer, TransactionKind("goods"), operation=operation) == IvaCategory(
+        "export_third_country_zero_rated"
+    )
 
 
 @pytest.mark.parametrize(
@@ -469,7 +479,7 @@ def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
     ids=["canarias", "ceuta-y-melilla"],
 )
 def test_services_leaving_the_tai_are_not_subject_rather_than_exempt(
-    customer: IvaTerritorialScope,
+    customer: IvaTerritorialScope, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Goods and services fork, and the fork is the point.
 
@@ -479,20 +489,22 @@ def test_services_leaving_the_tai_are_not_subject_rather_than_exempt(
     different Modelo 303 consequence, which is why one predicate feeds two rows
     rather than one row covering both.
     """
-    assert _outbound(customer, TransactionKind("services_general")) == IvaCategory("operacion_no_sujeta")
-
-
-def test_a_third_country_customer_is_unaffected() -> None:
-    """The rows these territories joined must keep answering as they did."""
-    assert _outbound(IvaTerritorialScope._from_registry("third_country"), TransactionKind("goods")) == IvaCategory(
-        "export_third_country_zero_rated"
+    assert _outbound(customer, TransactionKind("services_general"), operation=operation) == IvaCategory(
+        "operacion_no_sujeta"
     )
+
+
+def test_a_third_country_customer_is_unaffected(*, operation: PinnedAuthorityOperation) -> None:
+    """The rows these territories joined must keep answering as they did."""
     assert _outbound(
-        IvaTerritorialScope._from_registry("third_country"), TransactionKind("services_general")
+        IvaTerritorialScope._from_registry("third_country"), TransactionKind("goods"), operation=operation
+    ) == IvaCategory("export_third_country_zero_rated")
+    assert _outbound(
+        IvaTerritorialScope._from_registry("third_country"), TransactionKind("services_general"), operation=operation
     ) == IvaCategory("operacion_no_sujeta")
 
 
-def test_the_population_used_to_classify_as_nothing_at_all() -> None:
+def test_the_population_used_to_classify_as_nothing_at_all(*, operation: PinnedAuthorityOperation) -> None:
     """Mutation proof: without the territories in the set the branch falls through.
 
     Re-runs the pre-change predicate -- third countries only -- and shows a
@@ -504,9 +516,9 @@ def test_the_population_used_to_classify_as_nothing_at_all() -> None:
         return customer is IvaTerritorialScope._from_registry("third_country")
 
     assert not _third_country_only(IvaTerritorialScope._from_registry("es_canarias"))
-    assert _outbound(IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods")) != IvaCategory(
-        "unknown"
-    )
+    assert _outbound(
+        IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods"), operation=operation
+    ) != IvaCategory("unknown")
 
 
 # -- a peninsular rate charged to a non-peninsular customer ------------------
@@ -537,8 +549,7 @@ def test_the_population_used_to_classify_as_nothing_at_all() -> None:
     ids=["canarias-goods", "canarias-services", "ceuta-melilla-goods", "ceuta-melilla-services"],
 )
 def test_the_resolved_treatment_admits_no_cuota_at_all(
-    customer: IvaTerritorialScope,
-    kind: TransactionKind,
+    customer: IvaTerritorialScope, kind: TransactionKind, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Every outbound non-peninsular treatment is cuota-less by law.
 
@@ -546,7 +557,7 @@ def test_the_resolved_treatment_admits_no_cuota_at_all(
     disagreement about the number: a category admitting no cuota admits no tipo
     either, so one of the two facts is wrong.
     """
-    category = _outbound(customer, kind)
+    category = _outbound(customer, kind, operation=operation)
 
     assert category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED)
 
@@ -556,7 +567,7 @@ def test_a_domestic_treatment_is_not_cuota_less_so_the_check_stays_narrow() -> N
     assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
 
 
-def test_the_charged_rate_never_places_the_customer() -> None:
+def test_the_charged_rate_never_places_the_customer(*, operation: PinnedAuthorityOperation) -> None:
     """The separation the row insists on, asserted rather than assumed.
 
     The criteria carry no charged rate at all on this branch -- territory comes
@@ -565,7 +576,9 @@ def test_the_charged_rate_never_places_the_customer() -> None:
     silently reclassify the operation as domestic and the contradiction would
     never be raised, which is the failure this ordering exists to prevent.
     """
-    canarian = _outbound(IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods"))
+    canarian = _outbound(
+        IvaTerritorialScope._from_registry("es_canarias"), TransactionKind("goods"), operation=operation
+    )
     peninsular_customer_would_be_domestic = IvaTerritorialScope._from_registry("es_mainland")
 
     assert canarian == IvaCategory("export_third_country_zero_rated")

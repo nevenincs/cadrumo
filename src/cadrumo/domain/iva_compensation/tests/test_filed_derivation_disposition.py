@@ -34,13 +34,18 @@ from ...calculations.registry.iva_compensation_annual_partition_bindings import 
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
 from ..carry_forward import derive_303_compensation_available
-from ..filed_derivation import derive_m303_compensation_available_from_casillas
+from ..filed_derivation import CompensationCasillaDeclarations, derive_m303_compensation_available_from_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _POSTERIOR = Decimal("400.00")
 _GENERATED = Decimal("250.00")
 _NEGATIVE_RESULTADO = Decimal("-250.00")
+_DECLARATIONS = CompensationCasillaDeclarations(
+    posterior=M303_COMPENSATION_POSTERIOR_CASILLA,
+    generated=M303_COMPENSATION_GENERADA_CASILLA,
+    result=M303_COMPENSATION_RESULTADO_CASILLA,
+)
 
 
 def _values(**overrides: Decimal) -> dict[CasillaId, Decimal]:
@@ -70,6 +75,7 @@ def test_a_refunded_period_carries_only_the_posterior_on_the_resultado_basis() -
     """The refunded credit was returned to the taxpayer, so it is not carried."""
     derivation = derive_m303_compensation_available_from_casillas(
         _values(**{M303_COMPENSATION_RESULTADO_CASILLA: _NEGATIVE_RESULTADO}),
+        declarations=_DECLARATIONS,
         refunded=True,
     )
 
@@ -88,6 +94,7 @@ def test_a_refunded_period_carries_only_the_posterior_on_the_generated_basis() -
     """
     derivation = derive_m303_compensation_available_from_casillas(
         _values(**{M303_COMPENSATION_GENERADA_CASILLA: _GENERATED}),
+        declarations=_DECLARATIONS,
         refunded=True,
     )
 
@@ -111,7 +118,11 @@ def test_a_carried_period_still_includes_the_generated_credit(extra: dict[Casill
     both refunded cases above while silently under-stating every ordinary
     compensación carry.
     """
-    derivation = derive_m303_compensation_available_from_casillas(_values(**extra), refunded=False)
+    derivation = derive_m303_compensation_available_from_casillas(
+        _values(**extra),
+        declarations=_DECLARATIONS,
+        refunded=False,
+    )
 
     assert derivation is not None
     assert derivation.available > _POSTERIOR
@@ -141,6 +152,7 @@ def test_the_available_carry_decomposes_into_the_posterior_and_the_generated_cre
     """
     derivation = derive_m303_compensation_available_from_casillas(
         _values(**{M303_COMPENSATION_GENERADA_CASILLA: _GENERATED}),
+        declarations=_DECLARATIONS,
         refunded=refunded,
     )
 
@@ -166,6 +178,7 @@ def test_the_resultado_basis_generated_credit_answers_to_the_disposition(
     """
     derivation = derive_m303_compensation_available_from_casillas(
         _values(**{M303_COMPENSATION_RESULTADO_CASILLA: _NEGATIVE_RESULTADO}),
+        declarations=_DECLARATIONS,
         refunded=refunded,
     )
 

@@ -10,6 +10,7 @@ import pytest
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
@@ -66,6 +67,17 @@ def _withholding_observation(source_id: str, nif: str, clave: str) -> Withholdin
         clave=RetencionClave(clave),
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),
+        incapacity_cash_perception=Decimal("0"),
+        incapacity_cash_withholding=Decimal("0"),
+        incapacity_kind_value=Decimal("0"),
+        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+        incapacity_kind_repercutido=Decimal("0"),
+        foral_retention_estatal=Decimal("0"),
+        foral_retention_navarra=Decimal("0"),
+        foral_retention_araba=Decimal("0"),
+        foral_retention_gipuzkoa=Decimal("0"),
+        foral_retention_bizkaia=Decimal("0"),
+        base_retenciones=Decimal("1000"),
     )
 
 
@@ -229,12 +241,13 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert window.closes_on == closes_on
     assert window.legal_refs == expected_legal_refs
     assert {"aeat-modelo-190-procedure", "boe-modelo-190-2025-form"} <= set(window.source_refs)
-    if window.closes_on.year == 2026:
-        with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
-            shift_deadline(window.closes_on, modelo="190", ccaa_code=None, authority=compiled_bundled_authority())
-    else:
-        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, authority=compiled_bundled_authority())
-        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
+    with bundled_indexed_authority().operation() as operation:
+        if window.closes_on.year == 2026:
+            with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
+                shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
+        else:
+            shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
+            assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
     # A close date that is NOT the statutory month-end has been moved off a
     # non-working day, and the only sanctioned reason to move it is AEAT's own
     # published calendar -- so such a window must cite the calendar it was read

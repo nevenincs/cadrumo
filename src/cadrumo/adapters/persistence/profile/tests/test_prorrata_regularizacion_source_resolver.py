@@ -20,6 +20,7 @@ See Also:
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -41,6 +42,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
@@ -86,6 +88,12 @@ _MANUAL_CURRENT_YEAR_TOTAL = Decimal("45000.00")
 _MANUAL_CASILLA_44_REGULARIZACION = Decimal("-217.60")
 _M303_BINDING_ID = "modelo-303-prorrata-regularizacion-casilla-44"
 _M390_BINDING_ID = "modelo-390-prorrata-regularizacion-anual"
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _oracle_payload() -> dict[str, Any]:
@@ -176,7 +184,10 @@ def _save_prior_observation(
     )
 
 
-def test_resolver_projects_modelo_303_binding_from_prorrata_register(tmp_path: Path) -> None:
+def test_resolver_projects_modelo_303_binding_from_prorrata_register(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The register-backed resolver emits the AEAT manual casilla-44 value."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         register_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
@@ -189,6 +200,7 @@ def test_resolver_projects_modelo_303_binding_from_prorrata_register(tmp_path: P
             prorrata_register_repository=register_repository,
             observation_repository=observation_repository,
             registry_snapshot=snapshot,
+            operation=authority_operation,
         ).resolve(_context(snapshot, modelo=Modelo("303").value, period="4T"))
 
     assert resolution.owned_sources == (BindingSourceKind.PRORRATA_REGULARIZACION,)
@@ -201,7 +213,10 @@ def test_resolver_projects_modelo_303_binding_from_prorrata_register(tmp_path: P
     }
 
 
-def test_resolver_uses_the_explicit_secondary_prorrata_store_while_primary_is_active(tmp_path: Path) -> None:
+def test_resolver_uses_the_explicit_secondary_prorrata_store_while_primary_is_active(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """An explicitly injected secondary register cannot be shadowed by the active primary store."""
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         primary_repository = ProrrataRegisterRepository(
@@ -222,6 +237,7 @@ def test_resolver_uses_the_explicit_secondary_prorrata_store_while_primary_is_ac
                 prorrata_register_repository=secondary_repository,
                 observation_repository=secondary_observation_repository,
                 registry_snapshot=snapshot,
+                operation=authority_operation,
             ).resolve(
                 _context(
                     snapshot,
@@ -238,7 +254,10 @@ def test_resolver_uses_the_explicit_secondary_prorrata_store_while_primary_is_ac
     assert resolution.diagnostics == ()
 
 
-def test_resolver_uses_the_explicit_secondary_observation_store_while_primary_is_active(tmp_path: Path) -> None:
+def test_resolver_uses_the_explicit_secondary_observation_store_while_primary_is_active(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A prior-period percentage can only arrive from the explicitly injected target store."""
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
         primary_observations = CalculationObservationRepository(objects=runtime.primary.repository)
@@ -256,6 +275,7 @@ def test_resolver_uses_the_explicit_secondary_observation_store_while_primary_is
                 prorrata_register_repository=secondary_register,
                 observation_repository=secondary_observations,
                 registry_snapshot=snapshot,
+                operation=authority_operation,
             ).resolve(
                 _context(
                     snapshot,
@@ -293,7 +313,10 @@ def test_resolver_refuses_construction_without_an_explicit_observation_repositor
             )
 
 
-def test_resolver_falls_back_to_stamped_prior_observation_for_modelo_390(tmp_path: Path) -> None:
+def test_resolver_falls_back_to_stamped_prior_observation_for_modelo_390(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A stamped prior M303 settlement observation can source the annual M390 binding."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         observation_repository = CalculationObservationRepository(objects=profile.repository)
@@ -306,6 +329,7 @@ def test_resolver_falls_back_to_stamped_prior_observation_for_modelo_390(tmp_pat
             prorrata_register_repository=register_repository,
             observation_repository=observation_repository,
             registry_snapshot=snapshot,
+            operation=authority_operation,
         ).resolve(_context(snapshot, modelo=Modelo("390").value, period="0A"))
 
     assert resolution.binding_values == {_M390_BINDING_ID: _MANUAL_CASILLA_44_REGULARIZACION}
@@ -314,7 +338,10 @@ def test_resolver_falls_back_to_stamped_prior_observation_for_modelo_390(tmp_pat
     assert "303:2024:4T:iva.prorrata-porcentaje" in {row.source_ref for row in resolution.provenance}
 
 
-def test_resolver_marks_binding_unresolved_when_no_provisional_source_exists(tmp_path: Path) -> None:
+def test_resolver_marks_binding_unresolved_when_no_provisional_source_exists(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """No register value and no stamped prior observation produce an unresolved binding diagnostic."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         register_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
@@ -326,6 +353,7 @@ def test_resolver_marks_binding_unresolved_when_no_provisional_source_exists(tmp
             prorrata_register_repository=register_repository,
             observation_repository=observation_repository,
             registry_snapshot=snapshot,
+            operation=authority_operation,
         ).resolve(_context(snapshot, modelo=Modelo("303").value, period="4T"))
 
     assert resolution.binding_values == {}
@@ -338,7 +366,10 @@ def test_resolver_marks_binding_unresolved_when_no_provisional_source_exists(tmp
     assert "stamped prior-year Modelo 303" in diagnostic.message
 
 
-def test_resolver_marks_binding_unresolved_when_current_year_values_are_missing(tmp_path: Path) -> None:
+def test_resolver_marks_binding_unresolved_when_current_year_values_are_missing(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Missing current-year registry values block resolution before any zero can be inferred."""
     current_year_values = _current_year_values()
     del current_year_values[_PORCENTAJE_ID]
@@ -353,6 +384,7 @@ def test_resolver_marks_binding_unresolved_when_current_year_values_are_missing(
             prorrata_register_repository=register_repository,
             observation_repository=observation_repository,
             registry_snapshot=snapshot,
+            operation=authority_operation,
         ).resolve(_context(snapshot, modelo=Modelo("303").value, period="4T"))
 
     assert resolution.binding_values == {}

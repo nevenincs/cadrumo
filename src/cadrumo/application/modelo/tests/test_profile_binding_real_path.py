@@ -308,7 +308,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels(
     assert ecivil_binding_id == "renta-profile-marital-status"
 
     ecivil_binding = next(binding for binding in snapshot.revision.bindings if binding.id == ecivil_binding_id)
-    selector = ecivil_binding.selector
+    selector = ecivil_binding.provider
     profile_key = getattr(selector, "profile_key", None)
     xsd_path = getattr(selector, "xsd_path", None)
     dictionary_field = getattr(selector, "dictionary_field", None)

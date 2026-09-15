@@ -70,6 +70,8 @@ See Also:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 
 from ...core.draft_discrepancy import DraftDiscrepancyKind
@@ -84,6 +86,9 @@ from ...domain.calculations.registry.tax_id_runtime import validate_runtime_span
 from ...domain.iva.establishment import country_code_for_printed_tax_identifier
 from .grounding_anchor import ground_ambiguous_candidates
 from .invoice_draft_records import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "IdentityCandidate",
@@ -141,7 +146,12 @@ class IdentityRoleResolution(BaseModel):
     findings: tuple[DraftDiscrepancyFinding, ...] = ()
 
 
-def canonical_identity_token(value: str, *, country_code: str | None = None) -> str | None:
+def canonical_identity_token(
+    value: str,
+    *,
+    country_code: str | None = None,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
     """Return the canonical form of *value*, or ``None`` when it does not verify.
 
     Routes Spanish identifiers through the AEAT control-character algorithm and
@@ -177,6 +187,8 @@ def canonical_identity_token(value: str, *, country_code: str | None = None) -> 
             identifier's own prefix answers; an identifier carrying no
             recognisable prefix takes the Spanish path, which is right because
             a bare ``B``-CIF is what an unqualified Spanish invoice prints.
+        operation: Caller-owned pinned authority operation for the country
+            catalogue used to interpret a printed identifier.
 
     Returns:
         The canonical identifier, or ``None`` when it fails verification.
@@ -185,7 +197,9 @@ def canonical_identity_token(value: str, *, country_code: str | None = None) -> 
     if not stripped:
         return None
 
-    country = (country_code or country_code_for_printed_tax_identifier(stripped) or "ES").strip().upper()
+    country = (
+        (country_code or country_code_for_printed_tax_identifier(stripped, operation=operation) or "ES").strip().upper()
+    )
     if country == "ES":
         try:
             return validate_runtime_spanish_tax_id(stripped)
@@ -217,6 +231,7 @@ def _verified_identity_candidates(
     field: str,
     candidates: tuple[IdentityCandidate, ...],
     taxpayer_tax_id: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[tuple[IdentityCandidate, str]], list[DraftDiscrepancyFinding]]:
     """Exclude the filer, verify candidates, and retain every failed finding."""
     findings: list[DraftDiscrepancyFinding] = []
@@ -226,7 +241,11 @@ def _verified_identity_candidates(
         # predicate, because the filer's own identifier is not a counterparty.
         if same_tax_identifier(candidate.value, taxpayer_tax_id):
             continue
-        token = canonical_identity_token(candidate.value, country_code=candidate.country_code)
+        token = canonical_identity_token(
+            candidate.value,
+            country_code=candidate.country_code,
+            operation=operation,
+        )
         if token is None:
             findings.append(
                 DraftDiscrepancyFinding(
@@ -345,6 +364,7 @@ def resolve_counterparty_identity(
     candidates: tuple[IdentityCandidate, ...],
     taxpayer_tax_id: str | None,
     origin: FieldOrigin,
+    operation: PinnedAuthorityOperation,
 ) -> IdentityRoleResolution:
     """Resolve which observed identifier holds the counterparty role.
 
@@ -363,6 +383,8 @@ def resolve_counterparty_identity(
             identity comparison. ``None`` or blank means unknown, which weakens
             the resolution and is reported in the note rather than passed over.
         origin: How the candidates were obtained.
+        operation: Caller-owned pinned authority operation for identifier
+            country interpretation.
 
     Returns:
         The resolution, carrying the envelope, any resolved value, and every
@@ -373,6 +395,7 @@ def resolve_counterparty_identity(
         field=field,
         candidates=candidates,
         taxpayer_tax_id=taxpayer_tax_id,
+        operation=operation,
     )
 
     if not verified:

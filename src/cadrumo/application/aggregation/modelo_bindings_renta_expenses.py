@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
@@ -84,6 +85,13 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 
         try:
+            with bundled_indexed_authority().operation() as operation:
+                usage_ratios = resolve_effective_usage_ratios(
+                    bucket_id=context.bucket_id,
+                    year=context.filing_year,
+                    usage_ratio_profile_loader=self._usage_ratio_profile_loader,
+                    operation=operation,
+                )
             aggregation = aggregate_renta_ledger_expenses_from_repositories(
                 bucket_id=context.bucket_id,
                 period=aggregation_period_for_modelo(
@@ -92,11 +100,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 ),
                 ports=self._ports,
                 profile_year=context.filing_year,
-                usage_ratios=resolve_effective_usage_ratios(
-                    bucket_id=context.bucket_id,
-                    year=context.filing_year,
-                    usage_ratio_profile_loader=self._usage_ratio_profile_loader,
-                ),
+                usage_ratios=usage_ratios,
                 modelo=context.modelo,
                 prorrata_register_repository=self._prorrata_register_repository,
             )

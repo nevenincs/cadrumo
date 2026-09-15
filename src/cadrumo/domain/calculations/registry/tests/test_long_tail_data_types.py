@@ -9,10 +9,14 @@ strict pydantic validation.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....deadlines.festivos import CalendarCCAA
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+from ..calendar_ccaa_catalogue import calendar_ccaa_choices
 from ..schema_scalars import (
     BicString,
     CalendarDate,
@@ -126,17 +130,19 @@ class TestCCAACode:
     def test_accepts_one_code_per_spanish_autonomous_territory(self) -> None:
         """The accepted count matches an independently-authored enumeration.
 
-        :class:`CalendarCCAA` enumerates the same population — the seventeen
-        autonomous communities plus Ceuta and Melilla — keyed by ISO 3166-2:ES
-        code for holiday calendars. It shares no source with this validator, so
-        agreeing on how many Spanish autonomous territories exist is a real
-        check rather than a restatement.
+        The registry calendar catalogue enumerates the same population — the
+        seventeen autonomous communities plus Ceuta and Melilla — keyed by ISO
+        3166-2:ES code for holiday calendars. It shares no source with this
+        validator, so agreeing on how many Spanish autonomous territories exist
+        is a real check rather than a restatement.
         """
         accepted = _accepted_two_digit_codes()
 
         assert accepted, "the validator accepts nothing; this probe cannot discriminate"
-        assert len(accepted) == len(CalendarCCAA), (
-            f"the shape check accepts {len(accepted)} codes but Spain has {len(CalendarCCAA)} autonomous territories"
+        with bundled_indexed_authority().operation() as operation:
+            members = calendar_ccaa_choices(effective_date=date(2025, 7, 1), authority=operation)
+        assert len(accepted) == len(members), (
+            f"the shape check accepts {len(accepted)} codes but Spain has {len(members)} autonomous territories"
         )
 
     def test_accepts_a_contiguous_run_of_ordinals_starting_at_one(self) -> None:

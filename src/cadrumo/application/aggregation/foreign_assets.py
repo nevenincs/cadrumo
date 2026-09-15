@@ -45,6 +45,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString, require_iso8601_date
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.detail_record_bindings import (
@@ -230,15 +231,27 @@ def declarable_asset_classes_720(
     aggregation: ForeignAssetsAggregation,
     *,
     thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold] | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> frozenset[ForeignAssetClass]:
     """Return present asset classes whose obligation block exceeds its 720 declaration floor.
 
     Returns a frozenset of :class:`ForeignAssetClass` members.
     """
-    resolved_thresholds = thresholds or foreign_asset_declaration_thresholds(
-        modelo=Modelo("720").value,
-        filing_year=aggregation.period.filing_year,
-    )
+    if thresholds is not None:
+        resolved_thresholds = thresholds
+    else:
+        if operation is None:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return declarable_asset_classes_720(
+                    aggregation,
+                    thresholds=None,
+                    operation=indexed_operation,
+                )
+        resolved_thresholds = foreign_asset_declaration_thresholds(
+            modelo=Modelo("720").value,
+            filing_year=aggregation.period.filing_year,
+            operation=operation,
+        )
     catalogue = resolve_foreign_asset_obligation_catalogue()
     group_totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     asset_classes_by_group: dict[ForeignAssetObligationGroup, set[ForeignAssetClass]] = {}
@@ -265,9 +278,10 @@ def declarable_class(
     *,
     asset_class: ForeignAssetClass,
     thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold] | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> bool:
     """Return True iff an asset class's obligation block crosses the 720 declaration floor."""
-    return asset_class in declarable_asset_classes_720(aggregation, thresholds=thresholds)
+    return asset_class in declarable_asset_classes_720(aggregation, thresholds=thresholds, operation=operation)
 
 
 def aggregate_foreign_assets_720(

@@ -1,7 +1,7 @@
 """The wizard-to-flow bridge over the real setup catalogue.
 
-Every scenario projects the real one-shot wizard catalogue
-(:data:`cadrumo.application.wizard.catalogue.WIZARD_FLOWS`) into a substrate
+Every scenario projects the real operation-scoped wizard catalogue
+(:func:`cadrumo.application.wizard.catalogue.build_setup_flow`) into a substrate
 :class:`FlowDefinition` through its defining modules, then asserts the mechanical mapping
 holds one-to-one: id and section count, every question id becoming a page
 with its ``profile_key`` as ``domain_key``, widget identity with the
@@ -24,12 +24,8 @@ from ....core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
-
-# The bridge reads the real wizard catalogue. The import is at module top so
-# a genuine peer-WIP breakage would surface as a loud collection error rather
-# than a silent skip; at HEAD it imports cleanly.
-from ...wizard.catalogue import WIZARD_FLOWS
 from ...wizard.models import WizardFlow, WizardQuestion, WizardVisibility
+from ...wizard.tests._support import registry_setup_flow as registry_setup_flow
 from ..definition import FlowCondition, FlowDefinition, FlowPage, FlowVisibility
 from ..engine import start_flow, visible_sequence
 from ..wizard_projection import flow_definition_from_wizard_flow
@@ -42,12 +38,8 @@ _CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
 }
 
 
-def _setup_flow() -> WizardFlow:
-    return next(flow for flow in WIZARD_FLOWS if flow.id == "setup")
-
-
-def _bridged() -> FlowDefinition:
-    return flow_definition_from_wizard_flow(_setup_flow(), checkpoint=dict(_CHECKPOINT))
+def _bridged(flow: WizardFlow) -> FlowDefinition:
+    return flow_definition_from_wizard_flow(flow, checkpoint=dict(_CHECKPOINT))
 
 
 def _pages_by_id(definition: FlowDefinition) -> dict[str, FlowPage]:
@@ -68,29 +60,31 @@ def _questions_by_id(flow: WizardFlow) -> dict[str, WizardQuestion]:
     return questions
 
 
-def test_bridge_preserves_id_and_section_count() -> None:
-    flow = _setup_flow()
-    definition = _bridged()
+def test_bridge_preserves_id_and_section_count(*, registry_setup_flow: WizardFlow) -> None:
+    flow = registry_setup_flow
+    definition = _bridged(flow)
 
     assert definition.id == flow.id
     assert len(definition.sections) == len(flow.sections)
     assert definition.answers_model is flow.answers_model
 
 
-def test_every_question_becomes_a_page_binding_its_profile_key() -> None:
-    flow = _setup_flow()
+def test_every_question_becomes_a_page_binding_its_profile_key(*, registry_setup_flow: WizardFlow) -> None:
+    flow = registry_setup_flow
     questions = _questions_by_id(flow)
-    pages = _pages_by_id(_bridged())
+    pages = _pages_by_id(_bridged(flow))
 
     assert set(pages) == set(questions)
     for qid, question in questions.items():
         assert pages[qid].domain_key == question.profile_key
 
 
-def test_widget_mapping_is_value_identical_except_text_with_choices_upgrades() -> None:
-    flow = _setup_flow()
+def test_widget_mapping_is_value_identical_except_text_with_choices_upgrades(
+    *, registry_setup_flow: WizardFlow
+) -> None:
+    flow = registry_setup_flow
     questions = _questions_by_id(flow)
-    pages = _pages_by_id(_bridged())
+    pages = _pages_by_id(_bridged(flow))
 
     for qid, question in questions.items():
         page_widget = pages[qid].widget
@@ -105,9 +99,9 @@ def test_widget_mapping_is_value_identical_except_text_with_choices_upgrades() -
             assert page_widget.value == question.widget.value, qid
 
 
-def test_taxation_type_text_with_choices_upgrades_to_select() -> None:
-    pages = _pages_by_id(_bridged())
-    questions = _questions_by_id(_setup_flow())
+def test_taxation_type_text_with_choices_upgrades_to_select(*, registry_setup_flow: WizardFlow) -> None:
+    pages = _pages_by_id(_bridged(registry_setup_flow))
+    questions = _questions_by_id(registry_setup_flow)
 
     # taxation-type is authored as a TEXT question carrying a closed choice
     # set; the bridge renders it as a selectable list.
@@ -121,8 +115,8 @@ def test_taxation_type_text_with_choices_upgrades_to_select() -> None:
     }
 
 
-def test_single_condition_visibility_carries_over_one_to_one() -> None:
-    pages = _pages_by_id(_bridged())
+def test_single_condition_visibility_carries_over_one_to_one(*, registry_setup_flow: WizardFlow) -> None:
+    pages = _pages_by_id(_bridged(registry_setup_flow))
     # legal-entity-form is gated on a single entity-type == 'legal_entity' clause.
     gate = pages["legal-entity-form"].visible_when
 
@@ -132,10 +126,10 @@ def test_single_condition_visibility_carries_over_one_to_one() -> None:
     assert gate.contains is None
 
 
-def test_disjunction_visibility_carries_every_clause() -> None:
-    flow = _setup_flow()
+def test_disjunction_visibility_carries_every_clause(*, registry_setup_flow: WizardFlow) -> None:
+    flow = registry_setup_flow
     questions = _questions_by_id(flow)
-    pages = _pages_by_id(_bridged())
+    pages = _pages_by_id(_bridged(flow))
 
     # 'activity' is gated on an any_of disjunction of two clauses.
     source = questions["activity"].visible_when
@@ -150,10 +144,10 @@ def test_disjunction_visibility_carries_every_clause() -> None:
         assert bridged_clause.contains == source_clause.contains
 
 
-def test_prompts_and_helps_become_locale_key_refs_carrying_original_keys() -> None:
-    flow = _setup_flow()
+def test_prompts_and_helps_become_locale_key_refs_carrying_original_keys(*, registry_setup_flow: WizardFlow) -> None:
+    flow = registry_setup_flow
     questions = _questions_by_id(flow)
-    pages = _pages_by_id(_bridged())
+    pages = _pages_by_id(_bridged(flow))
 
     for qid, question in questions.items():
         prompt_ref = pages[qid].prompt
@@ -169,8 +163,8 @@ def test_prompts_and_helps_become_locale_key_refs_carrying_original_keys() -> No
             assert help_ref.ref == str(question.help), qid
 
 
-def test_bridged_definition_drives_the_real_engine() -> None:
-    definition = _bridged()
+def test_bridged_definition_drives_the_real_engine(*, registry_setup_flow: WizardFlow) -> None:
+    definition = _bridged(registry_setup_flow)
     state = start_flow(definition, mode=FlowMode.CREATE)
 
     sequence = visible_sequence(definition, state)

@@ -126,6 +126,7 @@ def test_union_collapses_an_identical_row_named_by_both_paths_to_one() -> None:
     assert len(unioned) == 1
     values = detail_row_binding_values_for_calculation(
         work_unit=_work_unit(Modelo("349")),
+        revision=compiled_bundled_authority().snapshot(Modelo("349").value, filing_year=2025, period="0A").revision,
         detail_rows=unioned,
     )
     assert values["iva-349-declarante-numero-operadores"] == Decimal("1")

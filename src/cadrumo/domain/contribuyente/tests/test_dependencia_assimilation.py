@@ -24,6 +24,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ..descendant import DescendantInfo
@@ -32,12 +33,18 @@ from ..descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
+from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..family_types import MinimoDescendientesThresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _YEAR = 2024
+_FACT_CONTEXT = FamilyFactResolutionContext(
+    compiled_bundled_authority(),
+    date(_YEAR, 12, 31),
+    date(_YEAR, 12, 31),
+)
 
 #: Registry-shaped ceilings. Their VALUES are irrelevant to every assertion
 #: below: each case either declares no rentas at all, which both income
@@ -67,7 +74,7 @@ def _profile(child: DescendantInfo, anualidades: Decimal | None = None) -> Renta
 
 
 def _eligible(profile: RentaFamilyProfile) -> int:
-    return profile.descendientes_eligible_minimum(_YEAR, thresholds=_THRESHOLDS)
+    return profile.descendientes_eligible_minimum(_YEAR, thresholds=_THRESHOLDS, context=_FACT_CONTEXT)
 
 
 # -- the case the retirement declared unconstructible -------------------------
@@ -213,8 +220,15 @@ def test_the_predicate_default_withholds_rather_than_grants() -> None:
     """
     supporter = _child(convive_con_contribuyente=False, dependencia_economica=True)
 
-    assert supporter.meets_non_income_conditions(_YEAR) is False
-    assert supporter.meets_non_income_conditions(_YEAR, dependencia_assimilation_available=True) is True
+    assert supporter.meets_non_income_conditions(_YEAR, context=_FACT_CONTEXT) is False
+    assert (
+        supporter.meets_non_income_conditions(
+            _YEAR,
+            context=_FACT_CONTEXT,
+            dependencia_assimilation_available=True,
+        )
+        is True
+    )
 
 
 def test_cohabitation_is_never_overloaded_to_carry_the_dependency_case() -> None:

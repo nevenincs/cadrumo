@@ -6,7 +6,11 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
+from cadrumo.domain.calculations.registry.facts.resolution import (
+    ResolvedScalarFact,
+    ScalarFactQuery,
+    resolve_governed_fact,
+)
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
@@ -35,7 +39,12 @@ def _value(fact_id: str, effective_date: date) -> Decimal:
         ScalarFactQuery(fact_id=fact_id, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date),
         authority_digest="3" * 64,
     )
-    return resolved.payload.value
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise TypeError(f"fact {fact_id!r} resolved to a non-scalar payload")
+    value = resolved.payload.value
+    if not isinstance(value, Decimal):
+        raise TypeError(f"fact {fact_id!r} resolved to a non-decimal scalar")
+    return value
 
 
 @pytest.mark.parametrize(

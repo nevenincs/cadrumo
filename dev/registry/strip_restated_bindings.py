@@ -379,6 +379,9 @@ def _materialised_family(
     return inherit_keyed_family(
         f"{modelo_id}: revision {revision_id!r} inheriting from {predecessor_id!r}",
         revision_id=revision_id,
+        predecessor_id=predecessor_id,
+        predecessor=tables[predecessor_id],
+        storage_only=False,
         section=policy.section,
         identity=policy.identity or "id",
         identity_fields=policy.identity_fields,

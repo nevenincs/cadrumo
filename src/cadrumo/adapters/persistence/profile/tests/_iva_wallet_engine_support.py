@@ -47,6 +47,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
@@ -216,7 +217,7 @@ def _create_modelo_303_work_unit(
         filing_year=snapshot.filing_year,
         period=_period(snapshot.filing_year, snapshot.period),
         revision_id=snapshot.revision.id,
-        repository=work_unit_repository,
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=clock,
     )
 

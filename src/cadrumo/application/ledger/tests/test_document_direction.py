@@ -30,13 +30,19 @@ from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND
 from ..document_direction import (
     DIRECTION_BY_FILER_ROLE,
@@ -46,6 +52,7 @@ from ..document_direction import (
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..grounded_reading import ground_draft_against_transcription
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+from ..invoice_extraction_authority import default_invoice_extraction_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -115,29 +122,41 @@ def _read(*, supplier: str | None, customer: str | None) -> InvoiceDraft:
     return InvoiceDraft(supplier_tax_id=supplier, customer_tax_id=customer, provenance=tuple(envelopes))
 
 
-def _grounded(*, page: str, supplier: str | None, customer: str | None, filer: str | None = _FILER) -> InvoiceDraft:
+def _grounded(
+    *,
+    page: str,
+    supplier: str | None,
+    customer: str | None,
+    filer: str | None = _FILER,
+    operation: PinnedAuthorityOperation,
+) -> InvoiceDraft:
     """Return the draft as the reading router hands it on."""
     return ground_draft_against_transcription(
         draft=_read(supplier=supplier, customer=customer),
         transcription=_transcription(page),
+        legends=resolve_regime_legends(
+            operation=operation,
+            effective_date=default_invoice_extraction_period().end_date,
+        ),
         taxpayer_tax_id=filer,
+        operation=operation,
     )
 
 
-def test_an_issued_document_derives_the_issued_direction() -> None:
+def test_an_issued_document_derives_the_issued_direction(*, operation: PinnedAuthorityOperation) -> None:
     """The filer printed in the issuing party's block issued the invoice."""
-    draft = _grounded(page=_ISSUED_PAGE, supplier=_FILER, customer=_OTHER)
+    draft = _grounded(page=_ISSUED_PAGE, supplier=_FILER, customer=_OTHER, operation=operation)
 
     assert draft.suggested_kind is InvoiceKind.ISSUED
 
 
-def test_a_received_document_derives_the_received_direction() -> None:
+def test_a_received_document_derives_the_received_direction(*, operation: PinnedAuthorityOperation) -> None:
     """The other direction, which is the half a one-sided fixture would miss.
 
     A derivation hardcoded to ``ISSUED`` passes the case above and fails here,
     which is the whole reason both are asserted rather than one plus a negative.
     """
-    draft = _grounded(page=_RECEIVED_PAGE, supplier=_OTHER, customer=_FILER)
+    draft = _grounded(page=_RECEIVED_PAGE, supplier=_OTHER, customer=_FILER, operation=operation)
 
     assert draft.suggested_kind is InvoiceKind.RECEIVED
 
@@ -150,10 +169,7 @@ def test_a_received_document_derives_the_received_direction() -> None:
     ],
 )
 def test_the_basis_reaches_the_draft_beside_the_suggestion(
-    page: str,
-    supplier: str,
-    customer: str,
-    expected: InvoiceKind,
+    page: str, supplier: str, customer: str, expected: InvoiceKind, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The operator is shown what the suggestion was read from, not only the answer.
 
@@ -161,7 +177,7 @@ def test_the_basis_reaches_the_draft_beside_the_suggestion(
     arriving with an empty basis is one the operator cannot contest, which is the
     state the field shipped in before it had a producer.
     """
-    draft = _grounded(page=page, supplier=supplier, customer=customer)
+    draft = _grounded(page=page, supplier=supplier, customer=customer, operation=operation)
 
     envelope = next(item for item in draft.provenance if item.field == "suggested_kind")
     assert draft.suggested_kind is expected
@@ -171,7 +187,7 @@ def test_the_basis_reaches_the_draft_beside_the_suggestion(
     assert envelope.note.strip()
 
 
-def test_a_document_naming_the_filer_as_both_parties_settles_nothing() -> None:
+def test_a_document_naming_the_filer_as_both_parties_settles_nothing(*, operation: PinnedAuthorityOperation) -> None:
     """The autoconsumo-shaped document, and the reason containment was chosen.
 
     Comparing the two identity slots in table order would answer ``ISSUED`` here
@@ -181,7 +197,7 @@ def test_a_document_naming_the_filer_as_both_parties_settles_nothing() -> None:
     guess that happens to read as a verdict.
     """
     page = _ISSUED_PAGE.replace(f"NIF {_OTHER}", f"NIF {_FILER}")
-    draft = _grounded(page=page, supplier=_FILER, customer=_FILER)
+    draft = _grounded(page=page, supplier=_FILER, customer=_FILER, operation=operation)
 
     derivation = derive_invoice_kind_from_filer_role(
         draft=_read(supplier=_FILER, customer=_FILER),
@@ -194,10 +210,10 @@ def test_a_document_naming_the_filer_as_both_parties_settles_nothing() -> None:
     assert not derivation.settled
 
 
-def test_a_document_naming_neither_party_as_the_filer_settles_nothing() -> None:
+def test_a_document_naming_neither_party_as_the_filer_settles_nothing(*, operation: PinnedAuthorityOperation) -> None:
     """The negative control. A derivation that answered here would answer anything."""
     page = _ISSUED_PAGE.replace(f"NIF {_FILER}", "NIF A58818501")
-    draft = _grounded(page=page, supplier="A58818501", customer=_OTHER)
+    draft = _grounded(page=page, supplier="A58818501", customer=_OTHER, operation=operation)
 
     assert draft.suggested_kind is None
 
@@ -229,6 +245,10 @@ def test_a_document_with_no_party_headings_settles_nothing() -> None:
         draft = ground_draft_against_transcription(
             draft=InvoiceDraft(supplier_tax_id=_FILER, customer_tax_id=_OTHER),
             transcription=_transcription(_ISSUED_PAGE),
+            legends=resolve_regime_legends(
+                operation=_authority_operation_for_test,
+                effective_date=default_invoice_extraction_period().end_date,
+            ),
             taxpayer_tax_id=_FILER,
             operation=_authority_operation_for_test,
         )
@@ -254,13 +274,13 @@ def test_the_filers_identifier_printed_in_the_other_block_withholds_the_answer()
     assert derivation.kind is None
 
 
-def test_the_derivation_raises_no_finding_of_its_own() -> None:
+def test_the_derivation_raises_no_finding_of_its_own(*, operation: PinnedAuthorityOperation) -> None:
     """A suggestion is not a defect. The comparison happens where the kind is known.
 
     Raising here would refuse every document the operator has not yet stated a
     direction for, which is every document at reading time.
     """
-    draft = _grounded(page=_ISSUED_PAGE, supplier=_FILER, customer=_OTHER)
+    draft = _grounded(page=_ISSUED_PAGE, supplier=_FILER, customer=_OTHER, operation=operation)
 
     assert DraftDiscrepancyKind.DIRECTION_CONTRADICTED not in [finding.kind for finding in draft.discrepancies]
     assert draft.suggested_kind is InvoiceKind.ISSUED

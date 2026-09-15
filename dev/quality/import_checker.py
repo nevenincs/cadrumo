@@ -1313,7 +1313,7 @@ def _closed_attribute_targets(
                     continue
                 targets.add(resolved)
                 if len(targets) > _MAX_CLOSED_DYNAMIC_TARGETS:
-                    return frozenset()
+                    return frozenset[str]()
     return frozenset(targets)
 
 
@@ -1486,7 +1486,7 @@ def _metadata_target_set_loader(module: _Module, function: ast.AST) -> str | Non
     qualified = _qualified_name(function)
     if qualified is None:
         return None
-    expected = {
+    expected: dict[str, str] = {
         "cadrumo.tests.module_target_inventory.load_all_target_sets": "all",
         "cadrumo.tests.module_target_inventory.load_target_set": "named",
     }
@@ -1895,11 +1895,12 @@ class _EvaluationContext:
                     elements.append(element)
             return tuple(elements)
         if isinstance(node, ast.Dict):
-            if any(key is None for key in node.keys):
-                return None
-            return tuple(
-                ast.Tuple(elts=[key, value], ctx=ast.Load()) for key, value in zip(node.keys, node.values, strict=True)
-            )
+            elements: list[ast.AST] = []
+            for key, value in zip(node.keys, node.values, strict=True):
+                if key is None:
+                    return None
+                elements.append(ast.Tuple(elts=[key, value], ctx=ast.Load()))
+            return tuple(elements)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "items":
             if node.args or node.keywords:
                 return None

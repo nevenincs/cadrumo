@@ -37,16 +37,17 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
-    with pytest.raises(TransactionValidationError, match="already active"):
+    with pytest.raises(TransactionValidationError, match="already active"), ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
         restore_manual_transaction(
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
-            ports=ledger_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                transaction_repository=transaction_repository,
-                bucket_event_repository=event_repository,
-            ),
+            ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -62,44 +63,52 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("50.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="roundtrip restore row",
-            idempotency_key="restore-roundtrip",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
-    stash_manual_transaction(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        actor="operator-A",
-        reason="parked",
-        ports=ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
-    restore_manual_transaction(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("50.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="roundtrip restore row",
+                idempotency_key="restore-roundtrip",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        actor="operator-B",
-        reason="restored",
-        ports=ledger_ports_for_test(
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        stash_manual_transaction(
             bucket_id=_BUCKET_ID,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ),
-        occurred_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
-    )
+            transaction_id=created.ref.transaction_id,
+            actor="operator-A",
+            reason="parked",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        restore_manual_transaction(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            actor="operator-B",
+            reason="restored",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
+        )
 
     fresh_repository, _ = _repositories(secure_objects)
     reloaded = fresh_repository.load().get(created.ref.transaction_id)

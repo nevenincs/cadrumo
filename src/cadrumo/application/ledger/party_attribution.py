@@ -76,6 +76,8 @@ from ...domain.iva.classification import IvaTerritorialScope
 from .establishment_ladder import scope_printed_evidence_would_establish
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.iva.regime_legend import RegimeLegend
     from .invoice_draft_records import FieldProvenance, InvoiceDraft
 
 __all__ = [
@@ -268,7 +270,12 @@ def stamp_unverified_party_attribution(
     return tuple(stamped)
 
 
-def party_attribution_advisory(draft: InvoiceDraft) -> PartyAttributionAdvisory | None:
+def party_attribution_advisory(
+    draft: InvoiceDraft,
+    *,
+    legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
+) -> PartyAttributionAdvisory | None:
     """Return what an operator must be told about this draft's attribution, or ``None``.
 
     Reports a party only where a stamped address field actually carries a value.
@@ -282,6 +289,10 @@ def party_attribution_advisory(draft: InvoiceDraft) -> PartyAttributionAdvisory 
 
     Args:
         draft: The reviewed draft, carrying stamped provenance envelopes.
+        legends: The dated registry declarations selected by the enclosing
+            pinned authority operation.
+        operation: Caller-owned pinned authority operation for the ladder's
+            country, territory, identification, and rate lookups.
 
     Returns:
         The advisory, or ``None`` where no populated address value is stamped.
@@ -305,6 +316,8 @@ def party_attribution_advisory(draft: InvoiceDraft) -> PartyAttributionAdvisory 
                 # make the advisory name a territory the real ladder would never
                 # reach for this party.
                 scope_if_attributed=scope_printed_evidence_would_establish(
+                    legends=legends,
+                    operation=operation,
                     tax_identifier=getattr(draft, party.tax_id_field, None),
                     stated_country_name=getattr(draft, party.country_field, None),
                     resolved_country_code=getattr(draft, party.country_code_field, None),

@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REG
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
+from ...compiler.authority_state import source_root_for
 from ...maintenance_support import load_bundled_external_oracle_inventory
 from ..errors import RegistryApplicationInputError
 from ..external_grounding import (
@@ -481,7 +482,7 @@ def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
 ) -> None:
     """The comparator measures each law-selected M100 dictionary independently."""
     snapshot = registry_authority.snapshot("100", filing_year=filing_year, period="0A")
-    comparison = compare_annual_casilla_population(snapshot, source_root=registry_authority.source_root)
+    comparison = compare_annual_casilla_population(snapshot, source_root=source_root_for(registry_authority))
 
     assert isinstance(comparison, AnnualCasillaPopulationComparison)
     assert comparison.modelo == "100"
@@ -584,7 +585,7 @@ def test_annual_casilla_comparison_accepts_typed_inspection_without_snapshot(
         filing_year=2025,
         period="0A",
         sources=inspection.sources,
-        source_root=registry_authority.source_root,
+        source_root=source_root_for(registry_authority),
     )
 
     assert comparison.authority_scope == "inspection_only"

@@ -211,20 +211,23 @@ def _projection_validation_payload(result: InventoryAnexoDResult) -> dict[str, o
 
 def test_complete_cost_owns_0181_and_increase() -> None:
     result = compute_inventory_anexo_d_projection(_ledger(movements=(_purchase(),)))
-    assert result.casilla_0181 == result.complete_acquisition_total == Decimal("122.60")
-    assert (result.casilla_0177, result.casilla_0182) == (Decimal("122.60"), Decimal("0.00"))
+    assert result.complete_acquisition_total == Decimal("122.60")
+    assert (result.variation_increase_value, result.variation_decrease_value) == (Decimal("122.60"), Decimal("0.00"))
     assert len(result.acquisition_fingerprints) == 1
     assert result.authority_record_fingerprint and result.decision_fingerprint and result.prior_closing_link_fingerprint
 
 
 def test_equal_and_decrease_split() -> None:
     equal = compute_inventory_anexo_d_projection(_ledger())
-    assert (equal.casilla_0177, equal.casilla_0182) == (Decimal("0.00"), Decimal("0.00"))
+    assert (equal.variation_increase_value, equal.variation_decrease_value) == (Decimal("0.00"), Decimal("0.00"))
     sale = MovementRecord(
         movement_id="sale", movement_date=date(2025, 3, 1), kind=MovementKind.COGS, quantity=Decimal("0.25")
     )
     decrease = compute_inventory_anexo_d_projection(_ledger(movements=(sale,)))
-    assert (decrease.casilla_0177, decrease.casilla_0182) == (Decimal("0.00"), Decimal("25.00"))
+    assert (decrease.variation_increase_value, decrease.variation_decrease_value) == (
+        Decimal("0.00"),
+        Decimal("25.00"),
+    )
 
 
 def test_both_authorities_retain_conflict() -> None:

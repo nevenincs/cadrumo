@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Protocol, Self
+from typing import TYPE_CHECKING, Final, Protocol, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
@@ -38,6 +38,9 @@ from ...domain.modelos.filing_record import (
     ModeloRecordStatus,
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 DECLARATIONS_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
@@ -281,11 +284,15 @@ _SOURCES_BY_ZONE: Final = {
 }
 
 
-def _validate_current_revisions(revisions: tuple[CalculationRevision, ...]) -> None:
+def _validate_current_revisions(
+    revisions: tuple[CalculationRevision, ...],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
     for revision in revisions:
-        require_calculation_revision_coordinates_current(revision)
+        require_calculation_revision_coordinates_current(revision, operation=operation)
 
 
 def _observable_zones(
@@ -368,6 +375,7 @@ def _zone_states(
 
 def project_declarations_workspace(
     *,
+    operation: PinnedAuthorityOperation,
     bucket_id: BucketId,
     work_units: WorkUnitCatalogue,
     calculation_revisions: CalculationRevisionCatalogue,
@@ -380,7 +388,7 @@ def project_declarations_workspace(
     observations = _validate_observations(zone_observations)
     units = tuple(work_units.values())
     revisions = tuple(calculation_revisions.values())
-    _validate_current_revisions(revisions)
+    _validate_current_revisions(revisions, operation=operation)
     filings = tuple(filing_records.records.values())
     _validate_catalogue_joins(
         bucket_id=bucket_id,

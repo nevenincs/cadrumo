@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -24,6 +25,9 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -75,12 +79,13 @@ def _profile_record(*facts: UserProfileFact) -> UserProfileRecord:
     )
 
 
-def test_advisory_reads_attribution_facts_from_profile_record() -> None:
+def test_advisory_reads_attribution_facts_from_profile_record(operation: PinnedAuthorityOperation) -> None:
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
     findings = _attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,
         casilla_values={},
+        profile_decode_context=operation.profile_decode_context(),
         profile_record=_profile_record(*_received_facts()),
     )
 
@@ -88,12 +93,13 @@ def test_advisory_reads_attribution_facts_from_profile_record() -> None:
     assert findings[0].message_facts["total_base"] == Decimal("58100.00")
 
 
-def test_advisory_with_no_received_profile_facts_returns_no_finding() -> None:
+def test_advisory_with_no_received_profile_facts_returns_no_finding(operation: PinnedAuthorityOperation) -> None:
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
     findings = _attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,
         casilla_values={},
+        profile_decode_context=operation.profile_decode_context(),
         profile_record=_profile_record(),
     )
 

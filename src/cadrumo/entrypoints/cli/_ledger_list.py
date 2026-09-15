@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...application.ledger.actions_manual import (
     ledger_transaction_review_payload,
 )
@@ -22,7 +21,9 @@ from ...application.ledger.review_projection import ledger_transaction_review_st
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.i18n.render import tr
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..ledger_action_composition import compose_ledger_action_ports
 from ._ledger_payloads import LedgerListRowPayload
 
 
@@ -67,21 +68,21 @@ def project_ledger_list(
     rejection.
     """
     bucket_id = transaction_repository.bucket_id
-    page = query_ledger_transaction_list(
-        LedgerTransactionListQuery(
-            spec=spec,
-            group=group,
-            by_group=by_group,
-            limit=limit,
-            offset=offset,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            exclude_llm_rejected=exclude_llm_rejected,
-        ),
-        bucket_id=bucket_id,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=BucketEventHistoryRepository() if exclude_llm_rejected else None,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        page = query_ledger_transaction_list(
+            LedgerTransactionListQuery(
+                spec=spec,
+                group=group,
+                by_group=by_group,
+                limit=limit,
+                offset=offset,
+                sort_by=sort_by,
+                sort_order=sort_order,
+                exclude_llm_rejected=exclude_llm_rejected,
+            ),
+            bucket_id=bucket_id,
+            ports=compose_ledger_action_ports(bucket_id=bucket_id, operation=operation),
+        )
     results = page.results
     total = page.total
     truncated = page.truncated

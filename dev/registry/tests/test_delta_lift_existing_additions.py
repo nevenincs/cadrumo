@@ -5,6 +5,7 @@ import json
 import pytest
 
 from dev.registry.edition_delta_migration import (
+    _as_row,
     _Block,
     _block_row,
     _defaulted,
@@ -36,11 +37,16 @@ def test_existing_additions_drop_duplicate_default_without_changing_references(s
     raw = _block_row(text)
     defaults = _Defaults(source_refs=("design",), orden=())
     effective = _defaulted(raw, defaults)
-    if "constraints" in raw:
-        effective["constraints"] = _defaulted(raw["constraints"], defaults)
+    constraints = raw.get("constraints")
+    if isinstance(constraints, dict):
+        effective["constraints"] = _defaulted(constraints, defaults)
     lift = _lift(effective, source_default=defaults.source_refs, orden=())
     actual = _block_row(_lifted_text(_Block(text, raw), lift))
     assert actual == lift.row
-    target = actual if scope == "row" else actual["constraints"]
+    target: dict[str, object] = actual
+    if scope != "row":
+        constraints = actual.get("constraints")
+        assert isinstance(constraints, dict)
+        target = _as_row(constraints)
     assert target.get("additional_source_refs", []) == extra
     assert _defaulted(target, defaults)["source_refs"] == ["design", *extra]

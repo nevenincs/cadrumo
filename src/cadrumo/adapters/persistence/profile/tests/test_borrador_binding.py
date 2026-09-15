@@ -210,21 +210,23 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     )
 
     relation_values = _zero_relation_values()
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={},
-        binding_values=_non_borrador_decimal_binding_values(),
-        enum_binding_values={},
-        borrador_snapshot_id=snapshot_id,
-        relation_values=relation_values,
-        ports=calculation_ports_for_test(
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            bucket_event_repository=bucket_event_repository,
-            borrador_snapshot_repository=snapshot_repository,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        bucket_event_repository=bucket_event_repository,
+        borrador_snapshot_repository=snapshot_repository,
+    ) as _calculation_ports_221:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            casilla_inputs={},
+            binding_values=_non_borrador_decimal_binding_values(),
+            enum_binding_values={},
+            borrador_snapshot_id=snapshot_id,
+            relation_values=relation_values,
+            ports=_calculation_ports_221,
+        )
 
     assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
     assert revision.binding_overrides[_ENUM_BINDING] == "madrid"
@@ -290,23 +292,24 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
             _ENUM_BINDING: "madrid",
         },
     )
-
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={},
-        binding_values=_non_borrador_decimal_binding_values(),
-        enum_binding_values={_ENUM_BINDING: "cataluna"},
-        backend_binding_values={_DECIMAL_BINDING: Decimal("1.00")},
-        borrador_snapshot_id=snapshot_id,
-        relation_values=_zero_relation_values(),
-        ports=calculation_ports_for_test(
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-            bucket_event_repository=bucket_event_repository,
-            borrador_snapshot_repository=snapshot_repository,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        bucket_event_repository=bucket_event_repository,
+        borrador_snapshot_repository=snapshot_repository,
+    ) as _calculation_ports_303:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            casilla_inputs={},
+            binding_values=_non_borrador_decimal_binding_values(),
+            enum_binding_values={_ENUM_BINDING: "cataluna"},
+            backend_binding_values={_DECIMAL_BINDING: Decimal("1.00")},
+            borrador_snapshot_id=snapshot_id,
+            relation_values=_zero_relation_values(),
+            ports=_calculation_ports_303,
+        )
 
     assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
     assert revision.binding_overrides[_ENUM_BINDING] == "cataluna"

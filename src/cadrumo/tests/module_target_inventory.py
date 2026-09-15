@@ -12,13 +12,38 @@ import json
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Final
+from typing import Final, Literal, TypedDict
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
 UTF_8: Final = "utf-8"
 
 SCHEMA_VERSION: Final = 1
 TARGET_KIND: Final = "python-module-names"
+
+
+class _SourceSelection(TypedDict):
+    """Validated path-only source selection from the inventory artifact."""
+
+    package: str
+    source_root: str
+    subpackages: list[str]
+    exclude_test_packages: Literal[True]
+    exclude_test_module_prefixes: list[str]
+
+
+class _TargetSet(TypedDict):
+    """Validated target-set payload with its normalized module names."""
+
+    kind: Literal["python-module-names"]
+    source: _SourceSelection
+    targets: tuple[str, ...]
+
+
+class _ValidatedDocument(TypedDict):
+    """Validated inventory document consumed by the read-side helpers."""
+
+    schema_version: int
+    target_sets: dict[str, _TargetSet]
 
 
 class MetadataTargetSetError(ValueError):
@@ -63,12 +88,14 @@ def assert_all_target_sets_current(metadata_path: str | Path, *, repository: Pat
             )
 
 
-def compile_inventory(*, package: str, source_root: str, subpackages: Sequence[str], target_set: str) -> dict[str, Any]:
+def compile_inventory(
+    *, package: str, source_root: str, subpackages: Sequence[str], target_set: str
+) -> dict[str, object]:
     """Compile one reproducible metadata document from path-only source facts."""
-    source = {
+    source: _SourceSelection = {
         "package": _dotted(package, subject="package"),
         "source_root": _relative_path(source_root, subject="source_root"),
-        "subpackages": _subpackages(subpackages),
+        "subpackages": list(_subpackages(subpackages)),
         "exclude_test_packages": True,
         "exclude_test_module_prefixes": ["test_", "_test_", "conftest"],
     }
@@ -146,7 +173,7 @@ def _resolve_metadata_path(value: str | Path, *, repository: Path = REPO_ROOT) -
     return resolved
 
 
-def _read_document(path: Path) -> dict[str, object]:
+def _read_document(path: Path) -> _ValidatedDocument:
     try:
         payload = json.loads(path.read_text(encoding=UTF_8))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -156,7 +183,7 @@ def _read_document(path: Path) -> dict[str, object]:
     return _validated_document(payload)
 
 
-def _validated_document(document: Mapping[str, object]) -> dict[str, Any]:
+def _validated_document(document: Mapping[str, object]) -> _ValidatedDocument:
     if document.get("schema_version") != SCHEMA_VERSION:
         raise MetadataTargetSetError(
             f"unsupported metadata target inventory schema: {document.get('schema_version')!r}"
@@ -164,7 +191,7 @@ def _validated_document(document: Mapping[str, object]) -> dict[str, Any]:
     raw_sets = document.get("target_sets")
     if not isinstance(raw_sets, dict) or not raw_sets:
         raise MetadataTargetSetError("metadata target inventory has no target_sets")
-    target_sets: dict[str, Any] = {}
+    target_sets: dict[str, _TargetSet] = {}
     for name, raw_target in raw_sets.items():
         if not isinstance(name, str) or not name:
             raise MetadataTargetSetError("metadata target-set name must be a non-empty string")
@@ -181,14 +208,14 @@ def _validated_document(document: Mapping[str, object]) -> dict[str, Any]:
     return {"schema_version": SCHEMA_VERSION, "target_sets": target_sets}
 
 
-def _target_set(document: Mapping[str, object], name: str) -> dict[str, Any]:
+def _target_set(document: _ValidatedDocument, name: str) -> _TargetSet:
     target = document["target_sets"].get(name)
     if target is None:
         raise MetadataTargetSetError(f"metadata target set is not declared: {name!r}")
     return target
 
 
-def _validated_source(value: object) -> dict[str, object]:
+def _validated_source(value: object) -> _SourceSelection:
     if not isinstance(value, dict):
         raise MetadataTargetSetError("metadata target set has no source selection")
     package = _dotted(value.get("package"), subject="source package")
@@ -231,9 +258,9 @@ def _subpackages(values: Sequence[object]) -> tuple[str, ...]:
     return result
 
 
-def _enumerate_modules(source: Mapping[str, object], *, repository: Path = REPO_ROOT) -> tuple[str, ...]:
-    root = _resolve_metadata_path(str(source["source_root"]), repository=repository)
-    package = str(source["package"])
+def _enumerate_modules(source: _SourceSelection, *, repository: Path = REPO_ROOT) -> tuple[str, ...]:
+    root = _resolve_metadata_path(source["source_root"], repository=repository)
+    package = source["package"]
     names: set[str] = set()
     subpackages = source["subpackages"]
     selections = tuple(subpackages) if subpackages else (None,)

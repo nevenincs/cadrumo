@@ -306,18 +306,19 @@ def test_m369_exterior_period_calculate_review_export_e2e(
         ),
         clock=_T0,
     )
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            bucket_id=_M369_BUCKET,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_M369_BUCKET,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_311:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_311,
+            clock=_T1,
+        )
     period_casilla = validated_casilla_id("decl.periodo")
     exterior_cuota = validated_casilla_id("iva.exterior.de.services-cuota")
     assert result.revision.input_values_by_casilla_id[period_casilla] == period_token
@@ -483,18 +484,19 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                 ),
                 clock=_T0,
             )
-            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                ports=calculation_ports_for_test(
-                    bucket_id=_M369_BUCKET,
-                    work_unit_repository=wu_repo,
-                    calculation_repository=cr_repo,
-                    bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
-                    transaction_repository=tx_repo,
-                    invoice_repository=invoice_repo,
-                ),
-                clock=_T1,
-            )
+            with calculation_ports_for_test(
+                bucket_id=_M369_BUCKET,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
+                transaction_repository=tx_repo,
+                invoice_repository=invoice_repo,
+            ) as _calculation_ports_488:
+                result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                    work_unit.work_unit_id,
+                    ports=_calculation_ports_488,
+                    clock=_T1,
+                )
 
             assert isinstance(result, BucketAggregationCalculationResult)
             casilla_values = result.revision.casilla_values
@@ -632,19 +634,19 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
         ),
         clock=_T0,
     )
-
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            bucket_id=_M369_BUCKET,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_M369_BUCKET,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_638:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_638,
+            clock=_T1,
+        )
 
     assert any(
         diagnostic.source_kind == "ledger_oss_aggregation" and diagnostic.reason == "oss_no_live_source"
@@ -738,19 +740,19 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
         ),
         clock=_T0,
     )
-
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            bucket_id=_M369_BUCKET,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_M369_BUCKET,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_744:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_744,
+            clock=_T1,
+        )
 
     assert any(
         diagnostic.source_kind == "ledger_oss_aggregation" and diagnostic.reason == "unrouted_observation"
@@ -765,18 +767,21 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
     )
 
     retired_keyword: dict[str, Any] = {"source_provenance": result.revision.source_provenance}
-    with pytest.raises(TypeError, match="source_provenance"):
+    with (
+        pytest.raises(TypeError, match="source_provenance"),
+        calculation_ports_for_test(
+            bucket_id=_M369_BUCKET,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ) as _calculation_ports_772,
+    ):
         calculate_modelo_revision(
             work_unit.work_unit_id,
             casilla_inputs={},
-            ports=calculation_ports_for_test(
-                bucket_id=_M369_BUCKET,
-                work_unit_repository=wu_repo,
-                calculation_repository=cr_repo,
-                bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
-                transaction_repository=tx_repo,
-                invoice_repository=invoice_repo,
-            ),
+            ports=_calculation_ports_772,
             **retired_keyword,
         )
     assert cr_repo.load().get(result.revision.calculation_revision_id) == result.revision
@@ -872,19 +877,19 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
         ),
         clock=_T0,
     )
-
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            bucket_id=_M369_BUCKET,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_M369_BUCKET,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_878:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_878,
+            clock=_T1,
+        )
 
     assert not any(
         diagnostic.source_kind == "ledger_oss_aggregation" and diagnostic.reason == "unrouted_observation"

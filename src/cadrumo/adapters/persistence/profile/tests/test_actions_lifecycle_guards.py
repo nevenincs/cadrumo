@@ -56,12 +56,15 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
-    with pytest.raises(TransactionValidationError, match="can be edited"), ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
-        objects=secure_objects,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-    ) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="can be edited"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports,
+    ):
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
@@ -115,12 +118,15 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
-    with pytest.raises(TransactionValidationError, match="already archived"), ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
-        objects=secure_objects,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-    ) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="already archived"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports,
+    ):
         archive_manual_transaction(
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
@@ -128,12 +134,15 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
             ports=ports,
             occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
         )
-    with pytest.raises(TransactionValidationError, match="cannot be stashed"), ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
-        objects=secure_objects,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-    ) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="cannot be stashed"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports,
+    ):
         stash_manual_transaction(
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,

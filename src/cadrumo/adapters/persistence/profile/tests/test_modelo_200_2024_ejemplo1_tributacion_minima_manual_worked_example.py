@@ -358,30 +358,29 @@ def _calculate_m200(
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo
-        ),
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        casilla_inputs={
-            **_oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
-            # Not declared: the cuota líquida mínima is what this scenario ASSERTS
-            # (casillas 00592 and 00611), so supplying it as a declared input would
-            # have the oracle check the figure it was handed.
-            _CASILLA_CUOTA_LIQUIDA_MINIMA: cuota_liquida_minima,
-        },
-        ports=calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bucket_event_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bucket_event_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_375:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            casilla_inputs={
+                **_oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
+                # Not declared: the cuota líquida mínima is what this scenario ASSERTS
+                # (casillas 00592 and 00611), so supplying it as a declared input would
+                # have the oracle check the figure it was handed.
+                _CASILLA_CUOTA_LIQUIDA_MINIMA: cuota_liquida_minima,
+            },
+            ports=_calculation_ports_375,
+            clock=_T1,
+        )
 
 
 def test_m200_2024_ejemplo1_con_tributacion_minima_manual_worked_example(

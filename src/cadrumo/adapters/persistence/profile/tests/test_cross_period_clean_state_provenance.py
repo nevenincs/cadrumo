@@ -482,18 +482,19 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tm
             )
             snapshot = _snapshot_390()
             binding_values = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}
-            revision = calculate_modelo_revision(
-                work_unit.work_unit_id,
-                casilla_inputs={},
-                binding_values=binding_values,
-                ports=calculation_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    work_unit_repository=work_unit_repository,
-                    calculation_repository=calculation_repository,
-                    bucket_event_repository=bucket_event_repository,
-                ),
-                clock=_CLOCK,
-            )
+            with calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_unit_repository,
+                calculation_repository=calculation_repository,
+                bucket_event_repository=bucket_event_repository,
+            ) as _calculation_ports_489:
+                revision = calculate_modelo_revision(
+                    work_unit.work_unit_id,
+                    casilla_inputs={},
+                    binding_values=binding_values,
+                    ports=_calculation_ports_489,
+                    clock=_CLOCK,
+                )
 
             report = verify_modelo_revision(
                 revision.calculation_revision_id,

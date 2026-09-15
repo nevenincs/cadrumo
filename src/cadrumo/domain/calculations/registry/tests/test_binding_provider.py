@@ -18,7 +18,6 @@ from .....core.aggregation import (
     BindingAggregationOp,
     BindingSourceKind,
 )
-from .....core.modelo import Modelo
 from .....core.toml import freeze_toml_value
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import (
@@ -56,7 +55,7 @@ _PREVIOUS_FILING_PROVIDER = PreviousFilingProvider(
 )
 
 _INVENTORY_PROVIDER = InventoryProvider(
-    modelo=Modelo("100"),
+    modelo="100",
     projection_grain="taxpayer_year_activity",
     fact="row_field",
     record="inventory_activity",

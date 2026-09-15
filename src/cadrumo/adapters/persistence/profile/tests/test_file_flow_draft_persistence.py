@@ -41,16 +41,19 @@ def test_a_verified_revision_leaves_its_approved_draft_in_the_store(repos: Repos
     drafts = ModeloDraftRepository(bucket_id=work_unit.bucket_id)
 
     assert tuple(drafts.iter_drafts()) == ()
-
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_49:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_49,
+            clock=T1,
+        )
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -77,16 +80,19 @@ def test_re_verifying_the_same_revision_rewrites_one_row(repos: Repos) -> None:
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
     drafts = ModeloDraftRepository(bucket_id=work_unit.bucket_id)
-
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_85:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_85,
+            clock=T1,
+        )
     for clock in (T1, T2):
         verify_revision(
             revision.calculation_revision_id,
@@ -123,15 +129,19 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
         # agree by accident, and the assertion below holds however the basis is
         # stamped.
         _seed_one_bucket_transaction(work_unit.bucket_id)
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            ports=calculation_ports_for_test(
-                work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-            ),
-            clock=T1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+        ) as _calculation_ports_130:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+                binding_values=DEFAULT_130_BINDING_VALUES,
+                ports=_calculation_ports_130,
+                clock=T1,
+            )
         verify_revision(
             revision.calculation_revision_id,
             revision=revision,

@@ -34,6 +34,7 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.resources.bundled_data import bundled_path
@@ -83,7 +84,7 @@ def test_the_oracle_quotes_the_bundled_manual_that_it_names() -> None:
     assert "otro Estado miembro de la Unión Europea" in quoted
 
 
-def test_the_classifier_reproduces_the_manual_outcome() -> None:
+def test_the_classifier_reproduces_the_manual_outcome(*, operation: PinnedAuthorityOperation) -> None:
     """The parity itself: AEAT states the treatment, the engine derives it.
 
     The criteria are read from the oracle rather than typed here, so the case
@@ -91,19 +92,19 @@ def test_the_classifier_reproduces_the_manual_outcome() -> None:
     describe.
     """
     oracle = _oracle()
-    operation = oracle["operation"]
+    operation_case = oracle["operation"]
 
     criteria = IvaInvoiceClassificationCriteria(
         transaction_date=date(oracle["source"]["year"], 6, 15),
-        issuer_residency=IvaTerritorialScope(operation["issuer_residency"]),
-        customer_residency=IvaTerritorialScope(operation["customer_residency"]),
-        customer_identification_state=EUMemberState(operation["customer_member_state"]),
-        customer_tax_status=CustomerTaxStatus(operation["customer_tax_status"]),
-        kind=TransactionKind(operation["transaction_kind"]),
-        direction=InvoiceKind(operation["direction"]),
+        issuer_residency=IvaTerritorialScope(operation_case["issuer_residency"]),
+        customer_residency=IvaTerritorialScope(operation_case["customer_residency"]),
+        customer_identification_state=EUMemberState(operation_case["customer_member_state"]),
+        customer_tax_status=CustomerTaxStatus(operation_case["customer_tax_status"]),
+        kind=TransactionKind(operation_case["transaction_kind"]),
+        direction=InvoiceKind(operation_case["direction"]),
     )
 
-    result = classify_iva(criteria)
+    result = classify_iva(criteria, operation=operation)
 
     assert result.category is IvaCategory(oracle["expected"]["iva_category"])
 

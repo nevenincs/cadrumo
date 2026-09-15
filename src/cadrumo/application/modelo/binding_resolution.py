@@ -67,6 +67,7 @@ def resolve_borrador_source_tier(
     caller_binding_values: Mapping[BindingId, Decimal],
     caller_enum_binding_values: Mapping[BindingId, str],
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
     """Resolve the borrador precedence tier as a source-mesh resolution.
 
@@ -98,6 +99,7 @@ def resolve_borrador_source_tier(
         caller_enum_binding_values=caller_enum_binding_values,
         registry_snapshot=snapshot,
         snapshot_repository=borrador_snapshot_repository,
+        operation=operation,
     )
 
 
@@ -333,6 +335,7 @@ def _resolve_borrador_bindings_for_calculation(
     caller_enum_binding_values: Mapping[BindingId, str],
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
     """Resolve the optional borrador snapshot, returning its resolution directly.
 
@@ -349,6 +352,7 @@ def _resolve_borrador_bindings_for_calculation(
         caller_enum_binding_values=caller_enum_binding_values,
         registry_snapshot=registry_snapshot,
         snapshot_repository=snapshot_repository,
+        operation=operation,
     )
     require_calculation_route_resolver("pre_mesh", resolver)
     return resolver.resolve(

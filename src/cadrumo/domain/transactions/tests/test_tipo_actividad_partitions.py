@@ -172,6 +172,8 @@ def test_typed_code_set_refuses_a_token_that_is_not_a_modelo_036_code() -> None:
         review_status="agent_reviewed",
         ownership=FactOwnership.GENERATED,
         authority_digest="a" * 64,
+        source_variant_id="rirpf-art-95:selector-m036-actividades-profesionales.current",
+        source_revision_ids=("rirpf-art-95:selector-m036-actividades-profesionales.current",),
     )
     with pytest.raises(TransactionValidationError, match="'Z99'") as raised:
         _typed_code_set(selector)
@@ -207,6 +209,8 @@ def test_selector_resolution_refuses_a_non_entity_set_fact() -> None:
                 review_status="agent_reviewed",
                 ownership=FactOwnership.GENERATED,
                 authority_digest="a" * 64,
+                source_variant_id="lirpf-art-31:eo-exclusion-compras-eur.current",
+                source_revision_ids=("lirpf-art-31:eo-exclusion-compras-eur.current",),
             )
 
     with pytest.raises(TransactionValidationError, match="did not resolve to an entity-set fact"):

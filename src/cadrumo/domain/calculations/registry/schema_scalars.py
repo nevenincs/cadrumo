@@ -435,7 +435,6 @@ _REGISTRY_SCALAR_VALUE_TYPES: dict[str, RegistryScalarValueType] = {
 
 _REGISTRY_TEXT_SCALAR_VALIDATORS: dict[str, Callable[[object], object]] = {
     "text": lambda value: value,
-    "nif": _validate_nif_string,
     "nif_iva": _validate_nif_iva_string,
     "name": _validate_name_string,
     "period_code": _validate_period_code,

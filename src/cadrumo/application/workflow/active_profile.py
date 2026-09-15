@@ -21,6 +21,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from .profile_bucket_scan import resolve_profile_bucket
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.values import UserProfileRecord
 
 _log = get_logger(__name__)
@@ -61,7 +62,7 @@ def require_active_profile_bucket_id() -> str:
     return bucket_id
 
 
-def resolve_active_profile_record() -> ActiveProfileRecordResolution:
+def resolve_active_profile_record(*, profile_decode_context: ProfileDecodeContext) -> ActiveProfileRecordResolution:
     """Read the active profile record and name the reason when it is absent."""
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import (
@@ -76,7 +77,10 @@ def resolve_active_profile_record() -> ActiveProfileRecordResolution:
         return ActiveProfileRecordResolution(unavailability=ProfileRecordUnavailability.NO_LIVE_CAPSULE)
 
     with override_settings(cadrumo_active_profile=bucket_id):
-        session = profile_record_session_if_authenticated(bucket_id)
+        session = profile_record_session_if_authenticated(
+            bucket_id,
+            profile_decode_context=profile_decode_context,
+        )
         if session is None:
             _log.debug("active profile record resolution found no authenticated session for the committed capsule")
             return ActiveProfileRecordResolution(unavailability=ProfileRecordUnavailability.SESSION_REQUIRED)

@@ -236,27 +236,31 @@ def _calculate_m130_draft(objects: SecureObjectRepository) -> CalculationRevisio
         ),
         clock=_T0,
     )
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={
-            _CASILLA_01: Decimal("1000.00"),
-            _CASILLA_02: Decimal("0.00"),
-            _CASILLA_05: Decimal("0.00"),
-            _CASILLA_06: Decimal("0.00"),
-            _CASILLA_08: Decimal("0.00"),
-            _CASILLA_10: Decimal("0.00"),
-            _CASILLA_16: Decimal("0.00"),
-            _CASILLA_18: Decimal("0.00"),
-        },
-        binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("20000.00"),
-            "modelo-130-resultados-negativos-anteriores": Decimal("0.00"),
-        },
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_255:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={
+                _CASILLA_01: Decimal("1000.00"),
+                _CASILLA_02: Decimal("0.00"),
+                _CASILLA_05: Decimal("0.00"),
+                _CASILLA_06: Decimal("0.00"),
+                _CASILLA_08: Decimal("0.00"),
+                _CASILLA_10: Decimal("0.00"),
+                _CASILLA_16: Decimal("0.00"),
+                _CASILLA_18: Decimal("0.00"),
+            },
+            binding_values={
+                "irpf.previous_year_economic_activity_net_income": Decimal("20000.00"),
+                "modelo-130-resultados-negativos-anteriores": Decimal("0.00"),
+            },
+            ports=_calculation_ports_255,
+            clock=_T1,
+        )
     return revision
 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....calculations.registry.authority import PinnedAuthorityOperation
 from ..catalogue import (
     ALL_TOKEN,
     ApoderamientosCatalogue,
@@ -17,8 +18,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @pytest.fixture
-def catalogue() -> ApoderamientosCatalogue:
-    return load_default_catalogue()
+def catalogue(operation: PinnedAuthorityOperation) -> ApoderamientosCatalogue:
+    return load_default_catalogue(operation=operation)
 
 
 def test_default_catalogue_loads_registry_invariants(catalogue: ApoderamientosCatalogue) -> None:

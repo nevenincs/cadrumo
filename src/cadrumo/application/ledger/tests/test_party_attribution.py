@@ -26,13 +26,17 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..grounded_reading import ground_draft_against_transcription
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..party_attribution import (
     ATTRIBUTION_ESTABLISHING_ORIGINS,
     PARTY_ATTRIBUTED_ADDRESS_FIELDS,
@@ -104,8 +108,16 @@ def _read_draft(*, supplier_postal: str, customer_postal: str) -> InvoiceDraft:
     )
 
 
-def _grounded(draft: InvoiceDraft) -> InvoiceDraft:
-    return ground_draft_against_transcription(draft=draft, transcription=_transcription())
+def _grounded(draft: InvoiceDraft, *, operation: PinnedAuthorityOperation) -> InvoiceDraft:
+    return ground_draft_against_transcription(
+        draft=draft,
+        transcription=_transcription(),
+        legends=resolve_regime_legends(
+            operation=operation,
+            effective_date=default_invoice_extraction_period().end_date,
+        ),
+        operation=operation,
+    )
 
 
 def _stamp(draft: InvoiceDraft, field: str) -> bool:
@@ -145,9 +157,9 @@ def test_the_canonical_party_table_owns_fields_and_operator_roles_for_both_advis
     ]
 
 
-def test_the_reading_path_stamps_every_model_read_party_address_value() -> None:
+def test_the_reading_path_stamps_every_model_read_party_address_value(*, operation: PinnedAuthorityOperation) -> None:
     """A read draft arrives with each per-party address field stamped unverified."""
-    grounded = _grounded(_read_draft(supplier_postal="28001", customer_postal="35001"))
+    grounded = _grounded(_read_draft(supplier_postal="28001", customer_postal="35001"), operation=operation)
 
     stamped = {envelope.field for envelope in grounded.provenance if envelope.attribution_unverified}
     assert stamped == {
@@ -158,14 +170,16 @@ def test_the_reading_path_stamps_every_model_read_party_address_value() -> None:
     }
 
 
-def test_a_value_that_is_not_a_party_address_is_never_stamped() -> None:
+def test_a_value_that_is_not_a_party_address_is_never_stamped(*, operation: PinnedAuthorityOperation) -> None:
     """The stamp does not spread to fields naming no party."""
-    grounded = _grounded(_read_draft(supplier_postal="28001", customer_postal="35001"))
+    grounded = _grounded(_read_draft(supplier_postal="28001", customer_postal="35001"), operation=operation)
 
     assert _stamp(grounded, "taxable_base") is False
 
 
-def test_the_stamp_is_per_field_so_one_party_value_can_be_attributed_and_another_not() -> None:
+def test_the_stamp_is_per_field_so_one_party_value_can_be_attributed_and_another_not(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """Two fields of ONE party disagree, which a coarser flag could not express.
 
     The retiring gate for deterministic co-location has to assert the stamp is
@@ -187,13 +201,13 @@ def test_the_stamp_is_per_field_so_one_party_value_can_be_attributed_and_another
         },
     )
 
-    grounded = _grounded(attributed)
+    grounded = _grounded(attributed, operation=operation)
 
     assert _stamp(grounded, "supplier_postal_code") is True
     assert _stamp(grounded, "supplier_country") is False
 
 
-def test_an_attribution_establishing_origin_clears_a_stale_stamp() -> None:
+def test_an_attribution_establishing_origin_clears_a_stale_stamp(*, operation: PinnedAuthorityOperation) -> None:
     """The pass is not a latch: it restamps both ways on every run."""
     draft = _read_draft(supplier_postal="28001", customer_postal="35001")
     stale = draft.model_copy(
@@ -213,7 +227,7 @@ def test_an_attribution_establishing_origin_clears_a_stale_stamp() -> None:
         },
     )
 
-    assert _stamp(_grounded(stale), "supplier_postal_code") is False
+    assert _stamp(_grounded(stale, operation=operation), "supplier_postal_code") is False
 
 
 def test_every_establishing_origin_is_a_real_field_origin_member() -> None:
@@ -235,11 +249,20 @@ def test_the_attributed_field_set_covers_both_parties_address_axes() -> None:
     assert set(InvoiceDraft.model_fields) >= PARTY_ATTRIBUTED_ADDRESS_FIELDS
 
 
-def test_the_advisory_names_the_territory_each_party_s_values_would_establish() -> None:
+def test_the_advisory_names_the_territory_each_party_s_values_would_establish(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """The operator is given a concrete claim to contest, not an abstraction."""
-    grounded = _grounded(_read_draft(supplier_postal="28001", customer_postal="35001"))
+    grounded = _grounded(_read_draft(supplier_postal="28001", customer_postal="35001"), operation=operation)
 
-    advisory = party_attribution_advisory(grounded)
+    advisory = party_attribution_advisory(
+        grounded,
+        legends=resolve_regime_legends(
+            operation=operation,
+            effective_date=default_invoice_extraction_period().end_date,
+        ),
+        operation=operation,
+    )
 
     assert advisory is not None
     by_role = {party.role: party for party in advisory.parties}
@@ -247,7 +270,7 @@ def test_the_advisory_names_the_territory_each_party_s_values_would_establish() 
     assert by_role["customer"].scope_if_attributed is IvaTerritorialScope._from_registry("es_canarias")
 
 
-def test_a_transposition_produces_no_finding_and_only_the_stamp_says_so() -> None:
+def test_a_transposition_produces_no_finding_and_only_the_stamp_says_so(*, operation: PinnedAuthorityOperation) -> None:
     """The failure class the stamp exists for, driven end to end.
 
     The two postal codes are swapped: each is printed on the page, so every
@@ -255,8 +278,8 @@ def test_a_transposition_produces_no_finding_and_only_the_stamp_says_so() -> Non
     What changes is the territory each party would be placed in -- and the only
     signal that the placement rests on an unchecked assignment is the stamp.
     """
-    straight = _grounded(_read_draft(supplier_postal="28001", customer_postal="35001"))
-    swapped = _grounded(_read_draft(supplier_postal="35001", customer_postal="28001"))
+    straight = _grounded(_read_draft(supplier_postal="28001", customer_postal="35001"), operation=operation)
+    swapped = _grounded(_read_draft(supplier_postal="35001", customer_postal="28001"), operation=operation)
 
     assert [finding.kind for finding in swapped.discrepancies] == [finding.kind for finding in straight.discrepancies]
     for field in ("supplier_postal_code", "customer_postal_code"):
@@ -264,8 +287,12 @@ def test_a_transposition_produces_no_finding_and_only_the_stamp_says_so() -> Non
         assert envelope.grounding is FieldGroundingOutcome.ANCHORED
         assert envelope.attribution_unverified is True
 
-    straight_advisory = party_attribution_advisory(straight)
-    swapped_advisory = party_attribution_advisory(swapped)
+    legends = resolve_regime_legends(
+        operation=operation,
+        effective_date=default_invoice_extraction_period().end_date,
+    )
+    straight_advisory = party_attribution_advisory(straight, legends=legends, operation=operation)
+    swapped_advisory = party_attribution_advisory(swapped, legends=legends, operation=operation)
     assert straight_advisory is not None
     assert swapped_advisory is not None
     straight_scopes = {party.role: party.scope_if_attributed for party in straight_advisory.parties}
@@ -273,7 +300,7 @@ def test_a_transposition_produces_no_finding_and_only_the_stamp_says_so() -> Non
     assert straight_scopes != swapped_scopes
 
 
-def test_a_stamped_field_with_no_printed_value_raises_no_advisory() -> None:
+def test_a_stamped_field_with_no_printed_value_raises_no_advisory(operation: PinnedAuthorityOperation) -> None:
     """An attribution nobody made is not reported as an unverified one."""
     draft = InvoiceDraft(
         supplier_tax_id="B12345674",
@@ -288,4 +315,14 @@ def test_a_stamped_field_with_no_printed_value_raises_no_advisory() -> None:
         ),
     )
 
-    assert party_attribution_advisory(draft) is None
+    assert (
+        party_attribution_advisory(
+            draft,
+            legends=resolve_regime_legends(
+                operation=operation,
+                effective_date=default_invoice_extraction_period().end_date,
+            ),
+            operation=operation,
+        )
+        is None
+    )

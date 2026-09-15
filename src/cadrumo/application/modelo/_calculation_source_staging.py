@@ -34,6 +34,7 @@ from types import MappingProxyType
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_initial_values import initial_value_casilla_ids
 from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -114,6 +115,7 @@ def resolve_prorrata_regularizacion_sources(
     registry_snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
     context: CalculationSourceContext,
+    operation: PinnedAuthorityOperation,
     source_resolution: CalculationSourceResolution,
     casilla_inputs: Mapping[CasillaId, Decimal] | None,
     text_casilla_inputs: Mapping[CasillaId, str] | None,
@@ -136,6 +138,8 @@ def resolve_prorrata_regularizacion_sources(
             threaded to the staged registry engine run.
         context: The :class:`CalculationSourceContext` the staged prorrata
             and bienes-inversion resolvers resolve against.
+        operation: The caller-owned generation-pinned authority operation shared
+            by the staged prorrata and bienes-inversion resolvers.
         source_resolution: The upstream :class:`CalculationSourceResolution`
             mesh envelope the staged resolutions are merged into.
         casilla_inputs: Operator- and backend-supplied casilla values that
@@ -188,6 +192,7 @@ def resolve_prorrata_regularizacion_sources(
         prorrata_register_repository=prorrata_register_repository,
         observation_repository=observation_repository,
         registry_snapshot=registry_snapshot,
+        operation=operation,
     )
     bienes_resolver = BienesInversionRegularizacionSourceResolver(
         current_year_values=materialised.values,
@@ -195,6 +200,7 @@ def resolve_prorrata_regularizacion_sources(
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
         register_repository=bienes_inversion_repository,
         observation_repository=observation_repository,
+        operation=operation,
     )
     require_calculation_route_resolver("post_mesh", prorrata_resolver)
     require_calculation_route_resolver("post_mesh", bienes_resolver)
@@ -298,7 +304,10 @@ def _effective_staged_binding_inputs(
     unresolved_binding_ids: tuple[BindingId, ...],
 ) -> tuple[dict[BindingId, Decimal], tuple[BindingId, ...]]:
     """Overlay caller values and keep only unresolved bindings still absent."""
-    effective_binding_values = {**dict(staging_binding_defaults or {}), **dict(binding_values)}
+    effective_binding_values: dict[BindingId, Decimal] = {}
+    if staging_binding_defaults is not None:
+        effective_binding_values.update(staging_binding_defaults)
+    effective_binding_values.update(binding_values)
     effective_unresolved_binding_ids = tuple(
         binding_id for binding_id in unresolved_binding_ids if binding_id not in effective_binding_values
     )

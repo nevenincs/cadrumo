@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from decimal import Decimal
 
 import pytest
@@ -79,6 +80,19 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _verification_repositories_for_test(repos: Repos):
+    """Compose verification capabilities while retaining fixture repositories."""
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    return replace(
+        build_test_verification_repository_bundle(),
+        work_unit=wu_repo,
+        calculation=cr_repo,
+        filing=fr_repo,
+        verification=vr_repo,
+        bucket_event=bv_repo,
+    )
+
+
 def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> None:
     """Verification cannot interpret a stored calculation under a different schema."""
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
@@ -100,15 +114,16 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), stale))
 
-    with pytest.raises(WorkUnitRevisionDivergenceError):
+    with pytest.raises(WorkUnitRevisionDivergenceError), bundled_indexed_authority().operation() as operation:
         verify_modelo_revision(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
+            verification_repositories=_verification_repositories_for_test(repos),
             actor="operator-A",
             workflow_profile=workflow_profile(),
             clock=T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
         )
 
 
@@ -353,10 +368,12 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     assert refreshed.verified_by == "operator-A"
 
     # Round-trip through encrypted storage.
-    persisted = get_verification_report(
-        report.verification_report_id,
-        ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        persisted = get_verification_report(
+            report.verification_report_id,
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            operation=operation,
+        )
     assert persisted.granted_verificado_completo is True
     assert persisted.completeness_status is VerificationCompletenessStatus.COMPLETE
 
@@ -394,15 +411,17 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         bucket_event_repository=bv_repo,
     )
 
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        clock=T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories_for_test(repos),
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            clock=T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert report.granted_verificado_completo is False
     assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
@@ -421,10 +440,12 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         )
     assert refreshed.state is CalculationRevisionState.BORRADOR
 
-    persisted = get_verification_report(
-        report.verification_report_id,
-        ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        persisted = get_verification_report(
+            report.verification_report_id,
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            operation=operation,
+        )
     assert persisted.granted_verificado_completo is False
 
 
@@ -474,15 +495,17 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
     )
-    first = verify_modelo_revision(
-        revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        clock=T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        first = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories_for_test(repos),
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            clock=T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert first.granted_verificado_completo is True
     with bundled_indexed_authority().operation() as operation:
         refreshed_state = get_calculation_revision(
@@ -502,24 +525,28 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
         return tuple(event.event_id for event in events)
 
     event_ids_after_first = _verification_event_ids()
-    reports_after_first = tuple(
-        r.verification_report_id
-        for r in list_verification_reports(
-            calculation_revision_id=revision.calculation_revision_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+    with bundled_indexed_authority().operation() as operation:
+        reports_after_first = tuple(
+            r.verification_report_id
+            for r in list_verification_reports(
+                calculation_revision_id=revision.calculation_revision_id,
+                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+                operation=operation,
+            )
         )
-    )
 
     # Re-verify at a LATER clock (T3): must collapse, not refuse.
-    second = verify_modelo_revision(
-        revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        clock=T3,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        second = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories_for_test(repos),
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            clock=T3,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     # Same content-addressed report; anti-tautology — run_at stays T2, NOT re-stamped to T3.
     assert second.verification_report_id == first.verification_report_id
@@ -527,13 +554,15 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos
     assert second.granted_verificado_completo is True
     # No second lifecycle event, and the report catalogue is unchanged.
     assert _verification_event_ids() == event_ids_after_first
-    reports_after_second = tuple(
-        r.verification_report_id
-        for r in list_verification_reports(
-            calculation_revision_id=revision.calculation_revision_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+    with bundled_indexed_authority().operation() as operation:
+        reports_after_second = tuple(
+            r.verification_report_id
+            for r in list_verification_reports(
+                calculation_revision_id=revision.calculation_revision_id,
+                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+                operation=operation,
+            )
         )
-    )
     assert reports_after_second == reports_after_first
     with bundled_indexed_authority().operation() as operation:
         refreshed_state = get_calculation_revision(
@@ -593,15 +622,19 @@ def test_verify_refuses_non_draft_revision_with_no_granting_report(repos: Repos)
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), verified))
     assert verified.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
-    with pytest.raises(CalculationRevisionStateError, match=r"state|DRAFT|draft"):
+    with (
+        pytest.raises(CalculationRevisionStateError, match=r"state|DRAFT|draft"),
+        bundled_indexed_authority().operation() as operation,
+    ):
         verify_modelo_revision(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
+            verification_repositories=_verification_repositories_for_test(repos),
             actor="operator-A",
             workflow_profile=workflow_profile(),
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
         )
 
 
@@ -631,21 +664,25 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
         clock=T2,
     )
 
-    listed = list_verification_reports(
-        calculation_revision_id=revision.calculation_revision_id,
-        ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
-    )
-    assert tuple(r.verification_report_id for r in listed) == (report.verification_report_id,)
-
-    fetched = get_verification_report(
-        report.verification_report_id,
-        ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
-    )
-    assert fetched.verification_report_id == report.verification_report_id
-
-    with pytest.raises(VerificationReportNotFoundError) as excinfo:
-        get_verification_report(
-            "0" * 64,
+    with bundled_indexed_authority().operation() as operation:
+        listed = list_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
             ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            operation=operation,
         )
+        assert tuple(r.verification_report_id for r in listed) == (report.verification_report_id,)
+
+        fetched = get_verification_report(
+            report.verification_report_id,
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            operation=operation,
+        )
+        assert fetched.verification_report_id == report.verification_report_id
+
+        with pytest.raises(VerificationReportNotFoundError) as excinfo:
+            get_verification_report(
+                "0" * 64,
+                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+                operation=operation,
+            )
     assert excinfo.value.translated_message == "application.modelo.errors.verification_report_not_found"

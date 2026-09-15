@@ -25,11 +25,12 @@ import textwrap
 
 import pytest
 
-from .. import validate_cross_domain_snapshot as snapshot_validation
 from ..snapshot import _CROSS_DOMAIN_CHECK_MODULES
 from ..validate_cross_domain_snapshot import (
     _CROSS_DOMAIN_CHECK_IDENTITIES,
+    _CROSS_DOMAIN_SNAPSHOT_CHECKS,
     REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES,
+    CrossDomainSnapshotCheck,
     missing_required_cross_domain_check,
 )
 
@@ -39,9 +40,9 @@ _REQUIRED_MODULE = "cadrumo.domain.renta.first_slice_routing_integrity"
 _OTHER_MODULE = "cadrumo.domain.renta.retenciones_routing_integrity"
 
 
-def _registered_checks() -> list[object]:
+def _registered_checks() -> list[CrossDomainSnapshotCheck]:
     """Read the validator's private list for identity-index consistency proofs."""
-    return vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]
+    return _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
 
 def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProcess[str]:

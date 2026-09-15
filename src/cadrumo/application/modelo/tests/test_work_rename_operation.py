@@ -15,6 +15,14 @@ from pydantic import ValidationError
 from ....core.operations import OperationCancellation, OperationDurability, OperationEffect
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ....entrypoints.adapter_composition import (
+    build_active_work_lifecycle_ports,
+    build_amendment_action_ports,
+    build_filing_action_ports,
+    build_modelo_export_ports,
+    build_verification_repository_bundle,
+)
+from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...operations.capabilities import (
     OperationBaselinePolicy,
     OperationConflictScope,
@@ -56,6 +64,7 @@ from ..operation_definitions import (
 from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,7 +74,7 @@ def _test_profile_resolver() -> TaxpayerProfile:
 
 
 def _definition():
-    return build_modelo_work_rename_definition()
+    return build_modelo_work_rename_definition(work_lifecycle_ports_factory=build_active_work_lifecycle_ports)
 
 
 def test_the_definition_enrolls_the_declared_lifecycle_subject() -> None:
@@ -170,7 +179,7 @@ def test_the_definition_module_is_public_and_importable_directly() -> None:
 
 
 def _discard_definition():
-    return build_modelo_work_discard_definition()
+    return build_modelo_work_discard_definition(work_lifecycle_ports_factory=build_active_work_lifecycle_ports)
 
 
 def test_discard_requires_an_exact_approval_baseline() -> None:
@@ -224,7 +233,10 @@ def test_the_two_enrolments_are_distinct_registered_subjects() -> None:
 
 def _verify_definition():
     return build_modelo_work_verify_definition(
-        profile_resolver=_test_profile_resolver, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+        profile_resolver=_test_profile_resolver,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        verification_repository_bundle_factory=build_verification_repository_bundle,
     )
 
 
@@ -291,7 +303,10 @@ def test_every_enrolment_here_targets_a_distinct_subject() -> None:
 
 def _file_definition():
     return build_modelo_work_file_definition(
-        profile_resolver=_test_profile_resolver, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+        filing_action_ports_factory=build_filing_action_ports,
+        profile_resolver=_test_profile_resolver,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
 
@@ -354,7 +369,10 @@ def test_the_filing_request_carries_elections_the_operator_declared() -> None:
 
 
 def _export_definition():
-    return build_modelo_export_definition(profile_resolver=_test_profile_resolver)
+    return build_modelo_export_definition(
+        export_ports_factory=build_modelo_export_ports,
+        profile_resolver=_test_profile_resolver,
+    )
 
 
 def test_the_export_result_fingerprints_the_artefact_and_carries_no_bytes() -> None:
@@ -400,7 +418,7 @@ def test_the_export_stamps_the_identity_this_invocation_recorded() -> None:
 
 
 def _amend_definition():
-    return build_modelo_work_amend_definition()
+    return build_modelo_work_amend_definition(amendment_action_ports_factory=build_amendment_action_ports)
 
 
 def test_an_amendment_is_bound_to_the_filed_baseline_it_corrects() -> None:

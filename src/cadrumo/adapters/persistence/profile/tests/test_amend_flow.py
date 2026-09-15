@@ -418,19 +418,21 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
     )
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        settings=Settings(
-            cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
-            cadrumo_clave_movil_dni_nie=SecretStr("X1234567L"),
-        ),
-        clock=_T2,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            settings=Settings(
+                cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
+                cadrumo_clave_movil_dni_nie=SecretStr("X1234567L"),
+            ),
+            clock=_T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert report.granted_verificado_completo is True
     with bundled_indexed_authority().operation() as operation:
         verified_revision = get_calculation_revision(
@@ -932,7 +934,7 @@ def test_export_refuses_an_amendment_carrying_contributors(repos: _Repos, tmp_pa
     # Exercise the public export boundary: the persisted revision has no ledger
     # snapshot/evidence for its contributor, so export must refuse before bytes
     # are rendered or written.
-    with pytest.raises(ModeloExportEvidenceMissingError):
+    with pytest.raises(ModeloExportEvidenceMissingError), bundled_indexed_authority().operation() as operation:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=with_contributors.calculation_revision_id,
@@ -948,6 +950,7 @@ def test_export_refuses_an_amendment_carrying_contributors(repos: _Repos, tmp_pa
                 bucket_event=bv_repo,
             ),
             clock=_T4,
+            operation=operation,
         )
 
 

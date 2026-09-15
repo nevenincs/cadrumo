@@ -129,6 +129,8 @@ def _work_unit_for_target(
 def _current_revision(
     work_unit: WorkUnit,
     repository: CalculationRevisionCatalogueRepositoryProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision | None:
     revision_id = work_unit.current_calculation_revision_id
     if revision_id is None:
@@ -148,7 +150,7 @@ def _current_revision(
                 "stored_work_unit_id": revision.work_unit_id,
             },
         )
-    require_calculation_revision_coordinates_current(revision)
+    require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision
 
 
@@ -525,7 +527,7 @@ def assemble_modelo_work_review(
         registry_revision_id=snapshot.revision.id,
         catalogue=work_units,
     )
-    revision = _current_revision(work_unit, calculation_repo)
+    revision = _current_revision(work_unit, calculation_repo, operation=operation)
     verification = _latest_verification(revision, verification_repo, operation=operation)
     findings = () if verification is None else verification.findings
     blocking_findings = tuple(

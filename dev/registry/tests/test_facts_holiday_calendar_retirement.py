@@ -11,7 +11,11 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import EventFactQuery, resolve_governed_fact
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.schema import (
+    EventFactPayload,
+    FactSelector,
+    GovernedFactCatalogue,
+)
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.deadlines.festivos import (
     HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
@@ -367,19 +371,28 @@ def _publication_semantics(catalogue: GovernedFactCatalogue) -> dict[str, tuple[
     fact = catalogue.facts[HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID]
     result: dict[str, tuple[date, date, str, str, str]] = {}
     for variant in fact.variants:
+        assert isinstance(variant.payload, EventFactPayload)
         outputs = {output.name: output.value for output in variant.payload.outputs}
+        valid_from = variant.valid_from
+        valid_to = variant.valid_to
+        assert valid_from is not None
+        assert valid_to is not None
+        boe_ref = outputs["boe_ref"]
+        boe_url = outputs["boe_url"]
+        assert isinstance(boe_ref, str)
+        assert isinstance(boe_url, str)
         assert variant.date_axis is DateAxis.SUBMISSION_DATE
-        assert variant.payload.event_date == variant.valid_from
+        assert variant.payload.event_date == valid_from
         assert variant.legal_refs == (_LEGAL_REF,)
         assert variant.source_refs == (variant.source_citations[0].source_ref,)
         assert variant.source_citations[0].required_text == (_CITATION_TEXT,)
         assert variant.ownership.value == "authored"
         result[variant.variant_id] = (
-            variant.valid_from,
-            variant.valid_to,
+            valid_from,
+            valid_to,
             variant.source_refs[0],
-            outputs["boe_ref"],
-            outputs["boe_url"],
+            boe_ref,
+            boe_url,
         )
     return result
 
@@ -388,23 +401,38 @@ def _event_semantics(catalogue: GovernedFactCatalogue) -> dict[str, tuple[date, 
     fact = catalogue.facts[HOLIDAY_EVENT_FACT_ID]
     result: dict[str, tuple[date, str, str | None, str, str, str, str]] = {}
     for variant in fact.variants:
+        assert isinstance(variant.payload, EventFactPayload)
         selectors = {selector.name: selector.value for selector in variant.selectors}
         outputs = {output.name: output.value for output in variant.payload.outputs}
+        valid_from = variant.valid_from
+        valid_to = variant.valid_to
+        assert valid_from is not None
+        assert valid_to is not None
+        jurisdiction = selectors["jurisdiction"]
+        ccaa_code = selectors.get("ccaa_code")
+        name = outputs["name"]
+        boe_ref = outputs["boe_ref"]
+        boe_url = outputs["boe_url"]
+        assert isinstance(jurisdiction, str)
+        assert ccaa_code is None or isinstance(ccaa_code, str)
+        assert isinstance(name, str)
+        assert isinstance(boe_ref, str)
+        assert isinstance(boe_url, str)
         assert variant.date_axis is DateAxis.SUBMISSION_DATE
-        assert variant.valid_to == variant.valid_from == variant.payload.event_date
+        assert valid_to == valid_from == variant.payload.event_date
         assert variant.payload.event_code == "public_holiday"
         assert variant.legal_refs == (_LEGAL_REF,)
         assert variant.source_refs == (variant.source_citations[0].source_ref,)
         assert variant.source_citations[0].required_text == (_CITATION_TEXT,)
         assert variant.ownership.value == "authored"
         result[variant.variant_id] = (
-            variant.valid_from,
-            selectors["jurisdiction"],
-            selectors.get("ccaa_code"),
-            outputs["name"],
+            valid_from,
+            jurisdiction,
+            ccaa_code,
+            name,
             variant.source_refs[0],
-            outputs["boe_ref"],
-            outputs["boe_url"],
+            boe_ref,
+            boe_url,
         )
     return result
 
@@ -421,6 +449,7 @@ def test_authored_holiday_facts_match_the_complete_publication_and_event_master(
 
     publication_fact = catalogue.facts[HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID]
     for publication in publication_fact.variants:
+        assert publication.valid_from is not None
         resolved = resolve_governed_fact(
             catalogue,
             EventFactQuery(
@@ -434,6 +463,7 @@ def test_authored_holiday_facts_match_the_complete_publication_and_event_master(
 
     event_fact = catalogue.facts[HOLIDAY_EVENT_FACT_ID]
     for event in event_fact.variants:
+        assert event.valid_from is not None
         resolved = resolve_governed_fact(
             catalogue,
             EventFactQuery(

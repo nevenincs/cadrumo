@@ -11,6 +11,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence
+from .....application.ledger.llm_classification_ports import EvidenceImage, LLMClassificationPorts
 from .....application.provisioning import (
     AcceleratorReading,
     HardwareProfile,
@@ -18,7 +19,7 @@ from .....application.provisioning import (
     probe_hardware_profile,
 )
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
-from .....core.config import load_settings
+from .....core.config import Settings, load_settings
 from .....core.hardware import AcceleratorKind
 from .....core.image_media_type import ImageMediaType
 from .....core.model_catalogue import model_candidate
@@ -27,6 +28,7 @@ from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.llm import LLMClassificationResponse, prompt_spec_with_saturation_fields
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
+from .....entrypoints.cli._ledger_llm_composition import _VisionReader, compose_ledger_llm
 from .....tests.llm_vision_evidence_support import (
     json_array,
     json_object,
@@ -38,6 +40,13 @@ from ..models import MultimodalImageInput
 from ..vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET_ID = "70316d3b-62cd-4735-b831-c6712f01a418"
+
+
+def _llm_ports(settings: Settings) -> LLMClassificationPorts:
+    """Compose the canonical reader ports against the encrypted test bucket."""
+    return compose_ledger_llm(bucket_id=_BUCKET_ID, settings=settings).ports
 
 
 def _admissible_measured_hardware_profile(model: str) -> HardwareProfile:
@@ -71,11 +80,15 @@ def test_vision_classifier_classifies_from_images() -> None:
     )
     images = (MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),)
 
-    def _call() -> LLMClassificationResponse:
-        classifier = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(year=2025), model="llava-test")
-        return classifier.classify(vision_transaction("ev-1"), evidence_images=images)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        def _call() -> LLMClassificationResponse:
+            classifier = LocalVisionLLMClassifier(
+                spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
+                model="llava-test",
+            )
+            return classifier.classify(vision_transaction("ev-1"), evidence_images=images)
 
-    observed, response = run_against_loopback_ollama(classification_json, _call)
+        observed, response = run_against_loopback_ollama(classification_json, _call)
     assert response.classification is BusinessClassification.BUSINESS
     assert response.category is SpendingCategory._from_registry("hardware_amortizable")
     assert response.iva_category is IvaCategory("domestic_general")
@@ -101,21 +114,24 @@ def test_image_evidence_classifies_with_no_provider() -> None:
     evidence = ResolvedEvidence(
         reference="ev-1",
         text=None,
-        images=(MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
+        images=(EvidenceImage.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
 
-    def _call() -> tuple[LLMClassificationResponse, str]:
-        return classify_with_evidence(
-            vision_transaction("ev-1"),
-            evidence,
-            text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(year=2025),
-            vision_classifier=None,
-            vision_model=None,
-            settings=load_settings(),
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        def _call() -> tuple[LLMClassificationResponse, str]:
+            settings = load_settings()
+            return classify_with_evidence(
+                vision_transaction("ev-1"),
+                evidence,
+                text_classifier=None,
+                spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
+                vision_classifier=None,
+                vision_model=None,
+                settings=settings,
+                ports=_llm_ports(settings),
+            )
 
-    _observed, (response, provenance) = run_against_loopback_ollama(classification_json, _call)
+        _observed, (response, provenance) = run_against_loopback_ollama(classification_json, _call)
     assert response.classification is BusinessClassification.BUSINESS
     assert provenance.startswith("llm:local-vision:")
 
@@ -135,6 +151,7 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
     by the canonical provisioning verdict rather than transport-specific prose.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        settings = load_settings()
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             classify_with_evidence(
                 vision_transaction("ev-1"),
@@ -143,7 +160,8 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
                 spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
                 vision_classifier=None,
                 vision_model=None,
-                settings=load_settings(),
+                settings=settings,
+                ports=_llm_ports(settings),
             )
 
         verdict = raised.value.terminal_precondition_verdict
@@ -159,7 +177,7 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
             reference="ev-1",
             text=None,
             images=(
-                MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),
+                EvidenceImage.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),
             ),
         )
         unreachable_settings = load_settings().model_copy(
@@ -168,19 +186,19 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
                 "cadrumo_llm_vision_read_timeout_s": 1,
             },
         )
-        classifier = LocalVisionLLMClassifier(
-            spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
-            settings=unreachable_settings,
-        )
+        spec = prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test)
+        ports = _llm_ports(unreachable_settings)
+        classifier = ports.make_vision_classifier(spec, None)
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             classify_with_evidence(
                 vision_transaction("ev-1"),
                 evidence,
                 text_classifier=None,
-                spec=prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test),
+                spec=spec,
                 vision_classifier=classifier,
                 vision_model=None,
                 settings=unreachable_settings,
+                ports=ports,
             )
 
         verdict = raised.value.terminal_precondition_verdict
@@ -203,31 +221,34 @@ def test_vision_model_override_selects_the_named_model() -> None:
     evidence = ResolvedEvidence(
         reference="ev-1",
         text=None,
-        images=(MultimodalImageInput.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
+        images=(EvidenceImage.from_base64(base64.b64encode(png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
 
-    def _call() -> tuple[LLMClassificationResponse, str]:
-        settings = load_settings()
-        classifier = LocalVisionLLMClassifier(
-            spec=prompt_spec_with_saturation_fields(year=2025),
-            model="qwen2.5vl:7b",
-            client=LLMClient(
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        def _call() -> tuple[LLMClassificationResponse, str]:
+            settings = load_settings()
+            spec = prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test)
+            classifier = LocalVisionLLMClassifier(
+                spec=spec,
+                model="qwen2.5vl:7b",
+                client=LLMClient(
+                    settings=settings,
+                    hardware_profile=_admissible_measured_hardware_profile("qwen2.5vl:7b"),
+                ),
                 settings=settings,
-                hardware_profile=_admissible_measured_hardware_profile("qwen2.5vl:7b"),
-            ),
-            settings=settings,
-        )
-        return classify_with_evidence(
-            vision_transaction("ev-1"),
-            evidence,
-            text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(year=2025),
-            vision_classifier=classifier,
-            vision_model="qwen2.5vl:7b",
-            settings=settings,
-        )
+            )
+            return classify_with_evidence(
+                vision_transaction("ev-1"),
+                evidence,
+                text_classifier=None,
+                spec=spec,
+                vision_classifier=_VisionReader(classifier),
+                vision_model="qwen2.5vl:7b",
+                settings=settings,
+                ports=_llm_ports(settings),
+            )
 
-    observed, (_response, provenance) = run_against_loopback_ollama(classification_json, _call)
+        observed, (_response, provenance) = run_against_loopback_ollama(classification_json, _call)
     assert provenance == "llm:local-vision:qwen2.5vl:7b"
     body = json_object(observed["body"])
     assert body["model"] == "qwen2.5vl:7b"

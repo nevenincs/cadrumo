@@ -9,10 +9,12 @@ keeps the guard on the real resolver with an inward empty-port fake.
 
 from __future__ import annotations
 
-from datetime import date
+from collections.abc import Mapping, Sequence
+from datetime import date, datetime
 
 import pytest
 
+from ....core.aggregation import AggregationCaptureKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -46,6 +48,19 @@ _M180_RETENCIONES_SOURCE_REFS = (
 
 class _EmptyRetencionObservationRepository:
     """Application-port fake representing an empty observation window."""
+
+    def replace_observations(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observations: Sequence[RetencionObservation],
+        source_kind: AggregationCaptureKind,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> None:
+        del modelo, filing_year, period, observations, source_kind, captured_at, source_metadata
 
     def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
         return ()

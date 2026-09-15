@@ -355,9 +355,15 @@ def _derived_domestic_category(
     """
     if country_code != _DOMESTIC_COUNTRY or iva_rate is None:
         return None
-    tiers = rate_kinds_for_declared_rate(
-        spanish_eu_member_state(effective_date=on_date), iva_rate / Decimal("100"), on_date
-    )
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        tiers = rate_kinds_for_declared_rate(
+            spanish_eu_member_state(effective_date=on_date),
+            iva_rate / Decimal("100"),
+            on_date,
+            operation=operation,
+        )
     if len(tiers) != 1:
         return None
     return domestic_categories_by_rate_kind().get(tiers[0])

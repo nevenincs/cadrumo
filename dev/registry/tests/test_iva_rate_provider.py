@@ -30,6 +30,7 @@ from cadrumo.domain.iva.rates import (
 )
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind, require_eu_member_state
 
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
 
@@ -78,6 +79,7 @@ def test_iva_rate_schedule_is_a_complete_authored_fact() -> None:
     projected: set[tuple[EUMemberState, IvaRateKind, date, Decimal, bool]] = set()
     for variant in fact.variants:
         assert isinstance(variant.payload, MappingFactPayload)
+        assert variant.valid_from is not None
         projected.add(
             (
                 EUMemberState(str({item.name: item.value for item in variant.selectors}["member_state"])),
@@ -144,6 +146,7 @@ def test_retired_iva_schedule_lane_cannot_reappear() -> None:
 
 
 def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
+    authority = compiled_bundled_authority()
     resolved = resolve_governed_fact(
         _catalogue(),
         iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("general"), date(2025, 6, 1)),
@@ -151,7 +154,7 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
     )
 
     assert isinstance(resolved, ResolvedMappingFact)
-    assert iva_rate_record_from_fact(resolved).pct == Decimal("21")
+    assert iva_rate_record_from_fact(resolved, authority=authority).pct == Decimal("21")
     assert resolved.legal_refs == ("ley-37-1992:art-90",)
     assert resolved.authority_digest == "a" * 64
 
@@ -164,6 +167,7 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
 
 
 def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
+    authority = compiled_bundled_authority()
     catalogue = _catalogue()
     ordinary = resolve_governed_fact(
         catalogue,
@@ -183,9 +187,9 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
 
     assert isinstance(ordinary, ResolvedMappingFact)
     assert isinstance(coexisting, ResolvedMappingFact)
-    assert iva_rate_record_from_fact(ordinary).pct == Decimal("4")
-    assert iva_rate_record_from_fact(coexisting).pct == Decimal("2")
-    assert iva_rate_record_from_fact(coexisting).supersedes_tier_default is True
+    assert iva_rate_record_from_fact(ordinary, authority=authority).pct == Decimal("4")
+    assert iva_rate_record_from_fact(coexisting, authority=authority).pct == Decimal("2")
+    assert iva_rate_record_from_fact(coexisting, authority=authority).supersedes_tier_default is True
 
 
 def test_iva_provider_preserves_complete_legal_or_source_evidence_lanes() -> None:

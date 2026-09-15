@@ -73,7 +73,8 @@ _STARTED_AT = datetime(2026, 7, 16, 17, 0, tzinfo=UTC)
 
 
 def _create_profile(*, provider: str) -> None:
-    assert profile_keys()
+    with _certificate_indexed_authority_for_test().operation() as _profile_authority_operation_for_test:
+        assert profile_keys(_profile_authority_operation_for_test)
     with open_test_profile_session(_BUCKET_ID):
         register_minimal_profile(profile_id=_BUCKET_ID)
         configure_operator_auth(provider, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
@@ -470,7 +471,10 @@ def test_certificate_secret_remove_event_failure_reports_original_removal_once(
 
                 with _blocking_bucket_event_update_trigger(db_path), pytest.raises(RepositoryError):
                     remove_operator_certificate_source_secret(
-                        name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                        name="personal",
+                        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                        operation=_certificate_authority_operation_for_test,
+                        certificate_secret_backend_factory=build_certificate_secret_backend,
                     )
 
                 pending = repository.load().auth.certificate_secret_mutation_intent
@@ -489,10 +493,16 @@ def test_certificate_secret_remove_event_failure_reports_original_removal_once(
                 assert _event_count(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED) == 0
 
                 resumed = remove_operator_certificate_source_secret(
-                    name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                    name="personal",
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=_certificate_authority_operation_for_test,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
                 repeated = remove_operator_certificate_source_secret(
-                    name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                    name="personal",
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=_certificate_authority_operation_for_test,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
                 final = repository.load()
                 events = _events(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED)

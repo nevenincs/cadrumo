@@ -519,7 +519,7 @@ class TestAnnualFilingWindows:
     """
 
     def test_modelo_100_window_resolves_for_renta_2025_campaign(self) -> None:
-        windows = [window for code, _revision, window in _engine()._registry.deadline_windows(2025) if code == "100"]
+        windows = [window for code, _revision, window in _engine().deadline_windows(2025) if code == "100"]
         assert len(windows) == 1
         window = windows[0]
         assert window.id == "modelo-100-2025-0a"
@@ -530,7 +530,7 @@ class TestAnnualFilingWindows:
         assert "orden-hac-277-2026:art-7" in window.legal_refs
 
     def test_modelo_100_window_resolves_for_renta_2023_campaign(self) -> None:
-        windows = [window for code, _revision, window in _engine()._registry.deadline_windows(2023) if code == "100"]
+        windows = [window for code, _revision, window in _engine().deadline_windows(2023) if code == "100"]
         assert len(windows) == 1
         window = windows[0]
         assert window.id == "modelo-100-2023-0a"
@@ -575,7 +575,7 @@ class TestAnnualFilingWindows:
             quarterly_periods = sorted(
                 (
                     window.period
-                    for code, _revision, window in _engine()._registry.deadline_windows(year)
+                    for code, _revision, window in _engine().deadline_windows(year)
                     if code == "303" and window.period_kind == "quarterly"
                 ),
                 key=lambda p: p.code,
@@ -591,7 +591,7 @@ class TestAnnualFilingWindows:
             monthly_periods = sorted(
                 (
                     window.period
-                    for code, _revision, window in _engine()._registry.deadline_windows(year)
+                    for code, _revision, window in _engine().deadline_windows(year)
                     if code == "303" and window.period_kind == "monthly"
                 ),
                 key=lambda p: p.code,
@@ -599,7 +599,7 @@ class TestAnnualFilingWindows:
             assert len(monthly_periods) > 0, f"M303 monthly windows absent for {year}"
         january_2026 = next(
             window
-            for code, _revision, window in _engine()._registry.deadline_windows(2026)
+            for code, _revision, window in _engine().deadline_windows(2026)
             if code == "303" and window.period == _period(2026, "01")
         )
         assert january_2026.closes_on == date(2026, 3, 2)
@@ -607,9 +607,7 @@ class TestAnnualFilingWindows:
 
     def test_modelo_347_annual_window_resolves(self) -> None:
         for year, closes_on in ((2025, date(2026, 3, 2)), (2026, date(2027, 2, 28))):
-            windows = [
-                window for code, _revision, window in _engine()._registry.deadline_windows(year) if code == "347"
-            ]
+            windows = [window for code, _revision, window in _engine().deadline_windows(year) if code == "347"]
             assert [window.period for window in windows] == [_period(year, "0A")]
             assert windows[0].closes_on == closes_on
 

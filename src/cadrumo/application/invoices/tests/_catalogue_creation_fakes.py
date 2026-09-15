@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.invoices.models import InvoiceCatalogue
 from ..catalogue_creation_ports import CatalogueCreationPorts
@@ -39,6 +40,18 @@ class _InMemoryEventRepository:
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         self._catalogue = catalogue
+
+    def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
+        raise AssertionError("revisioned event loading is outside this creation fake")
+
+    def to_secure_object_write(
+        self,
+        catalogue: BucketEventHistoryCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        del catalogue, expected_revision_id
+        raise AssertionError("secure event writes are outside this creation fake")
 
     def append_guarded(
         self,

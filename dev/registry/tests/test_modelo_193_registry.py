@@ -10,6 +10,7 @@ import pytest
 from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
@@ -173,8 +174,11 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # Grounded on art. 5, which establishes the plazo, rather than art. 1,
         # which approves the modelo.
         assert window.legal_refs == ("orden-eha-3377-2011:art-5",)
-        with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
-            shift_deadline(window.closes_on, modelo="193", ccaa_code=None, authority=compiled_bundled_authority())
+        with (
+            pytest.raises(DeadlineValidationError, match="no variant for the exact query context"),
+            bundled_indexed_authority().operation() as operation,
+        ):
+            shift_deadline(window.closes_on, modelo="193", ccaa_code=None, operation=operation)
 
 
 @pytest.mark.parametrize(

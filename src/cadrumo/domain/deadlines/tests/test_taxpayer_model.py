@@ -24,6 +24,7 @@ from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.third_party_declaration_roles import third_party_declaration_role_choices
 from ...contribuyente.entity_type import EntityType, LegalEntityForm
 from ...contribuyente.renta_codes import FiscalResidency
 from ..fact_context import DeadlineFactResolutionContext
@@ -694,8 +695,9 @@ class TestThirdPartyDeclarationRoleOrthogonality:
         )
         assert derive_tax_route(baseline) is TaxRoute.IMPUESTO_SOCIEDADES
 
-        all_roles = frozenset(ThirdPartyDeclarationRole)
-        for role in (*ThirdPartyDeclarationRole, None):
+        role_choices = third_party_declaration_role_choices(effective_date=date(2024, 12, 31))
+        all_roles = frozenset(role_choices)
+        for role in (*role_choices, None):
             roles = all_roles if role is None else frozenset({role})
             colegio_profesional = TaxpayerProfile(
                 tax_id="B12345674",
@@ -708,8 +710,9 @@ class TestThirdPartyDeclarationRoleOrthogonality:
 
     def test_every_role_combination_leaves_the_natural_person_tax_route_unchanged(self) -> None:
         """The same proof for IRPF, so the axis is orthogonal on both routes it could distort."""
-        all_roles = frozenset(ThirdPartyDeclarationRole)
-        for role in (*ThirdPartyDeclarationRole, None):
+        role_choices = third_party_declaration_role_choices(effective_date=date(2024, 12, 31))
+        all_roles = frozenset(role_choices)
+        for role in (*role_choices, None):
             roles = all_roles if role is None else frozenset({role})
             profile = TaxpayerProfile(
                 tax_id="12345678Z",

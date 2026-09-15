@@ -184,7 +184,7 @@ def cross_period_clean_state_verdict_for_work_unit(
 def zero_value_previous_filing_binding_ids(target: CalculationRevision | None) -> frozenset[str]:
     """Return zero-valued binding overrides for the selected revision."""
     if target is None:
-        return frozenset()
+        return frozenset[str]()
     resolved: set[str] = set()
     for binding_id, raw_value in target.binding_overrides.items():
         try:

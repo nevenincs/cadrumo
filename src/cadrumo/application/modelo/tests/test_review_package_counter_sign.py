@@ -48,6 +48,7 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -211,9 +212,11 @@ def _mint_accountant_keypair(runtime: _TestTwoBucketRuntime) -> ReviewPackageSig
         )
 
 
-def test_operator_signs_accountant_counter_signs_both_layers_verify(tmp_path: Path) -> None:
+def test_operator_signs_accountant_counter_signs_both_layers_verify(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _two_bucket_runtime() as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
+        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id, operation=operation)
 
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
@@ -257,10 +260,12 @@ def test_operator_signs_accountant_counter_signs_both_layers_verify(tmp_path: Pa
 def test_counter_sign_refuses_a_naive_or_non_utc_envelope_timestamp(
     tmp_path: Path,
     counter_signed_at: datetime,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """An accountant receipt must carry one explicit UTC instant."""
     with _two_bucket_runtime() as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
+        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id, operation=operation)
         _, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
 
@@ -272,12 +277,14 @@ def test_counter_sign_refuses_a_naive_or_non_utc_envelope_timestamp(
             )
 
 
-def test_verify_fails_when_original_package_tampered_after_counter_sign(tmp_path: Path) -> None:
+def test_verify_fails_when_original_package_tampered_after_counter_sign(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Archive tamper is caught by the re-run integrity check before either signature layer."""
     import zipfile
 
     with _two_bucket_runtime() as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
+        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id, operation=operation)
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
         receipt = counter_sign_review_package(signed, counter_signer_keypair=accountant_keypair, note="ok")
@@ -300,10 +307,12 @@ def test_verify_fails_when_original_package_tampered_after_counter_sign(tmp_path
         )
 
 
-def test_verify_fails_when_note_edited_after_counter_sign(tmp_path: Path) -> None:
+def test_verify_fails_when_note_edited_after_counter_sign(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Editing the counter-signer's note invalidates the counter-signature (not just re-parses)."""
     with _two_bucket_runtime() as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
+        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id, operation=operation)
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
         receipt = counter_sign_review_package(
@@ -325,10 +334,12 @@ def test_verify_fails_when_note_edited_after_counter_sign(tmp_path: Path) -> Non
         )
 
 
-def test_verify_fails_when_counter_signature_bytes_are_corrupted(tmp_path: Path) -> None:
+def test_verify_fails_when_counter_signature_bytes_are_corrupted(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A structurally-valid but wrong counter-signature (same length, different bytes) must fail."""
     with _two_bucket_runtime() as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
+        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id, operation=operation)
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
         receipt = counter_sign_review_package(signed, counter_signer_keypair=accountant_keypair, note="ok")
@@ -347,9 +358,9 @@ def test_verify_fails_when_counter_signature_bytes_are_corrupted(tmp_path: Path)
         )
 
 
-def test_verify_fails_with_wrong_operator_public_key(tmp_path: Path) -> None:
+def test_verify_fails_with_wrong_operator_public_key(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     with _two_bucket_runtime() as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
+        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id, operation=operation)
         _, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
         receipt = counter_sign_review_package(signed, counter_signer_keypair=accountant_keypair, note="ok")
@@ -367,9 +378,11 @@ def test_verify_fails_with_wrong_operator_public_key(tmp_path: Path) -> None:
         )
 
 
-def test_verify_fails_with_wrong_counter_signer_public_key(tmp_path: Path) -> None:
+def test_verify_fails_with_wrong_counter_signer_public_key(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     with _two_bucket_runtime() as runtime:
-        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
+        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id, operation=operation)
         operator_keypair, signed = _sign_as_operator(runtime, package_path)
         accountant_keypair = _mint_accountant_keypair(runtime)
         receipt = counter_sign_review_package(signed, counter_signer_keypair=accountant_keypair, note="ok")

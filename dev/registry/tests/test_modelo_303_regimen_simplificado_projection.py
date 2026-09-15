@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
@@ -17,6 +18,7 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoModuleValue,
 )
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
@@ -40,6 +42,12 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _activity_ref() -> M303RegimenSimplificadoActivityProjectionRef:
@@ -135,7 +143,9 @@ def test_projection_identity_never_uses_json_serialisation() -> None:
     assert "json.dumps" not in source
 
 
-def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> None:
+def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     scope_decision = M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
@@ -199,6 +209,7 @@ def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> N
             rows=RegimenSimplificadoFilingRows(ejercicio=annual_activity.ejercicio, activities=(activity,)),
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
+            operation=authority_operation,
         ),
         censo_iae_epigraphs=frozenset({annual_activity.iae_epigrafe}),
     )
@@ -210,6 +221,7 @@ def test_declared_quantity_projection_uses_the_exact_annual_orden_ordinal() -> N
 def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
     iae_epigrafe: str,
     wire_value: str,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The two live same-IAE pairs remain distinct through typed projection refs."""
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
@@ -281,6 +293,7 @@ def test_non_agricultural_projection_keeps_the_canonical_iae_discriminator(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
+            operation=authority_operation,
         ),
         censo_iae_epigraphs=frozenset({iae_epigrafe}),
     )

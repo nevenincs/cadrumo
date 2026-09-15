@@ -34,12 +34,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.user_profile.projections import profile_fact_index
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.user_profile.values import (
@@ -66,13 +65,14 @@ _FACT_INDEXES: dict[str, dict[str, UserProfileFactValue] | None] = {}
 
 
 @pytest.fixture(scope="module")
-def modelo_operation() -> ValidatedRegistryAuthority:
-    """Compile the development authority only when the focused tests run."""
-    return compiled_bundled_authority()
+def modelo_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one indexed authority generation for the focused tests."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 @pytest.fixture(scope="module")
-def m100_2025_snapshot(modelo_operation: ValidatedRegistryAuthority) -> RegistrySnapshot:
+def m100_2025_snapshot(modelo_operation: PinnedAuthorityOperation) -> RegistrySnapshot:
     """Real bundled M100 2025 snapshot carrying the casilla-1039 semantic role."""
     return modelo_operation.snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
@@ -102,7 +102,7 @@ def seeded_bucket(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     _FACT_INDEXES.clear()
 
 
-def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...], *, operation: ValidatedRegistryAuthority) -> None:
+def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...], *, operation: PinnedAuthorityOperation) -> None:
     record = create_user_profile_record(
         context=operation.profile_create_context(),
         profile_id=bucket_id,
@@ -114,7 +114,7 @@ def _seed(bucket_id: str, facts: tuple[UserProfileFact, ...], *, operation: Vali
 
 def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant(
     m100_2025_snapshot: RegistrySnapshot,
-    modelo_operation: ValidatedRegistryAuthority,
+    modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """A tributación-conjunta Madrid filer with an eligible child gets the D4 advisory."""
@@ -139,7 +139,7 @@ def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant
 
 def test_advisory_fires_for_married_filer_with_eligible_descendant(
     m100_2025_snapshot: RegistrySnapshot,
-    modelo_operation: ValidatedRegistryAuthority,
+    modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """A married (non-conjunta) Madrid filer with an eligible child also gets the advisory."""
@@ -158,7 +158,7 @@ def test_advisory_fires_for_married_filer_with_eligible_descendant(
 
 def test_advisory_silent_for_determinate_single_filer(
     m100_2025_snapshot: RegistrySnapshot,
-    modelo_operation: ValidatedRegistryAuthority,
+    modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """A determinate single/monoparental filer is auto-triggered on the calculate path.
@@ -182,7 +182,7 @@ def test_advisory_silent_for_determinate_single_filer(
 
 def test_advisory_silent_when_casilla_already_populated(
     m100_2025_snapshot: RegistrySnapshot,
-    modelo_operation: ValidatedRegistryAuthority,
+    modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """A non-zero casilla 1039 means the auto-trigger already fired; nothing to advise."""
@@ -200,7 +200,7 @@ def test_advisory_silent_when_casilla_already_populated(
 
 def test_advisory_silent_for_non_madrid_indeterminate_unit(
     m100_2025_snapshot: RegistrySnapshot,
-    modelo_operation: ValidatedRegistryAuthority,
+    modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """A conjunta filer outside Madrid never triggers the Madrid-specific advisory."""
@@ -222,7 +222,7 @@ def test_advisory_silent_for_non_madrid_indeterminate_unit(
 
 def test_advisory_silent_for_indeterminate_unit_with_no_eligible_descendant(
     m100_2025_snapshot: RegistrySnapshot,
-    modelo_operation: ValidatedRegistryAuthority,
+    modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """A conjunta Madrid filer whose only child is out of the applicability window is silent."""
@@ -249,7 +249,7 @@ def test_advisory_silent_for_indeterminate_unit_with_no_eligible_descendant(
 
 def test_advisory_silent_when_no_profile_record_exists(
     m100_2025_snapshot: RegistrySnapshot,
-    modelo_operation: ValidatedRegistryAuthority,
+    modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """No profile record at all yields no advisory (no eligibility signal to read)."""
@@ -264,7 +264,7 @@ def test_advisory_silent_when_no_profile_record_exists(
 
 
 def test_advisory_weighted_count_matches_calculate_path_candidate_count(
-    modelo_operation: ValidatedRegistryAuthority,
+    modelo_operation: PinnedAuthorityOperation,
     seeded_bucket: str,
 ) -> None:
     """Parity: the verify-path advisory reads the SAME weighted count the

@@ -43,7 +43,9 @@ from typing import TYPE_CHECKING, Final
 from ...core.confirmation_gate import ReviewAdvisoryKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.establishment import StatedCountryCodeStatus
+from ...domain.iva.regime_legend import resolve_regime_legends
 from .country_vocabulary_advisory import country_vocabulary_advisory
+from .invoice_extraction_authority import default_invoice_extraction_period
 from .party_attribution import party_attribution_advisory
 
 if TYPE_CHECKING:
@@ -88,7 +90,17 @@ def review_advisory_kinds(
             bundled table is a defect, not an unadvised draft.
     """
     kinds: list[ReviewAdvisoryKind] = []
-    if party_attribution_advisory(draft) is not None:
+    if (
+        party_attribution_advisory(
+            draft,
+            legends=resolve_regime_legends(
+                operation=operation,
+                effective_date=default_invoice_extraction_period().end_date,
+            ),
+            operation=operation,
+        )
+        is not None
+    ):
         kinds.append(ReviewAdvisoryKind.PARTY_ATTRIBUTION)
     country = country_vocabulary_advisory(draft, operation=operation)
     if country is not None:

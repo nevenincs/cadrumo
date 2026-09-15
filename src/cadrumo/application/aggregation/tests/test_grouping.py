@@ -7,7 +7,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind, LedgerIncomeGrounding, RetencionScheme
+from ....core.aggregation import (
+    BindingSourceKind,
+    LedgerIncomeGrounding,
+    LedgerWithholdingDerivation,
+    RetencionScheme,
+)
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -213,6 +218,9 @@ def _income(transaction_id: str, casilla: str, gross: str, base: str | None = No
         taxable_base_amount=None if base is None else Decimal(base),
         filing_date=date(2026, 2, 1),
         grounding=(LedgerIncomeGrounding.CASH_FALLBACK if base is None else LedgerIncomeGrounding.SUBSTRATE_DECLARED),
+        withheld_derivation=(
+            LedgerWithholdingDerivation.NO_SUBSTRATE if base is None else LedgerWithholdingDerivation.NONE_WITHHELD
+        ),
     )
 
 

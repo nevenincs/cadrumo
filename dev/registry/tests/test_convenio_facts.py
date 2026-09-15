@@ -13,7 +13,11 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedOverrideFact,
     resolve_governed_fact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.schema import (
+    FactSelector,
+    GovernedFactCatalogue,
+    OverrideFactPayload,
+)
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
@@ -64,17 +68,20 @@ def _bundled_tipo_renta_catalogue(facts: GovernedFactCatalogue):
 
 def test_authored_convenio_fact_preserves_every_row_and_its_legal_anchor() -> None:
     fact = _bundled_fact_catalogue().facts[CONVENIO_OVERRIDE_FACT_ID]
-    actual_rows = {
-        (
-            {selector.name: selector.value for selector in variant.selectors}["country_code"],
-            {selector.name: selector.value for selector in variant.selectors}["tipo_renta"],
-            variant.valid_from.isoformat(),
-            variant.payload.override_code,
-            str(variant.payload.value) if variant.payload.value is not None else None,
-            variant.legal_refs[0],
+    actual_rows = set()
+    for variant in fact.variants:
+        assert variant.valid_from is not None
+        assert isinstance(variant.payload, OverrideFactPayload)
+        actual_rows.add(
+            (
+                {selector.name: selector.value for selector in variant.selectors}["country_code"],
+                {selector.name: selector.value for selector in variant.selectors}["tipo_renta"],
+                variant.valid_from.isoformat(),
+                variant.payload.override_code,
+                str(variant.payload.value) if variant.payload.value is not None else None,
+                variant.legal_refs[0],
+            )
         )
-        for variant in fact.variants
-    }
 
     assert actual_rows == _EXPECTED_ROWS
     assert len(fact.variants) == 21

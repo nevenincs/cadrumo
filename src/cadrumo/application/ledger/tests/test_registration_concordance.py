@@ -34,7 +34,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.classification import IvaTerritorialScope
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.domain.iva.schema import require_eu_member_state
 
 from ._ledger_value_fixtures import repository
@@ -48,6 +50,7 @@ from ..establishment_ladder import (
     EstablishmentRung,
     resolve_counterparty_establishment_scope,
 )
+from ..invoice_extraction_authority import default_invoice_extraction_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,6 +75,12 @@ _SPANISH_GENERAL_RATE = Decimal("21")
 _ON_DATE = date(2026, 3, 10)
 
 
+def _registry_legends(operation: PinnedAuthorityOperation):
+    """Resolve the registry vocabulary on the test's pinned authority lease."""
+    period = default_invoice_extraction_period()
+    return resolve_regime_legends(operation=operation, effective_date=period.end_date)
+
+
 def _resolve(
     repository: CounterpartyEstablishmentRepositoryProtocol,
     *,
@@ -81,6 +90,7 @@ def _resolve(
     regime_legend: str | None = None,
     charged_iva_rates: tuple[Decimal, ...] = (),
     on_date: date | None = _ON_DATE,
+    operation: PinnedAuthorityOperation,
 ) -> CounterpartyEstablishment:
     return resolve_counterparty_establishment_scope(
         bucket_id=_BUCKET_ID,
@@ -91,6 +101,8 @@ def _resolve(
         charged_iva_rates=charged_iva_rates,
         on_date=on_date,
         repository=repository,
+        legends=_registry_legends(operation),
+        operation=operation,
     )
 
 
@@ -98,39 +110,35 @@ class TestARegistrationAloneSettlesNoTerritory:
     """The rung that was removed, asserted from both sides of the symmetry."""
 
     def test_a_german_iva_number_alone_establishes_nothing(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The defect itself: this used to return EU_MEMBER and stop the ladder."""
-        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, operation=operation)
 
         assert resolved.scope is None
         assert resolved.rung is None
         assert not resolved.established
 
     def test_a_spanish_identifier_alone_establishes_nothing(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The side that was already right, pinned so a fix cannot arrive by tightening it."""
-        resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
+        resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, operation=operation)
 
         assert resolved.scope is None
         assert resolved.rung is None
 
     def test_both_registrations_leave_the_territory_equally_unsettled(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The symmetry itself. A repair tightening one side reddens exactly this."""
-        german = _resolve(repository, tax_identifier=_GERMAN_IVA)
-        spanish = _resolve(repository, tax_identifier=_SPANISH_CIF)
+        german = _resolve(repository, tax_identifier=_GERMAN_IVA, operation=operation)
+        spanish = _resolve(repository, tax_identifier=_SPANISH_CIF, operation=operation)
 
         assert (german.scope, german.rung) == (spanish.scope, spanish.rung) == (None, None)
 
     def test_the_registration_still_settles_the_identification_terminally(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The other half of the split: decisive for the fact registration IS.
 
@@ -139,7 +147,7 @@ class TestARegistrationAloneSettlesNoTerritory:
         asserting only the refusal would be satisfied by a ladder that had
         stopped reading the number at all.
         """
-        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, operation=operation)
 
         assert resolved.identification_state == require_eu_member_state("DE")
         assert resolved.scope is None
@@ -149,8 +157,7 @@ class TestConcordantPapersResolveSilently:
     """The cost the split was designed not to pay."""
 
     def test_a_printed_address_country_settles_it_without_the_registration(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The commonest concordant shape, and it needs no corroboration rule.
 
@@ -158,7 +165,9 @@ class TestConcordantPapersResolveSilently:
         German-established party whatever State registered it. This is why the
         prefix could be demoted without asking about most foreign invoices.
         """
-        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="Alemania", postal_code=_BERLIN)
+        resolved = _resolve(
+            repository, tax_identifier=_GERMAN_IVA, country_name="Alemania", postal_code=_BERLIN, operation=operation
+        )
 
         assert resolved.scope == IvaTerritorialScope._from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
@@ -166,11 +175,10 @@ class TestConcordantPapersResolveSilently:
         assert resolved.registration_conflict is None
 
     def test_a_reverse_charge_mention_corroborates_where_no_address_country_was_printed(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The concordance rung proper: registration plus an independent treatment."""
-        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, regime_legend=_REVERSE_CHARGE)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, regime_legend=_REVERSE_CHARGE, operation=operation)
 
         assert resolved.scope == IvaTerritorialScope._from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.CONCORDANT_REGISTRATION
@@ -178,18 +186,16 @@ class TestConcordantPapersResolveSilently:
         assert resolved.registration_conflict is None
 
     def test_the_mention_corroborates_nothing_without_a_registration(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The control. Concordance needs two signals, so one of them alone is not it."""
-        resolved = _resolve(repository, regime_legend=_REVERSE_CHARGE)
+        resolved = _resolve(repository, regime_legend=_REVERSE_CHARGE, operation=operation)
 
         assert resolved.scope is None
         assert resolved.rung is None
 
     def test_the_mention_stops_corroborating_when_spanish_iva_is_charged_beside_it(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """A document disagreeing with itself is not a corroboration.
 
@@ -203,6 +209,7 @@ class TestConcordantPapersResolveSilently:
             tax_identifier=_GERMAN_IVA,
             regime_legend=_REVERSE_CHARGE,
             charged_iva_rates=(_SPANISH_GENERAL_RATE,),
+            operation=operation,
         )
 
         assert resolved.scope != IvaTerritorialScope._from_registry("eu_member")
@@ -213,14 +220,14 @@ class TestConflictedPapersSurface:
     """The dangerous population, failing loud where it used to resolve silently."""
 
     def test_spanish_iva_charged_beside_a_foreign_registration_conflicts(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The design's named conflict fixture, and never a silent EU_MEMBER."""
         resolved = _resolve(
             repository,
             tax_identifier=_GERMAN_IVA,
             charged_iva_rates=(_SPANISH_GENERAL_RATE,),
+            operation=operation,
         )
 
         assert resolved.conflicted
@@ -230,18 +237,18 @@ class TestConflictedPapersSurface:
         assert resolved.registration_conflict.spain_indicating
 
     def test_a_spanish_address_beside_a_foreign_registration_conflicts(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The other face of the same entity: registered abroad, addressed here."""
-        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID)
+        resolved = _resolve(
+            repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID, operation=operation
+        )
 
         assert resolved.conflicted
         assert resolved.scope is None
 
     def test_the_postal_rung_never_quietly_answers_a_conflicted_document(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Why the conflict check runs BEFORE the ordinary rungs.
 
@@ -250,14 +257,15 @@ class TestConflictedPapersSurface:
         document has not settled. Checking after the rungs would let exactly the
         dangerous population resolve, just to a different wrong value.
         """
-        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID)
+        resolved = _resolve(
+            repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID, operation=operation
+        )
 
         assert resolved.scope != IvaTerritorialScope._from_registry("es_mainland")
         assert resolved.rung is not EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_spanish_registration_with_a_spanish_address_does_not_conflict(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The control that keeps the conflict specific to a FOREIGN registration.
 
@@ -265,15 +273,16 @@ class TestConflictedPapersSurface:
         address, and nothing about that disagrees. A conflict rule firing here
         would put a finding on the commonest document there is.
         """
-        resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_MADRID)
+        resolved = _resolve(
+            repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_MADRID, operation=operation
+        )
 
         assert not resolved.conflicted
         assert resolved.scope == IvaTerritorialScope._from_registry("es_mainland")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_foreign_rate_charged_beside_a_foreign_registration_does_not_conflict(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Charged tax is only Spain-indicating when the rate is a SPANISH one.
 
@@ -286,13 +295,13 @@ class TestConflictedPapersSurface:
             tax_identifier=_GERMAN_IVA,
             regime_legend=_REVERSE_CHARGE,
             charged_iva_rates=(Decimal("19"),),
+            operation=operation,
         )
 
         assert not resolved.conflicted
 
     def test_an_unreadable_date_raises_no_conflict_from_a_rate_it_cannot_check(
-        self,
-        repository: CounterpartyEstablishmentRepositoryProtocol,
+        self, repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Inconclusive contributes nothing in either direction.
 
@@ -306,6 +315,7 @@ class TestConflictedPapersSurface:
             tax_identifier=_GERMAN_IVA,
             charged_iva_rates=(_SPANISH_GENERAL_RATE,),
             on_date=None,
+            operation=operation,
         )
 
         assert not resolved.conflicted
