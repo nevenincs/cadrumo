@@ -47,7 +47,7 @@ def test_load_returns_profile_when_no_home_office_overrides(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("0.50")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.50")}),
         bucket_id=_BUCKET_ID,
     )
 
@@ -58,14 +58,14 @@ def test_load_returns_profile_when_no_home_office_overrides(
         operation=authority_operation,
     )
 
-    assert profile.ratios == {SpendingCategory._from_registry("telefonia_movil"): Decimal("0.50")}
+    assert profile.ratios == {SpendingCategory.from_registry("telefonia_movil"): Decimal("0.50")}
 
 
 def test_refuses_when_censo_unset_but_home_office_override_persisted(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("suministros_home_office_luz"): Decimal("0.20")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.20")}),
         bucket_id=_BUCKET_ID,
     )
 
@@ -92,7 +92,7 @@ def test_refuses_when_censo_unset_but_telefonia_fija_override_persisted(
     siblings.
     """
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_fija"): Decimal("0.20")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_fija"): Decimal("0.20")}),
         bucket_id=_BUCKET_ID,
     )
 
@@ -113,7 +113,7 @@ def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value(
     """A telefonia_fija override equal to raw * 0.30 (its statutory_multiplier) is accepted."""
     raw = Decimal("0.20")
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_fija"): raw * Decimal("0.30")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_fija"): raw * Decimal("0.30")}),
         bucket_id=_BUCKET_ID,
     )
 
@@ -124,7 +124,7 @@ def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value(
         operation=authority_operation,
     )
 
-    assert profile.ratios[SpendingCategory._from_registry("telefonia_fija")] == Decimal("0.060")
+    assert profile.ratios[SpendingCategory.from_registry("telefonia_fija")] == Decimal("0.060")
 
 
 def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_persisted(
@@ -139,7 +139,7 @@ def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_per
     defect class this guard closes for its three titularidad siblings.
     """
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("arrendamiento_vivienda_afecto"): Decimal("0.20")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.20")}),
         bucket_id=_BUCKET_ID,
     )
 
@@ -160,7 +160,7 @@ def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_deri
     """An arrendamiento override equal to the raw ratio (no statutory_multiplier) is accepted."""
     raw = Decimal("0.20")
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("arrendamiento_vivienda_afecto"): raw}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): raw}),
         bucket_id=_BUCKET_ID,
     )
 
@@ -171,14 +171,14 @@ def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_deri
         operation=authority_operation,
     )
 
-    assert profile.ratios[SpendingCategory._from_registry("arrendamiento_vivienda_afecto")] == Decimal("0.20")
+    assert profile.ratios[SpendingCategory.from_registry("arrendamiento_vivienda_afecto")] == Decimal("0.20")
 
 
 def test_refuses_on_mismatch_between_persisted_and_censo_derived(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("amortizacion_vivienda_afecto"): Decimal("0.50")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("amortizacion_vivienda_afecto"): Decimal("0.50")}),
         bucket_id=_BUCKET_ID,
     )
 
@@ -202,8 +202,8 @@ def test_accepts_when_persisted_matches_censo_derived_value(
     save_usage_ratios(
         UsageRatioProfile(
             ratios={
-                SpendingCategory._from_registry("ibi_vivienda_afecto"): raw,
-                SpendingCategory._from_registry("comunidad_vivienda_afecto"): raw,
+                SpendingCategory.from_registry("ibi_vivienda_afecto"): raw,
+                SpendingCategory.from_registry("comunidad_vivienda_afecto"): raw,
             },
         ),
         bucket_id=_BUCKET_ID,
@@ -216,5 +216,5 @@ def test_accepts_when_persisted_matches_censo_derived_value(
         operation=authority_operation,
     )
 
-    assert profile.ratios[SpendingCategory._from_registry("ibi_vivienda_afecto")] == raw
-    assert profile.ratios[SpendingCategory._from_registry("comunidad_vivienda_afecto")] == raw
+    assert profile.ratios[SpendingCategory.from_registry("ibi_vivienda_afecto")] == raw
+    assert profile.ratios[SpendingCategory.from_registry("comunidad_vivienda_afecto")] == raw

@@ -57,11 +57,11 @@ def test_declare_especial_transition_persists_typed_option(
         service = ProrrataRegisterService(repository=repository, operation=authority_operation)
         entry = ProrrataRegisterEntry(
             ejercicio=2026,
-            regime=ProrrataRegisterRegime._from_registry("especial"),
+            regime=ProrrataRegisterRegime.from_registry("especial"),
             provisional_percentage=Decimal("60"),
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             especial_transition=ProrrataEspecialTransitionEvidence(
-                kind=ProrrataEspecialTransitionKind._from_registry("opcion"),
+                kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
                 evidence_reference="modelo-303-2026-prorrata-opcion",
             ),
             source_registry_snapshot_refs=(),
@@ -74,7 +74,7 @@ def test_declare_especial_transition_persists_typed_option(
     persisted = loaded.entry_for(2026)
     assert persisted is not None
     assert persisted.especial_transition is not None
-    assert persisted.especial_transition.kind is ProrrataEspecialTransitionKind._from_registry("opcion")
+    assert persisted.especial_transition.kind is ProrrataEspecialTransitionKind.from_registry("opcion")
     assert persisted.especial_transition.evidence_reference == "modelo-303-2026-prorrata-opcion"
 
 
@@ -88,10 +88,10 @@ def test_record_aeat_autorizada_persists_authorised_override(
         service.declare(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 provisional_percentage=Decimal("80"),
-                provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                 source_observation_ref="303:2025:4T",
                 source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
             ),
@@ -108,9 +108,9 @@ def test_record_aeat_autorizada_persists_authorised_override(
     assert len(loaded.entries) == 1
     entry = loaded.entry_for(2026)
     assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime._from_registry("general")
+    assert entry.regime is ProrrataRegisterRegime.from_registry("general")
     assert entry.provisional_percentage == Decimal("63.5")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance._from_registry("aeat_autorizada")
+    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
     assert entry.authorisation_reference == "AEAT-AUTH-2026-0007"
     assert entry.source_observation_ref is None
 
@@ -125,10 +125,10 @@ def test_record_inicio_actividad_persists_proposed_override(
         service.declare(
             ProrrataRegisterEntry(
                 ejercicio=2026,
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 provisional_percentage=Decimal("80"),
-                provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                 source_observation_ref="303:2025:4T",
                 source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
             ),
@@ -145,8 +145,8 @@ def test_record_inicio_actividad_persists_proposed_override(
     assert len(loaded.entries) == 1
     entry = loaded.entry_for(2026)
     assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime._from_registry("general")
+    assert entry.regime is ProrrataRegisterRegime.from_registry("general")
     assert entry.provisional_percentage == Decimal("55")
-    assert entry.provisional_provenance is ProrrataProvisionalProvenance._from_registry("inicio_actividad")
+    assert entry.provisional_provenance is ProrrataProvisionalProvenance.from_registry("inicio_actividad")
     assert entry.authorisation_reference == "INICIO-036-2026-0003"
     assert entry.source_observation_ref is None

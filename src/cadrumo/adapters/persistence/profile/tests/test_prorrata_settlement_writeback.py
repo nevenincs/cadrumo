@@ -223,7 +223,7 @@ def test_m303_settlement_creates_prorrata_register_entry_when_none_exists(
         filed_revision = calculation_repository.load().get(revision.calculation_revision_id)
 
     assert entry is not None
-    assert entry.regime is ProrrataRegisterRegime._from_registry("general")
+    assert entry.regime is ProrrataRegisterRegime.from_registry("general")
     assert entry.definitive_percentage == Decimal("75")
     assert entry.definitive_volume_con_derecho == Decimal("150000.00")
     assert entry.definitive_volume_sin_derecho == Decimal("50000.00")
@@ -237,10 +237,10 @@ def test_m303_settlement_preserves_existing_register_facts(
     """Settlement write-back replaces only the whole-entity settlement fields."""
     existing = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("80"),
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref="303:2025:4T",
         source_registry_snapshot_refs=(
             compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref,
@@ -248,11 +248,11 @@ def test_m303_settlement_preserves_existing_register_facts(
     )
     sector_entry = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("especial"),
+        regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=None,
         sector_id="arrendamiento",
         provisional_percentage=Decimal("60"),
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
         authorisation_reference="AEAT-AUTH-2026-001",
         source_registry_snapshot_refs=(),
     )
@@ -284,9 +284,9 @@ def test_m303_settlement_preserves_existing_register_facts(
     carried = register.entry_for(2026)
     retained_sector = register.entry_for(2026, sector_id="arrendamiento")
     assert carried is not None
-    assert carried.regime is ProrrataRegisterRegime._from_registry("general")
+    assert carried.regime is ProrrataRegisterRegime.from_registry("general")
     assert carried.provisional_percentage == Decimal("80")
-    assert carried.provisional_provenance is ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
+    assert carried.provisional_provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
     assert carried.source_observation_ref == "303:2025:4T"
     assert carried.definitive_percentage == Decimal("75")
     assert carried.definitive_volume_con_derecho == Decimal("150000.00")
@@ -300,7 +300,7 @@ def test_m303_settlement_preserves_existing_activity_rows(
     """Filing 4T cannot erase the canonical DP30305 activity evidence."""
     general_entry = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         source_registry_snapshot_refs=(),
     )

@@ -741,7 +741,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
                 repository=repository,
                 legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
-            ).scope is IvaTerritorialScope._from_registry("es_mainland")
+            ).scope is IvaTerritorialScope.from_registry("es_mainland")
 
 
 #: The authored UBL export specimen. It declares UNTDID ``G`` -- free export
@@ -1050,11 +1050,11 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
                     source=ClassifierInputSource.DOCUMENT_EVIDENCE,
                 ),
                 issuer_scope=DeclaredFact(
-                    value=IvaTerritorialScope._from_registry("es_mainland"),
+                    value=IvaTerritorialScope.from_registry("es_mainland"),
                     source=ClassifierInputSource.PROFILE_AUTHORITY,
                 ),
                 customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                    value=CustomerTaxStatus.from_registry("b2b_iva_registered"),
                     source=ClassifierInputSource.OPERATOR_ASSERTION,
                 ),
                 supply_nature=DeclaredFact(
@@ -1120,7 +1120,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
                     source=ClassifierInputSource.DOCUMENT_EVIDENCE,
                 ),
                 customer_tax_status=DeclaredFact(
-                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                    value=CustomerTaxStatus.from_registry("b2b_iva_registered"),
                     source=ClassifierInputSource.OPERATOR_ASSERTION,
                 ),
                 supply_nature=DeclaredFact(
@@ -1178,4 +1178,4 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         )
 
         assert not self._counterparty_unestablished(confirmed)
-        assert confirmed.counterparty.scope is IvaTerritorialScope._from_registry("third_country")
+        assert confirmed.counterparty.scope is IvaTerritorialScope.from_registry("third_country")

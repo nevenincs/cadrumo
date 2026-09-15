@@ -47,10 +47,10 @@ def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
 def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=ejercicio,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal(percentage),
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref=f"303:{ejercicio - 1}:4T",
         source_registry_snapshot_refs=(_m303_snapshot_ref(ejercicio - 1),),
     )

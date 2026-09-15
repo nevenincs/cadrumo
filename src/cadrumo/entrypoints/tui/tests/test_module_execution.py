@@ -48,7 +48,10 @@ async def _run_module_async(*, timeout: float) -> tuple[int | None, bytes]:
         process.kill()
         output, _ = await process.communicate()
         return None, output
-    return int(process.returncode), output
+    returncode = process.returncode
+    if returncode is None:
+        raise RuntimeError("the TUI module did not finish after communicate()")
+    return returncode, output
 
 
 def _run_module(*, timeout: float) -> tuple[int | None, bytes]:

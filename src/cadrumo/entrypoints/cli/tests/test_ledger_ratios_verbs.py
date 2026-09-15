@@ -102,17 +102,17 @@ def test_ratios_payloads_refuse_unknown_category_and_kind() -> None:
 
     with pytest.raises(ValidationError):
         RatiosEligibleRowPayload(
-            category=SpendingCategory._from_registry("suministros_home_office_luz"),
+            category=SpendingCategory.from_registry("suministros_home_office_luz"),
             proportionality_kind="bogus",
             override_present=False,
         )
 
     # A canonical member is accepted and still serialises to its plain string.
-    row = RatiosRowPayload(category=SpendingCategory._from_registry("suministros_home_office_luz"), ratio="0.5")
+    row = RatiosRowPayload(category=SpendingCategory.from_registry("suministros_home_office_luz"), ratio="0.5")
     assert row.model_dump(mode="json")["category"] == "suministros_home_office_luz"
     eligible = RatiosEligibleRowPayload(
-        category=SpendingCategory._from_registry("suministros_home_office_luz"),
-        proportionality_kind=ProportionalityKind._from_registry("usage_ratio_home_area"),
+        category=SpendingCategory.from_registry("suministros_home_office_luz"),
+        proportionality_kind=ProportionalityKind.from_registry("usage_ratio_home_area"),
         override_present=False,
     )
     assert eligible.model_dump(mode="json")["proportionality_kind"] == "usage_ratio_home_area"
@@ -131,12 +131,12 @@ def test_ratios_payload_ratio_is_bound_by_the_domain_authority() -> None:
 
     for bad in ("-1", "2", "1.5", "not-a-decimal"):
         with pytest.raises(ValidationError):
-            RatiosRowPayload(category=SpendingCategory._from_registry("suministros_home_office_luz"), ratio=bad)
+            RatiosRowPayload(category=SpendingCategory.from_registry("suministros_home_office_luz"), ratio=bad)
 
     for good in ("0", "0.30", "1"):
         assert (
             RatiosRowPayload(
-                category=SpendingCategory._from_registry("suministros_home_office_luz"),
+                category=SpendingCategory.from_registry("suministros_home_office_luz"),
                 ratio=good,
             ).ratio
             == good
@@ -151,14 +151,14 @@ def test_ratios_validate_finding_requires_kind_and_detail() -> None:
 
     with pytest.raises(ValidationError):
         RatiosValidateFindingPayload(
-            category=SpendingCategory._from_registry("suministros_home_office_luz"),
+            category=SpendingCategory.from_registry("suministros_home_office_luz"),
             kind="missing_override",
             detail="",
         )
 
     with pytest.raises(ValidationError):
         RatiosValidateFindingPayload(
-            category=SpendingCategory._from_registry("suministros_home_office_luz"),
+            category=SpendingCategory.from_registry("suministros_home_office_luz"),
             kind="",
             detail="no override persisted",
         )

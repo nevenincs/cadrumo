@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "e3030000-0000-4000-8000-000000000058"
 _CLOCK = datetime(2026, 4, 1, tzinfo=UTC)
-_DEFAULT_M303_REGIME_COMPOSITION = M303RegimeComposition._from_registry("general")
+_DEFAULT_M303_REGIME_COMPOSITION = M303RegimeComposition.from_registry("general")
 
 
 def _general_scope() -> M303RegimenSimplificadoScopeDecision:
@@ -284,7 +284,7 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(
 
 @pytest.mark.parametrize(
     "composition",
-    (M303RegimeComposition._from_registry("simplified"), M303RegimeComposition._from_registry("mixed")),
+    (M303RegimeComposition.from_registry("simplified"), M303RegimeComposition.from_registry("mixed")),
 )
 def test_evidence_scope_disagreeing_with_active_censo_refuses(
     tmp_path: Path, composition: M303RegimeComposition, *, operation: PinnedAuthorityOperation
@@ -341,7 +341,7 @@ def test_structurally_valid_noncanonical_simplified_result_refuses_before_persis
         activity = regimen.rows.activities[0]
         assert isinstance(activity, ActividadNoAgricolaSimplificado)
         _store_profile(
-            composition=M303RegimeComposition._from_registry("simplified"),
+            composition=M303RegimeComposition.from_registry("simplified"),
             iae_epigraph=activity.iae_epigrafe,
         )
         with pytest.raises(M303FilingEvidenceError) as raised_divergent_result:

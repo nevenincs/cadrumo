@@ -507,7 +507,7 @@ def _seed_m190_withholding_detail(secure_objects: SecureObjectRepository) -> Non
                 perceptor_tax_id="12345678Z",
                 perceptor_legal_name="Profesional Ejemplo",
                 transaction_date=date(_YEAR, 3, 15),
-                clave=RetencionClave._from_registry("G"),
+                clave=RetencionClave.from_registry("G"),
                 subclave="01",
                 percibido_dinerario=Decimal("1000.00"),
                 retencion_practicada=Decimal("150.00"),

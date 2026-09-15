@@ -58,7 +58,7 @@ _INCN_BELOW_THRESHOLD = Decimal("5_999_999.99")
 def _sl_profile(incn: Decimal | None) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType._from_registry("legal_entity"),
+        entity_type=EntityType.from_registry("legal_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=incn,
@@ -68,7 +68,7 @@ def _sl_profile(incn: Decimal | None) -> TaxpayerProfile:
 def _natural_person_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        entity_type=EntityType._from_registry("natural_person"),
+        entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
     )
@@ -77,7 +77,7 @@ def _natural_person_profile() -> TaxpayerProfile:
 def _attribution_entity_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="E12345674",
-        entity_type=EntityType._from_registry("attribution_entity"),
+        entity_type=EntityType.from_registry("attribution_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
     )

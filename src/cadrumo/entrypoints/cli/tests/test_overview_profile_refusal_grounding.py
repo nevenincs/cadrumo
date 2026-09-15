@@ -215,7 +215,7 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
     from ....domain.contribuyente.entity_type import EntityType
 
     refusal = _undeclared_taxpayer_model_refusal(
-        _profile(entity_type=EntityType._from_registry("natural_person")),
+        _profile(entity_type=EntityType.from_registry("natural_person")),
         schema=load_user_profile_schema(),
     )
 

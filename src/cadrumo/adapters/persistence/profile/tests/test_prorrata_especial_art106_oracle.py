@@ -142,9 +142,9 @@ def _classified_purchase(provider_id: str, classification: InputClassification):
             "iva_rate": Decimal("0.21"),
             "iva_amount": _INPUT_CUOTA,
             "input_classification": classification,
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="7" * 64,
             ),
@@ -163,7 +163,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
                     regime=regime,
                     especial_transition=None,
                     provisional_percentage=_GENERAL_PERCENTAGE,
-                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                    provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                     source_observation_ref="303:2025:4T",
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
@@ -198,9 +198,9 @@ def _deducible_cuota(objects: SecureObjectRepository, *, operation: PinnedAuthor
 
 def _txns():
     return (
-        _classified_purchase("buy-excl-ded", InputClassification._from_registry("exclusively_deductible")),
-        _classified_purchase("buy-excl-non", InputClassification._from_registry("exclusively_non_deductible")),
-        _classified_purchase("buy-common", InputClassification._from_registry("common")),
+        _classified_purchase("buy-excl-ded", InputClassification.from_registry("exclusively_deductible")),
+        _classified_purchase("buy-excl-non", InputClassification.from_registry("exclusively_non_deductible")),
+        _classified_purchase("buy-common", InputClassification.from_registry("common")),
     )
 
 
@@ -211,9 +211,9 @@ def test_especial_routes_three_art106_reglas_and_differs_from_general(
     """The production aggregation routes the three art. 106 reglas, distinct from general."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_register(objects, ProrrataRegisterRegime._from_registry("especial"))
+        _seed_register(objects, ProrrataRegisterRegime.from_registry("especial"))
         especial_cuota = _deducible_cuota(objects, operation=authority_operation)
-        _seed_register(objects, ProrrataRegisterRegime._from_registry("general"))
+        _seed_register(objects, ProrrataRegisterRegime.from_registry("general"))
         general_cuota = _deducible_cuota(objects, operation=authority_operation)
 
     multiplier = _GENERAL_PERCENTAGE / Decimal("100")
@@ -231,9 +231,9 @@ def test_especial_routes_three_art106_reglas_and_differs_from_general(
 @pytest.mark.parametrize(
     ("classification", "expected"),
     [
-        (InputClassification._from_registry("exclusively_deductible"), _INPUT_CUOTA),
-        (InputClassification._from_registry("exclusively_non_deductible"), Decimal("0")),
-        (InputClassification._from_registry("common"), _INPUT_CUOTA * (_GENERAL_PERCENTAGE / Decimal("100"))),
+        (InputClassification.from_registry("exclusively_deductible"), _INPUT_CUOTA),
+        (InputClassification.from_registry("exclusively_non_deductible"), Decimal("0")),
+        (InputClassification.from_registry("common"), _INPUT_CUOTA * (_GENERAL_PERCENTAGE / Decimal("100"))),
     ],
 )
 def test_each_art106_regla_isolated(
@@ -248,7 +248,7 @@ def test_each_art106_regla_isolated(
     revision = compiled_bundled_authority().modelo("303").revisions["2022"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_register(objects, ProrrataRegisterRegime._from_registry("especial"))
+        _seed_register(objects, ProrrataRegisterRegime.from_registry("especial"))
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
         tx_repo.save(
             TransactionCatalogue.from_transactions((_classified_purchase("solo", classification),)),
@@ -279,9 +279,9 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
     """The art. 103.Dos.2 advisory fires on the real production general-vs-especial totals."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_register(objects, ProrrataRegisterRegime._from_registry("especial"))
+        _seed_register(objects, ProrrataRegisterRegime.from_registry("especial"))
         especial_cuota = _deducible_cuota(objects, operation=authority_operation)
-        _seed_register(objects, ProrrataRegisterRegime._from_registry("general"))
+        _seed_register(objects, ProrrataRegisterRegime.from_registry("general"))
         general_cuota = _deducible_cuota(objects, operation=authority_operation)
 
     # general 18.90 exceeds especial 16.80 by 12.5% (> 10%): especial is obligatory.

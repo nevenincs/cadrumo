@@ -91,10 +91,10 @@ def _save_prior_prorrata_observation(repo: CalculationObservationRepository, *, 
 def _carried_entry(*, percentage: Decimal) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=_CURRENT_YEAR,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=percentage,
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref=_SOURCE_REF,
         source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
     )
@@ -108,7 +108,7 @@ def _override_entry(
 ) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=_CURRENT_YEAR,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=percentage,
         provisional_provenance=provenance,
@@ -122,21 +122,21 @@ def _override_entry(
     (
         (
             _override_entry(
-                provenance=ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
+                provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
                 percentage=Decimal("63"),
                 reference="AEAT-AUTH-2026-0009",
             ),
             Decimal("63"),
-            ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
+            ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
         ),
         (
             _override_entry(
-                provenance=ProrrataProvisionalProvenance._from_registry("inicio_actividad"),
+                provenance=ProrrataProvisionalProvenance.from_registry("inicio_actividad"),
                 percentage=Decimal("55"),
                 reference="INICIO-036-2026-0005",
             ),
             Decimal("55"),
-            ProrrataProvisionalProvenance._from_registry("inicio_actividad"),
+            ProrrataProvisionalProvenance.from_registry("inicio_actividad"),
         ),
     ),
 )
@@ -187,7 +187,7 @@ def test_carried_prior_definitiva_contradiction_blocks(tmp_path: Path, *, operat
     (
         (
             _override_entry(
-                provenance=ProrrataProvisionalProvenance._from_registry("aeat_autorizada"),
+                provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
                 percentage=Decimal("63"),
                 reference="AEAT-AUTH-2026-0011",
             ),
@@ -195,7 +195,7 @@ def test_carried_prior_definitiva_contradiction_blocks(tmp_path: Path, *, operat
         ),
         (
             _override_entry(
-                provenance=ProrrataProvisionalProvenance._from_registry("inicio_actividad"),
+                provenance=ProrrataProvisionalProvenance.from_registry("inicio_actividad"),
                 percentage=Decimal("55"),
                 reference="INICIO-036-2026-0006",
             ),

@@ -388,7 +388,7 @@ def test_the_confirm_boundary_carries_the_writer_regime_axes(
         filename="factura_regimen.pdf",
         authority=invoice_authority,
         recargo_amount=Decimal("5.20"),
-        invoice_class=InvoiceClass._from_registry("RECTIFICATIVA"),
+        invoice_class=InvoiceClass.from_registry("RECTIFICATIVA"),
         series="R",
         rectifies_invoice_number="F-2026-0044",
         retention_rate=Decimal("0.15"),
@@ -397,7 +397,7 @@ def test_the_confirm_boundary_carries_the_writer_regime_axes(
     )
 
     invoice = result.invoice
-    assert invoice.invoice_class is InvoiceClass._from_registry("RECTIFICATIVA")
+    assert invoice.invoice_class is InvoiceClass.from_registry("RECTIFICATIVA")
     assert invoice.series == "R"
     assert invoice.rectifies_invoice_number == "F-2026-0044"
     assert invoice.retention_amount == Decimal("15.00")

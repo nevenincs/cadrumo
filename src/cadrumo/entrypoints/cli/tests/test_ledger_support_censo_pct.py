@@ -32,7 +32,7 @@ from .._ledger_support import resolve_business_pct_with_censo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
-_SUMINISTROS = SpendingCategory._from_registry("suministros_home_office_internet").value
+_SUMINISTROS = SpendingCategory.from_registry("suministros_home_office_internet").value
 
 runtime = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime")
 

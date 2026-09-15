@@ -207,4 +207,4 @@ def modelo_export_verb(
     )
 
 
-modelo_export_verb.__input_model__ = ModeloExportOperatorInput
+modelo_export_verb.__dict__["__input_model__"] = ModeloExportOperatorInput

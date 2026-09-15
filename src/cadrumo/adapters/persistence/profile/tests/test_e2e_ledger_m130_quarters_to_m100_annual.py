@@ -246,15 +246,15 @@ _AUTONOMA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
 _AUTONOMA_SALARY_GROSS = Decimal("30000.00")
 _AUTONOMA_SALARY_WITHHOLDING = Decimal("4500.00")
 _EXPENSE_ROWS: tuple[tuple[str, date, SpendingCategory, Decimal], ...] = (
-    ("expense-office", date(_YEAR, 2, 20), SpendingCategory._from_registry("material_oficina"), Decimal("500.00")),
+    ("expense-office", date(_YEAR, 2, 20), SpendingCategory.from_registry("material_oficina"), Decimal("500.00")),
     (
         "expense-software",
         date(_YEAR, 5, 22),
-        SpendingCategory._from_registry("software_suscripcion"),
+        SpendingCategory.from_registry("software_suscripcion"),
         Decimal("700.00"),
     ),
-    ("expense-phone", date(_YEAR, 8, 12), SpendingCategory._from_registry("telefonia_movil"), Decimal("300.00")),
-    ("expense-advisory", date(_YEAR, 11, 8), SpendingCategory._from_registry("asesoria_fiscal"), Decimal("900.00")),
+    ("expense-phone", date(_YEAR, 8, 12), SpendingCategory.from_registry("telefonia_movil"), Decimal("300.00")),
+    ("expense-advisory", date(_YEAR, 11, 8), SpendingCategory.from_registry("asesoria_fiscal"), Decimal("900.00")),
 )
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
@@ -371,7 +371,7 @@ def _persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> No
     )
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("1")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("1")}),
         bucket_id=_BUCKET_ID,
         objects=secure_objects,
     )
@@ -610,9 +610,9 @@ def _seed_taxpayer_profile() -> None:
 def _autonomaworkflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
-        entity_type=EntityType._from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
-        irpf_estimation_regime=IrpfEstimationRegime._from_registry("directa_normal"),
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_professionals_with_retencion=False,
@@ -858,7 +858,7 @@ def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
         _expense_transaction(
             "expense-missing-base",
             value_date=date(_YEAR, 2, 20),
-            category=SpendingCategory._from_registry("material_oficina"),
+            category=SpendingCategory.from_registry("material_oficina"),
             taxable_base=Decimal("500.00"),
         ).model_copy(update={"taxable_base": None}),
     )

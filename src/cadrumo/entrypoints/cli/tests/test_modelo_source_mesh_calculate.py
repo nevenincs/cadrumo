@@ -183,7 +183,7 @@ def _transaction(
         # invoice-evidence deduction authority.
         fields["deduction_fact_kind"] = deduction_fact_kind
         fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
             source_locator=deduction_locator or "invoice:test-purchase",
             evidence_digest="a" * 64,
         )
@@ -435,25 +435,25 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> Non
         _m100_activity_expense_transaction(
             "m100-expense-office",
             value_date=date(2024, 2, 20),
-            category=SpendingCategory._from_registry("material_oficina"),
+            category=SpendingCategory.from_registry("material_oficina"),
             taxable_base=Decimal("500.00"),
         ),
         _m100_activity_expense_transaction(
             "m100-expense-software",
             value_date=date(2024, 5, 22),
-            category=SpendingCategory._from_registry("software_suscripcion"),
+            category=SpendingCategory.from_registry("software_suscripcion"),
             taxable_base=Decimal("700.00"),
         ),
         _m100_activity_expense_transaction(
             "m100-expense-phone",
             value_date=date(2024, 8, 12),
-            category=SpendingCategory._from_registry("telefonia_movil"),
+            category=SpendingCategory.from_registry("telefonia_movil"),
             taxable_base=Decimal("300.00"),
         ),
         _m100_activity_expense_transaction(
             "m100-expense-advisory",
             value_date=date(2024, 11, 8),
-            category=SpendingCategory._from_registry("asesoria_fiscal"),
+            category=SpendingCategory.from_registry("asesoria_fiscal"),
             taxable_base=Decimal("900.00"),
         ),
     )
@@ -465,7 +465,7 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> Non
         )
         InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
         save_usage_ratios(
-            UsageRatioProfile(ratios={SpendingCategory._from_registry("telefonia_movil"): Decimal("1")}),
+            UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("1")}),
             bucket_id=bucket_id,
         )
 
@@ -659,7 +659,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         amount=Decimal("60.50"),
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
         deduction_locator="invoice:purchase-general-2026-1T",
     )
 
@@ -943,7 +943,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         # Art. 25 exempts on the IDENTIFICATION, so the supply is refused at
         # preflight without it however clear the establishment is; declaring
         # only the establishment is what this fixture used to do.
-        counterparty_identification_state=EUMemberState._from_registry("de"),
+        counterparty_identification_state=EUMemberState.from_registry("de"),
     )
     with open_test_profile_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(

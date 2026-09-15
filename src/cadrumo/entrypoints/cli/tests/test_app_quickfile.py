@@ -252,9 +252,9 @@ def _m303_transaction(
     }
     if purchase_invoice_evidence_id is not None:
         payload["purchase_invoice_evidence_id"] = purchase_invoice_evidence_id
-        payload["deduction_fact_kind"] = IvaDeductionFactKind._from_registry("domestic_current")
+        payload["deduction_fact_kind"] = IvaDeductionFactKind.from_registry("domestic_current")
         payload["deduction_provenance"] = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
             source_locator=f"invoice:{purchase_invoice_evidence_id}",
             evidence_digest=purchase_invoice_evidence_id,
         )

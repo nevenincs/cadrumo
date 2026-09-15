@@ -43,7 +43,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory._from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with _ledger_ports(transaction_repository, event_repository, profile) as ports:
@@ -78,7 +78,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory._from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("telefonia_movil")
 
     with (
         pytest.raises(TransactionValidationError, match="not configured"),
@@ -108,7 +108,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory._from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with (
@@ -144,7 +144,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
                 description="telefono movil",
                 business_classification=BusinessClassification.MIXED,
                 business_pct=Decimal("0.60"),
-                category_id=SpendingCategory._from_registry("suministros_home_office_luz").value,
+                category_id=SpendingCategory.from_registry("suministros_home_office_luz").value,
                 usage_ratio_id=category.value,
             ),
             ports=ports,
@@ -159,7 +159,7 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory._from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("telefonia_movil")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with (

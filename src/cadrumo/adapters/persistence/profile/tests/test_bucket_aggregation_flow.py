@@ -148,13 +148,13 @@ def _transaction(
             # aggregation gate drops the row as MISSING_DEDUCTION_CLASSIFICATION
             # and the deducible casillas silently stay at zero.
             "deduction_fact_kind": (
-                IvaDeductionFactKind._from_registry("domestic_current")
+                IvaDeductionFactKind.from_registry("domestic_current")
                 if direction is TransactionDirection.OUTGOING
                 else None
             ),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                    authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                     source_locator=f"test-invoice:{provider_id}",
                     evidence_digest="a" * 64,
                 )

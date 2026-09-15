@@ -144,9 +144,9 @@ def _third_country_import() -> Transaction:
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
             "iva_category": IvaCategory("import_third_country"),
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("import_current"),
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("import_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("customs_declaration"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("customs_declaration"),
                 source_locator="customs:import-1",
                 evidence_digest="e" * 64,
             ),

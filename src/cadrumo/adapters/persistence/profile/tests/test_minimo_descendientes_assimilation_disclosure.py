@@ -56,7 +56,7 @@ _FILING_YEAR = 2024
 _ANNUAL_PERIOD = "0A"
 _ESTATAL_CASILLA: CasillaId = "0513"
 _CLAIMED = {_ESTATAL_CASILLA: Decimal("2400")}
-_DEFAULT_DESCENDANT_RELATION = DescendantRelacion._from_registry("descendiente")
+_DEFAULT_DESCENDANT_RELATION = DescendantRelacion.from_registry("descendiente")
 
 
 def _coordinator_diagnostics() -> tuple[CalculationSourceDiagnostic, ...]:
@@ -171,7 +171,7 @@ def test_the_under_grant_disclosure_covers_an_assimilated_descendant() -> None:
     """
     _write(
         _assimilated_child(
-            relacion=DescendantRelacion._from_registry("adoptado"),
+            relacion=DescendantRelacion.from_registry("adoptado"),
             inscripcion_registro_civil_date=None,
         ),
     )
@@ -192,7 +192,7 @@ def test_a_suppressed_household_is_still_excluded_from_both_disclosures() -> Non
     """
     descendants = (
         _assimilated_child(
-            relacion=DescendantRelacion._from_registry("adoptado"),
+            relacion=DescendantRelacion.from_registry("adoptado"),
             inscripcion_registro_civil_date=None,
         ),
     )

@@ -93,7 +93,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory._from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("telefonia_movil")
     with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
         objects=secure_objects,

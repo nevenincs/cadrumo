@@ -232,7 +232,7 @@ def review_package_build(
     )
 
 
-review_package_build.__input_model__ = ModeloReviewPackageBuildOperatorInput
+review_package_build.__dict__["__input_model__"] = ModeloReviewPackageBuildOperatorInput
 
 
 def review_package_verify(ctx: typer.Context, package: Path) -> None:

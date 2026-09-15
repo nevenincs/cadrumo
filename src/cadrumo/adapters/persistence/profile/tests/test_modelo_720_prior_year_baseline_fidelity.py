@@ -102,13 +102,13 @@ with _indexed_authority_for_test().operation() as _module_authority_operation_fo
         operation=_module_authority_operation_for_test,
     )
 _INITIAL_THRESHOLD_EUR = _M720_THRESHOLDS[
-    ForeignAssetObligationGroup._from_registry("cuentas")
+    ForeignAssetObligationGroup.from_registry("cuentas")
 ].initial_declaration_floor_eur
 
 #: Re-declaration delta threshold per arts. 42-bis.5 / 42-ter.5 / 54-bis.7
 #: (€20,000 increment over last-declared baseline triggers re-declaration obligation).
 _REDECLARATION_DELTA_EUR = _M720_THRESHOLDS[
-    ForeignAssetObligationGroup._from_registry("cuentas")
+    ForeignAssetObligationGroup.from_registry("cuentas")
 ].redeclaration_increase_delta_eur
 
 # Year-N asset valuations (both above €50k initial threshold).
@@ -154,11 +154,11 @@ _BASELINE_BINDINGS = frozenset(
 
 _M720_SOURCE_REFS = ("aeat-modelo-720-procedure",)
 _M720_HEADER_LEGAL_REFS = ("ley-58-2003:da-18",)
-_M720_CUENTAS_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup._from_registry("cuentas")].legal_refs
+_M720_CUENTAS_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup.from_registry("cuentas")].legal_refs
 _M720_VALORES_LEGAL_REFS = _M720_THRESHOLDS[
-    ForeignAssetObligationGroup._from_registry("valores_derechos_seguros")
+    ForeignAssetObligationGroup.from_registry("valores_derechos_seguros")
 ].legal_refs
-_M720_INMUEBLES_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup._from_registry("inmuebles")].legal_refs
+_M720_INMUEBLES_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup.from_registry("inmuebles")].legal_refs
 _M720_CASILLA_LEGAL_REFS = {
     _CUENTAS_CODIGO_DE_CUENTA_CASILLA: _M720_CUENTAS_LEGAL_REFS,
     _CUENTAS_VALORACION_CASILLA: _M720_CUENTAS_LEGAL_REFS,
@@ -624,8 +624,8 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     assert dict(finding.message_facts) == {
         "modelo_code": _MODELO,
         "filing_year": _YEAR_N_PLUS_1,
-        "position_key": ForeignAssetObligationGroup._from_registry("cuentas").value,
-        "group_code": ForeignAssetObligationGroup._from_registry("cuentas").value,
+        "position_key": ForeignAssetObligationGroup.from_registry("cuentas").value,
+        "group_code": ForeignAssetObligationGroup.from_registry("cuentas").value,
         "prior_value_eur": _CUENTAS_N,
         "current_value_eur": _CUENTAS_N1,
         "delta_value_eur": _CUENTAS_N1 - _CUENTAS_N,

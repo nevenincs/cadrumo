@@ -119,7 +119,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
         quantity=Decimal("1"),
         unit_price=Decimal("100.00"),
         subtotal=Decimal("100.00"),
-        iva_rate=IvaRate._from_registry("RATE_21"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
         iva_amount=Decimal("21.00"),
     )
     purchase_evidence = Invoice.model_validate(

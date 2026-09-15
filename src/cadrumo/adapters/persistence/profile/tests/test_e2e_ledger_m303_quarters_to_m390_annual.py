@@ -375,9 +375,9 @@ def _persist_year_of_invoices(
             purchase_invoice_evidence_id=purchase_invoice.invoice_id,
             # Domestic purchase from an ES supplier: cuota soportada established
             # by that supplier's invoice (LIVA art. 97.Uno.1).
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
             deduction_provenance=IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{purchase_invoice.invoice_id}",
                 evidence_digest="a" * 64,
             ),
@@ -424,9 +424,9 @@ def _persist_year_of_invoices(
                     # deduction family stays domestic and the establishing
                     # evidence is the supplier's invoice, NOT an intra-EU
                     # self-assessment.
-                    deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+                    deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
                     deduction_provenance=IvaDeductionClassificationProvenance(
-                        authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                        authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                         source_locator=f"invoice:reverse-charge-{filing_year}-{period}",
                         evidence_digest="b" * 64,
                     ),
@@ -558,8 +558,8 @@ def workflow_profile() -> TaxpayerProfile:
 def _ireneworkflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_IRENE_TAX_ID,
-        entity_type=EntityType._from_registry("legal_entity"),
-        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        entity_type=EntityType.from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,

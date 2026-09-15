@@ -121,9 +121,9 @@ def _purchase(provider_id: str, *, sector_id: str | None) -> Transaction:
         "taxable_base": Decimal("50.00"),
         "iva_rate": Decimal("0.21"),
         "iva_amount": Decimal("10.50"),
-        "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
+        "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
         "deduction_provenance": IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
             source_locator=f"invoice:{provider_id}",
             evidence_digest="5" * 64,
         ),
@@ -131,7 +131,7 @@ def _purchase(provider_id: str, *, sector_id: str | None) -> Transaction:
         "classified_by": "manual",
     }
     if sector_id is None:
-        payload["input_classification"] = InputClassification._from_registry("common")
+        payload["input_classification"] = InputClassification.from_registry("common")
     else:
         payload["prorrata_sector_id"] = sector_id
     return Transaction.model_validate(payload)
@@ -159,11 +159,11 @@ def _settled_2025_entry(sector_id: str | None, *, con: str, sin: str) -> Prorrat
     """A 2025 sector entry settled from its OWN annual volumes (con/total definitive)."""
     provisional = ProrrataRegisterEntry(
         ejercicio=2025,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=Decimal("50"),
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref=f"seed:{sector_id or 'comun'}",
         source_registry_snapshot_refs=(_m303_snapshot_ref(2024),),
     )
@@ -214,10 +214,10 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(
 
     common_2026 = ProrrataRegisterEntry(
         ejercicio=2026,
-        regime=ProrrataRegisterRegime._from_registry("general"),
+        regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("40"),
-        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+        provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref="seed:comun:2026",
         source_registry_snapshot_refs=(_m303_snapshot_ref(2025),),
     )
@@ -226,11 +226,11 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(
         entries=(comercio_2026, arrendamiento_2026, common_2026),
         sector_definitions=(
             SectorDefinition(
-                sector_id="comercio", letra=SectorDiferenciadoLetra._from_registry("a"), member_activity_codes=("4711",)
+                sector_id="comercio", letra=SectorDiferenciadoLetra.from_registry("a"), member_activity_codes=("4711",)
             ),
             SectorDefinition(
                 sector_id="arrendamiento",
-                letra=SectorDiferenciadoLetra._from_registry("a"),
+                letra=SectorDiferenciadoLetra.from_registry("a"),
                 member_activity_codes=("6820",),
             ),
         ),

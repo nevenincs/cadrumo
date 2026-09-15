@@ -535,7 +535,7 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         start, end = period.start_date, period.end_date
         return {
             record.pct
-            for record in load_iva_rate_table(operation=operation)[EUMemberState._from_registry("es")]
+            for record in load_iva_rate_table(operation=operation)[EUMemberState.from_registry("es")]
             if record.effective_from <= end and (record.effective_until is None or record.effective_until >= start)
         }
 

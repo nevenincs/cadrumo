@@ -261,7 +261,7 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
                 entries=(
                     ProrrataRegisterEntry(
                         ejercicio=_YEAR,
-                        regime=ProrrataRegisterRegime._from_registry("general"),
+                        regime=ProrrataRegisterRegime.from_registry("general"),
                         especial_transition=None,
                         source_registry_snapshot_refs=(),
                     ),

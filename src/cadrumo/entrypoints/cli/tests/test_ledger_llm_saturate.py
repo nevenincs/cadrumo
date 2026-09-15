@@ -83,7 +83,7 @@ def _classify_business(tx: str) -> None:
             "--classification",
             "BUSINESS",
             "--category-id",
-            SpendingCategory._from_registry("manutencion_dietas_nacional").value,
+            SpendingCategory.from_registry("manutencion_dietas_nacional").value,
         ],
     )
     assert classified.exit_code == 0, classified.output

@@ -520,8 +520,8 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
     history_b = _history(_BUCKET_B_ID)
     decision_a = _iva_wallet_decision(_BUCKET_A_ID, target_period="2T")
     decision_b = _iva_wallet_decision(_BUCKET_B_ID, target_period="3T")
-    usage_a = _usage_profile(SpendingCategory._from_registry("suministros_home_office_luz"), "0.21")
-    usage_b = _usage_profile(SpendingCategory._from_registry("telefonia_movil"), "0.60")
+    usage_a = _usage_profile(SpendingCategory.from_registry("suministros_home_office_luz"), "0.21")
+    usage_b = _usage_profile(SpendingCategory.from_registry("telefonia_movil"), "0.60")
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         ModeloHistoryRepository(

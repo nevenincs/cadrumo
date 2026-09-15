@@ -71,7 +71,7 @@ def _fully_populated_fact() -> ConfirmedCounterpartyFacts:
     """
     return ConfirmedCounterpartyFacts.create(
         tax_identifier="B12345674",
-        territorial_scope=IvaTerritorialScope._from_registry("es_canarias"),
+        territorial_scope=IvaTerritorialScope.from_registry("es_canarias"),
         asserted_by="operator@example.test",
         identification_state=require_eu_member_state("FR"),
         note="supplier confirmed established in Las Palmas by telephone on 2026-04-17",
@@ -92,12 +92,12 @@ def test_establishment_fact_roundtrips_through_encrypted_storage(
 
     assert loaded == original
     assert loaded is not None
-    assert loaded.territorial_scope == IvaTerritorialScope._from_registry("es_canarias")
+    assert loaded.territorial_scope == IvaTerritorialScope.from_registry("es_canarias")
     assert loaded.source is ClassifierInputSource.OPERATOR_ASSERTION
     assert loaded.identification_state == require_eu_member_state("FR")
     # The two axes survived as the DIFFERENT facts they are: nothing collapsed
     # the registration onto the territory beside it.
-    assert loaded.territorial_scope != IvaTerritorialScope._from_registry("eu_member")
+    assert loaded.territorial_scope != IvaTerritorialScope.from_registry("eu_member")
     assert loaded.note == "supplier confirmed established in Las Palmas by telephone on 2026-04-17"
     assert loaded.asserted_at == _ASSERTED_AT
     assert loaded.canonical_tax_identifier == "B12345674"
@@ -133,7 +133,7 @@ def test_persisted_fact_answering_neither_question_is_refused_at_load(
     assert record is not None
     envelope = json.loads(record.payload.decode("utf-8"))
     stored = envelope["payload"]
-    assert stored["territorial_scope"] == IvaTerritorialScope._from_registry("es_canarias").value, (
+    assert stored["territorial_scope"] == IvaTerritorialScope.from_registry("es_canarias").value, (
         "fixture must serialise territorial_scope for this proof to mean anything"
     )
 

@@ -177,7 +177,7 @@ def _seed_sofia_ledger(objects: SecureObjectRepository) -> tuple[Transaction, ..
     transactions = (
         _expense_transaction(
             "sofia-autonomos-ss",
-            category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+            category=SpendingCategory.from_registry("cuotas_autonomos_ss"),
             value_date=date(_YEAR, 2, 15),
             gross_amount=Decimal("340.00"),
             taxable_base=Decimal("340.00"),
@@ -186,7 +186,7 @@ def _seed_sofia_ledger(objects: SecureObjectRepository) -> tuple[Transaction, ..
         ),
         _expense_transaction(
             "sofia-advisory-taxable-base",
-            category=SpendingCategory._from_registry("asesoria_fiscal"),
+            category=SpendingCategory.from_registry("asesoria_fiscal"),
             value_date=date(_YEAR, 2, 20),
             gross_amount=Decimal("6776.00"),
             taxable_base=Decimal("5600.00"),

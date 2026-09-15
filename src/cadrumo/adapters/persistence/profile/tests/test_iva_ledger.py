@@ -126,7 +126,7 @@ def _modelo_303_iva_revision() -> ModeloRevision:
             "modelo-303-iva-repercutido-general-cuota",
             categories=(IvaCategory("domestic_general"),),
             rate_kinds=(IvaRateKind("general"),),
-            flow_direction=IvaFlowDirection._from_registry("repercutido"),
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
         ),
         _iva_binding(
             "modelo-303-iva-soportado-interiores-cuota",
@@ -136,7 +136,7 @@ def _modelo_303_iva_revision() -> ModeloRevision:
                 IvaCategory("domestic_super_reduced"),
             ),
             rate_kinds=(IvaRateKind("general"), IvaRateKind("reduced"), IvaRateKind("super_reduced")),
-            flow_direction=IvaFlowDirection._from_registry("soportado"),
+            flow_direction=IvaFlowDirection.from_registry("soportado"),
         ),
     )
 
@@ -242,11 +242,11 @@ def _transaction(
             "iva_amount": iva_amount,
             "iva_category": iva_category,
             "deduction_fact_kind": (
-                IvaDeductionFactKind._from_registry("domestic_current") if carries_input_iva else None
+                IvaDeductionFactKind.from_registry("domestic_current") if carries_input_iva else None
             ),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                    authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                     source_locator=f"test-invoice:{provider_id}",
                     evidence_digest="a" * 64,
                 )

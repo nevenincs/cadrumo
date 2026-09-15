@@ -247,7 +247,7 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
         assert derived_value.source_artefact_kind == "derived_carry_policy"
 
 
-def test_modelo_303_filed_observation_derives_compensation_available_from_registry_formula() -> None:
+def test_modelo_303_filed_observation_derives_compensation_availablefrom_registry_formula() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         observation = _filed_observation(
             modelo="303",

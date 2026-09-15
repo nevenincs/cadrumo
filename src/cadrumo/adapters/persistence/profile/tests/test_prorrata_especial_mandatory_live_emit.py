@@ -124,9 +124,9 @@ def _purchase(
             "iva_amount": cuota,
             "input_classification": classification,
             "prorrata_sector_id": sector_id,
-            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="6" * 64,
             ),
@@ -159,7 +159,7 @@ def _declare(
             especial_transition=None,
             sector_id=sector_id,
             provisional_percentage=percentage,
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         )
     )
@@ -210,16 +210,16 @@ def test_fires_for_fully_classified_general_bucket_with_breach(
             profile,
             (
                 _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification._from_registry("common")
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
                 ),
                 _purchase(
                     "buy-non-ded",
                     cuota=Decimal("210.00"),
-                    classification=InputClassification._from_registry("exclusively_non_deductible"),
+                    classification=InputClassification.from_registry("exclusively_non_deductible"),
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect())
 
     assert len(especial) == 1
@@ -249,16 +249,16 @@ def test_fires_confirmatorily_for_especial_bucket_with_breach(
             profile,
             (
                 _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification._from_registry("common")
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
                 ),
                 _purchase(
                     "buy-non-ded",
                     cuota=Decimal("210.00"),
-                    classification=InputClassification._from_registry("exclusively_non_deductible"),
+                    classification=InputClassification.from_registry("exclusively_non_deductible"),
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("especial"), operation=operation, percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime.from_registry("especial"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect())
 
     assert len(especial) == 1
@@ -285,12 +285,12 @@ def test_prompt_for_general_bucket_with_unclassified_row(
             profile,
             (
                 _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification._from_registry("common")
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
                 ),
                 _purchase("buy-unclassified", cuota=Decimal("210.00"), classification=None),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect())
 
     assert len(especial) == 1
@@ -316,16 +316,16 @@ def test_silent_mid_year_period(tmp_path: Path, *, operation: PinnedAuthorityOpe
             profile,
             (
                 _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification._from_registry("common")
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
                 ),
                 _purchase(
                     "buy-non-ded",
                     cuota=Decimal("210.00"),
-                    classification=InputClassification._from_registry("exclusively_non_deductible"),
+                    classification=InputClassification.from_registry("exclusively_non_deductible"),
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect(period_token=_MID_YEAR_PERIOD))
 
     assert especial == []
@@ -338,7 +338,7 @@ def test_silent_when_no_register_apportionment_resolves(tmp_path: Path) -> None:
             profile,
             (
                 _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification._from_registry("common")
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
                 ),
             ),
         )
@@ -355,14 +355,14 @@ def test_silent_when_spread_within_ten_percent(tmp_path: Path, *, operation: Pin
             profile,
             (
                 _purchase(
-                    "buy-common-a", cuota=Decimal("210.00"), classification=InputClassification._from_registry("common")
+                    "buy-common-a", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
                 ),
                 _purchase(
-                    "buy-common-b", cuota=Decimal("210.00"), classification=InputClassification._from_registry("common")
+                    "buy-common-b", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect())
 
     assert especial == []
@@ -377,13 +377,13 @@ def test_silent_for_sectorized_register(tmp_path: Path, *, operation: PinnedAuth
                 _purchase(
                     "buy-common",
                     cuota=Decimal("210.00"),
-                    classification=InputClassification._from_registry("common"),
+                    classification=InputClassification.from_registry("common"),
                     sector_id="sector-a",
                 ),
                 _purchase(
                     "buy-non-ded",
                     cuota=Decimal("210.00"),
-                    classification=InputClassification._from_registry("exclusively_non_deductible"),
+                    classification=InputClassification.from_registry("exclusively_non_deductible"),
                     sector_id="sector-a",
                 ),
             ),
@@ -391,18 +391,18 @@ def test_silent_for_sectorized_register(tmp_path: Path, *, operation: PinnedAuth
         service = _service(operation=operation)
         service.declare_sector(
             SectorDefinition(
-                sector_id="sector-a", letra=SectorDiferenciadoLetra._from_registry("a"), member_activity_codes=("4711",)
+                sector_id="sector-a", letra=SectorDiferenciadoLetra.from_registry("a"), member_activity_codes=("4711",)
             )
         )
         for sector_id in (None, "sector-a"):
             service.declare(
                 ProrrataRegisterEntry(
                     ejercicio=_EJERCICIO,
-                    regime=ProrrataRegisterRegime._from_registry("general"),
+                    regime=ProrrataRegisterRegime.from_registry("general"),
                     especial_transition=None,
                     sector_id=sector_id,
                     provisional_percentage=_GENERAL_PCT,
-                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                    provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )
@@ -423,16 +423,16 @@ def test_fires_through_live_calculate_fan_out(tmp_path: Path, *, operation: Pinn
             profile,
             (
                 _purchase(
-                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification._from_registry("common")
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
                 ),
                 _purchase(
                     "buy-non-ded",
                     cuota=Decimal("210.00"),
-                    classification=InputClassification._from_registry("exclusively_non_deductible"),
+                    classification=InputClassification.from_registry("exclusively_non_deductible"),
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime.from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         diagnostics = collect_bucket_aggregation_advisory_diagnostics(
             _revision(),
             {},
