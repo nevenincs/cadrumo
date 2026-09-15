@@ -262,8 +262,6 @@ def _xml_dictionary_xsd_root(
         root = DefusedElementTree.fromstring(source_payloads[str(source.id)])
     except (DefusedElementTree.ParseError, KeyError) as exc:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
-    if root is None:
-        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed")
     return root
 
 

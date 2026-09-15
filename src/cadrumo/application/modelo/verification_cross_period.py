@@ -154,21 +154,19 @@ def cross_period_clean_state_verdict_for_work_unit(
                 period_overrides=period_overrides,
                 operation=indexed_operation,
             )
-    del (
-        observation_repository,
-        filing_repository,
-        calculation_repository,
-        verification_repository,
-        expected_member_sets,
-        taxpayer_tax_id,
-        activity_start_date,
-        modelo_202_modality,
-        taxpayer_files_economic_activity,
-        workflow_profile,
-        not_applicable_source_modelos,
-        zero_value_previous_filing_binding_ids,
-        period_overrides,
-    )
+    del observation_repository
+    del filing_repository
+    del calculation_repository
+    del verification_repository
+    del expected_member_sets
+    del taxpayer_tax_id
+    del activity_start_date
+    del modelo_202_modality
+    del taxpayer_files_economic_activity
+    del workflow_profile
+    del not_applicable_source_modelos
+    del zero_value_previous_filing_binding_ids
+    del period_overrides
     try:
         snapshot = operation.snapshot(
             work_unit.modelo,

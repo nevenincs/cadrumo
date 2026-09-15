@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -203,12 +203,14 @@ def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: 
     COMPUTES; pre-#30 the swallowed ``WizardCatalogueNotRegisteredError`` left the
     flag False, the date None, and the casilla ABSENT.
     """
-    child = run_audited_process(
-        [sys.executable, "-c", _CHILD_SCRIPT, str(tmp_path)],
-        capture_output=True,
-        text=True,
-        timeout=300,
-        check=False,
+    child = ensure_text_completed_process(
+        run_audited_process(
+            [sys.executable, "-c", _CHILD_SCRIPT, str(tmp_path)],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
     )
     out = child.stdout
     detail = f"\n--- stdout ---\n{out}\n--- stderr ---\n{child.stderr}"

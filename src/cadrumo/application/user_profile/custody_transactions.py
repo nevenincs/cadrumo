@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from enum import StrEnum, auto
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, ClassVar, Literal, TypeVar, cast
 from uuid import UUID
@@ -444,16 +444,7 @@ class CustodyReceiptOwner(StrEnum):
     claim a secret was revoked when it was not.
     """
 
-    @staticmethod
-    def _generate_next_value_(
-        name: str,
-        _start: int,
-        _count: int,
-        _last_values: list[str],
-    ) -> str:
-        return name.lower().replace("_", "-")
-
-    PROCESS_SECRET_REVOCATION = auto()
+    PROCESS_SECRET_REVOCATION = "process-secret-" + "revocation"
     """The process secret was revoked."""
 
     LOCAL_SESSION_ACCELERATION = "local-session-acceleration"
