@@ -52,7 +52,7 @@ from .ledger_iva_aggregation_support import (
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_validate_accepts_canonical_iva_repercutido_binding() -> None:

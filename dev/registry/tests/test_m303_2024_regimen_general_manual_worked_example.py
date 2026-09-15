@@ -172,7 +172,7 @@ from .ledger_iva_aggregation_support import (
     _rate_kind,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 _CASILLA_27: CasillaId = validated_casilla_id("27", surface="_CASILLA_27")
