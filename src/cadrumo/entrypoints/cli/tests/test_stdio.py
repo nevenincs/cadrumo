@@ -45,6 +45,7 @@ import typer.core
 from cadrumo.tests.audited_process import run_audited_process
 
 from .._stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
+from .subprocess_cli import _as_text_completed_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -194,15 +195,17 @@ def test_console_help_invocation_renders_plain_text_with_full_flag_names(tmp_pat
         },
     )
 
-    result = run_audited_process(
-        [aeat_exe, "--language", "en", "config", "profile", "create", "--help"],
-        cwd=Path.cwd(),
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=120,
-        check=False,
+    result = _as_text_completed_process(
+        run_audited_process(
+            [aeat_exe, "--language", "en", "config", "profile", "create", "--help"],
+            cwd=Path.cwd(),
+            env=env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=120,
+            check=False,
+        ),
     )
 
     assert result.returncode == 0, result.stderr + result.stdout

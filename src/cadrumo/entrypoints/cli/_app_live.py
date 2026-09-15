@@ -28,7 +28,7 @@ import subprocess
 from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Literal, overload
 
 import typer
 
@@ -790,11 +790,27 @@ async def _posix_process_command_inventory() -> tuple[_ProcessCommand, ...] | No
     return _parse_posix_process_inventory(completed.stdout)
 
 
+@overload
+async def _run_process_inventory_command(
+    command: Sequence[str],
+    *,
+    text: Literal[True],
+) -> subprocess.CompletedProcess[str]: ...
+
+
+@overload
+async def _run_process_inventory_command(
+    command: Sequence[str],
+    *,
+    text: Literal[False],
+) -> subprocess.CompletedProcess[bytes]: ...
+
+
 async def _run_process_inventory_command(
     command: Sequence[str],
     *,
     text: bool,
-) -> subprocess.CompletedProcess[str | bytes]:
+) -> subprocess.CompletedProcess[str] | subprocess.CompletedProcess[bytes]:
     """Run one fixed process-table query through the audited async boundary."""
     process = await asyncio.create_subprocess_exec(
         *command,
@@ -815,11 +831,28 @@ async def _run_process_inventory_command(
             output=_decode_process_output(stdout, text=text),
             stderr=_decode_process_output(stderr, text=text),
         ) from None
-    output = _decode_process_output(stdout, text=text)
-    error = _decode_process_output(stderr, text=text)
-    if process.returncode:
-        raise subprocess.CalledProcessError(process.returncode, command, output=output, stderr=error)
-    return subprocess.CompletedProcess(command, process.returncode, output, error)
+    returncode = process.returncode
+    if returncode is None:
+        raise RuntimeError("the process inventory command did not finish after communicate()")
+    if text:
+        output = _decode_process_output(stdout, text=True)
+        error = _decode_process_output(stderr, text=True)
+        if returncode:
+            raise subprocess.CalledProcessError(returncode, command, output=output, stderr=error)
+        return subprocess.CompletedProcess(command, returncode, output, error)
+    output = _decode_process_output(stdout, text=False)
+    error = _decode_process_output(stderr, text=False)
+    if returncode:
+        raise subprocess.CalledProcessError(returncode, command, output=output, stderr=error)
+    return subprocess.CompletedProcess(command, returncode, output, error)
+
+
+@overload
+def _decode_process_output(output: bytes, *, text: Literal[True]) -> str: ...
+
+
+@overload
+def _decode_process_output(output: bytes, *, text: Literal[False]) -> bytes: ...
 
 
 def _decode_process_output(output: bytes, *, text: bool) -> str | bytes:

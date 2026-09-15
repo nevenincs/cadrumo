@@ -17,12 +17,14 @@ from ......core.casilla_id import CasillaId, validated_casilla_id, validated_cas
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
-from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ......domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ......domain.calculations.registry.ids import BindingId, RelationId
 from ......domain.calculations.registry.relations import (
     resolve_relation_values_from_observations,
 )
+from ......domain.calculations.registry.schema import RegistrySnapshot
+from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ......tests.inventory import FIXTURES_DIR
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..declarations_capture import _select_authoritative_declaration as _select_authoritative_declaration_production
@@ -232,12 +234,18 @@ def _modelo_snapshot(
     filing_year: int,
     period: str,
     operation: PinnedAuthorityOperation,
-):
+) -> RegistrySnapshot:
     return operation.snapshot(modelo_id, filing_year=filing_year, period=period)
 
 
-def _modelo_130_snapshot(operation: PinnedAuthorityOperation):
+def _modelo_130_snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
     return _modelo_snapshot("130", filing_year=2026, period="1T", operation=operation)
+
+
+def _modelo_snapshot_ref(*, modelo: str, filing_year: int, period: str) -> RegistrySnapshotRef:
+    """Resolve a fixture snapshot reference inside one pinned authority operation."""
+    with bundled_indexed_authority().operation() as operation:
+        return _modelo_snapshot(modelo, filing_year=filing_year, period=period, operation=operation).snapshot_ref
 
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
@@ -354,7 +362,7 @@ def _filed_observation(
             for casilla_id, value in casilla_values.items()
         ),
         extraction_coverage=coverage,
-        registry_snapshot_ref=_modelo_snapshot(modelo, filing_year=ejercicio, period=period).snapshot_ref,
+        registry_snapshot_ref=_modelo_snapshot_ref(modelo=modelo, filing_year=ejercicio, period=period),
     )
 
 

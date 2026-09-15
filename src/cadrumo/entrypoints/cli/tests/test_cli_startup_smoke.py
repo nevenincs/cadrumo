@@ -13,6 +13,7 @@ import pytest
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....tests.inventory import REPO_ROOT
+from .subprocess_cli import _as_text_completed_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,16 +52,18 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
 def _run_startup_smoke(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update({"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"})
-    return run_audited_process(
-        [sys.executable, "-c", _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS, str(tmp_path), *args],
-        cwd=REPO_ROOT,
-        env=env,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-        timeout=120.0,
+    return _as_text_completed_process(
+        run_audited_process(
+            [sys.executable, "-c", _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS, str(tmp_path), *args],
+            cwd=REPO_ROOT,
+            env=env,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+            timeout=120.0,
+        ),
     )
 
 

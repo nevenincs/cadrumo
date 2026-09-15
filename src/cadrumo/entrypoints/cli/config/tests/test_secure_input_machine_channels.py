@@ -13,6 +13,7 @@ from typing import cast
 import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
 
+from cadrumo.entrypoints.cli.tests.subprocess_cli import _as_bytes_completed_process
 from cadrumo.tests.audited_process import run_audited_process
 
 from ...errors import CliRefusedBoundaryError
@@ -202,11 +203,14 @@ except CliRefusedBoundaryError as exc:
 else:
     print("accepted")
 """
-    return run_audited_process(
-        [sys.executable, "-c", code],
-        input=payload,
-        capture_output=True,
-        check=False,
+    return _as_bytes_completed_process(
+        run_audited_process(
+            [sys.executable, "-c", code],
+            input=payload,
+            text=False,
+            capture_output=True,
+            check=False,
+        ),
     )
 
 

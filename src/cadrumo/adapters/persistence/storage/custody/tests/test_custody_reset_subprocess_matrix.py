@@ -147,7 +147,10 @@ async def _read_child_lines(
             for _ in range(line_count)
         ]
         _, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
-        return lines, int(process.returncode), stderr.decode("utf-8", errors="replace")
+        returncode = process.returncode
+        if returncode is None:
+            raise RuntimeError("the child process did not finish after communicate()")
+        return lines, returncode, stderr.decode("utf-8", errors="replace")
     finally:
         if process.returncode is None:
             process.kill()

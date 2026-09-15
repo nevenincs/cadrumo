@@ -67,6 +67,25 @@ __all__ = [
     "subprocess_cli_env",
 ]
 
+
+def _as_text_completed_process(
+    result: subprocess.CompletedProcess[str | bytes],
+) -> subprocess.CompletedProcess[str]:
+    """Validate and retain the text-output contract of an audited process."""
+    if not isinstance(result.stdout, str) or not isinstance(result.stderr, str):
+        raise TypeError("the audited process did not return text output")
+    return subprocess.CompletedProcess(result.args, result.returncode, result.stdout, result.stderr)
+
+
+def _as_bytes_completed_process(
+    result: subprocess.CompletedProcess[str | bytes],
+) -> subprocess.CompletedProcess[bytes]:
+    """Validate and retain the binary-output contract of an audited process."""
+    if not isinstance(result.stdout, bytes) or not isinstance(result.stderr, bytes):
+        raise TypeError("the audited process did not return binary output")
+    return subprocess.CompletedProcess(result.args, result.returncode, result.stdout, result.stderr)
+
+
 #: Harness run by :func:`run_cadrumo_subprocess`. ``sys.argv[1]`` carries a
 #: JSON payload (``{"settings": {...}, "expected_storage_route_kind": str |
 #: None}``); ``sys.argv[2:]`` is handed to ``main()`` unchanged. Settings
@@ -157,17 +176,19 @@ def run_subprocess_cli_harness(
     :data:`_CONTEXTVAR_HARNESS_SOURCE`) controls how those positions are
     interpreted.
     """
-    return run_audited_process(
-        [sys.executable, "-c", harness_source, *args],
-        cwd=cwd or SRC_CADRUMO,
-        env=subprocess_cli_env(strip_prefixes=env_strip_prefixes, extra=extra_env),
-        input=stdin_payload,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-        timeout=timeout,
+    return _as_text_completed_process(
+        run_audited_process(
+            [sys.executable, "-c", harness_source, *args],
+            cwd=cwd or SRC_CADRUMO,
+            env=subprocess_cli_env(strip_prefixes=env_strip_prefixes, extra=extra_env),
+            input=stdin_payload,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+            timeout=timeout,
+        ),
     )
 
 

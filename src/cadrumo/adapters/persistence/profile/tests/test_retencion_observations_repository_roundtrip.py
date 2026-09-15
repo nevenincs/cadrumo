@@ -576,16 +576,11 @@ def test_an_evidence_authority_value_cannot_enter_this_store(tmp_path: Path) -> 
     nothing else, so the exemption would have expired silently the day something
     wrote an AEAT kind here. This is the refusal that makes it structural.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile, pytest.raises(ValidationError):
-        RetencionObservationRepositoryAdapter(objects=profile.repository).save_observation(
-            modelo="180",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "0A"),
-            observation=_observation(
-                nif="11111111H",
-                scheme=RetencionScheme("actividades_economicas"),
-                retencion=Decimal("100"),
-            ),
-            captured_at=datetime.now(UTC),
-            source_kind="aeat_sede_justificante",
-        )
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
+        built = _capture_payload(repo, Period.from_year_and_code(2024, "0A"))
+        invalid = dict(built.model_dump(mode="python"))
+        invalid["source_kind"] = "aeat_sede_justificante"
+
+        with pytest.raises(ValidationError):
+            repo.payload_type.model_validate(invalid)

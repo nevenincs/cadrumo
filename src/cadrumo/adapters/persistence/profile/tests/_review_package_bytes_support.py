@@ -6,6 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from cadrumo.application.modelo.review_package import build_review_package
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.work_unit import WorkUnit
 
@@ -25,13 +26,15 @@ def build_package_path(
     work_unit = work_unit_factory(bucket_id=bucket_id)
     revision = revision_factory(work_unit)
     output_path = tmp_path / filename_template.format(bucket_id=bucket_id)
-    build_review_package(
-        revision=revision,
-        work_unit=work_unit,
-        draft_bytes=draft_bytes,
-        output_path=output_path,
-        built_by="operator",
-    )
+    with bundled_indexed_authority().operation() as operation:
+        build_review_package(
+            revision=revision,
+            work_unit=work_unit,
+            draft_bytes=draft_bytes,
+            output_path=output_path,
+            built_by="operator",
+            operation=operation,
+        )
     return output_path
 
 

@@ -28,6 +28,7 @@ import textwrap
 
 import pytest
 
+from cadrumo.entrypoints.cli.tests.subprocess_cli import _as_text_completed_process
 from cadrumo.tests.audited_process import run_audited_process
 
 from .....core.i18n.render import tr
@@ -41,14 +42,21 @@ _PLANTED_INPUT = "correct-horse-battery-staple"
 
 async def _wait_for_prompt_probe(*, command: list[str], creationflags: int = 0) -> None:
     """Run a fixed prompt probe with an explicit bounded process lifecycle."""
-    options = {} if creationflags == 0 else {"creationflags": creationflags}
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        stdin=asyncio.subprocess.DEVNULL,
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.DEVNULL,
-        **options,
-    )
+    if creationflags:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+            creationflags=creationflags,
+        )
+    else:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
     try:
         await asyncio.wait_for(process.wait(), timeout=90)
     except TimeoutError:
@@ -59,12 +67,14 @@ async def _wait_for_prompt_probe(*, command: list[str], creationflags: int = 0) 
 
 def _run_probe(body: str) -> dict[str, object]:
     """Run ``body`` in a real interpreter and return its JSON verdict."""
-    completed = run_audited_process(
-        [sys.executable, "-c", textwrap.dedent(body)],
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
+    completed = _as_text_completed_process(
+        run_audited_process(
+            [sys.executable, "-c", textwrap.dedent(body)],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
     )
     stdout = completed.stdout.strip()
     assert stdout, (
@@ -162,12 +172,13 @@ def test_prompt_secret_no_echo_refuses_a_character_device_with_no_console() -> N
 
 def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
     """A redirected (non-tty) stdin refuses without consuming the planted secret."""
-    completed = run_audited_process(
-        [
-            sys.executable,
-            "-c",
-            textwrap.dedent(
-                """
+    completed = _as_text_completed_process(
+        run_audited_process(
+            [
+                sys.executable,
+                "-c",
+                textwrap.dedent(
+                    """
                 import json, sys
                 from cadrumo.entrypoints.cli.config.secure_input import prompt_secret_no_echo
                 from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
@@ -180,13 +191,14 @@ def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
                     verdict = {"outcome": "escaped", "error_type": type(exc).__name__}
                 print(json.dumps(verdict))
                 """,
-            ),
-        ],
-        input=f"{_PLANTED_INPUT}\n",
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
+                ),
+            ],
+            input=f"{_PLANTED_INPUT}\n",
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
     )
     verdict = json.loads(completed.stdout.strip().splitlines()[-1])
 
@@ -356,12 +368,13 @@ def test_the_predicate_predicts_the_refusal_it_names() -> None:
     Both halves are asserted from the one probe, which is what makes this
     a claim about their agreement rather than two separate facts.
     """
-    completed = run_audited_process(
-        [
-            sys.executable,
-            "-c",
-            textwrap.dedent(
-                """
+    completed = _as_text_completed_process(
+        run_audited_process(
+            [
+                sys.executable,
+                "-c",
+                textwrap.dedent(
+                    """
                 import json
                 from cadrumo.entrypoints.cli.config.secure_input import (
                     prompt_secret_no_echo,
@@ -378,13 +391,14 @@ def test_the_predicate_predicts_the_refusal_it_names() -> None:
                     verdict |= {"outcome": "escaped", "error_type": type(exc).__name__}
                 print(json.dumps(verdict))
                 """,
-            ),
-        ],
-        input=f"{_PLANTED_INPUT}\n",
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
+                ),
+            ],
+            input=f"{_PLANTED_INPUT}\n",
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
     )
     verdict = json.loads(completed.stdout.strip().splitlines()[-1])
 

@@ -25,7 +25,7 @@ from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollm
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.config import override_settings
 from ....tests.inventory import SRC_CADRUMO
-from .subprocess_cli import subprocess_cli_env
+from .subprocess_cli import _as_text_completed_process, subprocess_cli_env
 
 _PROFILE_INPUT = "s13-profile-passphrase-that-must-never-escape"
 _NEW_PROFILE_INPUT = "s13-new-profile-passphrase-that-must-never-escape"
@@ -393,24 +393,26 @@ def _run(
             "assert_stdin_unread": assert_stdin_unread,
             "assert_unread_payload": unread_payload,
         }
-        return run_audited_process(
-            [sys.executable, "-c", _HARNESS, json.dumps(payload), *rendered_args],
-            cwd=SRC_CADRUMO,
-            env=subprocess_cli_env(
-                strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
-                extra={
-                    "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
-                    **(hostile_env or {}),
-                },
+        return _as_text_completed_process(
+            run_audited_process(
+                [sys.executable, "-c", _HARNESS, json.dumps(payload), *rendered_args],
+                cwd=SRC_CADRUMO,
+                env=subprocess_cli_env(
+                    strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
+                    extra={
+                        "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
+                        **(hostile_env or {}),
+                    },
+                ),
+                input=stdin,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                capture_output=True,
+                check=False,
+                timeout=180,
+                pass_fds=tuple(readers),
             ),
-            input=stdin,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            capture_output=True,
-            check=False,
-            timeout=180,
-            pass_fds=tuple(readers),
         )
 
 
@@ -445,32 +447,34 @@ def _run_windows_handles(
             "assert_stdin_unread": assert_stdin_unread,
             "assert_unread_payload": unread_payload,
         }
-        return run_audited_process(
-            [
-                bootstrap_interpreter(),
-                "-c",
-                _WINDOWS_HANDLE_HARNESS,
-                json.dumps(payload),
-                *command,
-            ],
-            cwd=SRC_CADRUMO,
-            env=subprocess_cli_env(
-                strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
-                extra={
-                    "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
-                    "PYTHONPATH": _base_interpreter_pythonpath(),
-                    **(hostile_env or {}),
-                },
+        return _as_text_completed_process(
+            run_audited_process(
+                [
+                    bootstrap_interpreter(),
+                    "-c",
+                    _WINDOWS_HANDLE_HARNESS,
+                    json.dumps(payload),
+                    *command,
+                ],
+                cwd=SRC_CADRUMO,
+                env=subprocess_cli_env(
+                    strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
+                    extra={
+                        "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
+                        "PYTHONPATH": _base_interpreter_pythonpath(),
+                        **(hostile_env or {}),
+                    },
+                ),
+                input=stdin,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                capture_output=True,
+                check=False,
+                timeout=180,
+                close_fds=True,
+                startupinfo=startup,
             ),
-            input=stdin,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            capture_output=True,
-            check=False,
-            timeout=180,
-            close_fds=True,
-            startupinfo=startup,
         )
 
 

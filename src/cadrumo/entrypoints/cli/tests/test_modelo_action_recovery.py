@@ -24,6 +24,7 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings, override_settings
 from ....core.config_support import SecretStoreBackend
 from ..verb_input_schema import build_verb_input_schemas
+from .subprocess_cli import _as_text_completed_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,16 +52,18 @@ def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
 def _run_console(environment: dict[str, str], arguments: list[str]) -> subprocess.CompletedProcess[str]:
     """Run the installed console executable, never the in-process Click app."""
     assert _CONSOLE.is_file(), f"installed console is absent: {_CONSOLE}"
-    return run_audited_process(
-        [_CONSOLE, "--format", "json", *arguments],
-        cwd=_CONSOLE.parents[2],
-        env=environment,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-        check=False,
-        timeout=90,
+    return _as_text_completed_process(
+        run_audited_process(
+            [_CONSOLE, "--format", "json", *arguments],
+            cwd=_CONSOLE.parents[2],
+            env=environment,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
+            timeout=90,
+        ),
     )
 
 

@@ -464,6 +464,7 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
             timeout=60,
         )
         assert completed.returncode == 0, completed.stderr
+        assert isinstance(completed.stdout, str)
         return completed.stdout.strip()
 
     def test_crash_before_successor_key_storage_preserves_or_converges_the_prepared_receipt(

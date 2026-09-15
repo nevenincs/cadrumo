@@ -12,7 +12,7 @@ from textwrap import dedent
 
 import pytest
 
-from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
 from .test_config_reset import (
     _OVERRIDE_REASON,
@@ -231,16 +231,18 @@ def _run_child(
     check: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     _release_parent_bucket_handles(root)
-    return run_audited_process(
-        [sys.executable, "-c", harness, str(root), *args],
-        cwd=Path.cwd(),
-        env=_child_env(root),
-        check=check,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=90,
+    return ensure_text_completed_process(
+        run_audited_process(
+            [sys.executable, "-c", harness, str(root), *args],
+            cwd=Path.cwd(),
+            env=_child_env(root),
+            check=check,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=90,
+        ),
     )
 
 
