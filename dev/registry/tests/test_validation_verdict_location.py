@@ -1,11 +1,9 @@
 """Validation-verdict cache location and helper roundtrip behavior.
 
-These tests exercise the real filesystem helpers of ``_verdict_cache``:
-the settings-derived writable location, the shipped bundled-tree location, the
-atomic write/read roundtrip, foreign-file tolerance, and the delete-on-mismatch
-branch. The authority-integration regression pin (skip-validation on a hit,
-corpus-cache write counts, re-validation on a fingerprint change) lives in the
-sibling ``test_validation_verdict_cache`` module.
+These tests exercise the real filesystem helpers of the verdict cache: the
+runner-local writable location, the shipped bundled-tree location, the atomic
+write/read roundtrip, foreign-file tolerance, and the delete-on-mismatch
+branch.
 """
 
 from __future__ import annotations
@@ -14,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.config import override_settings
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.tests.env_scope import scoped_env_var
 
 from ..compiler.identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 from ..compiler.verdict_cache import (
@@ -26,6 +24,7 @@ from ..compiler.verdict_cache import (
     certify_registry_validation,
     compute_shipped_verdict_key,
     compute_verdict_key,
+    default_verdict_cache_dir,
     read_verdict,
     registry_validation_is_certified,
     shipped_verdict_location,
@@ -35,18 +34,25 @@ from ..compiler.verdict_cache import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_CACHE_DIR_ENV = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 
-def test_verdict_cache_path_derives_under_cache_namespace(tmp_path: Path) -> None:
+
+def test_the_default_verdict_store_is_runner_local_outside_the_application_storage_root() -> None:
+    with scoped_env_var(_CACHE_DIR_ENV, None):
+        assert default_verdict_cache_dir() == Path.home() / ".cadrumo" / "registry-verdict"
+
+
+def test_an_explicit_verdict_store_wins_and_holds_the_verdict_file(tmp_path: Path) -> None:
     root = tmp_path / "registry" / "aeat"
-    with override_settings(cadrumo_local_storage_root=tmp_path / "state"):
+    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         path = verdict_cache_path(root)
-    assert path.parent == tmp_path / "state" / "cache" / "registry-verdict"
+    assert path.parent == tmp_path / "verdicts"
     assert path.name.startswith("cadrumo_validation_verdict_")
     assert path.suffix == ".json"
 
 
 def test_distinct_roots_get_distinct_verdict_files(tmp_path: Path) -> None:
-    with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
+    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         first = verdict_cache_path(tmp_path / "registry-a" / "aeat")
         second = verdict_cache_path(tmp_path / "registry-b" / "aeat")
     assert first != second
@@ -107,7 +113,7 @@ def test_certify_then_matching_key_is_certified(tmp_path: Path) -> None:
         source_evidence_fingerprints=(("b.pdf", 3, 4),),
         package_version="1.2.3",
     )
-    with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
+    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         written = certify_registry_validation(root, verdict_key=key, package_version="1.2.3")
         assert written.is_file()
         assert registry_validation_is_certified(root, verdict_key=key, identity=identity) is True
@@ -116,7 +122,7 @@ def test_certify_then_matching_key_is_certified(tmp_path: Path) -> None:
 def test_mismatched_key_is_not_certified_and_deletes_the_stale_verdict(tmp_path: Path) -> None:
     root = tmp_path / "registry" / "aeat"
     identity = _walked_identity((("a.toml", 1, 2, "digest-a"),))
-    with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
+    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         written = certify_registry_validation(root, verdict_key="stored-key", package_version="1.2.3")
         assert written.is_file()
         assert registry_validation_is_certified(root, verdict_key="different-key", identity=identity) is False
@@ -203,5 +209,5 @@ def test_a_shipped_verdict_cannot_certify_a_walked_tree(tmp_path: Path) -> None:
     )
     assert shipped.is_file(), "the planted verdict must exist, or this proves nothing"
 
-    with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
+    with scoped_env_var(_CACHE_DIR_ENV, str(tmp_path / "verdicts")):
         assert registry_validation_is_certified(root, verdict_key="unmatched", identity=identity) is False

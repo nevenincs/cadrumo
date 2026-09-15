@@ -378,6 +378,7 @@ def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_m303_2024_1t_manual_worked_example_devengada_deducible_resultado() -> None:
     """27/45/69/71 = 23.088 / 16.800 / 3.288 / 3.288 for the manual's 1T solucion.
 
@@ -396,6 +397,7 @@ def test_m303_2024_1t_manual_worked_example_devengada_deducible_resultado() -> N
     assert result.values[_CASILLA_71] == Decimal("3288.00")
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_m303_2024_1t_manual_worked_example_per_casilla_leaves() -> None:
     """Each leaf the manual states verbatim is reproduced in its own casilla.
 
@@ -417,6 +419,7 @@ def test_m303_2024_1t_manual_worked_example_per_casilla_leaves() -> None:
         )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_casilla_27_anti_tautology_recargo_changes_total_cuota_devengada() -> None:
     """Dropping op (9)'s recargo must lower casilla 27 by exactly the dropped amount.
 

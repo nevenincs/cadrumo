@@ -26,13 +26,13 @@ def _isolate_registry_caches() -> Iterator[None]:
     _reset()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def governed_fact_scope() -> Iterator[None]:
-    """Resolve registry tokens in a requesting module against the compiled authored facts.
+    """Resolve registry tokens in one requesting test against the compiled authored facts.
 
     Governed-fact resolvers refuse to run without an explicit authority scope.
-    Modules whose test bodies construct registry-validated values request this
-    fixture instead of relying on an ambient scope.
+    Only a test whose body constructs registry-validated values requests this
+    fixture, and the scope ends with that test, so no other test inherits it.
     """
     from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 

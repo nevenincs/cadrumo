@@ -17,6 +17,7 @@ import os
 import secrets
 import shutil
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Final, Literal
@@ -55,10 +56,19 @@ from .semantic_map import SemanticMap
 from .tree_paths import contains
 
 __all__ = [
+    "GeneratedExportPublicationJournal",
+    "GeneratedExportTransactionPaths",
     "GeneratedExportTreePublicationContext",
     "GeneratedExportTreeTargetStateReceipt",
     "PublishedGeneratedExportTree",
+    "export_provenance_file_sha256",
+    "load_generated_export_publication_journal",
     "publish_validated_generated_export_tree",
+    "recover_interrupted_publication",
+    "require_expected_target_state",
+    "stage_verified_candidate_package",
+    "verify_generated_export_package",
+    "write_generated_export_publication_journal",
 ]
 
 
@@ -69,7 +79,7 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
-class _PublicationJournal(_StrictModel):
+class GeneratedExportPublicationJournal(_StrictModel):
     """Crash-recovery facts for an opaque export-directory transaction."""
 
     schema_version: Literal[1]
@@ -90,6 +100,10 @@ class GeneratedExportTreePublicationContext:
     target_root: Path
     target_export_root: Path
     expected_target_state: GeneratedExportTreeTargetStateReceipt | None = None
+    #: Replaces one export directory with another for cutover, rollback and
+    #: recovery. A caller proving the rollback path supplies a replacement that
+    #: refuses one specific swap; publication itself always uses ``os.replace``.
+    replace_export_directory: Callable[[Path, Path], None] = os.replace
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,7 +118,7 @@ class GeneratedExportTreeTargetStateReceipt:
         if not export_root.exists():
             return cls(manifest_sha256=None, output_files=())
         return cls(
-            manifest_sha256=_sha256(export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME),
+            manifest_sha256=export_provenance_file_sha256(export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME),
             output_files=collect_export_fragment_output_digests(export_root),
         )
 
@@ -116,6 +130,68 @@ class PublishedGeneratedExportTree:
     validated: ValidatedGeneratedExportTree | None
     export_root: Path
     provenance_manifest_path: Path
+
+
+@dataclass(frozen=True, slots=True)
+class GeneratedExportTransactionPaths:
+    """The registry-root siblings one modelo/revision export transaction owns.
+
+    The journal and lock identity are fixed per target. Each rollback backup and
+    staging sibling is a fresh, opaque name under a transaction-scoped prefix, so
+    recovery recognises exactly the siblings this transaction may own.
+    """
+
+    target_root: Path
+    modelo: str
+    revision_id: str
+
+    @classmethod
+    def for_context(cls, context: GeneratedExportTreePublicationContext) -> GeneratedExportTransactionPaths:
+        """The transaction paths under a publication context's resolved target root."""
+        return cls(
+            target_root=context.target_root.resolve(),
+            modelo=str(context.validation.target.modelo),
+            revision_id=str(context.validation.target.revision_id),
+        )
+
+    @property
+    def lock_identity(self) -> Path:
+        """The identity whose ``.lock`` sidecar serialises this transaction."""
+        return self.target_root / f".generated-export-transaction-{self.modelo}-{self.revision_id}"
+
+    @property
+    def journal(self) -> Path:
+        """The crash-recovery journal beside the lock identity."""
+        return self.target_root / f"{self.lock_identity.name}.json"
+
+    @property
+    def backup_prefix(self) -> str:
+        """The name prefix every rollback backup sibling of this transaction carries."""
+        return f".generated-export-backup-{self.modelo}-{self.revision_id}-"
+
+    @property
+    def staging_prefix(self) -> str:
+        """The name prefix every same-volume staging sibling of this transaction carries."""
+        return f".generated-export-stage-{self.modelo}-{self.revision_id}-"
+
+    def new_backup_sibling(self) -> Path:
+        """Return a fresh rollback backup sibling that does not exist yet."""
+        backup = self.target_root / f"{self.backup_prefix}{secrets.token_hex(16)}"
+        if backup.exists() or is_link_like(backup):
+            raise RegistryValidationError(f"generated export rollback sibling unexpectedly exists: {backup}")
+        return backup
+
+    def new_staging_sibling(self) -> Path:
+        """Return a fresh same-volume staging sibling that does not exist yet.
+
+        It lives beside ``modelos/`` at the registry root, never inside the revision
+        directory: ``load_modelo_directory`` recursively validates every file under
+        a revision directory and refuses a staging sibling parked next to ``export/``.
+        """
+        staging = self.target_root / f"{self.staging_prefix}{secrets.token_hex(16)}"
+        if staging.exists() or is_link_like(staging):
+            raise RegistryValidationError(f"generated export staging sibling unexpectedly exists: {staging}")
+        return staging
 
 
 def publish_validated_generated_export_tree(
@@ -135,14 +211,15 @@ def publish_validated_generated_export_tree(
     post-cutover manifest, digest, and production-loader checks.
     """
     candidate_export_root = _prepare_candidate_publication_path(context)
-    journal_path = _journal_path(context)
-    lock_identity = _lock_identity(context)
+    transaction_paths = GeneratedExportTransactionPaths.for_context(context)
+    journal_path = transaction_paths.journal
+    lock_identity = transaction_paths.lock_identity
 
     with exclusive_file_lock(lock_identity):
         target_export_root = _admit_target_publication_path(context)
         revision_root = target_export_root.parent
-        _require_expected_target_state(context, target_export_root)
-        recovery_completed = _recover_interrupted_publication(
+        require_expected_target_state(context, target_export_root)
+        recovery_completed = recover_interrupted_publication(
             context=context,
             target_export_root=target_export_root,
             journal_path=journal_path,
@@ -175,12 +252,14 @@ def publish_validated_generated_export_tree(
             render_profile=render_profile,
             render_profile_source_evidence=render_profile_source_evidence,
         )
-        candidate_manifest = _verify_generated_export_package(candidate_export_root)
-        candidate_manifest_sha256 = _sha256(candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
+        candidate_manifest = verify_generated_export_package(candidate_export_root)
+        candidate_manifest_sha256 = export_provenance_file_sha256(
+            candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+        )
         publication_target_root = context.target_root.resolve()
         publication_modelo = str(context.validation.target.modelo)
         publication_revision_id = str(context.validation.target.revision_id)
-        staged_candidate_export_root = _stage_verified_candidate_package(
+        staged_candidate_export_root = stage_verified_candidate_package(
             candidate_export_root=candidate_export_root,
             target_root=publication_target_root,
             modelo=publication_modelo,
@@ -189,12 +268,8 @@ def publish_validated_generated_export_tree(
             expected_manifest=candidate_manifest,
         )
 
-        backup_export_root = _rollback_sibling(
-            target_root=publication_target_root,
-            modelo=publication_modelo,
-            revision_id=publication_revision_id,
-        )
-        journal = _PublicationJournal(
+        backup_export_root = transaction_paths.new_backup_sibling()
+        journal = GeneratedExportPublicationJournal(
             schema_version=_JOURNAL_SCHEMA_VERSION,
             state="intent",
             modelo=str(context.validation.target.modelo),
@@ -203,21 +278,22 @@ def publish_validated_generated_export_tree(
             backup_export=str(backup_export_root),
             candidate_manifest_sha256=candidate_manifest_sha256,
         )
-        _write_journal(journal_path, journal)
+        write_generated_export_publication_journal(journal_path, journal)
 
         had_target = target_export_root.exists()
         if had_target:
-            os.replace(target_export_root, backup_export_root)
+            context.replace_export_directory(target_export_root, backup_export_root)
             fsync_parent_dir(target_export_root)
             journal = journal.model_copy(update={"state": "backup_staged"})
-            _write_journal(journal_path, journal)
+            write_generated_export_publication_journal(journal_path, journal)
         try:
-            os.replace(staged_candidate_export_root, target_export_root)
+            context.replace_export_directory(staged_candidate_export_root, target_export_root)
         except OSError as publish_error:
             _restore_backup_or_raise(
                 target_export_root=target_export_root,
                 backup_export_root=backup_export_root,
                 publish_error=publish_error,
+                replace_export_directory=context.replace_export_directory,
             )
             _delete_verified_staged_candidate_if_present(staged_candidate_export_root)
             _delete_journal(journal_path)
@@ -226,7 +302,7 @@ def publish_validated_generated_export_tree(
             ) from publish_error
         fsync_parent_dir(target_export_root)
         journal = journal.model_copy(update={"state": "candidate_live"})
-        _write_journal(journal_path, journal)
+        write_generated_export_publication_journal(journal_path, journal)
 
         _verify_post_cutover_target(
             target_export_root,
@@ -234,7 +310,7 @@ def publish_validated_generated_export_tree(
             expected_manifest=candidate_manifest,
         )
         journal = journal.model_copy(update={"state": "committed"})
-        _write_journal(journal_path, journal)
+        write_generated_export_publication_journal(journal_path, journal)
         if had_target:
             _delete_opaque_rollback_tree(backup_export_root)
         _delete_journal(journal_path)
@@ -286,7 +362,7 @@ def _admit_target_publication_path(context: GeneratedExportTreePublicationContex
     return target_export_root
 
 
-def _require_expected_target_state(context: GeneratedExportTreePublicationContext, target_export_root: Path) -> None:
+def require_expected_target_state(context: GeneratedExportTreePublicationContext, target_export_root: Path) -> None:
     """Refuse a target that changed after the read-only preflight and before lock entry."""
     expected = context.expected_target_state
     if expected is None:
@@ -297,7 +373,8 @@ def _require_expected_target_state(context: GeneratedExportTreePublicationContex
         return
     if (
         not target_export_root.exists()
-        or _sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected.manifest_sha256
+        or export_provenance_file_sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
+        != expected.manifest_sha256
         or collect_export_fragment_output_digests(target_export_root) != expected.output_files
     ):
         raise RegistryValidationError("generated export target changed after check and before publication lock")
@@ -378,7 +455,8 @@ def _require_no_stale_sibling_manifest(revision_root: Path, *, subject: str) -> 
         raise RegistryValidationError(f"{subject} refuses stale sibling provenance manifest: {stale}")
 
 
-def _verify_generated_export_package(export_root: Path) -> ExportFragmentProvenanceManifest:
+def verify_generated_export_package(export_root: Path) -> ExportFragmentProvenanceManifest:
+    """Return the package manifest after proving its files are exactly the attested outputs."""
     _require_complete_regular_tree(export_root, subject="generated export package")
     manifest_path = export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     if is_link_like(manifest_path) or not manifest_path.is_file():
@@ -410,9 +488,12 @@ def _verify_post_cutover_target(
     expected_manifest_sha256: str,
     expected_manifest: ExportFragmentProvenanceManifest,
 ) -> None:
-    if _sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected_manifest_sha256:
+    if (
+        export_provenance_file_sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
+        != expected_manifest_sha256
+    ):
         raise RegistryValidationError("published export provenance digest does not match the validated candidate")
-    if _verify_generated_export_package(target_export_root) != expected_manifest:
+    if verify_generated_export_package(target_export_root) != expected_manifest:
         raise RegistryValidationError("published export provenance does not match the validated candidate")
     modelo_root = target_export_root.parent.parent.parent
     loaded = load_modelo_directory(modelo_root)
@@ -431,7 +512,7 @@ def _verify_post_cutover_target(
         )
 
 
-def _recover_interrupted_publication(
+def recover_interrupted_publication(
     *,
     context: GeneratedExportTreePublicationContext,
     target_export_root: Path,
@@ -442,9 +523,10 @@ def _recover_interrupted_publication(
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> bool:
+    """Complete, roll back, or retire an interrupted transaction; report whether a candidate went live."""
     if not journal_path.exists():
         return False
-    journal = _load_journal(journal_path)
+    journal = load_generated_export_publication_journal(journal_path)
     if journal.modelo != str(context.validation.target.modelo) or journal.revision_id != str(
         context.validation.target.revision_id
     ):
@@ -488,8 +570,11 @@ def _recover_interrupted_publication(
     if backup_export_root.exists():
         if candidate_is_verified:
             if target_export_root.exists():
-                _move_failed_candidate_aside(target_export_root)
-            os.replace(staged_candidate_export_root, target_export_root)
+                _move_failed_candidate_aside(
+                    target_export_root,
+                    replace_export_directory=context.replace_export_directory,
+                )
+            context.replace_export_directory(staged_candidate_export_root, target_export_root)
             fsync_parent_dir(target_export_root)
             # The authority check reads `revision.export_layouts` off the disk
             # tree, which only exists once the candidate is at the canonical
@@ -515,13 +600,16 @@ def _recover_interrupted_publication(
             _delete_journal(journal_path)
             return True
         if target_export_root.exists():
-            _move_failed_candidate_aside(target_export_root)
-        os.replace(backup_export_root, target_export_root)
+            _move_failed_candidate_aside(
+                target_export_root,
+                replace_export_directory=context.replace_export_directory,
+            )
+        context.replace_export_directory(backup_export_root, target_export_root)
         fsync_parent_dir(target_export_root)
         _delete_journal(journal_path)
         return False
     if candidate_is_verified and not target_export_root.exists():
-        os.replace(staged_candidate_export_root, target_export_root)
+        context.replace_export_directory(staged_candidate_export_root, target_export_root)
         fsync_parent_dir(target_export_root)
         candidate_manifest = _verify_recovery_package_against_current_authorities(
             target_export_root,
@@ -557,7 +645,7 @@ def _verify_recovery_package_against_current_authorities(
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> ExportFragmentProvenanceManifest:
-    package_manifest = _verify_generated_export_package(export_root)
+    package_manifest = verify_generated_export_package(export_root)
     loaded = load_modelo_directory(modelo_root)
     revision_id = str(context.validation.target.revision_id)
     revision = loaded.revisions.get(revision_id)
@@ -583,25 +671,31 @@ def _verify_recovery_package_against_current_authorities(
     return verified
 
 
-def _matches_journal_candidate(export_root: Path, journal: _PublicationJournal) -> bool:
+def _matches_journal_candidate(export_root: Path, journal: GeneratedExportPublicationJournal) -> bool:
     try:
-        _verify_generated_export_package(export_root)
-        return _sha256(export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME) == journal.candidate_manifest_sha256
+        verify_generated_export_package(export_root)
+        return (
+            export_provenance_file_sha256(export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
+            == journal.candidate_manifest_sha256
+        )
     except (OSError, RegistryValidationError):
         return False
 
 
 def _journal_backup_path(
-    journal: _PublicationJournal,
+    journal: GeneratedExportPublicationJournal,
     target_export_root: Path,
     target_root: Path,
 ) -> Path:
     backup = Path(journal.backup_export)
     if backup.parent != target_root:
         raise RegistryValidationError("generated publication journal backup escapes the target registry root")
-    if not backup.name.startswith(
-        f".generated-export-backup-{journal.modelo}-{journal.revision_id}-",
-    ):
+    backup_prefix = GeneratedExportTransactionPaths(
+        target_root=target_root,
+        modelo=journal.modelo,
+        revision_id=journal.revision_id,
+    ).backup_prefix
+    if not backup.name.startswith(backup_prefix):
         raise RegistryValidationError("generated publication journal backup name is not transaction-scoped")
     return backup
 
@@ -609,7 +703,7 @@ def _journal_backup_path(
 def _retire_completed_legacy_orphan_journal(
     *,
     context: GeneratedExportTreePublicationContext,
-    journal: _PublicationJournal,
+    journal: GeneratedExportPublicationJournal,
     journal_path: Path,
     target_export_root: Path,
     backup_export_root: Path,
@@ -640,33 +734,7 @@ def _retire_completed_legacy_orphan_journal(
     return True
 
 
-def _rollback_sibling(
-    *,
-    target_root: Path,
-    modelo: str,
-    revision_id: str,
-) -> Path:
-    backup = target_root / (f".generated-export-backup-{modelo}-{revision_id}-{secrets.token_hex(16)}")
-    if backup.exists() or is_link_like(backup):
-        raise RegistryValidationError(f"generated export rollback sibling unexpectedly exists: {backup}")
-    return backup
-
-
-def _staging_sibling(*, target_root: Path, modelo: str, revision_id: str) -> Path:
-    """Return one opaque, same-volume candidate sibling for the final swap.
-
-    Lives beside ``modelos/`` at the registry root, never inside the revision
-    directory itself.  ``load_modelo_directory`` recursively validates every file
-    under a revision directory, so a staging sibling parked next to ``export/``
-    there is litter the loader has no owned-fragment name for and refuses.
-    """
-    staging = target_root / f".generated-export-stage-{modelo}-{revision_id}-{secrets.token_hex(16)}"
-    if staging.exists() or is_link_like(staging):
-        raise RegistryValidationError(f"generated export staging sibling unexpectedly exists: {staging}")
-    return staging
-
-
-def _stage_verified_candidate_package(
+def stage_verified_candidate_package(
     *,
     candidate_export_root: Path,
     target_root: Path,
@@ -682,7 +750,11 @@ def _stage_verified_candidate_package(
     ``Y:``).  Only this fresh, opaque sibling is ever the source of the final
     ``os.replace`` into ``export/``.
     """
-    staging = _staging_sibling(target_root=target_root, modelo=modelo, revision_id=revision_id)
+    staging = GeneratedExportTransactionPaths(
+        target_root=target_root,
+        modelo=modelo,
+        revision_id=revision_id,
+    ).new_staging_sibling()
     try:
         staging.mkdir()
         for source in scan_directory(candidate_export_root, recursive=True, select=DirectoryEntryKind.FILES):
@@ -696,9 +768,9 @@ def _stage_verified_candidate_package(
             fsync_parent_dir(destination)
         fsync_parent_dir(staging / ".staging-complete")
         fsync_parent_dir(staging)
-        staged_manifest = _verify_generated_export_package(staging)
+        staged_manifest = verify_generated_export_package(staging)
         if (
-            _sha256(staging / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected_manifest_sha256
+            export_provenance_file_sha256(staging / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected_manifest_sha256
             or staged_manifest != expected_manifest
         ):
             raise RegistryValidationError("same-volume staged export does not match the validated candidate")
@@ -719,9 +791,13 @@ def _copy_and_fsync_regular_file(source: Path, destination: Path) -> None:
         os.fsync(output_stream.fileno())
 
 
-def _journal_staged_candidate_path(journal: _PublicationJournal, target_root: Path) -> Path:
+def _journal_staged_candidate_path(journal: GeneratedExportPublicationJournal, target_root: Path) -> Path:
     candidate = Path(journal.candidate_export)
-    prefix = f".generated-export-stage-{journal.modelo}-{journal.revision_id}-"
+    prefix = GeneratedExportTransactionPaths(
+        target_root=target_root,
+        modelo=journal.modelo,
+        revision_id=journal.revision_id,
+    ).staging_prefix
     if candidate.parent != target_root or not candidate.name.startswith(prefix):
         raise RegistryValidationError(
             "generated publication journal candidate is not a target-revision staging sibling",
@@ -742,30 +818,17 @@ def _delete_verified_staged_candidate_if_present(staging: Path) -> None:
             raise RegistryValidationError(f"generated export staging residue remains: {staging}")
 
 
-def _journal_path(context: GeneratedExportTreePublicationContext) -> Path:
-    return context.target_root.resolve() / f"{_transaction_stem(context)}.json"
-
-
-def _lock_identity(context: GeneratedExportTreePublicationContext) -> Path:
-    return context.target_root.resolve() / _transaction_stem(context)
-
-
-def _transaction_stem(context: GeneratedExportTreePublicationContext) -> str:
-    modelo = str(context.validation.target.modelo)
-    revision_id = str(context.validation.target.revision_id)
-    return f".generated-export-transaction-{modelo}-{revision_id}"
-
-
 def _restore_backup_or_raise(
     *,
     target_export_root: Path,
     backup_export_root: Path,
     publish_error: OSError,
+    replace_export_directory: Callable[[Path, Path], None],
 ) -> None:
     if not backup_export_root.exists():
         raise RegistryValidationError(f"generated export publication failed: {publish_error}") from publish_error
     try:
-        os.replace(backup_export_root, target_export_root)
+        replace_export_directory(backup_export_root, target_export_root)
         fsync_parent_dir(target_export_root)
     except OSError as restore_error:
         raise RegistryValidationError(
@@ -792,14 +855,18 @@ def _delete_opaque_rollback_tree(backup_export_root: Path) -> None:
         raise RegistryValidationError(f"generated export rollback residue remains: {backup_export_root}")
 
 
-def _move_failed_candidate_aside(target_export_root: Path) -> None:
+def _move_failed_candidate_aside(
+    target_export_root: Path,
+    *,
+    replace_export_directory: Callable[[Path, Path], None],
+) -> None:
     failed = target_export_root.with_name(f".{target_export_root.name}.generator-invalid-{secrets.token_hex(16)}")
-    os.replace(target_export_root, failed)
+    replace_export_directory(target_export_root, failed)
     try:
         _delete_opaque_rollback_tree(failed)
     except BaseException:
         if not target_export_root.exists() and failed.exists():
-            os.replace(failed, target_export_root)
+            replace_export_directory(failed, target_export_root)
         raise
 
 
@@ -818,7 +885,8 @@ def _require_complete_regular_tree(path: Path, *, subject: str) -> None:
             raise RegistryValidationError(f"{subject} contains a non-regular member: {child}")
 
 
-def _write_journal(path: Path, journal: _PublicationJournal) -> None:
+def write_generated_export_publication_journal(path: Path, journal: GeneratedExportPublicationJournal) -> None:
+    """Durably replace the journal at ``path`` with the canonical JSON of ``journal``."""
     payload = canonical_json_bytes(journal.model_dump(mode="json"))
     descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
     temporary_path = Path(temporary_name)
@@ -836,12 +904,13 @@ def _write_journal(path: Path, journal: _PublicationJournal) -> None:
             temporary_path.unlink()
 
 
-def _load_journal(path: Path) -> _PublicationJournal:
+def load_generated_export_publication_journal(path: Path) -> GeneratedExportPublicationJournal:
+    """Load a journal, refusing a linked, invalid, or non-canonical file."""
     if is_link_like(path) or not path.is_file():
         raise RegistryValidationError(f"generated publication journal must be a regular file: {path}")
     raw = path.read_bytes()
     try:
-        journal = _PublicationJournal.model_validate_json(raw)
+        journal = GeneratedExportPublicationJournal.model_validate_json(raw)
     except ValidationError as exc:
         raise RegistryValidationError(f"generated publication journal is invalid: {path}") from exc
     if raw != canonical_json_bytes(journal.model_dump(mode="json")):
@@ -855,7 +924,8 @@ def _delete_journal(path: Path) -> None:
         fsync_parent_dir(path)
 
 
-def _sha256(path: Path) -> str:
+def export_provenance_file_sha256(path: Path) -> str:
+    """Return the SHA-256 of one regular, non-linked export provenance file."""
     if is_link_like(path) or not path.is_file():
         raise RegistryValidationError(f"generated export provenance path must be a regular file: {path}")
     digest, _byte_count = hash_file(path)

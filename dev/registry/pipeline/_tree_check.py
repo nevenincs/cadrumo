@@ -44,6 +44,7 @@ __all__ = [
     "CheckedGeneratedExportTree",
     "GeneratedExportTreeCheckContext",
     "check_generated_export_tree",
+    "refuse_repeat_the_candidate_would_drop",
 ]
 
 
@@ -149,7 +150,7 @@ def check_generated_export_tree(
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
     )
-    _refuse_repeat_the_candidate_would_drop(published_layout, candidate.layout)
+    refuse_repeat_the_candidate_would_drop(published_layout, candidate.layout)
     if normalised_loader_semantics(published_layout) != normalised_loader_semantics(candidate.layout):
         raise RegistryValidationError("published export loader semantics do not match fresh generated semantics")
     _require_exact_tree_bytes(
@@ -370,7 +371,7 @@ def _require_no_obsolete_direct_paths(
             raise RegistryValidationError(f"generated check refuses obsolete direct registry path: {path}")
 
 
-def _refuse_repeat_the_candidate_would_drop(
+def refuse_repeat_the_candidate_would_drop(
     published_layout: ExportLayoutDefinition,
     candidate_layout: ExportLayoutDefinition,
 ) -> None:

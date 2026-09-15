@@ -30,6 +30,7 @@ import pytest
 from cadrumo.core.config import override_settings
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.tests.env_scope import scoped_env_var
 from dev.packaging.command_execution import run_command
 
 from ..compiler.identity import (
@@ -192,9 +193,9 @@ def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cach
     registry_root = _write_registry_tree(tmp_path, number="01")
     resolved = registry_root.resolve()
 
-    with override_settings(
-        cadrumo_validation_verdict_cache_dir=tmp_path / "verdict",
-        cadrumo_registry_disk_cache_dir=tmp_path / "registry-disk-cache",
+    with (
+        scoped_env_var("CADRUMO_REGISTRY_VERDICT_CACHE_DIR", str(tmp_path / "verdict")),
+        override_settings(cadrumo_registry_disk_cache_dir=tmp_path / "registry-disk-cache"),
     ):
         before, _catalogues = load_registry_tree(registry_root)
         assert _casilla_number(before) == "01"

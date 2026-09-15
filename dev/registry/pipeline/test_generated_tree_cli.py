@@ -23,7 +23,7 @@ from ._generated_tree_test_support import (
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
-    _require_expected_target_state,
+    require_expected_target_state,
 )
 from ._tree_validation import GeneratedExportTreeValidationContext
 from .candidate_staging import (
@@ -31,14 +31,14 @@ from .candidate_staging import (
     stage_continuity_metadata,
 )
 from .cli import (
-    _bootstrap_target,
-    _check,
-    _Invocation,
-    _prepare,
-    _PreparedInvocation,
-    _publish,
-    _require_republication_eligibility,
+    GeneratedTreeInvocation,
+    PreparedGeneratedTreeInvocation,
     app,
+    check_prepared_invocation,
+    prepare_generated_tree_invocation,
+    publish_prepared_invocation,
+    require_republication_eligibility,
+    reviewed_bootstrap_target,
 )
 from .export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
 from .generated_tree_dispositions import record_drift_dispositions
@@ -62,8 +62,8 @@ def test_pipeline_cli_registers_the_separate_check_and_publish_verbs() -> None:
     assert "republish" in result.output
 
 
-def _republish_invocation(expected_manifest_sha256: str) -> _Invocation:
-    return _Invocation("190", "2024", "aeat-dr-190-2024", 2024, "0A", expected_manifest_sha256)
+def _republish_invocation(expected_manifest_sha256: str) -> GeneratedTreeInvocation:
+    return GeneratedTreeInvocation("190", "2024", "aeat-dr-190-2024", 2024, "0A", expected_manifest_sha256)
 
 
 def _republish_comparison(*, differing: tuple[str, ...]) -> RenderComparison:
@@ -84,13 +84,13 @@ def test_republish_requires_the_exact_reviewed_target_manifest_digest() -> None:
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=actual, output_files=())
 
     with pytest.raises(ValueError, match="exact lowercase 64-character"):
-        _require_republication_eligibility(
+        require_republication_eligibility(
             _republish_invocation("not-a-digest"),
             state,
             _republish_comparison(differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,)),
         )
     with pytest.raises(ValueError, match="differs from the explicitly reviewed digest"):
-        _require_republication_eligibility(
+        require_republication_eligibility(
             _republish_invocation("b" * 64),
             state,
             _republish_comparison(differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,)),
@@ -110,12 +110,12 @@ def test_republish_admits_only_provenance_only_drift() -> None:
     digest = "a" * 64
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
-    _require_republication_eligibility(
+    require_republication_eligibility(
         _republish_invocation(digest),
         state,
         _republish_comparison(differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,)),
     )
-    _require_republication_eligibility(
+    require_republication_eligibility(
         _republish_invocation(digest),
         state,
         RenderComparison(
@@ -130,7 +130,7 @@ def test_republish_admits_only_provenance_only_drift() -> None:
         ),
     )
     with pytest.raises(ValueError, match="refuses an unexplained record change"):
-        _require_republication_eligibility(
+        require_republication_eligibility(
             _republish_invocation(digest),
             state,
             _republish_comparison(
@@ -138,7 +138,7 @@ def test_republish_admits_only_provenance_only_drift() -> None:
             ),
         )
     with pytest.raises(ValueError, match="refuses an unexplained record change"):
-        _require_republication_eligibility(
+        require_republication_eligibility(
             _republish_invocation(digest),
             state,
             RenderComparison(
@@ -156,7 +156,7 @@ def test_republish_admits_only_provenance_only_drift() -> None:
 def test_pipeline_cli_refuses_a_bootstrap_source_absent_from_the_catalogue() -> None:
     """An absent tree's bootstrap selector must resolve to a real catalogued source.
 
-    Modelo 200/2024 has no published export tree yet, so ``_prepare`` takes the
+    Modelo 200/2024 has no published export tree yet, so ``prepare_generated_tree_invocation`` takes the
     bootstrap branch before ``revision_render_inputs`` is ever reached. The
     given ``source_ref`` is not any catalogued source at all, so this proves
     the bootstrap guard in ``cli.py`` rather than the record-design guard in
@@ -176,7 +176,7 @@ def test_pipeline_cli_refuses_a_catalogued_source_undeclared_as_this_revisions_r
     """A source that exists but is not a record-design source is refused by name.
 
     Modelo 200's 2025-y-siguientes revision already has a published export
-    tree, so ``_prepare`` skips the bootstrap branch entirely and calls
+    tree, so ``prepare_generated_tree_invocation`` skips the bootstrap branch entirely and calls
     ``revision_render_inputs`` directly. ``aeat-modelo-200-manual-2025`` is a
     real catalogued source (``kind = "manual_pdf"``) and is one of this
     revision's declared ``source_refs``, but it is not a record-design source,
@@ -196,16 +196,16 @@ def test_pipeline_cli_refuses_a_catalogued_source_undeclared_as_this_revisions_r
 def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
     """A generic revision/source convention cannot become a bootstrap permission."""
     with pytest.raises(ValueError, match="no reviewed generated-export bootstrap target"):
-        _bootstrap_target(
-            _Invocation("200", "2025-y-siguientes", "aeat-dr-200-2025", 2025, "0A"),
+        reviewed_bootstrap_target(
+            GeneratedTreeInvocation("200", "2025-y-siguientes", "aeat-dr-200-2025", 2025, "0A"),
             source_sha256="0" * 64,
         )
 
 
 def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_2024_design() -> None:
     """The absent 2024 tree may bootstrap only from its own reviewed source."""
-    target = _bootstrap_target(
-        _Invocation("200", "2024", "aeat-dr-200-2024", 2024, "0A"),
+    target = reviewed_bootstrap_target(
+        GeneratedTreeInvocation("200", "2024", "aeat-dr-200-2024", 2024, "0A"),
         source_sha256="ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
     )
 
@@ -259,9 +259,9 @@ def test_bootstrap_construct_retarget_refuses_reference_count_drift_without_muta
 def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> None:
     """A reviewed bootstrap authorization must not outlive the bootstrap it authorized.
 
-    ``_prepare`` in ``cli.py`` only ever consults this file while
+    ``prepare_generated_tree_invocation`` in ``cli.py`` only ever consults this file while
     ``target_export_root`` is absent; once a revision's tree is published,
-    ``_bootstrap_target`` can never match that row again. A row surviving its
+    ``reviewed_bootstrap_target`` can never match that row again. A row surviving its
     own bootstrap is dead weight nothing else refuses, mirroring the sibling
     disposition ledger's own stated policy in this package
     (``generated_tree_dispositions.toml``: "a row whose tree has been repaired
@@ -348,7 +348,7 @@ def test_target_appearing_after_an_absent_receipt_is_refused_without_mutation(tm
     target.mkdir()
 
     with pytest.raises(RegistryValidationError, match="appeared after check"):
-        _require_expected_target_state(
+        require_expected_target_state(
             _publication_context_for_target(target, receipt),
             target,
         )
@@ -367,7 +367,7 @@ def test_non_manifest_member_mutation_after_existing_receipt_is_refused_without_
     member.write_text("id = 'mutated'\n", encoding="utf-8")
 
     with pytest.raises(RegistryValidationError, match="changed after check"):
-        _require_expected_target_state(
+        require_expected_target_state(
             _publication_context_for_target(target, receipt),
             target,
         )
@@ -375,7 +375,7 @@ def test_non_manifest_member_mutation_after_existing_receipt_is_refused_without_
     assert member.read_text(encoding="utf-8") == "id = 'mutated'\n"
 
 
-def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _PreparedInvocation:
+def _prepared_absent_target(candidate_base: Path, target_root: Path) -> PreparedGeneratedTreeInvocation:
     """Build a real isolated candidate for the bootstrap-path detector test."""
     validation, joined, semantic_map, rendered, candidate_export_root = write_isolated_generated_authority_tree(
         candidate_base,
@@ -391,8 +391,8 @@ def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _Prepare
         render_profile_source_evidence=evidence,
         transport_profile=transport,
     )
-    return _PreparedInvocation(
-        invocation=_Invocation(
+    return PreparedGeneratedTreeInvocation(
+        invocation=GeneratedTreeInvocation(
             ISOLATED_TREE.modelo,
             ISOLATED_TREE.revision,
             ISOLATED_TREE.source_ref,
@@ -418,7 +418,7 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     first = _prepared_absent_target(tmp_path / "check", tmp_path / "target" / "registry" / "aeat")
     shutil.copytree(first.candidate_root, first.target_root)
 
-    result, _rendered, _target_state = _check(first)
+    result, _rendered, _target_state = check_prepared_invocation(first)
     assert result == "publishable_absence"
     assert first.candidate_root.joinpath(
         "modelos",
@@ -430,8 +430,8 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     assert not first.target_export_root.exists()
 
     publication = _prepared_absent_target(tmp_path / "publish", first.target_root)
-    _publication_result, publication_rendered, publication_target_state = _check(publication)
-    _publish(publication, publication_rendered, publication_target_state)
+    _publication_result, publication_rendered, publication_target_state = check_prepared_invocation(publication)
+    publish_prepared_invocation(publication, publication_rendered, publication_target_state)
 
     assert first.target_export_root.is_dir()
 
@@ -495,8 +495,8 @@ def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_pa
 @pytest.mark.timeout(900)
 def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_path: Path) -> None:
     """The operator path validates M390 without consulting either prior export tree."""
-    prepared = _prepare(
-        _Invocation("390", "2022", "aeat-dr-390-2022", 2022, "0A"),
+    prepared = prepare_generated_tree_invocation(
+        GeneratedTreeInvocation("390", "2022", "aeat-dr-390-2022", 2022, "0A"),
         tmp_path,
     )
 
@@ -504,7 +504,7 @@ def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_p
     assert not (staged_revision / "export").exists()
     assert not (staged_revision / "export_layouts").exists()
 
-    result, rendered, _target_state = _check(prepared)
+    result, rendered, _target_state = check_prepared_invocation(prepared)
     close = next(
         field
         for record in rendered.layout.records
@@ -529,16 +529,13 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
     ledger's own gate fails once its cause is gone.
     """
     digest = "a" * 64
-    # Explicitly a row whose remedy is `republish`. Taking whichever row sorted
-    # first silently selected modelo 347, whose remedy is `repair_inputs` -- so
-    # the test asserted that republication is admitted using the one subject for
-    # which it must be refused, and only stopped passing when the remedy field
-    # made the two directions distinguishable.
+    # Only a row whose remedy is `republish` admits republication; a row with any
+    # other remedy must be refused, so the subject is selected by its remedy.
     explained = next(item for item in record_drift_dispositions() if item.remedy == "republish")
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
-    _require_republication_eligibility(
-        _Invocation(
+    require_republication_eligibility(
+        GeneratedTreeInvocation(
             explained.modelo,
             explained.revision,
             explained.source_ref,

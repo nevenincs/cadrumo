@@ -44,7 +44,14 @@ def toml_comments(text: str) -> list[str]:
     return comments
 
 
-def _replace_if_unchanged(target: Path, replacement: Path | None, expected: str | None) -> None:
+def replace_file_if_unchanged(target: Path, replacement: Path | None, expected: str | None) -> None:
+    """Replace or delete ``target`` only while it still holds the bytes hashed as ``expected``.
+
+    ``replacement`` of ``None`` deletes the target; ``expected`` of ``None`` requires the target
+    to be absent. The target is displaced before its hash is checked, so a concurrent edit is
+    captured and restored in place rather than overwritten, and the call refuses with a
+    ``ValueError`` naming where the concurrent bytes were preserved.
+    """
     target.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".registry-install-", delete=False) as stream:
         pending = Path(stream.name)
@@ -100,7 +107,7 @@ def install_proven_tree(directory: Path, staged: Path, originals: Path, before: 
             if actual != before.get(name):
                 raise ValueError(f"concurrent edit at {target}")
             completed.append(name)
-            _replace_if_unchanged(target, staged / name if name in after else None, before.get(name))
+            replace_file_if_unchanged(target, staged / name if name in after else None, before.get(name))
         for relative in sorted(before_directories - after_directories, key=lambda path: len(path.parts), reverse=True):
             (directory / relative).rmdir()
         live_directories = {path.relative_to(directory) for path in directory.rglob("*") if path.is_dir()}
@@ -119,7 +126,7 @@ def install_proven_tree(directory: Path, staged: Path, originals: Path, before: 
                 conflicts.append(name)
                 continue
             try:
-                _replace_if_unchanged(target, originals / name if name in before else None, after.get(name))
+                replace_file_if_unchanged(target, originals / name if name in before else None, after.get(name))
             except (OSError, ValueError) as recovery_error:
                 conflicts.append(f"{name}: {recovery_error}")
         raise ValueError(
@@ -128,4 +135,4 @@ def install_proven_tree(directory: Path, staged: Path, originals: Path, before: 
         ) from exc
 
 
-__all__ = ["fingerprint", "install_proven_tree", "toml_comments"]
+__all__ = ["fingerprint", "install_proven_tree", "replace_file_if_unchanged", "toml_comments"]

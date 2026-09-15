@@ -20,6 +20,10 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportDraftAttribute
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    CandidateFactAuthority,
+    validating_governed_facts,
+)
 from cadrumo.domain.calculations.registry.invoice_bindings import CollectibleInvoiceProvider
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.schema import (
@@ -160,11 +164,12 @@ _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS = (
 
 
 def _validate_modelo(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> None:
-    RegistryValidator(
-        catalogues,
-        source_root=bundled_path(),
-        user_profile_schema=load_user_profile_schema(),
-    ).validate_modelo(modelo)
+    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+        RegistryValidator(
+            catalogues,
+            source_root=bundled_path(),
+            user_profile_schema=load_user_profile_schema(),
+        ).validate_modelo(modelo)
 
 
 def _validate_revision(modelo: ModeloDefinition, catalogues: RegistryCatalogues, revision: ModeloRevision) -> None:
@@ -593,7 +598,12 @@ def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
     )
     _validate_revision(modelo, catalogues, with_provider(rebuilt, BindingAggregationOp.COUNT_DISTINCT))
 
-    # A provider without ``fact`` is no longer expressible: the typed provider model requires it.
+    CollectibleInvoiceProvider.model_validate_json(
+        json.dumps({"fact": "operator_count", "claves": list(committed.claves)})
+    )
+    with pytest.raises(ValidationError, match="fact"):
+        CollectibleInvoiceProvider.model_validate_json(json.dumps({"claves": list(committed.claves)}))
+
     cases = (
         (
             "aggregation-mismatch",
@@ -796,6 +806,7 @@ def _with_replaced_export_field(
     return revision.model_copy(update={"export_layouts": layouts})
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_spanish_tax_id_width_is_the_width_the_identifier_validator_enforces() -> None:
     """The declared identifier width must still be the one the validator refuses around.
 
@@ -850,6 +861,7 @@ def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> 
         _validate_revision(modelo, catalogues, mutated)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -> None:
     """Deleted profile draft authority is refused even at the identifier width."""
     modelo, catalogues = _committed_modelo("131")
@@ -949,6 +961,7 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
     assert any("to a slot of length 17" in failure for failure in failures), failures
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_declarant() -> None:
     """Re-binding M200's foreign-parent-TIN slot to the declarant must be refused.
 
@@ -1054,7 +1067,10 @@ def test_validator_rejects_missing_legal_reference() -> None:
     modelo, catalogues = _committed_registry()
     missing_legal = catalogues.model_copy(update={"legal": {}})
 
-    with pytest.raises(RegistryValidationError, match="unknown legal id"):
+    with (
+        pytest.raises(RegistryValidationError, match="unknown legal id"),
+        validating_governed_facts(CandidateFactAuthority(missing_legal.facts)),
+    ):
         RegistryValidator(
             missing_legal,
             source_root=bundled_path(),

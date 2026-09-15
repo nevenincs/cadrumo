@@ -88,12 +88,12 @@ LOAD_ENTRY_POINTS: Final[tuple[str, ...]] = (
 #: would report live oracle modules as unreferenced.
 REFERENCE_SCAN_ROOTS: Final[tuple[Path, ...]] = (SOURCE_ROOT / "cadrumo", REPO_ROOT / "dev")
 
-#: Cache directories whose redirection forces a cold load. Both are settings
-#: fields; pointing them at empty directories denies the loader its compiled
-#: tree and denies the validator its persisted verdict.
+#: Cache directories whose redirection forces a cold load. Pointing them at
+#: empty directories denies the loader its compiled tree and denies the
+#: validator its persisted verdict.
 COLD_REGIME_ENV: Final[tuple[str, ...]] = (
     "CADRUMO_REGISTRY_DISK_CACHE_DIR",
-    "CADRUMO_VALIDATION_VERDICT_CACHE_DIR",
+    "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
 )
 
 #: Named once, as this tree requires of a module doing text IO.
