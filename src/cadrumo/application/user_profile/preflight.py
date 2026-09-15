@@ -12,7 +12,7 @@ from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ...core.period import Period
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
@@ -242,7 +242,7 @@ class ProfilePreflightService:
         revision_id: RevisionId,
         period: Period,
         revision: ModeloRevision | None = None,
-        authority: ValidatedRegistryAuthority | None = None,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> ProfilePreflightReport:
         """Compute missing required profile fields for the given filing context.
 
@@ -259,7 +259,7 @@ class ProfilePreflightService:
             period: Typed filing period.
             revision: Optional :class:`ModeloRevision` whose export layouts
                 contribute filing-grade declarant identity requirements.
-            authority: Optional :class:`ValidatedRegistryAuthority` used to
+            operation: Optional pinned authority operation used to
                 union each missing field's grounding with every consuming
                 ``source = "profile"`` registry binding's ``legal_refs`` and
                 modelos, via :func:`build_profile_grounding_index`. When
@@ -285,7 +285,7 @@ class ProfilePreflightService:
         """
         values = record_to_path_values(record)
         grounding_index: Mapping[str, ProfileKeyGrounding] = (
-            build_profile_grounding_index(authority) if authority is not None else dict[str, ProfileKeyGrounding]()
+            build_profile_grounding_index(operation) if operation is not None else dict[str, ProfileKeyGrounding]()
         )
         missing: list[ProfilePreflightRequirement] = []
         target = self._selector_prefix(modelo)

@@ -52,7 +52,7 @@ from .ledger_iva_aggregation_support import (
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
@@ -150,6 +150,7 @@ with validating_governed_facts(compiled_bundled_authority()):
 
 
 @pytest.mark.parametrize("selector_updates", _MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES)
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_validate_rejects_malformed_exemption_article_selector_without_registry_resources(
     selector_updates: dict[str, object],
 ) -> None:
@@ -233,6 +234,7 @@ def test_resolve_filters_by_binding_selector(
     assert result == {binding_id: expected_amount}
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_routes_domestic_reverse_charge_to_devengado_and_deducible_net_zero() -> None:
     """Domestic inversión del sujeto pasivo (LIVA art. 84.Uno.2) books both sides.
 
@@ -281,6 +283,7 @@ def test_resolve_routes_domestic_reverse_charge_to_devengado_and_deducible_net_z
     assert devengado - deducible == Decimal("0")
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_intracomunitaria_binding_consumes_inversion_sujeto_pasivo_flow() -> None:
     """The intracomunitaria binding resolves the ISP-flow observation.
 
@@ -316,6 +319,7 @@ def test_resolve_intracomunitaria_binding_consumes_inversion_sujeto_pasivo_flow(
     assert result == {"modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("63.00")}
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_calculate_303_domestic_reverse_charge_books_boxes_13_and_37_with_zero_net_impact() -> None:
     """End-to-end: a reverse-charge ISP observation books box 13 + 37 and nets to zero.
 
@@ -382,6 +386,7 @@ def test_calculate_303_domestic_reverse_charge_books_boxes_13_and_37_with_zero_n
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_filters_by_category_set() -> None:
     """The selector's categories tuple is interpreted as a SET match —
     observations whose category is in the tuple count, others don't."""
@@ -434,6 +439,7 @@ def test_resolve_filters_by_category_set() -> None:
     assert cuota > Decimal("210"), f"only one matching observation aggregated; got {cuota}"
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_supports_base_amount_sum_fact() -> None:
     revision = _revision_with_bindings(_with_selector(_binding(), fact="base_amount_sum"))
     observations = [
@@ -444,6 +450,7 @@ def test_resolve_supports_base_amount_sum_fact() -> None:
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("1500")}
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_filters_by_exemption_article_when_selector_declares_article() -> None:
     binding = _article_filter_binding()
     observations = (
@@ -477,6 +484,7 @@ def test_resolve_filters_by_exemption_article_when_selector_declares_article() -
     assert result == {"test-art-20-base": Decimal("400.00")}
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_without_exemption_article_filter_keeps_broad_domestic_exempt_match() -> None:
     binding = _article_filter_binding(exemption_articles=None)
     observations = (
@@ -510,6 +518,7 @@ def test_resolve_without_exemption_article_filter_keeps_broad_domestic_exempt_ma
     assert result == {"test-art-20-base": Decimal("2000.00")}
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_returns_zero_when_no_observation_matches() -> None:
     revision = _revision_with_bindings(_binding())
     observations = [
@@ -519,6 +528,7 @@ def test_resolve_returns_zero_when_no_observation_matches() -> None:
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("0")}
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_unsupported_ledger_iva_observations_identifies_unbound_regimes() -> None:
     revision = _revision_with_bindings(_binding())
     supported = _observation(applied_rate=Decimal("0.21"), ledger_id="ordinary-output")
@@ -533,6 +543,7 @@ def test_unsupported_ledger_iva_observations_identifies_unbound_regimes() -> Non
     assert unsupported_ledger_iva_observations(revision, (supported, unsupported)) == (unsupported,)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_unsupported_excludes_cuota_less_by_law_categories() -> None:
     """#64 refinement: cuota-less-by-law categories must not be flagged as unsupported.
 
@@ -563,6 +574,7 @@ def test_unsupported_excludes_cuota_less_by_law_categories() -> None:
     assert unsupported_ledger_iva_observations(revision, (exempt_supply, reverse_charge)) == (reverse_charge,)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_unsupported_flags_zero_amount_observation_unlike_every_other_ledger_family() -> None:
     """IVA's fail-closed screen has NO zero-amount false-fire guard, unlike its six siblings.
 
@@ -593,6 +605,7 @@ def test_unsupported_flags_zero_amount_observation_unlike_every_other_ledger_fam
     assert unsupported_ledger_iva_observations(revision, (zero_amount_reverse_charge,)) == (zero_amount_reverse_charge,)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_resolve_handles_multiple_bindings_independently() -> None:
     revision = _revision_with_bindings(
         _binding("modelo-303-iva-repercutido-general-cuota"),

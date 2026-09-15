@@ -162,7 +162,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

@@ -76,7 +76,7 @@ from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionC
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 # Chain 2 — M369 OSS/IOSS (ledger_oss_aggregation): live invoice projection
 # ---------------------------------------------------------------------------
@@ -176,7 +176,7 @@ _M369_DE_GOODS_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.g
 
 def workflow_profile() -> TaxpayerProfile:
     """Return the real profile projection used by the M369 verify/export gates."""
-    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("general"))
+    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
 
 
 @pytest.fixture

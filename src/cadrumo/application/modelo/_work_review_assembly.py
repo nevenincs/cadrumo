@@ -39,6 +39,7 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.calculations.registry.source_byte_availability import layout_embedded_source_ids
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
@@ -200,11 +201,9 @@ def _official_references(
     snapshot: RegistrySnapshot,
     estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial],
     *,
-    operation: PinnedAuthorityOperation,
+    source_payloads: Mapping[str, bytes],
 ) -> Mapping[CasillaId, str | None]:
     layouts = derive_export_layouts_from_bindings(snapshot.revision)
-    source_ids = {str(source_id) for layout in layouts for source_id in layout.source_refs}
-    source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
     xml_paths: dict[CasillaId, str] = {}
     for layout in layouts:
         if layout.dictionary_source_ref is None:
@@ -409,8 +408,10 @@ def _review_row_context(
     blocking_findings: tuple[ModeloVerificationFinding, ...],
     operation: PinnedAuthorityOperation,
 ) -> _ReviewRowContext:
+    # Only embedded dictionary and XSD bytes are fetched; the rows still cite
+    # every casilla source reference, including record designs without bytes.
     layouts = derive_export_layouts_from_bindings(snapshot.revision)
-    source_ids = {str(source_id) for layout in layouts for source_id in layout.source_refs}
+    source_ids = layout_embedded_source_ids(layouts, sources=snapshot.sources)
     source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
     estados_casillas_oficiales = clasificar_casillas_oficiales(
         snapshot.revision,
@@ -436,7 +437,7 @@ def _review_row_context(
         official_references=_official_references(
             snapshot,
             estados_casillas_oficiales,
-            operation=operation,
+            source_payloads=source_payloads,
         ),
         blocking_findings=blocking_findings,
     )

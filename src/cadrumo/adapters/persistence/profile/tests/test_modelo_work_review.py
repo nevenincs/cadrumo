@@ -67,7 +67,7 @@ from cadrumo.domain.modelos.verification_repository import upsert_verification_r
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _M130 = ModeloCode("130")
 _M130_INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"

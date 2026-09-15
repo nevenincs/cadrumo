@@ -8,8 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -17,6 +15,7 @@ from cadrumo.application.calculations.observations_repository import APP_FILING_
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -45,7 +44,7 @@ def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
         # Sourced from the schema, never pinned: a literal goes stale the moment
         # the profile schema is revised, and the record then refuses to validate
         # against its own canonical version.
-        schema_version=load_user_profile_schema().version,
+        schema_version=published_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -96,9 +95,7 @@ def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_CAPTURED_AT,
-            stamped_revision_id=str(
-                compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A").revision.id
-            ),
+            stamped_revision_id=str(published_snapshot("100", filing_year=2024, period="0A").revision.id),
         )
     )
 

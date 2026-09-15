@@ -58,7 +58,7 @@ from ..compiler.record_design import extract_record_design
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 #: Provenance stamped onto directly-constructed projections in this module. A
@@ -223,6 +223,7 @@ def test_real_dp30305_geometry_is_exact_for_every_revision(
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_apportioned_contributions_and_regularisation_project_once(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
@@ -274,6 +275,7 @@ def test_apportioned_contributions_and_regularisation_project_once(
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_projection_refuses_incomplete_or_double_consumed_sources(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
@@ -379,11 +381,13 @@ def test_especial_common_use_must_be_explicit() -> None:
         )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_wrong_owner_regularisation_cannot_become_a_ledger_observation() -> None:
     with pytest.raises(ValueError, match="emitted only by the bienes-inversion owner"):
         _observation("wrong-owner", kind=IvaDeductionFactKind.from_registry("investment_goods_regularisation"))
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_projector_refuses_reused_source_ledger_across_kinds(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
@@ -395,6 +399,7 @@ def test_projector_refuses_reused_source_ledger_across_kinds(
         )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forged(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
@@ -415,6 +420,7 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
         ("general", "no resolved percentage"),
     ),
 )
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_projector_refuses_inactive_or_percentage_less_active_sector(
     regime: str,
     message: str,
@@ -437,6 +443,7 @@ def test_projector_refuses_inactive_or_percentage_less_active_sector(
         )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_projector_refuses_unlinked_and_duplicate_regularisation_assets(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
@@ -488,6 +495,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets(
         )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_projector_refuses_regularisation_asset_sector_mismatch(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:

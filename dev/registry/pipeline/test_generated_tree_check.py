@@ -26,7 +26,6 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 
-from . import _tree_check
 from ._export_tree import ExportTreeTransportProfile
 from ._generated_tree_test_support import (
     ISOLATED_TREE,
@@ -40,6 +39,7 @@ from ._generated_tree_test_support import (
 from ._tree_check import (
     GeneratedExportTreeCheckContext,
     check_generated_export_tree,
+    refuse_repeat_the_candidate_would_drop,
 )
 from .export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
@@ -121,9 +121,9 @@ _PUBLICATION_ARTIFACT_PREFIXES: Final = (
 class _PublicationArtifactObserver:
     """Record every publication-shaped entry that appears directly under watched roots.
 
-    A polling thread observes the roots while the block runs, so a journal or
-    backup that a publication creates and removes within one call is recorded,
-    not only what remains afterwards.
+    A polling thread scans the roots while the block runs, so an entry is recorded
+    when it outlives one poll interval, including a journal or backup removed again
+    before the block ends. An entry shorter-lived than one interval can escape.
     """
 
     def __init__(self, roots: tuple[Path, ...]) -> None:
@@ -448,7 +448,7 @@ def test_repeat_guard_refuses_a_published_binding_rows_record_the_candidate_drop
     candidate = _layout_with_repeat(None)
 
     with pytest.raises(RegistryValidationError, match="repeat='binding_rows'") as refusal:
-        _tree_check._refuse_repeat_the_candidate_would_drop(published, candidate)
+        refuse_repeat_the_candidate_would_drop(published, candidate)
 
     assert "declarado" in str(refusal.value)
 
@@ -458,4 +458,4 @@ def test_repeat_guard_admits_a_candidate_that_keeps_the_published_repeat() -> No
     published = _layout_with_repeat("binding_rows")
     candidate = _layout_with_repeat("binding_rows")
 
-    _tree_check._refuse_repeat_the_candidate_would_drop(published, candidate)
+    refuse_repeat_the_candidate_would_drop(published, candidate)

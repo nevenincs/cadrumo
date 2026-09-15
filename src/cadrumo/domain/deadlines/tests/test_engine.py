@@ -6,12 +6,12 @@ from collections import Counter
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
+from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ..engine import DeadlineEngine, applies_to, explain, next_deadline
 from ..errors import NoDeadlineWindowsError, ScheduleComputationError
 from ..models import (
@@ -37,7 +37,7 @@ def _period(year: int, code: str) -> Period:
 def _profile(**overrides: object) -> TaxpayerProfile:
     base: dict[str, object] = {
         "tax_id": "X1234567L",
-        "iva_regime": IVARegime("general"),
+        "iva_regime": IVARegime("GENERAL"),
         "iva": ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
             regime_composition=M303RegimeComposition.from_registry("general"),
@@ -262,13 +262,12 @@ class TestCompute:
                 hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             ),
         )
-        authority = compiled_bundled_authority()
-        supported_years = authority.catalogues.supported_filing_years
+        supported_years = published_supported_filing_years()
         assert supported_years is not None
 
         for filing_year in supported_years.years:
             expected = []
-            for modelo, revision, window in authority.deadline_windows(filing_year):
+            for modelo, revision, window in _engine().deadline_windows(filing_year):
                 # Qualified windows (currently M210 resultado/tipo-renta variants)
                 # resolve only after calculation and are intentionally absent from
                 # the pre-calculation schedule. Every unqualified authored window,

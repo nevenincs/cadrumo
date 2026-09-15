@@ -6,7 +6,7 @@ legal provisions. That grounding is never hand-authored — it is a projection
 over the validated registry: every ``source = "profile"``
 :class:`BindingDefinition` names the profile key(s) it consumes in its
 selector and carries its own ``legal_refs`` / ``source_refs``, so the index
-inverts that relation once per :class:`ValidatedRegistryAuthority` and the
+inverts that relation once per published authority generation and the
 flow reads it at flow-compile time.
 
 Only value-consuming selector members contribute (the scalar ``profile_key``
@@ -25,11 +25,10 @@ from pydantic import BaseModel, Field, ValidationError
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from .authority import ValidatedRegistryAuthority
+from .authority import PinnedAuthorityOperation
 from .binding_selector_utils import provider_member
 from .errors import RegistryValidationError
 from .profile_bindings import ProfileProvider
-from .queries import RegistryQueryService
 from .schema import BindingDefinition
 
 
@@ -55,41 +54,34 @@ class ProfileKeyGrounding(BaseModel):
 
 
 _GROUNDING_INDEX_CACHE_MAXSIZE = 4
-_grounding_index_cache: dict[int, Mapping[str, ProfileKeyGrounding]] = {}
+_grounding_index_cache: dict[str, Mapping[str, ProfileKeyGrounding]] = {}
 _grounding_index_cache_lock = threading.Lock()
 
 
 def build_profile_grounding_index(
-    authority: ValidatedRegistryAuthority,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[str, ProfileKeyGrounding]:
     """Invert every profile-sourced binding into a per-profile-key grounding map.
 
-    Walks every :class:`ModeloDefinition` registered on the supplied
-    :class:`ValidatedRegistryAuthority` and every revision's bindings; a key
-    never consumed by any profile binding is simply absent (the flow renders
-    no legal zone for it — nothing is invented).
+    Walks every revision the operation's pinned generation publishes and each
+    revision's bindings; a key never consumed by any profile binding is simply
+    absent (the flow renders no legal zone for it — nothing is invented).
 
-    Memoised per *authority* instance: this is a full registry-wide walk, and
-    the profile-preflight report path (blocking gate, ``config profile
-    preflight``, ``app modelo readiness``) can call it several times per
-    operator invocation. :class:`ValidatedRegistryAuthority` is an unhashable
-    ``@dataclass(slots=True)`` with no ``__weakref__`` slot (its default
-    ``eq``-driven ``__hash__ = None`` rules out ``functools.lru_cache``, and
-    its ``slots=True`` rules out :class:`weakref.finalize`-based eviction), so
-    the cache keys on ``id(authority)`` in a small FIFO-bounded dict instead:
-    at most :data:`_GROUNDING_INDEX_CACHE_MAXSIZE` entries are retained,
-    evicting the oldest when a new authority instance is seen. In practice at
-    most one or two distinct authority instances are ever live in a process
-    (a fresh instance appears only on an explicit registry reload), so the
-    bound is never exercised in production and exists purely so a long-running
-    process or test session cannot grow this cache unbounded.
+    Memoised per published logical generation: this is a full registry-wide
+    walk, and the profile-preflight report path (blocking gate, ``config
+    profile preflight``, ``app modelo readiness``) can call it several times
+    per operator invocation. Every lease of the same generation yields the same
+    index, so the cache keys on the generation's logical identity in a small
+    FIFO-bounded dict: at most :data:`_GROUNDING_INDEX_CACHE_MAXSIZE` entries
+    are retained, evicting the oldest when a new generation is published into a
+    long-running process.
     """
-    cache_key = id(authority)
+    cache_key = operation.generation.logical_generation
     with _grounding_index_cache_lock:
         cached = _grounding_index_cache.get(cache_key)
         if cached is not None:
             return cached
-    index = _compute_profile_grounding_index(authority)
+    index = _compute_profile_grounding_index(operation)
     with _grounding_index_cache_lock:
         _grounding_index_cache[cache_key] = index
         while len(_grounding_index_cache) > _GROUNDING_INDEX_CACHE_MAXSIZE:
@@ -99,14 +91,15 @@ def build_profile_grounding_index(
 
 
 def _compute_profile_grounding_index(
-    authority: ValidatedRegistryAuthority,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[str, ProfileKeyGrounding]:
     """Perform the uncached registry walk :func:`build_profile_grounding_index` memoises."""
     modelos: dict[str, set[str]] = {}
     legal_refs: dict[str, set[str]] = {}
     source_refs: dict[str, set[str]] = {}
 
-    for modelo_id, revision in RegistryQueryService(authority).iter_modelo_revisions():
+    for modelo_id, revision_id in operation.revision_ids():
+        revision = operation.revision(modelo_id, revision_id)
         for binding in revision.bindings:
             if binding.source is not BindingSourceKind.PROFILE:
                 continue

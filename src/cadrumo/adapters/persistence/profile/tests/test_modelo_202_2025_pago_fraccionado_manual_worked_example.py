@@ -107,9 +107,20 @@ from cadrumo.domain.period import calculation_filing_date
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from .secure_objects_fixture import secure_objects
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "3d7c1e9a-5b2f-4a68-9c0d-1e6f8b3a2c5d"
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _T0 = datetime(2026, 1, 15, 9, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 10, 0, tzinfo=UTC)
 _M202 = "202"

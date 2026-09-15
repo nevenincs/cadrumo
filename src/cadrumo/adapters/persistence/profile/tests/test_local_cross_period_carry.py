@@ -90,7 +90,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _T1 = datetime(2026, 4, 10, 9, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 4, 11, 9, 0, 0, tzinfo=UTC)

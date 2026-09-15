@@ -41,7 +41,7 @@ from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: Repos) -> None:

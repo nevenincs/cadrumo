@@ -8,7 +8,6 @@ from functools import lru_cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -47,6 +46,7 @@ from ....domain.calculations.registry.m303_orden_projection_models import M303Re
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.justificante.schema import Justificante
@@ -94,7 +94,7 @@ _NOW = datetime(2026, 8, 14, 8, 0, 0, tzinfo=UTC)
 
 @lru_cache(maxsize=1)
 def _snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="1T")
+    return published_snapshot(Modelo("303").value, filing_year=2025, period="1T")
 
 
 @lru_cache(maxsize=1)
@@ -107,7 +107,7 @@ def _filing_evidence(*, operation: PinnedAuthorityOperation):
         registry_revision_id=snapshot.revision.id,
     )
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
     )
     regimen_snapshot = M303RegimenSimplificadoSnapshot(
         filing_year=2025,
@@ -503,7 +503,7 @@ def test_motive_capability_is_selected_only_from_exact_registry_evidence(
     period: str,
     expected_revision_id: str | None,
 ) -> None:
-    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
+    snapshot = published_snapshot(Modelo("303").value, filing_year=filing_year, period=period)
     record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
     if expected_revision_id is None:
         assert record_design is None

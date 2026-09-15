@@ -12,6 +12,7 @@ with the registry development tooling instead.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 
@@ -101,6 +102,30 @@ def published_legal_reference(reference_id: str) -> LegalReference:
     """Return one published legal declaration by canonical identity."""
     with bundled_indexed_authority().operation() as operation:
         return operation.legal_reference(reference_id)
+
+
+def published_legal_references(reference_ids: Iterable[str]) -> dict[str, LegalReference]:
+    """Return the published legal declarations among ``reference_ids``, omitting ids it does not carry."""
+    references: dict[str, LegalReference] = {}
+    with bundled_indexed_authority().operation() as operation:
+        for reference_id in dict.fromkeys(reference_ids):
+            try:
+                references[reference_id] = operation.legal_reference(reference_id)
+            except LookupError:
+                continue
+    return references
+
+
+def published_legal_quotation_is_grounded(reference_id: str, quotation: str) -> bool:
+    """Judge one quotation against the published evidence through the canonical projection."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.legal_quotation_is_grounded(reference_id, quotation)
+
+
+def published_legal_evidence_text(reference_id: str) -> str:
+    """Return the publisher-anchored text for one legal citation."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.legal_evidence(reference_id).anchored_text
 
 
 def published_source_reference(reference_id: str) -> SourceReference:

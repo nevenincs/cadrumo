@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -475,8 +476,106 @@ class TestParseListbox:
         """
         with pytest.raises(SedeParseError) as exc_info:
             _parse_listbox(html, modelo="130", ejercicio=2026)
-        assert leaked_cell not in str(exc_info.value)
-        assert exc_info.value.__cause__ is None or leaked_cell not in str(exc_info.value.__cause__)
+        assert _exception_chain_disclosures(exc_info.value, leaked_cell) == []
+
+
+def _exception_chain_disclosures(error: BaseException, text: str) -> list[str]:
+    """Every place ``text`` survives on ``error`` or anything reachable through its cause/context chain.
+
+    Each exception is inspected through its rendered message, its ``args``, its
+    structured ``context``, its ``translated_message`` and its ``__notes__``. A
+    suppressed context (``raise ... from None``) is still walked, because the
+    exception object keeps it.
+    """
+    disclosures: list[str] = []
+    seen: set[int] = set()
+    pending: list[BaseException] = [error]
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        surfaces = {
+            "str": str(current),
+            "args": repr(current.args),
+            "context": repr(getattr(current, "context", None)),
+            "translated_message": repr(getattr(current, "translated_message", None)),
+            "notes": repr(getattr(current, "__notes__", ())),
+        }
+        disclosures.extend(
+            f"{type(current).__name__}.{surface}" for surface, rendered in surfaces.items() if text in rendered
+        )
+        pending.extend(link for link in (current.__cause__, current.__context__) if link is not None)
+    return disclosures
+
+
+_PLANTED_CELL = "Y0000000Z SINTETICO NOMBRE"
+_REDACTED_REFUSAL = "presented_at could not be parsed"
+
+
+def _refusal_raised_from_none() -> SedeParseError:
+    try:
+        try:
+            raise SedeValidationError(f"unexpected presented_at shape: {_PLANTED_CELL!r}")
+        except SedeValidationError:
+            raise SedeParseError(_REDACTED_REFUSAL) from None
+    except SedeParseError as refusal:
+        return refusal
+
+
+def _refusal_raised_from_cause() -> SedeParseError:
+    try:
+        try:
+            raise SedeValidationError(f"unexpected presented_at shape: {_PLANTED_CELL!r}")
+        except SedeValidationError as cause:
+            raise SedeParseError(_REDACTED_REFUSAL) from cause
+    except SedeParseError as refusal:
+        return refusal
+
+
+def _refusal_with_planted_context() -> SedeParseError:
+    return SedeParseError(_REDACTED_REFUSAL, context={"cell": _PLANTED_CELL})
+
+
+def _refusal_with_planted_translated_message() -> SedeParseError:
+    return SedeParseError(_REDACTED_REFUSAL, translated_message=_PLANTED_CELL)
+
+
+def _refusal_with_planted_note() -> SedeParseError:
+    refusal = SedeParseError(_REDACTED_REFUSAL)
+    refusal.add_note(f"cell={_PLANTED_CELL}")
+    return refusal
+
+
+class TestExceptionChainDisclosure:
+    """Prove the chain walk detects every leak shape a plausible refusal could keep."""
+
+    @pytest.mark.parametrize(
+        ("build_refusal", "expected_surface"),
+        [
+            (_refusal_raised_from_none, "SedeValidationError.str"),
+            (_refusal_raised_from_cause, "SedeValidationError.str"),
+            (_refusal_with_planted_context, "SedeParseError.context"),
+            (_refusal_with_planted_translated_message, "SedeParseError.translated_message"),
+            (_refusal_with_planted_note, "SedeParseError.notes"),
+        ],
+        ids=["from-none-context", "explicit-cause", "context", "translated-message", "note"],
+    )
+    def test_each_leak_shape_is_detected(
+        self, build_refusal: Callable[[], SedeParseError], expected_surface: str
+    ) -> None:
+        refusal = build_refusal()
+        assert isinstance(refusal, SedeParseError)
+        assert expected_surface in _exception_chain_disclosures(refusal, _PLANTED_CELL)
+
+    def test_a_redacted_refusal_discloses_nothing(self) -> None:
+        refusal = SedeParseError(
+            _REDACTED_REFUSAL,
+            context={"modelo": "130", "ejercicio": 2026},
+            translated_message="adapters.sede.errors.parse_failed",
+        )
+        refusal.add_note("column=presented_at")
+        assert _exception_chain_disclosures(refusal, _PLANTED_CELL) == []
 
 
 class TestParsePresentedAt:

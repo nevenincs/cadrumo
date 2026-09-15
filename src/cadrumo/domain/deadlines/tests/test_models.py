@@ -37,7 +37,7 @@ _P_2026_1T = Period.from_year_and_code(2026, "1T")
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=True,
         pays_professionals_with_retencion=False,
         professional_income_withholding_ge_70pct=False,
@@ -150,7 +150,7 @@ class TestTaxpayerProfile:
         )
 
         assert profile.tax_id == "12345678Z"
-        assert profile.iva_regime is IVARegime("simplificado")
+        assert profile.iva_regime == IVARegime("SIMPLIFICADO")
         assert profile.has_employees is True
         assert profile.art109_activity_income_withholding_ge_70pct is True
         assert profile.pays_rent_with_retencion is True

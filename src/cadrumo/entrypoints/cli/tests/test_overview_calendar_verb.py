@@ -8,8 +8,6 @@ from datetime import UTC, date, datetime
 
 import pytest
 from click.testing import Result
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -34,6 +32,10 @@ from ....core.i18n.render import clear_output_language_cache
 from ....core.period import Period
 from ....core.time.clock import frozen_clock, now, today_madrid
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context,
+    published_supported_filing_years,
+)
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
@@ -229,7 +231,7 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
         profile = profile_to_taxpayer(current)
         record = current.active_profile_record()
         raw_values = record_to_values(record) if record is not None else None
-        supported_years = compiled_bundled_authority().catalogues.supported_filing_years
+        supported_years = published_supported_filing_years()
         assert supported_years is not None
 
         for filing_year in supported_years.years:
@@ -928,7 +930,7 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
     assert PROVENANCE_SOURCE_MANUAL_CLI not in verified_sources
 
     record = create_user_profile_record(
-        context=profile_creation_context_for_test(),
+        context=published_profile_create_context(),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(

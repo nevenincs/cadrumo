@@ -81,7 +81,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path: Path) -> None:

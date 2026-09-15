@@ -23,7 +23,7 @@ from .ledger_action_create_support import (
 )
 from .ledger_action_persistence_support import _BUCKET_ID, _repositories
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @dataclass(frozen=True, slots=True)

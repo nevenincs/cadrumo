@@ -16,11 +16,11 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ._modelo_work_ux_support import _create_m303_work_unit
 from .cli_runner import invoke_cached_cli
@@ -62,7 +62,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
         # Sourced from the schema, never pinned: a literal goes stale the moment
         # the profile schema is revised, and the record then refuses to validate
         # against its own canonical version.
-        schema_version=load_user_profile_schema().version,
+        schema_version=published_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(

@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -14,6 +13,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from ....core.modelo import Modelo
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import (
     _PROFILE_ID,
@@ -185,7 +185,7 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
         [
             "app", "modelo", "readiness",
             "--modelo", "303",
-            "--revision-id", str(compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id),
+            "--revision-id", str(published_snapshot("303", filing_year=2026, period="1T").revision.id),
             "--year", "2026",
             "--period", "1T",
         ],

@@ -28,7 +28,6 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
@@ -46,6 +45,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.regimen_simplificado_rows import (
@@ -163,10 +163,10 @@ def _active_bucket_id() -> str:
 def _write_m303_filing_evidence(path: Path, *, operation: PinnedAuthorityOperation) -> None:
     period = Period.from_year_and_code(2026, "1T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=compiled_bundled_authority().snapshot(
+        registry_snapshot=published_snapshot(
             "303",
             filing_year=period.filing_year,
             period=period.code,
@@ -314,9 +314,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
                 taxpayer_nif="12345678Z",
                 target_year=2026,
                 target_period=Period.from_year_and_code(2026, "1T"),
-                target_registry_snapshot_ref=compiled_bundled_authority()
-                .snapshot("303", filing_year=2026, period="1T")
-                .snapshot_ref,
+                target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
                 source_registry_snapshot_refs=(),
                 selected_authority="aeat_wallet",
                 selected_amount=Decimal("0.00"),

@@ -1200,7 +1200,7 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
 
     assert loaded == original
     loaded_txn = loaded.transactions[cash_purchase.transaction_id]
-    assert loaded_txn.cash_accounting_treatment is IvaCashAccountingTreatment("supplier_regime")
+    assert loaded_txn.cash_accounting_treatment == IvaCashAccountingTreatment("supplier_regime")
     assert loaded_txn.operation_date == date(2026, 3, 20)
     assert len(loaded_txn.cash_accounting_payment_evidence) == 2
     first, second = loaded_txn.cash_accounting_payment_evidence

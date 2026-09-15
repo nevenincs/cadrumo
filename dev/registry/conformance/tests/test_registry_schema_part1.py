@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import date
 from pathlib import Path
@@ -17,9 +18,14 @@ from cadrumo.core.identity.documents import IdentityError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportDraftAttribute
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    CandidateFactAuthority,
+    validating_governed_facts,
+)
+from cadrumo.domain.calculations.registry.invoice_bindings import CollectibleInvoiceProvider
+from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.schema import (
     BindingDefinition,
     ModeloDefinition,
@@ -45,6 +51,7 @@ from ...compiler.validate_export_field_widths import (
     validate_draft_field_slot_width,
 )
 from ...compiler.validator import RegistryValidator
+from ...tests.profile_schema_support import load_user_profile_schema
 from ..coverage import build_model_law_coverage_ledger
 from ..loader_directory_mode_support import write_fragmented_modelo_from_text
 from ..registry_schema_support import (
@@ -63,7 +70,7 @@ from ..registry_schema_support import (
     with_revision as _with_revision,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_CASILLA")
 _NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="_NAMED_LABEL_CASILLA")
 _DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL_CNAE_CASILLA")
@@ -157,7 +164,12 @@ _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS = (
 
 
 def _validate_modelo(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> None:
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+        RegistryValidator(
+            catalogues,
+            source_root=bundled_path(),
+            user_profile_schema=load_user_profile_schema(),
+        ).validate_modelo(modelo)
 
 
 def _validate_revision(modelo: ModeloDefinition, catalogues: RegistryCatalogues, revision: ModeloRevision) -> None:
@@ -390,8 +402,8 @@ source_refs = ["aeat-manual"]
 
 [[revisions."2025".bindings]]
 id = "01"
-source = "manual_input"
-selector = { record = "DPA", field = "test", offset = 1, length = 1, data_type = "integer" }
+provider = { kind = "manual_input", record = "DPA", field = "test", offset = 1, length = 1, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 """.lstrip()
@@ -567,67 +579,82 @@ def test_validator_rejects_binding_citation_missing_from_official_source() -> No
 
 
 def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
-    modelo, catalogues = _committed_registry()
-    revision = _revision(modelo)
+    modelo, catalogues = _committed_modelo("349")
+    revision = modelo.revisions["2020-y-siguientes"]
+    binding = next(item for item in revision.bindings if item.id == "iva-349-declarante-numero-operadores")
+    committed = binding.provider
+    assert isinstance(committed, CollectibleInvoiceProvider)
+
+    def with_provider(provider: CollectibleInvoiceProvider, op: BindingAggregationOp) -> ModeloRevision:
+        return _with_binding(
+            revision,
+            binding.model_copy(update={"provider": provider, "aggregation": BindingAggregation(op=op)}),
+        )
+
+    rebuilt = CollectibleInvoiceProvider(
+        fact="operator_count",
+        claves=committed.claves,
+        rectification_scope=committed.rectification_scope,
+    )
+    _validate_revision(modelo, catalogues, with_provider(rebuilt, BindingAggregationOp.COUNT_DISTINCT))
+
+    CollectibleInvoiceProvider.model_validate_json(
+        json.dumps({"fact": "operator_count", "claves": list(committed.claves)})
+    )
+    with pytest.raises(ValidationError, match="fact"):
+        CollectibleInvoiceProvider.model_validate_json(json.dumps({"claves": list(committed.claves)}))
+
     cases = (
         (
-            "missing-fact",
-            {
-                "source": "collectible_invoice",
-                "selector": {"claves": ("E",)},
-                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-            },
-            r"selector violates InvoiceProviderBase",
-        ),
-        (
             "aggregation-mismatch",
-            {
-                "source": "collectible_invoice",
-                "selector": {"fact": "operator_count", "claves": ("E",)},
-                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-            },
-            "requires aggregation op 'count_distinct'",
+            rebuilt,
+            BindingAggregationOp.SUM,
+            "fact 'operator_count' requires aggregation op 'count_distinct'",
         ),
         (
             "rectification-delta-without-scope",
-            {
-                "source": "collectible_invoice",
-                "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
-                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-            },
-            "requires rectification_scope 'only_rectifications'",
+            CollectibleInvoiceProvider(
+                fact="rectified_base_delta_sum",
+                claves=committed.claves,
+                rectification_scope=committed.rectification_scope,
+            ),
+            BindingAggregationOp.SUM,
+            "fact 'rectified_base_delta_sum' requires rectification_scope 'only_rectifications'",
         ),
         (
             "period-rows-without-scope",
-            {
-                "source": "collectible_invoice",
-                "selector": {
-                    "fact": "row_field",
-                    "row_field": "base_imponible",
-                    "grouping": "operator_clave_period",
-                    "claves": ("E",),
-                },
-                "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
-            },
-            "grouping 'operator_clave_period' requires",
+            CollectibleInvoiceProvider(
+                fact="row_field",
+                row_field="base_imponible",
+                grouping="operator_clave_period",
+                claves=committed.claves,
+                rectification_scope=committed.rectification_scope,
+            ),
+            BindingAggregationOp.ROWS,
+            "grouping 'operator_clave_period' requires rectification_scope 'only_rectifications'",
         ),
     )
 
-    for case_id, update, match in cases:
-        mutated = _with_binding(revision, revision.bindings[0].model_copy(update=update))
+    for case_id, provider, op, match in cases:
         with pytest.raises(RegistryValidationError, match=match) as excinfo:
-            _validate_revision(modelo, catalogues, mutated)
+            _validate_revision(modelo, catalogues, with_provider(provider, op))
         assert excinfo.type is RegistryValidationError, case_id
 
 
 def test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema() -> None:
     modelo, catalogues = _committed_modelo("100")
     revision = modelo.revisions["2025"]
-    binding = next(item for item in revision.bindings if item.source == "profile")
-    mutated_binding = binding.model_copy(
-        update={"selector": {**selector_as_dict(binding), "profile_key": "unknown.profile"}},
+    binding = next(
+        item
+        for item in revision.bindings
+        if isinstance(item.provider, ProfileProvider) and item.provider.profile_key is not None
     )
-    mutated = _with_binding(revision, mutated_binding)
+    _validate_revision(modelo, catalogues, revision)
+
+    unknown_key = ProfileProvider.model_validate_json(
+        json.dumps({**binding.provider.model_dump(mode="json"), "profile_key": "unknown.profile"}),
+    )
+    mutated = _with_binding(revision, binding.model_copy(update={"provider": unknown_key}))
 
     with pytest.raises(
         RegistryValidationError,
@@ -779,6 +806,7 @@ def _with_replaced_export_field(
     return revision.model_copy(update={"export_layouts": layouts})
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_spanish_tax_id_width_is_the_width_the_identifier_validator_enforces() -> None:
     """The declared identifier width must still be the one the validator refuses around.
 
@@ -833,6 +861,7 @@ def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> 
         _validate_revision(modelo, catalogues, mutated)
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -> None:
     """Deleted profile draft authority is refused even at the identifier width."""
     modelo, catalogues = _committed_modelo("131")
@@ -894,7 +923,7 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
     defect can no longer occur proves nothing.
     """
     modelo, _catalogues = _committed_modelo("200")
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions["2025-y-siguientes"]
 
     composed = tuple(
         prefix
@@ -928,10 +957,11 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
             "length": 17,
         },
     )
-    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024", field=collapsed)
+    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2025-y-siguientes", field=collapsed)
     assert any("to a slot of length 17" in failure for failure in failures), failures
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_declarant() -> None:
     """Re-binding M200's foreign-parent-TIN slot to the declarant must be refused.
 
@@ -956,7 +986,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
     contradiction the detector reports.
     """
     modelo, _catalogues = _committed_modelo("200")
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions["2025-y-siguientes"]
 
     assert set(DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == set(ExportDraftAttribute), (
         "the width ruling must stay total over the declarable attributes, or a "
@@ -985,7 +1015,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
             "length": runtime_tax_id_format().width,
         },
     )
-    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024", field=misbound)
+    failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2025-y-siguientes", field=misbound)
     width = runtime_tax_id_format().width
     assert any(f"to a slot of length {width}" in failure for failure in failures), failures
 
@@ -1037,8 +1067,15 @@ def test_validator_rejects_missing_legal_reference() -> None:
     modelo, catalogues = _committed_registry()
     missing_legal = catalogues.model_copy(update={"legal": {}})
 
-    with pytest.raises(RegistryValidationError, match="unknown legal id"):
-        RegistryValidator(missing_legal, source_root=bundled_path()).validate_modelo(modelo)
+    with (
+        pytest.raises(RegistryValidationError, match="unknown legal id"),
+        validating_governed_facts(CandidateFactAuthority(missing_legal.facts)),
+    ):
+        RegistryValidator(
+            missing_legal,
+            source_root=bundled_path(),
+            user_profile_schema=load_user_profile_schema(),
+        ).validate_modelo(modelo)
 
 
 def test_validator_rejects_extraction_profile_unknown_casilla() -> None:

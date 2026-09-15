@@ -80,7 +80,7 @@ from cadrumo.domain.transactions.retencion_facts import load_retencion_actividad
 from ..compiler.authority import compiled_bundled_authority
 from ._ledger_income_chain_oracle_support import modelo_130_revision
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The invoice, stated once from the document and the two cited rates.
 _BASE = Decimal("1000.00")
@@ -179,6 +179,7 @@ def test_the_worked_example_figures_satisfy_the_invoice_identity() -> None:
     assert (_BASE * _IVA_RATE).quantize(Decimal("0.01")) == _CUOTA
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_retencion_expectation_is_the_statutory_rate_not_the_engine_route() -> None:
     """150 is 15 % of the base, read from the registry, not gross minus cash.
 
@@ -199,6 +200,7 @@ def test_the_retencion_expectation_is_the_statutory_rate_not_the_engine_route() 
     ), "the retencion base is the base imponible, never the IVA-inclusive total"
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:
     """Casilla 01 receives 1000: the ingresos integros, not the gross, not the cash."""
     revision = modelo_130_revision()
@@ -218,6 +220,7 @@ def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None
     assert resolved[_TAXABLE_BASE_BINDING] == _BASE
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_declared_invoice_reaches_the_retenciones_casilla_at_the_statutory_figure() -> None:
     """The withheld binding resolves to the statutory 15 % of the base.
 
@@ -247,6 +250,7 @@ def test_the_declared_invoice_reaches_the_retenciones_casilla_at_the_statutory_f
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_declared_invoice_raises_no_ungrounded_advisory() -> None:
     """A fully declared invoice must not fire the advisory.
 
@@ -263,6 +267,7 @@ def test_the_declared_invoice_raises_no_ungrounded_advisory() -> None:
     assert screened.observations == ()
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_unrecorded_invoice_over_declares_casilla_01_and_loses_its_credit() -> None:
     """One missing field moves casilla 01 up by 60 and destroys the 150 credit.
 
@@ -289,6 +294,7 @@ def test_the_unrecorded_invoice_over_declares_casilla_01_and_loses_its_credit() 
     assert resolved[_TAXABLE_BASE_BINDING] == Decimal("0")
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> None:
     """The cash-fallback contribution fires the advisory, naming both facts.
 
@@ -333,6 +339,7 @@ _INICIO_RETENCION = (
 _INICIO_CASH = _TOTAL - _INICIO_RETENCION
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_inicio_de_actividad_rate_is_genuinely_below_the_general_rate() -> None:
     """The two registry rates differ, so the case below calibrates a second point.
 
@@ -347,6 +354,7 @@ def test_the_inicio_de_actividad_rate_is_genuinely_below_the_general_rate() -> N
     assert _INICIO_CASH > _CASH
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_a_sub_cap_withholding_is_inferred_at_its_own_rate_not_clamped_to_the_bound() -> None:
     """The inference reports what was withheld, not the most it would accept.
 
@@ -365,6 +373,7 @@ def test_a_sub_cap_withholding_is_inferred_at_its_own_rate_not_clamped_to_the_bo
     assert observation.taxable_base_amount == _BASE
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutory_figure() -> None:
     """The filed casilla carries the 7 % figure, resolved through the registry.
 

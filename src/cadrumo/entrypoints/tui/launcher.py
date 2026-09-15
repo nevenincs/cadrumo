@@ -6,7 +6,6 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,7 +16,6 @@ from ...application.workbench_generation import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
-from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.errors.hierarchy import InternalInvariantError
 from .account import (
     AccountRecomposeRequiredV1,
@@ -649,65 +647,10 @@ def resolve_modelo_workspace_static_inspection(
     another profile.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.modelo.registry_authority_capture import PinnedRegistryAuthorityCapture
     from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ...application.modelo.workspace import resolve_static_inspection_result
     from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
-    from ...domain.calculations.registry.authority import (
-        RegistryAuthorityCapture,
-        RegistryAuthorityCurrentCoordinate,
-    )
-    from ...domain.calculations.registry.snapshot import collect_snapshot_ref_ids
-    from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-    from ...domain.calculations.registry.temporal import select_revision_metadata
-
-    class _PinnedAuthorityAdapter:
-        """Minimal workspace authority port backed by one pinned operation."""
-
-        def __init__(self, operation: PinnedAuthorityOperation) -> None:
-            self._operation = operation
-
-        def capture_law_selected_projection(
-            self,
-            modelo_id: str,
-            *,
-            filing_year: int,
-            period: str,
-            on: date | None = None,
-            grade: RegistryAuthorityGrade | None = None,
-        ) -> RegistryAuthorityCapture:
-            directory = self._operation.modelo_directory(modelo_id)
-            selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=on)
-            revision = self._operation.revision(modelo_id, str(selected.id))
-            if grade is None:
-                modelo_definition = directory.materialize(revision)
-                legal_ids, source_ids = collect_snapshot_ref_ids(modelo_definition, revision)
-                inspection = RegistryRevisionInspection.from_revision(
-                    modelo=modelo_definition,
-                    revision=revision,
-                    source_root=None,
-                    sources={source_id: self._operation.source_reference(source_id) for source_id in source_ids},
-                    legal_ref_ids=frozenset(legal_ids),
-                )
-                projection = inspection
-            else:
-                projection = self._operation.snapshot(
-                    modelo_id,
-                    filing_year=filing_year,
-                    period=period,
-                    on=on,
-                    grade=grade,
-                )
-            return RegistryAuthorityCapture(
-                projection=projection,
-                comparison_domain=self._operation.generation.logical_generation,
-                generation=0,
-            )
-
-        def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
-            return RegistryAuthorityCurrentCoordinate(
-                comparison_domain=self._operation.generation.logical_generation,
-                generation=0,
-            )
 
     return resolve_static_inspection_result(
         ModeloWorkspaceExactWorkUnitTargetV1(
@@ -718,7 +661,7 @@ def resolve_modelo_workspace_static_inspection(
         ),
         bucket_id=unit.bucket_id,
         catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
-        authority=_PinnedAuthorityAdapter(operation),
+        authority=PinnedRegistryAuthorityCapture(operation),
         output_language=output_language,
     )
 

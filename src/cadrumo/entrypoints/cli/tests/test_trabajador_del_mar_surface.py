@@ -34,11 +34,11 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....application.calculations.maritime_exemption_service import resolve_maritime_exemption
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _rebeca_vessel_registry() -> str:
     """Return the schema-owned spelling used by the maritime test cases."""
-    values = load_user_profile_schema().field("maritime_worker.vessel_registry").enum_values
+    values = published_profile_schema().field("maritime_worker.vessel_registry").enum_values
     assert "rebeca" in values
     return "rebeca"
 
@@ -59,7 +59,7 @@ class TestWorkerClassProfileFactAcceptance:
     """contract — registered user-profile schema accepts ``worker_class``."""
 
     def test_schema_declares_worker_class_field(self) -> None:
-        schema = load_user_profile_schema()
+        schema = published_profile_schema()
         field = schema.field("maritime_worker.worker_class")
         # ``field()`` raises ``UserProfileNotFoundError`` if missing, so
         # reaching this line is itself the existence assertion. The enum
@@ -67,7 +67,7 @@ class TestWorkerClassProfileFactAcceptance:
         assert field.enum_values == ("trabajador_del_mar",)
 
     def test_schema_field_carries_legal_refs_for_all_pathways(self) -> None:
-        schema = load_user_profile_schema()
+        schema = published_profile_schema()
         field = schema.field("maritime_worker.worker_class")
         # All three exemption pathways and the RETMAR completeness gate
         # must be cited through canonical legal catalogue ids.

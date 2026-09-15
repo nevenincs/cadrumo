@@ -9,22 +9,15 @@ operator-supplied value untouched.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority_artifact import GovernedFactComponentQuery, ProfileSchemaComponentQuery
-from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .._ledger_support import resolve_business_pct_with_censo
@@ -35,21 +28,6 @@ _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _SUMINISTROS = SpendingCategory.from_registry("suministros_home_office_internet").value
 
 runtime = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime")
-
-
-@pytest.fixture(scope="module")
-def operation() -> Iterator[PinnedAuthorityOperation]:
-    """Expose canonical authored facts through one pinned component reader."""
-    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
-    reader = FakeAuthorityComponentReader(
-        {
-            **{GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()},
-            ProfileSchemaComponentQuery(): load_user_profile_schema(),
-        }
-    )
-    pinned = PinnedAuthorityOperation(reader, reader.pin())
-    with validating_governed_facts(pinned):
-        yield pinned
 
 
 def _declare_vivienda_office(operation: PinnedAuthorityOperation) -> None:

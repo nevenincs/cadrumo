@@ -72,12 +72,15 @@ from .schema import BindingDefinition, ModeloDefinition, ModeloRevision
 from .schema_base import filing_period_from_scope
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
-from .support_matrix import build_support_matrix, build_support_matrix_from_modelos
+from .support_matrix import build_support_matrix, build_support_matrix_from_directory_views
 from .temporal import ModeloRevisionDirectory, select_revision, select_revision_for_year
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from .authority import PinnedAuthorityOperation
     from .authority_artifact import AuthorityComponentReader, AuthorityGenerationPin
+    from .schema_references import PeriodSelector
 
 
 def load_modelo_revision_component(
@@ -390,7 +393,11 @@ class RegistryQueryService:
                 revision_count=len(modelo.revisions),
             )
             for modelo in RegistryQueryService(self._authority).iter_modelo_definitions()
-            if (year is None or _modelo_covers_year(modelo, year)) and (domain is None or modelo.tax_domain == domain)
+            if (
+                year is None
+                or _selectors_cover_year((revision.period_selector for revision in modelo.revisions.values()), year)
+            )
+            and (domain is None or modelo.tax_domain == domain)
         ]
         # Ordered into a pinned local first: pydantic's generated ``__init__``
         # accepts a mapping for a nested model, so sorting inline would let that
@@ -862,16 +869,20 @@ class PinnedRegistryQueryService:
                 rows.append((modelo_id, self._operation.revision(modelo_id, str(metadata.id))))
         return tuple(rows)
 
-    def iter_modelo_definitions(self) -> tuple[ModeloDefinition, ...]:
-        """Materialize one latest revision view per modelo for diagnostics."""
-        definitions: list[ModeloDefinition] = []
+    def _latest_modelo_views(self) -> tuple[tuple[ModeloRevisionDirectory, ModeloDefinition], ...]:
+        """Pair each modelo directory with the view materialized around its latest revision."""
+        views: list[tuple[ModeloRevisionDirectory, ModeloDefinition]] = []
         for modelo_id in sorted(self._operation.modelo_ids()):
             directory = self._operation.modelo_directory(modelo_id)
             metadata = max(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
-            definitions.append(
-                directory.materialize(self._operation.revision(modelo_id, str(metadata.id))),
+            views.append(
+                (directory, directory.materialize(self._operation.revision(modelo_id, str(metadata.id)))),
             )
-        return tuple(definitions)
+        return tuple(views)
+
+    def iter_modelo_definitions(self) -> tuple[ModeloDefinition, ...]:
+        """Materialize one latest revision view per modelo for diagnostics."""
+        return tuple(definition for _directory, definition in self._latest_modelo_views())
 
     def list_modelos(
         self,
@@ -879,10 +890,15 @@ class PinnedRegistryQueryService:
         year: int | None = None,
         domain: TaxDomain | None = None,
     ) -> ModeloListReport:
-        """Return a metadata catalogue backed by point-loaded directory views."""
+        """Return a metadata catalogue backed by point-loaded directory views.
+
+        A view carries only its selected revision, so revision count and year
+        coverage come from the directory's complete revision metadata.
+        """
         rows: list[ModeloListRow] = []
-        for definition in self.iter_modelo_definitions():
-            if year is not None and not _modelo_covers_year(definition, year):
+        for directory, definition in self._latest_modelo_views():
+            selectors = (metadata.period_selector for metadata in directory.revisions)
+            if year is not None and not _selectors_cover_year(selectors, year):
                 continue
             if domain is not None and definition.tax_domain != domain:
                 continue
@@ -892,14 +908,14 @@ class PinnedRegistryQueryService:
                     title=definition.title,
                     cadence=definition.cadence,
                     tax_domain=definition.tax_domain,
-                    revision_count=len(definition.revisions),
+                    revision_count=len(directory.revisions),
                 ),
             )
         return ModeloListReport(modelos=tuple(sorted(rows, key=lambda row: row.code)))
 
     def support_matrix(self) -> ModeloSupportMatrixReport:
         """Build the explicit bulk support inventory from point-loaded views."""
-        return ModeloSupportMatrixReport(entries=build_support_matrix_from_modelos(self.iter_modelo_definitions()))
+        return ModeloSupportMatrixReport(entries=build_support_matrix_from_directory_views(self._latest_modelo_views()))
 
     def describe_modelo(
         self,
@@ -1448,8 +1464,8 @@ def _operator_input_required_by_binding(
     return required
 
 
-def _modelo_covers_year(modelo: ModeloDefinition, year: int) -> bool:
-    return any(revision.period_selector.includes_year(year) for revision in modelo.revisions.values())
+def _selectors_cover_year(selectors: Iterable[PeriodSelector], year: int) -> bool:
+    return any(selector.includes_year(year) for selector in selectors)
 
 
 def _query_filing_period(filing_year: int | None, period: str | None) -> Period | None:

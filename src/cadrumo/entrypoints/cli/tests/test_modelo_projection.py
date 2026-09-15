@@ -53,14 +53,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_income_transaction
@@ -84,8 +83,7 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
     "19" (resultado final) are formula-computed; their registry entries must
     carry non-empty ``legal_refs`` and ``formula_id``.
     """
-    authority = compiled_bundled_authority()
-    m130_snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+    m130_snapshot = published_snapshot("130", filing_year=2026, period="1T")
     engine_result = calculate_registry_snapshot(
         m130_snapshot,
         inputs={
@@ -242,7 +240,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
         # Sourced from the schema, never pinned: a literal goes stale the moment
         # the profile schema is revised, and the record then refuses to validate
         # against its own canonical version.
-        schema_version=load_user_profile_schema().version,
+        schema_version=published_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -518,14 +516,13 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     #
     # Single-authority routing invariant: both the verb's
     # internal calculate_registry_snapshot call and the oracle below
-    # source their RegistrySnapshot from ``compiled_bundled_authority()``
+    # source their RegistrySnapshot from the published authority
     # (see _modelo.py modelo_project + the helper at line 528 / 1322 /
     # 3418). No alternate ``_service()._authority`` path exists in
     # the current codebase. The equivalence the audit asked about is
     # structurally enforced: a divergent path would have to introduce a
     # second authority constructor, which the resources() module gates.
-    authority = compiled_bundled_authority()
-    m100_snapshot = authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    m100_snapshot = published_snapshot("100", filing_year=_FILING_YEAR, period="0A")
     # Casilla 0604 is computed in the 2024 revision (formula
     # ``renta-{year}-pagos-fraccionados-ingresados`` sums the M130 + M131
     # relation channels). The oracle path supplies the same M130 total

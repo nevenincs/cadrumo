@@ -15,12 +15,15 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ....core.post_filing_event import PostFilingEventKind
+from ....domain.calculations.registry.tests.published_authority import (
+    published_legal_evidence_text,
+    published_legal_reference,
+)
 from .._overview_rendering import overview_deemed_served_notification_notices, overview_post_filing_event_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -69,15 +72,13 @@ def test_deemed_served_notifications_emit_one_warning_notice_with_legal_provenan
 
 def test_deemed_served_legal_ref_resolves_against_the_registry_catalogue() -> None:
     """The provenance the notice hands the operator is a real, corpus-backed entry."""
-    authority = compiled_bundled_authority()
-    catalogue = authority.catalogues.legal
     notice = overview_deemed_served_notification_notices(
         (_notificacion(reference_id="2596230606502", estado=NotificacionEstadoServicio.RECHAZO_TACITO),),
     )[0]
     legal_ref = str((notice.context or {})["legal_ref"])
-    assert legal_ref in catalogue, f"the notice cites {legal_ref!r}, absent from the registry legal catalogue"
-    reference = catalogue[legal_ref]
-    assert authority.legal_evidence_text(legal_ref).strip()
+    reference = published_legal_reference(legal_ref)
+    assert reference.id == legal_ref, f"the notice cites {legal_ref!r}, absent from the registry legal catalogue"
+    assert published_legal_evidence_text(legal_ref).strip()
     assert reference.article == "43.2"
 
 

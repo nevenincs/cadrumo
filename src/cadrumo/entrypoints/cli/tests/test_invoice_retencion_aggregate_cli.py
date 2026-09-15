@@ -19,9 +19,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
@@ -41,6 +38,9 @@ from ....application.modelo.calculation_actions import (
 )
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind

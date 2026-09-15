@@ -198,7 +198,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
     path). The preflight check must not block M303 manual casillas 47-58.
     """
     bucket_id = _SIMPLIFICADO_PROFILE_ID
-    _set_iva_regime(monkeypatch, IVARegime("simplificado"))
+    _set_iva_regime(monkeypatch, IVARegime("SIMPLIFICADO"))
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
@@ -223,7 +223,7 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     and the previous test becomes tautological.
     """
     bucket_id = _GENERAL_PROFILE_ID
-    _set_iva_regime(monkeypatch, IVARegime("general"))
+    _set_iva_regime(monkeypatch, IVARegime("GENERAL"))
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")

@@ -39,7 +39,6 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -76,13 +75,6 @@ def _registry_legends(operation):
     """Resolve the registry vocabulary on the test's pinned authority lease."""
     period = default_invoice_extraction_period()
     return resolve_regime_legends(operation=operation, effective_date=period.end_date)
-
-
-@pytest.fixture
-def operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease the published generation, whose runtime catalogues structured extraction reads."""
-    with _indexed_authority_for_test().operation() as leased:
-        yield leased
 
 
 # The Facturae specimen states both parties' countries in full, in the alpha-3
@@ -392,7 +384,7 @@ class TestTheStructuredPathOpensThePostalRung:
                 operation=_authority_operation_for_test,
             )
 
-            assert resolved.scope is IvaTerritorialScope.from_registry("es_mainland")
+            assert resolved.scope == IvaTerritorialScope.from_registry("es_mainland")
             assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_the_resolved_territory_follows_the_document_rather_than_a_constant(
@@ -437,7 +429,7 @@ class TestTheStructuredPathOpensThePostalRung:
                 operation=_authority_operation_for_test,
             )
 
-            assert resolved.scope is IvaTerritorialScope.from_registry("es_canarias")
+            assert resolved.scope == IvaTerritorialScope.from_registry("es_canarias")
             assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_ubl_document_resolves_its_counterparty_territory(
@@ -468,7 +460,7 @@ class TestTheStructuredPathOpensThePostalRung:
                 operation=_authority_operation_for_test,
             )
 
-            assert resolved.scope is IvaTerritorialScope.from_registry("es_canarias")
+            assert resolved.scope == IvaTerritorialScope.from_registry("es_canarias")
             assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_the_customer_side_resolves_its_own_country(
@@ -504,7 +496,7 @@ class TestTheStructuredPathOpensThePostalRung:
                 operation=_authority_operation_for_test,
             )
 
-            assert resolved.scope is IvaTerritorialScope.from_registry("es_mainland")
+            assert resolved.scope == IvaTerritorialScope.from_registry("es_mainland")
             assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_cii_document_resolves_a_spanish_counterparty_through_the_postal_rung(
@@ -542,7 +534,7 @@ class TestTheStructuredPathOpensThePostalRung:
                 operation=_authority_operation_for_test,
             )
 
-            assert resolved.scope is IvaTerritorialScope.from_registry("es_mainland")
+            assert resolved.scope == IvaTerritorialScope.from_registry("es_mainland")
             assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_cii_document_resolves_a_foreign_counterparty_through_the_country_rung(
@@ -580,7 +572,7 @@ class TestTheStructuredPathOpensThePostalRung:
                 operation=_authority_operation_for_test,
             )
 
-            assert resolved.scope is IvaTerritorialScope.from_registry("third_country")
+            assert resolved.scope == IvaTerritorialScope.from_registry("third_country")
             assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     def test_a_document_stating_no_country_still_exhausts(
@@ -744,7 +736,7 @@ class TestTheOverseasAddressIsNotConsulted:
             # unresolvable.
             assert territorial_scope_for_country(
                 "FR", operation=_authority_operation_for_test
-            ) is IvaTerritorialScope.from_registry("eu_member")
+            ) == IvaTerritorialScope.from_registry("eu_member")
 
 
 class TestTheProvenanceTellsTheTwoApart:

@@ -22,11 +22,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.validity_window import ValidityWindow
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.schema_references import LegalReference
+from ...calculations.registry.tests.published_authority import published_legal_reference, published_legal_references
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
     STATUTORY_CITATION_SOURCES,
@@ -38,8 +38,10 @@ from ..registry import load_category_profiles
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _legal_catalogue() -> dict[str, LegalReference]:
-    return dict(compiled_bundled_authority().catalogues.legal)
+def _legal_catalogue(citations: list[tuple[str, CategoryCitation]]) -> dict[str, LegalReference]:
+    return published_legal_references(
+        citation.legal_ref for _label, citation in citations if citation.legal_ref is not None
+    )
 
 
 def _statutory_citations(operation: PinnedAuthorityOperation) -> list[tuple[str, CategoryCitation]]:
@@ -72,8 +74,8 @@ def test_every_statutory_citation_names_a_provision_the_catalogue_carries(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Anchor: an unresolvable id would make the span check silently skip a row."""
-    catalogue = _legal_catalogue()
     citations = _statutory_citations(operation)
+    catalogue = _legal_catalogue(citations)
 
     assert citations, "no statutory citations were measured; every assertion here would be vacuous"
 
@@ -96,11 +98,12 @@ def test_every_statutory_citation_stays_inside_its_provisions_effective_span(
     Property, not tally: amending a provision's effective date automatically
     re-judges every citation that rests on it, with no constant to update here.
     """
-    catalogue = _legal_catalogue()
+    citations = _statutory_citations(operation)
+    catalogue = _legal_catalogue(citations)
 
     violations = [
         f"{label} ({citation.legal_ref}): {problem}"
-        for label, citation in _statutory_citations(operation)
+        for label, citation in citations
         if citation.legal_ref in catalogue
         and (problem := _outside_provision(citation.window, catalogue[citation.legal_ref]))
     ]
@@ -147,8 +150,7 @@ def test_a_statutory_citation_must_name_its_provision() -> None:
 
 def test_a_window_opening_before_its_provision_took_effect_is_a_violation() -> None:
     """DISCRIMINATING: the shape a future author produces by widening backwards."""
-    catalogue = _legal_catalogue()
-    entry = catalogue["ley-35-2006:art-30"]
+    entry = published_legal_reference("ley-35-2006:art-30")
     too_early = ValidityWindow(
         valid_from=date(entry.effective_from.year - 3, 1, 1),
         valid_to=date(2026, 12, 31),
@@ -158,8 +160,7 @@ def test_a_window_opening_before_its_provision_took_effect_is_a_violation() -> N
 
 
 def test_a_window_inside_the_span_is_not_a_violation() -> None:
-    catalogue = _legal_catalogue()
-    entry = catalogue["ley-35-2006:art-28"]
+    entry = published_legal_reference("ley-35-2006:art-28")
 
     assert not _outside_provision(
         ValidityWindow(valid_from=date(2022, 1, 1), valid_to=date(2026, 12, 31)),

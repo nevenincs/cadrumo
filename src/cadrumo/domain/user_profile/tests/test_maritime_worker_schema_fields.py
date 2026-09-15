@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ...calculations.registry.tests.published_authority import published_legal_reference
 from ..schema import ProfileSchemaDefinition
 from ._schema_loader_fixtures import function_scoped_schema
 
@@ -13,9 +13,12 @@ __all__ = ["function_scoped_schema"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _published_legal_ids(candidates: set[str]) -> set[str]:
+    """Return the candidates the published authority declares; an absent id refuses."""
+    return {reference_id for reference_id in candidates if published_legal_reference(reference_id).id == reference_id}
+
+
 def test_maritime_worker_fields_use_canonical_legal_refs(schema: ProfileSchemaDefinition) -> None:
-    catalogues = compiled_bundled_authority().catalogues
-    legal_ids = set(catalogues.legal)
     expected = {
         "maritime_worker.worker_class": {
             "ley-35-2006:art-7",
@@ -34,7 +37,7 @@ def test_maritime_worker_fields_use_canonical_legal_refs(schema: ProfileSchemaDe
     for field_path, expected_refs in expected.items():
         refs = set(schema.field(field_path).legal_refs)
         assert refs == expected_refs
-        assert refs <= legal_ids
+        assert refs <= _published_legal_ids(refs)
 
 
 def test_maritime_worker_selectors_match_runtime_facts(schema: ProfileSchemaDefinition) -> None:

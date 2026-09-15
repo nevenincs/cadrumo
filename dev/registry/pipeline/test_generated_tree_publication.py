@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import inspect
 import os
 from pathlib import Path
@@ -14,7 +15,6 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.loader import load_modelo_directory
-from . import _tree_publication
 from ._export_tree import RenderedExportTree
 from ._generated_tree_test_support import (
     ISOLATED_TREE,
@@ -22,10 +22,18 @@ from ._generated_tree_test_support import (
     write_isolated_generated_authority_tree,
 )
 from ._tree_publication import (
+    GeneratedExportPublicationJournal,
+    GeneratedExportTransactionPaths,
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
     PublishedGeneratedExportTree,
+    export_provenance_file_sha256,
+    load_generated_export_publication_journal,
     publish_validated_generated_export_tree,
+    recover_interrupted_publication,
+    stage_verified_candidate_package,
+    verify_generated_export_package,
+    write_generated_export_publication_journal,
 )
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
@@ -63,6 +71,15 @@ def _non_export_authority_bytes(revision_root: Path) -> dict[str, bytes]:
     }
 
 
+#: A record fragment no current render produces, planted in a legacy target.
+_STALE_RECORD_NAME = "0099-stale.toml"
+
+
+def _record_fragments(export_root: Path) -> tuple[Path, ...]:
+    """The rendered record fragments under one export root, in name order."""
+    return tuple(sorted(export_root.glob("*-record-*.toml")))
+
+
 def _publication_inputs(
     tmp_path: Path,
     *,
@@ -86,7 +103,11 @@ def _publication_inputs(
     if not existing_export:
         rmtree(target_revision_root / "export")
     elif legacy_export:
-        (target_revision_root / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).unlink()
+        legacy_export_root = target_revision_root / "export"
+        (legacy_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).unlink()
+        (legacy_export_root / _STALE_RECORD_NAME).write_text("stale = true\n", encoding="utf-8")
+        changed_record = _record_fragments(legacy_export_root)[0]
+        changed_record.write_bytes(changed_record.read_bytes() + b"# stale record edit\n")
     context = GeneratedExportTreePublicationContext(
         validation=validation,
         temporary_root=temporary_root,
@@ -147,36 +168,34 @@ def _stage_interrupted_verified_candidate(
     context: GeneratedExportTreePublicationContext,
     candidate_export_root: Path,
 ) -> Path:
-    candidate_manifest = _tree_publication._verify_generated_export_package(candidate_export_root)
-    staged_candidate_export_root = _tree_publication._stage_verified_candidate_package(
+    candidate_manifest = verify_generated_export_package(candidate_export_root)
+    staged_candidate_export_root = stage_verified_candidate_package(
         candidate_export_root=candidate_export_root,
         target_root=context.target_root.resolve(),
         modelo=ISOLATED_TREE.modelo,
         revision_id=ISOLATED_TREE.revision,
-        expected_manifest_sha256=_tree_publication._sha256(
+        expected_manifest_sha256=export_provenance_file_sha256(
             candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
         ),
         expected_manifest=candidate_manifest,
     )
-    backup_export_root = _tree_publication._rollback_sibling(
-        target_root=context.target_root.resolve(),
-        modelo=ISOLATED_TREE.modelo,
-        revision_id=ISOLATED_TREE.revision,
-    )
-    journal = _tree_publication._PublicationJournal(
+    backup_export_root = GeneratedExportTransactionPaths(
+        target_root=context.target_root.resolve(), modelo=ISOLATED_TREE.modelo, revision_id=ISOLATED_TREE.revision
+    ).new_backup_sibling()
+    journal = GeneratedExportPublicationJournal(
         schema_version=1,
         state="backup_staged",
         modelo=ISOLATED_TREE.modelo,
         revision_id=ISOLATED_TREE.revision,
         candidate_export=str(staged_candidate_export_root),
         backup_export=str(backup_export_root),
-        candidate_manifest_sha256=_tree_publication._sha256(
+        candidate_manifest_sha256=export_provenance_file_sha256(
             staged_candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
         ),
     )
     os.replace(context.target_export_root, backup_export_root)
-    _tree_publication._write_journal(
-        _tree_publication._journal_path(context),
+    write_generated_export_publication_journal(
+        GeneratedExportTransactionPaths.for_context(context).journal,
         journal,
     )
     return backup_export_root
@@ -189,7 +208,7 @@ def _legacy_orphan_context(tmp_path: Path) -> GeneratedExportTreePublicationCont
     return GeneratedExportTreePublicationContext(
         # This legacy-orphan recovery path never reads past `.target.modelo`
         # and `.target.revision_id` (the journal comparison at the top of
-        # `_recover_interrupted_publication`), so a real, minimally-populated
+        # `recover_interrupted_publication`), so a real, minimally-populated
         # validation context stands in rather than a duck-typed one -- the
         # other fields (`registry_root`, `source_root`, `filing_year`,
         # `period`) are never inspected on this path.
@@ -209,7 +228,7 @@ def _legacy_orphan_context(tmp_path: Path) -> GeneratedExportTreePublicationCont
 
 #: The legacy-orphan recovery path retires or refuses a journal before ever
 #: reading a joined design, semantic map, rendered tree, or render profile
-#: (see `_recover_interrupted_publication`, which only inspects
+#: (see `recover_interrupted_publication`, which only inspects
 #: `context.validation.target`). These stand in as real instances of the
 #: exact required types, built through pydantic's unvalidated-construction
 #: API rather than duck-typed placeholders, since no field on any of them is
@@ -228,7 +247,7 @@ def _legacy_orphan_journal(
     backup_export: Path,
     state: Literal["intent", "backup_staged", "candidate_live", "committed"] = "intent",
 ) -> Path:
-    journal = _tree_publication._PublicationJournal(
+    journal = GeneratedExportPublicationJournal(
         schema_version=1,
         state=state,
         modelo="200",
@@ -237,19 +256,17 @@ def _legacy_orphan_journal(
         backup_export=str(backup_export),
         candidate_manifest_sha256="a" * 64,
     )
-    path = _tree_publication._journal_path(context)
-    _tree_publication._write_journal(path, journal)
+    path = GeneratedExportTransactionPaths.for_context(context).journal
+    write_generated_export_publication_journal(path, journal)
     return path
 
 
 def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(tmp_path) -> None:
     context = _legacy_orphan_context(tmp_path)
     candidate_export = tmp_path / "former-system-temporary" / "export"
-    backup_export = _tree_publication._rollback_sibling(
-        target_root=context.target_root,
-        modelo="200",
-        revision_id="2025",
-    )
+    backup_export = GeneratedExportTransactionPaths(
+        target_root=context.target_root, modelo="200", revision_id="2025"
+    ).new_backup_sibling()
     journal_path = _legacy_orphan_journal(
         context,
         candidate_export=candidate_export,
@@ -261,7 +278,7 @@ def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(t
     assert journal_path.exists(), journal_path
     assert not context.target_export_root.exists(), context.target_export_root
 
-    assert not _tree_publication._recover_interrupted_publication(
+    assert not recover_interrupted_publication(
         context=context,
         target_export_root=context.target_export_root,
         journal_path=journal_path,
@@ -309,11 +326,9 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
 ) -> None:
     context = _legacy_orphan_context(tmp_path)
     candidate_export = tmp_path / "former-system-temporary" / "export"
-    backup_export = _tree_publication._rollback_sibling(
-        target_root=context.target_root,
-        modelo="200",
-        revision_id="2025",
-    )
+    backup_export = GeneratedExportTransactionPaths(
+        target_root=context.target_root, modelo="200", revision_id="2025"
+    ).new_backup_sibling()
     if case == "candidate-survives":
         candidate_export.mkdir(parents=True)
     elif case == "backup-survives":
@@ -334,7 +349,7 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
     # Each case pins its own refusal: four share the check that the legacy
     # candidate is not a staging sibling, and the fifth reaches a different check.
     with pytest.raises(RegistryValidationError, match=_ORPHAN_REFUSAL[case]):
-        _tree_publication._recover_interrupted_publication(
+        recover_interrupted_publication(
             context=context,
             target_export_root=context.target_export_root,
             journal_path=journal_path,
@@ -365,6 +380,10 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(tmp_path: Pa
     expected_export = _tree_bytes(candidate_export_root)
     revision_root = context.target_export_root.parent
     before_authority = _non_export_authority_bytes(revision_root)
+    stale_record = context.target_export_root / _STALE_RECORD_NAME
+    changed_record = _record_fragments(context.target_export_root)[0]
+    assert stale_record.is_file()
+    assert changed_record.read_bytes() != (candidate_export_root / changed_record.name).read_bytes()
 
     published = _publish(context, joined, semantic_map, rendered)
 
@@ -373,9 +392,11 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(tmp_path: Pa
     assert _tree_bytes(context.target_export_root) == expected_export
     assert _non_export_authority_bytes(revision_root) == before_authority
     assert candidate_export_root.exists()
+    assert not stale_record.exists()
+    assert changed_record.read_bytes() == (candidate_export_root / changed_record.name).read_bytes()
     assert not _rollback_siblings(context.target_export_root)
     assert not (revision_root / "export.lock").exists()
-    assert not _tree_publication._journal_path(context).exists()
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
 
 
 def test_publication_creates_missing_export_without_touching_revision_authority(tmp_path: Path) -> None:
@@ -419,7 +440,7 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert candidate_export_root.exists()
     assert not _rollback_siblings(context.target_export_root)
-    assert not _tree_publication._journal_path(context).exists()
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
 
 
 @pytest.mark.parametrize(
@@ -502,7 +523,7 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
     assert not _rollback_siblings(context.target_export_root)
 
 
-def test_publication_restores_live_export_after_staged_cutover_refusal(monkeypatch, tmp_path: Path) -> None:
+def test_publication_restores_live_export_after_staged_cutover_refusal(tmp_path: Path) -> None:
     """A same-volume staged candidate cannot leave the old export displaced."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
@@ -510,24 +531,28 @@ def test_publication_restores_live_export_after_staged_cutover_refusal(monkeypat
     )
     before = _tree_bytes(context.target_export_root)
     before_authority = _non_export_authority_bytes(context.target_export_root.parent)
-    real_replace = os.replace
+    target_export_root = context.target_export_root
+    staging_prefix = GeneratedExportTransactionPaths.for_context(context).staging_prefix
+    refused_cutovers: list[Path] = []
 
-    def refuse_staged_cutover(source: str | os.PathLike[str], destination: str | os.PathLike[str]) -> None:
-        if Path(source).name.startswith(".generated-export-stage-") and Path(destination) == context.target_export_root:
+    def refuse_staged_cutover(source: Path, destination: Path) -> None:
+        if source.name.startswith(staging_prefix) and destination == target_export_root:
+            refused_cutovers.append(source)
             raise OSError(17, "cross-device link")
-        real_replace(source, destination)
+        os.replace(source, destination)
 
-    monkeypatch.setattr(_tree_publication.os, "replace", refuse_staged_cutover)
+    context = dataclasses.replace(context, replace_export_directory=refuse_staged_cutover)
 
     with pytest.raises(RegistryValidationError, match="previous target was restored"):
         _publish(context, joined, semantic_map, rendered)
 
+    assert len(refused_cutovers) == 1, refused_cutovers
     assert _tree_bytes(context.target_export_root) == before
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert candidate_export_root.exists()
     assert not tuple(context.target_root.resolve().glob(".generated-export-stage-*"))
     assert not _rollback_siblings(context.target_export_root)
-    assert not _tree_publication._journal_path(context).exists()
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
 
 
 def test_publication_discards_only_a_completed_rollback_journal_from_an_abandoned_candidate(tmp_path: Path) -> None:
@@ -537,17 +562,13 @@ def test_publication_discards_only_a_completed_rollback_journal_from_an_abandone
         existing_export=True,
     )
     expected_export = _tree_bytes(candidate_export_root)
-    abandoned_candidate = _tree_publication._staging_sibling(
-        target_root=context.target_root.resolve(),
-        modelo=ISOLATED_TREE.modelo,
-        revision_id=ISOLATED_TREE.revision,
-    )
-    backup_export_root = _tree_publication._rollback_sibling(
-        target_root=context.target_root.resolve(),
-        modelo=ISOLATED_TREE.modelo,
-        revision_id=ISOLATED_TREE.revision,
-    )
-    journal = _tree_publication._PublicationJournal(
+    abandoned_candidate = GeneratedExportTransactionPaths(
+        target_root=context.target_root.resolve(), modelo=ISOLATED_TREE.modelo, revision_id=ISOLATED_TREE.revision
+    ).new_staging_sibling()
+    backup_export_root = GeneratedExportTransactionPaths(
+        target_root=context.target_root.resolve(), modelo=ISOLATED_TREE.modelo, revision_id=ISOLATED_TREE.revision
+    ).new_backup_sibling()
+    journal = GeneratedExportPublicationJournal(
         schema_version=1,
         state="backup_staged",
         modelo=ISOLATED_TREE.modelo,
@@ -556,8 +577,8 @@ def test_publication_discards_only_a_completed_rollback_journal_from_an_abandone
         backup_export=str(backup_export_root),
         candidate_manifest_sha256="a" * 64,
     )
-    journal_path = _tree_publication._journal_path(context)
-    _tree_publication._write_journal(journal_path, journal)
+    journal_path = GeneratedExportTransactionPaths.for_context(context).journal
+    write_generated_export_publication_journal(journal_path, journal)
 
     published = _publish(context, joined, semantic_map, rendered)
 
@@ -586,7 +607,7 @@ def test_publication_completes_a_real_interrupted_verified_candidate(tmp_path: P
     assert _tree_bytes(context.target_export_root) == expected_export
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert not backup_export_root.exists()
-    assert not _tree_publication._journal_path(context).exists()
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
 
 
 def _stage_interrupted_live_candidate(
@@ -603,10 +624,10 @@ def _stage_interrupted_live_candidate(
         existing_export=True,
     )
     backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
-    journal_path = _tree_publication._journal_path(context)
-    journal = _tree_publication._load_journal(journal_path)
+    journal_path = GeneratedExportTransactionPaths.for_context(context).journal
+    journal = load_generated_export_publication_journal(journal_path)
     os.replace(journal.candidate_export, context.target_export_root)
-    _tree_publication._write_journal(
+    write_generated_export_publication_journal(
         journal_path,
         journal.model_copy(update={"state": "candidate_live"}),
     )
@@ -635,7 +656,7 @@ def test_interrupted_live_candidate_recovers_under_current_profile_and_evidence(
     assert _tree_bytes(context.target_export_root) == expected_export
     assert candidate_export_root.exists()
     assert not backup_export_root.exists()
-    assert not _tree_publication._journal_path(context).exists()
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
 
 
 @pytest.mark.parametrize(
@@ -653,7 +674,7 @@ def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_
     context, joined, semantic_map, rendered, candidate_export_root, backup_export_root = (
         _stage_interrupted_live_candidate(tmp_path)
     )
-    journal_path = _tree_publication._journal_path(context)
+    journal_path = GeneratedExportTransactionPaths.for_context(context).journal
     profile, evidence = isolated_render_profile()
     if drift == "profile":
         profile = profile.model_copy(update={"fragment_ids": ("current-profile-drift",)})
@@ -741,6 +762,14 @@ def test_the_seam_check_is_reading_a_real_signature() -> None:
     """A signature read as empty would make the containment above vacuously true."""
     publication_parameters = set(inspect.signature(publish_validated_generated_export_tree).parameters)
 
-    assert {"context", "rendered"} <= publication_parameters
-    assert len(publication_parameters) >= 6
-    assert len(RevisionRenderInputs.__dataclass_fields__) >= 4
+    assert publication_parameters == {
+        "context",
+        "joined",
+        "semantic_map",
+        "rendered",
+        "render_profile",
+        "render_profile_source_evidence",
+    }
+    assert {"joined", "semantic_map", "render_profile", "render_profile_source_evidence"} <= set(
+        RevisionRenderInputs.__dataclass_fields__,
+    )

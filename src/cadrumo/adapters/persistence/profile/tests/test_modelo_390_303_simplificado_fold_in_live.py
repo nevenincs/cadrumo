@@ -113,12 +113,22 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports, build_verification_repository_bundle
 
 from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from .secure_objects_fixture import secure_objects
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "39000000-0000-4000-8000-000000000391"
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _YEAR = 2025
 _T0 = datetime(2026, 8, 14, 9, 0, tzinfo=UTC)
 _T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)

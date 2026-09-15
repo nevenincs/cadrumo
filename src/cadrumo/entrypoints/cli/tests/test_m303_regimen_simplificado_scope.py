@@ -9,10 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -20,6 +16,10 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context,
+    published_snapshot,
+)
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -65,7 +65,7 @@ def _store_current_profile(
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
-            context=_profile_creation_context_for_test(),
+            context=published_profile_create_context(),
         ),
         root=runtime_profile.storage_root,
         label="M303 CLI scope profile",
@@ -73,7 +73,7 @@ def _store_current_profile(
 
 
 def _m303_work_id() -> str:
-    revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id
+    revision = published_snapshot("303", filing_year=2026, period="1T").revision.id
     return create_modelo_work_unit_via_cli(
         modelo="303",
         filing_year=2026,
@@ -88,9 +88,7 @@ def _store_zero_prior_compensation(runtime_profile: TestRuntimeProfile) -> None:
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=compiled_bundled_authority()
-            .snapshot("303", filing_year=2026, period="1T")
-            .snapshot_ref,
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
             source_registry_snapshot_refs=(),
             selected_authority="aeat_wallet",
             selected_amount=Decimal("0.00"),

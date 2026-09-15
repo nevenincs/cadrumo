@@ -411,7 +411,7 @@ def _seed_retencion_perceptors(
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("general"))
+    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
 
 
 def test_m180_folds_in_four_m115_quarters_on_live_calculate(

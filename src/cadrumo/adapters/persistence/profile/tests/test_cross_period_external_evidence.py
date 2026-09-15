@@ -32,7 +32,7 @@ from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _TaxpayerIdentityEvidenceCase = tuple[str, str, str | None, CrossPeriodCleanStateBlocker | None]
 _PluralJustificanteCsvCase = tuple[str, str, bool]

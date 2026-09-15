@@ -31,7 +31,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
@@ -44,6 +43,8 @@ from ....domain.calculations.registry.applicability import (
     taxpayer_model_is_declared,
 )
 from ....domain.calculations.registry.applicability_routes import TaxRoute
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
 from ....domain.deadlines.models import (
     TaxpayerProfile,
 )
@@ -194,6 +195,12 @@ def test_undeclared_profile_yields_incomplete_for_every_modelo() -> None:
         assert result.applicable is False
         assert "tipo de contribuyente" in result.reason
         assert "config profile edit" not in result.reason
+        # The remedy travels as the typed failure the application projects
+        # into a recovery action; the profile declared no entity type either.
+        assert result.failure == RegistryFailureClassification(
+            condition=RegistryFailureCondition.TAXPAYER_MODEL_DECLARED,
+            facts={"modelo": modelo, "taxpayer_model_declared": False, "entity_type_declared": False},
+        ), modelo
 
 
 def test_natural_person_without_income_categories_is_incomplete() -> None:
@@ -211,7 +218,7 @@ def test_natural_person_without_income_categories_is_incomplete() -> None:
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
 
 
-def _an_unruled_modelo() -> str:
+def _an_unruled_modelo(operation: PinnedAuthorityOperation) -> str:
     """Return a modelo the engine has no applicability rule for, chosen at run time.
 
     This was hardcoded as Modelo 232, and it rotted: 232's rule was authored in
@@ -221,7 +228,7 @@ def _an_unruled_modelo() -> str:
     the engine actually reports and cannot go stale the same way.
     """
     ruled = {rule.modelo for rule in iter_modelo_applicability_rules()}
-    unruled = sorted(definition.id for definition in compiled_bundled_authority().modelos if definition.id not in ruled)
+    unruled = sorted(modelo_id for modelo_id in operation.modelo_ids() if modelo_id not in ruled)
     assert unruled, (
         "every modelo now carries an applicability rule, so the un-ruled rationale is "
         "unreachable and these two tests should be retired along with it"
@@ -229,14 +236,14 @@ def _an_unruled_modelo() -> str:
     return unruled[0]
 
 
-def test_modelo_without_seed_rule_is_incomplete() -> None:
+def test_modelo_without_seed_rule_is_incomplete(authority_operation: PinnedAuthorityOperation) -> None:
     """A modelo outside the rule set has no derived rule yet.
 
     It reports incomplete -- the deferred expansion completes coverage -- rather
     than a confident guess.
     """
 
-    result = derive_modelo_applicability(_autonomo(), _an_unruled_modelo())
+    result = derive_modelo_applicability(_autonomo(), _an_unruled_modelo(authority_operation))
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
 
@@ -246,7 +253,7 @@ def test_modelo_without_seed_rule_is_incomplete() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_unruled_modelo_on_declared_profile_uses_unruled_reason() -> None:
+def test_unruled_modelo_on_declared_profile_uses_unruled_reason(authority_operation: PinnedAuthorityOperation) -> None:
     """A fully declared profile asking about an un-ruled modelo gets the
     *un-ruled* rationale — a statement about rule coverage, not a wrong
     instruction to declare the taxpayer type the operator has already
@@ -255,13 +262,15 @@ def test_unruled_modelo_on_declared_profile_uses_unruled_reason() -> None:
     profile = _landlord()
     assert taxpayer_model_is_declared(profile) is True
 
-    result = derive_modelo_applicability(profile, _an_unruled_modelo())
+    result = derive_modelo_applicability(profile, _an_unruled_modelo(authority_operation))
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
     # The un-ruled rationale must NOT tell a declared operator to
     # declare their taxpayer type.
     assert "no está declarado" not in result.reason
     assert "config profile edit" not in result.reason
+    # Missing rule coverage is not an operator-recoverable taxpayer failure.
+    assert result.failure is None
     assert result.legal_refs
 
 
@@ -283,6 +292,10 @@ def test_undeclared_profile_still_uses_undeclared_reason() -> None:
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "tipo de contribuyente" in result.reason
     assert "config profile edit" not in result.reason
+    assert result.failure == RegistryFailureClassification(
+        condition=RegistryFailureCondition.TAXPAYER_MODEL_DECLARED,
+        facts={"modelo": "100", "taxpayer_model_declared": False, "entity_type_declared": False},
+    )
 
 
 def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
@@ -298,6 +311,12 @@ def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
     result = derive_modelo_applicability(profile, "130")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert result.reason == derive_modelo_applicability(_undeclared(), "100").reason
+    # Same failed condition, but the entity type IS declared: the fact that
+    # distinguishes this case from a fully undeclared profile survives.
+    assert result.failure == RegistryFailureClassification(
+        condition=RegistryFailureCondition.TAXPAYER_MODEL_DECLARED,
+        facts={"modelo": "130", "taxpayer_model_declared": False, "entity_type_declared": True},
+    )
 
 
 # ---------------------------------------------------------------------
@@ -592,6 +611,9 @@ def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
     # The undetermined rationale must not tell a declared operator to
     # declare their taxpayer type — the taxpayer model IS declared.
     assert "config profile edit" not in result.reason
+    # Only the taxpayer can answer the payer fact, so no taxpayer-model
+    # failure is classified for recovery.
+    assert result.failure is None
 
 
 def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
@@ -681,21 +703,16 @@ def test_undetermined_reason_distinct_from_undeclared_and_unruled() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_seed_legal_refs_resolve_against_the_registry() -> None:
+def test_seed_legal_refs_resolve_against_the_registry(authority_operation: PinnedAuthorityOperation) -> None:
     """Every ``legal_refs`` key carried by the seed applicability table
     must point at a real, corpus-backed registry legal entity.
 
-    Per ``.claude/rules/aeat-calculation-grounding.md``, every typed-ID
-    reference must resolve against an existing registry entity — no
-    invented BOE / AEAT slugs. This test loads the committed registry
-    legal catalogue and asserts each seed key (rule table plus the
-    undeclared-profile refs) is a member of it; a fabricated or
-    law-only slug would fail loudly here.
+    Every typed-ID reference must resolve against an existing registry
+    entity — no invented BOE / AEAT slugs. This test resolves each seed key
+    (rule table plus the undeclared-profile refs) through the published
+    authority generation the runtime consumes; a fabricated or law-only slug
+    has no published legal reference and fails loudly here.
     """
-
-    authority = compiled_bundled_authority()
-    registered_legal_ids = set(authority.catalogues.legal)
-    assert registered_legal_ids, "registry legal catalogue is empty"
 
     seed_refs: set[str] = set()
     for profile, modelo in (
@@ -709,13 +726,18 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
         seed_refs.update(rule.legal_refs)
     assert seed_refs, "seed table carries no legal_refs"
 
-    unresolved = sorted(ref for ref in seed_refs if ref not in registered_legal_ids)
-    assert not unresolved, f"seed legal_refs absent from the registry: {unresolved}"
+    unresolved: list[str] = []
+    for ref in sorted(seed_refs):
+        try:
+            authority_operation.legal_reference(ref)
+        except LookupError:
+            unresolved.append(ref)
+    assert not unresolved, f"seed legal_refs absent from the published registry: {unresolved}"
 
     # Every seed key is a scoped article reference, not a bare law slug.
     for ref in sorted(seed_refs):
         assert ":" in ref, f"seed legal_ref is not in scoped article form: {ref!r}"
 
-    legal_refs = {ref: authority.catalogues.legal[ref] for ref in sorted(seed_refs)}
-    for ref in sorted(legal_refs):
-        assert authority.legal_evidence_text(ref).strip(), f"published legal evidence is empty for {ref!r}"
+    for ref in sorted(seed_refs):
+        evidence = authority_operation.legal_evidence(ref)
+        assert evidence.anchored_text.strip(), f"published legal evidence is empty for {ref!r}"

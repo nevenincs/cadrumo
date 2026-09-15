@@ -33,7 +33,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
@@ -56,6 +55,7 @@ from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutco
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.justificante.schema import Justificante
 from ....entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
@@ -113,7 +113,7 @@ _M303_RECTIFICATIVA_MOTIVE = "rectificaciones"
 
 
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    return str(compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period).revision.id)
+    return str(published_snapshot("303", filing_year=filing_year, period=period).revision.id)
 
 
 # The fields whose values must be identical for the same amendment expressed

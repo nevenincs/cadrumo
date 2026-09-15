@@ -511,7 +511,7 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(
                 actor="operator-test",
                 workflow_profile=TaxpayerProfile(
                     tax_id="X1234567L",
-                    iva_regime=IVARegime("general"),
+                    iva_regime=IVARegime("GENERAL"),
                     has_employees=False,
                     pays_rent_with_retencion=False,
                     does_intracomunitario=False,

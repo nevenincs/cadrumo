@@ -73,7 +73,7 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
             },
         ),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_simplificada"),
-        iva_regime=IVARegime("reagp"),
+        iva_regime=IVARegime("REAGP"),
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
             regime_composition=M303RegimeComposition.from_registry("general"),
@@ -120,7 +120,7 @@ class TestTaxpayerModelRoundTrip:
             },
         )
         assert restored.irpf_estimation_regime is IrpfEstimationRegime.from_registry("directa_simplificada")
-        assert restored.iva_regime is IVARegime("reagp")
+        assert restored.iva_regime == IVARegime("REAGP")
         iva = restored.iva
         assert iva is not None
         assert iva.group_member_enrolled is True
@@ -141,7 +141,7 @@ class TestTaxpayerModelRoundTrip:
 
         original = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("simplificado"),
+            iva_regime=IVARegime("SIMPLIFICADO"),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         )
         restored = TaxpayerProfile.model_validate_json(original.model_dump_json())
@@ -155,7 +155,7 @@ class TestObjectiveEstimationRegimeAxis:
     def test_objetiva_regime_is_the_current_objective_estimation_signal(self) -> None:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         )
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("objetiva")
@@ -163,7 +163,7 @@ class TestObjectiveEstimationRegimeAxis:
     def test_directa_regime_is_not_objective_estimation(self) -> None:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         )
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("directa_normal")
@@ -175,7 +175,7 @@ class TestObjectiveEstimationRegimeAxis:
             TaxpayerProfile.model_validate(
                 {
                     "tax_id": "X1234567L",
-                    "iva_regime": IVARegime("general"),
+                    "iva_regime": IVARegime("GENERAL"),
                     "uses_objective_estimation_irpf": True,
                 },
             )
@@ -248,7 +248,7 @@ class TestImpatriado:
             TaxpayerProfile(
                 tax_id="X1234567L",
                 entity_type=EntityType.from_registry("natural_person"),
-                iva_regime=IVARegime("general"),
+                iva_regime=IVARegime("GENERAL"),
                 irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
                 # special_regime_start_date intentionally omitted
             )
@@ -261,7 +261,7 @@ class TestImpatriado:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             entity_type=EntityType.from_registry("natural_person"),
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
             special_regime_start_date=date(2023, 1, 15),
         )
@@ -274,7 +274,7 @@ class TestImpatriado:
 
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("general"),
         )
         assert profile.special_regime_start_date is None
@@ -284,7 +284,7 @@ class TestImpatriado:
 
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
         )
         assert profile.irpf_special_regime is None
         assert profile.special_regime_start_date is None
@@ -306,7 +306,7 @@ class TestImpatriado:
         original = TaxpayerProfile(
             tax_id="X1234567L",
             entity_type=EntityType.from_registry("natural_person"),
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
             special_regime_start_date=date(2023, 1, 15),
         )
@@ -326,7 +326,7 @@ class TestImpatriado:
         original = TaxpayerProfile(
             tax_id="X1234567L",
             entity_type=EntityType.from_registry("natural_person"),
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
             special_regime_start_date=date(2023, 1, 15),
         )
@@ -348,7 +348,7 @@ class TestBeckhamWindow:
         return TaxpayerProfile(
             tax_id="X1234567L",
             entity_type=EntityType.from_registry("natural_person"),
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
             special_regime_start_date=date(2023, 1, 15),
         )
@@ -370,7 +370,7 @@ class TestBeckhamWindow:
 
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_special_regime=IrpfSpecialRegime.from_registry("general"),
         )
         assert profile.beckham_window_active(date(2026, 5, 27)) is False
@@ -378,7 +378,7 @@ class TestBeckhamWindow:
     def test_profile_without_special_regime_is_always_outside_window(self) -> None:
         from datetime import date
 
-        profile = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("general"))
+        profile = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
         assert profile.beckham_window_active(date(2026, 5, 27)) is False
 
 
@@ -393,7 +393,7 @@ class TestNonResidentAxis:
         with pytest.raises(ValidationError, match=r"country_of_fiscal_residence is required"):
             TaxpayerProfile(
                 tax_id="X1234567L",
-                iva_regime=IVARegime("general"),
+                iva_regime=IVARegime("GENERAL"),
                 fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
                 country_of_fiscal_residence=None,
             )
@@ -402,7 +402,7 @@ class TestNonResidentAxis:
         # GB is post-Brexit non-EU/EEA; representante fiscal required.
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="GB",
             representante_fiscal_nif="12345678Z",
@@ -414,7 +414,7 @@ class TestNonResidentAxis:
     def test_ue_eee_status_true_for_eu_member(self) -> None:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="FR",
         )
@@ -424,7 +424,7 @@ class TestNonResidentAxis:
         # GB left the EU/EEA on 2020-12-31; representante is required.
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="GB",
             representante_fiscal_nif="12345678Z",
@@ -433,13 +433,13 @@ class TestNonResidentAxis:
         assert profile.ue_eee_status is False
 
     def test_ue_eee_status_false_when_country_none(self) -> None:
-        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("general"))
+        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
         assert profile.ue_eee_status is False
 
     def test_non_resident_roundtrip_preserves_fiscal_residency_and_country(self) -> None:
         original = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="DE",
         )
@@ -451,7 +451,7 @@ class TestNonResidentAxis:
         # from a NON_RESIDENT_IRNR payload must surface as a ValidationError.
         original = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="IT",
         )
@@ -474,7 +474,7 @@ class TestRepresentanteFiscalAxis:
         with pytest.raises(ValidationError, match=r"representante_fiscal_nif and representante_fiscal_nombre required"):
             TaxpayerProfile(
                 tax_id="X1234567L",
-                iva_regime=IVARegime("general"),
+                iva_regime=IVARegime("GENERAL"),
                 fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
                 country_of_fiscal_residence="GB",
                 representante_fiscal_nif=None,
@@ -485,7 +485,7 @@ class TestRepresentanteFiscalAxis:
         with pytest.raises(ValidationError, match=r"representante_fiscal_nombre required"):
             TaxpayerProfile(
                 tax_id="X1234567L",
-                iva_regime=IVARegime("general"),
+                iva_regime=IVARegime("GENERAL"),
                 fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
                 country_of_fiscal_residence="GB",
                 representante_fiscal_nif="12345678Z",
@@ -495,7 +495,7 @@ class TestRepresentanteFiscalAxis:
     def test_non_eu_non_resident_with_full_representante_is_accepted(self) -> None:
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="GB",
             representante_fiscal_nif="12345678Z",
@@ -508,7 +508,7 @@ class TestRepresentanteFiscalAxis:
         # FR is EU — representative not required.
         profile = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="FR",
         )
@@ -516,14 +516,14 @@ class TestRepresentanteFiscalAxis:
         assert profile.representante_fiscal_nombre is None
 
     def test_resident_irpf_does_not_require_representante(self) -> None:
-        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("general"))
+        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
         assert profile.representante_fiscal_nif is None
         assert profile.representante_fiscal_nombre is None
 
     def test_representante_roundtrip_preserves_fields(self) -> None:
         original = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="US",
             representante_fiscal_nif="87654321A",
@@ -535,7 +535,7 @@ class TestRepresentanteFiscalAxis:
     def test_anti_tautology_dropping_representante_nif_breaks_non_eu_non_resident(self) -> None:
         original = TaxpayerProfile(
             tax_id="X1234567L",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             country_of_fiscal_residence="US",
             representante_fiscal_nif="87654321A",
@@ -586,7 +586,7 @@ class TestMultiplePagadoresObligation:
         # TaxpayerProfile must carry the pagadores axes through construction unchanged.
         profile = TaxpayerProfile(
             tax_id="12345678Z",
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
             irpf_pagadores_count=3,
             irpf_pagadores_secondary_income=Decimal("2000"),
             irpf_pagadores_total_work_income=Decimal("19000"),
@@ -597,7 +597,7 @@ class TestMultiplePagadoresObligation:
 
     def test_taxpayer_profile_pagadores_fields_default_none(self) -> None:
         # Existing profiles without pagadores fields must load cleanly.
-        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("general"))
+        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
         assert profile.irpf_pagadores_count is None
         assert profile.irpf_pagadores_secondary_income is None
         assert profile.irpf_pagadores_total_work_income is None
@@ -691,7 +691,7 @@ class TestThirdPartyDeclarationRoleOrthogonality:
         baseline = TaxpayerProfile(
             tax_id="B12345674",
             entity_type=EntityType.from_registry("legal_entity"),
-            iva_regime=IVARegime("general"),
+            iva_regime=IVARegime("GENERAL"),
         )
         assert derive_tax_route(baseline) is TaxRoute.IMPUESTO_SOCIEDADES
 
@@ -702,7 +702,7 @@ class TestThirdPartyDeclarationRoleOrthogonality:
             colegio_profesional = TaxpayerProfile(
                 tax_id="B12345674",
                 entity_type=EntityType.from_registry("legal_entity"),
-                iva_regime=IVARegime("general"),
+                iva_regime=IVARegime("GENERAL"),
                 declaration_roles=roles,
             )
             assert derive_tax_route(colegio_profesional) is TaxRoute.IMPUESTO_SOCIEDADES
@@ -717,7 +717,7 @@ class TestThirdPartyDeclarationRoleOrthogonality:
             profile = TaxpayerProfile(
                 tax_id="12345678Z",
                 entity_type=EntityType.from_registry("natural_person"),
-                iva_regime=IVARegime("general"),
+                iva_regime=IVARegime("GENERAL"),
                 declaration_roles=roles,
             )
             assert derive_tax_route(profile) is TaxRoute.IRPF

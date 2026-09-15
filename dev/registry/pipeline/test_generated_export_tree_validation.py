@@ -146,7 +146,13 @@ def test_generated_tree_validation_refuses_direct_modelo_file_and_malformed_outp
     context, joined, semantic_map, rendered, _export_root = write_isolated_generated_authority_tree(tmp_path)
     (context.registry_root / "modelos" / "200.toml").write_text("[modelo]\nid = '200'\n", encoding="utf-8")
 
-    with pytest.raises(RegistryValidationError, match="generated registry modelos root must contain exactly"):
+    with pytest.raises(
+        RegistryValidationError,
+        match=re.escape(
+            "generated registry modelos root must contain exactly "
+            f"['{ISOLATED_TREE.modelo}'], got ['{ISOLATED_TREE.modelo}', '200.toml']",
+        ),
+    ):
         _validate(context, joined, semantic_map, rendered)
 
     context, joined, semantic_map, rendered, export_root = write_isolated_generated_authority_tree(

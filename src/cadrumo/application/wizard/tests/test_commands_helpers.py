@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import inspect
 import typing
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Annotated
 
@@ -114,6 +115,30 @@ def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
     assert option.show_choices is False
 
 
+@pytest.fixture
+def _isolated_setup_option_infos() -> Iterator[None]:
+    """Restore the shared setup option registry after a test builds the wizard command.
+
+    Building the command inserts options and mutates the shared ``OptionInfo``
+    objects in place (choice type, metavar, help, panel), so both the mapping
+    membership and every option's attribute state are restored, keeping each
+    object's identity for the modules that hold references to it.
+    """
+    saved_entries = dict(SETUP_OPTION_INFOS)
+    saved_state = {key: dict(vars(option)) for key, option in saved_entries.items() if option is not None}
+    try:
+        yield
+    finally:
+        SETUP_OPTION_INFOS.clear()
+        SETUP_OPTION_INFOS.update(saved_entries)
+        for key, state in saved_state.items():
+            option = saved_entries[key]
+            assert option is not None
+            vars(option).clear()
+            vars(option).update(state)
+
+
+@pytest.mark.usefixtures("_isolated_setup_option_infos")
 def test_tax_residence_ccaa_choices_match_the_ccaa_enum(authority_operation: PinnedAuthorityOperation) -> None:
     """The CCAA choice tokens are the canonical CCAA catalogue plus foral redirects.
 

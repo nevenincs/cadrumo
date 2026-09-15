@@ -8,7 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -25,6 +24,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import InvoiceCatalogue
@@ -337,9 +337,7 @@ def _seed_prior_m100_zero_carry() -> None:
             ),
             source_kind="app_filing",
             captured_at=datetime(2024, 6, 30, 12, 0, tzinfo=UTC),
-            stamped_revision_id=str(
-                compiled_bundled_authority().snapshot("100", filing_year=2023, period="0A").revision.id
-            ),
+            stamped_revision_id=str(published_snapshot("100", filing_year=2023, period="0A").revision.id),
         )
     )
 
@@ -687,12 +685,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=compiled_bundled_authority()
-            .snapshot("303", filing_year=2026, period="1T")
-            .snapshot_ref,
-            source_registry_snapshot_refs=(
-                compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
-            ),
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
@@ -705,9 +699,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
                     source_modelo="303",
                     source_filing_year=2026,
                     source_periods=(Period.from_year_and_code(2026, "1T"),),
-                    registry_snapshot_refs=(
-                        compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
-                    ),
+                    registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
                 ),
             ),
             override_amount=None,
@@ -854,12 +846,8 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=compiled_bundled_authority()
-            .snapshot("303", filing_year=2026, period="1T")
-            .snapshot_ref,
-            source_registry_snapshot_refs=(
-                compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
-            ),
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
@@ -872,9 +860,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
                     source_modelo="303",
                     source_filing_year=2026,
                     source_periods=(Period.from_year_and_code(2026, "1T"),),
-                    registry_snapshot_refs=(
-                        compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
-                    ),
+                    registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
                 ),
             ),
             override_amount=None,

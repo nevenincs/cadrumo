@@ -51,9 +51,7 @@ def test_inheriting_edition_is_staged_with_the_members_it_does_not_restate(tmp_p
     restated_ids = {
         row["id"]
         for fragment in (source_revision / "application_links").glob("*.toml")
-        for row in tomllib.loads(fragment.read_text("utf-8"))["revisions"][_INHERITING_REVISION][
-            "application_links"
-        ]
+        for row in tomllib.loads(fragment.read_text("utf-8"))["revisions"][_INHERITING_REVISION]["application_links"]
     }
     assert _INHERITED_LINK not in restated_ids, (
         "the fixture rests on this id being inherited rather than restated; pick another id"
@@ -97,9 +95,9 @@ def test_storage_only_transitive_baselines_are_detached_as_complete_authority(tm
     )
     staged_revision_roots = tuple(path.name for path in (staged_root / "revisions").iterdir() if path.is_dir())
     assert staged_revision_roots == (_STORAGE_ONLY_REVISION,)
-    declared = tomllib.loads(
-        (staged_root / "revisions" / _STORAGE_ONLY_REVISION / "revision.toml").read_text("utf-8")
-    )["revisions"][_STORAGE_ONLY_REVISION]
+    declared = tomllib.loads((staged_root / "revisions" / _STORAGE_ONLY_REVISION / "revision.toml").read_text("utf-8"))[
+        "revisions"
+    ][_STORAGE_ONLY_REVISION]
     assert not {"predecessor", "casilla_storage_baseline", "family_storage_baseline"}.intersection(declared)
 
     staged = load_modelo_directory(staged_root).revisions[_STORAGE_ONLY_REVISION]

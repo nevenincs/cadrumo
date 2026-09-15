@@ -41,7 +41,7 @@ from ...storage.sql import orm as _orm
 from ...storage.sql.session import session_scope
 from ..transactions import TransactionCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 

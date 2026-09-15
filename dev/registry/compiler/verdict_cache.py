@@ -14,8 +14,9 @@ done and skip the multi-second re-validation of an immutable bundled registry
 (build and continuous integration are the gate;
 the runtime asserts fingerprint identity only).
 
-Two homes back the verdict: a writable per-storage-root file (mutable trees)
-and a read-only file the release build stamps beside the bundled tree. Both key
+Two homes back the verdict: a writable file in the runner-local verdict store
+(mutable trees) and a read-only file the release build stamps beside the bundled
+tree. Both key
 on the tree identity that :mod:`~domain.calculations.registry._identity` owns --
 this module derives no identity of its own, so a verdict and the authority that
 consults it can never disagree about which tree was certified. The shipped
@@ -30,6 +31,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -38,8 +40,6 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.package_version import PACKAGE_VERSION
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.storage_taxonomy_locations import storage_path
 
 from .compiled_cache import loader_code_fingerprint
 from .identity import RegistryIdentity
@@ -50,6 +50,7 @@ SourceEvidenceFingerprintTuples = tuple[tuple[str, int, int], ...]
 
 VERDICT_OUTCOME_GREEN = "green"
 
+_CACHE_DIR_ENV = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 _VERDICT_FILENAME_PREFIX = "cadrumo_validation_verdict_"
 _BUNDLED_VERDICT_FILENAME = "aeat-validation-verdict.json"
 _ROOT_HASH_LEN = 16
@@ -138,24 +139,35 @@ def compute_shipped_verdict_key(
     return hasher.hexdigest()
 
 
-def verdict_cache_path(root: Path) -> Path:
-    """Return the writable per-storage-root verdict file for ``root``.
+def default_verdict_cache_dir() -> Path:
+    """Resolve the runner-local writable verdict store.
 
-    Resolved through :func:`~core.storage_path` for
-    ``StorageCategory.VALIDATION_VERDICT_CACHE``
-    (``<storage-root>/cache/registry-verdict``), never a shared OS temp dir and
-    never a direct read of ``cadrumo_validation_verdict_cache_dir`` here -- the
-    accessor is what stays correct if the member's resolution ever gains a
-    case. The filename embeds a hash of the resolved root path so distinct
-    registry roots never share a file, while a fingerprint change on one root
-    reuses the same filename so the mismatch branch deletes and rewrites in
-    place.
+    Follows the development cache convention: an explicit
+    ``CADRUMO_REGISTRY_VERDICT_CACHE_DIR`` wins, otherwise ``~/.cadrumo`` holds
+    it. The store lives outside the application's storage root, so writing a
+    verdict never changes the application state that root fingerprints.
 
     Returns:
-        The verdict file location for ``root`` under the settings cache dir.
+        The directory holding writable verdict files.
+    """
+    override = os.environ.get(_CACHE_DIR_ENV)
+    if override:
+        return Path(override)
+    return Path.home() / ".cadrumo" / "registry-verdict"
+
+
+def verdict_cache_path(root: Path) -> Path:
+    """Return the writable verdict file for ``root`` in the runner-local store.
+
+    The filename embeds a hash of the resolved root path so distinct registry
+    roots never share a file, while a fingerprint change on one root reuses the
+    same filename so the mismatch branch deletes and rewrites in place.
+
+    Returns:
+        The verdict file location for ``root`` under :func:`default_verdict_cache_dir`.
     """
     digest = hashlib.sha256(str(root).encode("utf-8")).hexdigest()[:_ROOT_HASH_LEN]
-    return storage_path(StorageCategory.VALIDATION_VERDICT_CACHE) / f"{_VERDICT_FILENAME_PREFIX}{digest}.json"
+    return default_verdict_cache_dir() / f"{_VERDICT_FILENAME_PREFIX}{digest}.json"
 
 
 def shipped_verdict_location(registry_root: Path) -> Path:

@@ -46,6 +46,7 @@ from .revision_contracts import DeclaredPredecessor, NoPredecessor
 from .runtime_catalogues import RuntimeRegistryCatalogues
 from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, SnapshotGlobalCatalogues
 from .schema_exports import ExportLayoutDefinition
+from .source_byte_availability import embedded_source_ids
 from .tax_id_format import tax_id_format_from_catalogue
 from .temporal import ModeloRevisionDirectory
 
@@ -636,9 +637,7 @@ class AuthorityArtifact:
         legal_ids = {item.legal_reference_id for item in self.evidence.legal}
         if legal_ids != set(self.catalogues.legal):
             raise ValueError("authority artifact legal evidence must cover exactly its legal catalogue")
-        required_sources = {
-            str(key) for key, source in self.catalogues.sources.items() if source.kind in {"dictionary", "xsd"}
-        }
+        required_sources = embedded_source_ids(self.catalogues.sources)
         source_ids = {item.source_reference_id for item in self.evidence.sources}
         if source_ids != required_sources:
             raise ValueError("authority artifact source evidence must cover exactly its runtime source catalogue")

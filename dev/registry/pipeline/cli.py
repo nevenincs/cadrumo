@@ -134,7 +134,9 @@ def publish_authority(
 
 
 @dataclass(frozen=True, slots=True)
-class _Invocation:
+class GeneratedTreeInvocation:
+    """One explicit generated-tree lifecycle request: target, source, filing context and reviewed digest."""
+
     modelo: str
     revision: str
     source_ref: str
@@ -144,8 +146,10 @@ class _Invocation:
 
 
 @dataclass(frozen=True, slots=True)
-class _PreparedInvocation:
-    invocation: _Invocation
+class PreparedGeneratedTreeInvocation:
+    """A request with its staged candidate registry, derived render inputs and live target roots."""
+
+    invocation: GeneratedTreeInvocation
     inputs: RevisionRenderInputs
     validation: GeneratedExportTreeValidationContext
     candidate_root: Path
@@ -154,7 +158,9 @@ class _PreparedInvocation:
     published_modelo_root: Path | None
 
 
-def _bootstrap_target(invocation: _Invocation, *, source_sha256: str) -> GeneratedExportBootstrapTarget:
+def reviewed_bootstrap_target(
+    invocation: GeneratedTreeInvocation, *, source_sha256: str
+) -> GeneratedExportBootstrapTarget:
     """Load the reviewed bootstrap authority for one explicitly owed tree."""
     target = generated_export_bootstrap_target(
         modelo=invocation.modelo,
@@ -170,12 +176,12 @@ def _bootstrap_target(invocation: _Invocation, *, source_sha256: str) -> Generat
     return target
 
 
-def _prepare(
-    invocation: _Invocation,
+def prepare_generated_tree_invocation(
+    invocation: GeneratedTreeInvocation,
     root: Path,
     *,
     authority: ValidatedRegistryAuthority | None = None,
-) -> _PreparedInvocation:
+) -> PreparedGeneratedTreeInvocation:
     """Stage one narrow candidate and derive its render inputs from authority."""
     authority = compiled_bundled_authority() if authority is None else authority
     target_root = bundled_path("registry", "aeat")
@@ -189,7 +195,7 @@ def _prepare(
     if not target_export_root.exists():
         if source is None:
             raise ValueError(f"no source {invocation.source_ref!r} exists for bootstrap target selection")
-        bootstrap_target = _bootstrap_target(invocation, source_sha256=source.sha256)
+        bootstrap_target = reviewed_bootstrap_target(invocation, source_sha256=source.sha256)
         bootstrap = GeneratedExportBootstrapTransport(
             layout_id=bootstrap_target.layout_id,
             line_ending=bootstrap_target.line_ending,
@@ -233,14 +239,14 @@ def _prepare(
             revision=invocation.revision,
         ),
     )
-    return _PreparedInvocation(
+    return PreparedGeneratedTreeInvocation(
         invocation=invocation,
         inputs=inputs,
         validation=validation,
         candidate_root=candidate_root,
         target_root=target_root,
         target_export_root=target_export_root,
-        published_modelo_root=_stage_published_modelo(root, modelo=invocation.modelo, revision=invocation.revision),
+        published_modelo_root=stage_published_modelo(root, modelo=invocation.modelo, revision=invocation.revision),
     )
 
 
@@ -256,7 +262,7 @@ def supporting_modelos(modelo: str) -> frozenset[str]:
     return frozenset(item for item in referenced - {modelo} if (modelos_root / item).is_dir())
 
 
-def _stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | None:
+def stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path | None:
     """Stage a one-revision published modelo only when check needs the witness.
 
     The witness is staged in registry shape with the published authored facts
@@ -368,7 +374,7 @@ def _authored_text(catalogue: Mapping[str, str | None], key: str) -> str | None:
     return None if value is None or value == key else value
 
 
-def _render_candidate(prepared: _PreparedInvocation) -> RenderedExportTree:
+def _render_candidate(prepared: PreparedGeneratedTreeInvocation) -> RenderedExportTree:
     """Render one candidate export tree into the staged revision."""
     candidate_export_root = (
         prepared.candidate_root
@@ -391,8 +397,8 @@ def _render_candidate(prepared: _PreparedInvocation) -> RenderedExportTree:
     return rendered
 
 
-def _check(
-    prepared: _PreparedInvocation,
+def check_prepared_invocation(
+    prepared: PreparedGeneratedTreeInvocation,
 ) -> tuple[Literal["matched", "publishable_absence"], RenderedExportTree, GeneratedExportTreeTargetStateReceipt]:
     """Drive the canonical checker, or validate a fresh candidate for an owed tree.
 
@@ -437,8 +443,8 @@ def _bootstrap_validation(context: GeneratedExportTreeValidationContext) -> Gene
     return replace(context, required_grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _publish(
-    prepared: _PreparedInvocation,
+def publish_prepared_invocation(
+    prepared: PreparedGeneratedTreeInvocation,
     rendered: RenderedExportTree,
     target_state: GeneratedExportTreeTargetStateReceipt,
 ) -> None:
@@ -459,8 +465,8 @@ def _publish(
     )
 
 
-def _require_republication_eligibility(
-    invocation: _Invocation,
+def require_republication_eligibility(
+    invocation: GeneratedTreeInvocation,
     target_state: GeneratedExportTreeTargetStateReceipt,
     comparison: RenderComparison,
 ) -> None:
@@ -519,7 +525,7 @@ def _require_republication_eligibility(
         )
 
 
-def _republish(prepared: _PreparedInvocation, target_state: GeneratedExportTreeTargetStateReceipt) -> None:
+def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: GeneratedExportTreeTargetStateReceipt) -> None:
     """Replace one stale manifest only after an exact target-bound safety proof."""
     rendered = _render_candidate(prepared)
     candidate_export_root = (
@@ -537,7 +543,7 @@ def _republish(prepared: _PreparedInvocation, target_state: GeneratedExportTreeT
         committed_root=prepared.target_export_root,
         rendered_root=candidate_export_root,
     )
-    _require_republication_eligibility(prepared.invocation, target_state, comparison)
+    require_republication_eligibility(prepared.invocation, target_state, comparison)
     validate_generated_export_tree(
         context=_bootstrap_validation(prepared.validation),
         joined=prepared.inputs.joined,
@@ -546,11 +552,11 @@ def _republish(prepared: _PreparedInvocation, target_state: GeneratedExportTreeT
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
-    _publish(prepared, rendered, target_state)
+    publish_prepared_invocation(prepared, rendered, target_state)
 
 
 def _run(
-    invocation: _Invocation,
+    invocation: GeneratedTreeInvocation,
     *,
     action: Literal["check", "publish", "republish"],
     temporary_directory: Callable[..., tempfile.TemporaryDirectory[str]] = tempfile.TemporaryDirectory,
@@ -559,9 +565,9 @@ def _run(
     try:
         with temporary_directory(prefix="cadrumo-generated-export-") as temporary_name:
             root = Path(temporary_name)
-            prepared = _prepare(invocation, root)
+            prepared = prepare_generated_tree_invocation(invocation, root)
             if action == "check":
-                result, _rendered, _target_state = _check(prepared)
+                result, _rendered, _target_state = check_prepared_invocation(prepared)
                 typer.echo(
                     "checked "
                     f"modelo={invocation.modelo} revision={invocation.revision} source={invocation.source_ref} "
@@ -570,8 +576,8 @@ def _run(
             elif action == "publish":
                 # Publishing is never the first question: a candidate must first
                 # pass the independent read-only proof against its live target.
-                _result, rendered, target_state = _check(prepared)
-                _publish(prepared, rendered, target_state)
+                _result, rendered, target_state = check_prepared_invocation(prepared)
+                publish_prepared_invocation(prepared, rendered, target_state)
             else:
                 target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
                 _republish(prepared, target_state)
@@ -636,7 +642,7 @@ def target_currentness(
         source_ref = str(design_refs[0])
     effective_filing_year = selected.valid_from.year if filing_year is None else filing_year
     effective_period = period or str(selected.period_selector.periods_for_year(effective_filing_year)[0])
-    invocation = _Invocation(
+    invocation = GeneratedTreeInvocation(
         modelo,
         revision,
         source_ref,
@@ -644,9 +650,9 @@ def target_currentness(
         effective_period,
     )
     with tempfile.TemporaryDirectory(prefix="cadrumo-generated-export-currentness-") as temporary_name:
-        prepared = _prepare(invocation, Path(temporary_name), authority=effective_authority)
+        prepared = prepare_generated_tree_invocation(invocation, Path(temporary_name), authority=effective_authority)
         if not prepared.target_export_root.exists():
-            _check(prepared)
+            check_prepared_invocation(prepared)
             return TargetCurrentnessFact(
                 modelo=modelo,
                 revision=revision,
@@ -654,7 +660,7 @@ def target_currentness(
                 detail="the target rendered successfully but has no committed export tree",
             )
         try:
-            _check(prepared)
+            check_prepared_invocation(prepared)
         except (OSError, RegistryError, ValueError) as error:
             candidate_export_root = prepared.candidate_root / "modelos" / modelo / "revisions" / revision / "export"
             comparison: RenderComparison | None = None
@@ -737,7 +743,7 @@ def publish_target_command(
     period: _PERIOD,
 ) -> None:
     """Check, then transactionally publish one named static target tree."""
-    _run(_Invocation(modelo, revision, source_ref, filing_year, period), action="publish")
+    _run(GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period), action="publish")
     typer.echo(f"publish-target\tmodelo={modelo}\trevision={revision}\tsource={source_ref}")
     typer.echo(
         "next\tcurrentness=check-registry-target-current\tpublication=registry-publish-authority-if-authority-stale"
@@ -758,7 +764,7 @@ def republish_target_command(
 ) -> None:
     """Digest-bound republish of one named target after its exact state was reviewed."""
     _run(
-        _Invocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
+        GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
         action="republish",
     )
     typer.echo(f"republish-target\tmodelo={modelo}\trevision={revision}\tsource={source_ref}")
@@ -776,7 +782,7 @@ def check_command(
     period: _PERIOD,
 ) -> None:
     """Regenerate and validate one target without changing the published registry."""
-    _run(_Invocation(modelo, revision, source_ref, filing_year, period), action="check")
+    _run(GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period), action="check")
 
 
 @app.command("publish")
@@ -788,7 +794,7 @@ def publish_command(
     period: _PERIOD,
 ) -> None:
     """Check, then transactionally publish one target through the canonical authority."""
-    _run(_Invocation(modelo, revision, source_ref, filing_year, period), action="publish")
+    _run(GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period), action="publish")
     typer.echo(f"published modelo={modelo} revision={revision} source={source_ref}")
 
 
@@ -806,7 +812,7 @@ def republish_command(
 ) -> None:
     """Replace one digest-pinned tree only when its records reproduce semantically."""
     _run(
-        _Invocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
+        GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
         action="republish",
     )
     typer.echo(f"republished modelo={modelo} revision={revision} source={source_ref}")

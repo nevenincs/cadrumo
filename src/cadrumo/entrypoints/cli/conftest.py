@@ -2,7 +2,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -11,20 +10,7 @@ from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_st
 from ...core.config import reset_settings_cache
 from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from ...core.i18n.render import clear_output_language_cache
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
-from ...domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ...tests.env import temporary_env
-
-
-@pytest.fixture(scope="session")
-def operation() -> PinnedAuthorityOperation:
-    """Expose canonical authored facts without requiring a published package."""
-    authority = compiled_bundled_authority()
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
-    )
-    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 @pytest.fixture

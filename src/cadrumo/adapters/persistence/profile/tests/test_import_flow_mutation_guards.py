@@ -77,7 +77,7 @@ from cadrumo.entrypoints.adapter_composition import (
 
 __all__ = ["repos"]
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_import_refuses_discarded_work_unit(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:

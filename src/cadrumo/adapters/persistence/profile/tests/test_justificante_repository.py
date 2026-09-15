@@ -23,7 +23,7 @@ from ...storage.envelope.contract import Envelope
 from ...storage.errors import ClassificationError
 from ..justificante import JustificanteRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 16, 0, 0, tzinfo=UTC)
 

@@ -35,11 +35,11 @@ from .candidate_staging import (
     stage_generated_export_candidate,
 )
 from .cli import (
-    _check,
-    _Invocation,
-    _PreparedInvocation,
-    _publish,
-    _stage_published_modelo,
+    GeneratedTreeInvocation,
+    PreparedGeneratedTreeInvocation,
+    check_prepared_invocation,
+    publish_prepared_invocation,
+    stage_published_modelo,
     supporting_modelos,
 )
 from .export_fragment_provenance import ExportFragmentTarget
@@ -109,7 +109,7 @@ def _cite_successor_design_on_inherited_rows(registry_root: Path, *, inherited_s
         )
 
 
-def _prepared(work: Path, target_root: Path) -> _PreparedInvocation:
+def _prepared(work: Path, target_root: Path) -> PreparedGeneratedTreeInvocation:
     modelo_root = target_root / "modelos" / _MODELO
     inputs = revision_render_inputs(
         compiled_bundled_authority(),
@@ -127,8 +127,8 @@ def _prepared(work: Path, target_root: Path) -> _PreparedInvocation:
         revision=_REVISION,
         supporting_modelos=supporting,
     )
-    return _PreparedInvocation(
-        invocation=_Invocation(_MODELO, _REVISION, _SOURCE_REF, _FILING_YEAR, _PERIOD),
+    return PreparedGeneratedTreeInvocation(
+        invocation=GeneratedTreeInvocation(_MODELO, _REVISION, _SOURCE_REF, _FILING_YEAR, _PERIOD),
         inputs=inputs,
         validation=GeneratedExportTreeValidationContext(
             registry_root=candidate_root,
@@ -146,7 +146,7 @@ def _prepared(work: Path, target_root: Path) -> _PreparedInvocation:
         candidate_root=candidate_root,
         target_root=target_root,
         target_export_root=modelo_root / "revisions" / _REVISION / "export",
-        published_modelo_root=_stage_published_modelo(work, modelo=_MODELO, revision=_REVISION),
+        published_modelo_root=stage_published_modelo(work, modelo=_MODELO, revision=_REVISION),
     )
 
 
@@ -233,7 +233,7 @@ def test_a_delta_target_with_its_existing_tree_is_refused_for_its_withdrawn_revi
     before = _tree_bytes(target_root / "modelos" / _MODELO)
 
     with pytest.raises(RegistryValidationError, match="is 'pending_review'; filing-grade snapshot requires") as refusal:
-        _check(prepared)
+        check_prepared_invocation(prepared)
 
     assert "export_refs" not in str(refusal.value)
     assert _tree_bytes(target_root / "modelos" / _MODELO) == before
@@ -250,13 +250,13 @@ def test_an_absent_tree_on_a_delta_target_publishes_and_derives_the_full_copys_r
     declarations_before = _tree_bytes(modelo_root)
 
     checked = _prepared(tmp_path / "check", target_root)
-    result, _rendered, _target_state = _check(checked)
+    result, _rendered, _target_state = check_prepared_invocation(checked)
     assert result == "publishable_absence"
     assert not checked.target_export_root.exists()
 
     publication = _prepared(tmp_path / "publish", target_root)
-    _result, rendered, target_state = _check(publication)
-    _publish(publication, rendered, target_state)
+    _result, rendered, target_state = check_prepared_invocation(publication)
+    publish_prepared_invocation(publication, rendered, target_state)
 
     assert publication.target_export_root.is_dir()
     after = _tree_bytes(modelo_root)

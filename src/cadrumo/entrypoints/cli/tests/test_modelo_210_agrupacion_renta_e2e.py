@@ -9,7 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 
@@ -28,6 +27,7 @@ from ....application.modelo.work_plazo import calculated_m210_plazo_resolution
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
@@ -107,7 +107,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
     )
 
     with _secure_backend(tmp_path):
-        snapshot = compiled_bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="0A")
+        snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="0A")
         work_repo = WorkUnitCatalogueRepository()
         calculation_repo = CalculationRevisionCatalogueRepository()
         event_repo = BucketEventHistoryRepository()
@@ -233,7 +233,7 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
 ) -> None:
     """Real calculation and verification retain one identical grounded notice."""
     with _secure_backend(tmp_path):
-        snapshot = compiled_bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="0A")
+        snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="0A")
         work_repo = WorkUnitCatalogueRepository()
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -303,7 +303,7 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
 def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_path: Path) -> None:
     """Tipo 28 remains event-shaped and silent at both lifecycle boundaries."""
     with _secure_backend(tmp_path):
-        snapshot = compiled_bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
+        snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -346,7 +346,7 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
 ) -> None:
     """The real EVENT-N work model reuses the qualified annual plazo authority."""
     with _secure_backend(tmp_path):
-        snapshot = compiled_bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
+        snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,

@@ -35,7 +35,7 @@ from .ledger_action_persistence_support import (
     _repositories,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 __all__ = ["secure_objects"]
 

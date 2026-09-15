@@ -31,7 +31,7 @@ _CUOTA = Decimal("8.40")
 
 
 def _profile(**overrides: Any) -> TaxpayerProfile:
-    payload: dict[str, Any] = {"tax_id": "12345678Z", "iva_regime": IVARegime("general")}
+    payload: dict[str, Any] = {"tax_id": "12345678Z", "iva_regime": IVARegime("GENERAL")}
     payload.update(overrides)
     return TaxpayerProfile(**payload)  # type: ignore[arg-type]
 

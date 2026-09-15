@@ -7,7 +7,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -551,7 +550,7 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
 
 
 def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(tmp_path: Path) -> None:
-    """``build_profile_grounding_index`` is memoised per authority.
+    """``build_profile_grounding_index`` is memoised per published generation.
 
     The blocking gate calls it on every filing-grade mutation
     (``require_profile_ready_for_modelo_work``), so an unmemoised
@@ -562,20 +561,20 @@ def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(t
     """
     import time
 
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
-    authority = compiled_bundled_authority()
+    with bundled_indexed_authority().operation() as operation:
+        first_start = time.perf_counter()
+        first_index = build_profile_grounding_index(operation)
+        first_duration = time.perf_counter() - first_start
+        assert first_index
 
-    first_start = time.perf_counter()
-    first_index = build_profile_grounding_index(authority)
-    first_duration = time.perf_counter() - first_start
-    assert first_index
-
-    repeat_start = time.perf_counter()
-    for _ in range(199):
-        repeated_index = build_profile_grounding_index(authority)
-        assert repeated_index is first_index
-    repeat_duration = time.perf_counter() - repeat_start
+        repeat_start = time.perf_counter()
+        for _ in range(199):
+            repeated_index = build_profile_grounding_index(operation)
+            assert repeated_index is first_index
+        repeat_duration = time.perf_counter() - repeat_start
 
     # 199 cached lookups must cost a small fraction of one uncached walk, not
     # 199x it - a generous 0.5x ceiling leaves ample margin over dict-lookup

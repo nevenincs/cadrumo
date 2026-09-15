@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.directory_scan import scan_directory
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
@@ -573,7 +573,7 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
     payload = _payload(result.output)
     bindings = payload["bindings"]
     assert bindings, "Modelo 100 declares bindings; the listing must be non-empty"
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_snapshot("100", filing_year=2025, period="0A")
     known_binding_ids = {binding.id for binding in snapshot.revision.bindings}
     emitted_binding_ids = {row["binding_id"] for row in bindings}
     assert emitted_binding_ids <= known_binding_ids
@@ -650,7 +650,7 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
 
     # Cross-check against the authoritative snapshot: every relation-prefill
     # binding's own id must surface as its relation input on the listed row.
-    snapshot = compiled_bundled_authority().snapshot("200", filing_year=2025, period="0A")
+    snapshot = published_snapshot("200", filing_year=2025, period="0A")
     expected = {
         str(binding.id): {str(binding.id)}
         for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)

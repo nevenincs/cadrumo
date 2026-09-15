@@ -27,13 +27,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
 
@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _m100_revision_id(*, filing_year: int, period: str) -> str:
-    return str(compiled_bundled_authority().snapshot("100", filing_year=filing_year, period=period).revision.id)
+    return str(published_snapshot("100", filing_year=filing_year, period=period).revision.id)
 
 
 def _create_natural_person() -> None:

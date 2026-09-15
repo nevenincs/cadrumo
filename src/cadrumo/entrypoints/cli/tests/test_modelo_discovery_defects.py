@@ -23,13 +23,13 @@ fleet:
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit as _create_111_work_unit,
@@ -285,7 +285,7 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "303", "--year", "2024", "--period", "1T",
-            "--revision", str(compiled_bundled_authority().snapshot("303", filing_year=2024, period="1T").revision.id),
+            "--revision", str(published_snapshot("303", filing_year=2024, period="1T").revision.id),
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output

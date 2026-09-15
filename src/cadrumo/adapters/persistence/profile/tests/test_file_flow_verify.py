@@ -77,7 +77,7 @@ from cadrumo.entrypoints.adapter_composition import (
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _verification_repositories_for_test(repos: Repos):

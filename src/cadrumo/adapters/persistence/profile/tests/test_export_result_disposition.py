@@ -41,7 +41,7 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _CLOCK = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"

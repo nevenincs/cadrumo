@@ -48,7 +48,7 @@ from cadrumo.entrypoints.adapter_composition import (
 
 __all__ = ["repos"]
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def test_import_filing_is_current_and_accepted(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:

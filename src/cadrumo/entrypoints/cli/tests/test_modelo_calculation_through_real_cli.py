@@ -28,12 +28,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
@@ -83,7 +82,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         # Sourced from the schema, never pinned: a literal goes stale the moment
         # the profile schema is revised, and the record then refuses to validate
         # against its own canonical version.
-        schema_version=load_user_profile_schema().version,
+        schema_version=published_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -156,7 +155,7 @@ def _seed_legal_entity_profile(
         # Sourced from the schema, never pinned: a literal goes stale the moment
         # the profile schema is revised, and the record then refuses to validate
         # against its own canonical version.
-        schema_version=load_user_profile_schema().version,
+        schema_version=published_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=tuple(facts),
@@ -451,7 +450,7 @@ def test_modelo_303_calculate_surface_is_reachable(
         modelo="303",
         filing_year=2026,
         period="1T",
-        revision=str(compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id),
+        revision=str(published_snapshot("303", filing_year=2026, period="1T").revision.id),
     )
 
     # Supply zero-value manual casillas so the engine can complete the
