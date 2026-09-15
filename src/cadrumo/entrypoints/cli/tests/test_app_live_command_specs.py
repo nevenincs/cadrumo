@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 from typer.main import get_command
 
+from cadrumo.application.operator_surface.command_ports import CommandWriteRoute
+
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._app_live_borrador_command_specs import LIVE_BORRADOR_COMMAND_SPECS
 from .._app_live_command_spec_support import (
@@ -47,7 +49,6 @@ from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_spec import (
     BindingState,
     CommandSpecGraph,
-    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

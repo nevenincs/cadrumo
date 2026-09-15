@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
+
 from ._modelo_nonwork_command_spec_policies import _MODEL_READ
 from .command_spec import (
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

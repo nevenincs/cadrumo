@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
+
 from ...core.modelo import Modelo
 from .command_spec import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandNodeKind,
     CommandSpec,
-    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

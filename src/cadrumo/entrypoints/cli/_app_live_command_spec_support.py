@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Final
 
+from cadrumo.application.operator_surface.command_ports import CommandWriteRoute
+
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
-    CommandWriteRoute,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,

@@ -6,8 +6,13 @@ import inspect
 
 import pytest
 
+from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
+
 from ...command_schema import command_registration_metadata
-from ...command_spec import MachineSecretChannelKind, OptionSpec, ProfileAuthenticationPosture
+from ...command_spec import (
+    MachineSecretChannelKind,
+    OptionSpec,
+)
 from ...command_specs import COMMAND_GRAPH
 from .._spec_policies import ENCRYPTED_DESTRUCTIVE, STATE_FREE
 from ..passphrase import PassphraseChangeSecrets, passphrase_change

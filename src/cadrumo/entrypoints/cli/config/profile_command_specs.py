@@ -5,6 +5,11 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Final
 
+from cadrumo.application.operator_surface.command_ports import (
+    CommandNodeKind,
+    MachineSecretPresence,
+)
+
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
     FLAG_VALUE,
@@ -12,7 +17,6 @@ from ..command_spec import (
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
-    CommandNodeKind,
     CommandSpec,
     DeferredTarget,
     ExecutionPolicySpec,
@@ -22,7 +26,6 @@ from ..command_spec import (
     MachineSecretChannelKind,
     MachineSecretConditionSpec,
     MachineSecretFieldSpec,
-    MachineSecretPresence,
     MachineSecretSpec,
     MachineSecretVariantSpec,
     OptionSpec,

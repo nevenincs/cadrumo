@@ -12,6 +12,8 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from cadrumo.application.calculations.observations_repository import CalculationObservationRepositoryProtocol
+
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
@@ -35,7 +37,6 @@ from ..calculations.cross_period_models import (
     CrossPeriodDependencyEvidence,
     CrossPeriodExpectedMemberSet,
 )
-from .verification_repository_ports import CalculationObservationRepositoryProtocol
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation

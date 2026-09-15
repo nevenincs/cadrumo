@@ -12,6 +12,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from cadrumo.application.calculations.observations_repository import (
+    CalculationObservationRepositoryProtocol,
+    IvaWalletDecisionRepositoryProtocol,
+)
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -26,10 +30,6 @@ from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProt
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
-from .verification_repository_ports import (
-    CalculationObservationRepositoryProtocol,
-    IvaWalletDecisionRepositoryProtocol,
-)
 
 
 @dataclass(frozen=True, slots=True)

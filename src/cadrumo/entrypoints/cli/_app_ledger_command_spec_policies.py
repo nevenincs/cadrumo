@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from .command_spec import CommandWriteRoute, ExecutionPolicySpec
+from cadrumo.application.operator_surface.command_ports import CommandWriteRoute
+
+from .command_spec import ExecutionPolicySpec
 
 _POLICY_1 = ExecutionPolicySpec(
     capabilities=frozenset(("state-free",)),
