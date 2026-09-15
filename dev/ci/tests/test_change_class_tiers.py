@@ -280,6 +280,12 @@ def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> No
         if "pull_request" not in set(_triggers(document)):
             continue
         for job_name, job in document["jobs"].items():
+            if path == _PR and job_name == "pr-correctness":
+                first, checkout = job["steps"][:2]
+                assert "head.repo.full_name != github.repository" in first.get("if", "")
+                assert "exit 1" in executed_text(first.get("run"))
+                assert checkout.get("if") == _SAME_REPO_GUARD
+                continue
             assert job.get("if") == _SAME_REPO_GUARD, f"{path.name}:{job_name} lacks the fork guard"
 
 
