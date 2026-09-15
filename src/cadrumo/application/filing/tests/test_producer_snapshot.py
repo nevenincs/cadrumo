@@ -1,7 +1,7 @@
 """Real public-surface tests for typed filing producer snapshots."""
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime
 from datetime import date as _date
 from datetime import date as _prov_date
@@ -160,6 +160,13 @@ _PRESENTER_TAX_ID = "00000000T"
 _CHARGE_IBAN = "ES9121000418450200051332"
 _REFUND_IBAN = "GB82WEST12345698765432"
 _M303_2026_IR_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
+
+
+@pytest.fixture(autouse=True)
+def _generation_pinned_authority() -> Iterator[None]:
+    """Run every test inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _presenter() -> PresenterIdentity:

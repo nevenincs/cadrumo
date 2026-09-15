@@ -37,8 +37,10 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
+from cadrumo.application.calculations.iva_compensation_history_ports import IvaCompensationHistoryPersistenceError
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
@@ -57,25 +59,26 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
 
 def _fully_populated_state() -> IvaCompensationPeriodState:
     """Return an AEAT-capture state with no field left at its default."""
-    return IvaCompensationPeriodState(
-        taxpayer_nif="12345678Z",
-        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "4T"),
-        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        expediente_id=_EXPEDIENTE,
-        status="presentada",
-        presented_at=_PRESENTED_AT,
-        prior_pending_amount=Decimal("100.00"),
-        applied_amount=Decimal("25.00"),
-        pending_for_later_amount=Decimal("75.00"),
-        period_result_amount=Decimal("-75.00"),
-        final_result_amount=Decimal("0.00"),
-        generated_amount=Decimal("50.00"),
-        available_end_amount=Decimal("125.00"),
-        source_observation_key="303:2025:4T:202530300000001Z",
-        source_artefact_sha256=_DIGEST,
-    )
+    with bundled_indexed_authority().operation():
+        return IvaCompensationPeriodState(
+            taxpayer_nif="12345678Z",
+            provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+            expediente_id=_EXPEDIENTE,
+            status="presentada",
+            presented_at=_PRESENTED_AT,
+            prior_pending_amount=Decimal("100.00"),
+            applied_amount=Decimal("25.00"),
+            pending_for_later_amount=Decimal("75.00"),
+            period_result_amount=Decimal("-75.00"),
+            final_result_amount=Decimal("0.00"),
+            generated_amount=Decimal("50.00"),
+            available_end_amount=Decimal("125.00"),
+            source_observation_key="303:2025:4T:202530300000001Z",
+            source_artefact_sha256=_DIGEST,
+        )
 
 
 def test_the_provenance_pair_survives_a_strict_round_trip(tmp_path: Path) -> None:
@@ -144,10 +147,12 @@ def test_a_state_stripped_of_its_persisted_provenance_refuses_to_load(tmp_path: 
             mutate=mutate,
         )
 
-        with pytest.raises(ValidationError) as caught:
+        with pytest.raises(IvaCompensationHistoryPersistenceError) as caught:
             repository.load_period(original.period)
 
-    reported = [(error["type"], error["loc"]) for error in caught.value.errors()]
+    cause = caught.value.__cause__
+    assert isinstance(cause, ValidationError), f"the persistence refusal must carry the validation cause, got {cause!r}"
+    reported = [(error["type"], error["loc"]) for error in cause.errors()]
     assert reported == [("missing", ("payload", "provenance"))], (
         f"expected only a missing-provenance error, got {reported}"
     )
@@ -155,7 +160,10 @@ def test_a_state_stripped_of_its_persisted_provenance_refuses_to_load(tmp_path: 
 
 def test_an_operator_declared_state_cannot_carry_an_aeat_expediente() -> None:
     """The impersonation the discriminated pair exists to make unrepresentable."""
-    with pytest.raises(ValidationError, match="operator_seed compensation state must not carry an expediente_id"):
+    with (
+        bundled_indexed_authority().operation(),
+        pytest.raises(ValidationError, match="operator_seed compensation state must not carry an expediente_id"),
+    ):
         IvaCompensationPeriodState(
             taxpayer_nif="12345678Z",
             provenance=IvaCompensationStateProvenance.OPERATOR_SEED,
@@ -172,8 +180,11 @@ def test_an_operator_declared_state_cannot_carry_an_aeat_expediente() -> None:
 
 def test_an_aeat_capture_without_an_expediente_refuses() -> None:
     """The other half of the pair: an AEAT row must carry what AEAT issued."""
-    with pytest.raises(
-        ValidationError, match="aeat_capture compensation state must carry the AEAT-issued expediente_id"
+    with (
+        bundled_indexed_authority().operation(),
+        pytest.raises(
+            ValidationError, match="aeat_capture compensation state must carry the AEAT-issued expediente_id"
+        ),
     ):
         IvaCompensationPeriodState(
             taxpayer_nif="12345678Z",

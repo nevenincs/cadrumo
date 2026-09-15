@@ -129,7 +129,7 @@ def _declared_concepts(fact_id: str) -> frozenset[ConceptoIngreso]:
     payload = fact.variants[0].payload
     if not isinstance(payload, EntitySetFactPayload):
         raise TypeError(f"fact {fact_id!r} must use an entity-set payload")
-    return frozenset(ConceptoIngreso(token) for token in payload.entities)
+    return frozenset(ConceptoIngreso.from_registry(token) for token in payload.entities)
 
 
 def test_the_two_provisions_disagree_on_exactly_one_concept() -> None:

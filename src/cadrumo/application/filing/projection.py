@@ -58,7 +58,7 @@ class FilingProjectionValue(BaseModel):
     @classmethod
     def _require_typed_projection_ref(cls, value: object) -> object:
         if not isinstance(value, BaseModel):
-            raise FilingExportValidationError("filing projection values require an actual typed projection_ref")
+            raise ValueError("filing projection values require an actual typed projection_ref")
         return value
 
 
@@ -75,9 +75,9 @@ class FilingRecordRenderContext(BaseModel):
     @model_validator(mode="after")
     def _require_snapshot_owned_record(self) -> FilingRecordRenderContext:
         if not any(candidate is self.layout for candidate in self.registry_snapshot.revision.export_layouts):
-            raise FilingExportValidationError("filing render context layout is not owned by its registry snapshot")
+            raise ValueError("filing render context layout is not owned by its registry snapshot")
         if not any(candidate is self.record for candidate in self.layout.records):
-            raise FilingExportValidationError("filing render context record is not owned by its selected layout")
+            raise ValueError("filing render context record is not owned by its selected layout")
         return self
 
 

@@ -16,12 +16,12 @@ parametrization resolves its arguments; indirect parametrization does not,
 because it still needs a real fixture of that name.
 
 The refusal never aborts the run. Every other test still executes and reports
-its own verdict; at session finish an ``OK``, ``TESTS_FAILED`` or
-``NO_TESTS_COLLECTED`` status becomes ``USAGE_ERROR``, and the terminal summary
-names each refused request. Any other status -- an interruption, an internal
-error, a usage error, or a custom ``pytest.exit`` code -- already carries a more
-specific verdict and is preserved. Aborting at collection instead would erase
-every healthy verdict in the lane for the sake of the dead ones.
+its own verdict; at session finish the exit status is replaced with
+``USAGE_ERROR`` through :func:`cadrumo.tests.session_exit_status.refuse_session`,
+which preserves any status more specific than a pass, a failure or an empty
+collection, and the terminal summary names each refused request. Aborting at
+collection instead would erase every healthy verdict in the lane for the sake
+of the dead ones.
 
 The same hand-off works in every mode: inside an xdist worker the requests
 travel to the controller through ``workeroutput`` and are absorbed on
@@ -47,13 +47,12 @@ from typing import Protocol, runtime_checkable
 
 import pytest
 
+from cadrumo.tests.session_exit_status import refuse_session
+
 UNRESOLVED_FIXTURES_WORKEROUTPUT_KEY = "cadrumo_unresolved_fixture_requests"
 """``config.workeroutput`` key carrying the refused requests out of an xdist worker."""
 
 _REQUEST_FIXTURE_NAME = "request"
-_OVERRIDABLE_EXIT_STATUSES = frozenset(
-    {pytest.ExitCode.OK, pytest.ExitCode.TESTS_FAILED, pytest.ExitCode.NO_TESTS_COLLECTED},
-)
 
 
 @runtime_checkable
@@ -171,13 +170,13 @@ def record_refused_from_node(node: object) -> None:
 
 
 def fail_session_on_refused_requests(session: pytest.Session) -> None:
-    """Turn a passing, failing or empty session with refused requests into ``USAGE_ERROR``.
+    """Refuse a session that collected unresolvable fixture requests.
 
     Args:
-        session: The finishing session, whose exit status may be overridden.
+        session: The finishing session, whose exit status may be replaced.
     """
-    if _refused_requests and session.exitstatus in _OVERRIDABLE_EXIT_STATUSES:
-        session.exitstatus = pytest.ExitCode.USAGE_ERROR
+    if _refused_requests:
+        refuse_session(session)
 
 
 def report_refused_requests(terminalreporter: _TerminalWriter) -> None:

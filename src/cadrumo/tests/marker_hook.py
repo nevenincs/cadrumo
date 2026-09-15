@@ -55,6 +55,8 @@ from typing import Protocol
 
 import pytest
 
+from cadrumo.tests.session_exit_status import refuse_session
+
 _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
 _SERIAL_MARKER = "serial"
 _MAX_NAMED_HELD_ITEMS = 10
@@ -299,11 +301,14 @@ def fail_session_on_held_serials(session: pytest.Session) -> None:
     false-green shape as a marker expression silently deselecting a whole
     lane.
 
+    The replacement goes through the shared allow-list, so an interruption, an
+    internal error or a custom ``pytest.exit`` status is preserved.
+
     Args:
-        session: The finishing session, whose exit status is overridden.
+        session: The finishing session, whose exit status may be replaced.
     """
     if _held_from_workers:
-        session.exitstatus = pytest.ExitCode.USAGE_ERROR
+        refuse_session(session)
 
 
 class _TerminalWriter(Protocol):
