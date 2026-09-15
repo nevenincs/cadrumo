@@ -25,9 +25,8 @@ import re
 import shutil
 import tomllib
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
@@ -35,7 +34,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev._paths import REPO_ROOT
 
 from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, restatement_differences
@@ -51,7 +50,9 @@ from ..edition_delta_migration import (
     PredecessorBasis,
     _choose_drops,
     _Defaults,
+    _EditionSource,
     _Placed,
+    _read_edition,
     _validate_staged_modelo,
     assess_migration_state,
     main,
@@ -588,8 +589,10 @@ def _semantic_withdrawal_fixture(root: Path) -> Path:
 
 
 def test_semantic_predecessor_withdrawal_without_retirement_is_refused(tmp_path: Path) -> None:
-    del tmp_path
-    predecessor = {
+    registry = _semantic_withdrawal_fixture(tmp_path / "registry")
+    definition = _load(registry, "999")
+    source = _read_edition(registry / "modelos" / "999", "2024")
+    predecessor: dict[str, object] = {
         "id": "0002",
         "number": "2",
         "continuidad_id": "fixture-withdrawn",
@@ -598,14 +601,14 @@ def test_semantic_predecessor_withdrawal_without_retirement_is_refused(tmp_path:
     }
 
     causes, *_ = _choose_drops(
-        definition=None,  # type: ignore[arg-type] -- refusal precedes definition-dependent matching
+        definition=definition,
         revision_id="2024",
         predecessor="2023",
         inherited=[_Placed(predecessor, "2023")],
         full_rows=[],
         lifts={},
-        source=SimpleNamespace(retired=frozenset()),  # type: ignore[arg-type]
-        defaults=_Defaults(source_refs=None, orden=None),
+        source=source,
+        defaults=_Defaults(source_refs=None, orden=()),
         storage_only=False,
     )
 
@@ -623,11 +626,15 @@ def test_blocked_semantic_edition_remains_readable_for_independent_later_work(
     original = migration._choose_predecessor
 
     def semantic_middle(
-        position: int, revisions: object, source: object, *, reconsider_technical_roots: bool = False
+        position: int,
+        revisions: Sequence[ModeloRevision],
+        source: _EditionSource,
+        *,
+        reconsider_technical_roots: bool = False,
     ) -> tuple[str | None, PredecessorBasis, list[BlockedCause]]:
         if position == 1:
             return "2023", PredecessorBasis.DECLARED, []
-        return original(position, revisions, source, reconsider_technical_roots=reconsider_technical_roots)  # type: ignore[arg-type]
+        return original(position, revisions, source, reconsider_technical_roots=reconsider_technical_roots)
 
     monkeypatch.setattr(migration, "_choose_predecessor", semantic_middle)
 

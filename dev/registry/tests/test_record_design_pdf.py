@@ -10,6 +10,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
 from ..compiler.record_design import (
@@ -388,6 +389,7 @@ def test_registry_import_does_not_load_the_pdf_and_xls_parser_backends() -> None
     """
     completed = run_command(
         [sys.executable, "-c", _PARSER_BACKEND_IMPORT_PROBE],
+        cwd=REPO_ROOT,
     )
 
     assert completed.returncode == 0, completed.stderr

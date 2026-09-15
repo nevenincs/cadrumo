@@ -64,8 +64,11 @@ async def _run_async(command: list[str], environment: dict[str, str]) -> _Comple
         process.kill()
         await process.wait()
         raise
+    returncode = process.returncode
+    if returncode is None:
+        raise RuntimeError("subprocess completed without a return code")
     return _Completed(
-        process.returncode,
+        returncode,
         stdout.decode(errors="replace"),
         stderr.decode(errors="replace"),
     )

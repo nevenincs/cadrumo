@@ -9,6 +9,8 @@ reports only actionable signal:
 * On failure: a compact summary grouped by rule and by file — never the
   raw multi-thousand-line dump — plus a pointer to the full-detail
   command, exit 1.
+* With ``--count``: print only the aggregate finding count and exit 0 after a
+  successful measurement, so the integer remains the sole machine signal.
 
 Pass ``--full`` to print every diagnostic verbatim (advisory mode, exit 0)
 for the ``audit-types`` recipe.
@@ -146,6 +148,7 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
         ["uv", "run", "--no-sync", *cmd],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=False,
     )
 
@@ -307,16 +310,26 @@ def _print_full(diagnostics: list[Diagnostic]) -> None:
 def main() -> int:
     """Run all type checkers and emit signal-only output."""
     parser = argparse.ArgumentParser(description="Signal-only ty + pyrefly + basedpyright harness.")
-    parser.add_argument(
+    output_mode = parser.add_mutually_exclusive_group()
+    output_mode.add_argument(
         "--full",
         action="store_true",
         help="Print every diagnostic verbatim and exit 0 (advisory audit mode).",
+    )
+    output_mode.add_argument(
+        "--count",
+        action="store_true",
+        help="Print only the aggregate diagnostic count and exit 0 after measuring.",
     )
     args = parser.parse_args()
 
     collected = collect_ty() + collect_pyrefly() + collect_basedpyright()
     suppressed = [d for d in collected if _is_irreducible_external_gap(d)]
     diagnostics = [d for d in collected if not _is_irreducible_external_gap(d)]
+
+    if args.count:
+        print(len(diagnostics))
+        return 0
 
     if args.full:
         if diagnostics:

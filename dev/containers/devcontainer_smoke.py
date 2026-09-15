@@ -91,6 +91,7 @@ def _check_just() -> None:
         ) from error
     completed = run_command(
         [executable, "--version"],
+        cwd=_REPO_ROOT,
     )
     if completed.returncode != 0:
         raise SystemExit(f"FAIL: `just` at {executable} is present but not runnable.")
@@ -101,6 +102,7 @@ def _check_unit_collection() -> None:
     """Confirm the unit suite collects against the baked source tree."""
     completed = run_command(
         [sys.executable, "-m", "pytest", "--collect-only", "-q", "-m", "unit"],
+        cwd=_REPO_ROOT,
     )
     if completed.returncode != 0:
         sys.stdout.write(completed.stdout)
