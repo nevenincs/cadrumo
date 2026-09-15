@@ -147,10 +147,10 @@ def test_hydrate_applicability_rule_round_trips_every_axis() -> None:
     assert hydrated == ModeloApplicabilityRule(
         modelo=Modelo("100"),
         applicable_entity_types=frozenset(
-            {EntityType._from_registry("natural_person"), EntityType._from_registry("legal_entity")}
+            {EntityType.from_registry("natural_person"), EntityType.from_registry("legal_entity")}
         ),
-        required_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
-        required_estimation_regimes=frozenset({IrpfEstimationRegime._from_registry("directa_normal")}),
+        required_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
+        required_estimation_regimes=frozenset({IrpfEstimationRegime.from_registry("directa_normal")}),
         applicable_fiscal_residencies=frozenset({FiscalResidency.from_registry("resident_irpf")}),
         applicable_iva_regimes=frozenset({IVARegime("GENERAL")}),
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,

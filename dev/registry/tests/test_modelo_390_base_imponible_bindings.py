@@ -106,21 +106,21 @@ def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
         _observation(
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             base=_GENERAL_BASE,
             iva=_GENERAL_CUOTA,
         ),
         _observation(
             category=IvaCategory("domestic_reduced"),
             rate_kind=IvaRateKind("reduced"),
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             base=_REDUCIDO_BASE,
             iva=_REDUCIDO_CUOTA,
         ),
         _observation(
             category=IvaCategory("domestic_super_reduced"),
             rate_kind=IvaRateKind("super_reduced"),
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             base=_SUPER_REDUCIDO_BASE,
             iva=_SUPER_REDUCIDO_CUOTA,
         ),
@@ -130,17 +130,17 @@ def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
         _observation(
             category=IvaCategory("domestic_zero"),
             rate_kind=IvaRateKind("zero"),
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             base=_ZERO_BASE,
             iva=Decimal("0.00"),
         ),
         _observation(
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
-            flow=IvaFlowDirection._from_registry("soportado"),
+            flow=IvaFlowDirection.from_registry("soportado"),
             base=_SOPORTADO_BASE,
             iva=_SOPORTADO_CUOTA,
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
         ),
         # Exempt supplies carrying base with no cuota. They reach the volume
         # boxes rather than the régimen-ordinario tiers, and without a row of
@@ -149,14 +149,14 @@ def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
         _observation(
             category=IvaCategory("intra_community_supply"),
             rate_kind=IvaRateKind("zero"),
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             base=_INTRACOM_BASE,
             iva=Decimal("0.00"),
         ),
         _observation(
             category=IvaCategory("export_third_country_zero_rated"),
             rate_kind=IvaRateKind("zero"),
-            flow=IvaFlowDirection._from_registry("repercutido"),
+            flow=IvaFlowDirection.from_registry("repercutido"),
             base=_EXPORT_BASE,
             iva=Decimal("0.00"),
         ),

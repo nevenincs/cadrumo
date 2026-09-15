@@ -31,7 +31,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, cast
+from typing import Final
 
 from babel.messages.catalog import Catalog, Message
 from babel.messages.pofile import read_po, write_po
@@ -225,12 +225,16 @@ def _read_manifest(path: Path) -> dict[str, object]:
         )
     if not isinstance(payload.get("updates"), list) or not payload["updates"]:
         raise DocumentationLocaleMutationError("docs translation manifest updates must be a non-empty list")
-    return payload
+    if not all(isinstance(key, str) for key in payload):
+        raise DocumentationLocaleMutationError("docs translation manifest keys must be strings")
+    return {key: value for key, value in payload.items() if isinstance(key, str)}
 
 
 def _parse_updates(payload: dict[str, object]) -> tuple[_ManifestUpdate, ...]:
     """Validate manifest records and reject duplicate catalogue/message targets."""
-    raw_updates = cast(list[object], payload["updates"])
+    raw_updates = payload["updates"]
+    if not isinstance(raw_updates, list):
+        raise DocumentationLocaleMutationError("docs translation manifest updates must be a non-empty list")
     updates: list[_ManifestUpdate] = []
     seen_catalogues: set[tuple[str, str]] = set()
     for update_index, raw_update in enumerate(raw_updates):
@@ -455,8 +459,16 @@ def _parse_catalogue(text: str, locale: str, path: Path) -> Catalog:
 def _message_key(message: Message) -> tuple[str, str]:
     """Return a context-aware stable identity for a Babel message."""
     message_id = message.id
-    identity = "\x04".join(message_id) if isinstance(message_id, tuple) else message_id
-    return message.context or "", identity
+    if isinstance(message_id, str):
+        identity = message_id
+    elif isinstance(message_id, (tuple, list)):
+        if not all(isinstance(part, str) for part in message_id):
+            raise DocumentationLocaleMutationError("Babel message identity contains non-text components")
+        identity = "\x04".join(message_id)
+    else:
+        raise DocumentationLocaleMutationError("Babel message identity is not text")
+    context = message.context if isinstance(message.context, str) else ""
+    return context, identity
 
 
 def _manifest_stale_key(context: str | None, msgid: str, msgid_plural: str | None) -> tuple[str, str]:
@@ -679,7 +691,9 @@ def _validate_format_contract(
 
 def _percent_placeholders(value: str) -> frozenset[str]:
     """Return Python percent-format tokens, excluding the literal ``%%``."""
-    return frozenset(candidate for candidate in _PYTHON_PERCENT.findall(value) if candidate != "%%")
+    return frozenset(
+        match.group(0) for match in _PYTHON_PERCENT.finditer(value) if match.group(0) != "%%"
+    )
 
 
 def _inline_tokens(
@@ -713,9 +727,10 @@ def _inline_tokens(
             myst_roles.append((role_match.group("role"), False, body))
         else:
             myst_roles.append((role_match.group("role"), True, target_match.group("target")))
+    rst_roles = tuple(sorted(match.group(0) for match in _RST_ROLE.finditer(value)))
     return (
         tuple(sorted(literals)),
-        tuple(sorted(_RST_ROLE.findall(value))),
+        rst_roles,
         tuple(sorted(myst_roles)),
         _markdown_link_targets(value),
         value.count("`"),

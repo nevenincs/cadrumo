@@ -24,7 +24,10 @@ def _source_stated_ordinal_anchor(unit: PreprocessUnit) -> str | None:
     match = _ORDINAL_ANCHOR.match(unit.title or "")
     if match is None:
         return None
-    return "#" + match.group("ordinal").casefold().replace("é", "e")
+    ordinal = match.group("ordinal")
+    if not isinstance(ordinal, str):
+        return None
+    return "#" + ordinal.casefold().replace("é", "e")
 
 
 def article_response_units(

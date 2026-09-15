@@ -191,7 +191,10 @@ def _conf_language_config() -> dict[str, object]:
         )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("LANG_CONFIG="))
-    return json.loads(line[len("LANG_CONFIG=") :])
+    payload = json.loads(line[len("LANG_CONFIG=") :])
+    if not isinstance(payload, dict) or not all(isinstance(key, str) for key in payload):
+        raise AssertionError("language config must contain a JSON object with string keys")
+    return {key: value for key, value in payload.items() if isinstance(key, str)}
 
 
 def test_docs_target_languages_equal_output_language_minus_english() -> None:
@@ -220,7 +223,10 @@ def test_docs_target_languages_equal_output_language_minus_english() -> None:
     )
 
     config = _conf_language_config()
-    assert set(config["valid_languages"]) == all_languages, (
+    valid_languages = config.get("valid_languages")
+    assert isinstance(valid_languages, list)
+    assert all(isinstance(language, str) for language in valid_languages)
+    assert set(valid_languages) == all_languages, (
         f"conf.py accepts {config['valid_languages']}, which must equal the full OutputLanguage set "
         f"{sorted(all_languages)} (English is a valid build language, it is only excluded as a translation target)"
     )

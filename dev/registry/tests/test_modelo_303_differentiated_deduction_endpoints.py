@@ -111,20 +111,20 @@ def _projection_refs() -> tuple[M303DifferentiatedDeductionProjectionRef, ...]:
 def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
     definitions = (
         SectorDefinition(
-            sector_id="a", letra=SectorDiferenciadoLetra._from_registry("a"), member_activity_codes=("4711",)
+            sector_id="a", letra=SectorDiferenciadoLetra.from_registry("a"), member_activity_codes=("4711",)
         ),
         SectorDefinition(
-            sector_id="b", letra=SectorDiferenciadoLetra._from_registry("b"), member_activity_codes=("6820",)
+            sector_id="b", letra=SectorDiferenciadoLetra.from_registry("b"), member_activity_codes=("6820",)
         ),
     )
     entries = tuple(
         ProrrataRegisterEntry(
             ejercicio=2025,
             sector_id=sector_id,
-            regime=ProrrataRegisterRegime._from_registry("general"),
+            regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=percentage,
-            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         )
         for sector_id, percentage in (("a", Decimal("80")), ("b", percentage_b))
@@ -150,9 +150,9 @@ def _contributions(*, authority: ValidatedRegistryAuthority) -> tuple[IvaDiffere
     )
 
 
-_DEFAULT_DEDUCTION_FACT_KIND = IvaDeductionFactKind._from_registry("domestic_current")
-_DEFAULT_INPUT_CLASSIFICATION = InputClassification._from_registry("common")
-_DEFAULT_PRORRATA_REGIME = ProrrataRegisterRegime._from_registry("general")
+_DEFAULT_DEDUCTION_FACT_KIND = IvaDeductionFactKind.from_registry("domestic_current")
+_DEFAULT_INPUT_CLASSIFICATION = InputClassification.from_registry("common")
+_DEFAULT_PRORRATA_REGIME = ProrrataRegisterRegime.from_registry("general")
 
 
 def _observation(
@@ -167,7 +167,7 @@ def _observation(
         transaction_date=date(2025, 10, 1),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
-        flow_direction=IvaFlowDirection._from_registry("soportado"),
+        flow_direction=IvaFlowDirection.from_registry("soportado"),
         base_amount=Decimal("100"),
         iva_amount=Decimal("20"),
         input_classification=classification,
@@ -175,9 +175,9 @@ def _observation(
         deduction_fact_kind=kind,
         deduction_provenance=IvaDeductionClassificationProvenance(
             authority=(
-                IvaDeductionEvidenceAuthority._from_registry("bienes_inversion_register")
-                if kind is IvaDeductionFactKind._from_registry("investment_goods_regularisation")
-                else IvaDeductionEvidenceAuthority._from_registry("invoice_evidence")
+                IvaDeductionEvidenceAuthority.from_registry("bienes_inversion_register")
+                if kind is IvaDeductionFactKind.from_registry("investment_goods_regularisation")
+                else IvaDeductionEvidenceAuthority.from_registry("invoice_evidence")
             ),
             source_locator=f"invoice:{ledger_id}",
             evidence_digest="a" * 64,
@@ -189,7 +189,7 @@ def _observation(
 def _apportionment(*, regime: ProrrataRegisterRegime = _DEFAULT_PRORRATA_REGIME) -> IvaLedgerProrrataApportionment:
     return IvaLedgerProrrataApportionment(
         percentage=Decimal("50"),
-        provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+        provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         sector_apportionments=(IvaLedgerSectorApportionment(sector_id="a", percentage=Decimal("50"), regime=regime),),
     )
 
@@ -231,14 +231,14 @@ def test_apportioned_contributions_and_regularisation_project_once(
         rows=(
             RegistroRegularizacionRow(
                 identifier="asset-a",
-                kind=BienInversionKind._from_registry("mueble"),
+                kind=BienInversionKind.from_registry("mueble"),
                 prorrata_sector_id="a",
                 prorrata_anio_pct=Decimal("80"),
                 result=None,
             ),
             RegistroRegularizacionRow(
                 identifier="asset-b",
-                kind=BienInversionKind._from_registry("mueble"),
+                kind=BienInversionKind.from_registry("mueble"),
                 prorrata_sector_id="b",
                 prorrata_anio_pct=Decimal("60"),
                 result=None,
@@ -294,7 +294,7 @@ def test_projection_refuses_incomplete_or_double_consumed_sources(
 def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         provenance = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
             source_locator="invoice:sector-a",
             evidence_digest="a" * 64,
         )
@@ -304,19 +304,19 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
                 transaction_date=date(2025, 10, index),
                 category=IvaCategory("domestic_general"),
                 rate_kind=IvaRateKind("general"),
-                flow_direction=IvaFlowDirection._from_registry("soportado"),
+                flow_direction=IvaFlowDirection.from_registry("soportado"),
                 base_amount=Decimal("100"),
                 iva_amount=Decimal("20"),
                 input_classification=classification,
                 prorrata_sector_id="a",
-                deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
                 deduction_provenance=provenance,
                 observation_role=IvaLedgerObservationRole.SETTLEMENT,
             )
             for index, classification in enumerate(
                 (
-                    InputClassification._from_registry("exclusively_deductible"),
-                    InputClassification._from_registry("common"),
+                    InputClassification.from_registry("exclusively_deductible"),
+                    InputClassification.from_registry("common"),
                 ),
                 1,
             )
@@ -326,12 +326,12 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
             observations,
             apportionment=IvaLedgerProrrataApportionment(
                 percentage=Decimal("50"),
-                provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                 sector_apportionments=(
                     IvaLedgerSectorApportionment(
                         sector_id="a",
                         percentage=Decimal("50"),
-                        regime=ProrrataRegisterRegime._from_registry("especial"),
+                        regime=ProrrataRegisterRegime.from_registry("especial"),
                     ),
                 ),
             ),
@@ -341,7 +341,7 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
             item
             for item in apportioned
             if item.sector_id == "a"
-            and item.deduction_fact_kind is IvaDeductionFactKind._from_registry("domestic_current")
+            and item.deduction_fact_kind is IvaDeductionFactKind.from_registry("domestic_current")
         )
         assert domestic.base_amount == Decimal("200")
         assert domestic.deducible_iva_amount == Decimal("30")
@@ -375,14 +375,14 @@ def test_especial_common_use_must_be_explicit() -> None:
         resolve_iva_differentiated_deduction_contributions(
             _revision(),
             (_observation("implicit-common", classification=None),),
-            apportionment=_apportionment(regime=ProrrataRegisterRegime._from_registry("especial")),
+            apportionment=_apportionment(regime=ProrrataRegisterRegime.from_registry("especial")),
             operation=_authority_operation_for_test,
         )
 
 
 def test_wrong_owner_regularisation_cannot_become_a_ledger_observation() -> None:
     with pytest.raises(ValueError, match="emitted only by the bienes-inversion owner"):
-        _observation("wrong-owner", kind=IvaDeductionFactKind._from_registry("investment_goods_regularisation"))
+        _observation("wrong-owner", kind=IvaDeductionFactKind.from_registry("investment_goods_regularisation"))
 
 
 def test_projector_refuses_reused_source_ledger_across_kinds(
@@ -401,7 +401,7 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
 ) -> None:
     contributions = list(_contributions(authority=registry_authority))
     contributions[0] = contributions[0].model_copy(
-        update={"deduction_fact_kind": IvaDeductionFactKind._from_registry("investment_goods_regularisation")}
+        update={"deduction_fact_kind": IvaDeductionFactKind.from_registry("investment_goods_regularisation")}
     )
     with pytest.raises(RegistryValidationError, match="cannot enter the ordinary deduction contribution channel"):
         project_m303_differentiated_deduction_rows(
@@ -416,7 +416,7 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
             ProrrataRegisterEntry(
                 ejercicio=2025,
                 sector_id="a",
-                regime=ProrrataRegisterRegime._from_registry("ninguna"),
+                regime=ProrrataRegisterRegime.from_registry("ninguna"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -426,7 +426,7 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
             ProrrataRegisterEntry(
                 ejercicio=2025,
                 sector_id="a",
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -454,7 +454,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets(
 ) -> None:
     row = RegistroRegularizacionRow(
         identifier="asset-a",
-        kind=BienInversionKind._from_registry("mueble"),
+        kind=BienInversionKind.from_registry("mueble"),
         prorrata_sector_id="a",
         prorrata_anio_pct=Decimal("80"),
         result=None,
@@ -508,7 +508,7 @@ def test_projector_refuses_regularisation_asset_sector_mismatch(
         rows=(
             RegistroRegularizacionRow(
                 identifier="asset-a",
-                kind=BienInversionKind._from_registry("mueble"),
+                kind=BienInversionKind.from_registry("mueble"),
                 prorrata_sector_id="a",
                 prorrata_anio_pct=Decimal("80"),
                 result=None,

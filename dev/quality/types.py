@@ -28,53 +28,10 @@ from dataclasses import dataclass
 
 _CWD = os.getcwd().replace("\\", "/")
 
-#: What ty checks. `src` has always been here; the `dev` entries are admitted
-#: one subtree at a time, each added only once it reaches zero, which is the
-#: same sequence `core` followed into the pyrefly gate. That ordering is the
-#: only honest one available while baselines and ratchets are banned: an
-#: unadmitted subtree is visibly absent from this list rather than silently
-#: suppressed inside a gate that claims to cover it.
-#:
-#: `dev/` matters because flattening the justfile moved every recipe's real
-#: logic into it - target dispatch, exit-code policy, environment provisioning -
-#: so what is left out is the tooling deciding whether every other gate passes.
-#:
-#: STILL OUT, with the diagnostic count each would bring in today:
-#:   docs 76, audit 36, tests 30, ci 27, locales 22, packaging 22, tui 12,
-#:   deploy 10, agent_eval 7  (242 total)
-#: Admit each by burning it to zero and moving it into the list below.
-#:
-#: `dev/registry` was admitted on 2026-09-09, burned from 220 to zero. Nothing
-#: was suppressed to get there: twenty-three typing suppression comments were
-#: REMOVED, several of them in mypy syntax this checker never honoured, so they
-#: had silenced nothing since the day they were written. Three of the fixes were
-#: real defects the checker found - a function annotated as returning a
-#: three-tuple whose body returns two, a ledger section read without validating
-#: it is a list of tables, and a parameter typed `str` that its caller feeds
-#: `str | None`.
-TY_TARGETS = (
-    "src",
-    "dev/__init__.py",
-    "dev/_paths.py",
-    "dev/actionlint.py",
-    "dev/ci_contract.py",
-    "dev/ci_reports.py",
-    "dev/exit_codes.py",
-    "dev/scripted_registration_channels.py",
-    "dev/containers",
-    "dev/corpus",
-    "dev/env",
-    "dev/identity",
-    "dev/ingest_harness",
-    "dev/init",
-    "dev/quality",
-    "dev/readme",
-    "dev/registry",
-    "dev/release",
-    "dev/sanitizer",
-    "dev/smoke",
-    "dev/test_runs",
-)
+# ty receives no path arguments on purpose. Its project discovery is the same
+# boundary contributors exercise with a standalone ``ty check``. A curated
+# target list here made the aggregate look healthier than that real check by
+# omitting valid ty findings before they could be counted.
 # pyrefly takes NO path arguments on purpose. Its checked subset and its test
 # exclusion are declared in `[tool.pyrefly]`, and `project_excludes` filters
 # only `project_includes` — a path passed here would bypass the exclusion and
@@ -175,7 +132,7 @@ def require_report(payload: str, result: subprocess.CompletedProcess[str], check
 
 def collect_ty() -> list[Diagnostic]:
     """Run ty and parse its GitLab-JSON diagnostics."""
-    result = _run(["ty", "check", *TY_TARGETS, "--output-format", "gitlab", "--color", "never"])
+    result = _run(["ty", "check", "--output-format", "gitlab", "--color", "never"])
     payload = result.stdout.strip()
     require_report(payload, result, "ty")
     try:

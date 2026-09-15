@@ -22,10 +22,7 @@ would have declared several hundred phantom keys required.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
+from typing import Final
 
 #: The ``CommandSpec`` family fields declared ``TranslationKey``. Held here as
 #: an explicit list, and kept honest by the annotation gate in
@@ -73,7 +70,13 @@ def _collect(value: object, seen: set[int], keys: set[str]) -> None:
         text = _key_text(getattr(value, field, None))
         if text is not None:
             keys.add(text)
-    slots: Iterable[str] | None = getattr(type(value), "__slots__", None)
+    raw_slots = getattr(type(value), "__slots__", None)
+    if isinstance(raw_slots, str):
+        slots = (raw_slots,)
+    elif isinstance(raw_slots, tuple) and all(isinstance(name, str) for name in raw_slots):
+        slots = raw_slots
+    else:
+        slots = ()
     if slots:
         for name in slots:
             _collect(getattr(value, name, None), seen, keys)

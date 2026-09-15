@@ -24,7 +24,13 @@ _FRAME_BULLET = re.compile(r"^- ``(@[a-z]+) aeat", re.MULTILINE)
 def _documented_frame_sigils() -> frozenset[str]:
     """Sigils the grammar list introduces as declaring a frame."""
     assert parser.__doc__ is not None, "the module docstring is the grammar under test"
-    return frozenset(_FRAME_BULLET.findall(parser.__doc__))
+    sigils: set[str] = set()
+    for match in _FRAME_BULLET.finditer(parser.__doc__):
+        sigil = match.group(1)
+        if not isinstance(sigil, str):
+            raise AssertionError("frame grammar regex returned a non-text sigil")
+        sigils.add(sigil)
+    return frozenset(sigils)
 
 
 def test_the_grammar_introduces_every_sigil_that_declares_a_frame() -> None:

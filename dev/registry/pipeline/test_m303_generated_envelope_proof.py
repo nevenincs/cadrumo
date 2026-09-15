@@ -168,20 +168,20 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues, ope
     register = ProrrataRegister(
         sector_definitions=(
             SectorDefinition(
-                sector_id="a", letra=SectorDiferenciadoLetra._from_registry("a"), member_activity_codes=("4711",)
+                sector_id="a", letra=SectorDiferenciadoLetra.from_registry("a"), member_activity_codes=("4711",)
             ),
             SectorDefinition(
-                sector_id="b", letra=SectorDiferenciadoLetra._from_registry("b"), member_activity_codes=("6820",)
+                sector_id="b", letra=SectorDiferenciadoLetra.from_registry("b"), member_activity_codes=("6820",)
             ),
         ),
         entries=tuple(
             ProrrataRegisterEntry(
                 ejercicio=filing_year,
                 sector_id=sector_id,
-                regime=ProrrataRegisterRegime._from_registry("general"),
+                regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 provisional_percentage=Decimal("50"),
-                provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
+                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
                 source_registry_snapshot_refs=(prior_snapshot_ref,),
             )
             for sector_id in (None, "a", "b")

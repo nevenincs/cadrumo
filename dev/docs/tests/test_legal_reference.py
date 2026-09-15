@@ -48,7 +48,13 @@ def _system_messages(rst: str) -> tuple[str, ...]:
         rst,
         settings_overrides={"report_level": 1, "warning_stream": warning_stream},
     )
-    return tuple(node.astext() for node in doctree.findall(nodes.system_message))
+    messages: list[str] = []
+    for node in doctree.findall(nodes.system_message):
+        message = node.astext()
+        if not isinstance(message, str):
+            raise AssertionError("docutils system message text must be a string")
+        messages.append(message)
+    return tuple(messages)
 
 
 def _quoted_extracts(rst: str) -> list[str]:

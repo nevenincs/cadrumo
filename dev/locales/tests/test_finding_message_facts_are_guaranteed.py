@@ -131,7 +131,10 @@ def _facts_at_call_sites(module: ast.Module, function_name: str) -> set[str]:
                 per_call.append(keys)
     if not per_call:
         raise _UnresolvedFactsError(f"no resolvable call site of {function_name}")
-    return set.intersection(*per_call)
+    guaranteed = per_call[0].copy()
+    for call_keys in per_call[1:]:
+        guaranteed.intersection_update(call_keys)
+    return guaranteed
 
 
 def _guaranteed_facts(module: ast.Module, call: ast.Call, facts: ast.expr) -> set[str]:
@@ -162,7 +165,11 @@ def _producer_sites() -> list[tuple[str, set[str], str]]:
             locale_key: str | None = None
             facts: ast.expr | None = None
             for keyword in node.keywords:
-                if keyword.arg == "message_locale_key" and isinstance(keyword.value, ast.Constant):
+                if (
+                    keyword.arg == "message_locale_key"
+                    and isinstance(keyword.value, ast.Constant)
+                    and isinstance(keyword.value.value, str)
+                ):
                     locale_key = keyword.value.value
                 if keyword.arg == "message_facts":
                     facts = keyword.value

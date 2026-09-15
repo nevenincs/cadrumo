@@ -10,10 +10,11 @@ import re
 import tomllib
 import unicodedata
 from collections import Counter, defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from difflib import SequenceMatcher
+from importlib import import_module
 from pathlib import Path
-from typing import Final, cast
+from typing import Final, Protocol, TypedDict, cast
 
 from babel.messages.mofile import write_mo
 from babel.messages.pofile import read_po
@@ -118,7 +119,77 @@ _ARCHITECTURE_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
-def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[str, object]:
+class _DictionaryLike(Protocol):
+    def lookup(self, word: str) -> bool: ...
+
+
+class _TranslationBacklogItem(TypedDict, total=False):
+    domain: str
+    key: str
+    locale: str
+    state: str
+    reason: str | None
+    next_action: str
+    unknown_words: list[str]
+
+
+class _TranslationCells(TypedDict):
+    required: int
+    defined: int
+    ready: int
+    missing: int
+    needs_value: int
+    needs_repair: int
+    needs_review: int
+
+
+class _TranslationMatrix(TypedDict):
+    backlog: list[_TranslationBacklogItem]
+    findings: list[dict[str, object]]
+    cells: _TranslationCells
+
+
+class _LocaleSignalDetails(TypedDict):
+    backlog: list[_TranslationBacklogItem]
+    findings: list[dict[str, object]]
+    required_keys: list[str]
+    dynamic_key_families: dict[str, object]
+
+
+class _LocaleSignal(TypedDict):
+    outcome: str
+    headline: str
+    summary: dict[str, object]
+    details: _LocaleSignalDetails
+
+
+class _SpellingInventory(TypedDict):
+    spellchecked_cells: int
+    spelling_cells: int
+    spelling_cells_by_locale: dict[str, int]
+    spelling_prose_cells: int
+    spelling_prose_cells_by_locale: dict[str, int]
+    spelling_structural_only_cells: int
+    spelling_structural_only_cells_by_locale: dict[str, int]
+    spelling_unknown_cells: int
+    spelling_unknown_words: int
+    spelling_tool_failures: int
+    excluded_structural_tokens: int
+    excluded_structural_tokens_by_surface_locale: dict[str, int]
+
+
+class _ExcludedStructuralInventory(TypedDict):
+    excluded_structural_tokens: int
+    excluded_structural_tokens_by_surface_locale: dict[str, int]
+
+
+def _inventory_count(inventory: Mapping[str, object], key: str) -> int:
+    """Read one integer inventory counter without widening arithmetic to object."""
+    value = inventory.get(key, 0)
+    return value if isinstance(value, int) else 0
+
+
+def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> _LocaleSignal:
     """Build the known translation backlog and inventory-integrity findings."""
     discovery_findings: list[dict[str, object]] = []
     try:
@@ -158,7 +229,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         dynamic_resolved_keys=finite_dynamic_keys,
     )
     inventory_findings = [*discovery_findings, *source_findings, *parallel_findings, *spelling_findings]
-    matrix_findings = cast(list[dict[str, object]], matrix["findings"])
+    matrix_findings = matrix["findings"]
     placeholder_mismatches = sum(
         finding.get("kind") == "translation_placeholder_mismatch" for finding in matrix_findings
     )
@@ -191,7 +262,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         [*inventory_findings, *({"kind": "unbounded_key_family"} for _ in unresolved_families)],
     )
     locales = _locale_summaries(required_keys, matrix, locale_leaves)
-    backlog = cast(list[dict[str, object]], matrix["backlog"])
+    backlog = matrix["backlog"]
     keys_to_translate = {
         str(item["key"]) for item in backlog if isinstance(item, dict) and item["state"] in {"missing", "needs_value"}
     }
@@ -208,24 +279,24 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         "known_unique_keys_to_translate": len(keys_to_translate),
         "known_cells_to_translate": cells_to_translate,
         "unique_keys_to_repair": len(keys_to_repair),
-        "cells_to_repair": int(cast(dict[str, int], matrix["cells"])["needs_repair"]),
-        "cells_to_review": int(cast(dict[str, int], matrix["cells"])["needs_review"]),
+        "cells_to_repair": matrix["cells"]["needs_repair"],
+        "cells_to_review": matrix["cells"]["needs_review"],
     }
     inventory_items = (
-        source_inventory["invalid_tr_calls"]
-        + source_inventory["conflicting_duplicate_declarations"]
-        + source_inventory["naked_presentation_sites"]
-        + source_inventory["unread_or_invalid_sources"]
-        + parallel_inventory["parallel_localization_declarations"]
-        + parallel_inventory["invalid_data_files"]
-        + parallel_inventory["docs_extraction_failures"]
-        + parallel_inventory["docs_source_drift_pages"]
-        + parallel_inventory["docs_translation_source_echo"]
-        + parallel_inventory["docs_orphan_catalogue_files"]
-        + parallel_inventory["docs_missing_catalogue_files"]
-        + parallel_inventory["docs_generated_source_failures"]
-        + spelling_inventory["spelling_tool_failures"]
-        + spelling_inventory["spelling_unknown_cells"]
+        _inventory_count(source_inventory, "invalid_tr_calls")
+        + _inventory_count(source_inventory, "conflicting_duplicate_declarations")
+        + _inventory_count(source_inventory, "naked_presentation_sites")
+        + _inventory_count(source_inventory, "unread_or_invalid_sources")
+        + _inventory_count(parallel_inventory, "parallel_localization_declarations")
+        + _inventory_count(parallel_inventory, "invalid_data_files")
+        + _inventory_count(parallel_inventory, "docs_extraction_failures")
+        + _inventory_count(parallel_inventory, "docs_source_drift_pages")
+        + _inventory_count(parallel_inventory, "docs_translation_source_echo")
+        + _inventory_count(parallel_inventory, "docs_orphan_catalogue_files")
+        + _inventory_count(parallel_inventory, "docs_missing_catalogue_files")
+        + _inventory_count(parallel_inventory, "docs_generated_source_failures")
+        + _inventory_count(spelling_inventory, "spelling_tool_failures")
+        + _inventory_count(spelling_inventory, "spelling_unknown_cells")
         + len(unresolved_families)
         + len(discovery_findings)
     )
@@ -233,7 +304,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
     catalogue_key_cells = sum(len(leaves) for leaves in locale_leaves.values())
     catalogue_keys_unique = len({key for leaves in locale_leaves.values() for key in leaves})
     catalogue_only_keys = {key for leaves in locale_leaves.values() for key in leaves if key not in required_keys}
-    catalogue_only_findings = [
+    catalogue_only_findings: list[dict[str, object]] = [
         {
             "classification": "blocking",
             "kind": "catalogue_only_key",
@@ -281,53 +352,56 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
             len(catalogue_only_keys),
         ),
     }
-    findings = [
+    unbounded_findings: list[dict[str, object]] = [
+        {
+            "classification": "blocking",
+            "kind": "unbounded_key_family",
+            "key_prefix": marker,
+            "next_action": "replace with a finite canonical key declaration",
+        }
+        for marker in unresolved_families
+    ]
+    findings: list[dict[str, object]] = [
         *inventory_findings,
         *(finding for finding in catalogue_findings if finding.get("key") not in required_keys),
         *matrix["findings"],
         *catalogue_only_findings,
-        *(
+        *unbounded_findings,
+    ]
+    dynamic_key_families: dict[str, object] = {
+        "finite": [
             {
-                "classification": "blocking",
-                "kind": "unbounded_key_family",
                 "key_prefix": marker,
-                "next_action": "replace with a finite canonical key declaration",
+                "concrete_keys": list(keys),
+            }
+            for marker, keys in sorted(finite_families.items())
+        ],
+        "unresolved": [
+            {
+                "key_prefix": marker,
+                "concrete_catalogue_keys": sorted(
+                    {
+                        key
+                        for leaves in locale_leaves.values()
+                        for key in leaves
+                        if _covered_by_namespace(key, (marker.rstrip("*").rstrip("."),))
+                    }
+                ),
             }
             for marker in unresolved_families
-        ),
-    ]
+        ],
+    }
+    details: _LocaleSignalDetails = {
+        "backlog": backlog,
+        "findings": findings,
+        "required_keys": sorted(required_keys),
+        "dynamic_key_families": dynamic_key_families,
+    }
     return {
         "outcome": "backlog" if findings else "complete",
         "headline": _headline(translation_backlog, locales, largest, inventory_items),
         "summary": summary,
-        "details": {
-            "backlog": backlog,
-            "findings": findings,
-            "required_keys": sorted(required_keys),
-            "dynamic_key_families": {
-                "finite": [
-                    {
-                        "key_prefix": marker,
-                        "concrete_keys": list(keys),
-                    }
-                    for marker, keys in sorted(finite_families.items())
-                ],
-                "unresolved": [
-                    {
-                        "key_prefix": marker,
-                        "concrete_catalogue_keys": sorted(
-                            {
-                                key
-                                for leaves in locale_leaves.values()
-                                for key in leaves
-                                if _covered_by_namespace(key, (marker.rstrip("*").rstrip("."),))
-                            }
-                        ),
-                    }
-                    for marker in unresolved_families
-                ],
-            },
-        },
+        "details": details,
     }
 
 
@@ -394,7 +468,7 @@ def _spellcheck_catalogues(
     repository: Path,
     *,
     additional_values: dict[str, dict[str, str]] | None = None,
-) -> tuple[dict[tuple[str, str], tuple[str, ...]], dict[str, object], list[dict[str, object]]]:
+) -> tuple[dict[tuple[str, str], tuple[str, ...]], _SpellingInventory, list[dict[str, object]]]:
     """Check authored prose with pinned Hunspell dictionaries through spylls."""
     unknown_by_cell: dict[tuple[str, str], set[str]] = defaultdict(set)
     keys_by_word: dict[str, dict[str, set[tuple[str, str]]]] = {}
@@ -483,25 +557,30 @@ def _spellcheck_catalogues(
         }
         enrolled_cells = sum(enrolled_cells_by_locale.values())
         prose_cells = sum(prose_cells_by_locale.values())
+        excluded_inventory = _excluded_structural_inventory(excluded_by_surface_locale)
+        failure_inventory: _SpellingInventory = {
+            "spellchecked_cells": enrolled_cells,
+            "spelling_cells": enrolled_cells,
+            "spelling_cells_by_locale": dict(sorted(enrolled_cells_by_locale.items())),
+            "spelling_prose_cells": prose_cells,
+            "spelling_prose_cells_by_locale": dict(sorted(prose_cells_by_locale.items())),
+            "spelling_structural_only_cells": sum(structural_only_cells_by_locale.values()),
+            "spelling_structural_only_cells_by_locale": dict(sorted(structural_only_cells_by_locale.items())),
+            "spelling_unknown_cells": 0,
+            "spelling_unknown_words": 0,
+            "spelling_tool_failures": 1,
+            "excluded_structural_tokens": excluded_inventory["excluded_structural_tokens"],
+            "excluded_structural_tokens_by_surface_locale": excluded_inventory[
+                "excluded_structural_tokens_by_surface_locale"
+            ],
+        }
         return (
             {},
-            {
-                "spellchecked_cells": enrolled_cells,
-                "spelling_cells": enrolled_cells,
-                "spelling_cells_by_locale": dict(sorted(enrolled_cells_by_locale.items())),
-                "spelling_prose_cells": prose_cells,
-                "spelling_prose_cells_by_locale": dict(sorted(prose_cells_by_locale.items())),
-                "spelling_structural_only_cells": sum(structural_only_cells_by_locale.values()),
-                "spelling_structural_only_cells_by_locale": dict(sorted(structural_only_cells_by_locale.items())),
-                "spelling_unknown_cells": 0,
-                "spelling_unknown_words": 0,
-                "spelling_tool_failures": 1,
-                **_excluded_structural_inventory(excluded_by_surface_locale),
-            },
+            failure_inventory,
             [failure],
         )
     spelling = {cell: tuple(sorted(words, key=str.casefold)) for cell, words in unknown_by_cell.items()}
-    unknown_findings = [
+    unknown_findings: list[dict[str, object]] = [
         {
             "classification": "blocking",
             "kind": "translation_spelling_unknown",
@@ -522,33 +601,38 @@ def _spellcheck_catalogues(
     ]
     enrolled_cells = sum(enrolled_cells_by_locale.values())
     prose_cells = sum(prose_cells_by_locale.values())
+    excluded_inventory = _excluded_structural_inventory(excluded_by_surface_locale)
+    spelling_inventory: _SpellingInventory = {
+        "spellchecked_cells": enrolled_cells,
+        "spelling_cells": enrolled_cells,
+        "spelling_cells_by_locale": dict(sorted(enrolled_cells_by_locale.items())),
+        "spelling_prose_cells": prose_cells,
+        "spelling_prose_cells_by_locale": dict(sorted(prose_cells_by_locale.items())),
+        "spelling_structural_only_cells": sum(structural_only_cells_by_locale.values()),
+        "spelling_structural_only_cells_by_locale": dict(sorted(structural_only_cells_by_locale.items())),
+        "spelling_unknown_cells": len(unknown_by_cell),
+        "spelling_unknown_words": len(unknown_words),
+        "spelling_tool_failures": 0,
+        "excluded_structural_tokens": excluded_inventory["excluded_structural_tokens"],
+        "excluded_structural_tokens_by_surface_locale": excluded_inventory[
+            "excluded_structural_tokens_by_surface_locale"
+        ],
+    }
     return (
         spelling,
-        {
-            "spellchecked_cells": enrolled_cells,
-            "spelling_cells": enrolled_cells,
-            "spelling_cells_by_locale": dict(sorted(enrolled_cells_by_locale.items())),
-            "spelling_prose_cells": prose_cells,
-            "spelling_prose_cells_by_locale": dict(sorted(prose_cells_by_locale.items())),
-            "spelling_structural_only_cells": sum(structural_only_cells_by_locale.values()),
-            "spelling_structural_only_cells_by_locale": dict(sorted(structural_only_cells_by_locale.items())),
-            "spelling_unknown_cells": len(unknown_by_cell),
-            "spelling_unknown_words": len(unknown_words),
-            "spelling_tool_failures": 0,
-            **_excluded_structural_inventory(excluded_by_surface_locale),
-        },
+        spelling_inventory,
         unknown_findings,
     )
 
 
 def _translation_matrix(
     required_keys: set[str],
-    locale_leaves: dict[str, dict[str, object]],
+    locale_leaves: Mapping[str, Mapping[str, object]],
     spelling: dict[tuple[str, str], tuple[str, ...]] | None = None,
-) -> dict[str, object]:
+) -> _TranslationMatrix:
     spelling = spelling or {}
     counts = Counter[str]()
-    backlog: list[dict[str, object]] = []
+    backlog: list[_TranslationBacklogItem] = []
     findings: list[dict[str, object]] = []
     for key in sorted(required_keys):
         domain = _domain(key)
@@ -583,7 +667,7 @@ def _translation_matrix(
             counts[state] += 1
             if state == "ready":
                 continue
-            item = {
+            item: _TranslationBacklogItem = {
                 "domain": domain,
                 "key": key,
                 "locale": locale,
@@ -619,8 +703,8 @@ def _translation_matrix(
 
 def _translation_tokens(value: str) -> tuple[frozenset[str], frozenset[str]]:
     """Return expansion placeholders and bracketed casilla references."""
-    bracketed = re.findall(r"\[([^\[\]\r\n]+)\]", value)
-    references = frozenset(token for token in bracketed if _is_bracket_reference(token))
+    bracketed = tuple(match.group(1) for match in re.finditer(r"\[([^\[\]\r\n]+)\]", value))
+    references = frozenset[str](token for token in bracketed if _is_bracket_reference(token))
     return extract_placeholders(value), references
 
 
@@ -635,7 +719,7 @@ def _is_bracket_reference(token: str) -> bool:
 
 def _suspicious_translation_locales(
     key: str,
-    locale_leaves: dict[str, dict[str, object]],
+    locale_leaves: Mapping[str, Mapping[str, object]],
 ) -> set[str]:
     source = locale_leaves.get("es", {}).get(key)
     if not isinstance(source, str):
@@ -775,10 +859,10 @@ def _spanish_word_context(
     *,
     owner_locale: str,
     dictionary: object | None,
-    spanish_dictionary: object | None,
+    spanish_dictionary: _DictionaryLike | None,
 ) -> bool:
     """Whether an unknown word sits in structured Spanish legal/name prose."""
-    if owner_locale == "es" or not callable(getattr(spanish_dictionary, "lookup", None)):
+    if owner_locale == "es" or spanish_dictionary is None:
         return False
     legal_context = (
         "/legal/" in key.casefold()
@@ -863,7 +947,7 @@ def _spelling_surface(key: str) -> str:
     return "generated_docs"
 
 
-def _excluded_structural_inventory(excluded: Counter[tuple[str, str]]) -> dict[str, object]:
+def _excluded_structural_inventory(excluded: Counter[tuple[str, str]]) -> _ExcludedStructuralInventory:
     """Return stable structural-exclusion totals for every surface/locale."""
     by_surface_locale = {
         f"{surface}/{locale}": excluded[(surface, locale)] for surface in _SPELLING_SURFACES for locale in _LOCALES
@@ -876,7 +960,7 @@ def _excluded_structural_inventory(excluded: Counter[tuple[str, str]]) -> dict[s
 
 def _translation_words(value: str) -> tuple[str, ...]:
     """Return alphabetic prose words for locale-quality signals."""
-    return tuple(re.findall(r"[^\W\d_]+", value, flags=re.UNICODE))
+    return tuple(match.group(0) for match in re.finditer(r"[^\W\d_]+", value, flags=re.UNICODE))
 
 
 def _source_inventory(
@@ -1144,11 +1228,11 @@ def _parallel_localization_inventory(
 
 def _documentation_source_inventory(
     repository: Path,
-    catalogue_messages: dict[tuple[str, str], dict[str, bool]],
+    catalogue_messages: Mapping[tuple[str, str], Mapping[str, bool]],
     *,
     catalogue_files: set[tuple[str, str]] | None = None,
-    catalogue_obsolete: dict[tuple[str, str], set[str]] | None = None,
-    catalogue_translations: dict[tuple[str, str], dict[str, tuple[str, ...]]] | None = None,
+    catalogue_obsolete: Mapping[tuple[str, str], set[str]] | None = None,
+    catalogue_translations: Mapping[tuple[str, str], Mapping[str, tuple[str, ...]]] | None = None,
     spelling_values: dict[str, dict[str, str]] | None = None,
 ) -> tuple[dict[str, object], list[dict[str, object]]]:
     """Validate cached source extraction and compare it with every PO.
@@ -1175,8 +1259,10 @@ def _documentation_source_inventory(
     echo_dictionaries: dict[str, object] | None = None
     echo_dictionaries_unavailable = False
     platform_identity_terms = _platform_identity_terms(repository)
-    catalogue_obsolete = catalogue_obsolete or {}
-    catalogue_translations = catalogue_translations or {}
+    if catalogue_obsolete is None:
+        catalogue_obsolete: dict[tuple[str, str], set[str]] = {}
+    if catalogue_translations is None:
+        catalogue_translations: dict[tuple[str, str], Mapping[str, tuple[str, ...]]] = {}
     for (locale, _catalogue), identities in catalogue_obsolete.items():
         counts["docs_catalogue_messages_obsolete"] += len(identities)
         counts[f"docs_catalogue_messages_obsolete_{locale}"] += len(identities)
@@ -1335,7 +1421,7 @@ def _documentation_source_inventory(
                         ratio = _translation_similarity(source_normalized, translation_normalized)
                         form = "singular" if len(source_forms) == 1 else f"plural[{index}]"
                         location = f"docs/locales/{locale}/LC_MESSAGES/{catalogue}"
-                        evidence = {
+                        evidence: dict[str, object] = {
                             "domain": "docs",
                             "form": form,
                             "locale": locale,
@@ -1377,7 +1463,7 @@ def _documentation_source_inventory(
                                 counts[f"docs_translation_invariant_echo_{locale}"] += 1
                                 counts[f"docs_translation_invariant_echo_reason_{reason}"] += 1
                                 counts[f"docs_translation_invariant_echo_{locale}_{reason}"] += 1
-                                invariant_evidence = {**evidence, "reason": reason}
+                                invariant_evidence: dict[str, object] = {**evidence, "reason": reason}
                                 findings.append(
                                     {
                                         "classification": "advisory",
@@ -1452,13 +1538,29 @@ def _read_gettext_messages(path: Path) -> dict[str, str] | None:
 
 def _po_message_id(value: object) -> str:
     """Normalize singular and plural Babel message identifiers."""
-    return value if isinstance(value, str) else "\x04".join(value)
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (tuple, list)):
+        parts: list[str] = []
+        for item in value:
+            if not isinstance(item, str):
+                raise TypeError("gettext plural message ids must contain text")
+            parts.append(item)
+        return "\x04".join(parts)
+    raise TypeError("gettext message id must be text or plural forms")
 
 
 def _po_message_identity(message: object) -> str:
     """Return a gettext identity that retains msgctxt and plural identity."""
-    message_id = _po_message_id(message.id)
-    context = message.context
+    message_id_value = getattr(message, "id", None)
+    if not isinstance(message_id_value, (str, tuple, list)):
+        raise TypeError("gettext message id must be text or plural forms")
+    if isinstance(message_id_value, (tuple, list)) and not all(
+        isinstance(item, str) for item in message_id_value
+    ):
+        raise TypeError("gettext plural message ids must contain text")
+    message_id = _po_message_id(message_id_value)
+    context = getattr(message, "context", None)
     return f"{context}\x1f{message_id}" if isinstance(context, str) and context else message_id
 
 
@@ -1473,10 +1575,14 @@ def _translation_echo_normalize(value: str) -> str:
 def _translation_similarity(left: str, right: str) -> float:
     """Return a normalized similarity ratio using rapidfuzz when installed."""
     try:
-        from rapidfuzz.fuzz import ratio
+        fuzz = import_module("rapidfuzz.fuzz")
     except ImportError:
         return SequenceMatcher(None, left, right).ratio()
-    return ratio(left, right) / 100
+    ratio = getattr(fuzz, "ratio", None)
+    if not callable(ratio):
+        return SequenceMatcher(None, left, right).ratio()
+    score = ratio(left, right)
+    return score / 100 if isinstance(score, (int, float)) else SequenceMatcher(None, left, right).ratio()
 
 
 def _translation_invariant_echo_reason(
@@ -1545,10 +1651,10 @@ def _platform_identity_terms(repository: Path) -> frozenset[str]:
         with descriptor.open("rb") as handle:
             payload = tomllib.load(handle)
     except (OSError, tomllib.TOMLDecodeError):
-        return frozenset()
+        return frozenset[str]()
     channels = payload.get("channel") if isinstance(payload, dict) else None
     if not isinstance(channels, list):
-        return frozenset()
+        return frozenset[str]()
     terms: set[str] = set()
     for channel in channels:
         if not isinstance(channel, dict):
@@ -1570,14 +1676,17 @@ def _ratio(value: int, total: int) -> float:
 def _documentation_counts(
     counts: Counter[str],
     *,
-    source_echo_samples: list[dict[str, object]] | None = None,
-    invariant_echo_samples: list[dict[str, object]] | None = None,
-    near_echo_samples: list[dict[str, object]] | None = None,
+    source_echo_samples: Sequence[Mapping[str, object]] | None = None,
+    invariant_echo_samples: Sequence[Mapping[str, object]] | None = None,
+    near_echo_samples: Sequence[Mapping[str, object]] | None = None,
 ) -> dict[str, object]:
     """Return the stable user-document inventory schema, including zeroes."""
-    source_echo_samples = source_echo_samples or []
-    invariant_echo_samples = invariant_echo_samples or []
-    near_echo_samples = near_echo_samples or []
+    if source_echo_samples is None:
+        source_echo_samples = list[Mapping[str, object]]()
+    if invariant_echo_samples is None:
+        invariant_echo_samples = list[Mapping[str, object]]()
+    if near_echo_samples is None:
+        near_echo_samples = list[Mapping[str, object]]()
     return {
         "docs_source_pages": counts["docs_source_pages"],
         "docs_source_messages": counts["docs_source_messages"],
@@ -1732,22 +1841,27 @@ def _po_translation_strings(value: object) -> tuple[str, ...]:
     """Return every gettext translation form without treating an empty plural tuple as complete."""
     if isinstance(value, str):
         return (value,)
-    if isinstance(value, tuple) and all(isinstance(item, str) for item in value):
-        return value
+    if isinstance(value, tuple):
+        strings: list[str] = []
+        for item in value:
+            if not isinstance(item, str):
+                return ()
+            strings.append(item)
+        return tuple(strings)
     return ()
 
 
 def _domain_summaries(
     required_keys: set[str],
-    matrix: dict[str, object],
-    locale_leaves: dict[str, dict[str, object]],
-    inventory_findings: list[dict[str, object]],
+    matrix: _TranslationMatrix,
+    locale_leaves: Mapping[str, Mapping[str, object]],
+    inventory_findings: Iterable[Mapping[str, object]],
 ) -> list[dict[str, object]]:
     locales = sorted(locale_leaves)
     keys_by_domain: dict[str, set[str]] = defaultdict(set)
     for key in required_keys:
         keys_by_domain[_domain(key)].add(key)
-    backlog = cast(list[dict[str, object]], matrix["backlog"])
+    backlog = matrix["backlog"]
     rows: list[dict[str, object]] = []
     for domain in sorted(keys_by_domain):
         keys = keys_by_domain[domain]
@@ -1801,7 +1915,7 @@ def _domain_summaries(
         )
     unassigned = next((row for row in rows if row["domain"] == "unassigned"), None)
     if unassigned is None:
-        unassigned = {
+        unassigned: dict[str, object] = {
             "domain": "unassigned",
             "state": "complete",
             "required_keys": 0,
@@ -1822,16 +1936,22 @@ def _domain_summaries(
         unassigned["state"] = "inventory_open"
         unassigned["next_action"] = "canonicalize production presentation declarations"
     order = {"inventory_open": 0, "translate": 1, "repair": 2, "review": 3, "stale": 4, "complete": 5}
-    return sorted(rows, key=lambda row: (order[str(row["state"])], -int(row["to_translate"]), str(row["domain"])))
+
+    def _sort_key(row: dict[str, object]) -> tuple[int, int, str]:
+        raw_count = row["to_translate"]
+        count = raw_count if isinstance(raw_count, int) else 0
+        return order[str(row["state"])], -count, str(row["domain"])
+
+    return sorted(rows, key=_sort_key)
 
 
 def _locale_summaries(
     required_keys: set[str],
-    matrix: dict[str, object],
-    locale_leaves: dict[str, dict[str, object]],
+    matrix: _TranslationMatrix,
+    locale_leaves: Mapping[str, Mapping[str, object]],
 ) -> list[dict[str, object]]:
-    backlog = cast(list[dict[str, object]], matrix["backlog"])
-    rows = []
+    backlog = matrix["backlog"]
+    rows: list[dict[str, object]] = []
     for locale, leaves in sorted(locale_leaves.items()):
         items = [item for item in backlog if isinstance(item, dict) and item.get("locale") == locale]
         states = Counter(str(item["state"]) for item in items)
@@ -1852,14 +1972,16 @@ def _locale_summaries(
     return rows
 
 
-def _largest_domain_locale(domains: list[dict[str, object]]) -> tuple[str, str, int] | None:
+def _largest_domain_locale(domains: Sequence[Mapping[str, object]]) -> tuple[str, str, int] | None:
     candidates: list[tuple[int, str, str]] = []
     for row in domains:
         by_locale = row.get("to_translate_by_locale")
         if not isinstance(by_locale, dict):
             continue
         for locale, raw_count in by_locale.items():
-            count = int(raw_count)
+            if not isinstance(raw_count, int):
+                continue
+            count = raw_count
             if count:
                 candidates.append((count, str(row["domain"]), str(locale)))
     if not candidates:
@@ -1869,8 +1991,8 @@ def _largest_domain_locale(domains: list[dict[str, object]]) -> tuple[str, str, 
 
 
 def _headline(
-    backlog: dict[str, object],
-    locales: list[dict[str, object]],
+    backlog: Mapping[str, object],
+    locales: Sequence[Mapping[str, object]],
     largest: tuple[str, str, int] | None,
     inventory_items: int,
 ) -> str:
@@ -1891,8 +2013,8 @@ def _headline(
 def _next_action(
     inventory_open: bool,
     inventory_items: int,
-    matrix: dict[str, object],
-    domains: list[dict[str, object]],
+    matrix: _TranslationMatrix,
+    domains: Sequence[Mapping[str, object]],
     catalogue_only: int,
 ) -> dict[str, object] | None:
     if inventory_open:
@@ -1901,7 +2023,7 @@ def _next_action(
             "items": inventory_items,
             "command": "fix source declarations, then run just check-locales",
         }
-    cells = cast(dict[str, object], matrix["cells"])
+    cells = matrix["cells"]
     if int(cells["missing"]):
         return {
             "action": "create_missing_catalogue_leaves",

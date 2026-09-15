@@ -141,7 +141,7 @@ def test_authority_rejects_wrong_version_unratified_or_incomplete_rows(
     value: object,
     message: str,
 ) -> None:
-    data: dict[str, object] = _entry().model_dump(mode="python")
+    data = {key: value for key, value in _entry().model_dump(mode="python").items() if isinstance(key, str)}
     data[field] = value
 
     if field == "schema_version":
@@ -238,7 +238,7 @@ def test_authority_rejects_extra_fields_and_mutation() -> None:
     # `frozen_instance` proves immutability held, not merely that assignment
     # raised - a field whose type rejected the value 2 would look identical.
     with pytest.raises(ValidationError, match="frozen_instance"):
-        authority.authority_version = 2  # type: ignore[misc]
+        authority.__setattr__("authority_version", 2)
 
 
 def test_provenance_rejects_path_escape() -> None:

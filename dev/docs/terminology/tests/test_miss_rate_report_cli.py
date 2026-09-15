@@ -31,7 +31,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 def _written(target: pathlib.Path) -> dict[str, object]:
-    return json.loads(target.read_text(encoding="utf-8"))
+    payload = json.loads(target.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or not all(isinstance(key, str) for key in payload):
+        raise AssertionError("miss-rate report must contain a JSON object with string keys")
+    return {key: value for key, value in payload.items() if isinstance(key, str)}
 
 
 def test_the_writer_returns_the_evaluation_it_wrote(tmp_path: pathlib.Path) -> None:

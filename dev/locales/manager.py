@@ -11,7 +11,7 @@ from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import IO, Any, override
+from typing import IO, Any, TypeGuard, override
 
 import yaml
 
@@ -130,10 +130,7 @@ class LocaleAuditResult:
 #: it does not. Only scanning and parsing are C-accelerated; the constructor
 #: below stays Python and keeps running for every mapping, which is what lets
 #: the duplicate-key refusal survive the swap unchanged.
-_CatalogueLoaderBase: type[yaml.SafeLoader] = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
-
-
-class StrictUniqueKeyLoader(_CatalogueLoaderBase):  # type: ignore[valid-type,misc]
+class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys.
 
     The catalogues are ~3 MB each, and parsing one measured 9.016s on the pure
@@ -184,7 +181,27 @@ def _parse_locale(source: IO[str] | str) -> dict[str, LocaleNode]:
         data = loader.get_single_data()
     finally:
         loader.dispose()
-    return data if data is not None else {}
+    if data is None:
+        return {}
+    if not _is_locale_mapping(data):
+        raise LocaleError("Locale catalogue root must be a mapping of string keys")
+    return data
+
+
+def _is_locale_value(value: object) -> TypeGuard[LocaleNode]:
+    """Return whether one parsed YAML value has the recursive locale shape."""
+    if value is None or isinstance(value, str):
+        return True
+    if not isinstance(value, dict):
+        return False
+    return all(isinstance(key, str) and _is_locale_value(child) for key, child in value.items())
+
+
+def _is_locale_mapping(value: object) -> TypeGuard[dict[str, LocaleNode]]:
+    """Return whether a parsed YAML document is a locale mapping."""
+    return isinstance(value, dict) and all(
+        isinstance(key, str) and _is_locale_value(child) for key, child in value.items()
+    )
 
 
 def _deep_merge_dicts(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
@@ -1109,7 +1126,7 @@ def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: Locale
     for part in parts[:-1]:
         child = curr.get(part)
         if not isinstance(child, dict):
-            child = {}
+            child: dict[str, LocaleNode] = {}
             curr[part] = child
         curr = child
     curr[parts[-1]] = value

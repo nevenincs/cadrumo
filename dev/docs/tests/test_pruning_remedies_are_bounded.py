@@ -37,6 +37,7 @@ Run via::
 from __future__ import annotations
 
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -74,6 +75,7 @@ class _NarrowedManager(ApiStubManager):
         super().__init__(src_cadrumo=src_cadrumo, docs_api=docs_api)
         self._excluded_segment = excluded_segment
 
+    @override
     def excludes_source(self, path: Path) -> bool:
         if self._excluded_segment in path.relative_to(self.src_cadrumo).parts:
             return True

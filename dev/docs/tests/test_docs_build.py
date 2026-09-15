@@ -368,7 +368,10 @@ def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
     )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("SCOPE_CONFIG="))
-    return json.loads(line[len("SCOPE_CONFIG=") :])
+    payload = json.loads(line[len("SCOPE_CONFIG=") :])
+    if not isinstance(payload, dict) or not all(isinstance(key, str) for key in payload):
+        raise AssertionError("scope config must contain a JSON object with string keys")
+    return {key: value for key, value in payload.items() if isinstance(key, str)}
 
 
 def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) -> None:

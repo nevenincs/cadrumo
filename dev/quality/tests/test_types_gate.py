@@ -29,6 +29,7 @@ from ..types import (
     Diagnostic,
     _ExternalGap,
     _is_irreducible_external_gap,
+    collect_ty,
     main,
     require_report,
 )
@@ -65,6 +66,20 @@ def test_an_empty_report_document_is_accepted() -> None:
 def test_a_populated_report_is_accepted() -> None:
     """The ordinary failing-tree path still reaches the parser."""
     require_report('[{"check_name": "x"}]', _completed(stdout='[{"check_name": "x"}]'), "ty")
+
+
+def test_ty_uses_the_same_project_discovery_as_a_standalone_check(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The aggregate must not replace ty's project boundary with a curated subset."""
+    seen: list[list[str]] = []
+
+    def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+        seen.append(cmd)
+        return _completed(stdout="[]")
+
+    monkeypatch.setattr("dev.quality.types._run", run)
+
+    assert collect_ty() == []
+    assert seen == [["ty", "check", "--output-format", "gitlab", "--color", "never"]]
 
 
 def test_the_suppression_list_is_empty() -> None:

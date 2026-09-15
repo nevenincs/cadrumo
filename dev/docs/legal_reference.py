@@ -73,7 +73,9 @@ _DATE_FIELDS: Final[tuple[str, ...]] = (
     "reviewed_at",
 )
 
-_LEGAL_TABLE_FIELDS: Final[frozenset[str]] = frozenset(LegalReference.model_fields) - {"id"}
+_LEGAL_TABLE_FIELDS: Final[frozenset[str]] = frozenset(
+    field_name for field_name in LegalReference.model_fields if isinstance(field_name, str) and field_name != "id"
+)
 """Every field a ``[legal."..."]`` table body may declare.
 
 Derived from :class:`LegalReference` rather than hand-listed, so it is complete

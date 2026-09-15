@@ -257,7 +257,7 @@ def _passing_evidence_rows() -> frozenset[str]:
     an empty set.
     """
     if not _EVIDENCE_DIR.is_dir():
-        return frozenset()
+        return frozenset[str]()
     passed: set[str] = set()
     for path in scan_directory(_EVIDENCE_DIR, pattern="*.json"):
         try:

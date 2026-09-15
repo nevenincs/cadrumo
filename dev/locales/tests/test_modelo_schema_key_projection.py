@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
     casilla_alias_locale_key,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
@@ -62,8 +63,8 @@ def _write_structural_modelo(root: Path, *, casilla: str = "valid", malformed_bi
 def test_structural_projection_matches_every_modelo_identity_ignoring_binding_shape(tmp_path: Path) -> None:
     keys = load_modelo_locale_key_projection(_write_structural_modelo(tmp_path, malformed_binding=True))
 
-    occurrence = casilla_occurrence_locale_key("999", "2024", "c1", "label")
-    continuity = casilla_continuity_locale_key("999", "chain-1", "label")
+    occurrence = casilla_occurrence_locale_key("999", "2024", "c1", ModeloLocalizationFieldKind.LABEL)
+    continuity = casilla_continuity_locale_key("999", "chain-1", ModeloLocalizationFieldKind.LABEL)
     assert keys == {
         modelo_locale_key("999", "title"),
         modelo_locale_key("999", "official_name"),

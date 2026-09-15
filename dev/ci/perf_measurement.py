@@ -196,7 +196,8 @@ class WindowsJobCpuAccounting:
             raise ProcessCpuMeasurementError(
                 f"QueryInformationJobObject failed (error {ctypes.get_last_error()})",
             )
-        return (accounting.TotalUserTime + accounting.TotalKernelTime) / 10_000_000
+        total_100ns = int(accounting.TotalUserTime) + int(accounting.TotalKernelTime)
+        return total_100ns / 10_000_000
 
     def close(self) -> None:
         """Release the job handle."""
@@ -231,7 +232,13 @@ async def _communicate_child(
         stderr=asyncio.subprocess.PIPE,
     )
     if accounting is not None:
-        raw_process = process._transport.get_extra_info("subprocess")
+        transport = getattr(process, "_transport", None)
+        get_extra_info = getattr(transport, "get_extra_info", None)
+        if not callable(get_extra_info):
+            process.kill()
+            await process.communicate()
+            raise ProcessCpuMeasurementError("asyncio did not expose the child transport")
+        raw_process = get_extra_info("subprocess")
         if raw_process is None:
             process.kill()
             await process.communicate()
@@ -243,10 +250,13 @@ async def _communicate_child(
         process.kill()
         await process.communicate()
         raise subprocess.TimeoutExpired(list(argv), timeout_s) from error
+    returncode = process.returncode
+    if returncode is None:
+        raise ProcessCpuMeasurementError("child exited without a return code")
     return (
         stdout.decode(_UTF_8, errors="strict"),
         stderr.decode(_UTF_8, errors="strict"),
-        process.returncode,
+        returncode,
     )
 
 

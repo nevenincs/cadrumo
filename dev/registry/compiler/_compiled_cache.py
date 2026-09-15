@@ -114,9 +114,9 @@ class _CompiledCacheUnpickler(pickle.Unpickler):
             return super().find_class(module, name)
         if module in _SAFE_PICKLE_MODULES or module.startswith(_SAFE_PICKLE_PREFIXES):
             resolved = super().find_class(module, name)
-            if not hasattr(resolved, "_from_registry"):
+            if not hasattr(resolved, "from_registry"):
                 return resolved
-            registry_constructor = resolved._from_registry
+            registry_constructor = resolved.from_registry
 
             class _RegistryProjectedType(resolved):
                 def __new__(cls, *args: object, **kwargs: object) -> object:

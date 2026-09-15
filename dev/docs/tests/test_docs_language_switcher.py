@@ -178,7 +178,10 @@ def _conf_switcher_context(language: str) -> dict[str, object]:
         )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("SWITCHER="))
-    return json.loads(line[len("SWITCHER=") :])
+    payload = json.loads(line[len("SWITCHER=") :])
+    if not isinstance(payload, dict) or not all(isinstance(key, str) for key in payload):
+        raise AssertionError("switcher context must contain a JSON object with string keys")
+    return {key: value for key, value in payload.items() if isinstance(key, str)}
 
 
 def test_conf_populates_switcher_context_from_output_language() -> None:
@@ -187,8 +190,15 @@ def test_conf_populates_switcher_context_from_output_language() -> None:
     assert context["language"] == "ca"
     assert context["default"] == "en"
     assert context["is_default"] is False
-    codes = [entry["code"] for entry in context["languages"]]
+    raw_languages = context.get("languages")
+    assert isinstance(raw_languages, list)
+    languages: list[dict[str, object]] = []
+    for raw_entry in raw_languages:
+        if not isinstance(raw_entry, dict) or not all(isinstance(key, str) for key in raw_entry):
+            raise AssertionError("switcher language entries must be JSON objects with string keys")
+        languages.append({key: value for key, value in raw_entry.items() if isinstance(key, str)})
+    codes = [entry["code"] for entry in languages]
     assert codes[0] == "en"
     assert set(codes) == {member.value for member in OutputLanguage}
-    labels = {entry["code"]: entry["label"] for entry in context["languages"]}
+    labels = {entry["code"]: entry["label"] for entry in languages}
     assert labels == _LANGUAGE_LABELS

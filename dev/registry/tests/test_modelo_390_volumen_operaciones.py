@@ -131,7 +131,7 @@ def _observation(
         category=category,
         exemption_article=None,
         rate_kind=IvaRateKind("zero"),
-        flow_direction=IvaFlowDirection._from_registry("repercutido"),
+        flow_direction=IvaFlowDirection.from_registry("repercutido"),
         base_amount=base,
         iva_amount=Decimal("0"),
         recargo_amount=Decimal("0"),

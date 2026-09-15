@@ -275,7 +275,11 @@ def _pid_alive(pid: int) -> bool:
         return False
     try:
         proc = psutil.Process(pid)
-        return proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE
+        running = proc.is_running()
+        status = proc.status()
+        if not isinstance(running, bool) or not isinstance(status, str):
+            return False
+        return running and status != psutil.STATUS_ZOMBIE
     except psutil.Error:
         return False
 

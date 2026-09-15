@@ -156,7 +156,7 @@ def _write_cohort_manifest(directory: Path) -> Path:
     manifest = create_manifest(
         root=directory,
         version="9.9.9",
-        source=SourceIdentity(commit="a" * 40),
+        source=SourceIdentity(source_digest="a" * 64),
         created_at=datetime(2026, 1, 1, tzinfo=UTC),
         builder=BuildIdentity(
             implementation="dev.packaging.release_cohort",

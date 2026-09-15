@@ -465,7 +465,10 @@ def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
     for raw in text.splitlines():
         header = _RECIPE_HEADER.match(raw)
         if header is not None:
-            current = header.group("name")
+            name = header.group("name")
+            if not isinstance(name, str):
+                raise RuntimeError("recipe header did not provide a textual name")
+            current = name
             continue
         # A non-indented, non-header, non-comment line ends the preceding recipe
         # body: an attribute (`[group('testing')]`) or a variable assignment.
@@ -515,7 +518,10 @@ def _recipe_bodies(text: str) -> dict[str, str]:
     for raw in text.splitlines():
         header = _RECIPE_HEADER.match(raw)
         if header is not None:
-            current = header.group("name")
+            name = header.group("name")
+            if not isinstance(name, str):
+                raise RuntimeError("recipe header did not provide a textual name")
+            current = name
             bodies.setdefault(current, [])
             continue
         if current is not None:
@@ -640,7 +646,7 @@ def workflow_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     """
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
-        return MappingProxyType({})
+        return MappingProxyType(dict[str, tuple[str, ...]]())
 
     events: dict[str, set[str]] = {}
     dispatches: dict[str, tuple[tuple[str, str | None], ...]] = {}
@@ -693,7 +699,7 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
 
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
-        return MappingProxyType({})
+        return MappingProxyType(dict[str, tuple[str, ...]]())
 
     effective = workflow_triggers(root)
     accumulated: dict[str, set[str]] = {}
@@ -738,7 +744,7 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
 
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
-        return frozenset()
+        return frozenset[str]()
 
     routed: dict[str, set[bool]] = {}
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
@@ -793,7 +799,10 @@ def configured_testpaths(root: Path) -> tuple[str, ...]:
     match = re.search(r"^testpaths\s*=\s*\[(.*?)\]", text, re.MULTILINE | re.DOTALL)
     if not match:
         return ()
-    return tuple(item.strip().strip("\"'") for item in match.group(1).split(",") if item.strip())
+    captured = match.group(1)
+    if not isinstance(captured, str):
+        return ()
+    return tuple(item.strip().strip("\"'") for item in captured.split(",") if item.strip())
 
 
 def configured_marker_expression(root: Path) -> str | None:
@@ -802,8 +811,14 @@ def configured_marker_expression(root: Path) -> str | None:
     match = re.search(r"^addopts\s*=\s*\"(.*?)\"", text, re.MULTILINE)
     if not match:
         return None
-    inner = re.search(r"-m\s+'([^']+)'", match.group(1)) or re.search(r'-m\s+"([^"]+)"', match.group(1))
-    return inner.group(1) if inner else None
+    captured = match.group(1)
+    if not isinstance(captured, str):
+        return None
+    inner = re.search(r"-m\s+'([^']+)'", captured) or re.search(r'-m\s+"([^"]+)"', captured)
+    if inner is None:
+        return None
+    marker_expression = inner.group(1)
+    return marker_expression if isinstance(marker_expression, str) else None
 
 
 def resolve_just_executable() -> str:

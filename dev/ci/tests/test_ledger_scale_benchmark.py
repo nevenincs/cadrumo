@@ -77,8 +77,6 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
@@ -92,6 +90,7 @@ from cadrumo.application.aggregation.renta_ledger import (
     aggregate_renta_ledger_expenses_from_repositories,
 )
 from cadrumo.application.aggregation.tests.iva_authority_support import aggregate_iva_ledger_observations
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -101,8 +100,12 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import (
     BusinessClassification,
@@ -111,7 +114,9 @@ from cadrumo.domain.transactions.enums import (
 )
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 from ..perf_measurement import wall_advisory_message
 
@@ -206,6 +211,13 @@ _PARTITION_LOG_MARKERS = (
 )
 
 
+@pytest.fixture(scope="module")
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin one registry generation for the benchmark's composed operations."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 def _raw(idx: int, *, booked: date) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=f"bench-row-{idx:06d}",
@@ -293,26 +305,28 @@ def _seed_prior_year_m130_minoracion(objects: SecureObjectRepository) -> None:
     observation_repo = CalculationObservationRepository(objects=objects)
     for target_year in _M130_DIAGNOSTIC_YEARS:
         prior_year = target_year - 1
+        observation = RegistryModeloObservation(
+            modelo="100",
+            filing_year=prior_year,
+            period=_M100_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=prior_year,
+                period=_M100_ANNUAL_PERIOD,
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                    _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                },
+            ),
+        )
         observation_repo.save(
             observation_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="100",
-                    filing_year=prior_year,
-                    period=_M100_ANNUAL_PERIOD,
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=prior_year,
-                        period=_M100_ANNUAL_PERIOD,
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                            _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
-                        },
-                    ),
-                ),
+                observation,
                 source_kind="app_filing",
+                stamped_revision_id=revision_id_for_observation(observation),
                 captured_at=datetime(target_year, 4, 6, 12, 0, tzinfo=UTC),
             )
         )
@@ -326,7 +340,8 @@ def _seed_taxpayer_profile() -> None:
     ``activity_start_date`` (2020) predates every benchmarked filing year
     (``_FIRST_YEAR`` 2021 onward).
     """
-    record = UserProfileRecord(
+    record = create_user_profile_record(
+        context=profile_creation_context_for_test(),
         profile_id=_BUCKET_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -394,7 +409,7 @@ def _partition_in_window_rows(messages: Iterable[str]) -> int:
 
 
 @pytest.fixture(scope="module")
-def scale_bucket() -> Iterator[SecureObjectRepository]:
+def scale_bucket(authority_operation: PinnedAuthorityOperation) -> Iterator[SecureObjectRepository]:
     """Yield a real bucket seeded with the 30k-transaction / 10-year ledger.
 
     Module-scoped: the seed is expensive real-adapter I/O (30k encrypted
@@ -450,7 +465,10 @@ def test_ledger_read_reports_full_catalogue_latency(scale_bucket: SecureObjectRe
     )
 
 
-def test_annual_renta_aggregation_reports_full_scan_latency(scale_bucket: SecureObjectRepository) -> None:
+def test_annual_renta_aggregation_reports_full_scan_latency(
+    scale_bucket: SecureObjectRepository,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Report latency of the annual renta full-scan aggregation at 30k-row scale.
 
     :func:`aggregate_renta_ledger_expenses_from_repositories` loads the full
@@ -468,8 +486,10 @@ def test_annual_renta_aggregation_reports_full_scan_latency(scale_bucket: Secure
         result = aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=_BUCKET_ID,
             period=period,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
+            ports=InvoiceCatalogueReadPorts(
+                transaction_reader=tx_repo,
+                invoice_reader=invoice_repo,
+            ),
             # The bundled spending-category profile facts only cover 2024/2025
             # (see src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml);
             # the benchmark's *period* still targets the last synthetic filing
@@ -477,6 +497,7 @@ def test_annual_renta_aggregation_reports_full_scan_latency(scale_bucket: Secure
             # decoupled per the function's own documented contract.
             profile_year=_CATEGORY_PROFILE_YEAR,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+            operation=authority_operation,
         )
         samples.append(time.perf_counter() - started)
         # Real accumulator output, not a mock stand-in: the filtered result carries
@@ -610,7 +631,10 @@ class _QuarterlyIvaSamples:
 
 
 @pytest.fixture(scope="module")
-def quarterly_iva_samples(scale_bucket: SecureObjectRepository) -> _QuarterlyIvaSamples:
+def quarterly_iva_samples(
+    scale_bucket: SecureObjectRepository,
+    authority_operation: PinnedAuthorityOperation,
+) -> _QuarterlyIvaSamples:
     """Measure the partitioned quarterly IVA path and the degraded full scan once.
 
     Module-scoped because the full-scan samples are expensive real work
@@ -654,6 +678,7 @@ def quarterly_iva_samples(scale_bucket: SecureObjectRepository) -> _QuarterlyIva
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
                 investment_asset_register=BienesInversionIvaRegister(),
                 investment_asset_profile_id=_BUCKET_ID,
+                operation=authority_operation,
             )
             partitioned_cpu_duration = time.process_time() - cpu_started
             partitioned_wall_duration = time.perf_counter() - wall_started
@@ -769,6 +794,7 @@ def test_iva_quarterly_budget_still_fails_without_the_partition(
 def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     scale_bucket: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Enforce real M130 quarterly CPU cost and prove a full scan breaks it.
 
@@ -786,11 +812,8 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     carry is represented by the bundled registry; the ledger itself still
     holds the full 30k-row / 10-year scale this benchmark reads over.
     """
-    wu_repo = WorkUnitCatalogueRepository(objects=scale_bucket)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=scale_bucket)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=scale_bucket)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=scale_bucket)
-    observation_repo = CalculationObservationRepository(objects=scale_bucket)
+    ports = build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=authority_operation)
+    tx_repo = ports.transaction_repository
 
     quarters = ("1T", "2T", "3T", "4T")
     wall_samples: list[float] = []
@@ -807,7 +830,8 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
                     filing_year=year,
                     period=Period.from_year_and_code(year, quarter),
                     revision_id=_M130_REVISION,
-                    repository=wu_repo,
+                    ports=ports.work_lifecycle_ports,
+                    operation=authority_operation,
                     clock=filed_at,
                 )
                 wall_started = time.perf_counter()
@@ -815,10 +839,7 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
                 revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                     work_unit.work_unit_id,
                     casilla_inputs=_M130_MANUAL_INPUTS,
-                    work_unit_repository=wu_repo,
-                    calculation_repository=cr_repo,
-                    transaction_repository=tx_repo,
-                    invoice_repository=invoice_repo,
+                    ports=ports,
                     clock=filed_at,
                 ).revision
                 quarter_cpu = time.process_time() - cpu_started
@@ -830,8 +851,9 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
                 persist_filed_revision_observation(
                     revision=revision,
                     work_unit=work_unit,
-                    repository=observation_repo,
+                    repository=ports.observation_repository,
                     captured_at=filed_at,
+                    iva_compensation_history_repository=ports.iva_compensation_history_repository,
                 )
 
     calculation_log_messages = tuple(record.getMessage() for record in caplog.records)

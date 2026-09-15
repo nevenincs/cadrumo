@@ -32,7 +32,7 @@ def _frame(**overrides: object) -> GoldenFrame:
     """Build a frame whose only variation is the stream fields under test."""
     fields: dict[str, object] = {"kind": FrameKind.COMMAND, "argv": ("aeat", "--help"), "exit_code": 0}
     fields.update(overrides)
-    return GoldenFrame(**fields)  # type: ignore[arg-type]
+    return GoldenFrame.model_validate(fields)
 
 
 def test_an_envelope_without_its_source_is_refused() -> None:

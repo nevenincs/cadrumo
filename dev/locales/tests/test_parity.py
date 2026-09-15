@@ -102,7 +102,7 @@ _CUSTODY_PASSPHRASE_NAMESPACE = ("cli", "config", "passphrase")
 # in a single call.
 _CUSTODY_PASSPHRASE_HELP_LEAVES = ("help", "change_help")
 # Command help is a label, not operator-addressed prose: it names no product.
-_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS: frozenset[str] = frozenset()
+_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS: frozenset[str] = frozenset[str]()
 _CUSTODY_PASSPHRASE_NOTICE_LEAVES = ("no_active_profile",)
 # The refusal instructs `aeat config login NAME`, so it carries the executable.
 _CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS = frozenset({"aeat"})

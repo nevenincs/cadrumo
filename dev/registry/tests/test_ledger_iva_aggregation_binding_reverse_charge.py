@@ -74,17 +74,17 @@ def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero
             applied_rate=Decimal("0.21"),
             ledger_id="aic-isp",
             category=IvaCategory("intra_community_acquisition_reverse_charge"),
-            flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+            flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
             iva=Decimal("84.00"),
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
         ),
         _observation(
             applied_rate=Decimal("0.21"),
             ledger_id="domestic-isp-stray",
             category=IvaCategory("domestic_reverse_charge"),
-            flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+            flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
             iva=Decimal("99.00"),
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
         ),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
@@ -133,9 +133,9 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
                 ledger_id="aic-isp",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory("intra_community_acquisition_reverse_charge"),
-                flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=aic_cuota,
-                deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
             ),
         ),
     )
@@ -155,10 +155,10 @@ def _received_from_eu_criteria(*, kind: TransactionKind) -> IvaInvoiceClassifica
     return IvaInvoiceClassificationCriteria.model_validate(
         {
             "transaction_date": date(2025, 3, 1),
-            "issuer_residency": IvaTerritorialScope._from_registry("eu_member"),
-            "issuer_identification_state": EUMemberState._from_registry("de"),
-            "customer_residency": IvaTerritorialScope._from_registry("es_mainland"),
-            "customer_tax_status": CustomerTaxStatus._from_registry("b2b_iva_registered"),
+            "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
+            "issuer_identification_state": EUMemberState.from_registry("de"),
+            "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
+            "customer_tax_status": CustomerTaxStatus.from_registry("b2b_iva_registered"),
             "kind": kind,
             "direction": InvoiceKind.RECEIVED,
             "rate_tier": IvaRateKind("general"),
@@ -219,17 +219,17 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
                 applied_rate=Decimal("0.21"),
                 ledger_id="aic-goods-leg",
                 category=goods.category,
-                flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=goods_cuota,
-                deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
             ),
             _observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="aic-services-leg",
                 category=services.category,
-                flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=services_cuota,
-                deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
             ),
         ]
         result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
@@ -255,9 +255,9 @@ def test_resolve_import_third_country_routes_deducible_only() -> None:
             applied_rate=Decimal("0.21"),
             ledger_id="import",
             category=IvaCategory("import_third_country"),
-            flow=IvaFlowDirection._from_registry("soportado"),
+            flow=IvaFlowDirection.from_registry("soportado"),
             iva=Decimal("33.00"),
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("import_current"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("import_current"),
         ),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
@@ -295,9 +295,9 @@ def test_calculate_303_import_deducible_reduces_resultado_by_its_cuota() -> None
                 ledger_id="import",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory("import_third_country"),
-                flow=IvaFlowDirection._from_registry("soportado"),
+                flow=IvaFlowDirection.from_registry("soportado"),
                 iva=import_cuota,
-                deduction_fact_kind=IvaDeductionFactKind._from_registry("import_current"),
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("import_current"),
             ),
         ),
     )
@@ -327,17 +327,17 @@ def test_64_advisory_no_longer_fires_on_aic_or_import() -> None:
         applied_rate=Decimal("0.21"),
         ledger_id="aic",
         category=IvaCategory("intra_community_acquisition_reverse_charge"),
-        flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+        flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
         iva=Decimal("84.00"),
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
     )
     import_row = _observation(
         applied_rate=Decimal("0.21"),
         ledger_id="import",
         category=IvaCategory("import_third_country"),
-        flow=IvaFlowDirection._from_registry("soportado"),
+        flow=IvaFlowDirection.from_registry("soportado"),
         iva=Decimal("33.00"),
-        deduction_fact_kind=IvaDeductionFactKind._from_registry("import_current"),
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("import_current"),
     )
     assert unsupported_ledger_iva_observations(revision, (aic, import_row)) == ()
 
@@ -387,14 +387,14 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
     # invoice direction the live classifier produces per category.
     received_categories = {IvaCategory("import_third_country")}
     deduction_kind_by_input_category = {
-        IvaCategory("domestic_reverse_charge"): IvaDeductionFactKind._from_registry("domestic_current"),
-        IvaCategory("intra_community_acquisition_reverse_charge"): IvaDeductionFactKind._from_registry(
+        IvaCategory("domestic_reverse_charge"): IvaDeductionFactKind.from_registry("domestic_current"),
+        IvaCategory("intra_community_acquisition_reverse_charge"): IvaDeductionFactKind.from_registry(
             "intra_eu_current"
         ),
-        IvaCategory("intra_community_service_acquisition_reverse_charge"): IvaDeductionFactKind._from_registry(
+        IvaCategory("intra_community_service_acquisition_reverse_charge"): IvaDeductionFactKind.from_registry(
             "intra_eu_current"
         ),
-        IvaCategory("import_third_country"): IvaDeductionFactKind._from_registry("import_current"),
+        IvaCategory("import_third_country"): IvaDeductionFactKind.from_registry("import_current"),
     }
 
     flagged: list[tuple[str, str]] = []
@@ -474,9 +474,9 @@ def test_eu_service_acquisition_books_official_boxes_11_and_37_and_nets_to_zero(
                 ledger_id="eu-service",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
-                flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=service_cuota,
-                deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
             ),
         ),
     )
@@ -532,18 +532,18 @@ def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> 
                 ledger_id="eu-goods",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory("intra_community_acquisition_reverse_charge"),
-                flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=goods_cuota,
-                deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
             ),
             _observation(
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
                 txn_date=date(2025, 3, 2),
                 category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
-                flow=IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+                flow=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
                 iva=service_cuota,
-                deduction_fact_kind=IvaDeductionFactKind._from_registry("intra_eu_current"),
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
             ),
         ),
     )

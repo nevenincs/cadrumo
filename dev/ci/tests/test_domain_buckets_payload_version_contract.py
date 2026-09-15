@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
@@ -76,22 +77,29 @@ def test_the_shared_primitive_requires_an_explicit_payload_version() -> None:
 
 def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
     """Registering a profile writes the profile-lifecycle payload contract."""
-    from ....application.user_profile.login_session import login_profile
-    from ....application.user_profile.registration import register_profile_with_credentials
+    from cadrumo.application.user_profile.login_session import login_profile
+    from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
     label = "Payload version probe"
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
-            label=label,
-            passphrase=_PROFILE_MARKER,
-        )
-        # Registration closes the session it opened, so a freshly registered
-        # profile is LOCKED and the event catalogue cannot be read back through
-        # an authenticated session. Reading the event this test is about needs
-        # the profile open, and the storage runtime says so rather than
-        # returning an empty catalogue.
-        login_profile(name=label, passphrase_callback=lambda: _PROFILE_MARKER)
+        with bundled_indexed_authority().operation() as operation:
+            register_profile_with_credentials(
+                recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+                label=label,
+                passphrase=_PROFILE_MARKER,
+                profile_create_context=operation.profile_create_context(),
+                profile_decode_context=operation.profile_decode_context(),
+            )
+            # Registration closes the session it opened, so a freshly registered
+            # profile is LOCKED and the event catalogue cannot be read back through
+            # an authenticated session. Reading the event this test is about needs
+            # the profile open, and the storage runtime says so rather than
+            # returning an empty catalogue.
+            login_profile(
+                name=label,
+                passphrase_callback=lambda: _PROFILE_MARKER,
+                profile_decode_context=operation.profile_decode_context(),
+            )
 
         event = _event_of(BucketEventType.PROFILE_BUCKET_CREATED)
         assert event.payload_version == _PROFILE_LIFECYCLE_PAYLOAD_VERSION
@@ -99,7 +107,7 @@ def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
 
 def test_workflow_state_reset_persists_version_one(tmp_path: Path) -> None:
     """The workflow-reset audit event writes the workflow payload contract."""
-    from ....application.workflow.persistence import reset_workflow_state
+    from cadrumo.application.workflow.persistence import reset_workflow_state
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         reset_workflow_state(actor="operator", source="payload-version-probe")
@@ -109,10 +117,10 @@ def test_workflow_state_reset_persists_version_one(tmp_path: Path) -> None:
 
 def test_inventory_events_persist_version_one(tmp_path: Path) -> None:
     """An inventory ledger create writes the inventory payload contract."""
-    from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
-    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ....application.inventory.ports import InventoryServicePorts
-    from ....application.inventory.service import InventoryService
+    from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
+    from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from cadrumo.application.inventory.ports import InventoryServicePorts
+    from cadrumo.application.inventory.service import InventoryService
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         InventoryService(

@@ -22,6 +22,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_sessionless_storage_root,
     read_db_at_rest_bytes,
 )
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.auth.session_types import (
     AeatLoginAssertion,
     AeatSession,
@@ -44,6 +45,7 @@ from cadrumo.application.live.iva_remote_state import (
     persist_iva_remote_state_acquisition_report,
     suppress_live_iva_playwright_cancellation_noise,
 )
+from cadrumo.application.live.iva_remote_state_ports import IvaRemoteStatePort
 from cadrumo.application.live.remote_state_models import (
     IvaCompensationHistoryCaptureReport,
     IvaRemoteStateAcquisitionManifest,
@@ -56,6 +58,8 @@ from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports
+from cadrumo.entrypoints.live_state_composition import compose_live_state
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket_or_default_route
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -64,6 +68,22 @@ _CAPTURED_AT = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
 _TARGET_1T = Period.from_year_and_code(2026, "1T")
 _TARGET_2T = Period.from_year_and_code(2026, "2T")
 _BUCKET_ID = "62626262-6262-4262-8262-626262626262"
+
+
+def _remote_state_port(
+    output_root: Path,
+    *,
+    objects: SecureObjectRepository | None = None,
+) -> IvaRemoteStatePort:
+    """Compose the live application port against the active test route."""
+    resolved_objects = (
+        secure_object_repository_for_active_bucket_or_default_route() if objects is None else objects
+    )
+    return compose_live_state(
+        output_root=output_root,
+        bucket_id=_BUCKET_ID,
+        objects=resolved_objects,
+    ).iva_remote_state_port
 
 
 def _clave_movil_session(identity_nif: str = "12345678Z") -> AeatSession:
@@ -531,7 +551,11 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
             wallet_error=wallet_error,
         )
 
-        manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+        manifest = persist_iva_remote_state_acquisition_report(
+            report,
+            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository),
+            captured_at=_CAPTURED_AT,
+        )
         repository = IvaRemoteStateAcquisitionManifestRepository()
         reloaded = repository.load(manifest.acquisition_id)
         listed = tuple(sorted(repository.iter_records(), key=lambda item: item.captured_at, reverse=True))
@@ -571,7 +595,7 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
         },
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = build_iva_remote_state_acquisition_report(
             output_root=tmp_path / "remote-state",
             year_from=2024,
@@ -581,7 +605,11 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
             auth_error=auth_error,
         )
 
-        manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+        manifest = persist_iva_remote_state_acquisition_report(
+            report,
+            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository),
+            captured_at=_CAPTURED_AT,
+        )
 
     assert manifest.auth.diagnostic_ref is not None
     assert manifest.auth.diagnostic_ref.startswith("sha256:")
@@ -608,8 +636,8 @@ def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another
         repository = IvaRemoteStateAcquisitionManifestRepository(objects=profile.repository)
         manifest = persist_iva_remote_state_acquisition_report(
             report,
+            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository),
             captured_at=_CAPTURED_AT,
-            repository=repository,
         )
 
         assert repository.load(manifest.acquisition_id) == manifest
@@ -662,7 +690,11 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
             target_period=_TARGET_1T,
             wallet_error=wallet_error,
         )
-        manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+        manifest = persist_iva_remote_state_acquisition_report(
+            report,
+            ports=_remote_state_port(tmp_path / "remote-state", objects=profile.repository),
+            captured_at=_CAPTURED_AT,
+        )
         rendered = f"{report.model_dump_json()} {manifest.model_dump_json()}"
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
 
@@ -735,12 +767,19 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
         )
 
         with pytest.raises(StorageValidationError):
-            persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+            persist_iva_remote_state_acquisition_report(
+                report,
+                ports=_remote_state_port(tmp_path / "remote-state"),
+                captured_at=_CAPTURED_AT,
+            )
 
 
 def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+    ports = _remote_state_port(tmp_path / "remote-state")
+
     async def run() -> None:
         await capture_iva_remote_state(
+            ports=ports,
             year_from=2026,
             year_to=2026,
             target_year=2026,
@@ -752,16 +791,25 @@ def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> 
 
 
 def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+    ports = _remote_state_port(tmp_path / "remote-state")
+
     async def run() -> None:
-        await capture_iva_compensation_wallet(target_year=2026, target_period=_TARGET_2T)
+        await capture_iva_compensation_wallet(ports=ports, target_year=2026, target_period=_TARGET_2T)
 
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
         asyncio.run(run())
 
 
 def test_standalone_iva_history_capture_refuses_without_active_profile(tmp_path: Path) -> None:
+    ports = _remote_state_port(tmp_path / "history")
+
     async def run() -> None:
-        await capture_iva_compensation_history(year_from=2026, year_to=2026, output_root=tmp_path / "history")
+        await capture_iva_compensation_history(
+            ports=ports,
+            year_from=2026,
+            year_to=2026,
+            output_root=tmp_path / "history",
+        )
 
     with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
         asyncio.run(run())

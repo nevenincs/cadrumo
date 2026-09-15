@@ -113,14 +113,14 @@ _SUMINISTRO_ROWS: tuple[tuple[str, Decimal], ...] = (
 )
 
 _OTHER_ROWS: tuple[tuple[str, Decimal, SpendingCategory], ...] = (
-    ("reta-titular", _RETA, SpendingCategory._from_registry("cuotas_autonomos_ss")),
-    ("gastos-financieros", _GASTOS_FINANCIEROS, SpendingCategory._from_registry("gastos_financieros")),
+    ("reta-titular", _RETA, SpendingCategory.from_registry("cuotas_autonomos_ss")),
+    ("gastos-financieros", _GASTOS_FINANCIEROS, SpendingCategory.from_registry("gastos_financieros")),
     (
         "tributos-no-estatales",
         _TRIBUTOS_NO_ESTATALES,
-        SpendingCategory._from_registry("tributos_fiscalmente_deducibles"),
+        SpendingCategory.from_registry("tributos_fiscalmente_deducibles"),
     ),
-    ("reparaciones-conservacion", _REPARACIONES, SpendingCategory._from_registry("reparaciones_conservacion")),
+    ("reparaciones-conservacion", _REPARACIONES, SpendingCategory.from_registry("reparaciones_conservacion")),
 )
 
 
@@ -173,7 +173,7 @@ def _expense_row(reference: str, amount: Decimal, category: SpendingCategory) ->
     )
 
 
-_SUMINISTROS_CATEGORY_DEFAULT = SpendingCategory._from_registry("suministros_local_afecto")
+_SUMINISTROS_CATEGORY_DEFAULT = SpendingCategory.from_registry("suministros_local_afecto")
 
 
 def _aggregated(*, suministros_category: SpendingCategory = _SUMINISTROS_CATEGORY_DEFAULT):
@@ -226,7 +226,7 @@ def test_the_home_office_carve_out_is_not_applied_to_a_local() -> None:
     local case back through the dwelling rule.
     """
     local = _resolved()[_SUMINISTROS_BINDING]
-    home_office = _resolved(suministros_category=SpendingCategory._from_registry("suministros_home_office_luz"))[
+    home_office = _resolved(suministros_category=SpendingCategory.from_registry("suministros_home_office_luz"))[
         _SUMINISTROS_BINDING
     ]
 
@@ -296,10 +296,10 @@ def test_moving_one_bill_moves_the_published_subtotal() -> None:
         _expense_row(
             "suministro-electrico",
             _SUMINISTRO_ELECTRICO + Decimal("1.00"),
-            SpendingCategory._from_registry("suministros_local_afecto"),
+            SpendingCategory.from_registry("suministros_local_afecto"),
         ),
         *(
-            _expense_row(reference, amount, SpendingCategory._from_registry("suministros_local_afecto"))
+            _expense_row(reference, amount, SpendingCategory.from_registry("suministros_local_afecto"))
             for reference, amount in _SUMINISTRO_ROWS[1:]
         ),
     ]

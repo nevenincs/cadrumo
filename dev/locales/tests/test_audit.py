@@ -409,7 +409,7 @@ _EM_DASH = chr(0x2014)
 # ``(locale, dotted_key)`` pair with a stated reason, only for an em dash inside a
 # verbatim official AEAT designation or legal citation -- never a blanket pattern
 # or a line-number exemption.
-_EM_DASH_EXEMPT_KEYS: frozenset[tuple[str, str]] = frozenset()
+_EM_DASH_EXEMPT_KEYS: frozenset[tuple[str, str]] = frozenset[tuple[str, str]]()
 
 
 def test_committed_catalogues_carry_no_em_dash() -> None:

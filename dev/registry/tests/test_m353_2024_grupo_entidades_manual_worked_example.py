@@ -120,7 +120,7 @@ def _calculate() -> object:
             transaction_date=date(2024, 3, 15),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection._from_registry("repercutido"),
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
             base_amount=Decimal("0"),
             # OMEGA 6.000 + DELTA 1.000 (manual's own printed per-member
             # "IVA devengado" figures, pag. 199).
@@ -132,14 +132,14 @@ def _calculate() -> object:
             transaction_date=date(2024, 3, 15),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection._from_registry("soportado"),
+            flow_direction=IvaFlowDirection.from_registry("soportado"),
             base_amount=Decimal("0"),
             # OMEGA 2.000 + DELTA 2.000 (manual's own printed per-member
             # "IVA deducible" figures, pag. 199).
             iva_amount=Decimal("4000.00"),
-            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
+            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
             deduction_provenance=_deduction_provenance(
-                IvaDeductionFactKind._from_registry("domestic_current"),
+                IvaDeductionFactKind.from_registry("domestic_current"),
                 source_locator="invoice:grupo-deducible-general",
             ),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,

@@ -120,10 +120,17 @@ def approved_modelo_numbers(required_text: tuple[str, ...]) -> frozenset[str]:
     """
     joined = fold(" ".join(required_text))
     if not any(phrase in joined for phrase in _APPROVAL_PHRASES):
-        return frozenset()
-    return frozenset(
-        number for listed in _MODELO_NUMBER_LIST.findall(joined) for number in _THREE_DIGITS.findall(listed)
-    )
+        return frozenset[str]()
+    numbers: set[str] = set()
+    for match in _MODELO_NUMBER_LIST.finditer(joined):
+        listed = match.group(1)
+        if not isinstance(listed, str):
+            continue
+        for number_match in _THREE_DIGITS.finditer(listed):
+            number = number_match.group(0)
+            if isinstance(number, str):
+                numbers.add(number)
+    return frozenset(numbers)
 
 
 class Mismatch(NamedTuple):

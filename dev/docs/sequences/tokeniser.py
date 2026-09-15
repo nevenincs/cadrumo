@@ -172,6 +172,8 @@ def tokenise_command(argv: Sequence[str]) -> tuple[CommandToken, ...]:
     index = 1
     while index < len(argv):
         token = argv[index]
+        if not isinstance(token, str):
+            raise TypeError("command argv entries must be strings")
         node = tree.get(current_path)
 
         if _PLACEHOLDER_RE.match(token):
@@ -202,7 +204,10 @@ def tokenise_command(argv: Sequence[str]) -> tuple[CommandToken, ...]:
             continue
 
         if node is not None and node.is_group and token in node.children:
-            child_path = (*current_path, token)
+            child_path_parts: list[str] = []
+            child_path_parts.extend(current_path)
+            child_path_parts.append(token)
+            child_path: tuple[str, ...] = tuple(child_path_parts)
             child = tree.get(child_path)
             kind = TokenKind.GROUP if (child is not None and child.is_group) else TokenKind.LEAF
             tokens.append(CommandToken(text=token, kind=kind, command_path=command_path_key(child_path)))
