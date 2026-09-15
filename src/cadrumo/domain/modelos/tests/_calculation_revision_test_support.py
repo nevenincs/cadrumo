@@ -5,10 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TypedDict
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ...calculations.registry.ids import RelationId
 from ...calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ...calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -57,10 +56,10 @@ class _CommonRevisionIdArgs(TypedDict):
 
 def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=compiled_bundled_authority().snapshot(
+        registry_snapshot=published_snapshot(
             "303",
             filing_year=period.filing_year,
             period="1T",

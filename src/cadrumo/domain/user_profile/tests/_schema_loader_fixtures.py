@@ -8,8 +8,8 @@ test modules import exactly one provider so their visibility never competes.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..schema import ProfileSchemaDefinition
 
@@ -17,13 +17,13 @@ from ..schema import ProfileSchemaDefinition
 @pytest.fixture(name="schema", scope="function")
 def function_scoped_schema() -> ProfileSchemaDefinition:
     """Load the frozen schema separately for each requesting test."""
-    return load_user_profile_schema()
+    return published_profile_schema()
 
 
 @pytest.fixture(name="schema", scope="module")
 def module_scoped_schema() -> ProfileSchemaDefinition:
     """Load the frozen schema once for each requesting test module."""
-    return load_user_profile_schema()
+    return published_profile_schema()
 
 
 @pytest.fixture(name="legal_ids", scope="module")

@@ -14,10 +14,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CoreValidationError
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..dt12_reduccion import compute_dt12_reduccion_plan_pensiones
 from ..errors import PensionReduccionError
 from ..modelo_fact_context import ModeloFactResolutionContext
@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ReductionCompute = Callable[..., Decimal]
 _CONTEXT = ModeloFactResolutionContext(
-    authority=compiled_bundled_authority(),
+    authority=PublishedGovernedFactSource(),
     filing_period=date(2025, 12, 31),
     devengo_date=date(2025, 12, 31),
 )

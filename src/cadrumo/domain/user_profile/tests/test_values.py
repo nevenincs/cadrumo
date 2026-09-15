@@ -6,11 +6,11 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.hashing import content_hash_hex
 from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PROFILE_ID = "8d87424d-0b5a-469e-b802-02ffdad316f1"
 _ACTIVE_PROFILE_ID = "503a9d70-8308-4cf8-9f56-0dd357f88594"
-_SCHEMA = load_user_profile_schema()
+_SCHEMA = published_profile_schema()
 _CREATE_CONTEXT = ProfileCreateContext(
     schema=_SCHEMA,
     generation=AuthorityGenerationPin(

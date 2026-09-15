@@ -194,7 +194,7 @@ def test_invoice_counterparty_eu_member_state_accessor() -> None:
         )
 
         assert invoice.counterparty_country == stored_country
-        assert invoice.counterparty_eu_member_state is expected_state
+        assert invoice.counterparty_eu_member_state == expected_state
         assert invoice.counterparty_is_eu_member is expected_is_member
 
 
@@ -265,9 +265,9 @@ def test_invoice_accepts_oss_axes_and_destination_rate_line() -> None:
         },
     )
 
-    assert invoice.oss_ioss_regime is OssIossRegime("union_scheme")
-    assert invoice.oss_transaction_kind is TransactionKind("oss_union_services")
-    assert invoice.lines[0].oss_rate_kind is IvaRateKind("general")
+    assert invoice.oss_ioss_regime == OssIossRegime("union_scheme")
+    assert invoice.oss_transaction_kind == TransactionKind("oss_union_services")
+    assert invoice.lines[0].oss_rate_kind == IvaRateKind("general")
     assert invoice.iva_total == Decimal("19")
 
 
@@ -364,7 +364,7 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
 
 def test_invoice_exempt_lines_require_zero_iva() -> None:
     """EXEMPT and NOT_SUBJECT lines must carry iva_amount == 0 exactly."""
-    with pytest.raises(ValidationError, match=r"iva_amount must be zero for EXEMPT / NOT_SUBJECT"):
+    with pytest.raises(ValidationError, match=r"iva_amount must be zero for nonnumeric IVA lines"):
         _valid_invoice(
             lines=(
                 InvoiceLine(
@@ -463,15 +463,16 @@ def test_invoice_exempt_invoice_enforces_zero_iva_total() -> None:
 def test_invoice_validates_spanish_tax_id_for_es_country() -> None:
     """ES counterparties must pass NIF/NIE/CIF validation."""
     # "INVALID" has 7 chars → tax-id shape gate rejects it before any
-    # checksum runs. IdentityError inherits from ValueError, so pydantic
-    # wraps the raise into ValidationError at the model boundary. Pin the
-    # wrapping class and the wrapped IdentityError's localisation key (never
-    # rendered prose) so the operator-facing message stays localisable.
+    # checksum runs. The validator boundary translates the registered
+    # IdentityError into pydantic's ValueError protocol and keeps it as the
+    # cause. Pin the wrapping class and the preserved IdentityError's
+    # localisation key (never rendered prose) so the operator-facing message
+    # stays localisable.
     with pytest.raises(ValidationError) as excinfo:
         _valid_invoice(counterparty_country="ES", counterparty_tax_id="INVALID")
     error_detail = excinfo.value.errors()[0]
     assert "ctx" in error_detail
-    wrapped = error_detail["ctx"]["error"]
+    wrapped = error_detail["ctx"]["error"].__cause__
     assert isinstance(wrapped, IdentityError)
     assert wrapped.translated_message == "errors.identity.tax_id_invalid_length"
 

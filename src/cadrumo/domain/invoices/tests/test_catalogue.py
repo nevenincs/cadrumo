@@ -41,6 +41,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _HEX64_A = "a" * 64
 _HEX64_B = "b" * 64
 _HEX64_C = "c" * 64
@@ -207,14 +208,14 @@ def test_persistence_round_trip_preserves_catalogue() -> None:
     assert populated.exemption_reference == "LIVA art. 20.Uno.26"
     assert populated.legal_mentions == (InvoiceLegalMention.from_registry("CASH_ACCOUNTING_REGIME"),)
     assert populated.operation_type is IntracomOperationType.S
-    assert populated.oss_transaction_kind is TransactionKind("oss_union_services")
+    assert populated.oss_transaction_kind == TransactionKind("oss_union_services")
     assert populated.retention_amount == Decimal("150.00")
     assert populated.recargo_amount == Decimal("52.00")
     assert populated.suplido_amount == Decimal("25.00")
     assert populated.payment_id == _HEX64_C
     assert populated.created_at == datetime(2026, 5, 5, 9, 30, 0, tzinfo=UTC)
     assert populated.updated_at == datetime(2026, 6, 11, 16, 45, 30, tzinfo=UTC)
-    assert populated.lines[0].oss_rate_kind is IvaRateKind("general")
+    assert populated.lines[0].oss_rate_kind == IvaRateKind("general")
     assert populated.lines[0].spending_category_id == "consultoria"
 
     foreign = next(invoice for invoice in restored if invoice.invoice_number == "F-2026-300")

@@ -13,13 +13,10 @@ from decimal import Decimal
 from typing import Any, cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 
 from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
@@ -34,16 +31,6 @@ from ..model import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-@pytest.fixture(scope="session")
-def operation() -> PinnedAuthorityOperation:
-    """Expose the compiled source authority through the typed operation contract."""
-    authority = compiled_bundled_authority()
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
-    )
-    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 @pytest.fixture(autouse=True)

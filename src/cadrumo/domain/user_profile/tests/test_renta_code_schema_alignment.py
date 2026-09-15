@@ -17,10 +17,10 @@ without a failure that names the field.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.renta_declaracion_type import RentaDeclaracionType
 from ....domain import contribuyente
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus, RentaSexCode
 from ..errors import UserProfileNotFoundError
 
@@ -37,7 +37,7 @@ def test_every_sex_field_declares_the_runtime_code_set() -> None:
     which is the failure that was there before in the other direction.
     """
 
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     expected = {member.value for member in RentaSexCode}
 
     for path in SEX_PATHS:
@@ -67,14 +67,14 @@ def test_marital_status_declares_the_runtime_code_set() -> None:
     meaningful.
     """
 
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     expected = {member.value for member in RentaMaritalStatus}
 
     assert set(schema.field("renta_taxpayer.marital_status").enum_values) == expected
 
 
 def test_renta_declaration_type_has_one_core_owner_and_canonical_profile_path() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     assert {member.value for member in RentaDeclaracionType} == {"1", "2"}
     assert not hasattr(contribuyente, "RentaDeclaracionType")
@@ -84,7 +84,7 @@ def test_renta_declaration_type_has_one_core_owner_and_canonical_profile_path() 
 
 
 def test_rental_reduction_tier_refuses_the_legacy_profile_path() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     assert schema.field("renta_rental.reduccion_art_23_2_tier_2024").enum_values == (
         "tier-50",

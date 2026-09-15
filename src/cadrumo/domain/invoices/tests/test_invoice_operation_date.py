@@ -34,6 +34,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
 
@@ -76,7 +77,7 @@ def test_an_invoice_can_state_its_operation_date_distinct_from_the_issue_date() 
     )
 
     assert invoice.operation_date == date(2026, 3, 28)
-    assert invoice.operation_date_role is InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
+    assert invoice.operation_date_role == InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
     assert invoice.operation_date != invoice.issued_at
 
 

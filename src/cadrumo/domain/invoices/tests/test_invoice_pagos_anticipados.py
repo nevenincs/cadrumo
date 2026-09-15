@@ -41,6 +41,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
 
@@ -82,7 +83,7 @@ def _invoice(**overrides: Any) -> Invoice:
         "lines": (_rated_line(),),
         "payment_status": PaymentStatus.PAID,
         "operation_date": date(2026, 6, 10),
-        "operation_date_role": require_invoice_operation_date_role("advance_payment_received"),
+        "operation_date_role": require_invoice_operation_date_role("ADVANCE_PAYMENT_RECEIVED"),
     }
     payload.update(overrides)
     return Invoice(**payload)  # type: ignore[arg-type]
@@ -93,7 +94,7 @@ def test_a_fully_collected_advance_payment_devengues_on_collection() -> None:
     invoice = _invoice()
 
     assert invoice.operation_date == date(2026, 6, 10)
-    assert invoice.operation_date_role == require_invoice_operation_date_role("advance_payment_received")
+    assert invoice.operation_date_role == require_invoice_operation_date_role("ADVANCE_PAYMENT_RECEIVED")
 
 
 def test_a_partially_collected_advance_payment_is_also_permitted() -> None:
@@ -141,7 +142,7 @@ def test_the_same_amounts_devengue_normally_without_the_advance_payment_role() -
         iva_total=Decimal("0"),
         grand_total=_BASE,
         iva_category=IvaCategory("intra_community_supply"),
-        operation_date_role=require_invoice_operation_date_role("operation_performed"),
+        operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
     )
 
-    assert invoice.operation_date_role == require_invoice_operation_date_role("operation_performed")
+    assert invoice.operation_date_role == require_invoice_operation_date_role("OPERATION_PERFORMED")

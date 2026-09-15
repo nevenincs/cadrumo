@@ -23,8 +23,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -112,7 +112,7 @@ def test_every_projected_path_is_declared_in_the_profile_schema() -> None:
     must not invent a path of its own, or the engine would be reading a
     fact nothing can ever write.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     declared = {f"{section.key}.{field.key}" for section in schema.sections for field in section.fields}
     undeclared = sorted(spec.path for spec in SETUP_ANSWER_FIELDS.values() if spec.path not in declared)
     assert not undeclared, f"paths absent from the profile schema: {undeclared}"

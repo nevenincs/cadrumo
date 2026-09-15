@@ -18,10 +18,10 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.hashing import content_hash_hex
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ...calculations.registry.authority_artifact import (
     AuthorityGenerationPin,
     ProfileCreateContext,
@@ -42,7 +42,7 @@ _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
 _UTC_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
 _NAIVE_INSTANT = datetime(2026, 1, 1, 10, 0, 0)
 _OFFSET_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours=1)))
-_SCHEMA = load_user_profile_schema()
+_SCHEMA = published_profile_schema()
 _PIN = AuthorityGenerationPin(
     content_hash_hex({"generation": "profile-lifecycle-fixture"}),
     content_hash_hex({"reader": "profile-lifecycle-fixture"}),

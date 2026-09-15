@@ -14,7 +14,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...iva.errors import IvaRateNotFoundError
 from .. import enums
-from ..enums import IvaRate, iva_rate_percentage, resolve_iva_rate_slot, resolve_iva_rate_slot_fact
+from ..enums import iva_rate_percentage, resolve_iva_rate_slot, resolve_iva_rate_slot_fact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

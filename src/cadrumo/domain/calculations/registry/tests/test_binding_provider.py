@@ -11,7 +11,6 @@ row may declare -- are refused rather than tolerated.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import TypeAdapter, ValidationError
 
 from .....core.aggregation import (
@@ -27,11 +26,10 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ..authority import bundled_indexed_authority
 from ..binding_provider import BindingProvider
 from ..binding_temporal import FilingYearOffset, SameTargetContext
 from ..bindings_previous_filing import PreviousFilingProvider
-from ..errors import RegistryValidationError
-from ..governed_fact_scope import validating_governed_facts
 from ..inventory_bindings import InventoryProvider
 from ..ledger_iva_bindings import LedgerIvaProvider
 from ..manual_input_selector import ManualInputProvider
@@ -43,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PROVIDER_ADAPTER: TypeAdapter[object] = TypeAdapter(BindingProvider)
 
-with validating_governed_facts(compiled_bundled_authority()):
+with bundled_indexed_authority().operation():
     _LEDGER_IVA_PROVIDER = LedgerIvaProvider(
         categories=(IvaCategory("domestic_general"),),
         rate_kinds=(IvaRateKind("general"),),
@@ -121,7 +119,7 @@ def test_provider_round_trips_through_its_own_discriminator(
     assert "source" not in payload
     assert payload["provider"]["kind"] == expected_kind.value
 
-    with validating_governed_facts(compiled_bundled_authority()):
+    with bundled_indexed_authority().operation():
         restored = BindingDefinition.model_validate(freeze_toml_value(payload))
 
     assert restored.provider == provider
@@ -171,7 +169,7 @@ def test_previous_filing_refuses_a_temporal_member_naming_no_source_window() -> 
     previous-filing declaration must name its source window explicitly rather
     than defaulting into reading the period it is supposed to carry from.
     """
-    with pytest.raises(RegistryValidationError, match="same_target_context"):
+    with pytest.raises(ValidationError, match="same_target_context"):
         PreviousFilingProvider(
             source_modelo="303",
             temporal=SameTargetContext(),

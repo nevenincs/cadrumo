@@ -74,19 +74,12 @@ _SRC_CADRUMO_ROOT: Path = Path(__file__).resolve().parent
 
 
 @pytest.fixture(scope="session")
-def operation() -> PinnedAuthorityOperation:
-    """Expose canonical authored facts without requiring a published package."""
-    from dev.registry.compiler.authority import compiled_bundled_authority
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease the published authority generation for the session, as runtime reads it."""
+    from .domain.calculations.registry.authority import bundled_indexed_authority
 
-    from .domain.calculations.registry.authority import PinnedAuthorityOperation
-    from .domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
-    from .domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
-
-    authority = compiled_bundled_authority()
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in authority.catalogues.facts.facts.items()}
-    )
-    return PinnedAuthorityOperation(reader, reader.pin())
+    with bundled_indexed_authority().operation() as pinned:
+        yield pinned
 
 
 @pytest.fixture(scope="session")

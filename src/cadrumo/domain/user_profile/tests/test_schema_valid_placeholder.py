@@ -20,8 +20,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType
 from ..values import UserProfileFact
 from .schema_value_support import schema_valid_placeholder
@@ -36,7 +36,7 @@ def test_the_filler_is_admissible_for_every_field_the_schema_declares() -> None:
     this exists to catch, so the sweep is over everything rather than
     over the subset that constrains anything today.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     refused = [
         f"{section.key}.{field.key} -> {schema_valid_placeholder(field)!r} not in {list(field.enum_values)}"
@@ -55,7 +55,7 @@ def test_an_enum_field_gets_a_declared_value_rather_than_the_sentinel() -> None:
     doing real work for that field rather than returning the sentinel and
     being admitted by a vacuous check.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     enum_fields = [field for section in schema.sections for field in section.fields if field.enum_values]
 
     assert enum_fields, "the sweep proves nothing unless the schema constrains at least one field"
@@ -78,7 +78,7 @@ def test_a_date_field_gets_a_real_calendar_date_rather_than_the_sentinel() -> No
     filler stays free to choose a different day without this test having
     an opinion about which.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     date_fields = [
         field for section in schema.sections for field in section.fields if field.type is ProfileFieldType.DATE
     ]
@@ -111,7 +111,7 @@ def test_a_boolean_field_gets_a_value_that_survives_as_a_boolean() -> None:
     boolean on re-parse and leaves anything else a ``str``, so this is the
     check the sentinel actually fails.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     boolean_fields = [
         (section, field)
         for section in schema.sections
@@ -156,7 +156,7 @@ def test_a_field_with_no_declared_set_gets_the_sentinel() -> None:
     test was left stale once already, by the numeric branch, and passed
     the staleness on as a failure that looked like the filler's fault.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     plain = [
         field
         for section in schema.sections

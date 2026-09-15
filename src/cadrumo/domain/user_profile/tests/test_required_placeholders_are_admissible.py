@@ -23,8 +23,8 @@ know what should have been chosen instead.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..schema import ProfileFieldDefinition
 from .schema_value_support import REQUIRED_PROFILE_PLACEHOLDERS
 
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _field_index() -> dict[str, ProfileFieldDefinition]:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     return {f"{section.key}.{field.key}": field for section in schema.sections for field in section.fields}
 
 

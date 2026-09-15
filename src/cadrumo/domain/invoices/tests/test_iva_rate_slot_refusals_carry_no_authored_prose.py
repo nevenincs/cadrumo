@@ -40,6 +40,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 #: Inside every ES tier's coverage. RATE_2 stood only October-December 2024, so
 #: this date reaches the legality branch rather than the coverage branch.
 _COVERED_BUT_OUT_OF_WINDOW = date(2024, 6, 1)

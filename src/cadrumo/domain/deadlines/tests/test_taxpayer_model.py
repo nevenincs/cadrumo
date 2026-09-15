@@ -15,11 +15,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
 from ...calculations.registry.errors import RegistryValidationError
@@ -47,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _deadline_facts(filing_year: int) -> DeadlineFactResolutionContext:
     coordinate = date(filing_year, 12, 31)
-    return DeadlineFactResolutionContext(compiled_bundled_authority(), coordinate, coordinate)
+    return DeadlineFactResolutionContext(PublishedGovernedFactSource(), coordinate, coordinate)
 
 
 def _fully_populated_taxpayer() -> TaxpayerProfile:

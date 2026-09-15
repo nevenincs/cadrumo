@@ -49,6 +49,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _BASE = Decimal("1000.00")
 _REFUSAL = "cannot name an acquirer purchasing under a Spanish IVA identification"
 
@@ -89,7 +90,7 @@ def test_a_genuine_entrega_intracomunitaria_names_a_foreign_identification() -> 
     """The truthful case: an acquirer identified in another Member State is accepted."""
     invoice = _invoice()
 
-    assert invoice.counterparty_identification_state is EUMemberState.from_registry("de")
+    assert invoice.counterparty_identification_state == EUMemberState.from_registry("de")
     assert invoice.iva_category == IvaCategory("intra_community_supply")
 
 
@@ -119,7 +120,7 @@ def test_a_spanish_established_acquirer_identified_abroad_is_accepted() -> None:
     )
 
     assert invoice.counterparty_country == "ES"
-    assert invoice.counterparty_identification_state is EUMemberState.from_registry("fr")
+    assert invoice.counterparty_identification_state == EUMemberState.from_registry("fr")
 
 
 def test_northern_ireland_is_not_refused_despite_not_being_an_eu_member_state() -> None:
@@ -130,7 +131,7 @@ def test_northern_ireland_is_not_refused_despite_not_being_an_eu_member_state() 
         counterparty_identification_state=EUMemberState.from_registry("xi"),
     )
 
-    assert invoice.counterparty_identification_state is EUMemberState.from_registry("xi")
+    assert invoice.counterparty_identification_state == EUMemberState.from_registry("xi")
 
 
 def test_an_unrecorded_identification_is_not_refused_by_this_guard() -> None:

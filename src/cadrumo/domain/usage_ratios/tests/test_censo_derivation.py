@@ -15,12 +15,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority_artifact import GovernedFactComponentQuery
-from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from cadrumo.domain.categories.spending_category import SpendingCategory
 
 from ...categories.spending_category import SpendingCategoryFamily, categories_for_family
@@ -39,16 +35,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # is the only way the test catches a registry mis-edit.
 _SUMINISTROS_STATUTORY_FACTOR = Decimal("0.30")
 _OWNERSHIP_STATUTORY_FACTOR = Decimal("1")
-
-
-@pytest.fixture(scope="module")
-def operation() -> PinnedAuthorityOperation:
-    """Expose canonical authored facts through one generation pin."""
-    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
-    reader = FakeAuthorityComponentReader(
-        {GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()}
-    )
-    return PinnedAuthorityOperation(reader, reader.pin())
 
 
 def _family_categories(

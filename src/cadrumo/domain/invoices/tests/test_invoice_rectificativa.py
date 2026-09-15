@@ -32,6 +32,7 @@ def _authority_operation() -> Iterator[None]:
     with bundled_indexed_authority().operation():
         yield
 
+
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
 
@@ -70,7 +71,7 @@ def test_an_ordinary_invoice_defaults_to_the_ordinaria_class() -> None:
     """Every invoice before this guard is, and remains, an ordinaria."""
     invoice = _invoice()
 
-    assert invoice.invoice_class is InvoiceClass.from_registry("ORDINARIA")
+    assert invoice.invoice_class == InvoiceClass.from_registry("ORDINARIA")
     assert invoice.series is None
     assert invoice.rectifies_invoice_number is None
 
@@ -83,7 +84,7 @@ def test_a_rectificativa_names_the_invoice_it_corrects_in_its_own_series() -> No
         rectifies_invoice_number="2026/RECT-0",
     )
 
-    assert invoice.invoice_class is InvoiceClass.from_registry("RECTIFICATIVA")
+    assert invoice.invoice_class == InvoiceClass.from_registry("RECTIFICATIVA")
     assert invoice.series == "R"
     assert invoice.rectifies_invoice_number == "2026/RECT-0"
 
@@ -114,5 +115,5 @@ def test_a_series_alone_is_permitted_on_any_invoice_class() -> None:
     """Series are a general RD 1619/2012 art. 6.1.a concept, not exclusive to rectificativas."""
     invoice = _invoice(series="A")
 
-    assert invoice.invoice_class is InvoiceClass.from_registry("ORDINARIA")
+    assert invoice.invoice_class == InvoiceClass.from_registry("ORDINARIA")
     assert invoice.series == "A"

@@ -40,6 +40,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.resources.bundled_data import bundled_path
 from ..classification import (
+    InvoiceKind,
     IvaInvoiceClassificationCriteria,
     resolve_iva_classification_catalogue,
 )
@@ -80,7 +81,7 @@ def _oracle_criteria(
             "customer_identification_state": operation_case["customer_member_state"],
             "customer_tax_status": vocabulary.require_customer_tax_status(operation_case["customer_tax_status"]),
             "kind": operation_case["transaction_kind"],
-            "direction": operation_case["direction"],
+            "direction": InvoiceKind(operation_case["direction"]),
         },
     )
 

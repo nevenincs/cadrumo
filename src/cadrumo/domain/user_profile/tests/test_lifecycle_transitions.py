@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_create_context
 from ..errors import UserProfileValidationError
 from ..values import ProfileSetupState, UserProfileRecord, UserProfileSnapshot, create_user_profile_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
-_CREATE_CONTEXT = profile_creation_context_for_test()
+_CREATE_CONTEXT = published_profile_create_context()
 
 
 def _incomplete_record() -> UserProfileRecord:

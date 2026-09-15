@@ -59,6 +59,11 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         # facts; neutral zero when the chain under test is unrelated.
         values["renta-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
         values["renta-profile-unidad-familiar-otros-miembros-base"] = Decimal("0")
+        # Art. 75 Ley 19/1994 maritime-worker exemption operands; neutral zero
+        # when the chain under test is unrelated (path itself is false).
+        values["renta-maritime-gross-navigation-income"] = Decimal("0")
+        values["renta-maritime-annual-salary"] = Decimal("0")
+        values["renta-maritime-qualifying-days"] = Decimal("0")
     if year == 2024:
         values.update(
             {
@@ -83,6 +88,13 @@ def _calculate(
     inputs: Mapping[str, Decimal],
     text_inputs: Mapping[str, str] | None = None,
 ) -> RegistryCalculationResult:
+    boolean_binding_values = (
+        # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
+        # when the chain under test is unrelated.
+        {"renta-maritime-path-rebeca": False}
+        if year == 2025
+        else None
+    )
     return calculate_registry_snapshot(
         _snapshot(year),
         inputs=inputs,
@@ -95,6 +107,7 @@ def _calculate(
             "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
         },
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        boolean_binding_values=boolean_binding_values,
     )
 
 

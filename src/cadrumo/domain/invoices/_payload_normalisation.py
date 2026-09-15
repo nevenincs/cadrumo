@@ -25,6 +25,7 @@ from typing import Final, NamedTuple
 
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.travel_agency_mediation import require_travel_agency_mediation
 from ..iva.classification import InvoiceKind, TransactionKind
 from ..iva.oss import OssIossRegime, require_oss_ioss_regime
@@ -152,6 +153,8 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
             if rule.enum is TransactionKind
             else require_eu_member_state(text)
             if rule.enum is EUMemberState
+            else require_iva_category(text, effective_date=effective_date)
+            if rule.enum is IvaCategory
             else require_invoice_class(text, effective_date=effective_date)
             if rule.enum is InvoiceClass
             else require_invoice_operation_date_role(text, effective_date=effective_date)

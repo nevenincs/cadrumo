@@ -17,9 +17,9 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
-from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.published_authority import published_profile_create_context
 from ....domain.user_profile.values import ProfileSetupState
 from ..portable_export import UserProfilePortableExport
 from ..values import UserProfileFact, UserProfileRecord, create_user_profile_record
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: this layer cannot see; this claims nothing about what production stamps.
 _SHAPE_UNDER_TEST = 3
 _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
-_CREATE_CONTEXT = profile_creation_context_for_test()
+_CREATE_CONTEXT = published_profile_create_context()
 _UTC_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
 _NAIVE_INSTANT = datetime(2026, 1, 1, 10, 0, 0)
 _OFFSET_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours=1)))

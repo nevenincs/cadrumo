@@ -25,7 +25,6 @@ from decimal import Decimal
 
 import pydantic
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.prorrata_register import (
@@ -35,6 +34,7 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..register import (
     ProrrataActivityRow,
@@ -49,15 +49,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            Modelo("303").value,
-            filing_year=ejercicio,
-            period="4T",
-        )
-        .snapshot_ref
-    )
+    return published_snapshot(
+        Modelo("303").value,
+        filing_year=ejercicio,
+        period="4T",
+    ).snapshot_ref
 
 
 def _carried_entry(ejercicio: int = 2024, pct: str = "80") -> ProrrataRegisterEntry:
