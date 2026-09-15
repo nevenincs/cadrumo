@@ -27,35 +27,6 @@ name: Cadrumo CI
 # test_change_class_tiers.py.
 on:
   workflow_dispatch:
-  push:
-    branches: [main, audit/ci-20260915]
-    paths-ignore:
-      - ".vault/**"
-      - ".vaultspec/**"
-      - ".claude/**"
-      - ".codex/**"
-      - ".gemini/**"
-      - ".agents/**"
-      - "docs/**"
-      - "**.md"
-  # SAME-REPO pull_request only: these jobs run on self-hosted runners, and a
-  # fork PR would execute untrusted PR-head code on the operator's machines
-  # (critical per GitHub's self-hosted hardening guidance). Development today
-  # is direct-push-to-main; this trigger exists so a future PR flow inherits
-  # the T1 discipline (static + unit) automatically. Every job carries the
-  # same-repo guard below, so a fork PR's jobs skip instead of running —
-  # same-repo branches already require write access to exist.
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - ".vault/**"
-      - ".vaultspec/**"
-      - ".claude/**"
-      - ".codex/**"
-      - ".gemini/**"
-      - ".agents/**"
-      - "docs/**"
-      - "**.md"
 
 # Push runs QUEUE; pull-request runs supersede. The two events want opposite
 # semantics and previously shared one.

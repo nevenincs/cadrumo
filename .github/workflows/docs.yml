@@ -31,6 +31,10 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "SECURITY.md"
+      - "PRIVACY.md"
       - "dev/docs/**"
       - "src/cadrumo/_data/terminology/**"
       - ".github/workflows/docs.yml"
@@ -41,6 +45,10 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "SECURITY.md"
+      - "PRIVACY.md"
       - "dev/docs/**"
       - "src/cadrumo/_data/terminology/**"
       - ".github/workflows/docs.yml"

@@ -11,6 +11,8 @@ name: Cadrumo Python Runtime Compatibility
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
   push:
     branches: [main]
     paths:
@@ -21,17 +23,6 @@ on:
       - "dev/**"
       - "src/**"
       - "packaging/**"
-  pull_request:
-    branches: [main]
-    paths:
-      - ".github/workflows/python-runtime-compatibility.yml"
-      - ".python-version"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "dev/**"
-      - "src/**"
-      - "packaging/**"
-
 concurrency:
   group: runtime-compatibility-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}

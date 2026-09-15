@@ -1,0 +1,116 @@
+name: Cadrumo Pull Request
+
+on:
+  workflow_dispatch:
+    inputs:
+      cache_mode:
+        description: Runner-local cache mode used by controlled validation
+        required: true
+        default: normal
+        type: choice
+        options: [normal, cold]
+  push:
+    branches: [main, audit/ci-20260915]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "docs/**"
+      - "**.md"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "docs/**"
+      - "**.md"
+
+concurrency:
+  group: correctness-${{ github.event.pull_request.number || github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  pr-correctness:
+    name: "Required: PR correctness"
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Select isolated empty uv cache
+        if: github.event_name == 'workflow_dispatch' && inputs.cache_mode == 'cold'
+        shell: bash
+        run: echo "UV_CACHE_DIR=${RUNNER_TEMP}/cadrumo-audit-cold-${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          enable-cache: false
+
+      - name: Initialize the worktree
+        run: just setup
+
+      - name: Workflow definitions and CI contract
+        run: just check-workflows
+
+      - name: Style and formatting
+        run: |
+          just check-style
+          just check-format
+
+      - name: Import architecture
+        run: just check-import-boundaries
+
+      - name: Type checks
+        run: just check-types
+
+      - name: Semgrep regression rules
+        run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
+
+      - name: Registry and source reachability
+        run: |
+          just check-registry
+          just check-module-reachability
+          just check-docstring-references
+
+      - name: Tooling and workflow conformance
+        run: just test-ci-contracts
+
+      - name: Product integration population
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
+        run: just test-integration-parallel
+
+      - name: Provision Node for duplication scan
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+
+      - name: Provision Playwright Chromium
+        run: just setup-browser
+
+      - name: Core behavior
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
+        run: just test-unit 50
+
+      - name: Harness behavior
+        run: just test-pytest-harness
