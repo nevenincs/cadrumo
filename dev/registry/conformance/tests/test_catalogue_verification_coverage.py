@@ -361,7 +361,12 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
                 "horizon = 2026",
                 "",
                 "[sociedades_annual_manual_coverage]",
-                'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }, { year = 2026, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]',
+                'dispositions = [{ year = 2025, status = "unpublished", '
+                'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+                'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }, '
+                '{ year = 2026, status = "unpublished", official_locator = "https://example.com/manuals", '
+                'observed_at = 2026-09-10, '
+                'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]',
                 "",
                 '[legal."orden-test-0001:art-1"]',
                 'evidence_tier = "legal_authority"',

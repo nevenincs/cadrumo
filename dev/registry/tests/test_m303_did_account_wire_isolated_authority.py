@@ -138,7 +138,10 @@ _REVISION_ID = "2026-y-siguientes"
 _TAXPAYER_TAX_ID = "12345678Z"
 _REFUND_IBAN = "GB82WEST12345698765432"
 _CHARGE_IBAN = "ES9121000418450200051332"
-_LEGAL_REFS = '"ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"'
+_LEGAL_REFS = (
+    '"ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", '
+    '"ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"'
+)
 
 #: ``ordinal`` is the PRINTED label the official design carries, preserved
 #: verbatim as text rather than parsed into an arithmetic value.
@@ -245,19 +248,148 @@ encoding = "iso-8859-1"
 line_ending = "none"
 required = true
 
-{_field_toml(field_id="did-open", offset=1, length=2, kind="literal", payload='literal = "<T"\n', data_type="text", required=True, padding="none", justification="none")}
-{_field_toml(field_id="did-modelo", offset=3, length=3, kind="literal", payload='literal = "303"\n', data_type="text", required=True, padding="none", justification="none")}
-{_field_toml(field_id="did-page", offset=6, length=5, kind="literal", payload='literal = "DID00"\n', data_type="text", required=True, padding="none", justification="none")}
-{_field_toml(field_id="did-tag-close", offset=11, length=1, kind="literal", payload='literal = ">"\n', data_type="text", required=True, padding="none", justification="none")}
-{_field_toml(field_id="did-swift-bic", offset=12, length=11, kind="header", payload='producer_key = "selected_account.swift_bic"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-iban", offset=23, length=34, kind="header", payload='producer_key = "selected_account.iban"\n', data_type="text", required=True, padding="right_space", justification="left")}
-{_field_toml(field_id="did-bank-name", offset=57, length=70, kind="header", payload='producer_key = "selected_account.bank_name"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-bank-address", offset=127, length=35, kind="header", payload='producer_key = "selected_account.bank_address"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-bank-city", offset=162, length=30, kind="header", payload='producer_key = "selected_account.bank_city"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-bank-country", offset=192, length=2, kind="header", payload='producer_key = "selected_account.bank_country_code"\n', data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-sepa", offset=194, length=1, kind="computed", payload='computed_key = "sepa_marca"\n', data_type="text", required=False, padding="left_zero", justification="right")}
-{_field_toml(field_id="did-reserved", offset=195, length=617, kind="filler", data_type="text", required=False, padding="right_space", justification="left")}
-{_field_toml(field_id="did-close", offset=812, length=12, kind="literal", payload='literal = "</T303DID00>"\n', data_type="text", required=True, padding="none", justification="none")}
+{_field_toml(
+    field_id="did-open",
+    offset=1,
+    length=2,
+    kind="literal",
+    payload='literal = "<T"\n',
+    data_type="text",
+    required=True,
+    padding="none",
+    justification="none",
+)}
+{_field_toml(
+    field_id="did-modelo",
+    offset=3,
+    length=3,
+    kind="literal",
+    payload='literal = "303"\n',
+    data_type="text",
+    required=True,
+    padding="none",
+    justification="none",
+)}
+{_field_toml(
+    field_id="did-page",
+    offset=6,
+    length=5,
+    kind="literal",
+    payload='literal = "DID00"\n',
+    data_type="text",
+    required=True,
+    padding="none",
+    justification="none",
+)}
+{_field_toml(
+    field_id="did-tag-close",
+    offset=11,
+    length=1,
+    kind="literal",
+    payload='literal = ">"\n',
+    data_type="text",
+    required=True,
+    padding="none",
+    justification="none",
+)}
+{_field_toml(
+    field_id="did-swift-bic",
+    offset=12,
+    length=11,
+    kind="header",
+    payload='producer_key = "selected_account.swift_bic"\n',
+    data_type="text",
+    required=False,
+    padding="right_space",
+    justification="left",
+)}
+{_field_toml(
+    field_id="did-iban",
+    offset=23,
+    length=34,
+    kind="header",
+    payload='producer_key = "selected_account.iban"\n',
+    data_type="text",
+    required=True,
+    padding="right_space",
+    justification="left",
+)}
+{_field_toml(
+    field_id="did-bank-name",
+    offset=57,
+    length=70,
+    kind="header",
+    payload='producer_key = "selected_account.bank_name"\n',
+    data_type="text",
+    required=False,
+    padding="right_space",
+    justification="left",
+)}
+{_field_toml(
+    field_id="did-bank-address",
+    offset=127,
+    length=35,
+    kind="header",
+    payload='producer_key = "selected_account.bank_address"\n',
+    data_type="text",
+    required=False,
+    padding="right_space",
+    justification="left",
+)}
+{_field_toml(
+    field_id="did-bank-city",
+    offset=162,
+    length=30,
+    kind="header",
+    payload='producer_key = "selected_account.bank_city"\n',
+    data_type="text",
+    required=False,
+    padding="right_space",
+    justification="left",
+)}
+{_field_toml(
+    field_id="did-bank-country",
+    offset=192,
+    length=2,
+    kind="header",
+    payload='producer_key = "selected_account.bank_country_code"\n',
+    data_type="text",
+    required=False,
+    padding="right_space",
+    justification="left",
+)}
+{_field_toml(
+    field_id="did-sepa",
+    offset=194,
+    length=1,
+    kind="computed",
+    payload='computed_key = "sepa_marca"\n',
+    data_type="text",
+    required=False,
+    padding="left_zero",
+    justification="right",
+)}
+{_field_toml(
+    field_id="did-reserved",
+    offset=195,
+    length=617,
+    kind="filler",
+    data_type="text",
+    required=False,
+    padding="right_space",
+    justification="left",
+)}
+{_field_toml(
+    field_id="did-close",
+    offset=812,
+    length=12,
+    kind="literal",
+    payload='literal = "</T303DID00>"\n',
+    data_type="text",
+    required=True,
+    padding="none",
+    justification="none",
+)}
 '''
 
 

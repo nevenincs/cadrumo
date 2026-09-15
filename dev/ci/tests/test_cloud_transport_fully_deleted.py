@@ -20,7 +20,8 @@ stays deleted permanently. ``cloud_evidence_read_permitted`` and the two
 deployment settings behind it therefore moved to
 ``_REINSTATED_CONSENT_SYMBOLS``, where they are asserted PRESENT and WIRED
 rather than absent -- joined later by ``CLOUD_EVIDENCE_UPLOAD``, the per-profile
-eligibility bar, once the decision it was waiting on was taken. The move is only honest because the destination has teeth:
+eligibility bar, once the decision it was waiting on was taken. The move is
+only honest because the destination has teeth:
 a symbol removed from the sweep and merely forgotten would leave this file
 reading like a decision while the tree lost a guarantee.
 

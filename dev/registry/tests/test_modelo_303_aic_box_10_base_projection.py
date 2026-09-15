@@ -179,7 +179,8 @@ def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(t
     mutated = original.replace(
         "\n".join(
             (
-                'categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]',
+                "categories = [\"intra_community_acquisition_reverse_charge\", "
+                "\"intra_community_service_acquisition_reverse_charge\"]",
                 'rate_kinds = ["zero", "general", "reduced", "super_reduced"]',
                 'flow_direction = "inversion_sujeto_pasivo"',
                 'fact = "base_amount_sum"',
@@ -187,7 +188,8 @@ def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(t
         ),
         "\n".join(
             (
-                'categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]',
+                "categories = [\"intra_community_acquisition_reverse_charge\", "
+                "\"intra_community_service_acquisition_reverse_charge\"]",
                 'rate_kinds = ["general", "reduced", "super_reduced"]',
                 'flow_direction = "inversion_sujeto_pasivo"',
                 'fact = "base_amount_sum"',

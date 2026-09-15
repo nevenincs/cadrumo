@@ -65,16 +65,16 @@ from typing import Literal
 
 import pytest
 
-# The former sibling gate was removed with the registry test split; retain its
-# reviewed corpus anchor here because this worklist uses the same disposition.
-_KNOWN_SELF_CONTRADICTING_DESIGN = "aeat-dr-038-2024"
-
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+
+# The former sibling gate was removed with the registry test split; retain its
+# reviewed corpus anchor here because this worklist uses the same disposition.
+_KNOWN_SELF_CONTRADICTING_DESIGN = "aeat-dr-038-2024"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -449,10 +449,14 @@ def _blocker(
     if not designs:
         if modelo.id == Modelo("721"):
             return _authorable(
-                "no positional record design is bundled; finite BOE form-spec packages do not establish the missing pair-complete 2023/2024 AEAT structured-message contract",
+                (
+                    "no positional record design is bundled; finite BOE form-spec packages do not establish the "
+                    "missing pair-complete 2023/2024 AEAT structured-message contract"
+                ),
                 owners=_M721_OWNERS,
                 reconsideration=(
-                    "the three accepted predecessor routes acquire pair-complete versioned AEAT SOAP/XML contract eras, source-derived value lifecycles, and the "
+                    "the three accepted predecessor routes acquire pair-complete versioned AEAT SOAP/XML contract "
+                    "eras, source-derived value lifecycles, and the "
                     "canonical locally-proven serializer"
                 ),
             )
@@ -468,7 +472,10 @@ def _blocker(
         return _authorable(
             f"{len(designs)} design(s) are bundled but none is registered; the era each governs is not grounded",
             owners=(_TEMPORAL_OWNER,),
-            reconsideration="the temporal owner registers the official source with exact applicability before it becomes a source_ref",
+            reconsideration=(
+                "the temporal owner registers the official source with exact applicability before it becomes a "
+                "source_ref"
+            ),
         )
     if not cited:
         if modelo.id == Modelo("185"):
@@ -541,7 +548,10 @@ def _blocker(
             "map and authorized export form after the design extraction is checked for partial overlap"
         ),
         owners=(_EXPORT_OWNER,),
-        reconsideration="the export owner lands and reviews the semantic map, render profile, generated tree, and emitted-byte proof",
+          reconsideration=(
+              "the export owner lands and reviews the semantic map, render profile, generated tree, and emitted-byte "
+              "proof"
+          ),
     )
 
 

@@ -424,7 +424,7 @@ def _method_facts(ancestry: tuple[_SurfaceClass, ...]) -> dict[str, _MethodFacts
                 continue
             own, called = _called_attributes(node.body)
             previous = facts.get(node.name)
-            inherited: frozenset[str] = previous.self_calls if previous else frozenset()
+            inherited: frozenset[str] = previous.self_calls if previous else frozenset[str]()
             facts[node.name] = _MethodFacts(
                 self_calls=own | inherited,
                 persists_directly=(_PERSIST_VERB in called - own) or bool(previous and previous.persists_directly),

@@ -122,6 +122,7 @@ def semantic_roles_are_month_axis_siblings(left: str, right: str) -> bool:
 
 
 def semantic_roles_are_tax_domain_siblings(left: str, right: str) -> bool:
+    """Return whether two roles differ only in their tax-domain suffix."""
     domain_suffixes = {"irpf", "is", "iva"}
     left_parts = left.split("_")
     right_parts = right.split("_")
@@ -147,6 +148,7 @@ _SEMANTIC_ROLE_AXIS_SUFFIXES: tuple[tuple[str, ...], ...] = (
 
 
 def semantic_roles_are_axis_siblings(left: str, right: str) -> bool:
+    """Return whether two roles differ only along a declared semantic axis."""
     left_stem, left_axis = _split_semantic_role_axis_suffix(left)
     right_stem, right_axis = _split_semantic_role_axis_suffix(right)
     if left_stem is not None and right_stem is not None and left_stem == right_stem and left_axis != right_axis:

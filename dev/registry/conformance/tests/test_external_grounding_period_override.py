@@ -13,6 +13,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..external_grounding import _select_revision_for_filing_year
 
@@ -63,5 +64,3 @@ def test_a_year_outside_the_override_keeps_the_flat_surface() -> None:
     assert selected is not None
     assert selected.id == _REVISION
 
-
-from dev.registry.compiler.authority import compiled_bundled_authority

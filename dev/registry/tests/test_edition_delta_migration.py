@@ -32,7 +32,6 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev._paths import REPO_ROOT
@@ -235,16 +234,16 @@ def test_the_pilot_migrates_every_successor_edition_in_merge_order(
     assert {edition.revision_id for edition in _delta_editions(pilot)} == successors
     assert not [edition for edition in pilot.plan.editions if edition.basis is PredecessorBasis.BLOCKED]
 
-    # Typed content and merge-order row order round-trip for every edition; the
-    # Delta editions' export bytes are unchecked.  That withholds authority
-    # publication, but it does not withhold the proven source replacement.
+    # Typed content, merge order and export bytes round-trip for every edition.
+    # A storage baseline is not a temporal or legal predecessor, so it does not
+    # disable the existing export scenarios.
     assert _unexpected(pilot) == []
     unchecked = [
         revision
         for kind, revision in _kinds(pilot)
         if kind is RoundTripFindingKind.EXPORT_UNCHECKED and revision is not None
     ]
-    assert sorted(unchecked) == sorted(successors)
+    assert unchecked == []
     assert pilot.applied
     assert pilot.source_status == "applied"
     assert pilot.publication_readiness_status == "failed"
@@ -259,7 +258,8 @@ def test_the_pilot_migrates_every_successor_edition_in_merge_order(
         edition_dir = _edition_dir(pilot.staged_registry, _PILOT, edition.revision_id)
         assert not set(edition.inherited_ids) & _stated_ids(edition_dir)
         revision = staged.revisions[edition.revision_id]
-        assert revision.predecessor == DeclaredPredecessor(revision_id=str(edition.predecessor))
+        assert revision.predecessor is None
+        assert str(revision.casilla_storage_baseline) == str(edition.predecessor)
         assert revision.reviewed_against == edition.reviewed_against
         # The loader marks exactly the rows the plan inherits, so the screen and
         # every other consumer see the same split the migration wrote.
@@ -334,14 +334,16 @@ def test_a_row_stating_only_a_lineage_claim_moves_to_the_canonical_carrier(
     assert row_id not in edition.stated_ids
     successor = pilot_before.revisions[edition.revision_id]
     original_row = next(casilla for casilla in successor.casillas if str(casilla.id) == row_id)
-    matching_claims = tuple(
-        claim for claim in edition.lineage_attestations if claim.continuidad_id == original_row.continuidad_id
+    matching_overrides = tuple(
+        override
+        for override in edition.casilla_overrides
+        if override.get("selector", {}).get("id") == row_id
     )
-    assert len(matching_claims) == 1
-    (claim,) = matching_claims
-    assert claim.to_revision == edition.revision_id
-    assert claim.from_revision == edition.predecessor
-    assert claim.continuidad_id == original_row.continuidad_id
+    assert edition.lineage_attestations == ()
+    assert len(matching_overrides) == 1
+    (override,) = matching_overrides
+    assert override["restate_provenance"] is True
+    assert set(override["fields"]) >= set(LINEAGE_CLAIM_FIELDS) & set(original_row.model_fields_set)
 
     edition_dir = _edition_dir(pilot.staged_registry, _PILOT, edition.revision_id)
     authored_payload_fields = sum(
@@ -434,7 +436,7 @@ def test_a_lower_grade_successor_reuses_the_adjacent_storage_baseline(
 
     plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
     changed = next(item for item in plan.editions if item.revision_id == edition.revision_id)
-    assert changed.basis is PredecessorBasis.ADJACENT
+    assert changed.basis is PredecessorBasis.STORAGE
     assert changed.predecessor is not None
     assert changed.blocked == ()
 
@@ -490,7 +492,7 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
             "removed_fields": [],
         },
     )
-    assert successor.casilla_positions == ({"id": "0003", "position": 1},)
+    assert successor.casilla_positions == ()
 
 
 def _withdrawable_row(definition: ModeloDefinition, edition_dir: Path, candidates: tuple[str, ...]) -> str:
@@ -652,9 +654,14 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(tmp_path: Path) -> None:
     assert outcome.applied
     published = _load(registry, _NO_EXPORT_SURFACE)
     assert {str(r.id): r.predecessor for r in published.revisions.values()} == {
-        str(edition.revision_id): (
-            DeclaredPredecessor(revision_id=edition.predecessor) if edition.predecessor else None
-        )
+        str(edition.revision_id): None for edition in outcome.plan.editions
+    }
+    storage_baselines = {
+        str(revision.id): str(revision.casilla_storage_baseline) if revision.casilla_storage_baseline else None
+        for revision in published.revisions.values()
+    }
+    assert storage_baselines == {
+        str(edition.revision_id): edition.predecessor
         for edition in outcome.plan.editions
     }
     report = edition_round_trip_report(

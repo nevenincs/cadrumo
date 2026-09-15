@@ -46,6 +46,7 @@ applies_across = source_window_applies_across
 
 
 def source_windows(legal_dir: Path | None = None) -> dict[str, tuple[date | None, date | None, str]]:
+    """Return applicability windows declared by every bundled source catalogue."""
     windows: dict[str, tuple[date | None, date | None, str]] = {}
     for path in sorted((legal_dir or LEGAL).rglob("*.toml")):
         payload = tomllib.loads(path.read_text(encoding="utf-8"))
@@ -95,6 +96,7 @@ def legal_windows(legal_dir: Path | None = None) -> dict[str, tuple[date | None,
 
 
 def revision_spans(revision_dir: Path) -> tuple[date, date | None] | None:
+    """Read the validity span declared by one modelo revision directory."""
     manifest = revision_dir / "revision.toml"
     if not manifest.exists():
         return None
@@ -124,7 +126,7 @@ def cited_sources(revision_dir: Path, known: set[str]) -> dict[str, list[str]]:
             line = raw.strip()
             if line.startswith("#"):
                 continue
-            key, separator, remainder = line.partition("=")
+            key, separator, _remainder = line.partition("=")
             if separator and not key.strip().startswith("["):
                 open_key = key.strip()
             for source_id in known:
@@ -191,6 +193,7 @@ def trailing_year(source_id: str) -> int | None:
 
 
 def classify(cited_in: list[str], *, superseded: bool = False, calendar_evidence: bool = False) -> str:
+    """Classify a citation whose declared window does not overlap its revision."""
     if superseded:
         return "superseded_alongside_current"
     roles = set()
@@ -351,6 +354,7 @@ def scan(
 
 
 def main() -> int:
+    """Render source-window findings for the selected modelo scope."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--modelo", help="restrict to one modelo id")
@@ -378,7 +382,6 @@ def main() -> int:
         )
         return 0
 
-    governing = [f for f in findings if f["role"] == "governing_non_overlap"]
     for finding in sorted(findings, key=lambda f: (f["role"] != "governing_non_overlap", f["modelo"])):
         span = finding["revision_span"]
         window = finding["source_window"]

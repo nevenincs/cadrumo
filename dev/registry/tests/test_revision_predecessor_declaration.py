@@ -221,7 +221,10 @@ def test_an_explicit_none_serialises_as_authored_and_hydrates_back(tmp_path: Pat
             id="missing-reason",
         ),
         pytest.param(
-            f'predecessor = {{ none = {{ reason = "", legal_refs = ["{_LEGAL_REF}"], source_refs = ["aeat-manual"] }} }}\n',
+            (
+                f'predecessor = {{ none = {{ reason = "", legal_refs = ["{_LEGAL_REF}"], '
+                'source_refs = ["aeat-manual"] } } }\n'
+            ),
             r"predecessor\.none\.reason",
             id="empty-reason",
         ),

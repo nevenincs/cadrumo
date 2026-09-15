@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .ledger_iva_aggregation_support import (
     _M303_REPERCUTIDO_GENERAL_BASE_CASILLA,
@@ -457,5 +458,3 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
         _CASILLA_RESULTADO_REGIMEN_GENERAL
     ] == Decimal("1248.00")
 
-
-from dev.registry.compiler.authority import compiled_bundled_authority

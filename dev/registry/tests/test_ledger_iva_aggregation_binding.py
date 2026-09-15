@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.iva.schema import IvaLedgerObservationRole
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,
@@ -611,5 +612,3 @@ def test_resolve_handles_multiple_bindings_independently() -> None:
         "modelo-303-iva-soportado-interiores-cuota": Decimal("63"),
     }
 
-
-from dev.registry.compiler.authority import compiled_bundled_authority

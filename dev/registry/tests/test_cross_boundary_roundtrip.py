@@ -44,6 +44,7 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -615,6 +616,3 @@ def test_calculation_revision_carries_typed_observations() -> None:
     assert roundtripped.observations[0].operand_refs == observation.operand_refs
     assert roundtripped.observations[0].operand_casilla_refs == observation.operand_casilla_refs
     assert roundtripped.observations[0].operand_values == observation.operand_values
-
-
-from dev.registry.compiler.authority import compiled_bundled_authority

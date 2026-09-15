@@ -35,7 +35,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
-from cadrumo.core.package_version import PACKAGE_VERSION as __version__
+from cadrumo.core.package_version import PACKAGE_VERSION
 
 from ..compiler.identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
@@ -98,7 +98,7 @@ def _stamp_text(digest: str) -> str:
     """Render one complete, strictly-valid stamp carrying ``digest``."""
     return RegistryIdentityStamp(
         schema_version=REGISTRY_IDENTITY_SCHEMA_VERSION,
-        package_version=__version__,
+        package_version=PACKAGE_VERSION,
         tree_digest=digest,
         entry_count=len(digest),
     ).model_dump_json()

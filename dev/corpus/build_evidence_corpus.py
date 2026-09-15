@@ -80,6 +80,7 @@ def _download(url: str) -> bytes:
 
 
 def licence_is_clean(short: str) -> bool:
+    """Return whether a Commons licence label is accepted by the corpus policy."""
     normalized = " ".join(short.strip().lower().split())
     return _CLEAN_LICENCE_PATTERN.fullmatch(normalized) is not None
 

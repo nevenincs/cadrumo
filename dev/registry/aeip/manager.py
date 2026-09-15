@@ -402,7 +402,8 @@ def _title_from_label(label: str) -> str | None:
     if wrapped is None:
         return core.strip()
     title = wrapped.group("title")
-    assert isinstance(title, str)
+    if not isinstance(title, str):
+        raise TypeError("wrapped title must be text")
     return title.strip()
 
 
@@ -1258,7 +1259,6 @@ def prepare_apply(
                 f"{key[0]}/{key[1]} category row carries an AEIP continuidad_id outside the plan",
             )
 
-    chain_ids = {entry.chain_id for entry in plan.entries}
     desired: dict[tuple[str, str, str, str], tuple[ChainPlanEntry, EvolutionPair, str]] = {}
     for entry, pair, earlier, later in pair_endpoints:
         endpoint = earlier if later is None else later
@@ -1295,7 +1295,7 @@ def prepare_apply(
 
     existing_evolutions = sum(len(records) for core, records in existing_by_core.items() if core in desired)
     unexpected_evolutions = sum(len(records) for core, records in existing_by_core.items() if core not in desired)
-    for core, (entry, pair, casilla_id) in sorted(desired.items()):
+    for core, (_entry, pair, casilla_id) in sorted(desired.items()):
         records = existing_by_core.get(core, [])
         if len(records) > 1:
             _add_refusal(refusals, seen_refusals, f"duplicate existing evolution {core!r}")

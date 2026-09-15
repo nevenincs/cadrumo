@@ -43,6 +43,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler import validate_export_layout_coverage as coverage
 
@@ -251,4 +252,3 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
     )
 
 
-from dev.registry.compiler.authority import compiled_bundled_authority

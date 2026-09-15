@@ -21,7 +21,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.package_version import PACKAGE_VERSION as __version__
+from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.prose_elision import ElidedProse
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -135,7 +135,7 @@ def reset_registry_caches(
 
 
 def stamp_bundled_registry_release(
-    registry_root: Path, *, package_version: str = __version__
+    registry_root: Path, *, package_version: str = PACKAGE_VERSION
 ) -> StampedRegistryRelease:
     """Stamp the install-stable identity and verdict beside ``registry_root``.
 
@@ -458,7 +458,7 @@ class GeneratedArtifactInspection(Protocol):
 
 
 def stamp_bundled_verdict(
-    *, identity_digest: str, output_path: Path, package_version: str = __version__
+    *, identity_digest: str, output_path: Path, package_version: str = PACKAGE_VERSION
 ) -> RegistryValidationVerdict:
     """Write the install-stable bundled-tree verdict at ``output_path``.
 
@@ -654,7 +654,7 @@ def _read_oracle_payload(
 
 
 def write_registry_identity_stamp(
-    *, registry_fingerprints: FingerprintTuples, registry_root: Path, package_version: str = __version__
+    *, registry_fingerprints: FingerprintTuples, registry_root: Path, package_version: str = PACKAGE_VERSION
 ) -> RegistryIdentityStamp:
     """Write the install-stable identity stamp beside ``registry_root``.
 
@@ -895,7 +895,7 @@ def _attribute_oracle_payload(
 
 
 def compute_installed_tree_digest(
-    fingerprints: FingerprintTuples, *, registry_root: Path, package_version: str = __version__
+    fingerprints: FingerprintTuples, *, registry_root: Path, package_version: str = PACKAGE_VERSION
 ) -> str:
     """Digest a tree into the install-stable identity the build stamps.
 

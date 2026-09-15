@@ -57,7 +57,12 @@ def _project_mapping(effective_date: date) -> MappingProxyType[str, str]:
         ),
     )
     assert isinstance(resolved, ResolvedMappingFact)
-    return MappingProxyType({entry.key: entry.value for entry in resolved.payload.entries})
+    projected: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        assert isinstance(entry.key, str)
+        assert isinstance(entry.value, str)
+        projected[entry.key] = entry.value
+    return MappingProxyType(projected)
 
 
 def test_projection_cache_is_scoped_to_candidate_authority_incarnation() -> None:

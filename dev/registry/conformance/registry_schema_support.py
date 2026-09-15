@@ -48,6 +48,7 @@ NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="NUMERIC_CASI
 
 @cache
 def committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    """Return the compiled bundled registry tree and its catalogues."""
     # The compiled tree, so validation sees the governed facts and supplements
     # the authority itself validates against, not the raw loader's catalogues.
     return compile_registry_tree(_REGISTRY_ROOT, bundled_path())
@@ -55,6 +56,7 @@ def committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCat
 
 @cache
 def committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
+    """Return one bundled modelo and the catalogues that govern it."""
     modelos, catalogues = committed_registry_tree()
     return next(modelo for modelo in modelos if modelo.id == modelo_id), catalogues
 
@@ -97,18 +99,22 @@ def committed_snapshot(
 
 
 def committed_registry() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    """Return the default bundled modelo fixture and its catalogues."""
     return committed_modelo("130")
 
 
 def revision(modelo: ModeloDefinition) -> ModeloRevision:
+    """Return the canonical fixture revision for ``modelo``."""
     return modelo.revisions["2019-y-siguientes"]
 
 
 def with_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
+    """Return ``modelo`` with ``revision`` replacing its same-id revision."""
     return modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: revision}})
 
 
 def as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
+    """Return a revision whose filing links are projected to communication."""
     filing_link = next(link for link in revision.application_links if link.surface == "filing")
     communication_link = filing_link.model_copy(
         update={
@@ -144,6 +150,7 @@ def as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
 
 
 def keyed_bracket(key: str, value: str = "0.24") -> KeyedBracketEntry:
+    """Build a one-year keyed bracket fixture."""
     return KeyedBracketEntry(
         key=key,
         value=Decimal(value),

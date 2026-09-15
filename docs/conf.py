@@ -96,9 +96,11 @@ def _skip_generated_output_for_i18n(generator: str) -> bool:
     """Report and skip one generated output outside authored gettext scope."""
     if not _I18N_MODE:
         return False
-    print(
-        f"DOCS_I18N_GENERATOR generator={generator} status=skipped reason=excluded_from_authored_gettext_scope",
-        flush=True,
+    import logging
+
+    logging.getLogger(__name__).info(
+        "DOCS_I18N_GENERATOR generator=%s status=skipped reason=excluded_from_authored_gettext_scope",
+        generator,
     )
     return True
 

@@ -173,9 +173,10 @@ def _expense_row(reference: str, amount: Decimal, category: SpendingCategory) ->
     )
 
 
-def _aggregated(
-    *, suministros_category: SpendingCategory = SpendingCategory._from_registry("suministros_local_afecto")
-):
+_SUMINISTROS_CATEGORY_DEFAULT = SpendingCategory._from_registry("suministros_local_afecto")
+
+
+def _aggregated(*, suministros_category: SpendingCategory = _SUMINISTROS_CATEGORY_DEFAULT):
     """Drive the example's purchase facts through the production aggregation."""
     rows = [_expense_row(reference, amount, suministros_category) for reference, amount in _SUMINISTRO_ROWS]
     rows.extend(_expense_row(reference, amount, category) for reference, amount, category in _OTHER_ROWS)

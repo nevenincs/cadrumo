@@ -227,7 +227,8 @@ def _position_change_parts(added: list[tuple[str, int, int]], removed: list[tupl
         )
     if removed:
         parts.append(
-            f"{len(removed)} removed (e.g. {', '.join(f'{sheet} offset {offset}' for sheet, offset, _l in removed[:3])})"
+            f"{len(removed)} removed (e.g. "
+            f"{', '.join(f'{sheet} offset {offset}' for sheet, offset, _l in removed[:3])})"
         )
     return parts
 

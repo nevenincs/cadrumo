@@ -56,7 +56,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
 from ..compiler.record_design import extract_record_design
 
 __all__ = [
-    "GenerationRefused",
+    "GenerationRefusedError",
     "GenerationReport",
     "RecordOutcome",
     "WaveSpec",
@@ -69,7 +69,7 @@ __all__ = [
 ]
 
 
-class GenerationRefused(Exception):
+class GenerationRefusedError(Exception):
     """The design, the prior edition or the emission did not hold up."""
 
 
@@ -371,7 +371,7 @@ def verify_design_hash(path: Path, declared: str | None) -> str:
     """Refuse a design binary that is not the artifact the registry cites."""
     actual = hashlib.sha256(path.read_bytes()).hexdigest()
     if declared is not None and actual != declared:
-        raise GenerationRefused(f"design sha256 {actual} does not match the declared {declared}")
+        raise GenerationRefusedError(f"design sha256 {actual} does not match the declared {declared}")
     return actual
 
 
@@ -389,7 +389,7 @@ def cross_check_sidecar(design_path: Path, sheets: Mapping[str, RecordDesignShee
     declared = payload.get("source_sha256")
     actual = hashlib.sha256(design_path.read_bytes()).hexdigest()
     if declared and declared != actual:
-        raise GenerationRefused(f"the sidecar describes {declared} but the binary on disk is {actual}")
+        raise GenerationRefusedError(f"the sidecar describes {declared} but the binary on disk is {actual}")
     # The sheet-name comparison only means something when the sidecar's units ARE
     # sheets. A workbook sidecar splits by worksheet and its titles are the record
     # names; a PDF sidecar splits by PAGE and titles them "Pag. 1"..."Pag. N",
@@ -401,7 +401,7 @@ def cross_check_sidecar(design_path: Path, sheets: Mapping[str, RecordDesignShee
     titles = {unit["title"].strip() for unit in payload.get("units", ())}
     missing = set(sheets) - titles
     if missing:
-        raise GenerationRefused(f"the workbook carries sheets the sidecar does not: {sorted(missing)}")
+        raise GenerationRefusedError(f"the workbook carries sheets the sidecar does not: {sorted(missing)}")
 
 
 def is_structural(description: str) -> bool:
@@ -439,13 +439,13 @@ def derive_number(
     if matches:
         number = matches[-1].group(1)
         if not isinstance(number, str):
-            raise GenerationRefused("the number grammar did not capture a string")
+            raise GenerationRefusedError("the number grammar did not capture a string")
         return number, pattern.sub("", flattened).strip()
     lettered = _LETTERED.search(flattened)
     if lettered:
         letter = lettered.group(1)
         if not isinstance(letter, str):
-            raise GenerationRefused("the letter grammar did not capture a string")
+            raise GenerationRefusedError("the letter grammar did not capture a string")
         return letter, _LETTERED.sub("", flattened).strip()
     prefix = stem or segmento.lower()
     slot = f"{offset}" if length == 1 else f"{offset}-{offset + length - 1}"
@@ -595,7 +595,9 @@ def load_prior_attributes(
                     # takes the wave default without a word -- the exact silence
                     # that cost modelo 036 all 530 of its legal_refs. Refuse on the
                     # malformed prior instead, naming the casilla it belongs to.
-                    raise GenerationRefused(f"{path.name}: {open_array} array for casilla {number!r} is never closed")
+                    raise GenerationRefusedError(
+                        f"{path.name}: {open_array} array for casilla {number!r} is never closed"
+                    )
                 if number:
                     attributes[number] = current
                 current, number = {"_caption": pending}, None
@@ -712,10 +714,10 @@ def emit_records(
     for segmento in spec.records:
         sheet = sheets.get(segmento)
         if sheet is None:
-            raise GenerationRefused(f"{segmento}: no such sheet in the design")
+            raise GenerationRefusedError(f"{segmento}: no such sheet in the design")
         problems = audit_sheet(sheet, spec.declared_desglose_parents.get(segmento), spec.number_grammar)
         if problems:
-            raise GenerationRefused("; ".join(problems))
+            raise GenerationRefusedError("; ".join(problems))
 
         prior = load_prior_attributes(spec.prior_casillas_dir, segmento, spec.prior_glob)
         emitted: list[str] = []
@@ -838,7 +840,7 @@ def emit_records(
         if report.refusals:
             continue
         if not emitted:
-            raise GenerationRefused(f"{segmento}: nothing emitted")
+            raise GenerationRefusedError(f"{segmento}: nothing emitted")
 
         first = _filename_stem(emitted[0])
         last = _filename_stem(emitted[-1])
@@ -905,22 +907,26 @@ def emit_records(
             target.write_text(outcome.body, encoding="utf-8")
             back = target.read_text(encoding="utf-8")
             if back != outcome.body:
-                raise GenerationRefused(f"{outcome.segmento}: read-back differs from the write")
+                raise GenerationRefusedError(f"{outcome.segmento}: read-back differs from the write")
             for number, line in enumerate(back.splitlines(), start=1):
                 if line and not (line.startswith(("#", "[")) or _KEY_LINE.match(line)):
-                    raise GenerationRefused(
+                    raise GenerationRefusedError(
                         f"{outcome.segmento}: line {number} is neither comment nor key: {line[:60]!r}"
                     )
             try:
                 tomllib.loads(back)
             except tomllib.TOMLDecodeError as error:
-                raise GenerationRefused(f"{outcome.segmento}: the emitted shard does not parse: {error}") from error
+                raise GenerationRefusedError(
+                    f"{outcome.segmento}: the emitted shard does not parse: {error}"
+                ) from error
             marker = f'[[revisions."{spec.revision_id}".casillas]]'
             if back.count(marker) != outcome.emitted:
-                raise GenerationRefused(f"{outcome.segmento}: read-back casilla count is wrong")
+                raise GenerationRefusedError(f"{outcome.segmento}: read-back casilla count is wrong")
 
     if report.refusals:
-        raise GenerationRefused(f"{len(report.refusals)} row(s) need adjudication: " + "; ".join(report.refusals[:5]))
+        raise GenerationRefusedError(
+            f"{len(report.refusals)} row(s) need adjudication: " + "; ".join(report.refusals[:5])
+        )
     return report
 
 
@@ -989,7 +995,7 @@ def reattach_attestations(body: str, harvested: dict[str, tuple[str, list[str]]]
             for line in harvested.get(casilla_id, ("", []))[1]:
                 key_match = _KEY_LINE.match(line)
                 if key_match is None:
-                    raise GenerationRefused(f"attestation line is not a key line: {line!r}")
+                    raise GenerationRefusedError(f"attestation line is not a key line: {line!r}")
                 key = key_match.group(1)
                 if key not in emitted:
                     block.append(line)
@@ -1040,7 +1046,7 @@ def refuse_dropped_attestations(
     )
     if not orphaned:
         return
-    raise GenerationRefused(
+    raise GenerationRefusedError(
         f"{len(orphaned)} attested row(s) sit in a shard this run rewrites and "
         f"would not be re-emitted: {', '.join(orphaned[:5])}"
         f"{' ...' if len(orphaned) > 5 else ''}. They carry fields this generator "
@@ -1069,7 +1075,7 @@ def _refuse_duplicate_ids(report: GenerationReport) -> None:
         return
     worst = sorted(duplicates.items(), key=lambda kv: -kv[1])[:5]
     detail = ", ".join(f"{key} x{count}" for key, count in worst)
-    raise GenerationRefused(
+    raise GenerationRefusedError(
         f"{len(duplicates)} casilla id(s) would be written more than once "
         f"({sum(duplicates.values())} rows): {detail}. An id must be unique across the "
         "whole edition. A duplicate serialises into valid TOML and is caught only when "

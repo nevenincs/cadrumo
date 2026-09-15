@@ -16,6 +16,7 @@ from cadrumo.domain.calculations.registry.casilla_membership import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -121,5 +122,3 @@ def test_noncanonical_reference_targets_expose_ambiguous_reused_printed_number(
         f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
     )
 
-
-from dev.registry.compiler.authority import compiled_bundled_authority

@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ScalarFactQuery,
     resolve_governed_fact,
 )
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFactFamily
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactFamily, MappingFactPayload
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.fact_loader import load_governed_facts
@@ -166,7 +166,9 @@ def test_authored_reduced_multiple_payer_limit_projects_forward_after_last_groun
 def test_spanish_tax_id_person_checks_remain_bound_to_official_algorithm_evidence() -> None:
     facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
     variant = next(fact for fact in facts if fact.fact_id == "spanish-tax-identifier-format").variants[0]
-    entries = {entry.key: entry.value for entry in variant.payload.entries}
+    payload = variant.payload
+    assert isinstance(payload, MappingFactPayload)
+    entries = {entry.key: entry.value for entry in payload.entries}
     citations = {citation.source_ref: citation.required_text for citation in variant.source_citations}
 
     assert {key: entries[key] for key in _SPANISH_TAX_ID_PERSON_CHECKS} == _SPANISH_TAX_ID_PERSON_CHECKS

@@ -927,7 +927,9 @@ def test_ast_scanner_resolves_aliased_translator_import(tmp_path: Path) -> None:
     """
 
     (tmp_path / "aliased_surface.py").write_text(
-        "from cadrumo.core.i18n.render import tr as _tr\n\ndef render() -> str:\n    return _tr('cli.root.verbose_help')\n",
+        "from cadrumo.core.i18n.render import tr as _tr\n"
+        "\ndef render() -> str:\n"
+        "    return _tr('cli.root.verbose_help')\n",
         encoding="utf-8",
     )
 

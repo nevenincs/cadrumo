@@ -281,7 +281,7 @@ class TestSupersededAlongsideCurrent:
         findings, _, _ = scan(legal, modelos)
         assert [f["role"] for f in findings] == ["superseded_alongside_current"]
 
-    def test_an_earlier_design_cited_ALONE_stays_a_governing_defect(self, tree: tuple[Path, Path]) -> None:
+    def test_an_earlier_design_cited_alone_stays_a_governing_defect(self, tree: tuple[Path, Path]) -> None:
         legal, modelos = tree
         build_catalogue(legal, {"aeat-dr-190-2024": ("2024-01-01", "2024-12-31")})
         build_revision(

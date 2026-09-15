@@ -150,12 +150,17 @@ def _contributions(*, authority: ValidatedRegistryAuthority) -> tuple[IvaDiffere
     )
 
 
+_DEFAULT_DEDUCTION_FACT_KIND = IvaDeductionFactKind._from_registry("domestic_current")
+_DEFAULT_INPUT_CLASSIFICATION = InputClassification._from_registry("common")
+_DEFAULT_PRORRATA_REGIME = ProrrataRegisterRegime._from_registry("general")
+
+
 def _observation(
     ledger_id: str,
     *,
     sector_id: str | None = "a",
-    kind: IvaDeductionFactKind = IvaDeductionFactKind._from_registry("domestic_current"),
-    classification: InputClassification | None = InputClassification._from_registry("common"),
+    kind: IvaDeductionFactKind = _DEFAULT_DEDUCTION_FACT_KIND,
+    classification: InputClassification | None = _DEFAULT_INPUT_CLASSIFICATION,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
@@ -182,7 +187,7 @@ def _observation(
 
 
 def _apportionment(
-    *, regime: ProrrataRegisterRegime = ProrrataRegisterRegime._from_registry("general")
+    *, regime: ProrrataRegisterRegime = _DEFAULT_PRORRATA_REGIME
 ) -> IvaLedgerProrrataApportionment:
     return IvaLedgerProrrataApportionment(
         percentage=Decimal("50"),
@@ -355,22 +360,24 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
 def test_canonical_aggregation_refuses_unattributable_duplicate_and_wrong_owner_rows(
     observations: tuple[IvaLedgerObservation, ...], message: str
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with pytest.raises(ValueError, match=message):
-            resolve_iva_differentiated_deduction_contributions(
-                _revision(), observations, apportionment=_apportionment(), operation=_authority_operation_for_test
-            )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(
+        ValueError, match=message
+    ):
+        resolve_iva_differentiated_deduction_contributions(
+            _revision(), observations, apportionment=_apportionment(), operation=_authority_operation_for_test
+        )
 
 
 def test_especial_common_use_must_be_explicit() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with pytest.raises(ValueError, match="common-use classification must be explicit"):
-            resolve_iva_differentiated_deduction_contributions(
-                _revision(),
-                (_observation("implicit-common", classification=None),),
-                apportionment=_apportionment(regime=ProrrataRegisterRegime._from_registry("especial")),
-                operation=_authority_operation_for_test,
-            )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, pytest.raises(
+        ValueError, match="common-use classification must be explicit"
+    ):
+        resolve_iva_differentiated_deduction_contributions(
+            _revision(),
+            (_observation("implicit-common", classification=None),),
+            apportionment=_apportionment(regime=ProrrataRegisterRegime._from_registry("especial")),
+            operation=_authority_operation_for_test,
+        )
 
 
 def test_wrong_owner_regularisation_cannot_become_a_ledger_observation() -> None:

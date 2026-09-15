@@ -24,7 +24,9 @@ def test_200_new_cohorts_do_not_hide_predecessor_declaration_gaps() -> None:
         assert current[identifier].continuidad_id is None
     for identifier in ("03401", "03402", "03594", "03642", "03647"):
         assert current[identifier].continuidad_origin is CasillaLineageOrigin.NEW_ON_FORM
-        assert "aeat-dr-200-2024" in current[identifier].continuidad_evidence
+        evidence = current[identifier].continuidad_evidence
+        assert evidence is not None
+        assert "aeat-dr-200-2024" in evidence
 
 
 @pytest.fixture(scope="module")

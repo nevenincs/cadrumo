@@ -1496,10 +1496,7 @@ def _metadata_target_set_loader(module: _Module, function: ast.AST) -> str | Non
     binding = module.bindings.get(head)
     if binding is None or binding.target is None:
         return None
-    if not separator:
-        resolved = f"{binding.target}.{binding.imported_name}"
-    else:
-        resolved = f"{binding.target}.{tail}"
+    resolved = f"{binding.target}.{binding.imported_name}" if not separator else f"{binding.target}.{tail}"
     return expected.get(resolved)
 
 

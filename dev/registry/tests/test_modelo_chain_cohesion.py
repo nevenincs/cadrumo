@@ -58,7 +58,7 @@ def _summary_relation_source_modelos(modelo: ModeloDefinition) -> set[str]:
     """Return source-modelo ids declared by relation-prefill providers."""
     seen: set[str] = set()
     for revision in modelo.revisions.values():
-        for binding, provider in relation_prefill_bindings_for_period(revision):
+        for _binding, provider in relation_prefill_bindings_for_period(revision):
             if provider.relation_kind in {"cross_model_output", "annual_summary"}:
                 seen.add(str(provider.source_modelo))
     return seen
@@ -197,7 +197,8 @@ def test_every_declared_relation_prefill_resolves_to_a_real_source_casilla() -> 
                 source_modelo = registry.get(str(provider.source_modelo))
                 if source_modelo is None:
                     failures.append(
-                        f"modelo {modelo.id} binding {binding.id!r} cites unknown source modelo {provider.source_modelo!r}"
+                        f"modelo {modelo.id} binding {binding.id!r} cites unknown source modelo "
+                        f"{provider.source_modelo!r}"
                     )
                     continue
                 source_casillas = set(provider.declared_source_casilla_ids)

@@ -40,6 +40,7 @@ from cadrumo.domain.filing.schema import (
     registry_schema_version,
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -305,6 +306,3 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     assert loaded_revision.observations[0].operand_values == observation.operand_values
     assert loaded_revision.observations[0].legal_refs == observation.legal_refs
     assert loaded_revision.observations[0].source_refs == observation.source_refs
-
-
-from dev.registry.compiler.authority import compiled_bundled_authority

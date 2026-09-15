@@ -305,7 +305,8 @@ def classify_m200_target_identities(
             )
         # MATCHES_IDENTITY_PROPOSAL is only reachable when `printed` is not None:
         # `_printed_identity_state` returns MISSING_OFFICIAL_PRINTED_IDENTITY otherwise.
-        assert printed is not None
+        if printed is None:
+            raise ValueError("identity proposal requires an official printed identity")
         mismatches.append(
             M200MapOwnerIdentity(
                 export_field_id=str(entry.export_field_id),

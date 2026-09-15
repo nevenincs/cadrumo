@@ -1123,7 +1123,8 @@ def _infer_modelo(relative_path: str) -> str | None:
     if match is None:
         return None
     modelo = match.group("modelo")
-    assert isinstance(modelo, str), "the named group always participates in this pattern"
+    if not isinstance(modelo, str):
+        raise TypeError("the named group always participates in this pattern")
     return modelo
 
 

@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.package_version import PACKAGE_VERSION as __version__
+from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.tests.attribute_scope import scoped_attribute
 
 from ..compiler import identity as identity_module
@@ -85,7 +85,7 @@ def _tree(tmp_path: Path) -> Path:
     return root
 
 
-def _stamp(root: Path, *, package_version: str = __version__) -> str:
+def _stamp(root: Path, *, package_version: str = PACKAGE_VERSION) -> str:
     """Write a real identity stamp for ``root`` and return its digest.
 
     Sizes come from the real files rather than being hardcoded: the installed
