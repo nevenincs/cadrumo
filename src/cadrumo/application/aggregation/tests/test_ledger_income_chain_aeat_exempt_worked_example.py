@@ -102,7 +102,6 @@ from ....domain.calculations.registry.tests.scenarios import (
 from ....domain.calculations.registry.tests.snapshot_support import build_snapshot
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import category_cuota_is_zero_by_law
-from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

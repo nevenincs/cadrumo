@@ -246,6 +246,7 @@ def _persist_report(
 
 
 def filed_history_surface_timeout_ms(settings: _Settings, *, year_from: int, year_to: int) -> int:
+    """Return the timeout budget for the requested filed-history year span."""
     return settings.cadrumo_live_iva_surface_timeout_ms * max(1, year_to - year_from + 1)
 
 
@@ -256,6 +257,7 @@ async def await_live_iva_surface[T](
     timeout_ms: int,
     progress_context: Mapping[str, object] | None = None,
 ) -> T:
+    """Await one live IVA surface operation within its timeout budget."""
     try:
         return await asyncio.wait_for(awaitable, timeout=timeout_ms / 1000)
     except TimeoutError as exc:
@@ -269,6 +271,7 @@ async def await_live_iva_surface[T](
 
 @asynccontextmanager
 async def suppress_live_iva_playwright_cancellation_noise(*, drain_ms: int = 0, restore_on_exit: bool = True):
+    """Temporarily suppress expected Playwright target-closed cancellation noise."""
     loop = asyncio.get_running_loop()
     previous_handler = loop.get_exception_handler()
 
@@ -315,6 +318,7 @@ def build_iva_remote_state_acquisition_report(
     filed_history_error: BaseException | None = None,
     wallet_error: BaseException | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
+    """Build an acquisition report from authentication and surface outcomes."""
     auth = _auth_outcome(auth_result=auth_result, error=auth_error)
     outcomes = (
         _surface_outcome(LiveIvaReadSurface.FILED_HISTORY, report=filed_history, error=filed_history_error, auth=auth),
@@ -340,6 +344,7 @@ def persist_iva_remote_state_acquisition_report(
     ports: IvaRemoteStatePort,
     captured_at: datetime | None = None,
 ) -> IvaRemoteStateAcquisitionManifest:
+    """Persist an acquisition report and return its manifest."""
     manifest = _iva_remote_state_acquisition_manifest(report, captured_at=captured_at or now())
     ports.persist_manifest(manifest)
     return manifest

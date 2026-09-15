@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from ...core.i18n.translatable import Translatable as t
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -76,6 +77,7 @@ def raise_if_invoice_iva_would_be_silent(
     *,
     context: CalculationSourceContext,
     period: Period,
+    operation: PinnedAuthorityOperation,
     transaction_binding_values: Mapping[BindingId, Decimal],
     ledger_observations: Sequence[IvaLedgerObservation] = (),
     ports: InvoiceCatalogueReadPorts,
@@ -144,6 +146,7 @@ def raise_if_invoice_iva_would_be_silent(
         screened=screened,
         transaction_binding_values=transaction_binding_values,
         prorrata_apportionment=prorrata_apportionment,
+        operation=operation,
     )
 
 
@@ -154,6 +157,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
     screened: ScreenedInvoiceIva,
     transaction_binding_values: Mapping[BindingId, Decimal],
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
+    operation: PinnedAuthorityOperation,
 ) -> InvoiceIvaSilenceReport:
     """Compare screened invoice facts with the canonical ledger projection.
 
@@ -212,6 +216,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
         context.revision,
         screened.observations,
         prorrata_apportionment=prorrata_apportionment,
+        operation=operation,
     )
     missing_binding_values = {
         binding_id: invoice_value - transaction_value

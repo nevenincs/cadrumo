@@ -64,9 +64,10 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 
 _BASE = Decimal("2000.00")
 _DAY = date(2026, 3, 15)
+_DEFAULT_INVOICE_RATE = IvaRate._from_registry("EXEMPT")
 
 
-def _received_reverse_charge(*, slot: IvaRate = IvaRate._from_registry("EXEMPT"), cuota: str = "0.00") -> Invoice:
+def _received_reverse_charge(*, slot: IvaRate = _DEFAULT_INVOICE_RATE, cuota: str = "0.00") -> Invoice:
     """A construction supply the recipient must self-assess.
 
     The supplier charges nothing, which is what an art. 84.Uno.2 invoice looks

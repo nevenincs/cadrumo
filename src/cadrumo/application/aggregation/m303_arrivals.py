@@ -120,7 +120,11 @@ class M303ProrrataTransitionArrival(BaseModel):
     @property
     def is_applicable(self) -> bool:
         """Whether the selected registry revision applies the transition."""
-        return _transition_period_applicability_from_registry(self.period)
+        with bundled_indexed_authority().operation() as operation:
+            return _transition_period_applicability_from_registry(
+                self.period,
+                operation=operation,
+            )
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

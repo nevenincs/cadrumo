@@ -62,9 +62,9 @@ surface, and until they do, filing the modelo refuses rather than assuming.
 
 def test_every_question_has_a_matching_table_row(*, registry_setup_flow: WizardFlow) -> None:
     """Path, type and default must agree field by field."""
-    _QUESTIONS = tuple(question for section in registry_setup_flow.sections for question in section.questions)
+    questions = tuple(question for section in registry_setup_flow.sections for question in section.questions)
     mismatches: list[str] = []
-    for question in _QUESTIONS:
+    for question in questions:
         field = question.id.replace("-", "_")
         spec = SETUP_ANSWER_FIELDS.get(field)
         if spec is None:
@@ -79,8 +79,8 @@ def test_every_question_has_a_matching_table_row(*, registry_setup_flow: WizardF
 
 def test_the_table_adds_nothing_beyond_the_documented_rows(*, registry_setup_flow: WizardFlow) -> None:
     """A row with no question must be a deliberate, named addition."""
-    _QUESTIONS = tuple(question for section in registry_setup_flow.sections for question in section.questions)
-    asked = {question.id.replace("-", "_") for question in _QUESTIONS}
+    questions = tuple(question for section in registry_setup_flow.sections for question in section.questions)
+    asked = {question.id.replace("-", "_") for question in questions}
     assert set(SETUP_ANSWER_FIELDS) - asked == _TABLE_ONLY_FIELDS
 
 
@@ -96,10 +96,10 @@ def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: Wi
     that silently fell back to defaults could not pass: a blank record
     would make the two implementations agree for the wrong reason.
     """
-    _QUESTIONS = tuple(question for section in registry_setup_flow.sections for question in section.questions)
+    questions = tuple(question for section in registry_setup_flow.sections for question in section.questions)
     values = {
         question.profile_key: _non_default_token(question)
-        for question in _QUESTIONS
+        for question in questions
         if question.profile_key is not None
     }
     values["identity.tax_id"] = "12345678Z"

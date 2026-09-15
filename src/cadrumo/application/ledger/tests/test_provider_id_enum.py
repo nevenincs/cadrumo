@@ -30,10 +30,13 @@ class _FinancialProviderFake(FinancialProviderProtocol):
         raise AssertionError("provider validation is outside this dispatch test")
 
 
+_DEFAULT_PROVIDER = _FinancialProviderFake()
+
+
 class _ProviderResolverFake:
     """Record normalized IDs without constructing a concrete parser."""
 
-    def __init__(self, result: FinancialProviderProtocol | None = _FinancialProviderFake()) -> None:
+    def __init__(self, result: FinancialProviderProtocol | None = _DEFAULT_PROVIDER) -> None:
         self.result = result
         self.provider_ids: list[str] = []
 

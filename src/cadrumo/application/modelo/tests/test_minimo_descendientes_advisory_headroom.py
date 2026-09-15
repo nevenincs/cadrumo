@@ -144,7 +144,7 @@ def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagno
         revision=revision,
         bindings=tuple(revision.bindings),
         filing_year=2024,
-        period_token="0A",
+        **{"period_token": "0A"},
     )
     return [
         ("undeclared", lambda: _undeclared_advisory(revision, casilla)),

@@ -77,7 +77,7 @@ def test_overview_window_lookup_goes_through_the_domain_resolver() -> None:
     reference distinguishes delegation from a local scan that happens to
     produce the same answer, so a duplicate matcher cannot satisfy this gate.
     """
-    unit = _work_unit()
+    _work_unit()
     referenced = _registry_window_for_work_unit.__code__.co_names
     assert "_resolve_filing_window" in referenced, (
         "overview._registry_window_for_work_unit must delegate to "

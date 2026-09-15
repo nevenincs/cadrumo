@@ -30,7 +30,6 @@ import pytest
 
 from cadrumo.domain.iva.schema import IvaCategory
 
-from ....domain.iva.schema import IvaCategory
 from ..creation_wizard import _derived_domestic_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

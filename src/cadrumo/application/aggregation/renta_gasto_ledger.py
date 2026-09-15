@@ -76,7 +76,8 @@ from .errors import AggregationValidationError
 # architecture rule; the cross-package boundary is enforced elsewhere.
 from .renta_ledger import resolve_iva_deduction_ratio
 
-# fact-relocation: selected Renta expense model, target, category policy, and binding declarations are consumed through RegistryQueryService
+# fact-relocation: selected Renta expense model, target, category policy, and
+# binding declarations are consumed through RegistryQueryService
 
 
 def renta_gasto_registry_declarations(

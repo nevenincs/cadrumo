@@ -53,8 +53,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from ....domain.iva.flow import IvaFlowDirection
-from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole
+from ....domain.iva.schema import IvaLedgerObservationRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

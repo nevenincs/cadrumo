@@ -25,13 +25,14 @@ from ..preflight import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 6, 3, 12, 0, tzinfo=UTC)
+_DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 
 def _tx(
     *,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     currency: str = "EUR",
-    iva_category: IvaCategory | None = IvaCategory("domestic_general"),
+    iva_category: IvaCategory | None = _DEFAULT_IVA_CATEGORY,
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_amount: Decimal | None = Decimal("21.00"),
     iva_rate: Decimal | None = Decimal("0.21"),

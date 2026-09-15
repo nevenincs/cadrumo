@@ -49,7 +49,7 @@ from ....domain.calculations.registry.binding_selector_utils import selector_as_
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.lookup import rate_kinds_for_declared_rate
-from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva.schema import IvaLedgerObservationRole
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

@@ -29,7 +29,6 @@ import pytest
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 
 from ....core.period import Period
-from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

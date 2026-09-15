@@ -371,7 +371,8 @@ def _impatriado_business_issue(
         transaction_id=transaction_id,
         reason=reason,
         detail=(
-            f"business classification {transaction.business_classification.value!r} cannot feed the selected registry target"
+            f"business classification {transaction.business_classification.value!r} "
+            "cannot feed the selected registry target"
         ),
     )
 

@@ -14,8 +14,6 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
-
-SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -37,6 +35,8 @@ from ..renta_ledger import (
     aggregate_renta_ledger_expenses,
 )
 from .renta_income_aggregation_support import _period
+
+SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -56,16 +56,21 @@ _SUPPLIER_CIF_FAILING_CHECKSUM = "B17283945"
 _FOREIGN_OWN_IVA = "FR52422961982"
 
 
-def _resolve(candidates: tuple[IdentityCandidate, ...], *, own: str | None = _OWN_NIF):
+def _resolve(
+    candidates: tuple[IdentityCandidate, ...], *, own: str | None = _OWN_NIF, operation: PinnedAuthorityOperation
+):
     return resolve_counterparty_identity(
         field="supplier_tax_id",
         candidates=candidates,
         taxpayer_tax_id=own,
         origin=FieldOrigin.TEXT_LAYER,
+        operation=operation,
     )
 
 
-def test_the_fixture_identifiers_still_carry_the_properties_they_are_named_for() -> None:
+def test_the_fixture_identifiers_still_carry_the_properties_they_are_named_for(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Anchor test: a validator change must not make these cases vacuous.
 
     Without this, a loosened checksum would turn the defect fixture into three
@@ -82,7 +87,9 @@ def test_the_fixture_identifiers_still_carry_the_properties_they_are_named_for()
         validate_runtime_spanish_tax_id(_FOREIGN_OWN_IVA)
 
 
-def test_the_measured_defect_shape_never_yields_a_first_match_identifier() -> None:
+def test_the_measured_defect_shape_never_yields_a_first_match_identifier(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """THE case this test exists for.
 
     A page carrying the true supplier's checksum-failing CIF, an unrelated valid
@@ -95,6 +102,7 @@ def test_the_measured_defect_shape_never_yields_a_first_match_identifier() -> No
             IdentityCandidate(value=_UNRELATED_VALID_CIF),
             IdentityCandidate(value=_OWN_NIF),
         ),
+        operation=operation,
     )
 
     assert resolution.resolved is None, "an unrelated entity was returned as the counterparty"
@@ -102,7 +110,9 @@ def test_the_measured_defect_shape_never_yields_a_first_match_identifier() -> No
     assert resolution.provenance.grounding is not FieldGroundingOutcome.ANCHORED
 
 
-def test_the_defect_shape_reports_both_the_bad_checksum_and_the_unresolved_role() -> None:
+def test_the_defect_shape_reports_both_the_bad_checksum_and_the_unresolved_role(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Neither fact may be swallowed: they are different things the operator needs."""
     resolution = _resolve(
         (
@@ -110,6 +120,7 @@ def test_the_defect_shape_reports_both_the_bad_checksum_and_the_unresolved_role(
             IdentityCandidate(value=_UNRELATED_VALID_CIF),
             IdentityCandidate(value=_OWN_NIF),
         ),
+        operation=operation,
     )
 
     kinds = {finding.kind for finding in resolution.findings}
@@ -119,7 +130,9 @@ def test_the_defect_shape_reports_both_the_bad_checksum_and_the_unresolved_role(
     assert _SUPPLIER_CIF_FAILING_CHECKSUM in unverified.detail
 
 
-def test_a_lone_surviving_identifier_without_role_evidence_does_not_resolve() -> None:
+def test_a_lone_surviving_identifier_without_role_evidence_does_not_resolve(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Sole survivorship is first-match with the competitors removed beforehand.
 
     This is the subtle half of the defect. Eliminating the bad checksum and the
@@ -127,14 +140,14 @@ def test_a_lone_surviving_identifier_without_role_evidence_does_not_resolve() ->
     it because it is the only one left names whichever unrelated entity happened
     to be printed on the page.
     """
-    resolution = _resolve((IdentityCandidate(value=_UNRELATED_VALID_CIF),))
+    resolution = _resolve((IdentityCandidate(value=_UNRELATED_VALID_CIF),), operation=operation)
 
     assert resolution.resolved is None
     assert resolution.provenance.grounding is FieldGroundingOutcome.UNANCHORED
     assert any(f.kind is DraftDiscrepancyKind.ROLE_UNRESOLVED for f in resolution.findings)
 
 
-def test_role_evidence_picking_exactly_one_candidate_resolves_it() -> None:
+def test_role_evidence_picking_exactly_one_candidate_resolves_it(operation: PinnedAuthorityOperation) -> None:
     """Positive control: the resolver is not a blanket refusal.
 
     Without this, every assertion above would be satisfied by a function that
@@ -145,6 +158,7 @@ def test_role_evidence_picking_exactly_one_candidate_resolves_it() -> None:
             IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="printed under 'Proveedor'"),
             IdentityCandidate(value=_OTHER_VALID_CIF),
         ),
+        operation=operation,
     )
 
     assert resolution.resolved == _UNRELATED_VALID_CIF
@@ -152,13 +166,16 @@ def test_role_evidence_picking_exactly_one_candidate_resolves_it() -> None:
     assert resolution.findings == ()
 
 
-def test_two_candidates_carrying_role_evidence_stay_ambiguous_with_both_surfaced() -> None:
+def test_two_candidates_carrying_role_evidence_stay_ambiguous_with_both_surfaced(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Competing evidence is ambiguity, not a ranking to be broken by order."""
     resolution = _resolve(
         (
             IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="under 'Proveedor'"),
             IdentityCandidate(value=_OTHER_VALID_CIF, role_evidence="under 'Emisor'"),
         ),
+        operation=operation,
     )
 
     assert resolution.resolved is None
@@ -167,7 +184,9 @@ def test_two_candidates_carrying_role_evidence_stay_ambiguous_with_both_surfaced
     assert surfaced == {_UNRELATED_VALID_CIF, _OTHER_VALID_CIF}
 
 
-def test_every_competing_candidate_is_surfaced_not_just_the_winner_and_one_alternate() -> None:
+def test_every_competing_candidate_is_surfaced_not_just_the_winner_and_one_alternate(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """All of them. A truncated candidate list is a partial answer wearing a full one."""
     resolution = _resolve(
         (
@@ -175,13 +194,14 @@ def test_every_competing_candidate_is_surfaced_not_just_the_winner_and_one_alter
             IdentityCandidate(value=_OTHER_VALID_CIF),
             IdentityCandidate(value=_THIRD_VALID_CIF),
         ),
+        operation=operation,
     )
 
     assert resolution.provenance.grounding is FieldGroundingOutcome.AMBIGUOUS
     assert len(resolution.provenance.candidates) == 3
 
 
-def test_reversing_document_order_does_not_change_the_outcome() -> None:
+def test_reversing_document_order_does_not_change_the_outcome(operation: PinnedAuthorityOperation) -> None:
     """Order-independence is the structural proof that no first-match remains.
 
     A resolver that ranked by position would return a different identifier here.
@@ -191,12 +211,14 @@ def test_reversing_document_order_does_not_change_the_outcome() -> None:
             IdentityCandidate(value=_UNRELATED_VALID_CIF),
             IdentityCandidate(value=_OTHER_VALID_CIF),
         ),
+        operation=operation,
     )
     reverse = _resolve(
         (
             IdentityCandidate(value=_OTHER_VALID_CIF),
             IdentityCandidate(value=_UNRELATED_VALID_CIF),
         ),
+        operation=operation,
     )
 
     assert forward.resolved == reverse.resolved is None
@@ -204,33 +226,37 @@ def test_reversing_document_order_does_not_change_the_outcome() -> None:
     assert {c.value for c in forward.provenance.candidates} == {c.value for c in reverse.provenance.candidates}
 
 
-def test_the_filers_own_identifier_is_never_a_counterparty_candidate() -> None:
+def test_the_filers_own_identifier_is_never_a_counterparty_candidate(operation: PinnedAuthorityOperation) -> None:
     """It is on every invoice in both directions; leaving it in makes it compete."""
     resolution = _resolve(
         (
             IdentityCandidate(value=_OWN_NIF),
             IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="under 'Proveedor'"),
         ),
+        operation=operation,
     )
 
     assert resolution.resolved == _UNRELATED_VALID_CIF
     assert _OWN_NIF not in {c.value for c in resolution.provenance.candidates}
 
 
-def test_the_own_identifier_exclusion_survives_printed_separators() -> None:
+def test_the_own_identifier_exclusion_survives_printed_separators(operation: PinnedAuthorityOperation) -> None:
     """A printed ``12.345.678-Z`` must not evade exclusion against a stored form."""
     resolution = _resolve(
         (
             IdentityCandidate(value="12.345.678-Z"),
             IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="under 'Proveedor'"),
         ),
+        operation=operation,
     )
 
     assert resolution.resolved == _UNRELATED_VALID_CIF
     assert not any(c.value == _OWN_NIF for c in resolution.provenance.candidates)
 
 
-def test_a_foreign_filer_identifier_still_excludes_the_filer_from_candidacy() -> None:
+def test_a_foreign_filer_identifier_still_excludes_the_filer_from_candidacy(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Exclusion is identity, not validity.
 
     A profile whose own identifier is a French IVA number cannot pass the AEAT
@@ -250,6 +276,7 @@ def test_a_foreign_filer_identifier_still_excludes_the_filer_from_candidacy() ->
             IdentityCandidate(value=_UNRELATED_VALID_CIF),
         ),
         own=_FOREIGN_OWN_IVA,
+        operation=operation,
     )
 
     assert resolution.resolved != _FOREIGN_OWN_IVA, "the filer was named as their own counterparty"
@@ -257,7 +284,9 @@ def test_a_foreign_filer_identifier_still_excludes_the_filer_from_candidacy() ->
     assert _FOREIGN_OWN_IVA not in {c.value for c in resolution.provenance.candidates}
 
 
-def test_a_checksum_invalid_filer_identifier_still_excludes_the_filer() -> None:
+def test_a_checksum_invalid_filer_identifier_still_excludes_the_filer(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The stored own id need not verify for the exclusion to run.
 
     A Spanish identifier stored with a wrong control character is unverifiable,
@@ -273,6 +302,7 @@ def test_a_checksum_invalid_filer_identifier_still_excludes_the_filer() -> None:
             IdentityCandidate(value=_UNRELATED_VALID_CIF),
         ),
         own=_SUPPLIER_CIF_FAILING_CHECKSUM,
+        operation=operation,
     )
 
     assert resolution.resolved is None
@@ -281,7 +311,9 @@ def test_a_checksum_invalid_filer_identifier_still_excludes_the_filer() -> None:
     )
 
 
-def test_the_exclusion_note_reports_the_actual_exclusion_not_the_arguments_presence() -> None:
+def test_the_exclusion_note_reports_the_actual_exclusion_not_the_arguments_presence(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A note claiming an exclusion that did not run is worse than no note.
 
     The provenance clause is the only operator-facing signal that the filer was
@@ -291,6 +323,7 @@ def test_the_exclusion_note_reports_the_actual_exclusion_not_the_arguments_prese
     unusable = _resolve(
         (IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="under 'Proveedor'"),),
         own="   ",
+        operation=operation,
     )
 
     assert "could not be excluded" in unusable.provenance.note
@@ -299,21 +332,27 @@ def test_the_exclusion_note_reports_the_actual_exclusion_not_the_arguments_prese
     usable = _resolve(
         (IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="under 'Proveedor'"),),
         own=_OWN_NIF,
+        operation=operation,
     )
     assert "after excluding the filer's own identifier" in usable.provenance.note
 
 
-def test_an_unknown_own_identifier_is_reported_rather_than_passed_over() -> None:
+def test_an_unknown_own_identifier_is_reported_rather_than_passed_over(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A weaker resolution must say it is weaker."""
     resolution = _resolve(
         (IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="under 'Proveedor'"),),
         own=None,
+        operation=operation,
     )
 
     assert "could not be excluded" in resolution.provenance.note
 
 
-def test_a_document_stating_no_identifier_resolves_to_nothing_without_blaming_the_role() -> None:
+def test_a_document_stating_no_identifier_resolves_to_nothing_without_blaming_the_role(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """An ABSENT identifier states no role, so there is no failed role to report.
 
     This case previously asserted a ``ROLE_UNRESOLVED`` finding. Every
@@ -327,14 +366,16 @@ def test_a_document_stating_no_identifier_resolves_to_nothing_without_blaming_th
     case, which is the one this resolver was built for, still raises -- see
     ``test_absent_identity_is_not_a_failed_role.py``.
     """
-    resolution = _resolve(())
+    resolution = _resolve((), operation=operation)
 
     assert resolution.resolved is None
     assert resolution.provenance.grounding is FieldGroundingOutcome.UNANCHORED
     assert not any(f.kind is DraftDiscrepancyKind.ROLE_UNRESOLVED for f in resolution.findings)
 
 
-def test_an_intra_eu_counterparty_verifies_rather_than_being_discarded() -> None:
+def test_an_intra_eu_counterparty_verifies_rather_than_being_discarded(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A Spanish-only check silently drops exactly the Modelo 349 population."""
     resolution = _resolve(
         (
@@ -344,6 +385,7 @@ def test_an_intra_eu_counterparty_verifies_rather_than_being_discarded() -> None
                 role_evidence="printed under 'Fournisseur'",
             ),
         ),
+        operation=operation,
     )
 
     assert resolution.resolved == "FR52422961982"

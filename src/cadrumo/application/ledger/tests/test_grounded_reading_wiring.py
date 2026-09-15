@@ -98,7 +98,7 @@ def _registry_legends(operation):
     return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
-class _ReaderUnavailableForTest(Exception):
+class _ReaderUnavailableForTestError(Exception):
     """Application-test failure representing an unavailable semantic reader."""
 
 
@@ -113,7 +113,7 @@ def _reader_unavailable_ports() -> InvoiceDraftExtractionPorts:
         _authority_values: object,
         /,
     ) -> InvoiceDraft:
-        raise InvoiceDraftReaderUnavailableError(_ReaderUnavailableForTest("reader unavailable"))
+        raise InvoiceDraftReaderUnavailableError(_ReaderUnavailableForTestError("reader unavailable"))
 
     def structured_reader_was_not_expected(data: bytes) -> StructuredInvoiceRecord:
         raise AssertionError("the structured reader is not part of this text-reader case")
@@ -438,7 +438,7 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTest("no provider reachable"))
+        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("no provider reachable"))
 
     assert raised.value.terminal_precondition_verdict is not None
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
@@ -447,7 +447,7 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     assert raised.value.args == ()
     assert raised.value.context == {
         "semantic_reader_available": False,
-        "reader_error_type": "_ReaderUnavailableForTest",
+        "reader_error_type": "_ReaderUnavailableForTestError",
     }
     assert raised.value.terminal_precondition_verdict.evidence[0].values == raised.value.context
 
@@ -586,7 +586,7 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTest("Ollama is not reachable"))
+        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("Ollama is not reachable"))
 
     assert raised.value.terminal_precondition_verdict is not None
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (

@@ -28,7 +28,6 @@ from ....domain.categories.proportionality import (
     ProportionalityRule,
     parse_http_url,
 )
-from ....domain.categories.spending_category import SpendingCategory
 from ....domain.contribuyente.ccaa import CCAA
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -46,6 +45,7 @@ from ..renta_ledger import (
 from .renta_income_aggregation_support import _period
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
+_DEFAULT_SPENDING_CATEGORY = SpendingCategory._from_registry("asesoria_fiscal")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -128,7 +128,7 @@ def _transaction(
     provider_id: str,
     *,
     amount: Decimal = Decimal("121.00"),
-    category: SpendingCategory = SpendingCategory._from_registry("asesoria_fiscal"),
+    category: SpendingCategory = _DEFAULT_SPENDING_CATEGORY,
     purchase_invoice_evidence_id: str | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,

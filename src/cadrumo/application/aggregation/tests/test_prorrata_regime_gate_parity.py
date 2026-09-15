@@ -25,9 +25,6 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
-from ....core.prorrata_register import (
-    ProrrataRegisterRegime,
-)
 from ....domain.calculations.registry.prorrata_register_catalogue import (
     regime_apportions_deduction,
     resolve_prorrata_register_catalogue,

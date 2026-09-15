@@ -48,7 +48,6 @@ from cadrumo.domain.iva.schema import IvaCategory
 
 from ....core.aggregation import LedgerWithholdingDerivation
 from ....core.period import Period
-from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -78,6 +77,7 @@ _BASE = Decimal("2000.00")
 _IVA = Decimal("420.00")
 _GROSS = _BASE + _IVA
 _EFFECTIVE_DATE = date(2024, 3, 15)
+_DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 
 def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
@@ -106,7 +106,7 @@ def _income_row(
     *,
     cash: str,
     iva_amount: str | None = "420.00",
-    iva_category: IvaCategory | None = IvaCategory("domestic_general"),
+    iva_category: IvaCategory | None = _DEFAULT_IVA_CATEGORY,
 ) -> Transaction:
     return Transaction.model_validate(
         {

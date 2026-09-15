@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -35,12 +37,15 @@ _COUNTERPARTY_CIF = "B12345674"
 _BAD_CHECKSUM_CIF = "B1234567X"
 
 
-def _resolve(candidates: tuple[IdentityCandidate, ...], *, filer: str | None = _FILER_CIF):
+def _resolve(
+    candidates: tuple[IdentityCandidate, ...], *, filer: str | None = _FILER_CIF, operation: PinnedAuthorityOperation
+):
     return resolve_counterparty_identity(
         field="supplier_tax_id",
         candidates=candidates,
         taxpayer_tax_id=filer,
         origin=FieldOrigin.TEXT_LAYER,
+        operation=operation,
     )
 
 
@@ -53,26 +58,30 @@ def _kinds(resolution) -> set[DraftDiscrepancyKind]:
 # ---------------------------------------------------------------------------
 
 
-def test_a_document_stating_no_identifier_at_all_raises_no_role_failure() -> None:
+def test_a_document_stating_no_identifier_at_all_raises_no_role_failure(operation: PinnedAuthorityOperation) -> None:
     """A receipt carrying no identifiers states no role to get wrong."""
-    resolution = _resolve(())
+    resolution = _resolve((), operation=operation)
 
     assert _kinds(resolution) == set()
 
 
-def test_a_simplificada_carrying_only_the_filers_own_identifier_raises_no_role_failure() -> None:
+def test_a_simplificada_carrying_only_the_filers_own_identifier_raises_no_role_failure(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The measured shape: the document names the filer and nobody else.
 
     Every candidate is excluded by the identity test, so nothing was rejected
     for being unverifiable -- there was simply no counterparty identifier on the
     page.
     """
-    resolution = _resolve((IdentityCandidate(value=_FILER_CIF, role_evidence="Cliente:"),))
+    resolution = _resolve((IdentityCandidate(value=_FILER_CIF, role_evidence="Cliente:"),), operation=operation)
 
     assert _kinds(resolution) == set()
 
 
-def test_an_absence_is_still_reported_as_unresolved_and_never_as_resolved() -> None:
+def test_an_absence_is_still_reported_as_unresolved_and_never_as_resolved(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The load-bearing half of the narrowing.
 
     Withholding the finding must mean "the question was not asked", never "the
@@ -80,7 +89,7 @@ def test_an_absence_is_still_reported_as_unresolved_and_never_as_resolved() -> N
     be reading an absence as a verdict, so the resolution must carry no value
     and an unanchored envelope.
     """
-    resolution = _resolve((IdentityCandidate(value=_FILER_CIF),))
+    resolution = _resolve((IdentityCandidate(value=_FILER_CIF),), operation=operation)
 
     assert resolution.resolved is None
     assert resolution.provenance.grounding is FieldGroundingOutcome.UNANCHORED
@@ -93,7 +102,7 @@ def test_an_absence_is_still_reported_as_unresolved_and_never_as_resolved() -> N
 # ---------------------------------------------------------------------------
 
 
-def test_a_counterparty_identifier_failing_its_checksum_still_blocks() -> None:
+def test_a_counterparty_identifier_failing_its_checksum_still_blocks(operation: PinnedAuthorityOperation) -> None:
     """The genuine catch, which the narrowing must not weaken.
 
     The true supplier's identifier fails its control character. The document DID
@@ -105,6 +114,7 @@ def test_a_counterparty_identifier_failing_its_checksum_still_blocks() -> None:
             IdentityCandidate(value=_BAD_CHECKSUM_CIF, role_evidence="Proveedor:"),
             IdentityCandidate(value=_FILER_CIF, role_evidence="Cliente:"),
         ),
+        operation=operation,
     )
 
     assert _kinds(resolution) == {
@@ -114,32 +124,36 @@ def test_a_counterparty_identifier_failing_its_checksum_still_blocks() -> None:
     assert resolution.resolved is None
 
 
-def test_the_role_failure_now_names_the_verification_failure_rather_than_the_exclusion() -> None:
+def test_the_role_failure_now_names_the_verification_failure_rather_than_the_exclusion(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The surviving detail must say what actually went wrong.
 
     It previously read "no verified identifier remained after excluding the
     filer's own identity", which described the filer exclusion on a document
     whose real problem is a rejected counterparty identifier.
     """
-    resolution = _resolve((IdentityCandidate(value=_BAD_CHECKSUM_CIF, role_evidence="Proveedor:"),))
+    resolution = _resolve(
+        (IdentityCandidate(value=_BAD_CHECKSUM_CIF, role_evidence="Proveedor:"),), operation=operation
+    )
 
     role = next(f for f in resolution.findings if f.kind is DraftDiscrepancyKind.ROLE_UNRESOLVED)
     assert "failed verification" in role.detail
 
 
-def test_a_verified_but_unevidenced_lone_survivor_still_blocks() -> None:
+def test_a_verified_but_unevidenced_lone_survivor_still_blocks(operation: PinnedAuthorityOperation) -> None:
     """The narrowing is scoped to ABSENCE and must not reach the survivor case.
 
     One identifier verified and nothing on the page ties it to the counterparty.
     That is a present-but-unroled identity, not an absent one, and accepting it
     would name whichever unrelated entity happens to appear on the page.
     """
-    resolution = _resolve((IdentityCandidate(value=_COUNTERPARTY_CIF),))
+    resolution = _resolve((IdentityCandidate(value=_COUNTERPARTY_CIF),), operation=operation)
 
     assert DraftDiscrepancyKind.ROLE_UNRESOLVED in _kinds(resolution)
 
 
-def test_role_evidence_still_resolves_an_evidenced_counterparty() -> None:
+def test_role_evidence_still_resolves_an_evidenced_counterparty(operation: PinnedAuthorityOperation) -> None:
     """Positive control: the resolver still promotes on real role evidence.
 
     Without this, every assertion above would also pass against a resolver that
@@ -150,6 +164,7 @@ def test_role_evidence_still_resolves_an_evidenced_counterparty() -> None:
             IdentityCandidate(value=_COUNTERPARTY_CIF, role_evidence="Proveedor:"),
             IdentityCandidate(value=_FILER_CIF, role_evidence="Cliente:"),
         ),
+        operation=operation,
     )
 
     assert resolution.resolved == _COUNTERPARTY_CIF

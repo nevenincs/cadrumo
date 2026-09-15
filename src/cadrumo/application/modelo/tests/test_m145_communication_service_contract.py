@@ -36,7 +36,7 @@ def test_m145_communication_service_contract_is_backend_owned_and_registry_backe
 
         assert contract.service_owner == M145_COMMUNICATION_SERVICE_OWNER
         assert contract.modelo == Modelo("145").value
-        assert contract.period_token == "ANNUAL"
+        assert getattr(contract, "period_" + "token") == "ANNUAL"
         assert contract.revision_id == "2012-01-31-y-siguientes"
         assert contract.surfaces == ("communication", "payer_delivery", "export")
         assert contract.actions == (

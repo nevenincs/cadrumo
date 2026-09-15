@@ -41,6 +41,7 @@ class LLMClassificationSuggestion(BaseModel):
 
     @property
     def recommends_split(self) -> bool:
+        """Return whether the suggestion contains multiple components."""
         return self.multiple_components is True
 
 
@@ -110,10 +111,13 @@ class LLMSplitSuggestion(BaseModel):
 
     @property
     def recommends_split(self) -> bool:
+        """Return whether this proposal contains more than one child."""
         return len(self.children) > 1
 
 
 class LLMSplitApplyResult(BaseModel):
+    """Result of persisting an evidence-driven transaction split."""
+
     model_config = STRICT_FROZEN_CONFIG
     bucket_id: BucketId
     parent_transaction_id: TransactionId
@@ -124,6 +128,8 @@ class LLMSplitApplyResult(BaseModel):
 
 
 class LLMSuggestionRejectionResult(BaseModel):
+    """Result of persisting an operator rejection of an LLM suggestion."""
+
     model_config = STRICT_FROZEN_CONFIG
     bucket_id: BucketId
     transaction_id: TransactionId
@@ -143,6 +149,7 @@ class EvidenceImage(BaseModel):
 
     @classmethod
     def from_base64(cls, base64_data: str, media_type: ImageMediaType) -> EvidenceImage:
+        """Build an evidence image while recording its content digest."""
         return cls(
             content_sha256=sha256_hex(base64.b64decode(base64_data)),
             base64_data=base64_data,
@@ -159,16 +166,24 @@ class ResolvedEvidenceInput:
 
 
 class VisionClassifier(Protocol):
+    """Read-only classifier port for evidence-backed vision suggestions."""
+
     @property
-    def decided_by(self) -> str: ...
+    def decided_by(self) -> str:
+        """Return the stable identity of the classifier implementation."""
+        ...
 
     def classify(
         self, transaction: Transaction, *, evidence_images: tuple[EvidenceImage, ...]
-    ) -> LLMClassificationResponse: ...
+    ) -> LLMClassificationResponse:
+        """Classify one transaction using the supplied evidence images."""
+        ...
 
     def propose_split(
         self, transaction: Transaction, *, evidence_images: tuple[EvidenceImage, ...]
-    ) -> LLMSplitResponse: ...
+    ) -> LLMSplitResponse:
+        """Propose evidence-driven children for one transaction."""
+        ...
 
 
 @dataclass(frozen=True)

@@ -144,7 +144,8 @@ def assert_complementaria_liability_direction_permitted(
     """Refuse a pre-rectificativa ``complementaria`` that decreases liability.
 
     Only load-bearing for a pre-rectificativa period (see
-    :func:`~domain.calculations.registry.amendment_regime_policy.resolve_amendment_kind_regime_for_period`): once rectificativa
+    :func:`~domain.calculations.registry.amendment_regime_policy.resolve_amendment_kind_regime_for_period`):
+    once rectificativa
     applies, both directions route through the unified mechanism and this
     guard is a no-op. For a pre-rectificativa period requesting
     ``COMPLEMENTARIA``, sums the modelo's declared final-result casilla(s)

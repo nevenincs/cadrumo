@@ -24,8 +24,6 @@ called them sectoral; the declaration says otherwise and now wins.
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import patch
-
 import pytest
 
 from ....domain.user_profile.values import UserProfileFact
@@ -53,7 +51,8 @@ def _profile_for_facts(*facts: UserProfileFact) -> SimpleNamespace:
 def _suggests(*facts: UserProfileFact) -> bool | None:
     """Exercise the policy with an inward fake profile, without persistence."""
     profile = _profile_for_facts(*facts)
-    with patch.object(_retencion_rate_advisory, "_load_profile_for_bucket", return_value=profile):
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(_retencion_rate_advisory, "_load_profile_for_bucket", lambda _bucket_id: profile)
         return _profile_suggests_sectoral_activity(_BUCKET_ID)
 
 

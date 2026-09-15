@@ -270,6 +270,7 @@ class LedgerIvaAggregationSourceResolver:
         investment_asset_register: BienesInversionIvaRegister | None = None,
         investment_asset_profile_id: str | None = None,
     ) -> None:
+        """Bind repositories used to resolve IVA ledger sources."""
         self._transaction_repository = transaction_repository
         self._invoice_catalogue_read_ports = invoice_catalogue_read_ports
         self._prorrata_register_repository = prorrata_register_repository
@@ -277,6 +278,7 @@ class LedgerIvaAggregationSourceResolver:
         self._investment_asset_profile_id = investment_asset_profile_id
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve IVA ledger observations for one calculation context."""
         if not revision_has_binding_source(context.revision, "ledger_iva_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 
@@ -484,9 +486,11 @@ class LedgerRentaIncomeAggregationSourceResolver:
         *,
         ports: InvoiceCatalogueReadPorts,
     ) -> None:
+        """Bind invoice-catalogue ports used by the Renta income resolver."""
         self._ports = ports
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve Renta activity-income observations for one context."""
         if not revision_has_binding_source(context.revision, "ledger_renta_income_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 
@@ -1107,10 +1111,12 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         transaction_repository: TransactionCatalogueRepositoryProtocol,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     ) -> None:
+        """Bind repositories used to resolve Renta expense sources."""
         self._transaction_repository = transaction_repository
         self._prorrata_register_repository = prorrata_register_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve Renta expense observations for one calculation context."""
         if not revision_has_binding_source(context.revision, "ledger_renta_gastos_pago_fraccionado_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 
