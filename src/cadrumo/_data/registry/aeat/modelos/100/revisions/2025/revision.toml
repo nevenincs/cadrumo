@@ -1849,23 +1849,19 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0456" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:829 y aeat-dr-100-2025-dictionary:855: NIFALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM1, tipo X y casilla 0456; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0457" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:830 y aeat-dr-100-2025-dictionary:856: NONIFALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM1, tipo LGC y casilla 0457; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0458" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:835 y aeat-dr-100-2025-dictionary:861: NIFALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM2, tipo X y casilla 0458; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0459" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:836 y aeat-dr-100-2025-dictionary:862: NONIFALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM2, tipo LGC y casilla 0459; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0460" }
@@ -2134,8 +2130,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0527" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:859 y aeat-dr-100-2025-dictionary:885: SUMALIM, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/SUMALIM, tipo P102 y casilla 0527; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0528" }
@@ -6844,108 +6839,87 @@ fields = { legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1741" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:831 y aeat-dr-100-2025-dictionary:857: IMPALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM1, tipo P102 y casilla 1741; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1742" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:833 y aeat-dr-100-2025-dictionary:859: NIFOPALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM1, tipo X y casilla 1742; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1743" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:834 y aeat-dr-100-2025-dictionary:860: NONIFOPALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM1, tipo LGC y casilla 1743; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1744" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:837 y aeat-dr-100-2025-dictionary:863: IMPALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM2, tipo P102 y casilla 1744; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1745" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:839 y aeat-dr-100-2025-dictionary:865: NIFOPALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM2, tipo X y casilla 1745; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1746" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:840 y aeat-dr-100-2025-dictionary:866: NONIFOPALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM2, tipo LGC y casilla 1746; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1747" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:841 y aeat-dr-100-2025-dictionary:867: NIFALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM3, tipo X y casilla 1747; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1748" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:842 y aeat-dr-100-2025-dictionary:868: NONIFALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM3, tipo LGC y casilla 1748; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1749" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:843 y aeat-dr-100-2025-dictionary:869: IMPALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM3, tipo P102 y casilla 1749; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1750" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:845 y aeat-dr-100-2025-dictionary:871: NIFOPALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM3, tipo X y casilla 1750; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1751" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:846 y aeat-dr-100-2025-dictionary:872: NONIFOPALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM3, tipo LGC y casilla 1751; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1752" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:847 y aeat-dr-100-2025-dictionary:873: NIFALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM4, tipo X y casilla 1752; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1753" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:848 y aeat-dr-100-2025-dictionary:874: NONIFALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM4, tipo LGC y casilla 1753; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1754" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:849 y aeat-dr-100-2025-dictionary:875: IMPALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM4, tipo P102 y casilla 1754; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1755" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:851 y aeat-dr-100-2025-dictionary:877: NIFOPALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM4, tipo X y casilla 1755; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1756" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:852 y aeat-dr-100-2025-dictionary:878: NONIFOPALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM4, tipo LGC y casilla 1756; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1757" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:853 y aeat-dr-100-2025-dictionary:879: NIFALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM5, tipo X y casilla 1757; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1758" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:854 y aeat-dr-100-2025-dictionary:880: NONIFALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM5, tipo LGC y casilla 1758; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1759" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:855 y aeat-dr-100-2025-dictionary:881: IMPALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM5, tipo P102 y casilla 1759; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1760" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:857 y aeat-dr-100-2025-dictionary:883: NIFOPALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM5, tipo X y casilla 1760; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-77", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1761" }
-fields = { legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
-removed_fields = ["continuidad_id"]
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary:858 y aeat-dr-100-2025-dictionary:884: NONIFOPALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM5, tipo LGC y casilla 1761; ambas ediciones mantienen el mismo campo, etiqueta, estructura de hijo y funcion en AnualidadesAlimentosRes.", legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "1762" }

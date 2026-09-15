@@ -40,9 +40,7 @@ _INVOICE_DATE = date(2026, 4, 1)
 _DEFAULT_RATE_21 = IvaRate._from_registry("RATE_21")
 
 
-def _line(
-    *, unit_price: str = "1000.00", iva_rate: IvaRate = _DEFAULT_RATE_21, **extra: object
-) -> InvoiceLine:
+def _line(*, unit_price: str = "1000.00", iva_rate: IvaRate = _DEFAULT_RATE_21, **extra: object) -> InvoiceLine:
     subtotal = Decimal(unit_price)
     rate = iva_rate_percentage(iva_rate, _INVOICE_DATE)
     iva_amount = Decimal("0") if rate is None else subtotal * rate
