@@ -292,8 +292,7 @@ def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
             consumed, layers = _consume_fifo(layers, movement)
             cogs_value += consumed
             continue
-        if movement.kind is MovementKind.COUNT:
-            layers = _apply_count(layers, movement)
+        layers = _apply_count(layers, movement)
     closing = layers_value(layers)
     return InventoryValuationResult(
         closing_layers=tuple(layers),
@@ -342,9 +341,8 @@ def _apply_weighted_average_movement(
         return purchase_delta, MONEY_ZERO
     if movement.kind is MovementKind.COGS:
         return _apply_weighted_average_cogs(ledger, movement, quantity, value, pools)
-    if movement.kind is MovementKind.COUNT:
-        average = MONEY_ZERO if quantity == MONEY_ZERO else value / quantity
-        pools[movement.sku] = (movement.quantity, movement.quantity * average)
+    average = MONEY_ZERO if quantity == MONEY_ZERO else value / quantity
+    pools[movement.sku] = (movement.quantity, movement.quantity * average)
     return MONEY_ZERO, MONEY_ZERO
 
 

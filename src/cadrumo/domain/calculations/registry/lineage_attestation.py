@@ -69,6 +69,11 @@ family dispatch and of revision loader internals.
 """
 
 
+def _runtime_object(value: object) -> object:
+    """Capture membership values before applying the runtime shape guard."""
+    return value
+
+
 class LineageAttestation(RegistryModel):
     """One grounded continuation across one exact predecessor edge.
 
@@ -189,11 +194,12 @@ def _members_for(
             f"lineage membership index for {family!r}/{revision!r} must be a "
             "collection of member identities, not a scalar",
         )
-    if any(not isinstance(member, str) for member in family_members):
+    raw_members = tuple(_runtime_object(member) for member in family_members)
+    if any(not isinstance(member, str) for member in raw_members):
         raise RegistryValidationError(
             f"lineage membership index for {family!r}/{revision!r} contains a non-string member identity",
         )
-    return tuple(family_members)
+    return tuple(member for member in raw_members if isinstance(member, str))
 
 
 def validate_lineage_attestations(

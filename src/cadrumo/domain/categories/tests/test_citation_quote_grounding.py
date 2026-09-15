@@ -46,8 +46,7 @@ def _shipped_citations(operation: PinnedAuthorityOperation) -> list[CategoryCita
     """Return every citation on every shipped category profile."""
     found: list[CategoryCitation] = []
     for profile in load_category_profiles(operation=operation).values():
-        if profile.proportionality is not None:
-            found.extend(profile.proportionality.citations)
+        found.extend(profile.proportionality.citations)
     return found
 
 

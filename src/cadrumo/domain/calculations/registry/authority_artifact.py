@@ -409,7 +409,7 @@ def authority_query_from_identity(kind: str, key: str) -> AuthorityComponentQuer
             return ReferenceComponentQuery(key, component_kind)
         if component_kind in (AuthorityComponentKind.LEGAL_EVIDENCE, AuthorityComponentKind.SOURCE_EVIDENCE):
             return EvidenceComponentQuery(key, component_kind)
-        if component_kind is AuthorityComponentKind.EXPORT_LAYOUT:
+        else:
             modelo_id, revision_id, layout_id = key.split("\x1f", 2)
             return ExportLayoutComponentQuery(modelo_id, revision_id, layout_id)
     except (ValueError, TypeError) as exc:

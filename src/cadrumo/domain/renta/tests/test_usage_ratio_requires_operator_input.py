@@ -83,7 +83,7 @@ def _usage_ratio_categories(operation: PinnedAuthorityOperation) -> list[Spendin
     return [
         category
         for category, profile in profiles.items()
-        if profile.proportionality is not None and profile.proportionality.kind in _usage_ratio_kinds(operation)
+        if profile.proportionality.kind in _usage_ratio_kinds(operation)
     ]
 
 

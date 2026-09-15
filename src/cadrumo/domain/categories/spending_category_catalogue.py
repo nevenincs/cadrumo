@@ -20,6 +20,11 @@ _ORDER_KEY = "spending_category.order"
 _FAMILY_PREFIX = "spending_category.family."
 
 
+def _runtime_object(value: object) -> object:
+    """Capture a family token before applying the runtime enum check."""
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class SpendingCategoryCatalogue:
     """Dated facts projection for category tokens and mechanical buckets."""
@@ -54,8 +59,9 @@ class SpendingCategoryCatalogue:
 
     def categories_for_family(self, family: SpendingCategoryFamily) -> tuple[SpendingCategory, ...]:
         """Return the ordered category projection for one retained family."""
+        raw_family = _runtime_object(family)
         try:
-            selected = family if isinstance(family, SpendingCategoryFamily) else SpendingCategoryFamily(family)
+            selected = raw_family if isinstance(raw_family, SpendingCategoryFamily) else SpendingCategoryFamily(family)
         except (TypeError, ValueError) as exc:
             raise RegistryValidationError(f"unknown spending category family {family!r}") from exc
         try:

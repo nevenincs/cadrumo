@@ -571,7 +571,7 @@ def _validate_state_metadata(revision: CalculationRevision) -> None:
             ("discarded_at", "discarded_by", "discard_reason"),
             present=False,
         )
-    elif revision.state is CalculationRevisionState.DESCARTADO:
+    else:
         _require_revision_fields(revision, ("discarded_at", "discarded_by"), present=True)
         _require_revision_fields(
             revision,

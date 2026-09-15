@@ -346,7 +346,7 @@ def test_the_blocking_axis_carries_no_country_condition() -> None:
     invisible to every behavioural case above if the check that raised it were
     still on the advisory channel.
     """
-    country_members = [kind for kind in DraftDiscrepancyKind if "country" in kind.value]
+    country_members = [kind for kind in DraftDiscrepancyKind if "country" in str(kind.value)]
 
     assert country_members == []
     assert set(BLOCKING_REASON_BY_DISCREPANCY_KIND) == set(DraftDiscrepancyKind)

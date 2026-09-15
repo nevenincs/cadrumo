@@ -34,7 +34,7 @@ def test_cadrumo_package_imports_in_process() -> None:
 
     from ..core.package_version import PACKAGE_VERSION
 
-    assert PACKAGE_VERSION
+    assert PACKAGE_VERSION.strip()
 
 
 def test_cadrumo_package_imports_in_subprocess() -> None:

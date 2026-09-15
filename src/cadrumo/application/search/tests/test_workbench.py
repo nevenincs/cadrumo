@@ -9,6 +9,7 @@ import math
 from collections.abc import Sequence
 from importlib import import_module
 from itertools import permutations
+from operator import methodcaller
 from typing import Any, cast
 
 import pytest
@@ -479,7 +480,7 @@ def test_query_is_transient_and_type_checked() -> None:
     request = WorkbenchSearchRequest(query="declaration")
     assert request.model_dump() == {"limit": 20}
     with pytest.raises(ValidationError):
-        WorkbenchSearchRequest(query=cast(str, 123))
+        methodcaller("__call__", query=123)(WorkbenchSearchRequest)
     with pytest.raises(ValidationError, match="control characters"):
         WorkbenchSearchRequest(query="bad\nquery")
     service = WorkbenchSearchService([_document()])

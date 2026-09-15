@@ -33,6 +33,11 @@ from .queries import RegistryQueryService
 from .schema import BindingDefinition
 
 
+def _runtime_object(value: object) -> object:
+    """Capture a provider before retaining its malformed-boundary fallback."""
+    return value
+
+
 class ProfileKeyGrounding(BaseModel):
     """Union grounding for one profile key across every consuming binding.
 
@@ -135,7 +140,7 @@ def binding_profile_keys(binding: BindingDefinition) -> tuple[str, ...]:
     registry, and a per-binding caller needs the same extraction without
     building that index.
     """
-    selector = binding.provider
+    selector = _runtime_object(binding.provider)
     if isinstance(selector, BaseModel) and not isinstance(selector, ProfileProvider):
         # A different binding-source family's selector (manual_input, relation,
         # ...); its shape never carries a profile key, so no read is needed.

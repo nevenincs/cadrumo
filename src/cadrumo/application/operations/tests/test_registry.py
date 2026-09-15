@@ -229,7 +229,10 @@ _UNVALIDATED_DEFAULT_WITNESS_CONFIG = ConfigDict(strict=True, frozen=True, extra
 class InvalidDefaultPayload(BaseModel):
     model_config = _UNVALIDATED_DEFAULT_WITNESS_CONFIG
 
-    value: int = cast(int, "not-an-integer")  # intentional admission witness
+    value: int
+
+
+InvalidDefaultPayload.model_fields["value"].default = "not-an-integer"  # intentional admission witness
 
 
 class ValidatedDefaultPayload(BaseModel):

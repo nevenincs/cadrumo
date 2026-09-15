@@ -23,7 +23,6 @@ from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -56,7 +55,7 @@ _GENERAL_PROFILE_ID = "30300000-0000-4000-8000-000000000304"
 
 
 def _build_work_unit(bucket_id: str) -> WorkUnit:
-    modelo: ModeloCode = cast(ModeloCode, "303")
+    modelo = ModeloCode("303")
     period = Period.from_year_and_code(2026, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(

@@ -32,7 +32,7 @@ class IvaCompensationHistoryRepositoryProtocol(Protocol):
 
     def to_secure_object_write(
         self,
-        state: IvaCompensationPeriodState,
+        payload: IvaCompensationPeriodState,
         *,
         expected_revision_id: str | None = None,
     ) -> SecureObjectWrite:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from decimal import Decimal
+from operator import methodcaller
 from pathlib import Path
 from typing import Any, cast, override
 
@@ -379,16 +380,17 @@ def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
     from ..invoice_classification import invoice_line_to_iva_observation
 
     with pytest.raises(ValidationError, match=r"base_amount|iva_amount|Decimal|decimal"):
-        invoice_line_to_iva_observation(
+        methodcaller(
+            "__call__",
             invoice_id="inv-bad",
             issued_at=date(2025, 6, 15),
             invoice_kind=InvoiceKind.ISSUED,
             iva_rate=IvaRate.from_registry("RATE_21"),
-            base_amount=cast(Decimal, "1000"),
-            iva_amount=cast(Decimal, "210"),
+            base_amount="1000",
+            iva_amount="210",
             deduction_fact_kind=None,
             deduction_provenance=None,
-        )
+        )(invoice_line_to_iva_observation)
 
 
 def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end() -> None:

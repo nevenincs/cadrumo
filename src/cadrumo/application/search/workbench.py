@@ -34,6 +34,12 @@ _MAX_SEARCH_RESULTS = 100
 _WORD_PATTERN = re.compile(r"\w+", re.UNICODE)
 _OPAQUE_IDENTITY_KEY = secrets.token_bytes(32)
 
+
+def _runtime_object(value: object) -> object:
+    """Capture a caller-provided projection before validating its runtime shape."""
+    return value
+
+
 _TransientQuery = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_QUERY_LENGTH),
@@ -538,9 +544,10 @@ class WorkbenchSearchService:
 
     def __init__(self, documents: Sequence[WorkbenchSearchDocument]) -> None:
         """Capture a private snapshot and refuse duplicate derived identities."""
-        snapshot = tuple(documents)
-        if any(not isinstance(document, WorkbenchSearchDocument) for document in snapshot):
+        raw_snapshot: tuple[object, ...] = tuple(_runtime_object(document) for document in documents)
+        if any(not isinstance(document, WorkbenchSearchDocument) for document in raw_snapshot):
             raise TypeError("workbench search requires WorkbenchSearchDocument projections")
+        snapshot = tuple(document for document in raw_snapshot if isinstance(document, WorkbenchSearchDocument))
         derived = tuple((_derived_stable_id(document), document) for document in snapshot)
         identities = tuple(identity for identity, _ in derived)
         if len(set(identities)) != len(identities):

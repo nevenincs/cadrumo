@@ -6,7 +6,7 @@ import csv
 import hashlib
 from collections.abc import Mapping
 from io import BytesIO, StringIO
-from typing import cast
+from operator import methodcaller
 
 import pytest
 from openpyxl import load_workbook
@@ -210,11 +210,12 @@ def test_normalize_row_raises_export_field_error_on_unknown_field() -> None:
 def test_serialize_tabular_rows_rejects_unsupported_runtime_format() -> None:
     """Site: serialize_tabular_rows — runtime value outside the closed enum."""
     with pytest.raises(ExportFormatError) as exc_info:
-        serialize_tabular_rows(
+        methodcaller(
+            "__call__",
             (),
             fieldnames=("amount",),
-            export_format=cast(ExportSerializationFormat, "xml"),
-        )
+            export_format="xml",
+        )(serialize_tabular_rows)
     assert exc_info.value.translated_message == "errors.refused.refused_export_format"
     assert exc_info.value.context == {"export_format": "xml"}
     envelope = build_error_envelope(exc_info.value)

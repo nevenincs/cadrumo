@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import cast
+from operator import methodcaller
 
 import pytest
 from pydantic import ValidationError
 
-from ....core.casilla_id import CasillaId
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ..errors import ModeloValidationError
@@ -28,6 +27,11 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo_year=2026,
     period="0A",
 )
+
+
+def _derive_with_invalid_input(**kwargs: object) -> object:
+    """Invoke the strict runtime boundary with intentionally invalid values."""
+    return methodcaller("__call__", **kwargs)(derive_calculation_revision_id)
 
 
 def test_revision_id_changes_when_row_binding_value_changes() -> None:
@@ -137,9 +141,9 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
         )
 
     with pytest.raises(ModeloValidationError, match=r"input_values_by_casilla_id contains non-canonical casilla\.id"):
-        derive_calculation_revision_id(
+        _derive_with_invalid_input(
             work_unit_id="a" * 64,
-            input_values_by_casilla_id=cast("dict[CasillaId, str]", {1: "10.00"}),
+            input_values_by_casilla_id={1: "10.00"},
             binding_overrides={},
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             filing_instance_evidence=None,
@@ -147,11 +151,11 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
         )
 
     with pytest.raises(ModeloValidationError, match=r"casilla_values contains non-canonical casilla\.id"):
-        derive_calculation_revision_id(
+        _derive_with_invalid_input(
             work_unit_id="a" * 64,
             input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
             binding_overrides={},
-            casilla_values=cast("dict[CasillaId, Decimal]", {1: Decimal("15.00")}),
+            casilla_values={1: Decimal("15.00")},
             filing_instance_evidence=None,
             source_provenance=(),
         )

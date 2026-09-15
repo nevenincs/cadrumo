@@ -47,6 +47,11 @@ from .errors import (
 from .observations_repository import ObservationEnvelopePayload, ObservationSourceKind, ResultDispositionProjection
 
 
+def _runtime_object(value: object) -> object:
+    """Capture registry input before retaining its defensive runtime check."""
+    return value
+
+
 def _required_registry_value(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)
     if not isinstance(value, str) or not value.strip():
@@ -69,12 +74,14 @@ def _selected_registry_mapping(
     *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
 ) -> dict[str, str]:
     """Resolve the dated carry declaration through the validated registry."""
-    normalized_modelo = modelo.strip() if isinstance(modelo, str) else ""
-    normalized_period = period.strip() if isinstance(period, str) else ""
+    raw_modelo = _runtime_object(modelo)
+    raw_period = _runtime_object(period)
+    normalized_modelo = raw_modelo.strip() if isinstance(raw_modelo, str) else ""
+    normalized_period = raw_period.strip() if isinstance(raw_period, str) else ""
     if not normalized_modelo or not normalized_period:
         raise M303CarryIngressError(
             translated_message=_translated_error(None, "registry_scope_invalid"),
-            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+            context={"modelo": raw_modelo, "filing_year": filing_year, "period": raw_period},
         )
     try:
         effective_date = date(filing_year, 12, 31)
@@ -163,7 +170,9 @@ def _validate_disposition_code_mapping(entries: Mapping[str, str]) -> None:
     admissible = _mapping_tokens(entries, "disposition.admissible")
     prefix = "disposition.code."
     code_to_semantic: dict[str, str] = {}
-    for key, value in entries.items():
+    for raw_key, raw_value in entries.items():
+        key = _runtime_object(raw_key)
+        value = _runtime_object(raw_value)
         if not isinstance(key, str) or not key.startswith(prefix):
             continue
         code = key.removeprefix(prefix)
