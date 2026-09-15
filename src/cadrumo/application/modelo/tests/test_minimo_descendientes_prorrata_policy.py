@@ -8,6 +8,8 @@ same values survive the profile write path.
 
 from __future__ import annotations
 
+import pytest
+
 from cadrumo.domain.contribuyente.renta_codes import RentaMaritalStatus
 
 from ..profile_binding import (
@@ -15,6 +17,8 @@ from ..profile_binding import (
     _PARTNERED_STATUS_TOKENS,
     _UNMARRIED_STATUS_TOKENS,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_the_partnered_tokens_carry_no_foreign_vocabulary() -> None:
