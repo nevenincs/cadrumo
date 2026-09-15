@@ -1085,39 +1085,46 @@ def _materialise_revision(
     predecessor_id = named.get(revision_id)
     storage_baseline_id = storage_named.get(revision_id)
     family_baseline_id = family_storage_named.get(revision_id)
-    baseline_id = predecessor_id or storage_baseline_id or family_baseline_id
+    casilla_baseline_id = predecessor_id or storage_baseline_id
+    family_baseline_id = predecessor_id or family_baseline_id
     result = _MaterialisedRevision(table=table, label_origins=None)
-    if baseline_id is not None:
-        predecessor = _materialise_revision(
-            source_path, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
-        )
-        relation = "inheriting from" if predecessor_id is not None else "hydrating casillas from"
-        rows, label_origins = _inherit_casillas(
-            f"{source_path}: revision {revision_id!r} {relation} {baseline_id!r}",
-            revision_id=revision_id,
-            predecessor_id=baseline_id,
-            inherited=_raw_casilla_rows(source_path, baseline_id, predecessor.table),
-            inherited_label_origins=predecessor.label_origins,
-            successor=table,
-        )
+    if casilla_baseline_id is not None or family_baseline_id is not None:
+        if casilla_baseline_id is None:
+            rows = _raw_casilla_rows(source_path, revision_id, table)
+            label_origins = None
+        else:
+            casilla_predecessor = _materialise_revision(
+                source_path, raw_revisions, named, storage_named, family_storage_named, casilla_baseline_id, resolved
+            )
+            relation = "inheriting from" if predecessor_id is not None else "hydrating casillas from"
+            rows, label_origins = _inherit_casillas(
+                f"{source_path}: revision {revision_id!r} {relation} {casilla_baseline_id!r}",
+                revision_id=revision_id,
+                predecessor_id=casilla_baseline_id,
+                inherited=_raw_casilla_rows(source_path, casilla_baseline_id, casilla_predecessor.table),
+                inherited_label_origins=casilla_predecessor.label_origins,
+                successor=table,
+            )
         merged: dict[str, object] = {**table, _INHERITED_SECTION: rows}
         restated = _restated_families(table)
-        semantic_predecessor_id = predecessor_id or family_baseline_id
-        if semantic_predecessor_id is not None:
+        if family_baseline_id is not None:
+            family_predecessor = _materialise_revision(
+                source_path, raw_revisions, named, storage_named, family_storage_named, family_baseline_id, resolved
+            )
             for family in _KEYED_FAMILIES:
                 if family.section in restated:
                     continue
                 if family.scoped and family.section not in (as_toml_array(table.get("scoped_families", ())) or ()):
                     continue
                 family_members = inherit_keyed_family(
-                    f"{source_path}: revision {revision_id!r} inheriting from {semantic_predecessor_id!r}",
+                    f"{source_path}: revision {revision_id!r} inheriting from {family_baseline_id!r}",
                     revision_id=revision_id,
-                    predecessor_id=semantic_predecessor_id,
-                    predecessor=predecessor.table,
-                    storage_only=family_baseline_id is not None,
+                    predecessor_id=family_baseline_id,
+                    predecessor=family_predecessor.table,
+                    storage_only=predecessor_id is None,
                     family=family,
-                    inherited=_raw_keyed_members(source_path, semantic_predecessor_id, predecessor.table, family),
-                    inherited_casillas=_raw_casilla_rows(source_path, semantic_predecessor_id, predecessor.table),
+                    inherited=_raw_keyed_members(source_path, family_baseline_id, family_predecessor.table, family),
+                    inherited_casillas=_raw_casilla_rows(source_path, family_baseline_id, family_predecessor.table),
                     successor_casillas=rows,
                     successor=table,
                 )

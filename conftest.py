@@ -110,6 +110,12 @@ _host_load_hook = import_module("cadrumo.tests._host_load_hook")
 _arm_host_load_stamp = _host_load_hook.arm_pre_timeout_stamp
 _disarm_host_load_stamp = _host_load_hook.disarm_pre_timeout_stamp
 _report_lost_tests = import_module("cadrumo.tests._lost_test_hook").apply
+_fixture_resolution_hook = import_module("cadrumo.tests._fixture_resolution_hook")
+_refuse_unresolved_fixtures = _fixture_resolution_hook.apply
+_fail_on_refused_fixtures = _fixture_resolution_hook.fail_session_on_refused_requests
+_record_refused_fixtures = _fixture_resolution_hook.record_refused_from_node
+_report_refused_fixtures = _fixture_resolution_hook.report_refused_requests
+_reset_refused_fixtures = _fixture_resolution_hook.reset_refused_requests
 _marker_hook = import_module("cadrumo.tests._marker_hook")
 _apply_marker_contract = _marker_hook.apply
 _apply_banned_live_import_policy = _marker_hook.apply_banned_live_import_policy
@@ -136,6 +142,7 @@ register_collection_storage_root_cleanup(collection_storage_root())
 def pytest_configure(config: pytest.Config) -> None:
     """Create and announce this pytest invocation's durable run log."""
     _reset_held_serials()
+    _reset_refused_fixtures()
     _run_logging.configure(config)
 
 
@@ -156,16 +163,18 @@ def pytest_collectreport(report: pytest.CollectReport) -> None:
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
-    """Fail incomplete serial runs, then finalize their durable metadata."""
+    """Fail incomplete serial runs and worker-refused fixture requests, then finalize metadata."""
     del exitstatus
     _fail_on_held_serials(session)
+    _fail_on_refused_fixtures(session)
     _run_logging.finish(session.config, session.exitstatus)
 
 
 def pytest_testnodedown(node: object, error: object | None) -> None:
-    """Collect serial items held inside an xdist worker."""
+    """Collect serial items held, and fixture requests refused, inside an xdist worker."""
     del error
     _record_held_serials(node)
+    _record_refused_fixtures(node)
 
 
 @pytest.hookimpl(trylast=True)
@@ -202,6 +211,10 @@ def _inherit_resident_service_environment(request: pytest.FixtureRequest) -> Non
 @pytest.hookimpl(tryfirst=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Apply the repository-wide collection-policy contracts."""
+    # First, before the marker contract holds serial items back and before
+    # marker selection deselects anything: a dead test must be refused even in
+    # a lane that would never execute it.
+    _refuse_unresolved_fixtures(config, items)
     _apply_marker_contract(config, items)
     _apply_banned_live_import_policy(items)
     # Recorded here, before selection removes anything, so the empty-selection

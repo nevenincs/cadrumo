@@ -621,14 +621,6 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     assert _decimal_value(casilla_17) == _decimal_value(casilla_14) - saldo_seed - _decimal_value(casilla_16)
 
 
-# Note: the "silently_ignored" test that previously lived here
-# (pinned the amendment's narrowed contract) was superseded by
-# The strict-rejection contract is now restored for the
-# smuggle-via-inputs-only pattern. The new
-# test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected
-# above is the harder gate.
-
-
 # ---------------------------------------------------------------------------
 # Modelo 130 casilla 17 official form formula
 # ---------------------------------------------------------------------------

@@ -19,6 +19,7 @@ from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     validate_generated_export_tree,
 )
+from .candidate_staging import stage_continuity_metadata
 from .export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
@@ -66,11 +67,11 @@ def _real_authorities(
 #: layout can satisfy that gate against a real design, and no bundled design is
 #: small enough to be covered by a toy.
 #:
-#: Modelo 232's first generated revision is used because it is independently
-#: renderable and has no predecessor or family-storage baseline that would make
-#: a target-only validation fixture depend on a pruned sibling revision.
+#: Modelo 184 is used because its real storage-only ancestry exercises detached
+#: target staging while its modern filing-grade authority remains selectable at
+#: the catalogue-derived supported coordinate.
 _ISOLATED_TREE: Final[GeneratedExportTree] = GeneratedExportTree(
-    "232", "2016-2017", "aeat-dr-232-2016", "2016", 2016, "0A"
+    "184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
 )
 
 
@@ -123,6 +124,11 @@ def _write_isolated_generated_authority_tree(
         ),
         filing_year=_ISOLATED_TREE.filing_year,
         period=_ISOLATED_TREE.period,
+        continuity_metadata_modelo_root=stage_continuity_metadata(
+            bundled_path("registry", "aeat", "modelos", _ISOLATED_TREE.modelo),
+            tmp_path,
+            revision=_ISOLATED_TREE.revision,
+        ),
     )
     return context, joined, semantic_map, rendered, export_root
 

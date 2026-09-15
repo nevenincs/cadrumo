@@ -65,9 +65,7 @@ def _supporting_modelos(tree: GeneratedExportTree) -> frozenset[str]:
     for path in modelo_root.rglob("*.toml"):
         referenced.update(match.group("modelo") for match in _SOURCE_MODELO_RE.finditer(path.read_text("utf-8")))
     return frozenset(
-        modelo
-        for modelo in referenced - {tree.modelo}
-        if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
+        modelo for modelo in referenced - {tree.modelo} if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
     )
 
 

@@ -573,7 +573,11 @@ def test_publication_discards_only_a_completed_rollback_journal_from_an_abandone
         existing_export=True,
     )
     expected_export = _tree_bytes(candidate_export_root)
-    abandoned_candidate = tmp_path / "abandoned-candidate" / "export"
+    abandoned_candidate = _tree_publication._staging_sibling(
+        target_root=context.target_root.resolve(),
+        modelo=_ISOLATED_TREE.modelo,
+        revision_id=_ISOLATED_TREE.revision,
+    )
     backup_export_root = _tree_publication._rollback_sibling(
         target_root=context.target_root.resolve(),
         modelo=_ISOLATED_TREE.modelo,
@@ -602,7 +606,7 @@ def test_publication_discards_only_a_completed_rollback_journal_from_an_abandone
 
     assert published.validated is not None
     assert _tree_bytes(context.target_export_root) == expected_export
-    assert not candidate_export_root.exists()
+    assert candidate_export_root.exists()
     assert not backup_export_root.exists()
     assert not journal_path.exists()
 
