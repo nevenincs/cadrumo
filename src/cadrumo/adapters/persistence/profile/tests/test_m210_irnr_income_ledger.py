@@ -173,12 +173,14 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The public source mesh reads the injected store, never a same-bucket ambient store."""
-    with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_BUCKET_ID) as runtime:  # noqa: SIM117
-        with isolated_injected_secure_object_repository(
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_BUCKET_ID) as runtime,
+        isolated_injected_secure_object_repository(
             tmp_path=tmp_path / "injected",
             bucket_id=_BUCKET_ID,
             database_name="m210-injected.db",
-        ) as injected_objects:
+        ) as injected_objects,
+    ):
             injected_transaction_repository = TransactionCatalogueRepository(
                 bucket_id=_BUCKET_ID,
                 objects=injected_objects,

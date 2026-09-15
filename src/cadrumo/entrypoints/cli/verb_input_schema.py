@@ -29,6 +29,7 @@ def _rows() -> dict[str, CommandRegistrationMetadata]:
 
 
 def cli_path_for_command_key(command_key: str) -> tuple[str, ...]:
+    """Return the CLI path registered for a command schema identity."""
     row = _rows().get(command_key)
     if row is None or row.cli_path is None:
         raise LookupError(f"unknown command schema identity: {command_key}")
@@ -36,6 +37,7 @@ def cli_path_for_command_key(command_key: str) -> tuple[str, ...]:
 
 
 def is_exposable_command(command_key: str) -> bool:
+    """Return whether a command schema identity is exposed as an operator verb."""
     from .command_spec import BindingState
     from .command_specs import COMMAND_GRAPH
 
@@ -76,6 +78,7 @@ def project_recovery_handoff_contract(spec: CommandSpec) -> RecoveryHandoffContr
 
 
 def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
+    """Build validated input schemas for the requested command identities."""
     from .command_specs import COMMAND_GRAPH
 
     rows = _rows()

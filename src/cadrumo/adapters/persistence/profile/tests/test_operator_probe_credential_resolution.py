@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from cadrumo.application.auth.operator_probes import (
     live_auth_identity_kind,
@@ -102,6 +103,7 @@ def test_backend_readiness_describes_the_profile_bound_clave_provider() -> None:
             certificate_credentials=None,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
     assert readiness.provider == "clave_movil"

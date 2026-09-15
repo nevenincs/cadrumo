@@ -258,10 +258,12 @@ def test_malformed_row_metadata_is_isolated_to_its_own_row(
             "SELECT id FROM secure_objects WHERE namespace = ? ORDER BY id LIMIT 1",
             (_NAMESPACE,),
         ).fetchone()[0]
-        # The column name is a test-local literal from the parametrisation,
-        # never operator input, so the interpolation carries no injection risk.
+        update_sql = {
+            "schema_version": "UPDATE secure_objects SET schema_version = ? WHERE id = ?",
+            "classification": "UPDATE secure_objects SET classification = ? WHERE id = ?",
+        }[column]
         con.execute(
-            f"UPDATE secure_objects SET {column} = ? WHERE id = ?",  # noqa: S608
+            update_sql,
             (value, target_id),
         )
 

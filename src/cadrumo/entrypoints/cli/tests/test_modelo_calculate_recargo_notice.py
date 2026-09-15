@@ -34,7 +34,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_storage,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_storage,
 )
 from ....application.modelo.work_plazo import ModeloWorkDeadlinePosture
 from ....core.period import Period, PeriodKind, registry_period_kind
@@ -49,6 +49,7 @@ from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+__all__ = ["_isolated_storage"]
 
 _UNASSESSED_PREVIEW_NOTICE_CODE = "modelo.work.calculate.plazo_vencido_unassessed_preview"
 _RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"

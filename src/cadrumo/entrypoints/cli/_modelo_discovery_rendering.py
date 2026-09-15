@@ -1,4 +1,3 @@
-# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Payload and text projections for modelo registry discovery commands."""
 
 from __future__ import annotations
@@ -270,7 +269,9 @@ def _binding_list_rows_for_report(
             )
         )
         text_rows.append(
-            f"{report.code}\t{report.revision}\t{report.period or '-'}\t{row.binding_id}\t{row.provider.kind}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t{row.borrador_capable}"
+            f"{report.code}\t{report.revision}\t{report.period or '-'}\t{row.binding_id}\t"
+            f"{row.provider.kind}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t"
+            f"{row.borrador_capable}"
         )
         text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
     if missing:
@@ -352,7 +353,8 @@ def notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
             else "-"
         )
         lines.append(
-            f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\taction_target={target}\taction_bindings={bindings or '-'}"
+            f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t"
+            f"action_target={target}\taction_bindings={bindings or '-'}"
         )
     return lines
 
@@ -362,14 +364,17 @@ def formula_lines(report: ModeloFormulasReport, *, explain: bool) -> list[str]:
         return [
             "formula_id\ttarget_casilla_id\tinputs\tlegal_refs\tsource_refs",
             *[
-                f"{row.formula_id}\t{row.target_casilla_id}\t{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}\t{', '.join(row.legal_refs)}\t{', '.join(row.source_refs)}"
+                f"{row.formula_id}\t{row.target_casilla_id}\t"
+                f"{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}\t"
+                f"{', '.join(row.legal_refs)}\t{', '.join(row.source_refs)}"
                 for row in report.rows
             ],
         ]
     return [
         "formula_id\ttarget_casilla_id\tinputs",
         *[
-            f"{row.formula_id}\t{row.target_casilla_id}\t{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}"
+            f"{row.formula_id}\t{row.target_casilla_id}\t"
+            f"{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}"
             for row in report.rows
         ],
     ]
@@ -446,7 +451,9 @@ def casillas_lines(report: ModeloCasillasReport, *, explain: bool) -> list[str]:
         return [
             "casilla_id\tnumber\tinput\trequired\tlabel\thelp\tlegal_refs\tsource_refs",
             *[
-                f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}\t{row.help_text or '-'}\t{', '.join(row.legal_refs)}\t{', '.join(row.source_refs)}"
+                f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t"
+                f"{row.label}\t{row.help_text or '-'}\t{', '.join(row.legal_refs)}\t"
+                f"{', '.join(row.source_refs)}"
                 for row in report.rows
             ],
         ]

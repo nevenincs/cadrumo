@@ -34,6 +34,7 @@ from cadrumo.application.modelo.workspace import (
     binding_schema_records,
     capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_captures,
+    fold_slots,
     formula_operand_references_for_casilla,
     formula_schema_records,
     modelo_work_selector_request_for_target,
@@ -646,7 +647,7 @@ def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas
         assert record.legal_refs is not None
 
 
-def test_static_inspection_schema_records_covers_all_five_reference_kinds_deterministically() -> None:
+def test_static_inspection_schema_records_project_four_reference_kinds_and_relation_endpoints_deterministically() -> None:
     from cadrumo.core.external_constants import OutputLanguage
 
     inspection = _real_303_inspection()
@@ -659,14 +660,37 @@ def test_static_inspection_schema_records_covers_all_five_reference_kinds_determ
         len(inspection.casilla_ids)
         + len(inspection.binding_ids)
         + len(inspection.formulas)
-        + len(inspection.relations)
         + len(inspection.parameters)
     )
     assert len(records) == expected_total
     assert records == records_again  # deterministic ordering across identical repeated reads
 
     kinds = {record.reference.kind for record in records}
-    assert kinds == {"casilla", "binding", "formula", "relation", "parameter"}
+    assert kinds == {"casilla", "binding", "formula", "parameter"}
+
+    relation_folds = fold_slots(inspection.bindings)
+    expected_sources = tuple(
+        (binding_id, source_casilla_id)
+        for binding_id, provider in relation_folds
+        for source_casilla_id in provider.declared_source_casilla_ids
+    )
+    expected_targets = tuple((binding_id, binding_id) for binding_id, _provider in relation_folds)
+    actual_sources = tuple(
+        (endpoint.relation_id, endpoint.casilla_id)
+        for record in records
+        for endpoint in record.relation_endpoints
+        if endpoint.kind == "relation_source_casilla"
+    )
+    actual_targets = tuple(
+        (endpoint.relation_id, endpoint.binding_id)
+        for record in records
+        for endpoint in record.relation_endpoints
+        if endpoint.kind == "relation_target_binding"
+    )
+    assert expected_sources
+    assert expected_targets
+    assert sorted(actual_sources) == sorted(expected_sources)
+    assert sorted(actual_targets) == sorted(expected_targets)
 
 
 def _minimal_resolved_target(inspection):

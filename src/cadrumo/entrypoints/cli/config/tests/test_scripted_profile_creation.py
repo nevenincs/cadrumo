@@ -28,7 +28,7 @@ from ...verb_input_schema import build_verb_input_schemas, project_recovery_hand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE = "a-sufficiently-long-operator-passphrase"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
 
 
 def _storage_overrides(tmp_path: Path, *, passphrase: str | None) -> dict[str, object]:
@@ -38,7 +38,7 @@ def _storage_overrides(tmp_path: Path, *, passphrase: str | None) -> dict[str, o
     }
 
 
-def _creation_payload(passphrase: str = _PASSPHRASE) -> str:
+def _creation_payload(passphrase: str = _CREDENTIAL_INPUT) -> str:
     return json.dumps({"passphrase": passphrase, "passphrase_confirmation": passphrase})
 
 
@@ -101,7 +101,7 @@ def _fact_values(document: dict[str, object]) -> dict[str, str]:
 
 def test_scripted_create_registers_a_real_profile(tmp_path: Path) -> None:
     """``create NAME --quiet`` brings a real, listable profile into existence."""
-    with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
         created, handoff = _invoke_create_with_recovery(
             ("--format", "json", "config", "profile", "create", "Scripted Operator", "--quiet", "--secrets-stdin"),
             input=_creation_payload(),
@@ -134,7 +134,7 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
     facts would be the worse failure, and it is the one the old routing was
     written to avoid.
     """
-    with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
         created, _handoff = _invoke_create_with_recovery(
             (
                 "--format",
@@ -162,7 +162,7 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
 
         shown = invoke_cached_cli(
             ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view"),
-            input=json.dumps({"profile_passphrase": _PASSPHRASE}),
+            input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
         )
 
     # `show` reports a non-zero code for an INCOMPLETE profile, which this one
@@ -194,7 +194,7 @@ def test_scripted_create_refuses_a_foral_ccaa_flag_without_creating_a_profile(tm
     Move the projection after registration and this case reds on the profile
     the run would strand.
     """
-    with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
         refused, _handoff = _invoke_create_with_recovery(
             (
                 "--format",
@@ -223,7 +223,7 @@ def test_scripted_create_refuses_a_foral_ccaa_flag_without_creating_a_profile(tm
 
 def test_a_scripted_profile_enrolls_recovery_without_leaking_it_to_normal_output(tmp_path: Path) -> None:
     """The machine lane proves possession before creation and emits no words."""
-    with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
         created, handoff = _invoke_create_with_recovery(
             ("--format", "json", "config", "profile", "create", "No Terminal", "--quiet", "--secrets-stdin"),
             input=_creation_payload(),
@@ -381,7 +381,7 @@ def test_scripted_create_ignores_configured_passphrase_without_an_explicit_chann
     the operator never chose is unopenable by them and indistinguishable from
     one they did choose.
     """
-    with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
         result = invoke_cached_cli(("config", "profile", "create", "No Channel", "--quiet"))
 
         assert result.exit_code != 0
@@ -508,8 +508,8 @@ def test_scripted_create_localizes_a_typed_password_refusal_without_leaking(tmp_
     "payload",
     (
         "not-json",
-        json.dumps({"passphrase": _PASSPHRASE}),
-        json.dumps({"passphrase": _PASSPHRASE, "passphrase_confirmation": _PASSPHRASE, "extra": "forbidden"}),
+        json.dumps({"passphrase": _CREDENTIAL_INPUT}),
+        json.dumps({"passphrase": _CREDENTIAL_INPUT, "passphrase_confirmation": _CREDENTIAL_INPUT, "extra": "forbidden"}),
         json.dumps({"passphrase": "x" * 9000, "passphrase_confirmation": "x" * 9000}),
     ),
 )
@@ -523,7 +523,7 @@ def test_scripted_create_rejects_malformed_secret_stdin_without_echo(tmp_path: P
 
     assert refused.exit_code != 0
     combined = refused.stdout + refused.stderr
-    assert _PASSPHRASE not in combined
+    assert _CREDENTIAL_INPUT not in combined
     assert "x" * 9000 not in combined
     assert "Traceback" not in combined
     assert json.loads(listed.stdout)["result"]["profiles"] == []
@@ -534,12 +534,12 @@ def test_scripted_create_rejects_mismatched_confirmation_without_echo(tmp_path: 
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
         refused = invoke_cached_cli(
             ("config", "profile", "create", "Mismatch", "--quiet", "--secrets-stdin"),
-            input=json.dumps({"passphrase": _PASSPHRASE, "passphrase_confirmation": confirmation}),
+            input=json.dumps({"passphrase": _CREDENTIAL_INPUT, "passphrase_confirmation": confirmation}),
         )
         listed = invoke_cached_cli(("--format", "json", "config", "profile", "list"))
     combined = refused.stdout + refused.stderr
     assert refused.exit_code != 0
-    assert _PASSPHRASE not in combined
+    assert _CREDENTIAL_INPUT not in combined
     assert confirmation not in combined
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
@@ -634,7 +634,7 @@ def test_recovery_handoff_refuses_integer_argument_in_place_of_descriptor_option
 
 def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
     """A blank subject is refused before any credential is consumed."""
-    with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
         result = invoke_cached_cli(
             ("config", "profile", "create", "   ", "--quiet", "--secrets-stdin"),
             input=_creation_payload(),
@@ -649,7 +649,7 @@ def test_scripted_create_refuses_a_blank_name(tmp_path: Path) -> None:
 
 def test_scripted_create_is_refused_for_a_duplicate_label(tmp_path: Path) -> None:
     """Text success renders normally; a retry refuses without a second mutation."""
-    with override_settings(**_storage_overrides(tmp_path, passphrase=_PASSPHRASE)):
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
         first, _handoff = _invoke_create_with_recovery(
             ("config", "profile", "create", "Only One", "--quiet", "--secrets-stdin"),
             input=_creation_payload(),

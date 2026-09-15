@@ -182,9 +182,9 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     if listing_host is None:
         raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
     filed_read_ids = tuple(
-        reference_id
-        for reference_id in snapshot.revision.live_cross_references
-        if reference_id.endswith("-filed-declarations-read")
+        decision.id
+        for decision in snapshot.revision.live_cross_references
+        if decision.id.endswith("-filed-declarations-read")
     )
     if len(filed_read_ids) != 1:
         decision_ids = ", ".join(sorted(str(reference_id) for reference_id in filed_read_ids)) or "none"

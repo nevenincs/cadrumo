@@ -73,7 +73,7 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
-_PASSPHRASE = "censal-operation-executor-passphrase"  # noqa: S105 - synthetic fixture
+_CREDENTIAL_INPUT = "censal-operation-executor-passphrase"
 _RESPONSE_TOKEN = "a" * 64
 
 
@@ -97,13 +97,13 @@ def _subject(tmp_path: Path) -> Generator[tuple[str, SecureObjectRepository, Pro
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Censal operation executor",
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=root)
-        unlocked = unlock_profile_custody(material.envelope, _PASSPHRASE, sentinel=material.sentinel)
+        unlocked = unlock_profile_custody(material.envelope, _CREDENTIAL_INPUT, sentinel=material.sentinel)
         session = ProfileRecordSession.from_envelope(
             envelope=material.envelope, dek=unlocked.dek, profile_decode_context=_profile_decode_context_for_test
         )

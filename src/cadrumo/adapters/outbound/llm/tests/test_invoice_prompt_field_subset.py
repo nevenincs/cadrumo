@@ -53,38 +53,42 @@ def _emitted_field_count(text: str) -> int:
     return len([line for line in block.splitlines() if line.startswith("- ")])
 
 
-def test_the_default_prompt_is_byte_identical_to_the_unselected_one() -> None:
+def test_the_default_prompt_is_byte_identical_to_the_unselected_one(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """No selection and the complete selection must produce the same bytes.
 
     The comparability guarantee. If these ever diverge, every measurement taken
     before the parameter existed is incomparable with every one taken after,
     and nothing about the prompt would look wrong.
     """
-    default = build_invoice_extraction_prompt(period=_PERIOD)
-    complete = build_invoice_extraction_prompt(period=_PERIOD, fields=_DECLARED)
+    default = build_invoice_extraction_prompt(period=_PERIOD, operation=operation)
+    complete = build_invoice_extraction_prompt(period=_PERIOD, fields=_DECLARED, operation=operation)
 
     assert default.text == complete.text
     assert default.fingerprint == complete.fingerprint
 
 
-def test_the_full_prompt_still_carries_every_declared_contract() -> None:
+def test_the_full_prompt_still_carries_every_declared_contract(*, operation: PinnedAuthorityOperation) -> None:
     """The positive control: the whole set survives the parameter's arrival."""
-    prompt = build_invoice_extraction_prompt(period=_PERIOD)
+    prompt = build_invoice_extraction_prompt(period=_PERIOD, operation=operation)
 
     assert _emitted_field_count(prompt.text) == len(INVOICE_FIELD_CONTRACTS)
 
 
 @pytest.mark.parametrize("size", (1, 3, 7))
-def test_a_subset_emits_exactly_that_many_contracts(size: int) -> None:
+def test_a_subset_emits_exactly_that_many_contracts(
+    size: int, *, operation: PinnedAuthorityOperation
+) -> None:
     """The capability itself, asserted on the emitted count rather than the call.
 
     A parameter accepted and ignored yields a green suite and a full prompt, so
     the count is what proves the window opened.
     """
-    prompt = build_invoice_extraction_prompt(period=_PERIOD, fields=_DECLARED[:size])
+    prompt = build_invoice_extraction_prompt(period=_PERIOD, fields=_DECLARED[:size], operation=operation)
 
     assert _emitted_field_count(prompt.text) == size
-    assert len(prompt.text) < len(build_invoice_extraction_prompt(period=_PERIOD).text)
+    assert len(prompt.text) < len(build_invoice_extraction_prompt(period=_PERIOD, operation=operation).text)
 
 
 def test_both_entry_points_honour_the_same_selection(*, operation: PinnedAuthorityOperation) -> None:
@@ -96,7 +100,7 @@ def test_both_entry_points_honour_the_same_selection(*, operation: PinnedAuthori
     from .....application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
 
     chosen = _DECLARED[:4]
-    built = build_invoice_extraction_prompt(period=_PERIOD, fields=chosen)
+    built = build_invoice_extraction_prompt(period=_PERIOD, fields=chosen, operation=operation)
     rendered = render_invoice_extraction_prompt(
         values=resolve_invoice_extraction_authority_values(period=_PERIOD, operation=operation),
         fields=chosen,
@@ -105,14 +109,16 @@ def test_both_entry_points_honour_the_same_selection(*, operation: PinnedAuthori
     assert rendered.text == built.text
 
 
-def test_the_selection_is_order_independent() -> None:
+def test_the_selection_is_order_independent(*, operation: PinnedAuthorityOperation) -> None:
     """Two arms passing one set differently ordered must get one prompt.
 
     Otherwise a measurement could differ by argument order alone, which is a
     difference nobody would think to control for.
     """
-    forward = build_invoice_extraction_prompt(period=_PERIOD, fields=_DECLARED[:5])
-    reversed_order = build_invoice_extraction_prompt(period=_PERIOD, fields=tuple(reversed(_DECLARED[:5])))
+    forward = build_invoice_extraction_prompt(period=_PERIOD, fields=_DECLARED[:5], operation=operation)
+    reversed_order = build_invoice_extraction_prompt(
+        period=_PERIOD, fields=tuple(reversed(_DECLARED[:5])), operation=operation
+    )
 
     assert forward.text == reversed_order.text
 
@@ -121,20 +127,22 @@ def test_the_selection_is_order_independent() -> None:
     "selection",
     ((), ("not_a_declared_field",), ("not_a_declared_field", "also_not_one")),
 )
-def test_a_selection_the_declaration_cannot_satisfy_is_refused(selection: tuple[str, ...]) -> None:
+def test_a_selection_the_declaration_cannot_satisfy_is_refused(
+    selection: tuple[str, ...], *, operation: PinnedAuthorityOperation
+) -> None:
     """Refusing, never silently emitting a shorter prompt.
 
     The empty case is refused on the same terms the period path fails closed on
     an empty rate set: a prompt asking for nothing is not a smaller prompt.
     """
     with pytest.raises(ValueError) as caught:
-        build_invoice_extraction_prompt(period=_PERIOD, fields=selection)
+        build_invoice_extraction_prompt(period=_PERIOD, fields=selection, operation=operation)
 
     message = str(caught.value)
     assert _DECLARED[0] in message, "the refusal must name the accepted set, or it cannot be acted on"
 
 
-def test_a_partly_valid_selection_is_refused_whole() -> None:
+def test_a_partly_valid_selection_is_refused_whole(*, operation: PinnedAuthorityOperation) -> None:
     """One bad name refuses the call; it does not quietly yield the good ones.
 
     Emitting the valid remainder is the silent-shortening failure wearing a
@@ -142,7 +150,9 @@ def test_a_partly_valid_selection_is_refused_whole() -> None:
     nothing raised.
     """
     with pytest.raises(ValueError):
-        build_invoice_extraction_prompt(period=_PERIOD, fields=(_DECLARED[0], "not_a_declared_field"))
+        build_invoice_extraction_prompt(
+            period=_PERIOD, fields=(_DECLARED[0], "not_a_declared_field"), operation=operation
+        )
 
 
 def test_the_selector_returns_declaration_order_whatever_it_is_given() -> None:
@@ -153,7 +163,9 @@ def test_the_selector_returns_declaration_order_whatever_it_is_given() -> None:
     assert selected_invoice_field_contracts(None) == INVOICE_FIELD_CONTRACTS
 
 
-def test_a_subset_is_not_a_route_around_the_empty_rate_refusal() -> None:
+def test_a_subset_is_not_a_route_around_the_empty_rate_refusal(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """A period with no in-force rates must refuse whether or not fields are selected.
 
     The fail-closed path guards a prompt that would enumerate no rate at all.
@@ -163,8 +175,8 @@ def test_a_subset_is_not_a_route_around_the_empty_rate_refusal() -> None:
     unpriced = Period.from_year_and_code(1990, "1T")
 
     with pytest.raises(ValidationError) as full_refusal:
-        build_invoice_extraction_prompt(period=unpriced)
+        build_invoice_extraction_prompt(period=unpriced, operation=operation)
     with pytest.raises(ValidationError) as subset_refusal:
-        build_invoice_extraction_prompt(period=unpriced, fields=_DECLARED[:2])
+        build_invoice_extraction_prompt(period=unpriced, fields=_DECLARED[:2], operation=operation)
 
     assert type(subset_refusal.value) is type(full_refusal.value)

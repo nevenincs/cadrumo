@@ -56,6 +56,7 @@ from cadrumo.core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry, SectorDefinition
@@ -140,12 +141,18 @@ def _save_txns(profile: TestRuntimeProfile, txns: tuple[Transaction, ...]) -> No
     repo.save(TransactionCatalogue.from_transactions(txns))
 
 
-def _service() -> ProrrataRegisterService:
-    return ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=_BUCKET))
+def _service(*, operation: PinnedAuthorityOperation) -> ProrrataRegisterService:
+    return ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=_BUCKET), operation=operation)
 
 
-def _declare(regime: ProrrataRegisterRegime, *, percentage: Decimal, sector_id: str | None = None) -> None:
-    _service().declare(
+def _declare(
+    regime: ProrrataRegisterRegime,
+    *,
+    operation: PinnedAuthorityOperation,
+    percentage: Decimal,
+    sector_id: str | None = None,
+) -> None:
+    _service(operation=operation).declare(
         ProrrataRegisterEntry(
             ejercicio=_EJERCICIO,
             regime=regime,
@@ -187,7 +194,11 @@ def _parenthesised_amounts(message: str) -> list[Decimal]:
 # ---------------------------------------------------------------------------
 
 
-def test_fires_for_fully_classified_general_bucket_with_breach(tmp_path: Path) -> None:
+def test_fires_for_fully_classified_general_bucket_with_breach(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """GENERAL bucket, every deducible row classified, >10% spread -> obligation fires.
 
     LIVA art. 106: one COMMON row deducts at the general % (50%), one
@@ -208,7 +219,7 @@ def test_fires_for_fully_classified_general_bucket_with_breach(tmp_path: Path) -
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect())
 
     assert len(especial) == 1
@@ -227,7 +238,11 @@ def test_fires_for_fully_classified_general_bucket_with_breach(tmp_path: Path) -
     assert deduction_general > deduction_especial * Decimal("1.10")
 
 
-def test_fires_confirmatorily_for_especial_bucket_with_breach(tmp_path: Path) -> None:
+def test_fires_confirmatorily_for_especial_bucket_with_breach(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """ESPECIAL bucket -> the general shadow is mechanical, so the check always runs."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         _save_txns(
@@ -243,7 +258,7 @@ def test_fires_confirmatorily_for_especial_bucket_with_breach(tmp_path: Path) ->
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("especial"), percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime._from_registry("especial"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect())
 
     assert len(especial) == 1
@@ -255,7 +270,11 @@ def test_fires_confirmatorily_for_especial_bucket_with_breach(tmp_path: Path) ->
 # ---------------------------------------------------------------------------
 
 
-def test_prompt_for_general_bucket_with_unclassified_row(tmp_path: Path) -> None:
+def test_prompt_for_general_bucket_with_unclassified_row(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """GENERAL bucket with an unclassified deducible row -> classify-to-enable prompt.
 
     The especial total is not honestly derivable, so the app names the obligation
@@ -271,7 +290,7 @@ def test_prompt_for_general_bucket_with_unclassified_row(tmp_path: Path) -> None
                 _purchase("buy-unclassified", cuota=Decimal("210.00"), classification=None),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect())
 
     assert len(especial) == 1
@@ -290,7 +309,7 @@ def test_prompt_for_general_bucket_with_unclassified_row(tmp_path: Path) -> None
 # ---------------------------------------------------------------------------
 
 
-def test_silent_mid_year_period(tmp_path: Path) -> None:
+def test_silent_mid_year_period(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """A mid-year quarter is never a settlement event: the check never runs."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         _save_txns(
@@ -306,7 +325,7 @@ def test_silent_mid_year_period(tmp_path: Path) -> None:
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect(period_token=_MID_YEAR_PERIOD))
 
     assert especial == []
@@ -329,7 +348,7 @@ def test_silent_when_no_register_apportionment_resolves(tmp_path: Path) -> None:
     assert especial == []
 
 
-def test_silent_when_spread_within_ten_percent(tmp_path: Path) -> None:
+def test_silent_when_spread_within_ten_percent(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """A fully-classified all-common general bucket -> general == especial -> no breach."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         _save_txns(
@@ -343,13 +362,13 @@ def test_silent_when_spread_within_ten_percent(tmp_path: Path) -> None:
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         especial = _especial_diagnostics(_collect())
 
     assert especial == []
 
 
-def test_silent_for_sectorized_register(tmp_path: Path) -> None:
+def test_silent_for_sectorized_register(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """A sectorized register is a named v1 deferral -> no branch fires."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         _save_txns(
@@ -369,7 +388,7 @@ def test_silent_for_sectorized_register(tmp_path: Path) -> None:
                 ),
             ),
         )
-        service = _service()
+        service = _service(operation=operation)
         service.declare_sector(
             SectorDefinition(
                 sector_id="sector-a", letra=SectorDiferenciadoLetra._from_registry("a"), member_activity_codes=("4711",)
@@ -397,7 +416,7 @@ def test_silent_for_sectorized_register(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_fires_through_live_calculate_fan_out(tmp_path: Path) -> None:
+def test_fires_through_live_calculate_fan_out(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     """The obligation fires through the ACTUAL calculate advisory fan-out, not the collector alone."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         _save_txns(
@@ -413,7 +432,7 @@ def test_fires_through_live_calculate_fan_out(tmp_path: Path) -> None:
                 ),
             ),
         )
-        _declare(ProrrataRegisterRegime._from_registry("general"), percentage=_GENERAL_PCT)
+        _declare(ProrrataRegisterRegime._from_registry("general"), operation=operation, percentage=_GENERAL_PCT)
         diagnostics = collect_bucket_aggregation_advisory_diagnostics(
             _revision(),
             {},

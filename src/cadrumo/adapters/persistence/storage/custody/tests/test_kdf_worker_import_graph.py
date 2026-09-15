@@ -16,11 +16,12 @@ would fail for reasons that have nothing to do with the import graph.
 from __future__ import annotations
 
 import importlib
-import subprocess
 import sys
 from importlib.util import resolve_name
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -54,7 +55,7 @@ def _child_modules(prelude: str = "") -> frozenset[str]:
     the worker import so a caller can prove this gate still bites.
     """
     source = f"{prelude}\nimport {_WORKER_MODULE}\nimport json, sys\nprint(json.dumps(sorted(sys.modules)))"
-    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell, interpreter is sys.executable
+    completed = run_audited_process(
         [sys.executable, "-c", source],
         capture_output=True,
         text=True,

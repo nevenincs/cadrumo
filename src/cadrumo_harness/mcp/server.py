@@ -46,6 +46,7 @@ from collections.abc import Callable
 from functools import partial
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
+from importlib.util import find_spec
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -272,8 +273,10 @@ def serve(*, profile_secrets_file: Path | None = None) -> None:
     persona = active_persona()
     surface_mode = resolve_surface_mode(os.environ.get(SURFACE_ENV_VAR))
     try:
-        import mcp.server  # noqa: F401
+        sdk_spec = find_spec("mcp.server")
     except ModuleNotFoundError:
+        sdk_spec = None
+    if sdk_spec is None:
         emit_missing_sdk_refusal()
         return
     try:

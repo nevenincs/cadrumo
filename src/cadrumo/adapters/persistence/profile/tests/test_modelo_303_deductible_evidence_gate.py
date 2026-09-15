@@ -8,7 +8,6 @@ from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -24,6 +23,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
@@ -115,22 +115,27 @@ _CALCULATED_AT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
 _VERIFIED_AT = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
 
 
-def _inward_export_ports(*, calculation: CalculationRevisionCatalogueRepository) -> ModeloExportPorts:
-    """Provide application-owned fakes for authorities unused by this gate."""
-    authority = SimpleNamespace()
-    return ModeloExportPorts(
+def _inward_export_ports(
+    *,
+    objects: SecureObjectRepository,
+    calculation: CalculationRevisionCatalogueRepository,
+    work_unit: WorkUnitCatalogueRepository,
+    filing: ModeloRecordCatalogueRepository,
+    verification: VerificationReportCatalogueRepository,
+    bucket_event: BucketEventHistoryRepository,
+    transaction: TransactionCatalogueRepository,
+) -> ModeloExportPorts:
+    """Compose typed export ports over the same persisted repositories."""
+    return modelo_export_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        taxpayer_tax_id=_TAX_ID,
+        secure_objects=objects,
         calculation=calculation,
-        work_unit=authority,
-        filing=authority,
-        verification=authority,
-        bucket_event=authority,
-        observation=authority,
-        iva_compensation_decision=authority,
-        justificante=authority,
-        prorrata_register=authority,
-        bienes_inversion=authority,
-        transaction=authority,
-        draft_review_ports=authority,
+        work_unit=work_unit,
+        filing=filing,
+        verification=verification,
+        bucket_event=bucket_event,
+        transaction=transaction,
     )
 
 
@@ -940,24 +945,31 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
 def test_modelo_303_export_refuses_legacy_verified_deductible_iva_missing_evidence(
     secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    revision, _sale, _purchase, _wu_repo, cr_repo, _filing_repo, _vr_repo, _event_repo, tx_repo = (
+    revision, _sale, _purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
         _calculate_irene_revision(secure_objects, operation=operation)
     )
     legacy = _persist_legacy_verified_revision(revision, cr_repo=cr_repo, tx_repo=tx_repo)
     output_path = tmp_path / "modelo-303.txt"
 
-    with pytest.raises(ModeloExportEvidenceMissingError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=legacy.calculation_revision_id,
-                    output_path=output_path,
-                    actor="operator",
-                ),
-                workflow_profile=workflow_profile(),
-                export_ports=_inward_export_ports(calculation=cr_repo),
-                operation=operation,
-            )
+    with pytest.raises(ModeloExportEvidenceMissingError) as exc_info, bundled_indexed_authority().operation() as operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=legacy.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=_inward_export_ports(
+                objects=secure_objects,
+                calculation=cr_repo,
+                work_unit=wu_repo,
+                filing=filing_repo,
+                verification=vr_repo,
+                bucket_event=event_repo,
+                transaction=tx_repo,
+            ),
+            operation=operation,
+        )
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_iva_evidence_missing"
@@ -982,24 +994,23 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing
     )
     legacy = _persist_legacy_verified_revision(revision, cr_repo=cr_repo, tx_repo=tx_repo)
 
-    with pytest.raises(ModeloFilingEvidenceMissingError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            file_modelo_revision(
-                legacy.calculation_revision_id,
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                actor="operator",
-                workflow_profile=workflow_profile(),
-                ports=_filing_ports(
-                    wu_repo=wu_repo,
-                    cr_repo=cr_repo,
-                    filing_repo=filing_repo,
-                    vr_repo=vr_repo,
-                    event_repo=event_repo,
-                ),
-                clock=_VERIFIED_AT,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            )
+    with pytest.raises(ModeloFilingEvidenceMissingError) as exc_info, bundled_indexed_authority().operation() as operation:
+        file_modelo_revision(
+            legacy.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            ports=_filing_ports(
+                wu_repo=wu_repo,
+                cr_repo=cr_repo,
+                filing_repo=filing_repo,
+                vr_repo=vr_repo,
+                event_repo=event_repo,
+            ),
+            clock=_VERIFIED_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_iva_evidence_missing"

@@ -91,8 +91,7 @@ def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
 
 
 def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
             for observation in _modelo_115_observations():
                 repository.save(
@@ -266,8 +265,7 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
     taxpayer FILES. A retención the payer files is unactionable for this taxpayer
     and stays silent.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()  # empty store
             snapshot = _snapshot("202", 2025, "2P")
 
@@ -362,8 +360,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
     DEBUG, so a default WARNING-level operator surface sees none of it.
     """
     logger_name = "cadrumo.application.calculations.relation_prefill"
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()  # empty store — cold-start
             snapshot = _snapshot("202", 2025, "2P")
             with caplog.at_level(logging.DEBUG, logger=logger_name):
@@ -401,8 +398,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
 
 def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_path: Path) -> None:
     """Modelo 202 1P has no previous same-year installment to fold into casilla 30."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
             snapshot = _snapshot("202", 2024, "1P")
 
@@ -427,8 +423,7 @@ def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_
 
 def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_path: Path) -> None:
     """Modelo 202 2P still requires the actual 1P installment relation."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
             snapshot = _snapshot("202", 2024, "2P")
 
@@ -462,8 +457,7 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
     fixture builds the revision directly via ``model_copy`` (which does not
     re-run cross-section validation) to exercise the defensive guard.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()  # empty store — relation cannot resolve
             snapshot = _snapshot("202", 2025, "2P")
 
@@ -517,8 +511,7 @@ def test_modelo_190_2025_empty_store_collapses_absent_m111_source_to_one_diagnos
     ten diagnostics naming one root cause; grouped by
     ``(source_modelo, filing_year, periods)``, it must be exactly one.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()  # empty store — nothing to resolve
             snapshot = _snapshot("190", 2025, "0A")
             source_resolution = RelationPrefillSourceResolver(
@@ -603,8 +596,7 @@ def testscoped_relation_source_requirements_drops_pre_activity_quarters() -> Non
 
 def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Path) -> None:
     """A Q2-start filer folds the quarters it filed; the pre-activity 1T is scoped, not left unresolved (IRPF-1)."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
             # The filer started activity in Q2, so it has no 1T M130 obligation; it
             # filed 2T/3T/4T only. Zero-valued later filings prove the fold resolves
@@ -633,26 +625,25 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
 
 def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> None:
     """A missing POST-activity quarter still unresolves — no-silent-under-declaration is preserved (IRPF-1)."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
-            repository = CalculationObservationRepository()
-            # Q2-start filer filed 2T and 4T but NOT 3T — a genuine in-scope gap, not a
-            # pre-activity period. The fold must stay unresolved (blank for the operator
-            # to confirm), never silently summed over the hole.
-            for observation in _modelo_130_pagos_observations({"2T": Decimal("640"), "4T": Decimal("800")}):
-                repository.save(
-                    repository.prepare_observation_envelope(
-                        observation,
-                        source_kind="app_filing",
-                        stamped_revision_id=revision_id_for_observation(observation),
-                    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        # Q2-start filer filed 2T and 4T but NOT 3T — a genuine in-scope gap, not a
+        # pre-activity period. The fold must stay unresolved (blank for the operator
+        # to confirm), never silently summed over the hole.
+        for observation in _modelo_130_pagos_observations({"2T": Decimal("640"), "4T": Decimal("800")}):
+            repository.save(
+                repository.prepare_observation_envelope(
+                    observation,
+                    source_kind="app_filing",
+                    stamped_revision_id=revision_id_for_observation(observation),
                 )
-            snapshot = _snapshot("100", 2024, "0A")
-            prefill = resolve_relations_from_local_store(
-                snapshot,
-                repository=repository,
-                activity_start_date=date(2024, 4, 1),
-                operation=_authority_operation_for_test,
             )
-            m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
-            assert m130.value is None
+        snapshot = _snapshot("100", 2024, "0A")
+        prefill = resolve_relations_from_local_store(
+            snapshot,
+            repository=repository,
+            activity_start_date=date(2024, 4, 1),
+            operation=_authority_operation_for_test,
+        )
+        m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
+        assert m130.value is None

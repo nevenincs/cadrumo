@@ -279,17 +279,16 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
         )
-
-    gate = workflow_gate(revision=revision, work_unit=work_unit, clock=T2)
-    result = asyncio.run(
-        gate.engine.run_for_period(
-            gate.profile,
-            work_unit.modelo,
-            canonical_work_unit_period(work_unit),
-            today=T2.date(),
-            purpose=WorkflowPurpose.VERIFY,
-        ),
-    )
+        gate = workflow_gate(revision=revision, work_unit=work_unit, clock=T2, operation=operation)
+        result = asyncio.run(
+            gate.engine.run_for_period(
+                gate.profile,
+                work_unit.modelo,
+                canonical_work_unit_period(work_unit),
+                today=T2.date(),
+                purpose=WorkflowPurpose.VERIFY,
+            ),
+        )
 
     assert result.final_stage is WorkflowStage.DONE
     assert result.aborted_reason is None

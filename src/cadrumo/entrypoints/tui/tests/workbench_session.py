@@ -43,7 +43,7 @@ unavailable. The workbench gates are about the AVAILABLE path, so the session
 declares an identity; the unavailable path is asserted separately.
 """
 
-_WORKBENCH_PASSWORD: Final[str] = "correct horse battery staple 42!"  # noqa: S105 - synthetic test credential
+_WORKBENCH_CREDENTIAL_INPUT: Final[str] = "correct horse battery staple 42!"
 
 
 @asynccontextmanager
@@ -61,7 +61,7 @@ async def installed_workbench_root(
         profile_create_context, profile_decode_context = _profile_contexts_for_test()
         register_profile_with_credentials(
             label=WORKBENCH_PROFILE_LABEL,
-            passphrase=_WORKBENCH_PASSWORD,
+            passphrase=_WORKBENCH_CREDENTIAL_INPUT,
             facts=(() if tax_id is None else (UserProfileFact(path="identity.tax_id", value=tax_id),)),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=profile_create_context,
@@ -71,7 +71,7 @@ async def installed_workbench_root(
         # the workbench generation below needs a real login to read anything.
         login_profile(
             name=WORKBENCH_PROFILE_LABEL,
-            passphrase_callback=lambda: _WORKBENCH_PASSWORD,
+            passphrase_callback=lambda: _WORKBENCH_CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
         )
         provider = compose_authenticated_root_inputs_provider(

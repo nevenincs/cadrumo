@@ -207,4 +207,4 @@ def modelo_export_verb(
     )
 
 
-setattr(modelo_export_verb, "__input_model__", ModeloExportOperatorInput)  # noqa: B010
+modelo_export_verb.__input_model__ = ModeloExportOperatorInput

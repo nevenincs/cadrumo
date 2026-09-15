@@ -689,28 +689,27 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
     assert verified.ledger_filing_evidence is not None
 
     output_path = tmp_path / f"modelo-303-{_YEAR}-1T.boe"
-    with pytest.raises(ModeloExportUnsupportedError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=revision.calculation_revision_id,
-                    output_path=output_path,
-                    actor="operator",
-                ),
-                workflow_profile=workflow_profile(),
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    taxpayer_tax_id=_TAX_ID,
-                    secure_objects=secure_objects,
-                    work_unit=wu_repo,
-                    calculation=cr_repo,
-                    filing=filing_repo,
-                    verification=vr_repo,
-                    bucket_event=event_repo,
-                ),
-                operation=operation,
-                clock=_FILE_AT,
-            )
+    with pytest.raises(ModeloExportUnsupportedError) as exc_info, bundled_indexed_authority().operation() as operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=revision.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                taxpayer_tax_id=_TAX_ID,
+                secure_objects=secure_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+                filing=filing_repo,
+                verification=vr_repo,
+                bucket_event=event_repo,
+            ),
+            operation=operation,
+            clock=_FILE_AT,
+        )
 
     assert exc_info.value.context == {
         "modelo": "303",
@@ -832,30 +831,29 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
         assert report.granted_verificado_completo is True, report.findings
 
         quarter_output = tmp_path / f"modelo-303-{_IRENE_YEAR}-{period}.boe"
-        with pytest.raises(ModeloExportUnsupportedError) as exc_info:
-            with bundled_indexed_authority().operation() as operation:
-                export_modelo_revision(
-                    ModeloExportCommand(
-                        calculation_revision_id=revision.calculation_revision_id,
-                        output_path=quarter_output,
-                        actor="irene",
-                    ),
-                    workflow_profile=workflow_profile,
-                    export_ports=modelo_export_ports_for_test(
-                        bucket_id=_BUCKET_ID,
-                        taxpayer_tax_id=_IRENE_TAX_ID,
-                        secure_objects=secure_objects,
-                        work_unit=wu_repo,
-                        calculation=cr_repo,
-                        filing=filing_repo,
-                        verification=verification_repo,
-                        bucket_event=event_repo,
-                        iva_compensation_decision=wallet_repo,
-                        observation=observation_repo,
-                    ),
-                    operation=operation,
-                    clock=_IRENE_FILE_AT,
-                )
+        with pytest.raises(ModeloExportUnsupportedError) as exc_info, bundled_indexed_authority().operation() as operation:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=revision.calculation_revision_id,
+                    output_path=quarter_output,
+                    actor="irene",
+                ),
+                workflow_profile=workflow_profile,
+                export_ports=modelo_export_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    taxpayer_tax_id=_IRENE_TAX_ID,
+                    secure_objects=secure_objects,
+                    work_unit=wu_repo,
+                    calculation=cr_repo,
+                    filing=filing_repo,
+                    verification=verification_repo,
+                    bucket_event=event_repo,
+                    iva_compensation_decision=wallet_repo,
+                    observation=observation_repo,
+                ),
+                operation=operation,
+                clock=_IRENE_FILE_AT,
+            )
         assert exc_info.value.context == {
             "modelo": "303",
             "reason": "the registry snapshot has no complete export_layouts definition",
@@ -924,29 +922,28 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
     # The annual resumen still verifies from the locally filed quarters, but its
     # live revision also has no filing-grade fixed-width layout.
     annual_output = tmp_path / f"modelo-390-{_IRENE_YEAR}-0A.boe"
-    with pytest.raises(ModeloExportUnsupportedError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=annual.calculation_revision_id,
-                    output_path=annual_output,
-                    actor="irene",
-                ),
-                workflow_profile=workflow_profile,
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    taxpayer_tax_id=_IRENE_TAX_ID,
-                    secure_objects=secure_objects,
-                    work_unit=wu_repo,
-                    calculation=cr_repo,
-                    filing=filing_repo,
-                    verification=verification_repo,
-                    bucket_event=event_repo,
-                    observation=observation_repo,
-                ),
-                operation=operation,
-                clock=_IRENE_FILE_AT,
-            )
+    with pytest.raises(ModeloExportUnsupportedError) as exc_info, bundled_indexed_authority().operation() as operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=annual.calculation_revision_id,
+                output_path=annual_output,
+                actor="irene",
+            ),
+            workflow_profile=workflow_profile,
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                taxpayer_tax_id=_IRENE_TAX_ID,
+                secure_objects=secure_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+                filing=filing_repo,
+                verification=verification_repo,
+                bucket_event=event_repo,
+                observation=observation_repo,
+            ),
+            operation=operation,
+            clock=_IRENE_FILE_AT,
+        )
     assert exc_info.value.context == {
         "modelo": "390",
         "reason": "the registry snapshot has no complete export_layouts definition",

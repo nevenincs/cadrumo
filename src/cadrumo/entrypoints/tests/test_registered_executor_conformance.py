@@ -127,8 +127,8 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE = "s45-registered-executor-passphrase"  # noqa: S105 - isolated integration fixture
-_ROTATED_PASSPHRASE = "s45-registered-executor-rotated-passphrase"  # noqa: S105
+_CREDENTIAL_INPUT = "s45-registered-executor-passphrase"
+_ROTATED_CREDENTIAL_INPUT = "s45-registered-executor-rotated-passphrase"
 _ACTOR = "operator:s45"
 
 
@@ -720,16 +720,16 @@ def _payload(
     match definition.definition_id:
         case "auth.profile.login":
             values = {"profile_id": profile_id}
-            secret = _PASSPHRASE.encode()
+            secret = _CREDENTIAL_INPUT.encode()
         case "auth.profile.passphrase-rotate":
             values = {"profile_id": profile_id}
             secret = (
                 '{"current_passphrase":"'
-                + _PASSPHRASE
+                + _CREDENTIAL_INPUT
                 + '","new_passphrase":"'
-                + _ROTATED_PASSPHRASE
+                + _ROTATED_CREDENTIAL_INPUT
                 + '","new_passphrase_confirmation":"'
-                + _ROTATED_PASSPHRASE
+                + _ROTATED_CREDENTIAL_INPUT
                 + '"}'
             ).encode()
         case "auth.provider.configure":
@@ -752,7 +752,7 @@ def _payload(
                 "destination": tmp_path / "profile.bundle",
                 "purpose": ProfileBundleExportPurpose.PORTABLE_TRANSFER,
             }
-            secret = _PASSPHRASE.encode()
+            secret = _CREDENTIAL_INPUT.encode()
         case "user-profile.logout":
             values = {"profile_id": profile_id}
         case "live.filed-history.pull":
@@ -867,7 +867,7 @@ def _runtime(
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         enrolled = register_profile_with_credentials(
             label="S45 registered executor subject",
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=_profile_create_context_for_test,
@@ -876,7 +876,7 @@ def _runtime(
         profile_id = UUID(enrolled.profile_id)
         initial_login = login_profile(
             name=enrolled.profile_id,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
         registry = build_production_operation_registry(

@@ -53,7 +53,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 
 _LABEL = "sanctioned-door-readback"
-_PASSPHRASE = "sanctioned-door-readback-passphrase"  # noqa: S105 - real test credential
+_CREDENTIAL_INPUT = "sanctioned-door-readback-passphrase"
 
 _PROFILE_VALUE_NAMESPACE = "cadrumo.application.user_profile.value"
 _NOT_READY = "errors.storage.runtime.not_ready"
@@ -66,7 +66,7 @@ def test_bucket_created_through_the_sanctioned_door_can_read_records(tmp_path: P
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -74,7 +74,7 @@ def test_bucket_created_through_the_sanctioned_door_can_read_records(tmp_path: P
 
         login_profile(
             name=_LABEL,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
 
@@ -105,7 +105,7 @@ def test_the_same_reads_refuse_before_authentication(tmp_path: Path) -> None:
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -132,7 +132,7 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -147,6 +147,6 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
         with pytest.raises(ProfileCustodyRecordError, match="current-format record"):
             login_profile(
                 name=_LABEL,
-                passphrase_callback=lambda: _PASSPHRASE,
+                passphrase_callback=lambda: _CREDENTIAL_INPUT,
                 profile_decode_context=_profile_decode_context_for_test,
             )

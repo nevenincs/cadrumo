@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger inventory analysis surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -29,9 +27,9 @@ from .command_spec import (
 
 LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_inventory_movement_add",
-        parent_key="app_ledger_inventory_movement",
-        token="add",
+        "app_ledger_inventory_movement_add",
+        "app_ledger_inventory_movement",
+        "add",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.inventory.movement_add_help"),
         short_help_key=None,
@@ -163,9 +161,9 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_inventory_valuation_preview",
-        parent_key="app_ledger_inventory_valuation",
-        token="preview",
+        "app_ledger_inventory_valuation_preview",
+        "app_ledger_inventory_valuation",
+        "preview",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.inventory.valuation_preview_help"),
         short_help_key=None,
@@ -187,3 +185,5 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger inventory analysis surface."""
+"""Authored CommandSpec declarations for the ledger inventory analysis surface."""

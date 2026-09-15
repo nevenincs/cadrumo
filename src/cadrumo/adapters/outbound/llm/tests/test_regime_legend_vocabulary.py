@@ -127,15 +127,23 @@ class TestTheVocabularyIsQuotedFromTheBundledRegulation:
 class TestThePromptCopiesTheLegendAndNeverChoosesOne:
     """A closed list offered as a recognition aid, not as a menu."""
 
-    def test_every_declared_phrase_reaches_the_compiled_prompt(self) -> None:
-        text = build_invoice_extraction_prompt(period=default_extraction_period()).text
+    def test_every_declared_phrase_reaches_the_compiled_prompt(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        text = build_invoice_extraction_prompt(
+            period=default_extraction_period(), operation=operation
+        ).text
 
         for phrase in regime_legend_phrases(_LEGENDS):
             assert phrase in text
 
-    def test_the_instruction_is_to_copy_and_explicitly_not_to_pick(self) -> None:
+    def test_the_instruction_is_to_copy_and_explicitly_not_to_pick(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The one sentence separating a recognition aid from a classification task."""
-        text = build_invoice_extraction_prompt(period=default_extraction_period()).text
+        text = build_invoice_extraction_prompt(
+            period=default_extraction_period(), operation=operation
+        ).text
 
         assert "copy it into regime_legend exactly as printed" in text
         assert "Never pick the closest phrase" in text
@@ -148,7 +156,9 @@ class TestThePromptCopiesTheLegendAndNeverChoosesOne:
         different purpose -- naming why a document may carry no tax -- so this
         asserts the machine-readable token form is absent rather than the words.
         """
-        text = build_invoice_extraction_prompt(period=default_extraction_period()).text
+        text = build_invoice_extraction_prompt(
+            period=default_extraction_period(), operation=operation
+        ).text
 
         categories = resolve_iva_category_catalogue(
             effective_date=default_extraction_period().end_date,
@@ -161,8 +171,12 @@ class TestThePromptCopiesTheLegendAndNeverChoosesOne:
 class TestTheLegendIsTranscribedLikeEveryOtherCopiedField:
     """Parity: declared once, asked for, mirrored by an anchor, carried to the draft."""
 
-    def test_the_field_is_declared_asked_for_and_anchored(self) -> None:
-        text = build_invoice_extraction_prompt(period=default_extraction_period()).text
+    def test_the_field_is_declared_asked_for_and_anchored(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        text = build_invoice_extraction_prompt(
+            period=default_extraction_period(), operation=operation
+        ).text
 
         assert "regime_legend" in {contract.field_name for contract in INVOICE_FIELD_CONTRACTS}
         assert '"regime_legend"' in text

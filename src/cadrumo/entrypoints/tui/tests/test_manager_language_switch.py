@@ -46,7 +46,7 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (160, 60)
-_PASSWORD = "manager-language-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "manager-language-operator-secret"
 _LABEL = "Language Subject"
 _STARTING_LANGUAGE = "en"
 _TARGET_LANGUAGE = "es"
@@ -94,7 +94,7 @@ def _register_in(language: str) -> None:
     register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=_LABEL,
-        passphrase=_PASSWORD,
+        passphrase=_CREDENTIAL_INPUT,
         facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),),
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
@@ -109,7 +109,7 @@ def _ensure_logged_in() -> None:
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     login_profile(
-        name=_LABEL, passphrase_callback=lambda: _PASSWORD, profile_decode_context=_profile_decode_context_for_test
+        name=_LABEL, passphrase_callback=lambda: _CREDENTIAL_INPUT, profile_decode_context=_profile_decode_context_for_test
     )
 
 

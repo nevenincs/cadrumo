@@ -621,7 +621,7 @@ async def _run_live_iva_evidence_pull_command[T](
     resolved_timeout_ms = (
         timeout_ms if timeout_ms is not None else load_settings().cadrumo_live_iva_cli_watchdog_timeout_ms
     )
-    baseline_inventory = _process_command_inventory()
+    baseline_inventory = await _process_command_inventory()
     # None (not an empty set) when the process table could not be read, so the
     # reaper can refuse to kill rather than treat every browser as newly ours.
     preexisting_profiles = None if baseline_inventory is None else _playwright_profile_tokens(baseline_inventory)
@@ -632,7 +632,7 @@ async def _run_live_iva_evidence_pull_command[T](
     try:
         return await asyncio.wait_for(awaitable, timeout=resolved_timeout_ms / 1000)
     except TimeoutError as exc:
-        killed_processes, inventory_available = _reap_new_playwright_profile_processes(
+        killed_processes, inventory_available = await _reap_new_playwright_profile_processes(
             preexisting_profiles=preexisting_profiles,
         )
         post_timeout_auth_context = _live_iva_auth_watchdog_context(
@@ -730,7 +730,7 @@ _PLAYWRIGHT_PROFILE_RE = re.compile(r"playwright_chromiumdev_profile-[A-Za-z0-9_
 _PROCESS_INVENTORY_TIMEOUT_SECONDS = 60
 
 
-def _process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
+async def _process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
     """Return local process command lines for watchdog cleanup.
 
     Returns ``None`` when the OS process table could NOT be inspected (the
@@ -743,23 +743,21 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
     """
     try:
         if platform.system() == "Windows":
-            return _windows_process_command_inventory()
-        return _posix_process_command_inventory()
+            return await _windows_process_command_inventory()
+        return await _posix_process_command_inventory()
     except (OSError, subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError, ValueError):
         return None
 
 
-def _windows_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
+async def _windows_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
     """Read the Windows process table through the available PowerShell host."""
     powershell = shutil.which("powershell") or shutil.which("pwsh")
     if powershell is None:
         return None
     script = "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
-    completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
+    completed = await _run_process_inventory_command(
         [powershell, "-NoProfile", "-Command", script],
-        check=True,
-        capture_output=True,
-        timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
+        text=False,
     )
     return _parse_windows_process_inventory(completed.stdout)
 
@@ -780,21 +778,53 @@ def _parse_windows_process_inventory(payload: bytes) -> tuple[_ProcessCommand, .
     )
 
 
-def _posix_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
+async def _posix_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
     """Read and parse the POSIX process table used by the local watchdog."""
     ps = shutil.which("ps")
     if ps is None:
         return None
-    completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
+    completed = await _run_process_inventory_command(
         [ps, "-axo", "pid=,args="],
-        check=True,
-        capture_output=True,
         text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
     )
     return _parse_posix_process_inventory(completed.stdout)
+
+
+async def _run_process_inventory_command(
+    command: Sequence[str],
+    *,
+    text: bool,
+) -> subprocess.CompletedProcess[str | bytes]:
+    """Run one fixed process-table query through the audited async boundary."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(
+            process.communicate(),
+            timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
+        )
+    except TimeoutError:
+        process.kill()
+        stdout, stderr = await process.communicate()
+        raise subprocess.TimeoutExpired(
+            command,
+            _PROCESS_INVENTORY_TIMEOUT_SECONDS,
+            output=_decode_process_output(stdout, text=text),
+            stderr=_decode_process_output(stderr, text=text),
+        ) from None
+    output = _decode_process_output(stdout, text=text)
+    error = _decode_process_output(stderr, text=text)
+    if process.returncode:
+        raise subprocess.CalledProcessError(process.returncode, command, output=output, stderr=error)
+    return subprocess.CompletedProcess(command, process.returncode, output, error)
+
+
+def _decode_process_output(output: bytes, *, text: bool) -> str | bytes:
+    """Decode a process-table stream only for the POSIX text parser."""
+    return output.decode("utf-8", errors="replace") if text else output
 
 
 def _parse_posix_process_inventory(output: str) -> tuple[_ProcessCommand, ...]:
@@ -818,7 +848,7 @@ def _playwright_profile_tokens(processes: tuple[_ProcessCommand, ...]) -> frozen
     return frozenset(tokens)
 
 
-def _reap_new_playwright_profile_processes(*, preexisting_profiles: frozenset[str] | None) -> tuple[int, bool]:
+async def _reap_new_playwright_profile_processes(*, preexisting_profiles: frozenset[str] | None) -> tuple[int, bool]:
     """Terminate processes tied to Playwright temp profiles created by this command.
 
     Returns ``(killed, inventory_available)``. ``inventory_available`` is
@@ -834,7 +864,7 @@ def _reap_new_playwright_profile_processes(*, preexisting_profiles: frozenset[st
     """
     if preexisting_profiles is None:
         return 0, False
-    processes = _process_command_inventory()
+    processes = await _process_command_inventory()
     if processes is None:
         return 0, False
     new_profiles = _playwright_profile_tokens(processes) - preexisting_profiles

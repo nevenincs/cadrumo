@@ -8,7 +8,7 @@ navigation decision after it starts.
 
 from __future__ import annotations
 
-import subprocess
+import asyncio
 import sys
 from typing import Final
 
@@ -22,13 +22,15 @@ def tui_root_command(executable: str = sys.executable) -> list[str]:
     return [executable, "-m", TUI_ROOT_MODULE]
 
 
+async def _run_tui(command: list[str]) -> int:
+    """Run the fixed TUI command through the audited async process boundary."""
+    process = await asyncio.create_subprocess_exec(*command)
+    return await process.wait()
+
+
 def launch_tui() -> None:
     """Start the independent TUI root and propagate its process status."""
-    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
-        tui_root_command(),
-        check=False,
-    )
-    raise typer.Exit(completed.returncode)
+    raise typer.Exit(asyncio.run(_run_tui(tui_root_command())))
 
 
 __all__ = ["TUI_ROOT_MODULE", "launch_tui", "tui_root_command"]

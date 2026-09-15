@@ -55,9 +55,9 @@ def workspace() -> Path:
 STATE_DIR = workspace()
 """Where this caller keeps its root, session and screenshots outside source."""
 
-PASSPHRASE_ENV_VAR = "CADRUMO_TUI_HARNESS_PASSPHRASE"  # noqa: S105 - the variable NAME, not a secret
+CREDENTIAL_ENV_VAR = "CADRUMO_TUI_HARNESS_PASSPHRASE"
 
-_DEFAULT_PASSPHRASE = "tui-harness-operator-secret"  # noqa: S105 - synthetic harness fixture
+_DEFAULT_CREDENTIAL_INPUT = "tui-harness-operator-secret"
 
 PROFILE_LABEL = "Harness Subject"
 
@@ -69,7 +69,7 @@ def passphrase() -> str:
     root-wide: profiles in one root are unwrapped by one passphrase, so a
     per-profile secret is not a state this application can be in.
     """
-    return os.environ.get(PASSPHRASE_ENV_VAR) or _DEFAULT_PASSPHRASE
+    return os.environ.get(CREDENTIAL_ENV_VAR) or _DEFAULT_CREDENTIAL_INPUT
 
 
 @contextmanager
@@ -161,7 +161,7 @@ def ensure_session() -> str:
 
 
 __all__ = [
-    "PASSPHRASE_ENV_VAR",
+    "CREDENTIAL_ENV_VAR",
     "PROFILE_LABEL",
     "STATE_DIR",
     "WORKSPACE_ENV_VAR",

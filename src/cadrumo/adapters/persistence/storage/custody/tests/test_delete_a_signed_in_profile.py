@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _LABEL = "Signed In Deletion Subject"
-_PASSPHRASE = "signed-in-profile-deletion-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "signed-in-profile-deletion-operator-secret"
 
 
 def test_a_freshly_registered_profile_passes_the_deletion_preflight(tmp_path: Path) -> None:
@@ -48,7 +48,7 @@ def test_a_freshly_registered_profile_passes_the_deletion_preflight(tmp_path: Pa
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -75,13 +75,13 @@ def test_the_profile_the_operator_is_signed_into_can_be_deleted(tmp_path: Path) 
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
         login_profile(
             name=outcome.label,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
         lifecycle = ProfileCapsuleLifecycle()

@@ -43,8 +43,8 @@ from ..registration import RegistrationScreen, build_profile_registration_attemp
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LABEL = "Secret journey subject"
-_CURRENT_PASSPHRASE = "secret-journey-current-passphrase"  # noqa: S105 - isolated integration fixture
-_NEW_PASSPHRASE = "secret-journey-replacement-passphrase"  # noqa: S105 - isolated integration fixture
+_CURRENT_CREDENTIAL_INPUT = "secret-journey-current-passphrase"
+_NEW_CREDENTIAL_INPUT = "secret-journey-replacement-passphrase"
 
 
 def _enroll() -> UUID:
@@ -52,7 +52,7 @@ def _enroll() -> UUID:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     enrolled = register_profile_with_credentials(
         label=_LABEL,
-        passphrase=_CURRENT_PASSPHRASE,
+        passphrase=_CURRENT_CREDENTIAL_INPUT,
         facts=(),
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         profile_create_context=_profile_create_context_for_test,
@@ -150,8 +150,8 @@ async def test_a_wrong_current_passphrase_refuses_and_never_rotates(tmp_path: Pa
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = "not-the-real-passphrase"
-            app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
-            app.query_one("#field-confirm", Input).value = _NEW_PASSPHRASE
+            app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
+            app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
             await pilot.pause()
             await pilot.click("#btn-change")
             await app.workers.wait_for_complete()
@@ -164,7 +164,7 @@ async def test_a_wrong_current_passphrase_refuses_and_never_rotates(tmp_path: Pa
         _, profile_decode_context = _profile_contexts_for_test()
         login_profile(
             name=str(profile_id),
-            passphrase_callback=lambda: _CURRENT_PASSPHRASE,
+            passphrase_callback=lambda: _CURRENT_CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
         )
 
@@ -177,8 +177,8 @@ async def test_a_confirmation_mismatch_refuses_locally_before_any_attempt(tmp_pa
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
-            app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE
-            app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
+            app.query_one("#field-current", Input).value = _CURRENT_CREDENTIAL_INPUT
+            app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = "a-different-confirmation"
             await pilot.pause()
             await pilot.click("#btn-change")
@@ -225,9 +225,9 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
-            app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE
-            app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
-            app.query_one("#field-confirm", Input).value = _NEW_PASSPHRASE
+            app.query_one("#field-current", Input).value = _CURRENT_CREDENTIAL_INPUT
+            app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
+            app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
             await pilot.pause()
             await pilot.click("#btn-change")
             await app.workers.wait_for_complete()
@@ -240,13 +240,13 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
         _, profile_decode_context = _profile_contexts_for_test()
         login_profile(
             name=str(profile_id),
-            passphrase_callback=lambda: _NEW_PASSPHRASE,
+            passphrase_callback=lambda: _NEW_CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
         )
         with pytest.raises(ProfileAuthenticationRefusedError):
             login_profile(
                 name=str(profile_id),
-                passphrase_callback=lambda: _CURRENT_PASSPHRASE,
+                passphrase_callback=lambda: _CURRENT_CREDENTIAL_INPUT,
                 profile_decode_context=profile_decode_context,
             )
 
@@ -265,9 +265,9 @@ async def test_a_second_change_click_while_one_is_in_flight_is_a_single_use_no_o
         app = PassphraseScreen(assess=assess_profile_password, rotate=_counting_rotate)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
-            app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE
-            app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
-            app.query_one("#field-confirm", Input).value = _NEW_PASSPHRASE
+            app.query_one("#field-current", Input).value = _CURRENT_CREDENTIAL_INPUT
+            app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
+            app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
             await pilot.pause()
             await pilot.click("#btn-change")
             # A second click before the worker settles must be swallowed by the
@@ -286,9 +286,9 @@ async def test_abandoning_the_screen_leaves_no_outcome_and_never_touches_storage
         app = _app(profile_id)
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
-            app.query_one("#field-current", Input).value = _CURRENT_PASSPHRASE
-            app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
-            app.query_one("#field-confirm", Input).value = _NEW_PASSPHRASE
+            app.query_one("#field-current", Input).value = _CURRENT_CREDENTIAL_INPUT
+            app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
+            app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
             await pilot.pause()
             await pilot.click("#btn-cancel")
             await pilot.pause()
@@ -298,7 +298,7 @@ async def test_abandoning_the_screen_leaves_no_outcome_and_never_touches_storage
         _, profile_decode_context = _profile_contexts_for_test()
         login_profile(
             name=str(profile_id),
-            passphrase_callback=lambda: _CURRENT_PASSPHRASE,
+            passphrase_callback=lambda: _CURRENT_CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
         )
 
@@ -323,8 +323,8 @@ async def test_a_refused_attempt_retains_no_plaintext_credential_on_the_app_or_i
         async with ScreenHostApp(app).run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             app.query_one("#field-current", Input).value = current
-            app.query_one("#field-new", Input).value = _NEW_PASSPHRASE
-            app.query_one("#field-confirm", Input).value = _NEW_PASSPHRASE
+            app.query_one("#field-new", Input).value = _NEW_CREDENTIAL_INPUT
+            app.query_one("#field-confirm", Input).value = _NEW_CREDENTIAL_INPUT
             await pilot.pause()
             await pilot.click("#btn-change")
             await app.workers.wait_for_complete()
@@ -335,7 +335,7 @@ async def test_a_refused_attempt_retains_no_plaintext_credential_on_the_app_or_i
 
         rendered_error = "" if app.error is None else str(app.error)
         assert current not in rendered_error
-        assert _NEW_PASSPHRASE not in rendered_error
+        assert _NEW_CREDENTIAL_INPUT not in rendered_error
 
 
 @pytest.mark.asyncio

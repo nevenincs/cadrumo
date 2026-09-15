@@ -154,10 +154,11 @@ def _stored_object_key(root: Path) -> bytes:
 def _mutate_persisted_row(root: Path, column: str, value: bytes) -> None:
     connection = sqlite3.connect(_capsule_database(root))
     try:
-        connection.execute(
-            f"UPDATE secure_objects SET {column} = ? WHERE namespace = ?",  # noqa: S608
-            (value, RECORD_NAMESPACE),
-        )
+        update_sql = {
+            "object_key": "UPDATE secure_objects SET object_key = ? WHERE namespace = ?",
+            "payload": "UPDATE secure_objects SET payload = ? WHERE namespace = ?",
+        }[column]
+        connection.execute(update_sql, (value, RECORD_NAMESPACE))
         connection.commit()
         connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     finally:

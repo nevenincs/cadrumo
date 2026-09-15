@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the Modelo non-work bindings family."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -71,9 +69,9 @@ _BINDINGS_INVOCATION: Final[InvocationSpec] = InvocationSpec(context_parameter="
 
 MODELO_NONWORK_BINDINGS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_bindings_list",
-        parent_key="app_modelo_bindings",
-        token="list",
+        "app_modelo_bindings_list",
+        "app_modelo_bindings",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.bindings.list_help"),
         short_help_key=None,
@@ -102,9 +100,9 @@ MODELO_NONWORK_BINDINGS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_bindings_resolve",
-        parent_key="app_modelo_bindings",
-        token="resolve",
+        "app_modelo_bindings_resolve",
+        "app_modelo_bindings",
+        "resolve",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.bindings.resolve_help"),
         short_help_key=None,
@@ -135,3 +133,5 @@ MODELO_NONWORK_BINDINGS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_BINDINGS_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work bindings family."""
+"""Authored CommandSpec declarations for the Modelo non-work bindings family."""

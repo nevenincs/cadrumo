@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger invoice intake surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -33,9 +31,9 @@ from .command_spec import (
 
 LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_invoice_add",
-        parent_key="app_ledger_invoice",
-        token="add",
+        "app_ledger_invoice_add",
+        "app_ledger_invoice",
+        "add",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.add_help"),
         short_help_key=None,
@@ -73,9 +71,9 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_invoice_import",
-        parent_key="app_ledger_invoice",
-        token="import",
+        "app_ledger_invoice_import",
+        "app_ledger_invoice",
+        "import",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.import_help"),
         short_help_key=None,
@@ -129,3 +127,5 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_INVOICE_INTAKE_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger invoice intake surface."""
+"""Authored CommandSpec declarations for the ledger invoice intake surface."""

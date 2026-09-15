@@ -66,9 +66,9 @@ def _flag(
 
 CONFIG_REPAIR_COMMAND_SPECS = (
     CommandSpec(
-        key="config_repair",
-        parent_key="config",
-        token="repair",  # noqa: S106 - CLI token, not a credential.
+        "config_repair",
+        "config",
+        "repair",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.repair.help"),
         short_help_key=None,
@@ -84,9 +84,9 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         result_schema=_schema("ConfigRepairResult", "config.repair"),
     ),
     CommandSpec(
-        key="config_repair_integrity",
-        parent_key="config_repair",
-        token="integrity",  # noqa: S106 - CLI token, not a credential.
+        "config_repair_integrity",
+        "config_repair",
+        "integrity",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.repair.integrity_help"),
         short_help_key=None,
@@ -97,9 +97,9 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="config_repair_logs",
-        parent_key="config_repair",
-        token="logs",  # noqa: S106 - CLI token, not a credential.
+        "config_repair_logs",
+        "config_repair",
+        "logs",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.logs_help"),
         short_help_key=None,
@@ -119,9 +119,9 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         result_schema=_schema("RepairLogsResult", "config.repair.logs"),
     ),
     CommandSpec(
-        key="config_repair_quarantine",
-        parent_key="config_repair",
-        token="quarantine",  # noqa: S106 - CLI token, not a credential.
+        "config_repair_quarantine",
+        "config_repair",
+        "quarantine",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.quarantine_help"),
         short_help_key=None,
@@ -135,9 +135,9 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         result_schema=_schema("RepairQuarantineResult", "config.repair.quarantine"),
     ),
     CommandSpec(
-        key="config_repair_reset_progress",
-        parent_key="config_repair",
-        token="reset-progress",  # noqa: S106 - CLI token, not a credential.
+        "config_repair_reset_progress",
+        "config_repair",
+        "reset-progress",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.reset_progress_help"),
         short_help_key=None,
@@ -151,9 +151,9 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         result_schema=_schema("RepairResetProgressResult", "config.repair.reset_progress"),
     ),
     CommandSpec(
-        key="config_repair_integrity_objects",
-        parent_key="config_repair_integrity",
-        token="objects",  # noqa: S106 - CLI token, not a credential.
+        "config_repair_integrity_objects",
+        "config_repair_integrity",
+        "objects",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.integrity.objects_help"),
         short_help_key=None,
@@ -172,9 +172,9 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         result_schema=_schema("RepairIntegrityObjectsResult", "config.repair.integrity.objects"),
     ),
     CommandSpec(
-        key="config_repair_connectivity",
-        parent_key="config_repair",
-        token="connectivity",  # noqa: S106 - CLI token, not a credential.
+        "config_repair_connectivity",
+        "config_repair",
+        "connectivity",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.connectivity_help"),
         short_help_key=None,
@@ -185,9 +185,9 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         result_schema=_schema("RepairConnectivityResult", "config.repair.connectivity"),
     ),
     CommandSpec(
-        key="config_repair_profile",
-        parent_key="config_repair",
-        token="profile",  # noqa: S106 - CLI token, not a credential.
+        "config_repair_profile",
+        "config_repair",
+        "profile",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.repair.profile_help"),
         short_help_key=None,

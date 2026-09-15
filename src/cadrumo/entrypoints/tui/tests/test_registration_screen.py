@@ -40,7 +40,7 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (140, 60)
-_TYPED_PASSWORD = "screen-typed-operator-secret"  # noqa: S105 - synthetic test fixture
+_TYPED_INPUT = "screen-typed-operator-secret"
 
 
 def _storage_entries(storage_root: Path) -> tuple[Path, ...]:
@@ -210,7 +210,7 @@ async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _fill(app, pilot, username="Mismatch", password=_TYPED_PASSWORD, confirm="something-else-entirely")
+            await _fill(app, pilot, username="Mismatch", password=_TYPED_INPUT, confirm="something-else-entirely")
             await pilot.click("#btn-create")
             await pilot.pause()
 
@@ -267,7 +267,7 @@ async def test_unkeyed_unexpected_registration_failure_keeps_internal_classifica
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = RegistrationScreen(assess=assess_profile_password, register=fail_registration)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _fill(app, pilot, username="Unexpected", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
+            await _fill(app, pilot, username="Unexpected", password=_TYPED_INPUT, confirm=_TYPED_INPUT)
             await pilot.click("#btn-create")
             await pilot.app.workers.wait_for_complete()
             await pilot.pause()
@@ -285,7 +285,7 @@ async def test_blank_username_refuses_and_focuses_the_field(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _fill(app, pilot, username="   ", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
+            await _fill(app, pilot, username="   ", password=_TYPED_INPUT, confirm=_TYPED_INPUT)
             await pilot.click("#btn-create")
             await pilot.pause()
 

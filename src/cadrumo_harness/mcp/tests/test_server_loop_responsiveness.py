@@ -57,6 +57,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.application.user_profile.login_session import close_profile_session_artefacts
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
+from cadrumo.core.config_support import SecretStoreBackend
 
 from .._call_runtime import tier_for
 from .._profile_secret_channel import clear_profile_secret, load_profile_secret_file
@@ -201,7 +202,7 @@ def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
     with (
         temporary_env(
             CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
-            CADRUMO_SECRET_STORE_BACKEND="auto",  # noqa: S106 - env var name, not a credential
+            CADRUMO_SECRET_STORE_BACKEND=SecretStoreBackend.AUTO.value,
             CADRUMO_SECRET_STORE_DIR=str(tmp_path / "fallback-store"),
             CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
         ),

@@ -471,19 +471,18 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
         observation_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
 
-        with pytest.raises(IvaCompensationReconciliationInputError) as excinfo:
-            with bundled_indexed_authority().operation() as operation:
-                reconcile_modelo_303_iva_compensation(
-                    snapshot,
-                    taxpayer_nif=_TAXPAYER_REF,
-                    wallet=_wallet(Decimal("1200")),
-                    repository=observation_repository,
-                    decision_repository=foreign_decision_repository,
-                    decided_at=_NOW,
-                    local_recurrence=None,
-                    prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
-                    operation=operation,
-                )
+        with pytest.raises(IvaCompensationReconciliationInputError) as excinfo, bundled_indexed_authority().operation() as operation:
+            reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_REF,
+                wallet=_wallet(Decimal("1200")),
+                repository=observation_repository,
+                decision_repository=foreign_decision_repository,
+                decided_at=_NOW,
+                local_recurrence=None,
+                prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
+                operation=operation,
+            )
 
         assert str(excinfo.value) == "application.calculations.iva_wallet.errors.decision_repository_backend_split"
 

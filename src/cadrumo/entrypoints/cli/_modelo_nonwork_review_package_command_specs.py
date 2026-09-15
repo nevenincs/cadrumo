@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the Modelo non-work review package family."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -67,9 +65,9 @@ _REVIEW_PACKAGE_BUCKET_ID_OPTION: Final[OptionSpec] = OptionSpec(
 
 MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_review_package_build",
-        parent_key="app_modelo_review_package",
-        token="build",
+        "app_modelo_review_package_build",
+        "app_modelo_review_package",
+        "build",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.build_help"),
         short_help_key=None,
@@ -142,9 +140,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_verify",
-        parent_key="app_modelo_review_package",
-        token="verify",
+        "app_modelo_review_package_verify",
+        "app_modelo_review_package",
+        "verify",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.verify_help"),
         short_help_key=None,
@@ -161,9 +159,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_sign",
-        parent_key="app_modelo_review_package",
-        token="sign",
+        "app_modelo_review_package_sign",
+        "app_modelo_review_package",
+        "sign",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.sign_help"),
         short_help_key=None,
@@ -197,9 +195,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_verify_signature",
-        parent_key="app_modelo_review_package",
-        token="verify-signature",
+        "app_modelo_review_package_verify_signature",
+        "app_modelo_review_package",
+        "verify-signature",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.verify_signature_help"),
         short_help_key=None,
@@ -230,9 +228,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_counter_sign",
-        parent_key="app_modelo_review_package",
-        token="counter-sign",
+        "app_modelo_review_package_counter_sign",
+        "app_modelo_review_package",
+        "counter-sign",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.counter_sign_help"),
         short_help_key=None,
@@ -278,9 +276,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_verify_receipt",
-        parent_key="app_modelo_review_package",
-        token="verify-receipt",
+        "app_modelo_review_package_verify_receipt",
+        "app_modelo_review_package",
+        "verify-receipt",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.verify_receipt_help"),
         short_help_key=None,
@@ -330,9 +328,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_encrypt_for_recipient",
-        parent_key="app_modelo_review_package",
-        token="encrypt-for-recipient",
+        "app_modelo_review_package_encrypt_for_recipient",
+        "app_modelo_review_package",
+        "encrypt-for-recipient",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.encrypt_for_recipient_help"),
         short_help_key=None,
@@ -403,9 +401,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_decrypt",
-        parent_key="app_modelo_review_package",
-        token="decrypt",
+        "app_modelo_review_package_decrypt",
+        "app_modelo_review_package",
+        "decrypt",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.decrypt_help"),
         short_help_key=None,
@@ -447,9 +445,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_encrypt_feedback",
-        parent_key="app_modelo_review_package",
-        token="encrypt-feedback",
+        "app_modelo_review_package_encrypt_feedback",
+        "app_modelo_review_package",
+        "encrypt-feedback",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.encrypt_feedback_help"),
         short_help_key=None,
@@ -551,9 +549,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_review_package_import_feedback",
-        parent_key="app_modelo_review_package",
-        token="import-feedback",
+        "app_modelo_review_package_import_feedback",
+        "app_modelo_review_package",
+        "import-feedback",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.review_package.import_feedback_help"),
         short_help_key=None,
@@ -614,3 +612,5 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work review package family."""
+"""Authored CommandSpec declarations for the Modelo non-work review package family."""

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 import signal
 import subprocess
@@ -33,10 +34,7 @@ def launch_worker(
         job = _WindowsJob.create()
         process: subprocess.Popen[bytes] | None = None
         try:
-            process = cast(
-                "subprocess.Popen[bytes]",
-                subprocess.Popen(command, **cast(Any, launch_kwargs)),  # noqa: S603 - fixed interpreter and module argv
-            )
+            process = _launch_worker_process(command, launch_kwargs)
             job.assign(process)
             if not job.contains(process):
                 raise _supervision_refusal()
@@ -49,11 +47,26 @@ def launch_worker(
         finally:
             clear_worker_handle_inheritance(request_read=request_read, result_write=result_write)
         return process, job
-    process = cast(
-        "subprocess.Popen[bytes]",
-        subprocess.Popen(command, **cast(Any, launch_kwargs)),  # noqa: S603 - fixed interpreter and module argv
-    )
+    process = _launch_worker_process(command, launch_kwargs)
     return process, None
+
+
+def _launch_worker_process(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
+    """Launch the fixed worker argv through asyncio's shell-free exec boundary."""
+    return asyncio.run(_create_worker_process(command, launch_kwargs))
+
+
+async def _create_worker_process(
+    command: list[str],
+    launch_kwargs: dict[str, object],
+) -> subprocess.Popen[bytes]:
+    process = await asyncio.create_subprocess_exec(*command, **cast(Any, launch_kwargs))
+    native_process = cast(Any, process)._transport.get_extra_info("subprocess")
+    if not isinstance(native_process, subprocess.Popen):
+        process.kill()
+        await process.wait()
+        raise _supervision_refusal()
+    return cast("subprocess.Popen[bytes]", native_process)
 
 
 def clear_worker_handle_inheritance(*, request_read: int, result_write: int) -> None:

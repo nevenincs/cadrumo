@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import subprocess
 import sys
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ....application.operator_surface.help import build_help_document
 from ....application.operator_surface.help_models import RootLandingReport
@@ -81,7 +82,7 @@ def test_help_branch_round_trip_does_not_import_the_overview_graph() -> None:
     must not pay for it. This pins the deferral: hoisting the overview branch
     back to an eager import in ``_root_payloads`` reds this test.
     """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+    completed = run_audited_process(
         [sys.executable, "-c", _HELP_BRANCH_IMPORT_PROBE],
         capture_output=True,
         text=True,

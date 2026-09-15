@@ -12,7 +12,6 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
-import subprocess
 from dataclasses import dataclass
 from functools import cache
 from types import MappingProxyType
@@ -60,6 +59,7 @@ from cadrumo.application.operator_surface.manifest import CommandSchemaRef
 from cadrumo.core.json_contract import OutputSchema, ResolvedActionReference
 from cadrumo.core.operator_action_enums import ActionArgumentStatus
 
+from ._call_runtime import run_captured
 from ._cli_executable import installed_cli_executable
 
 
@@ -91,13 +91,10 @@ def _cli_executable() -> str:
 
 def _load_wire_manifest() -> dict[str, Any]:
     """Read the closed command-surface projection from the installed CLI."""
-    completed = subprocess.run(  # noqa: S603 - fixed console executable and literal argument
+    completed = run_captured(
         [_cli_executable(), "--cadrumo-command-surface"],
-        check=False,
-        capture_output=True,
-        text=True,
         encoding="utf-8",
-        timeout=180,
+        timeout_s=180,
     )
     if completed.returncode != 0:
         detail = completed.stderr.strip() or "the command-surface process returned no diagnostic"

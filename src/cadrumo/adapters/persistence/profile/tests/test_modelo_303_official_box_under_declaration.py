@@ -433,14 +433,13 @@ def test_calculate_rejects_caller_override_of_projected_box(
     work_unit = _seed_work_unit(wu_repo, event_repo, operation=operation)
     tx_repo.save(TransactionCatalogue.from_transactions((sale,)))
 
-    with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
-        with calculation_ports_for_test(
-            bucket_id=_BUCKET,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-        ) as _calculation_ports_436:
+    with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"), calculation_ports_for_test(
+        bucket_id=_BUCKET,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+    ) as _calculation_ports_436:
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator-A",

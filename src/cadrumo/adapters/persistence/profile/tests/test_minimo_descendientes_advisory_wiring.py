@@ -32,17 +32,17 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
-    advisory_profile_bucket,  # noqa: F401
+    advisory_profile_bucket,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.aggregation.source_mesh import CalculationSourceDiagnostic
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from cadrumo.application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -52,6 +52,8 @@ from cadrumo.domain.contribuyente.renta_codes import RentaMaritalStatus
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+__all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
 _FILING_YEAR = 2024
@@ -99,6 +101,7 @@ def _source_diagnostics(
     casilla_values: dict[CasillaId, Decimal],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Every diagnostic the COORDINATOR raises for this bucket."""
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     return collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
         casilla_values,
@@ -106,10 +109,10 @@ def _source_diagnostics(
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
-        observation_repository=SimpleNamespace(),
-        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=SimpleNamespace(),
-        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
     )
 
 
@@ -176,6 +179,7 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
     profile setup is needed.
     """
     revision = compiled_bundled_authority().snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},
@@ -183,10 +187,10 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
         period_token=_ANNUAL_PERIOD,
         filing_year=2020,
         bucket_id=_BUCKET_ID,
-        observation_repository=SimpleNamespace(),
-        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=SimpleNamespace(),
-        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
     )
     assert _SETTLEMENT in {diagnostic.source_kind for diagnostic in diagnostics}
 
@@ -199,6 +203,7 @@ def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> N
     revision, which would say nothing about the condition it claims to detect.
     """
     revision = compiled_bundled_authority().snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},
@@ -206,10 +211,10 @@ def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> N
         period_token=_ANNUAL_PERIOD,
         filing_year=2024,
         bucket_id=_BUCKET_ID,
-        observation_repository=SimpleNamespace(),
-        prorrata_register_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
-        bienes_inversion_repository=SimpleNamespace(),
-        transaction_repository=SimpleNamespace(bucket_id=_BUCKET_ID),
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
     )
     assert _SETTLEMENT not in {diagnostic.source_kind for diagnostic in diagnostics}
 

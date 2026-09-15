@@ -25,7 +25,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -46,7 +45,6 @@ from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueR
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
 from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
-from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -55,6 +53,8 @@ from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.domain.usage_ratios.model import UsageRatioProfile
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -71,6 +71,16 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
 _VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
 
 
+def _empty_usage_ratio_profile_loader(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+) -> UsageRatioProfile:
+    """Return the empty usage-ratio profile for this source-mesh seam."""
+    del bucket_id, operation
+    return UsageRatioProfile()
+
+
 def _source_mesh_ports(
     *,
     bucket_id: str,
@@ -78,44 +88,40 @@ def _source_mesh_ports(
     bienes_repository: BienesInversionIvaRegisterRepository,
     operation: PinnedAuthorityOperation,
 ) -> CalculationActionPorts:
-    """Bind the real profile repositories while keeping unrelated authorities inward and deterministic."""
+    """Use the complete application composition with this test's isolated-store repositories."""
     transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
     invoice_repository = InvoiceCatalogueRepository(bucket_id=bucket_id, objects=objects)
-    work_unit_repository = SimpleNamespace()
-    bucket_event_repository = SimpleNamespace()
+    ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
     return CalculationActionPorts(
         operation=operation,
-        work_unit_repository=work_unit_repository,
-        work_lifecycle_ports=WorkLifecyclePorts(
-            work_unit_repository=work_unit_repository,
-            bucket_event_repository=bucket_event_repository,
-        ),
-        calculation_repository=SimpleNamespace(),
-        bucket_event_repository=bucket_event_repository,
+        work_unit_repository=ports.work_unit_repository,
+        work_lifecycle_ports=ports.work_lifecycle_ports,
+        calculation_repository=ports.calculation_repository,
+        bucket_event_repository=ports.bucket_event_repository,
         transaction_repository=transaction_repository,
-        usage_ratio_profile_loader=lambda: {},
+        usage_ratio_profile_loader=_empty_usage_ratio_profile_loader,
         profile_read_ports=empty_profile_read_ports(),
         invoice_repository=invoice_repository,
         invoice_catalogue_read_ports=InvoiceCatalogueReadPorts(
             invoice_reader=invoice_repository,
             transaction_reader=transaction_repository,
         ),
-        filing_repository=SimpleNamespace(),
+        filing_repository=ports.filing_repository,
+        invoice_source_ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repository),
         prorrata_register_repository=ProrrataRegisterRepository(objects=objects),
         bienes_inversion_repository=bienes_repository,
-        inventory_repository=SimpleNamespace(),
+        inventory_repository=ports.inventory_repository,
         observation_repository=CalculationObservationRepository(objects=objects),
-        invoice_source_ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repository),
         percepciones_observation_ports=PercepcionObservationPorts(
             repository=PercepcionObservationRepositoryAdapter(objects=objects),
         ),
-        iva_compensation_history_repository=SimpleNamespace(),
-        iva_compensation_decision_repository=SimpleNamespace(),
-        borrador_snapshot_repository=SimpleNamespace(),
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
         ),
-        relation_override_migration=SimpleNamespace(),
+        iva_compensation_history_repository=ports.iva_compensation_history_repository,
+        iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
+        borrador_snapshot_repository=ports.borrador_snapshot_repository,
+        relation_override_migration=ports.relation_override_migration,
     )
 
 

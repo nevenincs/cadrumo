@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from types import SimpleNamespace
 
 import pytest
 import typer
@@ -22,14 +21,14 @@ def test_the_launcher_propagates_the_child_exit_status(monkeypatch: pytest.Monke
     """The launcher neither interprets nor converts the child's result."""
     observed: list[object] = []
 
-    def run(command: list[str], *, check: bool) -> SimpleNamespace:
-        observed.append((command, check))
-        return SimpleNamespace(returncode=17)
+    async def run(command: list[str]) -> int:
+        observed.append(command)
+        return 17
 
-    monkeypatch.setattr("cadrumo.entrypoints.cli.tui_launcher.subprocess.run", run)
+    monkeypatch.setattr("cadrumo.entrypoints.cli.tui_launcher._run_tui", run)
 
     with pytest.raises(typer.Exit) as raised:
         launch_tui()
 
     assert raised.value.exit_code == 17
-    assert observed == [([sys.executable, "-m", TUI_ROOT_MODULE], False)]
+    assert observed == [[sys.executable, "-m", TUI_ROOT_MODULE]]

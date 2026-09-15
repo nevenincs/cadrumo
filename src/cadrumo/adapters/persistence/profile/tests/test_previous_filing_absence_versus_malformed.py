@@ -125,31 +125,30 @@ def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(t
 
 def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses(tmp_path: Path) -> None:
     """Optional candidates cannot turn a structurally unrelated observation into a silent zero."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path):
-            snapshot = _m130_snapshot()
-            repository = CalculationObservationRepository()
-            unrelated_observation = registry_grounded_modelo_observation(
-                modelo="100",
-                filing_year=_M100_FILING_YEAR,
-                period="0A",
-                casilla_values={validated_casilla_id("0670", surface="test fixture"): Decimal("1")},
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path):
+        snapshot = _m130_snapshot()
+        repository = CalculationObservationRepository()
+        unrelated_observation = registry_grounded_modelo_observation(
+            modelo="100",
+            filing_year=_M100_FILING_YEAR,
+            period="0A",
+            casilla_values={validated_casilla_id("0670", surface="test fixture"): Decimal("1")},
+        )
+        repository.save(
+            repository.prepare_observation_envelope(
+                unrelated_observation,
+                source_kind="app_filing",
+                stamped_revision_id=revision_id_for_observation(unrelated_observation),
             )
-            repository.save(
-                repository.prepare_observation_envelope(
-                    unrelated_observation,
-                    source_kind="app_filing",
-                    stamped_revision_id=revision_id_for_observation(unrelated_observation),
-                )
-            )
+        )
 
-            with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
-                resolve_bindings_from_local_store(
-                    snapshot,
-                    repository=repository,
-                    iva_history_repository=IvaCompensationHistoryRepository(),
-                    operation=_authority_operation_for_test,
-                )
+        with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
+            resolve_bindings_from_local_store(
+                snapshot,
+                repository=repository,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_an_ambiguous_multiple_observed_filing_match_still_refuses() -> None:

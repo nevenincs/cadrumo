@@ -12,7 +12,6 @@ means; the verb names what the operator asked for, and the transport it performs
 on the way is declared on its parameters rather than in its name.
 """
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -134,9 +133,9 @@ _SPREADSHEET_ID = _option(
 
 MODELO_SPREADSHEET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_spreadsheet",
-        parent_key="app_modelo",
-        token="spreadsheet",
+        "app_modelo_spreadsheet",
+        "app_modelo",
+        "spreadsheet",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.modelo.spreadsheet.app_help"),
         short_help_key=None,

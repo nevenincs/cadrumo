@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from ....tests.inventory import SRC_CADRUMO
 from ._machine_secret_channels_support import (
     _CERTIFICATE_SECRET,
@@ -111,7 +113,7 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
                 "recovery_verification_handle": handles[1],
             }
             args = [*command, *(("--secrets-stdin",) if channel == "stdin" else ())]
-            result = subprocess.run(  # noqa: S603 - fixed interpreter and test-owned command
+            result = run_audited_process(
                 [bootstrap_interpreter(), "-c", _WINDOWS_HANDLE_HARNESS, json.dumps(harness_payload), *args],
                 cwd=SRC_CADRUMO,
                 env=env,
@@ -135,7 +137,7 @@ def _run_profile_create_with_recovery(root: Path, *, channel: str, payload: str)
                 str(verification_reader),
             ]
             harness_payload = {"settings": settings, "assert_closed_descriptors": descriptors}
-            result = subprocess.run(  # noqa: S603 - fixed interpreter and test-owned command
+            result = run_audited_process(
                 [sys.executable, "-c", _HARNESS, json.dumps(harness_payload), *args],
                 cwd=SRC_CADRUMO,
                 env=env,
@@ -335,7 +337,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
             },
         )
-        result = subprocess.run(  # noqa: S603 - fixed interpreter and module
+        result = run_audited_process(
             [
                 bootstrap_interpreter(),
                 "-m",
@@ -397,35 +399,6 @@ def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: P
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         },
     )
-    process = subprocess.Popen(  # noqa: S603 - fixed interpreter and module
-        [
-            bootstrap_interpreter(),
-            "-m",
-            "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
-            "--recovery-handoff-handle",
-            str(handoff_handle),
-            "--recovery-verification-handle",
-            str(verification_handle),
-            "--",
-            "--format",
-            "json",
-            "config",
-            "profile",
-            "create",
-            "windows-recovery",
-            "--quiet",
-            "--secrets-stdin",
-        ],
-        cwd=SRC_CADRUMO,
-        env=env,
-        text=True,
-        encoding="utf-8",
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        close_fds=True,
-        startupinfo=startup,
-    )
     os.close(handoff_writer)
     os.close(verification_reader)
     supervisor_failure: list[BaseException] = []
@@ -451,22 +424,47 @@ def _assert_windows_recovery_handles_complete_real_headless_creation(tmp_path: P
     supervisor = threading.Thread(target=supervise_recovery, daemon=True)
     supervisor.start()
     try:
-        stdout, stderr = process.communicate(
+        result = run_audited_process(
+            [
+                bootstrap_interpreter(),
+                "-m",
+                "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
+                "--recovery-handoff-handle",
+                str(handoff_handle),
+                "--recovery-verification-handle",
+                str(verification_handle),
+                "--",
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "create",
+                "windows-recovery",
+                "--quiet",
+                "--secrets-stdin",
+            ],
+            cwd=SRC_CADRUMO,
+            env=env,
             input=json.dumps({"passphrase": _PROFILE_SECRET, "passphrase_confirmation": _PROFILE_SECRET}),
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            check=False,
             timeout=45,
+            close_fds=True,
+            startupinfo=startup,
         )
     except subprocess.TimeoutExpired:
-        process.kill()
-        stdout, stderr = process.communicate()
         raise AssertionError(
             f"recovery bootstrap stalled at {supervisor_state[0]}; "
-            f"supervisor_failure={supervisor_failure!r}; stderr={stderr[-2000:]!r}"
+            f"supervisor_failure={supervisor_failure!r}"
         ) from None
     supervisor.join(timeout=5)
     assert not supervisor.is_alive()
-    assert supervisor_failure == [], stderr
-    assert process.returncode == 0, stderr
-    assert json.loads(stdout)["result"]["profile_name"] == "windows-recovery"
+    assert supervisor_failure == [], result.stderr
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["result"]["profile_name"] == "windows-recovery"
 
 
 def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path: Path) -> None:
@@ -508,7 +506,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_creation(tmp_path:
         },
     )
     try:
-        result = subprocess.run(  # noqa: S603 - fixed interpreter and module
+        result = run_audited_process(
             [
                 sys.executable,
                 "-c",
@@ -613,7 +611,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
             },
         )
-        result = subprocess.run(  # noqa: S603 - fixed interpreter and module
+        result = run_audited_process(
             [
                 bootstrap_interpreter(),
                 "-m",

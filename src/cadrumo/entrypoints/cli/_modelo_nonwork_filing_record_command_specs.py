@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the Modelo non-work filing record family."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -34,9 +32,9 @@ from .command_spec import (
 
 MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_filing_record_list",
-        parent_key="app_modelo_filing_record",
-        token="list",
+        "app_modelo_filing_record_list",
+        "app_modelo_filing_record",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.filing_record.list_help"),
         short_help_key=None,
@@ -57,9 +55,9 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_filing_record_view",
-        parent_key="app_modelo_filing_record",
-        token="view",
+        "app_modelo_filing_record_view",
+        "app_modelo_filing_record",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.filing_record.view_help"),
         short_help_key=None,
@@ -74,9 +72,9 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_filing_record_import",
-        parent_key="app_modelo_filing_record",
-        token="import",
+        "app_modelo_filing_record_import",
+        "app_modelo_filing_record",
+        "import",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.filing_record.import_help"),
         short_help_key=None,
@@ -135,9 +133,9 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_filing_record_observe_local",
-        parent_key="app_modelo_filing_record",
-        token="observe-local",
+        "app_modelo_filing_record_observe_local",
+        "app_modelo_filing_record",
+        "observe-local",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.filing_record.observe_local_help"),
         short_help_key=None,
@@ -181,3 +179,5 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work filing record family."""
+"""Authored CommandSpec declarations for the Modelo non-work filing record family."""

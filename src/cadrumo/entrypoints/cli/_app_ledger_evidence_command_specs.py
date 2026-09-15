@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger evidence surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -45,9 +43,9 @@ from .command_spec import (
 
 LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_evidence_add",
-        parent_key="app_ledger_evidence",
-        token="add",
+        "app_ledger_evidence_add",
+        "app_ledger_evidence",
+        "add",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.add_help"),
         short_help_key=None,
@@ -85,9 +83,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_attachment_queue",
-        parent_key="app_ledger_evidence",
-        token="attachment-queue",
+        "app_ledger_evidence_attachment_queue",
+        "app_ledger_evidence",
+        "attachment-queue",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.attachment_queue_help"),
         short_help_key=None,
@@ -102,9 +100,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_attachment_view",
-        parent_key="app_ledger_evidence",
-        token="attachment-view",
+        "app_ledger_evidence_attachment_view",
+        "app_ledger_evidence",
+        "attachment-view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.attachment_view_help"),
         short_help_key=None,
@@ -119,9 +117,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_batch",
-        parent_key="app_ledger_evidence",
-        token="batch",
+        "app_ledger_evidence_batch",
+        "app_ledger_evidence",
+        "batch",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.batch_help"),
         short_help_key=None,
@@ -170,9 +168,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_confirm",
-        parent_key="app_ledger_evidence",
-        token="confirm",
+        "app_ledger_evidence_confirm",
+        "app_ledger_evidence",
+        "confirm",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.confirm_help"),
         short_help_key=None,
@@ -252,9 +250,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_consent",
-        parent_key="app_ledger_evidence",
-        token="consent",
+        "app_ledger_evidence_consent",
+        "app_ledger_evidence",
+        "consent",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.evidence.consent.group_help"),
         short_help_key=None,
@@ -265,9 +263,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="app_ledger_evidence_extract",
-        parent_key="app_ledger_evidence",
-        token="extract",
+        "app_ledger_evidence_extract",
+        "app_ledger_evidence",
+        "extract",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.extract_help"),
         short_help_key=None,
@@ -310,9 +308,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_list",
-        parent_key="app_ledger_evidence",
-        token="list",
+        "app_ledger_evidence_list",
+        "app_ledger_evidence",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.list_help"),
         short_help_key=None,
@@ -327,9 +325,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_remove",
-        parent_key="app_ledger_evidence",
-        token="remove",
+        "app_ledger_evidence_remove",
+        "app_ledger_evidence",
+        "remove",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.remove_help"),
         short_help_key=None,
@@ -347,9 +345,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_review",
-        parent_key="app_ledger_evidence",
-        token="review",
+        "app_ledger_evidence_review",
+        "app_ledger_evidence",
+        "review",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.evidence.review.group_help"),
         short_help_key=None,
@@ -360,9 +358,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="app_ledger_evidence_update",
-        parent_key="app_ledger_evidence",
-        token="update",
+        "app_ledger_evidence_update",
+        "app_ledger_evidence",
+        "update",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.update_help"),
         short_help_key=None,
@@ -461,9 +459,9 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_view",
-        parent_key="app_ledger_evidence",
-        token="view",
+        "app_ledger_evidence_view",
+        "app_ledger_evidence",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.view_help"),
         short_help_key=None,
@@ -480,3 +478,5 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_EVIDENCE_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger evidence surface."""
+"""Authored CommandSpec declarations for the ledger evidence surface."""

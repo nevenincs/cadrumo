@@ -23,6 +23,7 @@ from __future__ import annotations
 import contextvars
 import threading
 from collections.abc import Iterator
+from contextlib import ExitStack
 from decimal import Decimal
 from pathlib import Path
 
@@ -123,12 +124,17 @@ def test_usage_ratio_bucket_lock_is_a_real_mutex(tmp_path: Path) -> None:
     manager stopped acquiring a real OS lock, the nested acquire would succeed
     and this test would fail.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with ExitStack() as stack:
+        profile = stack.enter_context(isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID))
+        stack.enter_context(
+            override_settings(
+                cadrumo_file_lock_timeout_s=0.05,
+                cadrumo_file_lock_retry_backoff_s=0.01,
+            )
+        )
         bucket_id = profile.bucket_id
         # Tiny wait-budget so the contended re-acquire fails fast instead of
         # blocking for the default timeout (the setting must be strictly > 0).
-        with override_settings(cadrumo_file_lock_timeout_s=0.05, cadrumo_file_lock_retry_backoff_s=0.01):  # noqa: SIM117 - pytest.raises must scope only the contended re-acquire
-            with usage_ratio_bucket_lock(bucket_id):
-                with pytest.raises(LockAcquisitionError):
-                    with usage_ratio_bucket_lock(bucket_id):
-                        pass
+        stack.enter_context(usage_ratio_bucket_lock(bucket_id))
+        with pytest.raises(LockAcquisitionError):
+            stack.enter_context(usage_ratio_bucket_lock(bucket_id))

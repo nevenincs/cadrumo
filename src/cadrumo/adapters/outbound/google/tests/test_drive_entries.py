@@ -89,13 +89,22 @@ class _RecordedFiles:
     def __init__(self, owner: _RecordedDrive) -> None:
         self._owner = owner
 
-    def list(self, *, q: str, fields: str, pageSize: int) -> _RecordedCall:  # noqa: N803 - Drive API kwarg name
-        self._owner.queries.append(q)
+    def list(self, **request: object) -> _RecordedCall:
+        query = request["q"]
+        assert isinstance(query, str)
+        assert isinstance(request["fields"], str)
+        assert isinstance(request["pageSize"], int)
+        self._owner.queries.append(query)
         return _RecordedCall("list", {"_result": {"files": self._owner.entries}})
 
-    def update(self, *, fileId: str, body: dict[str, Any], fields: str) -> _RecordedCall:  # noqa: N803 - Drive API kwarg name
-        self._owner.updates.append(fileId)
-        return _RecordedCall("update", {"_result": {"id": fileId, "appProperties": body["appProperties"]}})
+    def update(self, **request: object) -> _RecordedCall:
+        file_id = request["fileId"]
+        body = request["body"]
+        assert isinstance(file_id, str)
+        assert isinstance(body, dict)
+        assert isinstance(request["fields"], str)
+        self._owner.updates.append(file_id)
+        return _RecordedCall("update", {"_result": {"id": file_id, "appProperties": body["appProperties"]}})
 
     def create(self, *, body: dict[str, Any], fields: str) -> _RecordedCall:
         return _RecordedCall("create", {"_result": {"id": "created-id", "name": body["name"]}})

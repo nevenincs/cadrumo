@@ -32,10 +32,12 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -97,7 +99,7 @@ def _create_non_resident_irnr_natural_person() -> None:
 
 
 def test_work_create_refuses_modelo_202_for_a_natural_person(
-    _isolated_cli_backend: Path,  # noqa: F811
+    _isolated_cli_backend: Path,
 ) -> None:
     """M4: a natural person is refused a Modelo 202 work unit.
 
@@ -124,7 +126,7 @@ def test_work_create_refuses_modelo_202_for_a_natural_person(
 
 
 def test_work_create_refuses_modelo_100_for_a_legal_entity(
-    _isolated_cli_backend: Path,  # noqa: F811
+    _isolated_cli_backend: Path,
 ) -> None:
     """M4: a sociedad limitada is refused a Modelo 100 work unit.
 
@@ -147,7 +149,7 @@ def test_work_create_refuses_modelo_100_for_a_legal_entity(
 
 
 def test_work_create_refuses_modelo_130_for_non_resident_irnr(
-    _isolated_cli_backend: Path,  # noqa: F811
+    _isolated_cli_backend: Path,
 ) -> None:
     """A declared IRNR non-resident is refused the resident-IRPF M130 work unit."""
 
@@ -168,7 +170,7 @@ def test_work_create_refuses_modelo_130_for_non_resident_irnr(
 
 
 def test_work_create_refuses_modelo_100_for_non_resident_irnr(
-    _isolated_cli_backend: Path,  # noqa: F811
+    _isolated_cli_backend: Path,
 ) -> None:
     """A declared IRNR non-resident is refused the resident-IRPF M100 work unit."""
 
@@ -189,7 +191,7 @@ def test_work_create_refuses_modelo_100_for_non_resident_irnr(
 
 
 def test_work_create_allow_not_applicable_bypasses_the_guard(
-    _isolated_cli_backend: Path,  # noqa: F811
+    _isolated_cli_backend: Path,
 ) -> None:
     """The ``--allow-not-applicable`` escape hatch lets an operator with
     a genuine reason override the refusal; the bypass is recorded in the
@@ -214,7 +216,7 @@ def test_work_create_allow_not_applicable_bypasses_the_guard(
 
 
 def test_work_create_allows_an_applicable_modelo(
-    _isolated_cli_backend: Path,  # noqa: F811
+    _isolated_cli_backend: Path,
 ) -> None:
     """The guard does not over-block: a modelo that applies to the
     profile is created normally. An autónomo en estimación directa owes

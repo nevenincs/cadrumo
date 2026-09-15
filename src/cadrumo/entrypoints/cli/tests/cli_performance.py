@@ -31,6 +31,8 @@ from pathlib import Path
 from statistics import median
 from typing import Any, Literal, Self, cast
 
+from cadrumo.tests.audited_process import run_audited_process
+
 from ....tests.inventory import SRC_CADRUMO
 from .subprocess_cli import subprocess_cli_env
 
@@ -514,7 +516,7 @@ def _run_child(
         }
         started = time.perf_counter()
         try:
-            completed = subprocess.run(  # noqa: S603 - fixed interpreter and in-tree profiler module.
+            completed = run_audited_process(
                 [sys.executable, "-m", "cadrumo.entrypoints.cli.tests.cli_performance", _CHILD_FLAG, str(request_path)],
                 cwd=SRC_CADRUMO.parent,
                 env=subprocess_cli_env(strip_prefixes=_ENV_PREFIXES, extra=env_extra),

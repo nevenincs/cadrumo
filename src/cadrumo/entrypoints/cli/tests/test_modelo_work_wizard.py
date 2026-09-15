@@ -34,7 +34,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401
+    isolated_cli_backend as _isolated_cli_backend,
 )
 from ....application.flows import line_frontend as _line_frontend
 from ....application.flows.copy import assemble_page_copy
@@ -54,6 +54,8 @@ from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_m130_work_unit
 from .cli_runner import invoke_cached_cli
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -32,13 +32,14 @@ _STATE_FREE = ExecutionPolicySpec(
 )
 _STRING = ValueContract(DeferredTarget("builtins", "str"))
 _NO_SCHEMA = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
+_OTHER_COMMAND = "other"
 
 
 def _root() -> CommandSpec:
     return CommandSpec(
-        key="root",
-        parent_key=None,
-        token="aeat",  # noqa: S106 - CLI token, not a credential.
+        "root",
+        None,
+        "aeat",
         kind=CommandNodeKind.ROOT,
         help_key=TranslationKey("cli.root.help"),
         short_help_key=None,
@@ -52,9 +53,9 @@ def _root() -> CommandSpec:
 
 def _group() -> CommandSpec:
     return CommandSpec(
-        key="config",
-        parent_key="root",
-        token="config",  # noqa: S106 - CLI token, not a credential.
+        "config",
+        "root",
+        "config",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.help"),
         short_help_key=TranslationKey("cli.config.short_help"),
@@ -68,9 +69,9 @@ def _group() -> CommandSpec:
 
 def _leaf() -> CommandSpec:
     return CommandSpec(
-        key="profile_list",
-        parent_key="config",
-        token="list",  # noqa: S106 - CLI token, not a credential.
+        "profile_list",
+        "config",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.profile.list_help"),
         short_help_key=None,
@@ -124,7 +125,7 @@ def test_value_contract_refuses_competing_choice_authority(field: str) -> None:
     ("specs", "message"),
     [
         (
-            (_root(), dataclasses.replace(_root(), key="second_root", token="other")),  # noqa: S106
+        (_root(), dataclasses.replace(_root(), key="second_root", token=_OTHER_COMMAND)),
             "exactly one root",
         ),
         ((_root(), dataclasses.replace(_group(), parent_key="missing")), "unknown parent"),
@@ -186,7 +187,7 @@ def test_graph_indexes_derived_paths_and_unique_schema_identities() -> None:
     duplicate_schema = dataclasses.replace(
         _leaf(),
         key="other_leaf",
-        token="other",  # noqa: S106 - CLI operator token, not a credential
+        token=_OTHER_COMMAND,
         result_schema=dataclasses.replace(_leaf().result_schema),
     )
     duplicate_graph = CommandSpecGraph((_root(), _group(), _leaf(), duplicate_schema))

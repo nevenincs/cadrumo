@@ -206,20 +206,19 @@ def _control_evidence() -> EvidenceInput:
 def _read_through_the_wired_path(chat_url: str):
     evidence = _control_evidence()
     period = default_invoice_extraction_period()
-    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url), bundled_indexed_authority().operation() as operation:
         # ``settings`` is required rather than resolved internally, so the
         # override above reaches the read instead of being silently bypassed.
-        with bundled_indexed_authority().operation() as operation:
-            legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
-            return invoice_draft_extraction_module._read_transcription_semantically(
-                evidence,
-                transcribe_text_layer(evidence, text_layer_ports=_CONTROL_TEXT_LAYER_PORTS),
-                settings=load_settings(),
-                authority_period=period,
-                operation=operation,
-                legends=legends,
-                ports=_reader_ports(operation=operation),
-            )
+        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
+        return invoice_draft_extraction_module._read_transcription_semantically(
+            evidence,
+            transcribe_text_layer(evidence, text_layer_ports=_CONTROL_TEXT_LAYER_PORTS),
+            settings=load_settings(),
+            authority_period=period,
+            operation=operation,
+            legends=legends,
+            ports=_reader_ports(operation=operation),
+        )
 
 
 def test_the_read_actually_reaches_the_loopback_endpoint(

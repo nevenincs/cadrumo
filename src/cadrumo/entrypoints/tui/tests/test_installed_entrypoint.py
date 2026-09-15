@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -37,7 +38,7 @@ def test_the_tui_module_imports_no_cli_internals() -> None:
         f"__import__({_SESSION_MODULE!r} + '.__main__')\n"
         "print(json.dumps(sorted(m for m in sys.modules if m.startswith('cadrumo.entrypoints.'))))\n"
     )
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and literal probe
+    completed = run_audited_process(
         [sys.executable, "-c", probe],
         cwd=_REPO_ROOT,
         capture_output=True,
@@ -60,7 +61,7 @@ def test_the_tui_module_refuses_retired_destination_session_arguments(tmp_path: 
     """An obsolete child-session request fails visibly before a root session starts."""
     outcome_file = tmp_path / "outcome.json"
 
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and literal TUI arguments
+    completed = run_audited_process(
         [
             sys.executable,
             "-m",

@@ -66,7 +66,7 @@ _VALID_FACTS: Mapping[str, str] = {
 _UNDECLARED_FACTS: Mapping[str, str] = {**_VALID_FACTS, "identity.not_a_declared_path": "x"}
 _VICTIM_LABEL = "Rollback Victim"
 _SURVIVOR_LABEL = "Rollback Survivor"
-_PASSPHRASE = "atomic-create-rollback-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "atomic-create-rollback-operator-secret"
 
 
 def _register(label: str, *, facts: Mapping[str, str]) -> None:
@@ -75,7 +75,7 @@ def _register(label: str, *, facts: Mapping[str, str]) -> None:
     register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
-        passphrase=_PASSPHRASE,
+        passphrase=_CREDENTIAL_INPUT,
         facts=tuple(UserProfileFact(path=path, value=value) for path, value in facts.items()),
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,

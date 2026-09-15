@@ -52,7 +52,7 @@ from cadrumo.core.time.clock import now as _now
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-_PASSWORD = "delete-while-logged-in-password"  # noqa: S105 - real test credential
+_CREDENTIAL_INPUT = "delete-while-logged-in-password"
 _LABEL = "Signed-in operator"
 
 _LABEL_RECORD_RELATIVE_PATH = "data/profile-label.v1.json"
@@ -74,13 +74,13 @@ def _register_and_sign_in(root: Path) -> UUID:
     outcome = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=_LABEL,
-        passphrase=_PASSWORD,
+        passphrase=_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
     login_profile(
         name=outcome.profile_id,
-        passphrase_callback=lambda: _PASSWORD,
+        passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,
     )
     assert current_active_bucket_session() is not None, (

@@ -414,7 +414,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
             actor="operator-A",
             filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             clock=_T1,
-        ).revision
+        )
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
     rendered = resolve_error_message(exc_info.value)
     assert "%{detail}" not in rendered
@@ -446,7 +446,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
             actor="operator-A",
             filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             clock=_T1,
-        ).revision
+        )
 
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
     assert exc_info.value.context is not None
@@ -649,7 +649,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
             filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             clock=_T1,
-        ).revision
+        )
     assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
 
     assert cr_repo.load().revisions == {}
@@ -673,7 +673,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
             filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             clock=_T1,
-        ).revision
+        )
     assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
 
     assert cr_repo.load().revisions == {}
@@ -697,7 +697,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
             filing_instance_evidence=_m303_filing_evidence(work_unit.period, operation=operation),
             casilla_inputs={_M303_REPERCUTIDO_GENERAL_CASILLA: Decimal("99.00")},
             clock=_T1,
-        ).revision
+        )
     assert exc_info.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
 
     assert cr_repo.load().revisions == {}

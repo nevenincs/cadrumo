@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ..command_specs import COMMAND_GRAPH, COMMAND_SPECS
 
@@ -43,7 +44,7 @@ def test_complete_authority_import_does_not_import_behavior_modules() -> None:
         "loaded = sorted(targets.intersection(sys.modules)); "
         "print(json.dumps({'specs': len(COMMAND_SPECS), 'loaded': loaded}))"
     )
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and authored test program
+    completed = run_audited_process(
         [sys.executable, "-c", source],
         check=True,
         capture_output=True,

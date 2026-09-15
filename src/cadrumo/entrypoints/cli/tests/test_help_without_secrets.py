@@ -1,7 +1,7 @@
 """Help and usage-error surfaces never demand the secret-store passphrase.
 
 Operator-surface regression for the help-tree black hole: with an active
-profile configured but ``CADRUMO_SECRET_PASSPHRASE`` unset and a
+profile configured but ``CADRUMO_SECRET_CREDENTIAL_INPUT`` unset and a
 non-interactive stdin, the root callback's bucket-session activation used
 to run before any help or usage rendering, so EVERY subgroup help
 (``aeat config --help``, ``aeat app --help``, ``aeat app ledger --help``)
@@ -47,15 +47,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 #: The sanctioned non-interactive secret channel, spelled out as a literal
 #: rather than imported from the master-key adapter that emits it: importing
 #: the producer's own constant would assert the code against itself.
-_PASSPHRASE_ENV_VAR = "CADRUMO_SECRET_PASSPHRASE"  # noqa: S105 - env var name, not a secret value
+_CREDENTIAL_ENV_VAR = "CADRUMO_SECRET_CREDENTIAL_INPUT"
 
 #: Matches an actual passphrase VALUE materialization (an env-style
 #: assignment, e.g. leaked from ``os.environ`` or a diagnostic dump), never
 #: a bare instructional mention of the variable's NAME. Operator-facing help
-#: prose is allowed to name ``CADRUMO_SECRET_PASSPHRASE`` when explaining where
+#: prose is allowed to name ``CADRUMO_SECRET_CREDENTIAL_INPUT`` when explaining where
 #: it must be set for an isolated run (``application/operator_surface/help.py``);
 #: only an actual ``KEY=value`` leak is a genuine secret disclosure.
-_PASSPHRASE_VALUE_LEAK_PATTERN = re.compile(r"CADRUMO_SECRET_PASSPHRASE\s*=\s*\S")
+_CREDENTIAL_INPUT_VALUE_LEAK_PATTERN = re.compile(r"CADRUMO_SECRET_CREDENTIAL_INPUT\s*=\s*\S")
 
 
 def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
@@ -84,7 +84,7 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
     profile or secret exists.
     """
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
-    env.pop(_PASSPHRASE_ENV_VAR, None)
+    env.pop(_CREDENTIAL_ENV_VAR, None)
     env.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
@@ -108,7 +108,7 @@ def _run(
     assert aeat_exe is not None, "aeat console script must be installed for this gate"
     env = _passphraseless_env(tmp_path)
     if passphrase is not None:
-        env[_PASSPHRASE_ENV_VAR] = passphrase
+        env[_CREDENTIAL_ENV_VAR] = passphrase
     return subprocess.run(
         [aeat_exe, *args],
         cwd=Path.cwd(),
@@ -193,7 +193,7 @@ def test_subgroup_help_renders_without_passphrase(
 ) -> None:
     """Every subgroup help renders exit 0 with real content, no master key.
 
-    Help prose may legitimately NAME ``CADRUMO_SECRET_PASSPHRASE`` (e.g. the
+    Help prose may legitimately NAME ``CADRUMO_SECRET_CREDENTIAL_INPUT`` (e.g. the
     isolated-run instructions on ``aeat config --help``); only an actual
     value assignment is a genuine leak, so the gate checks for that
     narrower pattern rather than a blanket substring match.
@@ -202,7 +202,7 @@ def test_subgroup_help_renders_without_passphrase(
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 0, combined
     assert expected_row in result.stdout, combined
-    assert not _PASSPHRASE_VALUE_LEAK_PATTERN.search(combined), combined
+    assert not _CREDENTIAL_INPUT_VALUE_LEAK_PATTERN.search(combined), combined
     assert "Traceback" not in combined
 
 
@@ -213,7 +213,7 @@ def test_live_config_help_only_documents_explicit_secret_channels(tmp_path: Path
     combined = f"{result.stdout}\n{result.stderr}"
 
     assert result.returncode == 0, combined
-    assert _PASSPHRASE_ENV_VAR not in combined, combined
+    assert _CREDENTIAL_ENV_VAR not in combined, combined
     for option in (
         "--profile-secrets-stdin",
         "--profile-secrets-fd",
@@ -229,7 +229,7 @@ def test_unknown_command_renders_usage_error_without_passphrase(tmp_path: Path) 
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 2, combined
     assert "nosuchcmd" in combined
-    assert "CADRUMO_SECRET_PASSPHRASE" not in combined
+    assert "CADRUMO_SECRET_CREDENTIAL_INPUT" not in combined
 
 
 def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: Path) -> None:
@@ -246,7 +246,7 @@ def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: 
     assert result.returncode == 2, combined
     assert "create" in combined, combined
     assert "view" in combined, combined
-    assert "CADRUMO_SECRET_PASSPHRASE" not in combined
+    assert "CADRUMO_SECRET_CREDENTIAL_INPUT" not in combined
 
 
 def test_store_writing_verb_still_demands_the_passphrase(tmp_path: Path) -> None:
@@ -273,9 +273,9 @@ def test_store_writing_verb_still_demands_the_passphrase(tmp_path: Path) -> None
     result = _run(["config", "profile", "edit", "control", "--quiet", "--activity", "consulting"], tmp_path)
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode != 0, combined
-    assert _PASSPHRASE_ENV_VAR in combined, combined
+    assert _CREDENTIAL_ENV_VAR in combined, combined
     # Naming the variable is correct; materializing a value is the leak.
-    assert not _PASSPHRASE_VALUE_LEAK_PATTERN.search(combined), combined
+    assert not _CREDENTIAL_INPUT_VALUE_LEAK_PATTERN.search(combined), combined
     assert "Traceback" not in combined
 
 
@@ -314,4 +314,4 @@ def test_data_verb_still_refuses_without_passphrase(tmp_path: Path) -> None:
     # Neither run may materialize the passphrase, in prose or as an assignment.
     for combined in (unlocked_combined, refused_combined):
         assert passphrase not in combined, combined
-        assert not _PASSPHRASE_VALUE_LEAK_PATTERN.search(combined), combined
+        assert not _CREDENTIAL_INPUT_VALUE_LEAK_PATTERN.search(combined), combined

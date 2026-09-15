@@ -105,10 +105,9 @@ def test_operation_composition_refuses_a_detached_public_contract_set() -> None:
 
     services = cast(OperationComposedServices, _Services())
 
-    with bundled_indexed_authority().operation() as authority_operation:
-        with pytest.raises(ValueError, match="exact composed service contracts"):
-            TuiOperationCompositionV1(
-                services=services,
-                public_contracts=detached,
-                authority_operation=authority_operation,
-            )
+    with bundled_indexed_authority().operation() as authority_operation, pytest.raises(ValueError, match="exact composed service contracts"):
+        TuiOperationCompositionV1(
+            services=services,
+            public_contracts=detached,
+            authority_operation=authority_operation,
+        )

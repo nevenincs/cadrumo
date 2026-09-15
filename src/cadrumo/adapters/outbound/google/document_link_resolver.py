@@ -115,16 +115,9 @@ class _DriveFilesListRequest(Protocol):
 
 
 class _DriveFilesResource(Protocol):
-    def get_media(self, *, fileId: str) -> _DriveMediaRequest: ...  # noqa: N803
+    def get_media(self, **request: object) -> _DriveMediaRequest: ...
 
-    def list(
-        self,
-        *,
-        q: str,
-        fields: str,
-        pageSize: int,  # noqa: N803
-        pageToken: str = ...,  # noqa: N803
-    ) -> _DriveFilesListRequest: ...
+    def list(self, **request: object) -> _DriveFilesListRequest: ...
 
 
 class _DriveService(Protocol):

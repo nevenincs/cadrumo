@@ -77,18 +77,17 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
     IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
 
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
-        with bundled_indexed_authority().operation() as operation:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=calc_rev_id,
-                    output_path=tmp_path / "out.txt",
-                    actor="operator",
-                ),
-                workflow_profile=_profile(),
-                export_ports=modelo_export_ports_for_test(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif),
-                operation=operation,
-            )
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"), bundled_indexed_authority().operation() as operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calc_rev_id,
+                output_path=tmp_path / "out.txt",
+                actor="operator",
+            ),
+            workflow_profile=_profile(),
+            export_ports=modelo_export_ports_for_test(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif),
+            operation=operation,
+        )
     assert not (tmp_path / "out.txt").exists()
 
 
@@ -110,18 +109,17 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
     IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"):
-        with bundled_indexed_authority().operation() as operation:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=calc_rev_id,
-                    output_path=tmp_path / "out.txt",
-                    actor="operator",
-                ),
-                workflow_profile=_profile(),
-                export_ports=modelo_export_ports_for_test(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif),
-                operation=operation,
-            )
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"), bundled_indexed_authority().operation() as operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calc_rev_id,
+                output_path=tmp_path / "out.txt",
+                actor="operator",
+            ),
+            workflow_profile=_profile(),
+            export_ports=modelo_export_ports_for_test(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif),
+            operation=operation,
+        )
     assert not (tmp_path / "out.txt").exists()
 
 
@@ -146,22 +144,21 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
-            with bundled_indexed_authority().operation() as operation:
-                export_modelo_revision(
-                    ModeloExportCommand(
-                        calculation_revision_id=calc_rev_id,
-                        output_path=tmp_path / "out.txt",
-                        actor="operator",
-                    ),
-                    workflow_profile=_profile(),
-                    export_ports=modelo_export_ports_for_test(
-                        bucket_id=bucket_id,
-                        taxpayer_tax_id=taxpayer_nif,
-                        iva_compensation_decision=decision_repo,
-                    ),
-                    operation=operation,
-                )
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"), bundled_indexed_authority().operation() as operation:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=calc_rev_id,
+                    output_path=tmp_path / "out.txt",
+                    actor="operator",
+                ),
+                workflow_profile=_profile(),
+                export_ports=modelo_export_ports_for_test(
+                    bucket_id=bucket_id,
+                    taxpayer_tax_id=taxpayer_nif,
+                    iva_compensation_decision=decision_repo,
+                ),
+                operation=operation,
+            )
     finally:
         dispose_engine(decision_settings)
     assert not (tmp_path / "out.txt").exists()
@@ -270,23 +267,22 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
-            with bundled_indexed_authority().operation() as operation:
-                file_modelo_revision(
-                    calc_rev_id,
-                    actor="operator",
-                    workflow_profile=_profile(),
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    ports=replace(
-                        build_filing_action_ports(bucket_id=bucket_id),
-                        work_unit_repository=WorkUnitCatalogueRepository(),
-                        calculation_repository=CalculationRevisionCatalogueRepository(),
-                        filing_repository=ModeloRecordCatalogueRepository(),
-                        iva_compensation_decision_repository=decision_repo,
-                    ),
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=operation,
-                )
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"), bundled_indexed_authority().operation() as operation:
+            file_modelo_revision(
+                calc_rev_id,
+                actor="operator",
+                workflow_profile=_profile(),
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                ports=replace(
+                    build_filing_action_ports(bucket_id=bucket_id),
+                    work_unit_repository=WorkUnitCatalogueRepository(),
+                    calculation_repository=CalculationRevisionCatalogueRepository(),
+                    filing_repository=ModeloRecordCatalogueRepository(),
+                    iva_compensation_decision_repository=decision_repo,
+                ),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
     finally:
         dispose_engine(decision_settings)
 

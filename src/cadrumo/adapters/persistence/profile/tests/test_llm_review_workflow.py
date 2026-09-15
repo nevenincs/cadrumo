@@ -425,24 +425,23 @@ def test_no_split_verdict_refuses_a_split_decision(
     repository, events = repositories
     tx_id = _seed_parent(repository)
 
-    with pytest.raises(TransactionValidationError):
-        with _workflow_ports(repository, events) as (ports, llm_ports, settings):
-            execute_reviewed_decision(
-                _split_suggestion(
-                    repository,
-                    tx_id,
-                    proposal=_single_line_proposal(),
-                    ledger_ports=ports,
-                    llm_ports=llm_ports,
-                    settings=settings,
-                    operation=operation,
-                ),
-                origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
-                decision=LlmReviewDecision.SPLIT,
-                bucket_id=_BUCKET,
-                ports=ports,
-                occurred_at=_NOW,
-            )
+    with pytest.raises(TransactionValidationError), _workflow_ports(repository, events) as (ports, llm_ports, settings):
+        execute_reviewed_decision(
+            _split_suggestion(
+                repository,
+                tx_id,
+                proposal=_single_line_proposal(),
+                ledger_ports=ports,
+                llm_ports=llm_ports,
+                settings=settings,
+                operation=operation,
+            ),
+            origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
+            decision=LlmReviewDecision.SPLIT,
+            bucket_id=_BUCKET,
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     parent = repository.load().get(tx_id)
     assert parent is not None
@@ -502,7 +501,11 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
     assert direct_cmd == workflow_cmd == origin.source_command
 
 
-def test_cli_route_parity_split_apply_matches_direct_primitive(tmp_path: Path) -> None:
+def test_cli_route_parity_split_apply_matches_direct_primitive(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     # Routing the auto-split apply through the workflow persists IDENTICAL children
     # to the pre-cutover direct apply_evidence_split with the same source_command.
     origin = LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT
@@ -521,6 +524,7 @@ def test_cli_route_parity_split_apply_matches_direct_primitive(tmp_path: Path) -
                     ledger_ports=ports,
                     llm_ports=llm_ports,
                     settings=settings,
+                    operation=operation,
                 )
                 if use_workflow:
                     applied = execute_reviewed_decision(

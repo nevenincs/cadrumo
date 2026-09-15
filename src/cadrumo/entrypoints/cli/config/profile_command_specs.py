@@ -212,42 +212,122 @@ _CONFIG = "..config"
 _WIZARD = "....application.wizard.results"
 
 _WIZARD_CONFIRM_FIELDS = frozenset(
-    """new-entity-first-two-profit-periods ley-49-2002-option-declared
-    ley-49-2002-renunciation-declared iva-roi-enrolled iva-oss-enrolled
-    iva-group-member-enrolled iva-group-dominant-entity-enrolled iva-sii-enrolled
-    iva-redeme-enrolled iva-intracommunity-operations-exceed-50000-eur
-    iva-cash-accounting-regime-enrolled iva-voluntary-sii-enrolled
-    iva-hydrocarbon-deposit-advance-payment-deduction-entitled enrollment-large-company
-    enrollment-public-administration-budget-gt-6000000 spouse-non-resident-irpf
-    spouse-eu-eea-resident family-descendants-eu-eea-deduction family-minor-children-in-unit
-    has-employees pays-professionals-with-retencion art109-activity-income-withholding-ge-70pct
-    pays-rent-with-retencion pays-capital-income-with-retencion does-intracomunitario
-    third-party-transactions-above-347-threshold bienes-extranjero-above-threshold
-    monedas-virtuales-extranjero-above-threshold llm-vision google-export""".split()  # noqa: SIM905 - compact immutable declaration table
+    {
+        "new-entity-first-two-profit-periods",
+        "ley-49-2002-option-declared",
+        "ley-49-2002-renunciation-declared",
+        "iva-roi-enrolled",
+        "iva-oss-enrolled",
+        "iva-group-member-enrolled",
+        "iva-group-dominant-entity-enrolled",
+        "iva-sii-enrolled",
+        "iva-redeme-enrolled",
+        "iva-intracommunity-operations-exceed-50000-eur",
+        "iva-cash-accounting-regime-enrolled",
+        "iva-voluntary-sii-enrolled",
+        "iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        "enrollment-large-company",
+        "enrollment-public-administration-budget-gt-6000000",
+        "spouse-non-resident-irpf",
+        "spouse-eu-eea-resident",
+        "family-descendants-eu-eea-deduction",
+        "family-minor-children-in-unit",
+        "has-employees",
+        "pays-professionals-with-retencion",
+        "art109-activity-income-withholding-ge-70pct",
+        "pays-rent-with-retencion",
+        "pays-capital-income-with-retencion",
+        "does-intracomunitario",
+        "third-party-transactions-above-347-threshold",
+        "bienes-extranjero-above-threshold",
+        "monedas-virtuales-extranjero-above-threshold",
+        "llm-vision",
+        "google-export",
+    }
 )
 _WIZARD_CHECKBOX_FIELDS = frozenset({"irpf-income-categories"})
-_WIZARD_FIELDS = """output-language entity-type legal-entity-form tax-id name surnames legal-name
-fiscal-residency country-of-fiscal-residence representante-fiscal-nif representante-fiscal-nombre
-tax-residence-jurisdiction-scope tax-residence-ccaa address-postcode irpf-income-categories activity
-activity-start-date incn-prior-12-months new-entity-first-two-profit-periods ley-49-2002-option-declared
-ley-49-2002-option-date ley-49-2002-renunciation-declared ley-49-2002-renunciation-date iva-regime
-iva-m303-regime-composition iva-roi-enrolled iva-oss-enrolled iva-group-member-enrolled
-iva-group-dominant-entity-enrolled iva-sii-enrolled iva-redeme-enrolled
-iva-intracommunity-operations-exceed-50000-eur iva-cash-accounting-regime-enrolled
-iva-voluntary-sii-enrolled iva-hydrocarbon-deposit-advance-payment-deduction-entitled
-enrollment-large-company enrollment-public-administration-budget-gt-6000000 taxation-type taxpayer-sex
-taxpayer-marital-status situacion-familiar taxpayer-marriage-date taxpayer-birth-date taxpayer-disability-grade
-taxpayer-death-date spouse-tax-id spouse-name spouse-surnames spouse-birth-date spouse-sex
-spouse-disability-grade spouse-non-resident-irpf spouse-eu-eea-resident spouse-eu-eea-country
-family-descendants-eu-eea-deduction family-minor-children-in-unit has-employees
-pays-professionals-with-retencion art109-activity-income-withholding-ge-70pct pays-rent-with-retencion
-pays-capital-income-with-retencion modelo-111-no-retenciones-periods irpf-estimation-regime
-objective-estimation-modulos-iae-epigraph objective-estimation-modulos-module-1-units
-objective-estimation-modulos-module-2-units objective-estimation-modulos-module-3-units
-objective-estimation-modulos-module-4-units objective-estimation-modulos-module-5-units
-objective-estimation-modulos-module-6-units objective-estimation-modulos-module-7-units irpf-special-regime
-irpf-special-regime-start-date does-intracomunitario third-party-transactions-above-347-threshold
-bienes-extranjero-above-threshold monedas-virtuales-extranjero-above-threshold llm-vision google-export notes""".split()  # noqa: SIM905 - ordered declaration table
+_WIZARD_FIELDS = (
+    "output-language",
+    "entity-type",
+    "legal-entity-form",
+    "tax-id",
+    "name",
+    "surnames",
+    "legal-name",
+    "fiscal-residency",
+    "country-of-fiscal-residence",
+    "representante-fiscal-nif",
+    "representante-fiscal-nombre",
+    "tax-residence-jurisdiction-scope",
+    "tax-residence-ccaa",
+    "address-postcode",
+    "irpf-income-categories",
+    "activity",
+    "activity-start-date",
+    "incn-prior-12-months",
+    "new-entity-first-two-profit-periods",
+    "ley-49-2002-option-declared",
+    "ley-49-2002-option-date",
+    "ley-49-2002-renunciation-declared",
+    "ley-49-2002-renunciation-date",
+    "iva-regime",
+    "iva-m303-regime-composition",
+    "iva-roi-enrolled",
+    "iva-oss-enrolled",
+    "iva-group-member-enrolled",
+    "iva-group-dominant-entity-enrolled",
+    "iva-sii-enrolled",
+    "iva-redeme-enrolled",
+    "iva-intracommunity-operations-exceed-50000-eur",
+    "iva-cash-accounting-regime-enrolled",
+    "iva-voluntary-sii-enrolled",
+    "iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+    "enrollment-large-company",
+    "enrollment-public-administration-budget-gt-6000000",
+    "taxation-type",
+    "taxpayer-sex",
+    "taxpayer-marital-status",
+    "situacion-familiar",
+    "taxpayer-marriage-date",
+    "taxpayer-birth-date",
+    "taxpayer-disability-grade",
+    "taxpayer-death-date",
+    "spouse-tax-id",
+    "spouse-name",
+    "spouse-surnames",
+    "spouse-birth-date",
+    "spouse-sex",
+    "spouse-disability-grade",
+    "spouse-non-resident-irpf",
+    "spouse-eu-eea-resident",
+    "spouse-eu-eea-country",
+    "family-descendants-eu-eea-deduction",
+    "family-minor-children-in-unit",
+    "has-employees",
+    "pays-professionals-with-retencion",
+    "art109-activity-income-withholding-ge-70pct",
+    "pays-rent-with-retencion",
+    "pays-capital-income-with-retencion",
+    "modelo-111-no-retenciones-periods",
+    "irpf-estimation-regime",
+    "objective-estimation-modulos-iae-epigraph",
+    "objective-estimation-modulos-module-1-units",
+    "objective-estimation-modulos-module-2-units",
+    "objective-estimation-modulos-module-3-units",
+    "objective-estimation-modulos-module-4-units",
+    "objective-estimation-modulos-module-5-units",
+    "objective-estimation-modulos-module-6-units",
+    "objective-estimation-modulos-module-7-units",
+    "irpf-special-regime",
+    "irpf-special-regime-start-date",
+    "does-intracomunitario",
+    "third-party-transactions-above-347-threshold",
+    "bienes-extranjero-above-threshold",
+    "monedas-virtuales-extranjero-above-threshold",
+    "llm-vision",
+    "google-export",
+    "notes",
+)
 
 
 #: Wizard axes whose answer validator accepts the enum's exact member value and
@@ -267,25 +347,25 @@ _WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
 }
 
 
-def _wizard_option(token: str) -> OptionSpec:
-    name = token.replace("-", "_")
-    help_key = f"wizard.setup.flags.{token}.help"
-    if token == "output-language":  # noqa: S105 - CLI token, not a credential
+def _wizard_option(field_key: str) -> OptionSpec:
+    name = field_key.replace("-", "_")
+    help_key = f"wizard.setup.flags.{field_key}.help"
+    if field_key == "output-language":
         return _option(name, ("--output-language",), _LANG, help_key)
-    if token in _WIZARD_CONFIRM_FIELDS:
+    if field_key in _WIZARD_CONFIRM_FIELDS:
         return _option(
             name,
-            (f"--{token}", f"--no-{token}"),
+            (f"--{field_key}", f"--no-{field_key}"),
             FLAG_VALUE,
             help_key,
             flag=True,
         )
-    if token in _WIZARD_CHECKBOX_FIELDS:
-        return _option(name, (f"--{token}",), TEXT_VALUE, help_key, default=(), multiple=True)
-    enum_contract = _WIZARD_ENUM_FIELDS.get(token)
+    if field_key in _WIZARD_CHECKBOX_FIELDS:
+        return _option(name, (f"--{field_key}",), TEXT_VALUE, help_key, default=(), multiple=True)
+    enum_contract = _WIZARD_ENUM_FIELDS.get(field_key)
     if enum_contract is not None:
-        return _option(name, (f"--{token}",), enum_contract, help_key)
-    return _option(name, (f"--{token}",), TEXT_VALUE, help_key)
+        return _option(name, (f"--{field_key}",), enum_contract, help_key)
+    return _option(name, (f"--{field_key}",), TEXT_VALUE, help_key)
 
 
 _WIZARD_BASE_PARAMETERS: tuple[ArgumentSpec | OptionSpec, ...] = (

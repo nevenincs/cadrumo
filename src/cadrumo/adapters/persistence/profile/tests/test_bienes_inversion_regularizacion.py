@@ -251,17 +251,16 @@ def test_no_advisory_when_no_in_window_goods() -> None:
 
 def test_source_resolver_projects_repository_register_to_binding_and_bound_casilla(tmp_path: Path) -> None:
     """The live resolver fills the declared M303 binding and casilla 43 from the real register."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-            repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
-            repository.add(_register().records[0])
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        repository.add(_register().records[0])
 
-            resolution = BienesInversionRegularizacionSourceResolver(
-                current_year_values={_CURRENT_YEAR_PRORRATA_ID: Decimal("60")},
-                register_repository=repository,
-                observation_repository=CalculationObservationRepository(objects=profile.repository),
-                operation=_authority_operation_for_test,
-            ).resolve(_context())
+        resolution = BienesInversionRegularizacionSourceResolver(
+            current_year_values={_CURRENT_YEAR_PRORRATA_ID: Decimal("60")},
+            register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
+            operation=_authority_operation_for_test,
+        ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("200.00")
     assert resolution.bound_inputs_by_casilla_id[
@@ -295,19 +294,18 @@ def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observ
     that is answered, a visible refusal is the honest outcome and a silently
     ungrounded 200.00 is not.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-            register_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
-            register_repository.add(_register().records[0])
-            observation_repository = CalculationObservationRepository(objects=profile.repository)
-            _save_current_year_m303_prorrata_observation(observation_repository, percentage=Decimal("60"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        register_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        register_repository.add(_register().records[0])
+        observation_repository = CalculationObservationRepository(objects=profile.repository)
+        _save_current_year_m303_prorrata_observation(observation_repository, percentage=Decimal("60"))
 
-            resolution = BienesInversionRegularizacionSourceResolver(
-                missing_current_year_casilla_ids=(_CURRENT_YEAR_PRORRATA_ID,),
-                register_repository=register_repository,
-                observation_repository=observation_repository,
-                operation=_authority_operation_for_test,
-            ).resolve(_context(modelo="390", period="0A"))
+        resolution = BienesInversionRegularizacionSourceResolver(
+            missing_current_year_casilla_ids=(_CURRENT_YEAR_PRORRATA_ID,),
+            register_repository=register_repository,
+            observation_repository=observation_repository,
+            operation=_authority_operation_for_test,
+        ).resolve(_context(modelo="390", period="0A"))
 
     assert resolution.binding_values == {}
     assert (
@@ -331,32 +329,31 @@ def test_source_resolver_uses_the_explicit_secondary_m390_observation_store(tmp_
     outcome for modelo 390 itself -- see the sibling M390 test for why the
     binding is now unresolved.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-            primary_observations = CalculationObservationRepository(objects=runtime.primary.repository)
-            _save_current_year_m303_prorrata_observation(primary_observations, percentage=Decimal("80"))
-            with runtime.switch_to_secondary():
-                secondary_register = BienesInversionIvaRegisterRepository(objects=runtime.secondary.repository)
-                secondary_register.add(_register().records[0])
-                secondary_observations = CalculationObservationRepository(objects=runtime.secondary.repository)
-                _save_current_year_m303_prorrata_observation(secondary_observations, percentage=Decimal("60"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+        primary_observations = CalculationObservationRepository(objects=runtime.primary.repository)
+        _save_current_year_m303_prorrata_observation(primary_observations, percentage=Decimal("80"))
+        with runtime.switch_to_secondary():
+            secondary_register = BienesInversionIvaRegisterRepository(objects=runtime.secondary.repository)
+            secondary_register.add(_register().records[0])
+            secondary_observations = CalculationObservationRepository(objects=runtime.secondary.repository)
+            _save_current_year_m303_prorrata_observation(secondary_observations, percentage=Decimal("60"))
 
-                resolution = BienesInversionRegularizacionSourceResolver(
-                    register_repository=secondary_register,
-                    observation_repository=secondary_observations,
-                    operation=_authority_operation_for_test,
-                ).resolve(
-                    _context(
-                        modelo="390",
-                        period="0A",
-                        bucket_id=runtime.secondary.bucket_id,
-                    )
+            resolution = BienesInversionRegularizacionSourceResolver(
+                register_repository=secondary_register,
+                observation_repository=secondary_observations,
+                operation=_authority_operation_for_test,
+            ).resolve(
+                _context(
+                    modelo="390",
+                    period="0A",
+                    bucket_id=runtime.secondary.bucket_id,
                 )
-
-            primary_observation = primary_observations.load_observation(
-                "303",
-                Period.from_year_and_code(_FILING_YEAR, "4T"),
             )
+
+        primary_observation = primary_observations.load_observation(
+            "303",
+            Period.from_year_and_code(_FILING_YEAR, "4T"),
+        )
 
     assert primary_observation is not None
     assert primary_observation.observation.casilla_values[_CURRENT_YEAR_PRORRATA_ID] == Decimal("80")
@@ -425,16 +422,15 @@ def test_bienes_inversion_observation_repository_caller_ast_census_has_only_expl
 
 def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata(tmp_path: Path) -> None:
     """A current-year definitive prorrata gap keeps the M303 binding unresolved."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-            repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
-            repository.add(_register().records[0])
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        repository.add(_register().records[0])
 
-            resolution = BienesInversionRegularizacionSourceResolver(
-                register_repository=repository,
-                observation_repository=CalculationObservationRepository(objects=profile.repository),
-                operation=_authority_operation_for_test,
-            ).resolve(_context())
+        resolution = BienesInversionRegularizacionSourceResolver(
+            register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
+            operation=_authority_operation_for_test,
+        ).resolve(_context())
 
     assert _BINDING_ID in resolution.unresolved_binding_ids
     assert _BINDING_ID not in resolution.binding_values
@@ -453,16 +449,15 @@ def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata
 
 def test_source_resolver_adds_disposal_year_art_110_amount(tmp_path: Path) -> None:
     """A disposal-year record contributes the art. 110 single regularisation amount."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-            repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
-            repository.add(_disposed_register().records[0])
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        repository.add(_disposed_register().records[0])
 
-            resolution = BienesInversionRegularizacionSourceResolver(
-                register_repository=repository,
-                observation_repository=CalculationObservationRepository(objects=profile.repository),
-                operation=_authority_operation_for_test,
-            ).resolve(_context())
+        resolution = BienesInversionRegularizacionSourceResolver(
+            register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
+            operation=_authority_operation_for_test,
+        ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("-2400.00")
     assert resolution.bound_inputs_by_casilla_id[
@@ -478,15 +473,14 @@ def test_source_resolver_adds_disposal_year_art_110_amount(tmp_path: Path) -> No
 
 def test_source_resolver_resolves_empty_register_to_explicit_zero(tmp_path: Path) -> None:
     """An empty real register produces an explicit zero for the declared M303 binding."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-            repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
 
-            resolution = BienesInversionRegularizacionSourceResolver(
-                register_repository=repository,
-                observation_repository=CalculationObservationRepository(objects=profile.repository),
-                operation=_authority_operation_for_test,
-            ).resolve(_context())
+        resolution = BienesInversionRegularizacionSourceResolver(
+            register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
+            operation=_authority_operation_for_test,
+        ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("0.00")
     assert resolution.bound_inputs_by_casilla_id[

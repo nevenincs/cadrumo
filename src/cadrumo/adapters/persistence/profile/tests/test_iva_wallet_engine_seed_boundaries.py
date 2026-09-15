@@ -192,13 +192,12 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                 operation=_authority_operation_for_test,
             )
 
-            with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-                with calculation_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    work_unit_repository=work_repo,
-                    calculation_repository=calc_repo,
-                    bucket_event_repository=event_repo,
-                ) as _calculation_ports_175:
+            with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info, calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_175:
                     calculate_modelo_revision(
                         work_unit.work_unit_id,
                         actor="operator",

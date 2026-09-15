@@ -53,13 +53,13 @@ class ModeloEditReceiptRepository(SecureBoundRepository[ModeloEditMutationResult
     @override
     def to_secure_object_write(
         self,
-        receipt: ModeloEditMutationResultReceiptV1,
+        payload: ModeloEditMutationResultReceiptV1,
         *,
         expected_revision_id: str | None = None,
     ) -> SecureObjectWrite:
         """Prepare the receipt write and translate storage-bound failures."""
         try:
-            return super().to_secure_object_write(receipt, expected_revision_id=expected_revision_id)
+            return super().to_secure_object_write(payload, expected_revision_id=expected_revision_id)
         except (OSError, StorageError, TypeError, ValueError, ValidationError) as exc:
             raise ModeloEditReceiptPersistenceError("to_secure_object_write") from exc
 

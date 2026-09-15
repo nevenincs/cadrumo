@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the live foundation service."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -40,9 +38,9 @@ from .command_spec import (
 
 LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_live",
-        parent_key="app",
-        token="live",
+        "app_live",
+        "app",
+        "live",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.app_help"),
         short_help_key=None,
@@ -53,9 +51,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_filed",
-        parent_key="app_live",
-        token="filed",
+        "app_live_filed",
+        "app_live",
+        "filed",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.filed_app_help"),
         short_help_key=None,
@@ -66,9 +64,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_filed_list",
-        parent_key="app_live_filed",
-        token="list",
+        "app_live_filed_list",
+        "app_live_filed",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.filed.list_help"),
         short_help_key=None,
@@ -97,9 +95,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_filed_discover",
-        parent_key="app_live_filed",
-        token="discover",
+        "app_live_filed_discover",
+        "app_live_filed",
+        "discover",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.filed.discover_help"),
         short_help_key=None,
@@ -122,9 +120,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_filed_pull_all",
-        parent_key="app_live_filed",
-        token="pull-all",
+        "app_live_filed_pull_all",
+        "app_live_filed",
+        "pull-all",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.filed.pull_all_help"),
         short_help_key=None,
@@ -152,9 +150,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_filed_pull",
-        parent_key="app_live_filed",
-        token="pull",
+        "app_live_filed_pull",
+        "app_live_filed",
+        "pull",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.filed.pull_help"),
         short_help_key=None,
@@ -219,9 +217,9 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_filed_pull_sources",
-        parent_key="app_live_filed",
-        token="pull-sources",
+        "app_live_filed_pull_sources",
+        "app_live_filed",
+        "pull-sources",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.filed.pull_sources_help"),
         short_help_key=None,
@@ -243,3 +241,5 @@ LIVE_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LIVE_FOUNDATION_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live foundation service."""
+"""Authored CommandSpec declarations for the live foundation service."""

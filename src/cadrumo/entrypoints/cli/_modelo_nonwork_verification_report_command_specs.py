@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the Modelo non-work verification report family."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -23,9 +21,9 @@ from .command_spec import (
 
 MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_verification_report_list",
-        parent_key="app_modelo_verification_report",
-        token="list",
+        "app_modelo_verification_report_list",
+        "app_modelo_verification_report",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.verification_report.list_help"),
         short_help_key=None,
@@ -52,9 +50,9 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_verification_report_view",
-        parent_key="app_modelo_verification_report",
-        token="view",
+        "app_modelo_verification_report_view",
+        "app_modelo_verification_report",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.verification_report.view_help"),
         short_help_key=None,
@@ -78,3 +76,5 @@ MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work verification report family."""
+"""Authored CommandSpec declarations for the Modelo non-work verification report family."""

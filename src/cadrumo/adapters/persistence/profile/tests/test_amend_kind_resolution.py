@@ -249,17 +249,16 @@ def test_rectificativa_kind_refused_for_pre_boundary_period(
         operation=operation,
     )
 
-    with pytest.raises(AmendmentKindNotPermittedError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            amend_modelo_revision(
-                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-                from_filing_record_id=baseline.filing_record_id,
-                overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
-                amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
-                reason="illegal rectificativa for a pre-boundary period",
-                actor="operator-A",
-                clock=_T4,
-            )
+    with pytest.raises(AmendmentKindNotPermittedError) as exc_info, bundled_indexed_authority().operation() as operation:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
+            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            reason="illegal rectificativa for a pre-boundary period",
+            actor="operator-A",
+            clock=_T4,
+        )
     assert exc_info.value.context is not None
     assert exc_info.value.context.get("requested_kind") == "rectificativa"
     accepted = str(exc_info.value.context.get("accepted_kinds"))
@@ -307,17 +306,16 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(
         operation=operation,
     )
 
-    with pytest.raises(AmendmentComplementariaLiabilityDecreaseError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            amend_modelo_revision(
-                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-                from_filing_record_id=baseline.filing_record_id,
-                overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-                reason="illegal liability-decreasing complementaria",
-                actor="operator-A",
-                clock=_T4,
-            )
+    with pytest.raises(AmendmentComplementariaLiabilityDecreaseError) as exc_info, bundled_indexed_authority().operation() as operation:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="illegal liability-decreasing complementaria",
+            actor="operator-A",
+            clock=_T4,
+        )
     assert exc_info.value.context is not None
     assert exc_info.value.context.get("baseline_result") == "100.00"
     assert exc_info.value.context.get("corrected_result") == "40.00"
@@ -337,17 +335,16 @@ def test_complementaria_kind_refused_for_post_boundary_period(
         operation=operation,
     )
 
-    with pytest.raises(AmendmentKindNotPermittedError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            amend_modelo_revision(
-                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-                from_filing_record_id=baseline.filing_record_id,
-                overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-                reason="illegal complementaria for a post-boundary period",
-                actor="operator-A",
-                clock=_T4,
-            )
+    with pytest.raises(AmendmentKindNotPermittedError) as exc_info, bundled_indexed_authority().operation() as operation:
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="illegal complementaria for a post-boundary period",
+            actor="operator-A",
+            clock=_T4,
+        )
     accepted = str(exc_info.value.context.get("accepted_kinds")) if exc_info.value.context else ""
     assert "rectificativa" in accepted
     assert "sustitutiva" in accepted

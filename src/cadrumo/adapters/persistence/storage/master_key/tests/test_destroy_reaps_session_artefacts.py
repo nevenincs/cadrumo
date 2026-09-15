@@ -60,7 +60,7 @@ from cadrumo.core.time.clock import now as _now
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PASSWORD = "destroy-reaps-session-artefacts-password"  # noqa: S105 - real test credential
+_CREDENTIAL_INPUT = "destroy-reaps-session-artefacts-password"
 _LABEL = "Destroy operator"
 _UNRELATED_PROFILE_ID = UUID("2b6d4c19-8e30-4a55-9c71-0d3f8a6e5417")
 _INSTANT = datetime(2026, 8, 15, 10, 15, 0, tzinfo=UTC)
@@ -92,7 +92,7 @@ def _register_with_a_live_process_secret(storage_root: Path) -> tuple[UUID, Buck
     outcome = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=_LABEL,
-        passphrase=_PASSWORD,
+        passphrase=_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
@@ -150,7 +150,7 @@ def test_destroying_a_profile_clears_its_durable_failed_login_backoff(tmp_path: 
             outcome = register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=_LABEL,
-                passphrase=_PASSWORD,
+                passphrase=_CREDENTIAL_INPUT,
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )

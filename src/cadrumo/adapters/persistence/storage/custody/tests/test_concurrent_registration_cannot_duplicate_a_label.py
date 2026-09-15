@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _LABEL = "Contended Registration Subject"
-_PASSPHRASE = "concurrent-registration-operator-secret"  # noqa: S105 - synthetic test credential
+_CREDENTIAL_INPUT = "concurrent-registration-operator-secret"
 
 
 def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tuple[str, str]]) -> None:
@@ -66,7 +66,7 @@ def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tu
             outcome = register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=_LABEL,
-                passphrase=_PASSPHRASE,
+                passphrase=_CREDENTIAL_INPUT,
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )

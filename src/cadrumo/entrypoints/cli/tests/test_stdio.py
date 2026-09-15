@@ -35,13 +35,14 @@ import io
 import logging
 import os
 import shutil
-import subprocess
 from pathlib import Path
 from typing import override
 
 import pytest
 import typer
 import typer.core
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from .._stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
 
@@ -193,7 +194,7 @@ def test_console_help_invocation_renders_plain_text_with_full_flag_names(tmp_pat
         },
     )
 
-    result = subprocess.run(  # noqa: S603 - test intentionally invokes the resolved aeat console script.
+    result = run_audited_process(
         [aeat_exe, "--language", "en", "config", "profile", "create", "--help"],
         cwd=Path.cwd(),
         env=env,

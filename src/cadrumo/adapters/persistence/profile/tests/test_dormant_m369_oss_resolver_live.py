@@ -409,13 +409,12 @@ def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_voca
         iva_amount=Decimal("0"),
     )
 
-    with pytest.raises(AggregationValidationError) as exc_info:
-        with bundled_indexed_authority().operation() as operation:
-            oss_ioss_module._exterior_detail_binding_values(
-                _revision("369", "esquema-exterior"),
-                (observation,),
-                operation=operation,
-            )
+    with pytest.raises(AggregationValidationError) as exc_info, bundled_indexed_authority().operation() as operation:
+        oss_ioss_module._exterior_detail_binding_values(
+            _revision("369", "esquema-exterior"),
+            (observation,),
+            operation=operation,
+        )
 
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"
     assert exc_info.value.context is not None
@@ -426,12 +425,14 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Live M369 calculate and verification use the injected store."""
-    with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_M369_BUCKET) as runtime:  # noqa: SIM117
-        with isolated_injected_secure_object_repository(
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_M369_BUCKET) as runtime,
+        isolated_injected_secure_object_repository(
             tmp_path=tmp_path / "injected",
             bucket_id=_M369_BUCKET,
             database_name="m369-injected.db",
-        ) as injected_objects:
+        ) as injected_objects,
+    ):
             _seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET)
             wu_repo = WorkUnitCatalogueRepository(objects=runtime.repository)
             cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)

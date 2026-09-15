@@ -364,16 +364,15 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(
             operation=operation,
         )
 
-        with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
-            with bundled_indexed_authority().operation() as operation:
-                calculate_modelo_revision(
-                    work_unit.work_unit_id,
-                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                    actor="operator-test",
-                    casilla_inputs={},
-                    binding_values={},
-                    clock=_CLOCK,
-                )
+        with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info, bundled_indexed_authority().operation() as operation:
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator-test",
+                casilla_inputs={},
+                binding_values={},
+                clock=_CLOCK,
+            )
 
         context = exc_info.value.context
         assert context is not None
@@ -417,23 +416,22 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         )
         profile = workflow_profile(Decimal("500000"))
 
-        with pytest.raises(ModeloRequiredBindingsMissingError) as verify_error:
-            with bundled_indexed_authority().operation() as operation:
-                verify_modelo_revision(
-                    draft.calculation_revision_id,
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    verification_repositories=_verification_ports(
-                        work_repo=work_repo,
-                        calc_repo=calc_repo,
-                        filing_repo=filing_repo,
-                        verification_repo=verification_repo,
-                    ),
-                    actor="operator-test",
-                    workflow_profile=profile,
-                    clock=_CLOCK,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=operation,
-                )
+        with pytest.raises(ModeloRequiredBindingsMissingError) as verify_error, bundled_indexed_authority().operation() as operation:
+            verify_modelo_revision(
+                draft.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_ports(
+                    work_repo=work_repo,
+                    calc_repo=calc_repo,
+                    filing_repo=filing_repo,
+                    verification_repo=verification_repo,
+                ),
+                actor="operator-test",
+                workflow_profile=profile,
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         verify_failure = verify_error.value.precondition_failure
         assert verify_failure is not None
         assert verify_failure.scenario_id == "modelo.work.verify.required_bindings_missing"
@@ -451,23 +449,22 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
             calculation_repository=calc_repo,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )
-        with pytest.raises(ModeloRequiredBindingsMissingError) as file_error:
-            with bundled_indexed_authority().operation() as operation:
-                file_modelo_revision(
-                    verified.calculation_revision_id,
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    actor="operator-test",
-                    workflow_profile=profile,
-                    ports=_filing_ports(
-                        work_repo=work_repo,
-                        calc_repo=calc_repo,
-                        filing_repo=filing_repo,
-                        verification_repo=verification_repo,
-                    ),
-                    clock=_CLOCK,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=operation,
-                )
+        with pytest.raises(ModeloRequiredBindingsMissingError) as file_error, bundled_indexed_authority().operation() as operation:
+            file_modelo_revision(
+                verified.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                actor="operator-test",
+                workflow_profile=profile,
+                ports=_filing_ports(
+                    work_repo=work_repo,
+                    calc_repo=calc_repo,
+                    filing_repo=filing_repo,
+                    verification_repo=verification_repo,
+                ),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         file_failure = file_error.value.precondition_failure
         assert file_failure is not None
         assert file_failure.scenario_id == "modelo.work.file.required_bindings_missing"
@@ -477,26 +474,25 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         assert isinstance(file_missing_bindings, tuple)
         assert _M202_PRIOR_PAYMENTS_BINDING in file_missing_bindings
         export_path = tmp_path / "modelo-202-2026-1P.txt"
-        with pytest.raises(ModeloExportUnsupportedError) as export_error:
-            with bundled_indexed_authority().operation() as operation:
-                export_modelo_revision(
-                    ModeloExportCommand(
-                        calculation_revision_id=verified.calculation_revision_id,
-                        output_path=export_path,
-                        actor="operator-test",
-                    ),
-                    workflow_profile=profile,
-                    export_ports=modelo_export_ports_for_test(
-                        bucket_id=_BUCKET_ID,
-                        taxpayer_tax_id=profile.tax_id,
-                        work_unit=work_repo,
-                        calculation=calc_repo,
-                        filing=filing_repo,
-                        verification=verification_repo,
-                    ),
-                    operation=operation,
-                    clock=_CLOCK,
-                )
+        with pytest.raises(ModeloExportUnsupportedError) as export_error, bundled_indexed_authority().operation() as operation:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=verified.calculation_revision_id,
+                    output_path=export_path,
+                    actor="operator-test",
+                ),
+                workflow_profile=profile,
+                export_ports=modelo_export_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    taxpayer_tax_id=profile.tax_id,
+                    work_unit=work_repo,
+                    calculation=calc_repo,
+                    filing=filing_repo,
+                    verification=verification_repo,
+                ),
+                operation=operation,
+                clock=_CLOCK,
+            )
         export_context = export_error.value.context
         assert export_context is not None
         export_modelo = export_context["modelo"]
@@ -568,19 +564,18 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(
             operation=operation,
         )
 
-        with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info:
-            with bundled_indexed_authority().operation() as operation:
-                calculate_modelo_revision(
-                    work_unit.work_unit_id,
-                    ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-                    actor="operator-test",
-                    casilla_inputs={},
-                    binding_values={
-                        _M202_RELATION_BINDING: Decimal("0"),
-                        _M202_PRIOR_PAYMENTS_BINDING: Decimal("0"),
-                    },
-                    clock=_CLOCK,
-                )
+        with pytest.raises(ModeloRequiredBindingsMissingError) as exc_info, bundled_indexed_authority().operation() as operation:
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                actor="operator-test",
+                casilla_inputs={},
+                binding_values={
+                    _M202_RELATION_BINDING: Decimal("0"),
+                    _M202_PRIOR_PAYMENTS_BINDING: Decimal("0"),
+                },
+                clock=_CLOCK,
+            )
 
         context2 = exc_info.value.context
         assert context2 is not None

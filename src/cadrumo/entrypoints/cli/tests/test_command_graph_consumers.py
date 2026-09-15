@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ....core.config import override_settings
 from ..command_schema import command_registration_metadata, command_schema_refs
@@ -63,7 +64,7 @@ print(json.dumps({
     "loaded_handlers": loaded_handlers,
 }))
 """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and authored test program
+    completed = run_audited_process(
         [sys.executable, "-c", source],
         check=True,
         capture_output=True,

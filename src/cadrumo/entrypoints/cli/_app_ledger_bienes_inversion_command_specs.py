@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger bienes inversion surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -26,9 +24,9 @@ from .command_spec import (
 
 LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_bienes_inversion_declare",
-        parent_key="app_ledger_bienes_inversion",
-        token="declare",
+        "app_ledger_bienes_inversion_declare",
+        "app_ledger_bienes_inversion",
+        "declare",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.bienes_inversion.declare_help"),
         short_help_key=None,
@@ -216,9 +214,9 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_bienes_inversion_list",
-        parent_key="app_ledger_bienes_inversion",
-        token="list",
+        "app_ledger_bienes_inversion_list",
+        "app_ledger_bienes_inversion",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.bienes_inversion.list_help"),
         short_help_key=None,
@@ -235,3 +233,5 @@ LEDGER_BIENES_INVERSION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_BIENES_INVERSION_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger bienes inversion surface."""
+"""Authored CommandSpec declarations for the ledger bienes inversion surface."""

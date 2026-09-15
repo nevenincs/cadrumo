@@ -62,12 +62,12 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._fold_in_assertions_support import _assert_distinct_positive
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.source_mesh import (
     CallerOverrideDisposition,
@@ -489,7 +489,7 @@ def _calculate_m111_administrador_quarter(
     total-retenciones formula rolls it into c28. Returns the produced c28.
     """
     period = Period.from_year_and_code(_YEAR, period_code)
-    RetencionObservationRepository().replace_observations(
+    RetencionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
         modelo="111",
         filing_year=_YEAR,
         period=period,

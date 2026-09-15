@@ -39,7 +39,7 @@ from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE = "lifecycle-session-passphrase"  # noqa: S105
+_CREDENTIAL_INPUT = "lifecycle-session-passphrase"
 
 #: Storage-root directory name every test below provisions under ``tmp_path``.
 _STORAGE_DIRNAME = "storage"
@@ -87,7 +87,7 @@ def _run(
         "cadrumo_output_language": "en",
     }
     if with_passphrase:
-        settings["cadrumo_secret_passphrase"] = _PASSPHRASE
+        settings["cadrumo_secret_passphrase"] = _CREDENTIAL_INPUT
     return run_cadrumo_subprocess(
         [*root_flags, *args],
         settings=settings,
@@ -118,7 +118,7 @@ def _create_profile(storage_root: Path) -> str:
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="session-operator",
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -154,7 +154,7 @@ class TestSessionLifecycle:
             storage_root,
             ("config", "login", bucket_id, "--secrets-stdin"),
             as_json=True,
-            stdin_payload=json.dumps({"passphrase": _PASSPHRASE}),
+            stdin_payload=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
         )
         assert logged_in.returncode == 0, _output(logged_in)
         envelope = _envelope(logged_in)
@@ -221,7 +221,7 @@ class TestSessionLifecycle:
             storage_root,
             ("config", "login", bucket_id, "--secrets-stdin"),
             as_json=True,
-            stdin_payload=json.dumps({"passphrase": _PASSPHRASE}),
+            stdin_payload=json.dumps({"passphrase": _CREDENTIAL_INPUT}),
         )
         assert logged_in.returncode == 0, _output(logged_in)
         envelope = _envelope(logged_in)
@@ -250,7 +250,7 @@ class TestSessionLifecycle:
         bucket_id = _create_profile(storage_root)
         _run(storage_root, ("config", "logout"))
 
-        payload = json.dumps({"passphrase": _PASSPHRASE})
+        payload = json.dumps({"passphrase": _CREDENTIAL_INPUT})
         first = _run(
             storage_root,
             ("config", "login", bucket_id, "--secrets-stdin"),

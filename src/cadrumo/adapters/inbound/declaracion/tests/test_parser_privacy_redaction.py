@@ -47,9 +47,8 @@ def test_word_extraction_debug_log_does_not_expose_source_filename(
     pdf_path = tmp_path / "12345678Z-private-words.pdf"
     pdf_path.write_text("not a PDF", encoding="utf-8")
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion.parser"):
-        with pytest.raises(DeclaracionParseError):
-            parse_declaracion(pdf_path)
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion.parser"), pytest.raises(DeclaracionParseError):
+        parse_declaracion(pdf_path)
 
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
     assert pdf_path.name not in rendered_logs

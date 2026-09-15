@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Behavior for modelo work verification and internal filing.
 
 This transport module resolves operator revision targets, calls
@@ -227,7 +226,9 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
     lines.extend(
         [
             "clean_state",
-            f"target\t{result.clean_state.target_modelo} {result.clean_state.target_filing_year} {result.clean_state.target_period.registry_token}",
+            "target\t"
+            f"{result.clean_state.target_modelo} {result.clean_state.target_filing_year} "
+            f"{result.clean_state.target_period.registry_token}",
             f"requires_clean_state\t{result.clean_state.requires_clean_state}",
             f"clean\t{result.clean_state.clean}",
             f"blockers\t{', '.join(result.clean_state.blockers)}",

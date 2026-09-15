@@ -13,7 +13,7 @@ sit there.
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import StrEnum, auto
 from typing import Final
 
 __all__ = ["UNWRAP_OPERATIONS", "WRAP_OPERATIONS", "KdfOperation"]
@@ -26,19 +26,28 @@ class KdfOperation(StrEnum):
     supervisor writes to the child's stdin, so their spelling is fixed.
     """
 
-    CALIBRATE = "calibrate-v1"
+    @staticmethod
+    def _generate_next_value_(
+        name: str,
+        _start: int,
+        _count: int,
+        _last_values: list[str],
+    ) -> str:
+        return f"{name.lower().replace('_', '-')}-v1"
+
+    CALIBRATE = auto()
     """Measure this machine's Argon2id cost; derives nothing and unwraps nothing."""
 
-    PASSWORD_UNWRAP = "password-unwrap-v1"  # noqa: S105 - an operation name, not a credential
+    PASSWORD_UNWRAP = auto()
     """Unwrap a DEK using the profile's own password."""
 
-    RECOVERY_UNWRAP = "recovery-unwrap-v1"
+    RECOVERY_UNWRAP = auto()
     """Unwrap a DEK using a recovery secret."""
 
-    PASSWORD_WRAP = "password-wrap-v1"  # noqa: S105 - an operation name, not a credential
+    PASSWORD_WRAP = auto()
     """Wrap a DEK under the profile's own password."""
 
-    RECOVERY_WRAP = "recovery-wrap-v1"
+    RECOVERY_WRAP = auto()
     """Wrap a DEK under a recovery secret."""
 
 

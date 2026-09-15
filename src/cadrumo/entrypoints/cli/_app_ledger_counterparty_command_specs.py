@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger counterparty surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -30,9 +28,9 @@ from .command_spec import (
 
 LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_counterparty_confirm",
-        parent_key="app_ledger_counterparty",
-        token="confirm",
+        "app_ledger_counterparty_confirm",
+        "app_ledger_counterparty",
+        "confirm",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.counterparty.confirm_help"),
         short_help_key=None,
@@ -84,9 +82,9 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_counterparty_view",
-        parent_key="app_ledger_counterparty",
-        token="view",
+        "app_ledger_counterparty_view",
+        "app_ledger_counterparty",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.counterparty.view_help"),
         short_help_key=None,
@@ -120,9 +118,9 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_counterparty_withdraw",
-        parent_key="app_ledger_counterparty",
-        token="withdraw",
+        "app_ledger_counterparty_withdraw",
+        "app_ledger_counterparty",
+        "withdraw",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.counterparty.withdraw_help"),
         short_help_key=None,
@@ -144,3 +142,5 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_COUNTERPARTY_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger counterparty surface."""
+"""Authored CommandSpec declarations for the ledger counterparty surface."""

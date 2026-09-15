@@ -38,10 +38,10 @@ def test_iva_compensation_history_refuses_a_period_payload_rekeyed_under_foreign
     foreign_period = Period.from_year_and_code(2025, "1T")
     foreign_key = iva_compensation_period_key(foreign_period)
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
-        repository = IvaCompensationHistoryRepository()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID) as profile:
+        repository = IvaCompensationHistoryRepository(objects=profile.repository)
         write = repository.to_secure_object_write(state)
-        repository.secure_object_repository.save(
+        profile.repository.save(
             namespace=write.namespace,
             object_key=foreign_key,
             classification=write.classification,

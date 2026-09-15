@@ -886,17 +886,22 @@ def _ps_parent_map() -> dict[int, int] | None:
     # Imported lazily: this branch is only reached on a POSIX platform without
     # /proc (macOS, the BSDs), and the module must stay import-cheap on the
     # startup path.
-    import subprocess
+    import shutil
+    from subprocess import TimeoutExpired
 
+    executable = shutil.which("ps")
+    if executable is None:
+        logger.debug("watchdog: ps executable is unavailable")
+        return None
     try:
-        completed = subprocess.run(
-            ["ps", "-Ao", "pid=,ppid="],  # noqa: S607 - fixed argv; ps is resolved from PATH by design
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
+        from ._call_runtime import run_captured
+
+        completed = run_captured(
+            [executable, "-Ao", "pid=,ppid="],
+            encoding=_UTF_8,
+            timeout_s=10,
         )
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, TimeoutExpired):
         logger.debug("watchdog: ps snapshot failed", exc_info=True)
         return None
     if completed.returncode != 0:

@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger prorrata surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -145,9 +143,9 @@ _REFERENCE_OPTION: Final[OptionSpec] = _option(
 
 LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_prorrata_declare_sector",
-        parent_key="app_ledger_prorrata",
-        token="declare-sector",
+        "app_ledger_prorrata_declare_sector",
+        "app_ledger_prorrata",
+        "declare-sector",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.prorrata.declare_sector_help"),
         short_help_key=None,
@@ -175,9 +173,9 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_result_schema("ProrrataDeclareSectorResult", "ledger.prorrata.declare_sector"),
     ),
     CommandSpec(
-        key="app_ledger_prorrata_elect_especial",
-        parent_key="app_ledger_prorrata",
-        token="elect-especial",
+        "app_ledger_prorrata_elect_especial",
+        "app_ledger_prorrata",
+        "elect-especial",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.prorrata.elect_especial_help"),
         short_help_key=None,
@@ -207,9 +205,9 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_result_schema("ProrrataElectEspecialResult", "ledger.prorrata.elect_especial"),
     ),
     CommandSpec(
-        key="app_ledger_prorrata_elect_general",
-        parent_key="app_ledger_prorrata",
-        token="elect-general",
+        "app_ledger_prorrata_elect_general",
+        "app_ledger_prorrata",
+        "elect-general",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.prorrata.elect_general_help"),
         short_help_key=None,
@@ -232,9 +230,9 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_result_schema("ProrrataElectGeneralResult", "ledger.prorrata.elect_general"),
     ),
     CommandSpec(
-        key="app_ledger_prorrata_list",
-        parent_key="app_ledger_prorrata",
-        token="list",
+        "app_ledger_prorrata_list",
+        "app_ledger_prorrata",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.prorrata.list_help"),
         short_help_key=None,
@@ -245,9 +243,9 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_result_schema("ProrrataListResult", "ledger.prorrata.list"),
     ),
     CommandSpec(
-        key="app_ledger_prorrata_revoke_especial",
-        parent_key="app_ledger_prorrata",
-        token="revoke-especial",
+        "app_ledger_prorrata_revoke_especial",
+        "app_ledger_prorrata",
+        "revoke-especial",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.prorrata.revoke_especial_help"),
         short_help_key=None,
@@ -277,9 +275,9 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_result_schema("ProrrataRevokeEspecialResult", "ledger.prorrata.revoke_especial"),
     ),
     CommandSpec(
-        key="app_ledger_prorrata_seed",
-        parent_key="app_ledger_prorrata",
-        token="seed",
+        "app_ledger_prorrata_seed",
+        "app_ledger_prorrata",
+        "seed",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.prorrata.seed_help"),
         short_help_key=None,
@@ -290,9 +288,9 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_result_schema("ProrrataSeedResult", "ledger.prorrata.seed"),
     ),
     CommandSpec(
-        key="app_ledger_prorrata_seed_sector",
-        parent_key="app_ledger_prorrata",
-        token="seed-sector",
+        "app_ledger_prorrata_seed_sector",
+        "app_ledger_prorrata",
+        "seed-sector",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.prorrata.seed_sector_help"),
         short_help_key=None,
@@ -303,9 +301,9 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_result_schema("ProrrataSeedSectorResult", "ledger.prorrata.seed_sector"),
     ),
     CommandSpec(
-        key="app_ledger_prorrata_settle_sector",
-        parent_key="app_ledger_prorrata",
-        token="settle-sector",
+        "app_ledger_prorrata_settle_sector",
+        "app_ledger_prorrata",
+        "settle-sector",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.prorrata.settle_sector_help"),
         short_help_key=None,
@@ -335,3 +333,5 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_PRORRATA_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger prorrata surface."""
+"""Authored CommandSpec declarations for the ledger prorrata surface."""

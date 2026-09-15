@@ -322,17 +322,16 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
 
         snapshot_2t = _snapshot_303(period="2T")
         work_unit_2t = _create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo, operation=operation)
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="no_usable_authority"):
-            with calculation_ports_for_test(
-                bucket_id=work_unit_2t.bucket_id,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-            ) as _calculation_ports_300:
-                calculate_modelo_revision(
-                    work_unit_2t.work_unit_id,
-                    actor="operator",
-                    casilla_inputs={},
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="no_usable_authority"), calculation_ports_for_test(
+            bucket_id=work_unit_2t.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_300:
+            calculate_modelo_revision(
+                work_unit_2t.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                     backend_binding_values=_modelo_303_engine_inputs(),
                     iva_compensation_decision=None,

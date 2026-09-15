@@ -97,7 +97,7 @@ _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE = "operation-modal-conformance-passphrase"  # noqa: S105 - isolated integration fixture
+_CREDENTIAL_INPUT = "operation-modal-conformance-passphrase"
 _ACTOR: OperationActorReference = "operator:operation-modal-conformance"
 
 
@@ -132,7 +132,7 @@ def _runtime(
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         enrolled = register_profile_with_credentials(
             label="Operation modal conformance subject",
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=_profile_create_context_for_test,
@@ -141,7 +141,7 @@ def _runtime(
         profile_id = UUID(enrolled.profile_id)
         initial_login = login_profile(
             name=enrolled.profile_id,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
         auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)

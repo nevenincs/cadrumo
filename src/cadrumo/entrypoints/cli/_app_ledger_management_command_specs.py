@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger management surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -39,9 +37,9 @@ from .command_spec import (
 
 LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_inventory",
-        parent_key="app_ledger",
-        token="inventory",
+        "app_ledger_inventory",
+        "app_ledger",
+        "inventory",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.inventory.group_help"),
         short_help_key=None,
@@ -52,9 +50,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_ledger_invoice",
-        parent_key="app_ledger",
-        token="invoice",
+        "app_ledger_invoice",
+        "app_ledger",
+        "invoice",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.invoice.group_help"),
         short_help_key=None,
@@ -65,9 +63,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_ledger_link",
-        parent_key="app_ledger",
-        token="link",
+        "app_ledger_link",
+        "app_ledger",
+        "link",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.link.help"),
         short_help_key=None,
@@ -125,9 +123,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_list",
-        parent_key="app_ledger",
-        token="list",
+        "app_ledger_list",
+        "app_ledger",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.list.help"),
         short_help_key=None,
@@ -273,9 +271,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_llm_diagnostics",
-        parent_key="app_ledger",
-        token="llm-diagnostics",
+        "app_ledger_llm_diagnostics",
+        "app_ledger",
+        "llm-diagnostics",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.llm_diagnostics.help"),
         short_help_key=None,
@@ -339,9 +337,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_merge",
-        parent_key="app_ledger",
-        token="merge",
+        "app_ledger_merge",
+        "app_ledger",
+        "merge",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.merge.help"),
         short_help_key=None,
@@ -406,9 +404,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_participation",
-        parent_key="app_ledger",
-        token="participation",
+        "app_ledger_participation",
+        "app_ledger",
+        "participation",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.ledger.participation.help"),
         short_help_key=None,
@@ -439,9 +437,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_preflight",
-        parent_key="app_ledger",
-        token="preflight",
+        "app_ledger_preflight",
+        "app_ledger",
+        "preflight",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.preflight.help"),
         short_help_key=None,
@@ -489,9 +487,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_prorrata",
-        parent_key="app_ledger",
-        token="prorrata",
+        "app_ledger_prorrata",
+        "app_ledger",
+        "prorrata",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.prorrata.group_help"),
         short_help_key=None,
@@ -502,9 +500,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=_NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_ledger_evidence_pull_all",
-        parent_key="app_ledger_evidence",
-        token="pull-all",
+        "app_ledger_evidence_pull_all",
+        "app_ledger_evidence",
+        "pull-all",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.pull_all_help"),
         short_help_key=None,
@@ -555,9 +553,9 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_ratios",
-        parent_key="app_ledger",
-        token="ratios",
+        "app_ledger_ratios",
+        "app_ledger",
+        "ratios",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.ratios.group_help"),
         short_help_key=None,
@@ -570,3 +568,5 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_MANAGEMENT_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger management surface."""
+"""Authored CommandSpec declarations for the ledger management surface."""

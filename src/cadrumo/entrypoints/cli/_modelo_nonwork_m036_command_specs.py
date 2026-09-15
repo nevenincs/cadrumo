@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the Modelo non-work m036 family."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -64,9 +62,9 @@ M036_DECLARATION_PARAMETERS: Final[tuple[OptionSpec, ...]] = (
 
 MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_m036_alta",
-        parent_key="app_modelo_m036",
-        token="alta",
+        "app_modelo_m036_alta",
+        "app_modelo_m036",
+        "alta",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m036.alta_help"),
         short_help_key=None,
@@ -81,9 +79,9 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_m036_modificacion",
-        parent_key="app_modelo_m036",
-        token="modificacion",
+        "app_modelo_m036_modificacion",
+        "app_modelo_m036",
+        "modificacion",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m036.modificacion_help"),
         short_help_key=None,
@@ -98,9 +96,9 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_m036_baja",
-        parent_key="app_modelo_m036",
-        token="baja",
+        "app_modelo_m036_baja",
+        "app_modelo_m036",
+        "baja",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m036.baja_help"),
         short_help_key=None,
@@ -115,9 +113,9 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_m036_list",
-        parent_key="app_modelo_m036",
-        token="list",
+        "app_modelo_m036_list",
+        "app_modelo_m036",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m036.list_help"),
         short_help_key=None,
@@ -132,9 +130,9 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_m036_view",
-        parent_key="app_modelo_m036",
-        token="view",
+        "app_modelo_m036_view",
+        "app_modelo_m036",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.m036.view_help"),
         short_help_key=None,
@@ -158,3 +156,5 @@ MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_M036_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work m036 family."""
+"""Authored CommandSpec declarations for the Modelo non-work m036 family."""

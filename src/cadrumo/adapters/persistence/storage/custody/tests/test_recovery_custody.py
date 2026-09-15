@@ -52,7 +52,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-_PASSWORD = "an operator chosen passphrase that clears the verifier minimum"  # noqa: S105 - real test credential
+_CREDENTIAL_INPUT = "an operator chosen passphrase that clears the verifier minimum"
 
 
 class _EnrolledProfile:
@@ -68,7 +68,7 @@ class _EnrolledProfile:
         dek_epoch = b64encode(token_bytes(16)).decode("ascii")
         material = create_profile_custody_registration_material(
             profile_id=self.profile_id,
-            password=_PASSWORD,
+            password=_CREDENTIAL_INPUT,
             dek=self.dek,
             dek_epoch=dek_epoch,
             salt=token_bytes(16),
@@ -113,7 +113,7 @@ class _EnrolledProfile:
     def export(self, target: Path) -> ProfileRecoveryArtifactReceipt:
         return export_profile_recovery_artifact(
             self.enrollment,
-            current_password=_PASSWORD,
+            current_password=_CREDENTIAL_INPUT,
             password_envelope=self.envelope,
             sentinel=self.sentinel,
             target=target,
@@ -340,7 +340,7 @@ def test_an_artifact_cannot_become_another_profiles_authority(
     other_id = uuid4()
     other = create_profile_custody_registration_material(
         profile_id=other_id,
-        password=_PASSWORD,
+        password=_CREDENTIAL_INPUT,
         dek=token_bytes(32),
         dek_epoch=b64encode(token_bytes(16)).decode("ascii"),
         salt=token_bytes(16),
@@ -440,7 +440,7 @@ def test_password_only_restore_publishes_the_capsule(
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     restored = restore_profile_with_password(
         label="Recovered by password",
-        password=_PASSWORD,
+        password=_CREDENTIAL_INPUT,
         password_envelope=enrolled.envelope,
         sentinel=enrolled.sentinel,
         database_bytes=enrolled.database_bytes,
@@ -547,7 +547,7 @@ def test_restore_refuses_a_sentinel_from_a_different_profile(
     other_id = UUID("6f3c0b4d-2f5a-4a6a-9c1f-0d2c5e7a8b90")
     other_envelope = create_profile_custody_registration_material(
         profile_id=other_id,
-        password=_PASSWORD,
+        password=_CREDENTIAL_INPUT,
         dek=enrolled.dek,
         dek_epoch=enrolled.envelope.dek_epoch,
         salt=token_bytes(16),

@@ -40,9 +40,9 @@ def _schema(name: str, identity: str) -> ResultSchemaSpec:
 
 CONFIG_COLLAB_COMMAND_SPECS = (
     CommandSpec(
-        key="config_collab",
-        parent_key="config",
-        token="collab",  # noqa: S106 - CLI token, not a credential.
+        "config_collab",
+        "config",
+        "collab",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.collab.help"),
         short_help_key=None,
@@ -53,9 +53,9 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="config_collab_recipient",
-        parent_key="config_collab",
-        token="recipient",  # noqa: S106 - CLI token, not a credential.
+        "config_collab_recipient",
+        "config_collab",
+        "recipient",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.config.collab.recipient.help"),
         short_help_key=None,
@@ -66,9 +66,9 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="config_collab_recipient_add",
-        parent_key="config_collab_recipient",
-        token="add",  # noqa: S106 - CLI token, not a credential.
+        "config_collab_recipient_add",
+        "config_collab_recipient",
+        "add",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.collab.recipient.add_help"),
         short_help_key=None,
@@ -95,9 +95,9 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         result_schema=_schema("ConfigCollabRecipientAddResult", "config.collab.recipient.add"),
     ),
     CommandSpec(
-        key="config_collab_recipient_list",
-        parent_key="config_collab_recipient",
-        token="list",  # noqa: S106 - CLI token, not a credential.
+        "config_collab_recipient_list",
+        "config_collab_recipient",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.collab.recipient.list_help"),
         short_help_key=None,
@@ -108,9 +108,9 @@ CONFIG_COLLAB_COMMAND_SPECS = (
         result_schema=_schema("ConfigCollabRecipientListResult", "config.collab.recipient.list"),
     ),
     CommandSpec(
-        key="config_collab_recipient_remove",
-        parent_key="config_collab_recipient",
-        token="remove",  # noqa: S106 - CLI token, not a credential.
+        "config_collab_recipient_remove",
+        "config_collab_recipient",
+        "remove",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.config.collab.recipient.remove_help"),
         short_help_key=None,

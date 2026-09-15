@@ -41,6 +41,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.core.rescate_type import RescateType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -98,6 +99,7 @@ def _build_bundle(
 ) -> WorkCalculateInputBundle:
     return build_work_calculate_input_bundle(
         work_unit_id=work_unit_id,
+        ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         casilla_overrides={},
         binding_overrides={},
         relation_overrides={},

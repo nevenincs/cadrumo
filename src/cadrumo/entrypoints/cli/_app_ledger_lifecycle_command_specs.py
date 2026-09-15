@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger lifecycle surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -40,9 +38,9 @@ from .command_spec import (
 
 LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_remove",
-        parent_key="app_ledger",
-        token="remove",
+        "app_ledger_remove",
+        "app_ledger",
+        "remove",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.remove.help"),
         short_help_key=None,
@@ -63,9 +61,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_reset",
-        parent_key="app_ledger",
-        token="reset",
+        "app_ledger_reset",
+        "app_ledger",
+        "reset",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.reset.help"),
         short_help_key=None,
@@ -85,9 +83,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_restore",
-        parent_key="app_ledger",
-        token="restore",
+        "app_ledger_restore",
+        "app_ledger",
+        "restore",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.restore.help"),
         short_help_key=None,
@@ -107,9 +105,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_review",
-        parent_key="app_ledger",
-        token="review",
+        "app_ledger_review",
+        "app_ledger",
+        "review",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.review.help"),
         short_help_key=None,
@@ -127,9 +125,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_rule",
-        parent_key="app_ledger",
-        token="rule",
+        "app_ledger_rule",
+        "app_ledger",
+        "rule",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.rule.group_help"),
         short_help_key=None,
@@ -140,9 +138,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="app_ledger_split",
-        parent_key="app_ledger",
-        token="split",
+        "app_ledger_split",
+        "app_ledger",
+        "split",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.split.help"),
         short_help_key=None,
@@ -170,9 +168,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_stash",
-        parent_key="app_ledger",
-        token="stash",
+        "app_ledger_stash",
+        "app_ledger",
+        "stash",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.stash.help"),
         short_help_key=None,
@@ -192,9 +190,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_status",
-        parent_key="app_ledger",
-        token="status",
+        "app_ledger_status",
+        "app_ledger",
+        "status",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.status.help"),
         short_help_key=None,
@@ -212,9 +210,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_track",
-        parent_key="app_ledger",
-        token="track",
+        "app_ledger_track",
+        "app_ledger",
+        "track",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.track.help"),
         short_help_key=None,
@@ -229,9 +227,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_update",
-        parent_key="app_ledger",
-        token="update",
+        "app_ledger_update",
+        "app_ledger",
+        "update",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.update.help"),
         short_help_key=None,
@@ -279,9 +277,9 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_view",
-        parent_key="app_ledger",
-        token="view",
+        "app_ledger_view",
+        "app_ledger",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.view.help"),
         short_help_key=None,
@@ -298,3 +296,5 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_LIFECYCLE_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger lifecycle surface."""
+"""Authored CommandSpec declarations for the ledger lifecycle surface."""

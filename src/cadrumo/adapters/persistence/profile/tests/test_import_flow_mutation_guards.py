@@ -374,12 +374,11 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
         )
         cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 
-        with pytest.raises(CalculationRevisionNotFoundError):
-            with bundled_indexed_authority().operation() as operation:
-                get_calculation_revision(
-                    revision.calculation_revision_id,
-                    ports=build_calculation_action_ports(bucket_id=_GUARD_BUCKET_A, operation=operation),
-                )
+        with pytest.raises(CalculationRevisionNotFoundError), bundled_indexed_authority().operation() as operation:
+            get_calculation_revision(
+                revision.calculation_revision_id,
+                ports=build_calculation_action_ports(bucket_id=_GUARD_BUCKET_A, operation=operation),
+            )
 
         assert cr_repo.load().get(revision.calculation_revision_id) == revision
 

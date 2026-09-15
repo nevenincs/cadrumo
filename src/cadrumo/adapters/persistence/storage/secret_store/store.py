@@ -62,7 +62,7 @@ from ..errors import (
 from ..master_key.active_session import get_active_master_key
 from ..master_key.master_key import MasterKeyProvider
 from ..storage_path_definitions import (
-    SECRET_INDEX_FILENAME,
+    INDEX_FILENAME,
     SECRET_INDEX_SCHEMA_VERSION,
     SECRET_RECORD_SCHEMA_VERSION,
 )
@@ -289,7 +289,7 @@ class SecretStore:
 
     def _index_path(self) -> Path:
         """Return the catalogue file path."""
-        return self._store_dir / SECRET_INDEX_FILENAME
+        return self._store_dir / INDEX_FILENAME
 
     def _lock_target(self) -> Path:
         """Return the path used as the exclusive-write lock sidecar."""

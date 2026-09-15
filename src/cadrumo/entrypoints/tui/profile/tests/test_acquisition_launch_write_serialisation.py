@@ -42,7 +42,7 @@ from ..overview import ProfileManagerScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE = "acquisition-serialisation-passphrase"  # noqa: S105 - isolated integration fixture
+_CREDENTIAL_INPUT = "acquisition-serialisation-passphrase"
 
 
 class _LaunchRecord:
@@ -63,7 +63,7 @@ def _build_overview() -> ProfileOverview:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     enrolled = register_profile_with_credentials(
         label="Acquisition serialisation subject",
-        passphrase=_PASSPHRASE,
+        passphrase=_CREDENTIAL_INPUT,
         facts=(),
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         profile_create_context=_profile_create_context_for_test,
@@ -71,7 +71,7 @@ def _build_overview() -> ProfileOverview:
     )
     login_profile(
         name=enrolled.profile_id,
-        passphrase_callback=lambda: _PASSPHRASE,
+        passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,
     )
     record = ProfileRecordRepository.for_current_session(

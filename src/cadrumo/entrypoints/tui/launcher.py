@@ -846,7 +846,8 @@ def compose_installed_workbench_root(
         so navigation, search and the mounted projections all describe one
         capture rather than three instants.
         """
-        assert refresh_destinations is not None  # noqa: S101 - guarded by the door below
+        if refresh_destinations is None:
+            raise RuntimeError("destination refresh requested without a refresh provider")
         refreshed_admissions, refreshed_factories = refresh_destinations()
         return build_destination_catalogue(
             admissions={"workbench.home": _available_admission("workbench.home"), **refreshed_admissions},

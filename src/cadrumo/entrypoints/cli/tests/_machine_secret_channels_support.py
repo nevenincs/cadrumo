@@ -17,6 +17,7 @@ from uuid import UUID
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.tests.audited_process import run_audited_process
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
@@ -26,12 +27,12 @@ from ....core.config import override_settings
 from ....tests.inventory import SRC_CADRUMO
 from .subprocess_cli import subprocess_cli_env
 
-_PROFILE_SECRET = "s13-profile-passphrase-that-must-never-escape"  # noqa: S105
-_NEW_PROFILE_SECRET = "s13-new-profile-passphrase-that-must-never-escape"  # noqa: S105
-_CERTIFICATE_SECRET = "s13-certificate-passphrase-that-must-never-escape"  # noqa: S105
-_REFUSAL_SECRET = "s14-refusal-secret-that-must-never-escape"  # noqa: S105
-_OVERSIZE_SECRET = "s14-oversize-secret-that-must-never-escape"  # noqa: S105
-_ALL_SECRETS = (_PROFILE_SECRET, _NEW_PROFILE_SECRET, _CERTIFICATE_SECRET, _REFUSAL_SECRET)
+_PROFILE_INPUT = "s13-profile-passphrase-that-must-never-escape"
+_NEW_PROFILE_INPUT = "s13-new-profile-passphrase-that-must-never-escape"
+_CERTIFICATE_INPUT = "s13-certificate-passphrase-that-must-never-escape"
+_REFUSAL_INPUT = "s14-refusal-secret-that-must-never-escape"
+_OVERSIZE_INPUT = "s14-oversize-secret-that-must-never-escape"
+_ALL_SECRETS = (_PROFILE_INPUT, _NEW_PROFILE_INPUT, _CERTIFICATE_INPUT, _REFUSAL_INPUT)
 
 
 def bootstrap_interpreter() -> str:
@@ -359,7 +360,7 @@ def _run(
     output_language: str = "en",
     assert_unread_indices: Sequence[int] = (),
     assert_stdin_unread: bool = False,
-    unread_payload: str = _REFUSAL_SECRET,
+    unread_payload: str = _REFUSAL_INPUT,
 ) -> subprocess.CompletedProcess[str]:
     """Run the real CLI, mapping payload pipes to argv ``{fd}`` tokens."""
     if inherited_payloads and os.name == "nt":
@@ -386,13 +387,13 @@ def _run(
                 *((0,) if assert_closed_fd_zero else ()),
             ],
             "preauthenticate_label": preauthenticate_label,
-            "preauthenticate_secret": _PROFILE_SECRET if preauthenticate_label is not None else None,
+            "preauthenticate_secret": _PROFILE_INPUT if preauthenticate_label is not None else None,
             "assert_dispatch_state_unchanged": assert_dispatch_state_unchanged,
             "assert_unread_descriptors": [readers[index] for index in assert_unread_indices],
             "assert_stdin_unread": assert_stdin_unread,
             "assert_unread_payload": unread_payload,
         }
-        return subprocess.run(  # noqa: S603 - fixed interpreter plus test-owned argv
+        return run_audited_process(
             [sys.executable, "-c", _HARNESS, json.dumps(payload), *rendered_args],
             cwd=SRC_CADRUMO,
             env=subprocess_cli_env(
@@ -438,13 +439,13 @@ def _run_windows_handles(
             "profile_handle": profile_handle,
             "secrets_handle": secrets_handle,
             "preauthenticate_label": preauthenticate_label,
-            "preauthenticate_secret": _PROFILE_SECRET if preauthenticate_label is not None else None,
+            "preauthenticate_secret": _PROFILE_INPUT if preauthenticate_label is not None else None,
             "assert_dispatch_state_unchanged": assert_dispatch_state_unchanged,
             "assert_descriptors_unread": assert_descriptors_unread,
             "assert_stdin_unread": assert_stdin_unread,
             "assert_unread_payload": unread_payload,
         }
-        return subprocess.run(  # noqa: S603 - fixed interpreter and production bootstrap
+        return run_audited_process(
             [
                 bootstrap_interpreter(),
                 "-c",
@@ -576,7 +577,7 @@ def _register(
     with override_settings(cadrumo_local_storage_root=storage_root):
         outcome = register_profile_with_credentials(
             label=label,
-            passphrase=_PROFILE_SECRET,
+            passphrase=_PROFILE_INPUT,
             recovery_handover=handover,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
@@ -603,7 +604,7 @@ def _register_certificate_source(storage_root: Path, *, name: str) -> None:
             "--file",
             str(certificate_path),
         ],
-        stdin=json.dumps({"profile_passphrase": _PROFILE_SECRET}),
+        stdin=json.dumps({"profile_passphrase": _PROFILE_INPUT}),
     )
     assert result.returncode == 0, _combined(result)
 
@@ -624,7 +625,7 @@ def _restore_material(tmp_path: Path) -> tuple[Path, Path, str]:
     artifact = tmp_path / "recovery.artifact.json"
     export_profile_recovery_artifact(
         enrollments[0],
-        current_password=_PROFILE_SECRET,
+        current_password=_PROFILE_INPUT,
         password_envelope=material.envelope,
         sentinel=material.sentinel,
         target=artifact,

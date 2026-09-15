@@ -1,4 +1,3 @@
-# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Behavior handlers for modelo maritime preview commands.
 
 This module is the transport boundary for
@@ -50,12 +49,18 @@ def _parse_maritime_amounts(
         optional_decimal_option(
             annual_salary,
             translation_key="cli.app.modelo.work.preview_maritime_exemption_annual_salary_not_decimal",
-            default="--annual-salary must be a decimal amount; received: {value}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.",
+            default=(
+                "--annual-salary must be a decimal amount; received: {value}. "
+                "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+            ),
         ),
         optional_decimal_option(
             gross_navigation_income,
             translation_key="cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_not_decimal",
-            default="--gross-navigation-income must be a decimal amount; received: {value}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.",
+            default=(
+                "--gross-navigation-income must be a decimal amount; received: {value}. "
+                "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+            ),
         ),
     )
 

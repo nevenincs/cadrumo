@@ -21,10 +21,9 @@ from __future__ import annotations
 
 import io
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any
 
 from rich.console import Console
-from textual._compositor import Compositor
 from textual.app import App
 from textual.widget import Widget
 
@@ -57,7 +56,7 @@ def screen_text(app: App[Any], width: int, height: int) -> str:
     # rendering it is the only way to capture the frame exactly as
     # ``export_screenshot`` does. The dynamic reach is annotated so the
     # compositor keeps its real declared type rather than leaking ``Any``.
-    compositor = cast(Compositor, getattr(app.screen, "_compositor"))  # noqa: B009
+    compositor = app.screen._compositor
     console.print(compositor, end="")
     return console.export_text(styles=False).rstrip("\n")
 

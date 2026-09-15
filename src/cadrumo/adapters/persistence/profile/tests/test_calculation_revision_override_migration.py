@@ -225,27 +225,26 @@ def test_revision_without_overrides_is_untouched_and_keeps_its_id() -> None:
 
 def test_migration_rekeys_a_catalogue_through_encrypted_storage(tmp_path: Path) -> None:
     """End to end: the stored encrypted catalogue comes back binding-keyed."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-            _seed_parent_work_unit(profile)
-            repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-            stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
-            repository.save(_catalogue(stored))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
+        repository.save(_catalogue(stored))
 
-            result = migrate_stored_relation_overrides_to_binding_ids(
-                repository, operation=_authority_operation_for_test
-            )
+        result = migrate_stored_relation_overrides_to_binding_ids(
+            repository, operation=_authority_operation_for_test
+        )
 
-            assert result.changed
-            reloaded = repository.load()
-            assert stored.calculation_revision_id not in reloaded
-            (migrated,) = tuple(reloaded.values())
-            assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
+        assert result.changed
+        reloaded = repository.load()
+        assert stored.calculation_revision_id not in reloaded
+        (migrated,) = tuple(reloaded.values())
+        assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
 
-            # Re-running against the now-migrated encrypted row is a no-op, so a
-            # migration interrupted after its write can simply be repeated.
-            rerun = migrate_stored_relation_overrides_to_binding_ids(
-                repository, operation=_authority_operation_for_test
-            )
-            assert not rerun.changed
-            assert tuple(repository.load().revisions) == tuple(reloaded.revisions)
+        # Re-running against the now-migrated encrypted row is a no-op, so a
+        # migration interrupted after its write can simply be repeated.
+        rerun = migrate_stored_relation_overrides_to_binding_ids(
+            repository, operation=_authority_operation_for_test
+        )
+        assert not rerun.changed
+        assert tuple(repository.load().revisions) == tuple(reloaded.revisions)

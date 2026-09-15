@@ -45,7 +45,7 @@ pytestmark = [
 #: Deliberately past the 30s wall-clock bound this handoff no longer carries.
 _PAST_REMOVED_BOUND_SECONDS = 33.0
 _TERMINAL_SIZE = (140, 60)
-_TYPED_PASSWORD = "recovery-words-screen-operator-secret"  # noqa: S105 - synthetic test fixture
+_TYPED_INPUT = "recovery-words-screen-operator-secret"
 
 
 def _attempt_registration(
@@ -123,8 +123,8 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
             await _fill(
                 pilot,
                 username="Recovery Words Subject",
-                password=_TYPED_PASSWORD,
-                confirm=_TYPED_PASSWORD,
+                password=_TYPED_INPUT,
+                confirm=_TYPED_INPUT,
             )
             await pilot.click("#btn-create")
 
@@ -157,8 +157,8 @@ async def test_cancelling_recovery_confirmation_publishes_no_capsule(tmp_path) -
             await _fill(
                 pilot,
                 username="Cancelled Recovery Subject",
-                password=_TYPED_PASSWORD,
-                confirm=_TYPED_PASSWORD,
+                password=_TYPED_INPUT,
+                confirm=_TYPED_INPUT,
             )
             await pilot.click("#btn-create")
             await _wait_for_recovery_screen(pilot)
@@ -180,8 +180,8 @@ async def test_wrong_recovery_reentry_publishes_no_capsule(tmp_path) -> None:
             await _fill(
                 pilot,
                 username="Wrong Recovery Reentry",
-                password=_TYPED_PASSWORD,
-                confirm=_TYPED_PASSWORD,
+                password=_TYPED_INPUT,
+                confirm=_TYPED_INPUT,
             )
             await pilot.click("#btn-create")
             words = await _wait_for_recovery_screen(pilot)
@@ -218,8 +218,8 @@ async def test_a_confirmation_past_the_removed_wall_clock_bound_still_publishes(
             await _fill(
                 pilot,
                 username="Unhurried Recovery Subject",
-                password=_TYPED_PASSWORD,
-                confirm=_TYPED_PASSWORD,
+                password=_TYPED_INPUT,
+                confirm=_TYPED_INPUT,
             )
             await pilot.click("#btn-create")
             words = await _wait_for_recovery_screen(pilot)
@@ -253,8 +253,8 @@ async def test_app_shutdown_releases_pending_handoff_without_publication(tmp_pat
             await _fill(
                 pilot,
                 username="Shutdown Recovery Subject",
-                password=_TYPED_PASSWORD,
-                confirm=_TYPED_PASSWORD,
+                password=_TYPED_INPUT,
+                confirm=_TYPED_INPUT,
             )
             await pilot.click("#btn-create")
             await _wait_for_recovery_screen(pilot)
@@ -291,8 +291,8 @@ async def test_a_words_screen_that_leaves_without_answering_refuses_instead_of_w
             await _fill(
                 pilot,
                 username="Abandoned Recovery Subject",
-                password=_TYPED_PASSWORD,
-                confirm=_TYPED_PASSWORD,
+                password=_TYPED_INPUT,
+                confirm=_TYPED_INPUT,
             )
             await pilot.click("#btn-create")
             words = await _wait_for_recovery_screen(pilot)

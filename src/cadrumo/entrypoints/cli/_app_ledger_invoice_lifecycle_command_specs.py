@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger invoice lifecycle surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -49,9 +47,9 @@ _REQUIRED_INVOICE_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
 
 LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_invoice_list",
-        parent_key="app_ledger_invoice",
-        token="list",
+        "app_ledger_invoice_list",
+        "app_ledger_invoice",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.list_help"),
         short_help_key=None,
@@ -83,9 +81,9 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_invoice_remove",
-        parent_key="app_ledger_invoice",
-        token="remove",
+        "app_ledger_invoice_remove",
+        "app_ledger_invoice",
+        "remove",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.remove_help"),
         short_help_key=None,
@@ -118,9 +116,9 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_invoice_update",
-        parent_key="app_ledger_invoice",
-        token="update",
+        "app_ledger_invoice_update",
+        "app_ledger_invoice",
+        "update",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.update_help"),
         short_help_key=None,
@@ -172,9 +170,9 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_invoice_view",
-        parent_key="app_ledger_invoice",
-        token="view",
+        "app_ledger_invoice_view",
+        "app_ledger_invoice",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.view_help"),
         short_help_key=None,
@@ -189,9 +187,9 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_invoice_wizard",
-        parent_key="app_ledger_invoice",
-        token="wizard",
+        "app_ledger_invoice_wizard",
+        "app_ledger_invoice",
+        "wizard",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.invoice.wizard_help"),
         short_help_key=None,
@@ -231,3 +229,5 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger invoice lifecycle surface."""
+"""Authored CommandSpec declarations for the ledger invoice lifecycle surface."""

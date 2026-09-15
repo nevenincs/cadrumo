@@ -1,4 +1,3 @@
-# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Behavior handlers for modelo filing-record and verification-report commands.
 
 The filing-record commands render stored :class:`ModeloRecord` rows, import
@@ -402,7 +401,10 @@ def filing_record_observe_local(
         captured_at=local_observation.captured_at,
         captured_by=local_observation.captured_by,
     )
-    notice_message = "Operator-supplied local observation recorded for calculation prefill only; it is not AEAT evidence and no filing record was created."
+    notice_message = (
+        "Operator-supplied local observation recorded for calculation prefill only; "
+        "it is not AEAT evidence and no filing record was created."
+    )
     notice = advisory_notice(
         "modelo.filing_record.observe_local.non_official",
         notice_message,

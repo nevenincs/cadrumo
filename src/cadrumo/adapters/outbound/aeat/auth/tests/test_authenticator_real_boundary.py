@@ -24,7 +24,7 @@ from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
 from ..certificate import extract_nif_from_subject
-from ._auth_fixtures import SECRET_PASSPHRASE
+from ._auth_fixtures import CERTIFICATE_INPUT
 from ._authenticator_support import _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -49,7 +49,7 @@ def _certificate_session() -> AeatSession:
 def _settings(tmp_path: Path) -> Settings:
     return Settings(
         cadrumo_certificate_path=_build_bundle(tmp_path),
-        cadrumo_certificate_password_secret=SecretStr(SECRET_PASSPHRASE),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
         cadrumo_token_dir=tmp_path / ".tokens",
         cadrumo_local_storage_root=tmp_path / "storage",
         cadrumo_browser_close_timeout_ms=15_000,

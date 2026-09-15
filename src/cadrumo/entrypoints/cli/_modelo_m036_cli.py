@@ -1,4 +1,3 @@
-# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Behavior handlers for Modelo 036 declarative-recording commands."""
 
 from __future__ import annotations
@@ -102,7 +101,10 @@ def record_m036(
 def m036_alta(
     ctx: typer.Context, declared_on: str, sede_justificante: str | None = None, note: str | None = None
 ) -> None:
-    """Record an M036 alta filed through AEAT Sede or in person at a competent AEAT office; the electronic justificante is optional."""
+    """Record an M036 alta filed through AEAT Sede or in person at a competent AEAT office.
+
+    The electronic justificante is optional.
+    """
     record_m036(
         ctx,
         event_kind=CensoModeloEventKind.ALTA,
@@ -118,7 +120,10 @@ def m036_modificacion(
     sede_justificante: str | None = None,
     note: str | None = None,
 ) -> None:
-    """Record an M036 modificacion filed through AEAT Sede or in person at a competent AEAT office; the electronic justificante is optional."""
+    """Record an M036 modificacion filed through AEAT Sede or in person at a competent AEAT office.
+
+    The electronic justificante is optional.
+    """
     record_m036(
         ctx,
         event_kind=CensoModeloEventKind.MODIFICACION,
@@ -134,7 +139,10 @@ def m036_baja(
     sede_justificante: str | None = None,
     note: str | None = None,
 ) -> None:
-    """Record an M036 baja filed through AEAT Sede or in person at a competent AEAT office; the electronic justificante is optional."""
+    """Record an M036 baja filed through AEAT Sede or in person at a competent AEAT office.
+
+    The electronic justificante is optional.
+    """
     record_m036(
         ctx,
         event_kind=CensoModeloEventKind.BAJA,

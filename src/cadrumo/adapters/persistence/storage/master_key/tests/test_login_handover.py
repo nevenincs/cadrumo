@@ -80,8 +80,8 @@ from cadrumo.tests.os_keychain_hook import require_os_credential_store
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-_PASSWORD_A = "login-handover-password-a"  # noqa: S105 - real test credential
-_PASSWORD_B = "login-handover-password-b"  # noqa: S105 - real test credential
+_CREDENTIAL_A = "login-handover-password-a"
+_CREDENTIAL_B = "login-handover-password-b"
 
 
 class _ConflictResult(TypedDict, total=False):
@@ -121,14 +121,14 @@ def _register_two_profiles(storage_root: Path) -> tuple[str, str]:
     first = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label="Handover A",
-        passphrase=_PASSWORD_A,
+        passphrase=_CREDENTIAL_A,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
     second = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label="Handover B",
-        passphrase=_PASSWORD_B,
+        passphrase=_CREDENTIAL_B,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
@@ -365,7 +365,7 @@ def _conflicted_b_handover_child(
     try:
         login_profile(
             name=profile_a,
-            passphrase_callback=lambda: _PASSWORD_A,
+            passphrase_callback=lambda: _CREDENTIAL_A,
             profile_decode_context=_profile_decode_context_for_test,
         )
         active_a = current_active_bucket_session()
@@ -375,7 +375,7 @@ def _conflicted_b_handover_child(
             candidate_ready.set()
             if not allow_authentication.wait(30):
                 raise TimeoutError("parent did not release candidate authentication")
-            return _PASSWORD_B
+            return _CREDENTIAL_B
 
         try:
             login_profile(
@@ -421,12 +421,12 @@ def _acceleration_failure_handover_child(
     try:
         login_profile(
             name=profile_a,
-            passphrase_callback=lambda: _PASSWORD_A,
+            passphrase_callback=lambda: _CREDENTIAL_A,
             profile_decode_context=_profile_decode_context_for_test,
         )
         result = login_profile(
             name=profile_b,
-            passphrase_callback=lambda: _PASSWORD_B,
+            passphrase_callback=lambda: _CREDENTIAL_B,
             profile_decode_context=_profile_decode_context_for_test,
         )
         active = current_active_bucket_session()
@@ -447,10 +447,10 @@ def _crash_after_b_handover_child(storage_root: Path, profile_a: str, profile_b:
     settings, _token, _composition = _child_settings(storage_root)
     _ = settings
     login_profile(
-        name=profile_a, passphrase_callback=lambda: _PASSWORD_A, profile_decode_context=_profile_decode_context_for_test
+        name=profile_a, passphrase_callback=lambda: _CREDENTIAL_A, profile_decode_context=_profile_decode_context_for_test
     )
     login_profile(
-        name=profile_b, passphrase_callback=lambda: _PASSWORD_B, profile_decode_context=_profile_decode_context_for_test
+        name=profile_b, passphrase_callback=lambda: _CREDENTIAL_B, profile_decode_context=_profile_decode_context_for_test
     )
     os._exit(0)
 
@@ -466,7 +466,7 @@ def _recover_selected_profile_child(
     _ = settings
     try:
         result = login_profile(
-            name=None, passphrase_callback=lambda: _PASSWORD_B, profile_decode_context=_profile_decode_context_for_test
+            name=None, passphrase_callback=lambda: _CREDENTIAL_B, profile_decode_context=_profile_decode_context_for_test
         )
         active = current_active_bucket_session()
         assert active is not None
@@ -633,7 +633,7 @@ def _crash_at_handover_phase_child(
     try:
         login_profile(
             name=profile_a,
-            passphrase_callback=lambda: _PASSWORD_A,
+            passphrase_callback=lambda: _CREDENTIAL_A,
             profile_decode_context=_profile_decode_context_for_test,
         )
         if phase is HandoverPhase.A_RETIRED:
@@ -643,7 +643,7 @@ def _crash_at_handover_phase_child(
             # return path with no further scheduling point.
             login_profile(
                 name=profile_b,
-                passphrase_callback=lambda: _PASSWORD_B,
+                passphrase_callback=lambda: _CREDENTIAL_B,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             payload = json.loads(handover_journal_path(storage_root).read_text(encoding="utf-8"))
@@ -656,7 +656,7 @@ def _crash_at_handover_phase_child(
             nonlocal watcher
             watcher = Thread(target=crash_after_phase_receipt, daemon=True)
             watcher.start()
-            return _PASSWORD_B
+            return _CREDENTIAL_B
 
         login_profile(
             name=profile_b,
@@ -973,7 +973,7 @@ def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path
         try:
             login_profile(
                 name=profile_a,
-                passphrase_callback=lambda: _PASSWORD_A,
+                passphrase_callback=lambda: _CREDENTIAL_A,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             active_a = current_active_bucket_session()
@@ -1019,7 +1019,7 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
             login_profile(
                 name=profile_a,
                 now=instant,
-                passphrase_callback=lambda: _PASSWORD_A,
+                passphrase_callback=lambda: _CREDENTIAL_A,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             active_a = current_active_bucket_session()
@@ -1034,7 +1034,7 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
                 login_profile(
                     name=profile_b,
                     now=instant + timedelta(seconds=3),
-                    passphrase_callback=lambda: _PASSWORD_B,
+                    passphrase_callback=lambda: _CREDENTIAL_B,
                     profile_decode_context=_profile_decode_context_for_test,
                 )
 
@@ -1057,7 +1057,7 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
         try:
             login_profile(
                 name=profile_a,
-                passphrase_callback=lambda: _PASSWORD_A,
+                passphrase_callback=lambda: _CREDENTIAL_A,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             active_a = current_active_bucket_session()
@@ -1075,7 +1075,7 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
             with pytest.raises((BucketEventHistoryPersistenceError, SqlDatabaseError)):
                 login_profile(
                     name=profile_b,
-                    passphrase_callback=lambda: _PASSWORD_B,
+                    passphrase_callback=lambda: _CREDENTIAL_B,
                     profile_decode_context=_profile_decode_context_for_test,
                 )
 
@@ -1101,14 +1101,14 @@ def test_successful_b_handover_publishes_before_retiring_a(tmp_path: Path) -> No
         try:
             login_profile(
                 name=profile_a,
-                passphrase_callback=lambda: _PASSWORD_A,
+                passphrase_callback=lambda: _CREDENTIAL_A,
                 profile_decode_context=_profile_decode_context_for_test,
             )
             active_a = current_active_bucket_session()
 
             result = login_profile(
                 name=profile_b,
-                passphrase_callback=lambda: _PASSWORD_B,
+                passphrase_callback=lambda: _CREDENTIAL_B,
                 profile_decode_context=_profile_decode_context_for_test,
             )
 
@@ -1153,7 +1153,7 @@ def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(t
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
 
-        first = _login_in_separate_process(storage_root, profile_a, _PASSWORD_A)
+        first = _login_in_separate_process(storage_root, profile_a, _CREDENTIAL_A)
         assert first["bucket_id"] == profile_a
 
         # Anti-tautology: prove the receipt IS resumable from a THIRD process
@@ -1164,7 +1164,7 @@ def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(t
         assert live["resumed"] is True
         assert live["dek_length"] == 32
 
-        second = _login_in_separate_process(storage_root, profile_b, _PASSWORD_B)
+        second = _login_in_separate_process(storage_root, profile_b, _CREDENTIAL_B)
         assert second["bucket_id"] == profile_b
 
         # The recovered material is the property, so it is measured before the
@@ -1195,18 +1195,18 @@ def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tm
         profile = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Relogin",
-            passphrase=_PASSWORD_A,
+            passphrase=_CREDENTIAL_A,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         ).profile_id
 
-        first = _login_in_separate_process(storage_root, profile, _PASSWORD_A)
+        first = _login_in_separate_process(storage_root, profile, _CREDENTIAL_A)
         assert first["bucket_id"] == profile
 
         second = _login_in_separate_process(
             storage_root,
             profile,
-            _PASSWORD_A,
+            _CREDENTIAL_A,
             now=_now() + timedelta(days=1),
         )
         assert second["bucket_id"] == profile

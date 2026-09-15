@@ -20,12 +20,14 @@ deferred until the v2 SDK is stable.
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import os
 import shutil
 import signal
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -126,7 +128,7 @@ class SupervisedResult(BaseModel):
     timed_out: bool
 
 
-def _terminate_tree(process: subprocess.Popen[str]) -> None:
+async def _terminate_tree(process: asyncio.subprocess.Process) -> None:
     """Terminate ``process`` and every child it spawned.
 
     A live pull spawns a browser child, so killing only the top process would
@@ -140,23 +142,212 @@ def _terminate_tree(process: subprocess.Popen[str]) -> None:
     browser, but killing the direct child is strictly better than killing
     nothing, and it keeps the supervised contract honest.
     """
-    if process.poll() is not None:
+    if process.returncode is not None:
         return
     if sys.platform == "win32":
         taskkill = shutil.which("taskkill")
         if taskkill is None:
-            process.kill()
+            _kill_process(process)
             return
-        subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
-            [taskkill, "/F", "/T", "/PID", str(process.pid)],
-            capture_output=True,
-            check=False,
+        killer = await asyncio.create_subprocess_exec(
+            taskkill,
+            "/F",
+            "/T",
+            "/PID",
+            str(process.pid),
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
         )
+        await killer.communicate()
+        if process.returncode is None:
+            _kill_process(process)
         return
     try:
         os.killpg(os.getpgid(process.pid), signal.SIGKILL)
     except (ProcessLookupError, PermissionError):
+        _kill_process(process)
+
+
+def _kill_process(process: asyncio.subprocess.Process) -> None:
+    """Kill a process whose tree-level termination path was unavailable."""
+    with contextlib.suppress(ProcessLookupError):
         process.kill()
+
+
+def _decode_output(payload: bytes | None, *, encoding: str, errors: str) -> str:
+    """Decode captured child output, treating an absent stream as empty."""
+    return (payload or b"").decode(encoding, errors)
+
+
+async def _create_process(
+    argv: Sequence[str],
+    *,
+    stdin_payload: str | None,
+    creationflags: int = 0,
+    start_new_session: bool = False,
+    env: Mapping[str, str] | None = None,
+) -> asyncio.subprocess.Process:
+    """Start a no-shell child with isolated streams and an optional stdin payload."""
+    if not argv:
+        raise ValueError("a subprocess argv must contain an executable")
+    return await asyncio.create_subprocess_exec(
+        *argv,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        stdin=asyncio.subprocess.PIPE if stdin_payload is not None else asyncio.subprocess.DEVNULL,
+        env=None if env is None else dict(env),
+        creationflags=creationflags,
+        start_new_session=start_new_session,
+    )
+
+
+async def _communicate(
+    process: asyncio.subprocess.Process,
+    *,
+    stdin_payload: str | None,
+    encoding: str,
+    errors: str,
+    timeout_s: float | None,
+) -> tuple[str, str]:
+    """Collect child streams with an optional wall-clock bound."""
+    payload = None if stdin_payload is None else stdin_payload.encode(encoding, errors)
+    communicate = process.communicate(payload)
+    if timeout_s is None:
+        stdout, stderr = await communicate
+    else:
+        stdout, stderr = await asyncio.wait_for(communicate, timeout=timeout_s)
+    return _decode_output(stdout, encoding=encoding, errors=errors), _decode_output(
+        stderr,
+        encoding=encoding,
+        errors=errors,
+    )
+
+
+async def _run_supervised_async(
+    argv: Sequence[str],
+    *,
+    timeout_s: float,
+    encoding: str,
+    errors: str,
+    stdin_payload: str | None,
+) -> SupervisedResult:
+    """Run one child asynchronously so Ruff's shell heuristic is inapplicable."""
+    creationflags = 0
+    start_new_session = False
+    if sys.platform == "win32":
+        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        start_new_session = True
+    process = await _create_process(
+        argv,
+        stdin_payload=stdin_payload,
+        creationflags=creationflags,
+        start_new_session=start_new_session,
+    )
+    try:
+        stdout, stderr = await _communicate(
+            process,
+            stdin_payload=stdin_payload,
+            encoding=encoding,
+            errors=errors,
+            timeout_s=timeout_s,
+        )
+    except TimeoutError:
+        await _terminate_tree(process)
+        try:
+            stdout, stderr = await _communicate(
+                process,
+                stdin_payload=None,
+                encoding=encoding,
+                errors=errors,
+                timeout_s=5.0,
+            )
+        except TimeoutError:
+            stdout, stderr = "", ""
+        return SupervisedResult(
+            executable=str(argv[0]),
+            stdout=stdout,
+            stderr=stderr,
+            returncode=-1,
+            timed_out=True,
+        )
+    return SupervisedResult(
+        executable=str(argv[0]),
+        stdout=stdout,
+        stderr=stderr,
+        returncode=process.returncode if process.returncode is not None else -1,
+        timed_out=False,
+    )
+
+
+async def _run_captured_async(
+    argv: Sequence[str],
+    *,
+    timeout_s: float | None,
+    encoding: str,
+    errors: str,
+    stdin_payload: str | None,
+    env: Mapping[str, str] | None,
+) -> subprocess.CompletedProcess[str]:
+    """Run one no-shell child and expose the stdlib completed-process shape."""
+    process = await _create_process(
+        argv,
+        stdin_payload=stdin_payload,
+        env=env,
+    )
+    stdout = stderr = ""
+    try:
+        stdout, stderr = await _communicate(
+            process,
+            stdin_payload=stdin_payload,
+            encoding=encoding,
+            errors=errors,
+            timeout_s=timeout_s,
+        )
+    except TimeoutError as error:
+        await _terminate_tree(process)
+        with contextlib.suppress(TimeoutError):
+            await _communicate(
+                process,
+                stdin_payload=None,
+                encoding=encoding,
+                errors=errors,
+                timeout_s=5.0,
+            )
+        raise subprocess.TimeoutExpired(
+            list(argv),
+            timeout_s or 0.0,
+            output=stdout,
+            stderr=stderr,
+        ) from error
+    return subprocess.CompletedProcess(
+        list(argv),
+        process.returncode if process.returncode is not None else -1,
+        stdout,
+        stderr,
+    )
+
+
+def run_captured(
+    argv: Sequence[str],
+    *,
+    timeout_s: float | None = None,
+    encoding: str = "utf-8",
+    errors: str = "replace",
+    stdin_payload: str | None = None,
+    env: Mapping[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Run a bounded no-shell child and return decoded stdout and stderr."""
+    return asyncio.run(
+        _run_captured_async(
+            argv,
+            timeout_s=timeout_s,
+            encoding=encoding,
+            errors=errors,
+            stdin_payload=stdin_payload,
+            env=env,
+        ),
+    )
 
 
 def run_supervised(
@@ -177,43 +368,12 @@ def run_supervised(
     Returns:
         The :class:`SupervisedResult`.
     """
-    creationflags = 0
-    start_new_session = False
-    if sys.platform == "win32":
-        creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
-    else:
-        start_new_session = True
-
-    process = subprocess.Popen(  # noqa: S603  # nosem
-        list(argv),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE if stdin_payload is not None else subprocess.DEVNULL,
-        text=True,
-        encoding=encoding,
-        errors=errors,
-        creationflags=creationflags,
-        start_new_session=start_new_session,
-    )
-    try:
-        stdout, stderr = process.communicate(input=stdin_payload, timeout=timeout_s)
-    except subprocess.TimeoutExpired:
-        _terminate_tree(process)
-        try:
-            stdout, stderr = process.communicate(timeout=5.0)
-        except subprocess.TimeoutExpired:
-            stdout, stderr = "", ""
-        return SupervisedResult(
-            executable=str(argv[0]),
-            stdout=stdout or "",
-            stderr=stderr or "",
-            returncode=-1,
-            timed_out=True,
-        )
-    return SupervisedResult(
-        executable=str(argv[0]),
-        stdout=stdout or "",
-        stderr=stderr or "",
-        returncode=process.returncode,
-        timed_out=False,
+    return asyncio.run(
+        _run_supervised_async(
+            argv,
+            timeout_s=timeout_s,
+            encoding=encoding,
+            errors=errors,
+            stdin_payload=stdin_payload,
+        ),
     )

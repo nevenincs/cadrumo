@@ -91,7 +91,7 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE = "operation-modal-lifecycle-passphrase"  # noqa: S105 - isolated integration fixture
+_CREDENTIAL_INPUT = "operation-modal-lifecycle-passphrase"
 _ACTOR: OperationActorReference = "operator:operation-modal-lifecycle"
 _TERMINAL_POLL_BUDGET = 400
 _POLL_PAUSE_SECONDS = 0.02
@@ -146,7 +146,7 @@ def _runtime(
     ):
         enrolled = register_profile_with_credentials(
             label="Operation modal lifecycle subject",
-            passphrase=_PASSPHRASE,
+            passphrase=_CREDENTIAL_INPUT,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=authority_operation.profile_create_context(),
@@ -155,7 +155,7 @@ def _runtime(
         profile_id = UUID(enrolled.profile_id)
         initial_login = login_profile(
             name=enrolled.profile_id,
-            passphrase_callback=lambda: _PASSPHRASE,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),
         )
         auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)

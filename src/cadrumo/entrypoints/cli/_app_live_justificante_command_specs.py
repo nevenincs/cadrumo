@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the live justificante service."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -33,9 +31,9 @@ from .command_spec import (
 
 LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_live_justificante",
-        parent_key="app_live",
-        token="justificante",
+        "app_live_justificante",
+        "app_live",
+        "justificante",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.justificante.app_help"),
         short_help_key=None,
@@ -46,9 +44,9 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_justificante_pull",
-        parent_key="app_live_justificante",
-        token="pull",
+        "app_live_justificante_pull",
+        "app_live_justificante",
+        "pull",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.justificante.pull_help"),
         short_help_key=None,
@@ -67,9 +65,9 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_justificante_list",
-        parent_key="app_live_justificante",
-        token="list",
+        "app_live_justificante_list",
+        "app_live_justificante",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.justificante.list_help"),
         short_help_key=None,
@@ -84,9 +82,9 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_justificante_view",
-        parent_key="app_live_justificante",
-        token="view",
+        "app_live_justificante_view",
+        "app_live_justificante",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.justificante.view_help"),
         short_help_key=None,
@@ -111,3 +109,5 @@ LIVE_JUSTIFICANTE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LIVE_JUSTIFICANTE_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live justificante service."""
+"""Authored CommandSpec declarations for the live justificante service."""

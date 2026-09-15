@@ -76,18 +76,17 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
             ports=_calculation_ports_70,
             clock=T1,
         )
-    with pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED") as raised:
-        with bundled_indexed_authority().operation() as operation:
-            file_modelo_revision(
-                revision.calculation_revision_id,
-                actor="operator-A",
-                workflow_profile=workflow_profile(),
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
-                clock=T2,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            )
+    with pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED") as raised, bundled_indexed_authority().operation() as operation:
+        file_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            clock=T2,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     failure = raised.value.precondition_failure
     assert failure is not None
     assert failure.scenario_id == "modelo.work.file.calculation_revision.unverified"

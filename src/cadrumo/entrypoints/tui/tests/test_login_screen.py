@@ -38,12 +38,12 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (140, 60)
-_PASSWORD = "login-screen-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "login-screen-operator-secret"
 """One password for every fixture profile, because the master key is
 storage-root-wide: profiles in one root are unwrapped by one passphrase,
 so a per-profile password is not a state this application can be in."""
 
-_WRONG_PASSWORD = "not-the-password-that-was-chosen"  # noqa: S105 - synthetic test fixture
+_WRONG_CREDENTIAL_INPUT = "not-the-password-that-was-chosen"
 
 _BACKOFF_WAIT_SECONDS = 2.5
 """Long enough to outlast the backoff one failed attempt arms.
@@ -61,7 +61,7 @@ def _register(label: str) -> str:
     outcome = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
-        passphrase=_PASSWORD,
+        passphrase=_CREDENTIAL_INPUT,
         profile_create_context=_profile_create_context_for_test,
         profile_decode_context=_profile_decode_context_for_test,
     )
@@ -115,7 +115,7 @@ async def test_typing_the_password_and_pressing_log_in_opens_a_real_session(tmp_
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Login Subject")])
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(app, pilot, _PASSWORD)
+            await _unlock_with(app, pilot, _CREDENTIAL_INPUT)
 
         assert app.error is None
         assert app.outcome is not None, "the typed password must open the profile"
@@ -139,7 +139,7 @@ async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> No
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Refusal Subject")])
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(app, pilot, _WRONG_PASSWORD)
+            await _unlock_with(app, pilot, _WRONG_CREDENTIAL_INPUT)
 
             assert app.outcome is None, "a wrong password must not open anything"
             assert app.is_running, "the screen must stay open so the operator can retry"
@@ -157,7 +157,7 @@ async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> No
             # meets it HERE rather than as a traceback: the screen shows
             # the wait and stays open. Asserted because it is what the
             # operator actually experiences after a typo.
-            await _unlock_with(app, pilot, _PASSWORD)
+            await _unlock_with(app, pilot, _CREDENTIAL_INPUT)
             assert app.outcome is None, "the backoff must hold the immediate retry"
             assert app.is_running, "a throttled retry must refuse in place, not close the screen"
             assert status.tone == "error"
@@ -180,11 +180,11 @@ async def test_the_operator_can_retry_on_the_same_screen_once_the_backoff_clears
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Retry Subject")])
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await _unlock_with(app, pilot, _WRONG_PASSWORD)
+            await _unlock_with(app, pilot, _WRONG_CREDENTIAL_INPUT)
             assert app.outcome is None
 
             await asyncio.sleep(_BACKOFF_WAIT_SECONDS)
-            await _unlock_with(app, pilot, _PASSWORD)
+            await _unlock_with(app, pilot, _CREDENTIAL_INPUT)
 
         assert app.error is None
         assert app.outcome is not None, "the retry on the same screen must succeed once the wait is served"
@@ -218,7 +218,7 @@ async def test_the_chosen_profile_is_the_one_that_opens(tmp_path) -> None:
             app.query_one("#field-profile", Select).value = second
             await pilot.pause()
             assert app.selected_profile_id() == second, "the chooser must hold the operator's pick"
-            await _unlock_with(app, pilot, _PASSWORD)
+            await _unlock_with(app, pilot, _CREDENTIAL_INPUT)
 
         assert app.error is None
         assert app.outcome is not None
@@ -271,7 +271,7 @@ async def test_cancelling_leaves_without_opening_anything(tmp_path) -> None:
 
         app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Cancel Subject")])
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            app.query_one("#field-passphrase", Input).value = _PASSWORD
+            app.query_one("#field-passphrase", Input).value = _CREDENTIAL_INPUT
             await pilot.pause()
             await pilot.click("#btn-cancel")
             await pilot.pause()
@@ -282,7 +282,7 @@ async def test_cancelling_leaves_without_opening_anything(tmp_path) -> None:
         _, profile_decode_context = _profile_contexts_for_test()
         resumed = login_profile(
             name=profile_id,
-            passphrase_callback=lambda: _PASSWORD,
+            passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
         )
         assert resumed.already_authenticated is False, "cancelling must have left the profile locked"

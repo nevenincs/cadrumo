@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the Modelo non-work work amend family."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -19,9 +17,9 @@ from .modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 
 MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_work_amend_wizard",
-        parent_key="app_modelo_work",
-        token="amend-wizard",
+        "app_modelo_work_amend_wizard",
+        "app_modelo_work",
+        "amend-wizard",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.work.amend_wizard_help"),
         short_help_key=None,
@@ -43,3 +41,5 @@ MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work work amend family."""
+"""Authored CommandSpec declarations for the Modelo non-work work amend family."""

@@ -15,6 +15,7 @@ composition site.
 
 from __future__ import annotations
 
+from importlib.util import find_spec
 from typing import Any, cast
 
 import anyio
@@ -29,9 +30,7 @@ from .session import connected_server_and_client_session as connect
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 try:  # the SDK-gated build path, exercised without a skip either way
-    import mcp.server  # noqa: F401
-
-    _SDK_PRESENT = True
+    _SDK_PRESENT = find_spec("mcp.server") is not None
 except ModuleNotFoundError:
     _SDK_PRESENT = False
 

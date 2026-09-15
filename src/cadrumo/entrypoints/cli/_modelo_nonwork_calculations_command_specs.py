@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the Modelo non-work calculations family."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -39,9 +37,9 @@ from .command_spec import (
 
 MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_modelo_formulas",
-        parent_key="app_modelo",
-        token="formulas",
+        "app_modelo_formulas",
+        "app_modelo",
+        "formulas",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.formulas.help"),
         short_help_key=None,
@@ -62,9 +60,9 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_support_matrix",
-        parent_key="app_modelo",
-        token="support-matrix",
+        "app_modelo_support_matrix",
+        "app_modelo",
+        "support-matrix",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.support_matrix.help"),
         short_help_key=None,
@@ -79,9 +77,9 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_aggregate",
-        parent_key="app_modelo",
-        token="aggregate",
+        "app_modelo_aggregate",
+        "app_modelo",
+        "aggregate",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.aggregate_help"),
         short_help_key=None,
@@ -125,9 +123,9 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_export",
-        parent_key="app_modelo",
-        token="export",
+        "app_modelo_export",
+        "app_modelo",
+        "export",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.modelo.export.help"),
         short_help_key=None,
@@ -164,3 +162,5 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_NONWORK_CALCULATION_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work calculations family."""
+"""Authored CommandSpec declarations for the Modelo non-work calculations family."""

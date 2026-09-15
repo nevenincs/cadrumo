@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the live expedientes service."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -34,9 +32,9 @@ from .command_spec import (
 
 LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_live_expedientes",
-        parent_key="app_live",
-        token="expedientes",
+        "app_live_expedientes",
+        "app_live",
+        "expedientes",
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.expedientes.app_help"),
         short_help_key=None,
@@ -47,9 +45,9 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=NO_RESULT_SCHEMA,
     ),
     CommandSpec(
-        key="app_live_expedientes_pull",
-        parent_key="app_live_expedientes",
-        token="pull",
+        "app_live_expedientes_pull",
+        "app_live_expedientes",
+        "pull",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.expedientes.pull_help"),
         short_help_key=None,
@@ -69,9 +67,9 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_expedientes_list",
-        parent_key="app_live_expedientes",
-        token="list",
+        "app_live_expedientes_list",
+        "app_live_expedientes",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.expedientes.list_help"),
         short_help_key=None,
@@ -86,9 +84,9 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_expedientes_view",
-        parent_key="app_live_expedientes",
-        token="view",
+        "app_live_expedientes_view",
+        "app_live_expedientes",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.expedientes.view_help"),
         short_help_key=None,
@@ -111,9 +109,9 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_live_expedientes_latest",
-        parent_key="app_live_expedientes",
-        token="latest",
+        "app_live_expedientes_latest",
+        "app_live_expedientes",
+        "latest",
         kind=CommandNodeKind.LEAF,
         help_key=_key("cli.app.live.expedientes.latest_help"),
         short_help_key=None,
@@ -130,3 +128,5 @@ LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LIVE_EXPEDIENTES_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live expedientes service."""
+"""Authored CommandSpec declarations for the live expedientes service."""

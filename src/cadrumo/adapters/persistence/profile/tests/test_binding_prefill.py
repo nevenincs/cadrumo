@@ -203,144 +203,143 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
     resolve through :func:`resolve_relations_from_local_store` and that the
     annual reconciliation casillas equal the ledger-derived annual totals.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-            quarterly_observations = {
-                "1T": (
-                    _observation(ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
-                    _observation(
-                        ledger_id="q1-input",
-                        txn_date=date(2025, 3, 1),
-                        flow=IvaFlowDirection._from_registry("soportado"),
-                        iva=Decimal("42.00"),
-                    ),
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        quarterly_observations = {
+            "1T": (
+                _observation(ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
+                _observation(
+                    ledger_id="q1-input",
+                    txn_date=date(2025, 3, 1),
+                    flow=IvaFlowDirection._from_registry("soportado"),
+                    iva=Decimal("42.00"),
                 ),
-                "2T": (
-                    _observation(ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("10.00")),
-                    _observation(
-                        ledger_id="q2-input",
-                        txn_date=date(2025, 6, 20),
-                        flow=IvaFlowDirection._from_registry("soportado"),
-                        iva=Decimal("30.00"),
-                    ),
+            ),
+            "2T": (
+                _observation(ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("10.00")),
+                _observation(
+                    ledger_id="q2-input",
+                    txn_date=date(2025, 6, 20),
+                    flow=IvaFlowDirection._from_registry("soportado"),
+                    iva=Decimal("30.00"),
                 ),
-                "3T": (_observation(ledger_id="q3-output", txn_date=date(2025, 8, 12), iva=Decimal("50.00")),),
-                "4T": (
-                    _observation(ledger_id="q4-output", txn_date=date(2025, 11, 4), iva=Decimal("15.00")),
-                    _observation(
-                        ledger_id="q4-input",
-                        txn_date=date(2025, 12, 12),
-                        flow=IvaFlowDirection._from_registry("soportado"),
-                        iva=Decimal("45.00"),
-                    ),
+            ),
+            "3T": (_observation(ledger_id="q3-output", txn_date=date(2025, 8, 12), iva=Decimal("50.00")),),
+            "4T": (
+                _observation(ledger_id="q4-output", txn_date=date(2025, 11, 4), iva=Decimal("15.00")),
+                _observation(
+                    ledger_id="q4-input",
+                    txn_date=date(2025, 12, 12),
+                    flow=IvaFlowDirection._from_registry("soportado"),
+                    iva=Decimal("45.00"),
                 ),
-            }
-            quarterly_results = {
-                period: _calculate_303_from_observations(
-                    filing_year=2025,
-                    period=period,
-                    observations=observations,
+            ),
+        }
+        quarterly_results = {
+            period: _calculate_303_from_observations(
+                filing_year=2025,
+                period=period,
+                observations=observations,
+            )
+            for period, observations in quarterly_observations.items()
+        }
+        repository = CalculationObservationRepository()
+        for period, result in quarterly_results.items():
+            repository.save(
+                repository.prepare_observation_envelope(
+                    _registry_observation(filing_year=2025, period=period, result=result),
+                    source_kind="app_filing",
+                    stamped_revision_id=_snapshot("303", 2025, period).revision.id,
+                    result_disposition=ResultDispositionProjection(
+                        disposition=_filing_result_disposition(result),
+                        provenance_kind="app_filing",
+                        provenance_locator=f"test-local-filing:2025:{period}",
+                    ),
                 )
-                for period, observations in quarterly_observations.items()
-            }
-            repository = CalculationObservationRepository()
-            for period, result in quarterly_results.items():
-                repository.save(
-                    repository.prepare_observation_envelope(
-                        _registry_observation(filing_year=2025, period=period, result=result),
-                        source_kind="app_filing",
-                        stamped_revision_id=_snapshot("303", 2025, period).revision.id,
-                        result_disposition=ResultDispositionProjection(
-                            disposition=_filing_result_disposition(result),
-                            provenance_kind="app_filing",
-                            provenance_locator=f"test-local-filing:2025:{period}",
-                        ),
-                    )
-                )
-
-            snapshot = _snapshot("390", 2025, "0A")
-
-            # The ordinary M390←M303 annual totals are relation_prefill; the
-            # compensation carry partition is owned by iva_compensation_annual_partition.
-            relation_vals = resolve_relations_from_local_store(
-                snapshot, repository=repository, operation=_authority_operation_for_test
-            )
-            resolved_relation_ids = {rv.relation for rv in relation_vals.values if rv.value is not None}
-            assert resolved_relation_ids == {
-                "modelo-390-prev-303-cuota-devengada-total",
-                "modelo-390-prev-303-cuota-deducible-total",
-                "modelo-390-prev-303-resultado-regimen-general",
-            }
-            # Provenance: resolved entries carry local_filing provenance.
-            assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
-            relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
-            relation_binding_values = relation_prefill_values_as_binding_values(
-                snapshot.revision,
-                relation_values_map,
-                period="0A",
-            )
-            annual_partition = IvaCompensationAnnualPartitionSourceResolver(
-                repository=repository,
-                registry_snapshot=snapshot,
-                operation=_authority_operation_for_test,
-            ).resolve(
-                CalculationSourceContext(
-                    bucket_id="m390-binding-prefill",
-                    modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
-                    revision=snapshot.revision,
-                ),
-            )
-            assert not annual_partition.unresolved_binding_ids
-            # M390 casilla 63 (regularización de bienes de inversión, LIVA arts.
-            # 107-110) is a declared binding on the annual revision; with no
-            # capital-goods register the live resolver returns its empty-register
-            # zero. Enrolling it here mirrors the calculate-path mesh so the
-            # annual snapshot has every declared binding fact.
-            bienes_resolution = BienesInversionRegularizacionSourceResolver(
-                operation=_authority_operation_for_test,
-                register_repository=BienesInversionIvaRegisterRepository(objects=profile.repository),
-                observation_repository=CalculationObservationRepository(objects=profile.repository),
-            ).resolve(
-                CalculationSourceContext(
-                    bucket_id=profile.bucket_id,
-                    modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
-                    revision=snapshot.revision,
-                ),
-            )
-            assert not bienes_resolution.unresolved_binding_ids
-            annual_ledger_values = resolve_ledger_iva_aggregation_binding_values(
-                snapshot.revision,
-                tuple(row for rows in quarterly_observations.values() for row in rows),
-            )
-            binding_values = {
-                **annual_ledger_values,
-                **relation_binding_values,
-                **annual_partition.binding_values,
-                **bienes_resolution.binding_values,
-            }
-            result = calculate_registry_snapshot(
-                snapshot,
-                inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-                binding_values=binding_values,
-                date_context={"filing_period": date(2025, 12, 31)},
             )
 
-            assert (
-                result.values[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA]
-                == result.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA]
-            )
-            assert (
-                result.values[_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
-                == result.values[_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA]
-            )
-            assert (
-                result.values[_M390_RESULTADO_REGIMEN_GENERAL_CASILLA]
-                == result.values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]
-            )
+        snapshot = _snapshot("390", 2025, "0A")
+
+        # The ordinary M390←M303 annual totals are relation_prefill; the
+        # compensation carry partition is owned by iva_compensation_annual_partition.
+        relation_vals = resolve_relations_from_local_store(
+            snapshot, repository=repository, operation=_authority_operation_for_test
+        )
+        resolved_relation_ids = {rv.relation for rv in relation_vals.values if rv.value is not None}
+        assert resolved_relation_ids == {
+            "modelo-390-prev-303-cuota-devengada-total",
+            "modelo-390-prev-303-cuota-deducible-total",
+            "modelo-390-prev-303-resultado-regimen-general",
+        }
+        # Provenance: resolved entries carry local_filing provenance.
+        assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
+        relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
+        relation_binding_values = relation_prefill_values_as_binding_values(
+            snapshot.revision,
+            relation_values_map,
+            period="0A",
+        )
+        annual_partition = IvaCompensationAnnualPartitionSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+            operation=_authority_operation_for_test,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="m390-binding-prefill",
+                modelo="390",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
+                revision=snapshot.revision,
+            ),
+        )
+        assert not annual_partition.unresolved_binding_ids
+        # M390 casilla 63 (regularización de bienes de inversión, LIVA arts.
+        # 107-110) is a declared binding on the annual revision; with no
+        # capital-goods register the live resolver returns its empty-register
+        # zero. Enrolling it here mirrors the calculate-path mesh so the
+        # annual snapshot has every declared binding fact.
+        bienes_resolution = BienesInversionRegularizacionSourceResolver(
+            operation=_authority_operation_for_test,
+            register_repository=BienesInversionIvaRegisterRepository(objects=profile.repository),
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=profile.bucket_id,
+                modelo="390",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
+                revision=snapshot.revision,
+            ),
+        )
+        assert not bienes_resolution.unresolved_binding_ids
+        annual_ledger_values = resolve_ledger_iva_aggregation_binding_values(
+            snapshot.revision,
+            tuple(row for rows in quarterly_observations.values() for row in rows),
+        )
+        binding_values = {
+            **annual_ledger_values,
+            **relation_binding_values,
+            **annual_partition.binding_values,
+            **bienes_resolution.binding_values,
+        }
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+            binding_values=binding_values,
+            date_context={"filing_period": date(2025, 12, 31)},
+        )
+
+        assert (
+            result.values[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA]
+            == result.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA]
+        )
+        assert (
+            result.values[_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+            == result.values[_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA]
+        )
+        assert (
+            result.values[_M390_RESULTADO_REGIMEN_GENERAL_CASILLA]
+            == result.values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]
+        )
 
 
 def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(

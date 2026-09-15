@@ -42,16 +42,6 @@ _KEY = "absent-revision-subject"
 _PAYLOAD = b"absent-revision-payload"
 _LINEAGE_REASON = "revision lineage self-consistency check failed"
 
-#: Every column ``write_revision_metadata`` stamps that the lineage gate reads.
-_REVISION_COLUMNS = (
-    "revision_id",
-    "previous_revision_id",
-    "payload_hash",
-    "ciphertext_hash",
-    "previous_payload_hash",
-)
-
-
 def _seed(db_path: Path) -> None:
     """Write one genuine row through the public repository."""
     with _repo_at(db_path) as repo:
@@ -72,10 +62,11 @@ def _erase_revision_metadata(db_path: Path) -> None:
     DECRYPTS: the refusal under test is attributable to the absent lineage
     metadata alone and to nothing else about the row.
     """
-    assignments = ", ".join(f"{column} = NULL" for column in _REVISION_COLUMNS)
     with sqlite3.connect(db_path) as con:
         con.execute(
-            f"UPDATE secure_objects SET {assignments} WHERE namespace = ?",  # noqa: S608 - column names are module constants
+            "UPDATE secure_objects SET revision_id = NULL, previous_revision_id = NULL, "
+            "payload_hash = NULL, ciphertext_hash = NULL, previous_payload_hash = NULL "
+            "WHERE namespace = ?",
             (_NAMESPACE,),
         )
 

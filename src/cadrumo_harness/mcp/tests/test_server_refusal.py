@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 
 import pytest
 
+from .._call_runtime import run_captured
 from ..server import emit_missing_sdk_refusal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -33,13 +33,11 @@ def test_installed_service_refuses_a_plugin_requiring_another_cohort_version() -
     """The real console script fails closed before opening the MCP transport."""
     executable = shutil.which("cadrumo-mcp")
     assert executable is not None
-    completed = subprocess.run(  # noqa: S603 - installed project console script
+    completed = run_captured(
         [executable],
         env={**os.environ, "CADRUMO_MCP_REQUIRED_VERSION": "999.0.0"},
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=30,
+        encoding="utf-8",
+        timeout_s=30,
     )
     assert completed.returncode == 4
     assert completed.stdout == ""

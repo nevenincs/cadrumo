@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger evidence followup surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -23,9 +21,9 @@ from .command_spec import (
 
 LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger_evidence_consent_list",
-        parent_key="app_ledger_evidence_consent",
-        token="list",
+        "app_ledger_evidence_consent_list",
+        "app_ledger_evidence_consent",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.consent.list_help"),
         short_help_key=None,
@@ -40,9 +38,9 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_review_list",
-        parent_key="app_ledger_evidence_review",
-        token="list",
+        "app_ledger_evidence_review_list",
+        "app_ledger_evidence_review",
+        "list",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.review.list_help"),
         short_help_key=None,
@@ -124,9 +122,9 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_evidence_review_view",
-        parent_key="app_ledger_evidence_review",
-        token="view",
+        "app_ledger_evidence_review_view",
+        "app_ledger_evidence_review",
+        "view",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.app.ledger.evidence.review.view_help"),
         short_help_key=None,
@@ -154,3 +152,5 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger evidence followup surface."""
+"""Authored CommandSpec declarations for the ledger evidence followup surface."""

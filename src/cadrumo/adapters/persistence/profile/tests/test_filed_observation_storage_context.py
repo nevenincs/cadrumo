@@ -173,7 +173,7 @@ def test_foreign_history_repository_is_refused_before_either_row_lands(
         with isolated_runtime_profile(tmp_path=tmp_path / "b", bucket_id=_BUCKET_B) as profile_b:
             foreign_history = IvaCompensationHistoryRepository(objects=profile_b.repository)
             assert (
-                foreign_history.secure_object_repository.engine.url != observations.secure_object_repository.engine.url
+                profile_b.repository.engine.url != profile_a.repository.engine.url
             )
 
             with pytest.raises(ModeloLocalObservationError) as exc_info:

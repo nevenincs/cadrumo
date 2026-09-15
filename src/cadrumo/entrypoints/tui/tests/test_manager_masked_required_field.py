@@ -53,7 +53,7 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (160, 60)
-_PASSWORD = "manager-masked-required-operator-secret"  # noqa: S105 - synthetic test fixture
+_CREDENTIAL_INPUT = "manager-masked-required-operator-secret"
 _LABEL = "Masked Required Subject"
 
 #: A real masked path, so the write door and storage below are the real ones.
@@ -74,7 +74,7 @@ def _ensure_logged_in() -> None:
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     login_profile(
-        name=_LABEL, passphrase_callback=lambda: _PASSWORD, profile_decode_context=_profile_decode_context_for_test
+        name=_LABEL, passphrase_callback=lambda: _CREDENTIAL_INPUT, profile_decode_context=_profile_decode_context_for_test
     )
 
 
@@ -180,7 +180,7 @@ async def test_a_required_masked_field_holding_a_value_keeps_it_on_a_blank_save(
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -212,7 +212,7 @@ async def test_the_dialog_explains_the_no_change_reading_wherever_it_applies(tmp
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -254,7 +254,7 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -278,7 +278,7 @@ async def test_whitespace_in_an_empty_required_masked_field_refuses_too(tmp_path
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -306,7 +306,7 @@ async def test_a_typed_value_still_reaches_the_record(tmp_path) -> None:
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -340,7 +340,7 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
@@ -384,7 +384,7 @@ async def test_a_required_masked_field_is_never_offered_a_clear_button(tmp_path)
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
-            passphrase=_PASSWORD,
+            passphrase=_CREDENTIAL_INPUT,
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )

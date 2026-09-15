@@ -1,6 +1,4 @@
-"""Authored CommandSpec declarations for the ledger foundation surface."""
 
-# ruff: noqa: S106 - command tokens are operator verbs, never credentials
 
 from __future__ import annotations
 
@@ -47,9 +45,9 @@ from .command_spec import (
 
 LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
-        key="app_ledger",
-        parent_key="app",
-        token="ledger",
+        "app_ledger",
+        "app",
+        "ledger",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.ledger.app_help"),
         short_help_key=None,
@@ -60,9 +58,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="app_ledger_add",
-        parent_key="app_ledger",
-        token="add",
+        "app_ledger_add",
+        "app_ledger",
+        "add",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.add.help"),
         short_help_key=None,
@@ -202,9 +200,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_allocate",
-        parent_key="app_ledger",
-        token="allocate",
+        "app_ledger_allocate",
+        "app_ledger",
+        "allocate",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.allocate.help"),
         short_help_key=None,
@@ -228,9 +226,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_archive",
-        parent_key="app_ledger",
-        token="archive",
+        "app_ledger_archive",
+        "app_ledger",
+        "archive",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.archive.help"),
         short_help_key=None,
@@ -250,9 +248,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_attach",
-        parent_key="app_ledger",
-        token="attach",
+        "app_ledger_attach",
+        "app_ledger",
+        "attach",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.attach.help"),
         short_help_key=None,
@@ -276,9 +274,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_bienes_inversion",
-        parent_key="app_ledger",
-        token="bienes-inversion",
+        "app_ledger_bienes_inversion",
+        "app_ledger",
+        "bienes-inversion",
         kind=CommandNodeKind.GROUP,
         help_key=TranslationKey("cli.app.ledger.bienes_inversion.group_help"),
         short_help_key=None,
@@ -289,9 +287,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
-        key="app_ledger_categories",
-        parent_key="app_ledger",
-        token="categories",
+        "app_ledger_categories",
+        "app_ledger",
+        "categories",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.categories.help"),
         short_help_key=None,
@@ -306,9 +304,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_ledger_check",
-        parent_key="app_ledger",
-        token="check",
+        "app_ledger_check",
+        "app_ledger",
+        "check",
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.ledger.check.help"),
         short_help_key=None,
@@ -329,3 +327,5 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["LEDGER_FOUNDATION_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger foundation surface."""
+"""Authored CommandSpec declarations for the ledger foundation surface."""

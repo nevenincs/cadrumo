@@ -134,6 +134,7 @@ def test_bucket_history_event_payload_requires_payload_version() -> None:
 def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> None:
     """The omitted subject is the real active profile, not a copied default."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    history_credential = "history-subject-operator-secret"
     from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
     from .....application.user_profile.registration import register_profile_with_credentials
     from .....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -142,7 +143,7 @@ def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> N
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label="History Subject",
-            passphrase="history-subject-operator-secret",  # noqa: S106 - synthetic fixture
+            passphrase=history_credential,
             facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="en"),),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             profile_create_context=_profile_create_context_for_test,

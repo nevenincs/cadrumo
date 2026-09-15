@@ -7,6 +7,7 @@ from functools import cache
 
 from pydantic import SecretStr
 
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
 from ......application.auth.providers import AuthProvider, select_provider
@@ -74,4 +75,9 @@ def clave_movil_provider(*, identity: str | None) -> AuthProvider:
         cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
         cadrumo_clave_movil_dni_nie=SecretStr(identity or ""),
     )
-    return select_provider(AuthProviderKind.CLAVE_MOVIL, settings=settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    return select_provider(
+        AuthProviderKind.CLAVE_MOVIL,
+        settings=settings,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+    )
