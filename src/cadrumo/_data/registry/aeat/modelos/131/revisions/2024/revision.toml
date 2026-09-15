@@ -47,6 +47,8 @@ source_refs = [
     "aeat-modelo-131-instructions",
     "boe-modelo-131-2007-form",
 ]
+family_storage_baseline = "2019-2023"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 [revisions."2024".family_dispositions.projection_endpoints]
@@ -87,3 +89,413 @@ source_refs = [
 # Original bindings modelo-131-volumen-ingresos-agrario commentary: #    rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario. Las
 # Original bindings modelo-131-volumen-ingresos-agrario commentary: #    subvenciones CORRIENTES si computan, y las instrucciones AEAT del modelo lo
 # Original bindings modelo-131-volumen-ingresos-agrario commentary: #    dicen expresamente.
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "01" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "02" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "03" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "04" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "05" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "06" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "07" }
+fields = { constraints = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }, source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "08" }
+fields = { constraints = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }, source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "09" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "10" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "11" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "12" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "13" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "14" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "15" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2019-2023", id = "saldo-negativo-fin-periodo" }
+fields = { source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"] }
+removed_fields = []
+
+[[revisions."2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2023", id = "modelo-131-saldo-negativo-fin-periodo"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2024".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2019-2023", id = "modelo-131-submitted-file"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "constructs"
+selector = {revision = "2019-2023", id = "modelo-131-objective-estimation-instalment"}
+removed_fields = ["deadline_windows"]
+sequence_additions = {casilla_ids = ["modulos-epigrafe", "modulos-1-unidades", "modulos-1-unidades-anterior", "modulos-2-unidades", "modulos-3-unidades", "modulos-4-unidades", "modulos-5-unidades", "modulos-6-unidades", "modulos-7-unidades", "modulos-minoracion-inversion", "modulos-indice-pequena-dimension", "modulos-indice-temporada", "modulos-indice-inicio-actividad", "modulos-pequena-dimension-ignorado-flag", "modulos-temporada-inicio-actividad-conflicto-flag", "modulos-rendimiento-neto-previo", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos", "modulos-rendimiento-neto-actividad"], formulas = ["modelo-131-modulos-rendimiento-neto-previo", "modelo-131-modulos-rendimiento-neto-minorado", "modelo-131-modulos-rendimiento-neto-modulos", "modelo-131-modulos-rendimiento-neto-actividad", "modelo-131-modulos-pequena-dimension-ignorado-flag", "modelo-131-modulos-temporada-inicio-actividad-conflicto-flag"], legal_refs = ["orden-hfp-1359-2023:art-4", "orden-hfp-1359-2023:da-1", "orden-hfp-1359-2023:instruccion-2-2-a", "orden-hfp-1359-2023:instruccion-2-2-b", "orden-hfp-1359-2023:instruccion-2-3-b-3", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades", "ley-35-2006:art-31"], parameters = ["m131-modulos-coeficientes", "m131-modulos-reduccion-general"], source_refs = ["aeat-dr-131-2024", "aeat-renta-2024-manual-parte1"]}
+sequence_removals = {legal_refs = [0, 2, 4, 5, 6, 7, 8], source_refs = [0, 3, 4, 5]}
+sequence_order = {legal_refs = [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 2], source_refs = [3, 0, 1, 4, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-131-approval"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-131-export"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-131-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-131-filing"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-131-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-131-review"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-131-workflow"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2019-2023", id = "irpf.objective_agriculture_fractional_payment_rate"}
+sequence_additions = {values = [{value = "2", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2024-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2019-2023", id = "irpf.objective_no_base_fractional_payment_rate"}
+sequence_additions = {values = [{value = "2", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2024-12-31}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2019-2023", id = "cap-le-when-positive:c11-cap-by-c10"}
+fields = {predicate_id = "modelo-131-2024-c11-cap-by-c10"}
+
+[[revisions."2024".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2019-2023", id = "implies-nonzero:pago-fraccionado-determinado-cuando-rendimientos-positivos"}
+fields = {predicate_id = "modelo-131-2024-pago-fraccionado-determinado-cuando-rendimientos-positivos"}
+
+[[revisions."2024".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2019-2023", id = "implies-nonzero:rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"}
+fields = {predicate_id = "modelo-131-2024-rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-1-epigrafe"}
+fields = {provider = {offset = 110}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-1-porcentaje"}
+fields = {provider = {offset = 131}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-1-rendimiento-neto"}
+fields = {provider = {offset = 114}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-1-resultado"}
+fields = {provider = {offset = 136}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-2-epigrafe"}
+fields = {provider = {offset = 153}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-2-porcentaje"}
+fields = {provider = {offset = 174}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-2-rendimiento-neto"}
+fields = {provider = {offset = 157}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-2-resultado"}
+fields = {provider = {offset = 179}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-3-epigrafe"}
+fields = {provider = {offset = 196}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-3-porcentaje"}
+fields = {provider = {offset = 217}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-3-rendimiento-neto"}
+fields = {provider = {offset = 200}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-3-resultado"}
+fields = {provider = {offset = 222}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-4-epigrafe"}
+fields = {provider = {offset = 239}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-4-porcentaje"}
+fields = {provider = {offset = 260}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-4-rendimiento-neto"}
+fields = {provider = {offset = 243}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-4-resultado"}
+fields = {provider = {offset = 265}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-5-epigrafe"}
+fields = {provider = {offset = 282}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-5-porcentaje"}
+fields = {provider = {offset = 303}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-5-rendimiento-neto"}
+fields = {provider = {offset = 286}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.actividad-5-resultado"}
+fields = {provider = {offset = 308}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2019-2023", id = "modelo-131.page1.justificante-anterior"}
+fields = {provider = {offset = 693}}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "export_layouts"
+selector = {revision = "2019-2023", id = "modelo-131-fichero-boe"}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], records = [{id = "modelo-131-2024-envelope-header", record_type = "envelope_header", order = 0, encoding = "iso-8859-1", line_ending = "none", fields = [{id = "modelo-131-2024-envelope-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-modelo", offset = 3, length = 3, kind = "literal", literal = "131", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-discriminante", offset = 6, length = 1, kind = "literal", literal = "0", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-ejercicio", offset = 7, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-periodo", offset = 11, length = 2, kind = "draft", draft_attribute = "period_code", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-marker", offset = 13, length = 5, kind = "literal", literal = "0000>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-aux-open", offset = 18, length = 5, kind = "literal", literal = "<AUX>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-reserved-1", offset = 23, length = 70, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-reserved-2", offset = 97, length = 4, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-reserved-3", offset = 110, length = 213, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-envelope-aux-close", offset = 323, length = 6, kind = "literal", literal = "</AUX>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}]}, {id = "modelo-131-2024-page-01", record_type = "page_1", order = 1, encoding = "iso-8859-1", line_ending = "none", binding_record = "page_1", fields = [{id = "modelo-131-2024-page-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-page-modelo", offset = 3, length = 3, kind = "literal", literal = "131", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-page-number", offset = 6, length = 5, kind = "literal", literal = "01000", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-page-end", offset = 11, length = 1, kind = "literal", literal = ">", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-complementaria-indicator", offset = 12, length = 1, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-declaration-type", offset = 13, length = 1, kind = "header", producer_key = "filing.result_disposition", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-tax-id", offset = 14, length = 9, kind = "header", producer_key = "taxpayer.tax_id", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-declarante-apellidos", offset = 23, length = 60, kind = "header", producer_key = "taxpayer.surnames", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-declarante-nombre", offset = 83, length = 20, kind = "header", producer_key = "taxpayer.given_name", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-devengo-ejercicio", offset = 103, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-devengo-periodo", offset = 107, length = 2, kind = "draft", draft_attribute = "period_code", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-01", offset = 325, length = 17, kind = "casilla", casilla_id = "01", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-02", offset = 342, length = 17, kind = "casilla", casilla_id = "02", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-03", offset = 390, length = 17, kind = "casilla", casilla_id = "03", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-04", offset = 407, length = 17, kind = "casilla", casilla_id = "04", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-05", offset = 488, length = 17, kind = "casilla", casilla_id = "05", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-06", offset = 505, length = 17, kind = "casilla", casilla_id = "06", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-07", offset = 522, length = 17, kind = "casilla", casilla_id = "07", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-08", offset = 539, length = 17, kind = "casilla", casilla_id = "08", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-09", offset = 562, length = 17, kind = "casilla", casilla_id = "09", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-10", offset = 579, length = 17, kind = "casilla", casilla_id = "10", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-11", offset = 596, length = 17, kind = "casilla", casilla_id = "11", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-12", offset = 624, length = 17, kind = "casilla", casilla_id = "12", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-13", offset = 641, length = 17, kind = "casilla", casilla_id = "13", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-14", offset = 658, length = 17, kind = "casilla", casilla_id = "14", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-casilla-15", offset = 675, length = 17, kind = "casilla", casilla_id = "15", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = true, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-page-close", offset = 820, length = 12, kind = "literal", literal = "</T13101000>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}]}, {id = "modelo-131-2024-dpa", record_type = "DPA", order = 2, encoding = "iso-8859-1", line_ending = "none", repeat = "binding_rows", binding_record = "DPA", fields = [{id = "modelo-131-2024-dpa-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-dpa-modelo", offset = 3, length = 3, kind = "literal", literal = "131", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-dpa-page", offset = 6, length = 5, kind = "literal", literal = "DPA00", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-dpa-end", offset = 11, length = 1, kind = "literal", literal = ">", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-dpa-complementaria-indicator", offset = 12, length = 1, kind = "computed", computed_key = "complementaria_page_marker", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-dpa-close", offset = 587, length = 12, kind = "literal", literal = "</T131DPA00>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}]}, {id = "modelo-131-2024-did", record_type = "DID", order = 3, encoding = "iso-8859-1", line_ending = "none", required = false, binding_record = "DID", requires_positive_casilla_id = "15", fields = [{id = "modelo-131-2024-did-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-did-modelo", offset = 3, length = 3, kind = "literal", literal = "131", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-did-page", offset = 6, length = 5, kind = "literal", literal = "DID00", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-did-end", offset = 11, length = 1, kind = "literal", literal = ">", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}, {id = "modelo-131-2024-did-close", offset = 246, length = 12, kind = "literal", literal = "</T131DID00>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-dr-131-2024"]}]}], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {records = [0, 1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2019-2023", id = "modelo-131-dr-xlsx"}
+fields = {fixture_id = "modelo-131-2024-record-design-layout", workbook_source = "aeat-dr-131-2024"}
+sequence_additions = {legal_refs = ["orden-hfp-1359-2023:art-4"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {legal_refs = [2, 3, 4, 5, 6], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 3, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2019-2023", id = "modelo-131-calculation-verification"}
+sequence_additions = {source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2024".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2019-2023", id = "modelo-131-reconcile-when-present"}
+sequence_additions = {reconcile_when_present_casilla_ids = ["modulos-pequena-dimension-ignorado-flag", "modulos-rendimiento-neto-actividad", "modulos-rendimiento-neto-minorado", "modulos-rendimiento-neto-modulos", "modulos-rendimiento-neto-previo", "modulos-temporada-inicio-actividad-conflicto-flag"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {reconcile_when_present_casilla_ids = [1, 2, 3, 4, 5, 6, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2019-2023", id = "aeat-dr-131-2019-2023-v101"}
+replacement_id = "aeat-dr-131-2024"
+sequence_additions = {casillas = [{casilla_id = "modulos-epigrafe", number = "modulos-epigrafe"}, {casilla_id = "modulos-1-unidades", number = "modulos-1-unidades"}, {casilla_id = "modulos-1-unidades-anterior", number = "modulos-1-unidades-anterior"}, {casilla_id = "modulos-2-unidades", number = "modulos-2-unidades"}, {casilla_id = "modulos-3-unidades", number = "modulos-3-unidades"}, {casilla_id = "modulos-4-unidades", number = "modulos-4-unidades"}, {casilla_id = "modulos-5-unidades", number = "modulos-5-unidades"}, {casilla_id = "modulos-6-unidades", number = "modulos-6-unidades"}, {casilla_id = "modulos-7-unidades", number = "modulos-7-unidades"}, {casilla_id = "modulos-minoracion-inversion", number = "modulos-minoracion-inversion"}, {casilla_id = "modulos-indice-pequena-dimension", number = "modulos-indice-pequena-dimension"}, {casilla_id = "modulos-indice-temporada", number = "modulos-indice-temporada"}, {casilla_id = "modulos-indice-inicio-actividad", number = "modulos-indice-inicio-actividad"}], legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4", "orden-hfp-1359-2023:da-1", "orden-hfp-1359-2023:instruccion-2-2-a", "orden-hfp-1359-2023:instruccion-2-2-b", "orden-hfp-1359-2023:instruccion-2-3-b-3", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4", "orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"], source_refs = ["aeat-dr-131-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-131-2022-1t"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-131-2022-2t"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-131-2022-3t"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-131-2022-4t"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-131-2023-1t"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-131-2023-2t"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-131-2023-3t"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-131-2023-4t"}

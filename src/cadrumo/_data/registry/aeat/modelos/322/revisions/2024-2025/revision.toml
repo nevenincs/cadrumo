@@ -1,4 +1,5 @@
 [revisions."2024-2025"]
+casilla_storage_baseline = "2023"
 binding_source_refs = ["aeat-dr-322-2024-2025", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 formula_source_refs = ["aeat-dr-322-2024-2025", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-eha-3434-2007:art-1"], source_refs = ["aeat-dr-322-2024-2025"] } }
@@ -70,6 +71,9 @@ source_refs = [
     "aeat-calendario-contribuyente-2024",
     "aeat-calendario-contribuyente-2025",
 ]
+family_storage_baseline = "2023"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
 [revisions."2024-2025".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification names another modelo whose filing this one depends on. 322 depends on none: it is the LEAF of the grupo de entidades chain, the member entity's own monthly liquidation of its own operations, and every value it reports originates in that member's ledger. The dependency runs the other way -- Modelo 353 declares 'modelo-353-dep-322' because the group aggregate reads these results -- and a classification is authored on the DEPENDENT revision, not the source. Empty by \
@@ -125,3 +129,1459 @@ source_refs = [
     "aeat-dr-322-2024-2025",
     "aeat-modelo-322-procedure",
 ]
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "01" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "02" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "03" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "04" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "05" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "06" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "07" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "08" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "09" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "10" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "107" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "11" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "12" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "120" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "122" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "123" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "124" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "125" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "126" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "127" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "128" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:233 (sha256 540805f09ca3) DR32203 campo 38 posicion 386 len 17 N box [128]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:267 (sha256 a70f3a2ca7dd) DR32203 campo 38 posicion 386 len 17 N box [128]; misma descripcion, campo, posicion, longitud y tipo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "13" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "14" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "15" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "150" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "151" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "152" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "153" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "154" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "155" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "156" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "157" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "158" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "159" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "16" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "160" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "161" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "162" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "163" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "164" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "17" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "18" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "19" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "20" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "21" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "22" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "23" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "24" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "25" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "26" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "27" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "28" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "29" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "30" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "31" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "32" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "33" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "34" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "35" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "36" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "37" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "38" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "39" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "40" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "41" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "42" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "43" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "44" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "45" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "46" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "47" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "48" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "49" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "50" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "500" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:246 (sha256 540805f09ca3) DR32204 campo 3 posicion 13 len 3 An box [500]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:280 (sha256 a70f3a2ca7dd) DR32204 campo 3 posicion 13 len 3 Num box [500]; misma descripcion, campo y posicion; tipo An->Num y contenido CNAE.TXT->Nota 6.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "501" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "502" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "503" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "504" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "505" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:251 (sha256 540805f09ca3) DR32204 campo 8 posicion 56 len 3 An box [505]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:285 (sha256 a70f3a2ca7dd) DR32204 campo 8 posicion 56 len 3 Num box [505]; misma descripcion, campo y posicion; tipo An->Num y contenido CNAE.TXT->Nota 6.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "506" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "507" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "508" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "509" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "51" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "510" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:256 (sha256 540805f09ca3) DR32204 campo 13 posicion 99 len 3 An box [510]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:290 (sha256 a70f3a2ca7dd) DR32204 campo 13 posicion 99 len 3 Num box [510]; misma descripcion, campo y posicion; tipo An->Num y contenido CNAE.TXT->Nota 6.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "511" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "512" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "513" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "514" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "515" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:261 (sha256 540805f09ca3) DR32204 campo 18 posicion 142 len 3 An box [515]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:295 (sha256 a70f3a2ca7dd) DR32204 campo 18 posicion 142 len 3 Num box [515]; misma descripcion, campo y posicion; tipo An->Num y contenido CNAE.TXT->Nota 6.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "516" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "517" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "518" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "519" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "52" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "520" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:266 (sha256 540805f09ca3) DR32204 campo 23 posicion 185 len 3 An box [520]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:300 (sha256 a70f3a2ca7dd) DR32204 campo 23 posicion 185 len 3 Num box [520]; misma descripcion, campo y posicion; tipo An->Num y contenido CNAE.TXT->Nota 6.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "521" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "522" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "523" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "524" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "53" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "54" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "55" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "56" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "57" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "58" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "59" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "60" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "61" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "62" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "63" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "64" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "65" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "66" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "67" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "68" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "69" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "70" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "700" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "701" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "702" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "703" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "704" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "705" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "706" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "707" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "708" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "709" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "71" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "710" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "711" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "712" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "713" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "714" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "715" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "716" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "717" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "718" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "719" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "72" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "720" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "721" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "722" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "723" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "724" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "725" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "726" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "727" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "728" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "729" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "730" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "731" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "732" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "733" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "734" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "735" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "74" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "75" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "76" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "77" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "79" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "80" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "81" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "83" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "84" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "86" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "88" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "89" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "90" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "91" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "92" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "93" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "94" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "95" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "96" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "97" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "98" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "99" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-1.codigo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-1.epigrafe-iae" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-2.codigo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-2.epigrafe-iae" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-3.codigo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-3.epigrafe-iae" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-4.codigo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-4.epigrafe-iae" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-5.codigo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.otras-5.epigrafe-iae" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.principal.codigo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "actividad.principal.epigrafe-iae" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.destinatario-criterio-caja" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.entidad-dominante-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.exonerado-modelo-390" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:130 (sha256 540805f09ca3) DR32201 campo 96 posicion 1310 len 1 An; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:135 (sha256 a70f3a2ca7dd) DR32201 campo 96 posicion 1310 len 1 An; misma descripcion, campo, posicion, longitud, tipo y contenido (Si=1, No=2).", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.grupo-numero" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.grupo-rol" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.prorrata-especial" }
+fields = { continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:48 (sha256 540805f09ca3) DR32201 campo 15 posicion 132 len 1 Num; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:47 (sha256 a70f3a2ca7dd) DR32201 campo 15 posicion 132 len 1 Num; misma descripcion, campo, posicion, longitud, tipo y contenido (Nota 3).", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.redeme-inscrito" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.regimen-163-sexies-cinco" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.tributacion-exclusivamente-foral" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.volumen-anual-no-cero" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.ejercicio" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "decl.periodo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "iva.repercutido.general" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "iva.repercutido.reducido" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "iva.repercutido.super-reducido" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "iva.soportado.interiores" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "iva.autorepercutido.intracomunitaria" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "iva.cuota-devengada-total" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "iva.cuota-deducible-total" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_overrides]]
+selector = { revision = "2023", id = "iva.resultado-regimen-general" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-2025".casilla_positions]]
+id = "165"
+position = 40
+
+[[revisions."2024-2025".casilla_positions]]
+id = "166"
+position = 41
+
+[[revisions."2024-2025".casilla_positions]]
+id = "167"
+position = 42
+
+[[revisions."2024-2025".casilla_positions]]
+id = "168"
+position = 43
+
+[[revisions."2024-2025".casilla_positions]]
+id = "169"
+position = 44
+
+[[revisions."2024-2025".casilla_positions]]
+id = "170"
+position = 46
+
+[[revisions."2024-2025".casilla_positions]]
+id = "171"
+position = 47
+
+[[revisions."2024-2025".casilla_positions]]
+id = "172"
+position = 48
+
+[[revisions."2024-2025".casilla_positions]]
+id = "173"
+position = 49
+
+[[revisions."2024-2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2023", id = "modelo-322-iva-cuota-deducible-total"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2023", id = "modelo-322-iva-cuota-devengada-total"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2023", id = "modelo-322-iva-resultado-regimen-general"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2023", id = "modelo-322-iva-grupo-individual"}
+sequence_additions = {deadline_windows = ["modelo-322-2024-01", "modelo-322-2024-02", "modelo-322-2024-03", "modelo-322-2024-04", "modelo-322-2024-05", "modelo-322-2024-06", "modelo-322-2024-07", "modelo-322-2024-08", "modelo-322-2024-09", "modelo-322-2024-10", "modelo-322-2024-11", "modelo-322-2024-12", "modelo-322-2025-01", "modelo-322-2025-02", "modelo-322-2025-03", "modelo-322-2025-04", "modelo-322-2025-05", "modelo-322-2025-06", "modelo-322-2025-07", "modelo-322-2025-08", "modelo-322-2025-09", "modelo-322-2025-10", "modelo-322-2025-11", "modelo-322-2025-12"], source_refs = ["aeat-dr-322-2024-2025", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026"]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], source_refs = [0, 3]}
+sequence_order = {source_refs = [3, 0, 1, 2, 4, 5]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-322-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-322-export"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-322-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-322-iva-autorepercutido-intracomunitaria-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-322-iva-repercutido-general-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-322-iva-repercutido-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-322-iva-repercutido-super-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-322-iva-soportado-interiores-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2023", id = "modelo-322-dr"}
+fields = {workbook_source = "aeat-dr-322-2024-2025"}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2023", id = "modelo-322-iva-chain-verification"}
+fields = {externally_grounded_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general"]}
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024-2025".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2023", id = "aeat-dr-322-2023"}
+replacement_id = "aeat-dr-322-2024-2025"
+sequence_additions = {source_refs = ["aeat-dr-322-2024-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-01"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-02"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-03"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-04"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-05"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-06"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-07"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-08"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-09"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-10"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-11"}
+
+[[revisions."2024-2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-322-2023-12"}

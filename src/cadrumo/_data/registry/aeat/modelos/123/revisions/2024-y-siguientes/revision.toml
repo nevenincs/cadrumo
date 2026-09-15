@@ -22,6 +22,8 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
+family_storage_baseline = "2019-2023"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -64,3 +66,294 @@ A dependency classification declares which OTHER modelo's filing a value here de
 exists to classify, so the family is inapplicable by this modelo's position in the chain."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
+
+[[revisions."2024-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+from_revision = "2019-2023"
+to_revision = "2024-y-siguientes"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls.extracted.md:50 (sha256 21ec4feed295) box [2] (13 124 17 Num Liquidación(3). Retenciones e ingresos a cuenta. Base...) continues as corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls.extracted.md:55 (sha256 85ffe058c172) box [6] (16 188 17 Num Liquidación(3). Base de retenciones e ingresos a cuen...)."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+from_revision = "2019-2023"
+to_revision = "2024-y-siguientes"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls.extracted.md:51 (sha256 21ec4feed295) box [3] (14 141 17 Num Liquidación(3). Retenciones e ingresos a cuenta. Rete...) continues as corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls.extracted.md:58 (sha256 85ffe058c172) box [9] (19 239 17 Num Liquidación(3). Retenciones e ingresos a cuenta. Tota...)."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "ingresos-ejercicios-anteriores"
+from_revision = "2019-2023"
+to_revision = "2024-y-siguientes"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls.extracted.md:52 (sha256 21ec4feed295) box [4] (15 158 17 Num Liquidación(3). Periodificación. Ingresos ejercicios ...) continues as corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls.extracted.md:59 (sha256 85ffe058c172) box [10] (20 256 17 Num Liquidación(3). Periodificación. Ingresos ejercicios ...)."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "regularizacion"
+from_revision = "2019-2023"
+to_revision = "2024-y-siguientes"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls.extracted.md:53 (sha256 21ec4feed295) box [5] (16 175 17 Num Liquidación(3). Periodificación. Regularización. [05]...) continues as corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls.extracted.md:60 (sha256 85ffe058c172) box [11] (21 273 17 Num Liquidación(3). Periodificación. Regularización. [11]...)."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "suma-retenciones-regularizacion"
+from_revision = "2019-2023"
+to_revision = "2024-y-siguientes"
+origin = "grounded"
+evidence = "BOE annexes boe-modelo-123-2007-form-text and boe-modelo-123-2024-form-text, corroborated by both AEAT designs, identify the same total: withholding and payments on account plus any regularization. The original [06]=[03]+[05] becomes [12]=[09]+[11] after the 2024 column insertion; neither component nor the total's legal role changes."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "resultado-anteriores-autoliquidaciones"
+from_revision = "2019-2023"
+to_revision = "2024-y-siguientes"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls.extracted.md:55 (sha256 21ec4feed295) box [7] (18 209 17 Num Liquidación(3). Total liquidación. Resultado de anter...) continues as corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls.extracted.md:62 (sha256 85ffe058c172) box [13] (23 307 17 Num Liquidación(3). Resultados a ingresar de anteriores a...)."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "cuota-a-ingresar"
+from_revision = "2019-2023"
+to_revision = "2024-y-siguientes"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls.extracted.md:56 (sha256 21ec4feed295) box [8] (19 226 17 Num Liquidación(3). Total liquidación. Resultado a ingres...) continues as corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls.extracted.md:63 (sha256 85ffe058c172) box [14] (24 324 17 Num Liquidación(3). Resultado a ingresar ( [12] - [13] ) ...)."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2019-2023", id = "02" }
+fields = { formula = "modelo-123-total-base", id = "06", input_kind = "computed", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], number = "06", section = ["base_retenciones", "total"], semantic_role = "base_rentas_total" }
+removed_fields = ["constraints"]
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2019-2023", id = "03" }
+fields = { constraints = { legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"] }, formula = "modelo-123-total-retenciones", id = "09", input_kind = "computed", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], number = "09", section = ["retenciones_ingresos_cuenta", "total"] }
+removed_fields = []
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2019-2023", id = "04" }
+fields = { id = "10", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], number = "10" }
+removed_fields = []
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2019-2023", id = "05" }
+fields = { id = "11", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], number = "11" }
+removed_fields = []
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2019-2023", id = "06" }
+fields = { id = "12", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], number = "12" }
+removed_fields = []
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2019-2023", id = "07" }
+fields = { id = "13", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], number = "13" }
+removed_fields = []
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2019-2023", id = "08" }
+fields = { constraints = { legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"] }, id = "14", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], number = "14" }
+removed_fields = []
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2023", id = "modelo-123-resultado-ingresar"}
+fields = {target_casilla_id = "14"}
+sequence_additions = {"expression.args" = [{casilla_id = "12"}, {casilla_id = "13"}], legal_refs = ["orden-hac-56-2024:art-1"], source_citations = [{source_ref = "boe-modelo-123-2024-form-text", required_text = ["Resultado a ingresar ( [12] - [13] )"]}], source_refs = ["boe-modelo-123-2024-form-text"]}
+sequence_removals = {"expression.args" = [0, 1], legal_refs = [2], source_citations = [0], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2019-2023", id = "modelo-123-total-liquidacion"}
+fields = {target_casilla_id = "12"}
+sequence_additions = {"expression.args" = [{casilla_id = "09"}, {casilla_id = "11"}], legal_refs = ["orden-hac-56-2024:art-1"], source_citations = [{source_ref = "boe-modelo-123-2024-form-text", required_text = ["Suma de retenciones e ingresos a cuenta y regularización, en su caso ( [09] + [11] )"]}], source_refs = ["boe-modelo-123-2024-form-text"]}
+sequence_removals = {"expression.args" = [0, 1], legal_refs = [2], source_citations = [0], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "live_cross_references"
+selector = {revision = "2019-2023", id = "modelo-123-filed-declarations-read"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "live_cross_references"
+selector = {revision = "2019-2023", id = "modelo-123-static-official"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2019-2023", id = "modelo-123-declaracion-pdf"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"], target_casillas = [{casilla_id = "09", match_strategy = "numeric_casilla", value_kind = "amount"}, {casilla_id = "10", match_strategy = "numeric_casilla", value_kind = "amount"}, {casilla_id = "11", match_strategy = "numeric_casilla", value_kind = "amount"}, {casilla_id = "12", match_strategy = "numeric_casilla", value_kind = "amount"}, {casilla_id = "13", match_strategy = "numeric_casilla", value_kind = "amount"}, {casilla_id = "14", match_strategy = "numeric_casilla", value_kind = "amount"}]}
+sequence_removals = {legal_refs = [2], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2019-2023", id = "modelo-123-capital-withholding"}
+fields = {deadline_windows = ["modelo-123-2024-1t", "modelo-123-2024-2t", "modelo-123-2024-3t", "modelo-123-2024-4t", "modelo-123-2025-1t", "modelo-123-2025-2t", "modelo-123-2025-3t", "modelo-123-2025-4t", "modelo-123-2026-1t", "modelo-123-2026-2t", "modelo-123-2026-3t", "modelo-123-2026-4t"]}
+sequence_additions = {application_links = ["modelo-123-deadline"], casilla_ids = ["09", "10", "11", "12", "13", "14"], formulas = ["modelo-123-total-rentas", "modelo-123-total-base", "modelo-123-total-retenciones"], legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026", "aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form", "boe-modelo-123-2024-form-text"]}
+sequence_removals = {source_refs = [0, 1, 3, 4]}
+sequence_order = {formulas = [2, 3, 4, 0, 1], legal_refs = [0, 1, 2, 6, 3, 4, 5], source_refs = [1, 2, 3, 4, 5, 0, 6, 7]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-approval"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-calculation"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["boe-modelo-123-2024-form-text"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-deadline"}
+sequence_additions = {legal_refs = ["ley-35-2006:art-25", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-90", "ley-35-2006:art-101"]}
+sequence_order = {legal_refs = [2, 0, 3, 4, 1, 5, 6]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-export"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-extractor"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]}
+sequence_removals = {legal_refs = [2], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-filed-declarations-observation"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-filing"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-portal-cross-reference"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-reconciliation"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]}
+sequence_removals = {legal_refs = [2], source_refs = [0, 1, 2]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-review"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]}
+sequence_removals = {legal_refs = [2], source_refs = [0, 1, 2]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2019-2023", id = "modelo-123-workflow"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2019-2023", id = "implies-nonzero:base-declarada-cuando-rentas-positivas"}
+fields = {expression = "implies_nonzero([\"03\", \"06\"])", predicate_id = "modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas"}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "export_layouts"
+selector = {revision = "2019-2023", id = "modelo-123-fichero-boe"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], records = [{id = "modelo-123-2024-envelope-header", record_type = "envelope_header", order = 0, encoding = "iso-8859-1", line_ending = "none", fields = [{id = "modelo-123-2024-envelope-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-modelo", offset = 3, length = 3, kind = "literal", literal = "123", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-discriminante", offset = 6, length = 1, kind = "literal", literal = "0", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-ejercicio", offset = 7, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-periodo", offset = 11, length = 2, kind = "draft", draft_attribute = "period_code", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-marker", offset = 13, length = 5, kind = "literal", literal = "0000>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-aux-open", offset = 18, length = 5, kind = "literal", literal = "<AUX>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-reserved-1", offset = 23, length = 70, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-reserved-2", offset = 97, length = 4, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-reserved-3", offset = 110, length = 213, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-envelope-aux-close", offset = 323, length = 6, kind = "literal", literal = "</AUX>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}]}, {id = "modelo-123-2024-page-01", record_type = "page_1", order = 1, encoding = "iso-8859-1", line_ending = "none", fields = [{id = "modelo-123-2024-page-01-open", offset = 1, length = 2, kind = "literal", literal = "<T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-modelo", offset = 3, length = 3, kind = "literal", literal = "123", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-pagina", offset = 6, length = 2, kind = "literal", literal = "01", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-identifier-close", offset = 8, length = 4, kind = "literal", literal = "000>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-indicador-pagina-complementaria", offset = 12, length = 1, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-tipo-declaracion", offset = 13, length = 1, kind = "header", producer_key = "filing.result_disposition", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-nif", offset = 14, length = 9, kind = "header", producer_key = "taxpayer.tax_id", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-nombre-completo", offset = 23, length = 80, kind = "header", producer_key = "taxpayer.full_name", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-ejercicio", offset = 103, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-periodo", offset = 107, length = 2, kind = "draft", draft_attribute = "period_code", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-01", offset = 109, length = 15, kind = "casilla", casilla_id = "01", data_type = "integer", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-02", offset = 124, length = 15, kind = "casilla", casilla_id = "02", data_type = "integer", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-03", offset = 139, length = 15, kind = "casilla", casilla_id = "03", data_type = "integer", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-04", offset = 154, length = 17, kind = "casilla", casilla_id = "04", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-05", offset = 171, length = 17, kind = "casilla", casilla_id = "05", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-06", offset = 188, length = 17, kind = "casilla", casilla_id = "06", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-07", offset = 205, length = 17, kind = "casilla", casilla_id = "07", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-08", offset = 222, length = 17, kind = "casilla", casilla_id = "08", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-09", offset = 239, length = 17, kind = "casilla", casilla_id = "09", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-10", offset = 256, length = 17, kind = "casilla", casilla_id = "10", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-11", offset = 273, length = 17, kind = "casilla", casilla_id = "11", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-12", offset = 290, length = 17, kind = "casilla", casilla_id = "12", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-13", offset = 307, length = 17, kind = "casilla", casilla_id = "13", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-casilla-14", offset = 324, length = 17, kind = "casilla", casilla_id = "14", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-declaracion-complementaria", offset = 341, length = 1, kind = "header", producer_key = "amendment_evidence.is_complementaria", data_type = "boolean", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-justificante-anterior", offset = 342, length = 13, kind = "header", producer_key = "amendment_evidence.original_aeat_receipt", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-iban", offset = 355, length = 34, kind = "header", producer_key = "selected_account.iban", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-reserved-aeat", offset = 389, length = 200, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}, {id = "modelo-123-2024-page-01-close", offset = 589, length = 12, kind = "literal", literal = "</T12301000>", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20"]}]}], source_refs = ["aeat-dr-123-2024-v20"]}
+sequence_removals = {records = [0, 1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2019-2023", id = "modelo-123-dr-xls"}
+fields = {fixture_id = "modelo-123-2024-record-design-layout", workbook_source = "aeat-dr-123-2024-v20"}
+sequence_additions = {legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2019-2023", id = "modelo-123-calculation-verification"}
+fields = {reconciliation_total_casilla_ids = {ingresar = "14"}}
+sequence_additions = {computed_casilla_ids = ["03", "09", "12", "14"], legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]}
+sequence_removals = {computed_casilla_ids = [1], legal_refs = [2], source_refs = [0, 1, 2]}
+sequence_order = {computed_casilla_ids = [1, 0, 2, 3, 4], legal_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2019-2023", id = "aeat-dr-123-2019-2023-v13"}
+replacement_id = "aeat-dr-123-2024-v20"
+sequence_additions = {casillas = [{casilla_id = "01", number = "01"}, {casilla_id = "02", number = "02"}, {casilla_id = "04", number = "04"}, {casilla_id = "09", number = "09"}, {casilla_id = "11", number = "11"}, {casilla_id = "12", number = "12"}, {casilla_id = "13", number = "13"}, {casilla_id = "14", number = "14"}], legal_refs = ["orden-hac-56-2024:art-1"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]}
+sequence_removals = {legal_refs = [3], source_refs = [0, 1, 2]}
+sequence_order = {casillas = [5, 6, 0, 7, 1, 2, 3, 4, 8, 9, 10, 11, 12], legal_refs = [0, 1, 2, 5, 3, 4]}
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-123-2022-1t"}
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-123-2022-2t"}
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-123-2022-3t"}
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-123-2022-4t"}
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-123-2023-1t"}
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-123-2023-2t"}
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-123-2023-3t"}
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2019-2023", id = "modelo-123-2023-4t"}

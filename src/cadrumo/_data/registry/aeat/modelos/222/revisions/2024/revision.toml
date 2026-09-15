@@ -78,3 +78,644 @@ the same state the back-year editions of modelos 190 and 193 are in. NOT CLAIMED
 independent_check_coverage is n/a: NO CLAIM, not zero. No human operator has countersigned \
 this edition."""
 reviewed_at = 2026-09-12
+family_storage_baseline = "2023"
+scoped_families = ["workbook_parity_refs"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-2-lis-base-del-pago-fraccionado"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-2-lis-resultado-de-la-declaracion-anterior"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-2-lis-a-ingresar"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-suma-de-resultados-contables-individuales"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-aumentos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-reversion-del-30-del-importe-de-los-gastos-amortiz-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-bi-ne-aumentos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-total-aumentos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-total-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-grup-aumentos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-suma-de-bases-imponibles-individuales-antes-de-compensar-bases-nega"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-corre-aumentos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-base-imponible-previa"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-del-grupo"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-generados-a-nivel-individual-o-d"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-remanente-reserva-de-capitalizacion-no-aplicada-por-insuficiencia-d"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-del-grupo-de-periodos-an"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-de-entidades-o-de-grupos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-especi-aumentos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-e-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-base-del-pago-fraccionado"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-porcentaje"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-del-grupo"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-generadas-previa-a-la"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-del-grupo-de-peri"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-individuales-de-p"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-cuotas-aumentos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-c-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-del-pago-fraccionado"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-1"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-1"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-1"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-2"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-2"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-2"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-del-grupo"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-generadas-previa"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-del-grupo-de"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-individuales"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-es-aumentos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-solo-grupos-que-cumplan-los-disminuciones"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-previo"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-bonificaciones-correspondientes-al-periodo-co"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-retenciones-e-ingresos-a-cuenta-practicados-s"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-volumen-de-operaciones-en-territorio-comun"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-pagos-fraccionados-anteriores-correspondiente"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-de-la-declaracion-anterior"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-minimo-a-ingresar"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-cantidad-a-ingresar"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-informacion-adicional-resultado-consolidado-del-periodo"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-quita-espera-importe-excluido"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-quita-espera-integrado-base"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-quita-espera-integrado-cuota"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-reversion-deterioros"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-reserva-inversiones-canarias"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-bonificacion-ley-19-1994"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-regimen-zec-no-computable"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-minoracion-bonificacion-art-33"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-aumento-capital-compensacion-creditos"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-renta-exenta-cap-xiv-tit-vii"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "is-pf-grupo-info-bonificacion-art-34"
+from_revision = "2023"
+to_revision = "2024"
+origin = "seeded"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+[[revisions."2024".family_overrides]]
+family = "constructs"
+selector = {revision = "2023", id = "modelo-222-declaration-construct"}
+sequence_additions = {deadline_windows = ["modelo-222-2024-1p", "modelo-222-2024-2p", "modelo-222-2024-3p"]}
+sequence_removals = {deadline_windows = [0, 1, 2]}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-222-2023-1p"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-222-2023-2p"}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-222-2023-3p"}

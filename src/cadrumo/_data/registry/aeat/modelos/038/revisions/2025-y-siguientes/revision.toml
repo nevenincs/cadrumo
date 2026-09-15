@@ -25,6 +25,8 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent: applicability-grade review; 12/12 deadline windows verified against the calendar and orden HAC/66/2002 art 6; the 2024 design applies from June 2024 and has no stated terminus; full-Diseno coverage is not claimed"
 reviewed_at = 2026-08-25
+family_storage_baseline = "2024-desde-06"
+scoped_families = ["workbook_parity_refs"]
 
 [[revisions."2025-y-siguientes".lineage_attestations]]
 family = "casillas"
@@ -43,3 +45,37 @@ to_revision = "2025-y-siguientes"
 origin = "seeded"
 legal_refs = ["orden-hac-66-2002:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure"]
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2024-desde-06", id = "modelo-038-informative"}
+sequence_additions = {deadline_windows = ["modelo-038-2025-01", "modelo-038-2025-02", "modelo-038-2025-03", "modelo-038-2025-04", "modelo-038-2025-05", "modelo-038-2025-06", "modelo-038-2025-07", "modelo-038-2025-08", "modelo-038-2025-09", "modelo-038-2025-10", "modelo-038-2025-11", "modelo-038-2025-12"]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-desde-06", id = "modelo-038-2024-06"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-desde-06", id = "modelo-038-2024-07"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-desde-06", id = "modelo-038-2024-08"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-desde-06", id = "modelo-038-2024-09"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-desde-06", id = "modelo-038-2024-10"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-desde-06", id = "modelo-038-2024-11"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024-desde-06", id = "modelo-038-2024-12"}

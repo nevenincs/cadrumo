@@ -50,6 +50,8 @@ source_refs = [
     "aeat-modelo-390-procedure",
     "boe-modelo-390-2009-form",
 ]
+family_storage_baseline = "2021"
+scoped_families = ["workbook_parity_refs"]
 
 [revisions."2022".family_dispositions.projection_endpoints]
 reason = """
@@ -72,3 +74,102 @@ A parameter holds a regulatory value a formula of this revision applies -- a rat
 applies nothing of its own. Empty by the shape of this revision's calculation rather than by omission."""
 legal_refs = ["ley-37-1992:art-164", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-cuota-repercutida-tipo-21"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "aeat-dr-390-2021, T39002000 campo 11, cuota ordinaria [06], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 21 %, misma cuota [06]: misma cuota repercutida al tipo 21 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-cuota-repercutida-tipo-10"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "aeat-dr-390-2021, T39002000 campo 9, cuota ordinaria [04], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 10 %, misma cuota [04]: misma cuota repercutida al tipo 10 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-cuota-repercutida-tipo-4"
+from_revision = "2021"
+to_revision = "2022"
+origin = "grounded"
+evidence = "aeat-dr-390-2021, T39002000 campo 7, cuota ordinaria [02], y aeat-dr-390-2022, bloque 5 regimen ordinario tipo 4 %, misma cuota [02]: misma cuota repercutida al tipo 4 %, no el acumulador interno por familia. La identidad de la observacion 2021 se corrige desde la familia generica a la cuota especifica que realmente observa; el diseno 2022 explicita el tipo en el rotulo."
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.aic.bienes.tipo-21.cuota" }
+fields = { additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"], binding = "modelo-390-iva-aic-bienes-tipo-21-cuota", input_kind = "bound", legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], section = ["iva", "anual", "inversion_sujeto_pasivo"], semantic_role_cardinality = "intentional_singleton", semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 21 % rung is a distinct box from its sibling rates, not a typo twin." }
+removed_fields = []
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.soportado.interiores" }
+fields = { binding = "modelo-390-iva-soportado-interiores-cuota", input_kind = "bound", legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], number = "iva.anual.soportado.interiores" }
+removed_fields = []
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.compensacion-ultimo-periodo-97" }
+fields = { additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"], binding = "modelo-390-prev-303-compensacion-ultimo-periodo", constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"] }, input_kind = "bound", legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"], section = ["iva", "anual", "resultado_liquidaciones"], semantic_role = "iva_anual_compensacion_ultimo_periodo" }
+removed_fields = ["semantic_role_cardinality", "semantic_role_cardinality_reason"]
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.compensacion-generada-ejercicio-no-97" }
+fields = { additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"], binding = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97", constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"] }, input_kind = "bound", legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"], number = "662", section = ["iva", "anual", "resultado_liquidaciones"], semantic_role = "iva_anual_compensacion_generada_ejercicio" }
+removed_fields = ["semantic_role_cardinality", "semantic_role_cardinality_reason"]
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.cuota-devengada-total" }
+fields = { form_number = "47", formula = "modelo-390-iva-anual-cuota-devengada-total", input_kind = "computed", legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], number = "iva.anual.cuota-devengada-total", section = ["iva", "anual", "totales"] }
+removed_fields = []
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.cuota-deducible-total" }
+fields = { form_number = "64", formula = "modelo-390-iva-anual-cuota-deducible-total", input_kind = "computed", legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], number = "iva.anual.cuota-deducible-total", section = ["iva", "anual", "totales"] }
+removed_fields = []
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.resultado-regimen-general" }
+fields = { form_number = "65", formula = "modelo-390-iva-anual-resultado-regimen-general", input_kind = "computed", legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], number = "iva.anual.resultado-regimen-general", section = ["iva", "anual", "totales"] }
+removed_fields = []
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.repercutido.general" }
+fields = { binding = "modelo-390-iva-repercutido-tipo-21-cuota", id = "iva.anual.repercutido.tipo-21.cuota", input_kind = "bound", legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], semantic_role_cardinality = "intentional_singleton", semantic_role_cardinality_reason = "One official AEAT box per rate; the 21 % tier is a distinct box from its sibling rates, not a typo twin." }
+removed_fields = []
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.repercutido.reducido" }
+fields = { binding = "modelo-390-iva-repercutido-tipo-10-cuota", id = "iva.anual.repercutido.tipo-10.cuota", input_kind = "bound", legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], semantic_role_cardinality = "intentional_singleton", semantic_role_cardinality_reason = "One official AEAT box per rate; the 10 % tier is a distinct box from its sibling rates, not a typo twin." }
+removed_fields = []
+
+[[revisions."2022".casilla_overrides]]
+selector = { revision = "2021", id = "iva.anual.repercutido.super-reducido" }
+fields = { binding = "modelo-390-iva-repercutido-tipo-4-cuota", id = "iva.anual.repercutido.tipo-4.cuota", input_kind = "bound", legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"], semantic_role_cardinality = "intentional_singleton", semantic_role_cardinality_reason = "One official AEAT box per rate; the 4 % tier is a distinct box from its sibling rates, not a typo twin." }
+removed_fields = []
+
+[[revisions."2022".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2021", id = "modelo-390-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-390-2022"], target_casillas = [{casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97", match_strategy = "named_label", value_kind = "amount", label_pattern = "(?:Cuotas\\s+pendientes\\s+de\\s+compensaci[oó]n\\s+generadas\\s+en\\s+el\\s+ejercicio|Amounts\\s+pending\\s+offset\\s+arising\\s+in\\s+the\\s+year)"}]}
+sequence_removals = {source_refs = [0], target_casillas = [9]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2022".family_overrides]]
+family = "application_links"
+selector = {revision = "2021", id = "modelo-390-extractor"}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2022".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2021", id = "modelo-390-dr"}
+fields = {fixture_id = "modelo-390-2022-record-design-layout", formula_coverage = "record_design_layout", workbook_source = "aeat-dr-390-2022"}
+sequence_additions = {source_refs = ["aeat-dr-390-2022"]}
+sequence_removals = {source_refs = [0]}

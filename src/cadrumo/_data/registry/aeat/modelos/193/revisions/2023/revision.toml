@@ -51,3 +51,32 @@ legal_refs = [
 ]
 orden_aplicabilidad = ["orden-eha-3377-2011:art-1"]
 source_refs = ["aeat-dr-193-2023", "boe-modelo-193-2011-form"]
+family_storage_baseline = "2022"
+
+[[revisions."2023".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2022", id = "modelo-193-anual"}
+sequence_additions = {profile_conditions = [{field = "pays_capital_income_with_retencion", op = "equals", value = true, explanation = "Retenedor que satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion y presenta el resumen anual Modelo 193.", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["boe-modelo-193-2011-form", "aeat-calendario-contribuyente-2024"]}], source_refs = ["aeat-calendario-contribuyente-2024"]}
+sequence_removals = {profile_conditions = [0], source_refs = [1]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-193-deadline"}
+sequence_additions = {source_refs = ["aeat-calendario-contribuyente-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-193-filing"}
+sequence_additions = {source_refs = ["aeat-calendario-contribuyente-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-193-2022-0a"}
+replacement_id = "modelo-193-2023-0a"
+fields = {closes_on = 2024-01-31, filing_year = 2023, opens_on = 2024-01-01, period = "2023 0A"}
+sequence_additions = {applicability_conditions = [{field = "pays_capital_income_with_retencion", op = "equals", value = true, explanation = "Retenedor que satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion y presenta el resumen anual.", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["boe-modelo-193-2011-form", "aeat-calendario-contribuyente-2024"]}], source_refs = ["aeat-calendario-contribuyente-2024"]}
+sequence_removals = {applicability_conditions = [0], source_refs = [1]}

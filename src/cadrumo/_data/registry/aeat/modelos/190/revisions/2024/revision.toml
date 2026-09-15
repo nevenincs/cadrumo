@@ -85,6 +85,7 @@ legal_refs = [
 ]
 orden_aplicabilidad = ["orden-eha-3127-2009:art-1"]
 source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
+family_storage_baseline = "2023"
 
 [revisions."2024".family_dispositions.projection_endpoints]
 reason = """
@@ -113,3 +114,372 @@ A parameter holds a regulatory value a formula of this revision applies -- a rat
 already-withheld amounts. Contrast modelo 115, which DOES hold one, because its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Empty by the shape of this modelo's calculation rather than by omission."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.persona-contacto-telefono" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.persona-contacto-nombre" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.numero-identificativo" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.complementaria" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.sustitutiva" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.numero-identificativo-anterior" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.correo-electronico" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.total-percepciones" }
+fields = { additional_source_refs = ["boe-modelo-190-2025-form"], binding = "modelo-190-percepciones-anual", input_kind = "bound", legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.percepciones-total" }
+fields = { additional_source_refs = ["boe-modelo-190-2025-form"], formula = "modelo-190-percepciones-total", input_kind = "computed", legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "decl.retenciones-total" }
+fields = { additional_source_refs = ["boe-modelo-190-2025-form"], constraints = { additional_source_refs = ["boe-modelo-190-2025-form"], legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"] }, formula = "modelo-190-retenciones-total", input_kind = "computed", legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-menores-3-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-menores-3-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-resto-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-resto-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-discapacidad-33-65-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-discapacidad-33-65-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-discapacidad-movilidad-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-discapacidad-movilidad-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-discapacidad-65-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.descendientes-discapacidad-65-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-menores-75-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-menores-75-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-75-mas-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-75-mas-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-discapacidad-33-65-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-discapacidad-33-65-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-discapacidad-movilidad-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-discapacidad-movilidad-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-discapacidad-65-total" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ascendientes-discapacidad-65-entero" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.computo-hijo-1" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.computo-hijo-2" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.computo-hijo-3" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.prestamos-vivienda-clave" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.incapacidad-dineraria-percepcion" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.incapacidad-dineraria-retenciones" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.incapacidad-especie-valoracion" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.incapacidad-especie-ingresos-a-cuenta" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.incapacidad-especie-repercutidos" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.complemento-ayuda-infancia" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.retenciones-forales-estatal" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.retenciones-forales-navarra" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.retenciones-forales-araba" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.retenciones-forales-gipuzkoa" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.retenciones-forales-bizkaia" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.nif-representante-legal" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ingresos-a-cuenta-repercutidos" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ejercicio-devengo" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.nif-conyuge-titular-unidad" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.discapacidad" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.contrato-relacion" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.titular-unidad-convivencia" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.movilidad-geografica" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.nif" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.nombre" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.clave" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.subclave" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.percepcion-dineraria" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.retenciones-practicadas" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.percepcion-especie" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ingresos-a-cuenta" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.provincia" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ceuta-melilla" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.ano-nacimiento" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.situacion-familiar" }
+fields = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.reducciones-aplicables" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.gastos-deducibles" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.pension-compensatoria" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "perc.anualidades-alimentos" }
+fields = { constraints = { legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2024".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2023", id = "modelo-190-anual"}
+sequence_additions = {source_refs = ["boe-modelo-190-2025-form"]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-190-deadline"}
+sequence_additions = {source_refs = ["boe-modelo-190-2025-form"]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-190-filing"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6], source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-190-2023-0a"}
+replacement_id = "modelo-190-2024-0a"
+fields = {closes_on = 2025-01-31, filing_year = 2024, opens_on = 2025-01-01, period = "2024 0A"}
+sequence_additions = {source_refs = ["boe-modelo-190-2025-form"]}

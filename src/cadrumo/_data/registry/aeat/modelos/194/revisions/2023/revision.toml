@@ -28,6 +28,8 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: inspected the official AEAT hash-pinned Modelo 194 design for ejercicio 2023 and the cited full BOE amendment. The revision is bounded exactly to the design's stated ejercicio; no record-design evidence is reused for a different year. The five hoja-resumen casillas remain manual input, no export layout is declared, and no authority grade is promoted. The 2020-2022 gap remains unselectable, and this 2023 evidence does not establish a predecessor or successor."""
 reviewed_at = 2026-08-25
+family_storage_baseline = "2019"
+scoped_families = ["workbook_parity_refs", "verification_expectations"]
 
 [[revisions."2023".lineage_attestations]]
 family = "casillas"

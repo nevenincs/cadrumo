@@ -52,6 +52,8 @@ source_refs = [
     "aeat-modelo-390-procedure",
     "boe-modelo-390-2009-form",
 ]
+family_storage_baseline = "2022"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2023".family_dispositions.projection_endpoints]
 reason = """
@@ -797,3 +799,79 @@ source_refs = ["aeat-modelo-390-procedure"]
 # Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # Modelo 390 2022, página 1, casillas 74--83.  One source family consumes the
 # Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # immutable filed/current Modelo 303 4T calculation revision; endpoint bindings
 # Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # merely name arrival slots and never replay a scalar relation or observation.
+
+[[revisions."2023".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2022", id = "modelo-390-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2022", id = "modelo-390-dep-303"}
+sequence_additions = {source_refs = ["aeat-dr-390-2023"]}
+sequence_order = {source_refs = [0, 3, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-390-iva-resumen-anual"}
+sequence_additions = {casilla_ids = ["iva.anual.repercutido.recargo.tipo-0-62.cuota"], deadline_windows = ["modelo-390-2023-0a"], export_layouts = ["generated-modelo-390-2023-fichero"], source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {deadline_windows = [0], export_layouts = [0]}
+sequence_order = {casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 80, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79], source_refs = [0, 3, 1, 2]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-390-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-390-export"}
+sequence_additions = {source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-390-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-390-2022-0a"}
+replacement_id = "modelo-390-2023-0a"
+fields = {closes_on = 2024-01-30, filing_year = 2023, opens_on = 2024-01-01, period = "2023 0A"}
+
+[[revisions."2023".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2022", id = "modelo-390-dr"}
+fields = {fixture_id = "modelo-390-2023-record-design-layout", workbook_source = "aeat-dr-390-2023"}
+sequence_additions = {source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2022", id = "modelo-390-iva-annual-chain-verification"}
+sequence_additions = {source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2022", id = "modelo-390-reconcile-when-present"}
+sequence_additions = {source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2022", id = "aeat-dr-390-2022"}
+replacement_id = "aeat-dr-390-2023"
+sequence_additions = {casillas = [{casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota", number = "666"}], source_refs = ["aeat-dr-390-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 80, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79], source_refs = [2, 0, 1]}

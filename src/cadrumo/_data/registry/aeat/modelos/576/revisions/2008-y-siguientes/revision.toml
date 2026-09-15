@@ -34,6 +34,8 @@ source is aeat-dr-576-2008, whose applies_from date and record_design_epoch both
 orden proves the model's use, but its graphical annex does not supply a parser-usable \
 fixed-width record design. This revision therefore makes no 2007 layout claim."""
 reviewed_at = 2026-08-21
+family_storage_baseline = "2007"
+scoped_families = ["workbook_parity_refs"]
 
 [revisions."2008-y-siguientes".family_dispositions.deadline_windows]
 reason = """\
@@ -51,3 +53,28 @@ legal_refs = [
 source_refs = [
     "enrolled-modelo-576-procedure",
 ]
+
+[[revisions."2008-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2007"
+to_revision = "2008-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-576-procedure"]
+
+[[revisions."2008-y-siguientes".casilla_overrides]]
+selector = { revision = "2007", id = "decl.ejercicio" }
+fields = { legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"], source_refs = ["enrolled-modelo-576-procedure"] }
+removed_fields = []
+
+[[revisions."2008-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2007", id = "modelo-576-filing"}
+sequence_additions = {legal_refs = ["orden-eha-3851-2007:art-1"], source_refs = ["enrolled-modelo-576-procedure"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2008-y-siguientes".family_removals]]
+family = "workbook_parity_refs"
+selector = {revision = "2007", id = "modelo-576-2005-graphical-form"}

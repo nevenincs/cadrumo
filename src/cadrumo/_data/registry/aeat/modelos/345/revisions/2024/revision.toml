@@ -1,4 +1,5 @@
 [revisions."2024"]
+casilla_storage_baseline = "2023"
 casilla_source_refs = ["aeat-dr-345-2024"]
 # Applicability-grade historical epoch for modelo 345, ejercicio 2024.
 #
@@ -92,6 +93,7 @@ source_refs = [
     "boe-modelo-345-2023-amendment-hfp-1397",
     "boe-modelo-345-2024-amendment-hac-1504",
 ]
+family_storage_baseline = "2023"
 
 [revisions."2024".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
@@ -100,3 +102,226 @@ legal_refs = [
     "orden-hfp-823-2022:art-3",
 ]
 source_refs = ["aeat-dr-345-2024", "boe-modelo-345-base-order"]
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "declarante-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "ejercicio-declaracion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "declarante-razon-social" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "total-declarados" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "importe-total-aportaciones" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "declarado-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "declarado-nombre" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "anio-nacimiento" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "codigo-provincia" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "clave" }
+fields = { continuidad_origin = "seeded", legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-528-2023:art-unico", "orden-hac-1504-2024:art-octavo"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "subclave" }
+fields = { continuidad_origin = "seeded", legal_refs = ["orden-hfp-528-2023:art-unico", "orden-hfp-1397-2023:art-sexto", "orden-hac-1504-2024:art-octavo"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "beneficiario-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "importe" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "datos-adicionales-claves-abc" }
+fields = { continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2023 declares '107-160 Alfanumerico DATOS ADICIONALES PARA LAS CLAVES A, B y C' for ejercicio 2023, and aeat-dr-345-2024 declares the identical '107-160 Alfanumerico DATOS ADICIONALES PARA LAS CLAVES A, B y C' for ejercicio 2024. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "plan-pensiones-denominacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "fondo-pensiones-numero-registro" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "fondo-pensiones-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "entidad-aseguradora-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "datos-adicionales-clave-i" }
+fields = { continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2023 declares '170-189 Numerico DATOS ADICIONALES PARA LA CLAVE I' for ejercicio 2023, and aeat-dr-345-2024 declares the identical '170-189 Numerico DATOS ADICIONALES PARA LA CLAVE I' for ejercicio 2024. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "pias-fecha-primera-prima" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "pias-importe-acumulado" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "datos-adicionales-clave-m" }
+fields = { continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2023 declares '190-270 Alfanumerico DATOS ADICIONALES PARA LA CLAVE M' for ejercicio 2023, and aeat-dr-345-2024 declares the identical '190-270 Alfanumerico DATOS ADICIONALES PARA LA CLAVE M' for ejercicio 2024. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "pepp-denominacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "pepp-numero-inscripcion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "pepp-cuenta-subcuenta" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "rendimientos-trabajo-no-superiores-60000" }
+fields = { continuidad_origin = "seeded", legal_refs = ["orden-hfp-528-2023:art-unico", "orden-hac-1504-2024:art-octavo"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "empleador-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "empleador-nombre" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "devoluciones-excesos" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "persona-relacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "numero-identificativo-declaracion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "declaracion-complementaria-sustitutiva" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "numero-identificativo-anterior" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "representante-legal-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "datos-identificativos-empleador" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-345-filing"}
+sequence_additions = {source_refs = ["aeat-dr-345-2024"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {source_refs = [0, 2, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-345-2023-0a"}
+replacement_id = "modelo-345-2024-0a"
+fields = {closes_on = 2025-01-31, filing_year = 2024, opens_on = 2025-01-01, period = "2024 0A"}

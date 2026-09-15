@@ -38,6 +38,8 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-16
+family_storage_baseline = "2011-2024"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 
@@ -174,3 +176,606 @@ to_revision = "2025-y-siguientes"
 origin = "seeded"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "contraparte-provincia-codigo"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "contraparte-pais-codigo"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "rd-1065-2007:art-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "representante-legal-nif"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-anual-operaciones"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "operacion-seguro"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "arrendamiento-local-negocio"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-percibido-metalico"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-transmisiones-inmuebles"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "ejercicio-operacion"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-transmisiones-q1"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-transmisiones-q2"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-transmisiones-q3"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-transmisiones-q4"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "nif-operador-comunitario"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "numero-justificante"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "complementaria-sustitutiva"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "total-personas-entidades"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-total-anual-operaciones"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "total-inmuebles"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-total-arrendamiento-locales"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "persona-con-quien-relacionarse"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "persona-con-quien-relacionarse-telefono"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-representante-legal-nif"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-soporte"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "arrendatario-nif"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "arrendatario-representante-legal-nif"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "arrendatario-nombre"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-operacion-arrendamiento"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "situacion-inmueble"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "referencia-catastral"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "direccion-inmueble"
+from_revision = "2011-2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.provincia-codigo" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.pais-codigo" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "rd-1065-2007:art-33", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.representante-legal-nif" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.importe-anual" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.operacion-seguro" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.arrendamiento-local-negocio" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.importe-metalico" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.importe-transmisiones-inmuebles" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.ejercicio-operacion" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.importe-transmisiones-Q1" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.importe-transmisiones-Q2" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.importe-transmisiones-Q3" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.importe-transmisiones-Q4" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "contraparte.nif-operador-comunitario" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.numero-justificante" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.complementaria-sustitutiva" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.total-personas-entidades" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.importe-total-anual" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.total-inmuebles" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.importe-total-arrendamiento-locales" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.persona-relacion" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.persona-relacion-telefono" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.representante-legal-nif" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "decl.tipo-soporte" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "inmueble.arrendatario-nif" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "inmueble.representante-legal-nif" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "inmueble.arrendatario-nombre" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "inmueble.importe-operacion" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "inmueble.situacion" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "inmueble.referencia-catastral" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2011-2024", id = "inmueble.direccion" }
+fields = { legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"] }
+removed_fields = []
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2011-2024", id = "modelo-347-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2011-2024", id = "modelo-347-informative"}
+sequence_additions = {casilla_ids = ["contraparte.criterio-caja", "contraparte.inversion-sujeto-pasivo", "contraparte.bienes-vinculados", "contraparte.importe-criterio-caja", "contraparte.numero-convocatoria-bdns"], deadline_windows = ["modelo-347-2025-0a", "modelo-347-2026-0a"], export_layouts = ["generated-modelo-347-2025-y-siguientes-fichero"], legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6], export_layouts = [0], workbook_parity_refs = [1]}
+sequence_order = {casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 40, 41, 42, 43, 44, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], legal_refs = [0, 1, 5, 2, 3, 4], source_refs = [4, 0, 1, 2, 3, 5]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2011-2024", id = "modelo-347-export"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2011-2024", id = "modelo-347-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2011-2024", id = "modelo-347-filing"}
+sequence_additions = {source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2011-2024", id = "modelo-347-tercero-anual-threshold-eur"}
+sequence_additions = {values = [{value = "3005.06", date_axis = "filing_period", valid_from = 2025-01-01}]}
+sequence_removals = {values = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-clave"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 2, 1], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-importe"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 2, 1], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-importe-q1"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 2, 1], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-importe-q2"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 2, 1], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-importe-q3"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 2, 1], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-importe-q4"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 2, 1], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-nif"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-nombre"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-pais-codigo"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 3, 1, 2], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-declarante-importe-total-anual-operaciones"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_order = {legal_refs = [0, 3, 1, 2], source_refs = [3, 0, 1, 2]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2011-2024", id = "modelo-347-declarante-numero-personas-entidades"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_order = {legal_refs = [0, 3, 1, 2], source_refs = [3, 0, 1, 2]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2011-2024", id = "modelo-347-dr-2025"}
+fields = {workbook_source = "aeat-dr-347-2025"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2011-2024", id = "modelo-347-informative-summary-verification"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [4, 0, 1, 2, 3]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2011-2024", id = "aeat-dr-347-2011"}
+replacement_id = "aeat-dr-347-2025"
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [2, 0, 1]}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2011-2024", id = "modelo-347-2018-0a"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2011-2024", id = "modelo-347-2019-0a"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2011-2024", id = "modelo-347-2020-0a"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2011-2024", id = "modelo-347-2021-0a"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2011-2024", id = "modelo-347-2022-0a"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2011-2024", id = "modelo-347-2023-0a"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2011-2024", id = "modelo-347-2024-0a"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "workbook_parity_refs"
+selector = {revision = "2011-2024", id = "modelo-347-dr-2011"}

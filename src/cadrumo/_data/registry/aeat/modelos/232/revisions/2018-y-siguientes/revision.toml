@@ -44,6 +44,8 @@ source_refs = [
     "aeat-modelo-232-procedure",
     "boe-modelo-232-2017-form",
 ]
+family_storage_baseline = "2016-2017"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
 
@@ -99,3 +101,696 @@ to_revision = "2018-y-siguientes"
 origin = "seeded"
 legal_refs = ["orden-hfp-816-2017:art-1", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-nif-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-fjo-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-name-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-vinculacion-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-location-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-operacion-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-ingreso-pago-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-metodo-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-importe-1"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-nif-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-fjo-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-name-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-vinculacion-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-location-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-operacion-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-ingreso-pago-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-metodo-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-importe-2"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-nif-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-fjo-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-name-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-vinculacion-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-location-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-operacion-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-ingreso-pago-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-metodo-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-importe-3"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-nif-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-fjo-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-name-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-vinculacion-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-location-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-operacion-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-ingreso-pago-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-metodo-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-importe-4"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-nif-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-fjo-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-name-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-vinculacion-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-location-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-tipo-operacion-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-ingreso-pago-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-metodo-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "related-party-importe-5"
+from_revision = "2016-2017"
+to_revision = "2018-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-nif" }
+fields = { binding = "modelo-232.page_01.vinculada-1-nif" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-fjo" }
+fields = { binding = "modelo-232.page_01.vinculada-1-fjo" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-razon-social" }
+fields = { binding = "modelo-232.page_01.vinculada-1-razon-social" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-tipo-vinculacion" }
+fields = { binding = "modelo-232.page_01.vinculada-1-tipo-vinculacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-provincia-pais" }
+fields = { binding = "modelo-232.page_01.vinculada-1-provincia-pais" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-tipo-operacion" }
+fields = { binding = "modelo-232.page_01.vinculada-1-tipo-operacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-ingreso-pago" }
+fields = { binding = "modelo-232.page_01.vinculada-1-ingreso-pago" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-metodo-valoracion" }
+fields = { binding = "modelo-232.page_01.vinculada-1-metodo-valoracion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-1-importe" }
+fields = { binding = "modelo-232.page_01.vinculada-1-importe" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-nif" }
+fields = { binding = "modelo-232.page_01.vinculada-2-nif" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-fjo" }
+fields = { binding = "modelo-232.page_01.vinculada-2-fjo" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-razon-social" }
+fields = { binding = "modelo-232.page_01.vinculada-2-razon-social" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-tipo-vinculacion" }
+fields = { binding = "modelo-232.page_01.vinculada-2-tipo-vinculacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-provincia-pais" }
+fields = { binding = "modelo-232.page_01.vinculada-2-provincia-pais" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-tipo-operacion" }
+fields = { binding = "modelo-232.page_01.vinculada-2-tipo-operacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-ingreso-pago" }
+fields = { binding = "modelo-232.page_01.vinculada-2-ingreso-pago" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-metodo-valoracion" }
+fields = { binding = "modelo-232.page_01.vinculada-2-metodo-valoracion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-2-importe" }
+fields = { binding = "modelo-232.page_01.vinculada-2-importe" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-nif" }
+fields = { binding = "modelo-232.page_01.vinculada-3-nif" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-fjo" }
+fields = { binding = "modelo-232.page_01.vinculada-3-fjo" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-razon-social" }
+fields = { binding = "modelo-232.page_01.vinculada-3-razon-social" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-tipo-vinculacion" }
+fields = { binding = "modelo-232.page_01.vinculada-3-tipo-vinculacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-provincia-pais" }
+fields = { binding = "modelo-232.page_01.vinculada-3-provincia-pais" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-tipo-operacion" }
+fields = { binding = "modelo-232.page_01.vinculada-3-tipo-operacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-ingreso-pago" }
+fields = { binding = "modelo-232.page_01.vinculada-3-ingreso-pago" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-metodo-valoracion" }
+fields = { binding = "modelo-232.page_01.vinculada-3-metodo-valoracion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-3-importe" }
+fields = { binding = "modelo-232.page_01.vinculada-3-importe" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-nif" }
+fields = { binding = "modelo-232.page_01.vinculada-4-nif" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-fjo" }
+fields = { binding = "modelo-232.page_01.vinculada-4-fjo" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-razon-social" }
+fields = { binding = "modelo-232.page_01.vinculada-4-razon-social" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-tipo-vinculacion" }
+fields = { binding = "modelo-232.page_01.vinculada-4-tipo-vinculacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-provincia-pais" }
+fields = { binding = "modelo-232.page_01.vinculada-4-provincia-pais" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-tipo-operacion" }
+fields = { binding = "modelo-232.page_01.vinculada-4-tipo-operacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-ingreso-pago" }
+fields = { binding = "modelo-232.page_01.vinculada-4-ingreso-pago" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-metodo-valoracion" }
+fields = { binding = "modelo-232.page_01.vinculada-4-metodo-valoracion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-4-importe" }
+fields = { binding = "modelo-232.page_01.vinculada-4-importe" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-nif" }
+fields = { binding = "modelo-232.page_01.vinculada-5-nif" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-fjo" }
+fields = { binding = "modelo-232.page_01.vinculada-5-fjo" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-razon-social" }
+fields = { binding = "modelo-232.page_01.vinculada-5-razon-social" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-tipo-vinculacion" }
+fields = { binding = "modelo-232.page_01.vinculada-5-tipo-vinculacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-provincia-pais" }
+fields = { binding = "modelo-232.page_01.vinculada-5-provincia-pais" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-tipo-operacion" }
+fields = { binding = "modelo-232.page_01.vinculada-5-tipo-operacion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-ingreso-pago" }
+fields = { binding = "modelo-232.page_01.vinculada-5-ingreso-pago" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-metodo-valoracion" }
+fields = { binding = "modelo-232.page_01.vinculada-5-metodo-valoracion" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".casilla_overrides]]
+selector = { revision = "2016-2017", id = "vinculada-5-importe" }
+fields = { binding = "modelo-232.page_01.vinculada-5-importe" }
+removed_fields = ["additional_source_refs"]
+
+[[revisions."2018-y-siguientes".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2016-2017", id = "modelo-232-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-232-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2018-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2016-2017", id = "modelo-232-informative"}
+sequence_additions = {bindings = ["modelo-232-related-party-row-nif", "modelo-232-related-party-row-name", "modelo-232-related-party-row-country", "modelo-232-related-party-row-operation-kind", "modelo-232-related-party-row-tpr-method", "modelo-232-related-party-row-amount"], deadline_windows = ["modelo-232-2018-0a", "modelo-232-2019-0a", "modelo-232-2020-0a", "modelo-232-2021-0a", "modelo-232-2022-0a", "modelo-232-2023-0a", "modelo-232-2024-0a", "modelo-232-2025-0a", "modelo-232-2026-0a"], source_refs = ["aeat-dr-232-2018"]}
+sequence_removals = {deadline_windows = [0, 1]}
+sequence_order = {source_refs = [0, 3, 1, 2]}
+
+[[revisions."2018-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2017", id = "modelo-232-export"}
+sequence_additions = {source_refs = ["aeat-dr-232-2018"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2018-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2017", id = "modelo-232-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-232-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2018-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2016-2017", id = "modelo-232-filing"}
+sequence_additions = {source_refs = ["aeat-dr-232-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2018-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2016-2017", id = "modelo-232-dr"}
+fields = {fixture_id = "modelo-232-2018-record-design-layout", workbook_source = "aeat-dr-232-2018"}
+sequence_additions = {source_refs = ["aeat-dr-232-2018"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2018-y-siguientes".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2016-2017", id = "modelo-232-informative-summary-verification"}
+sequence_additions = {source_refs = ["aeat-dr-232-2018"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2018-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2016-2017", id = "aeat-dr-232-2016"}
+replacement_id = "aeat-dr-232-2018"
+sequence_additions = {casillas = [{casilla_id = "vinculada-1-fjo", number = "3.vinculada.1.fjo"}, {casilla_id = "vinculada-1-importe", number = "3.vinculada.1.importe"}, {casilla_id = "vinculada-1-ingreso-pago", number = "3.vinculada.1.ingreso-pago"}, {casilla_id = "vinculada-1-metodo-valoracion", number = "3.vinculada.1.metodo-valoracion"}, {casilla_id = "vinculada-1-nif", number = "3.vinculada.1.nif"}, {casilla_id = "vinculada-1-provincia-pais", number = "3.vinculada.1.provincia-pais"}, {casilla_id = "vinculada-1-razon-social", number = "3.vinculada.1.razon-social"}, {casilla_id = "vinculada-1-tipo-operacion", number = "3.vinculada.1.tipo-operacion"}, {casilla_id = "vinculada-1-tipo-vinculacion", number = "3.vinculada.1.tipo-vinculacion"}, {casilla_id = "vinculada-2-fjo", number = "3.vinculada.2.fjo"}, {casilla_id = "vinculada-2-importe", number = "3.vinculada.2.importe"}, {casilla_id = "vinculada-2-ingreso-pago", number = "3.vinculada.2.ingreso-pago"}, {casilla_id = "vinculada-2-metodo-valoracion", number = "3.vinculada.2.metodo-valoracion"}, {casilla_id = "vinculada-2-nif", number = "3.vinculada.2.nif"}, {casilla_id = "vinculada-2-provincia-pais", number = "3.vinculada.2.provincia-pais"}, {casilla_id = "vinculada-2-razon-social", number = "3.vinculada.2.razon-social"}, {casilla_id = "vinculada-2-tipo-operacion", number = "3.vinculada.2.tipo-operacion"}, {casilla_id = "vinculada-2-tipo-vinculacion", number = "3.vinculada.2.tipo-vinculacion"}, {casilla_id = "vinculada-3-fjo", number = "3.vinculada.3.fjo"}, {casilla_id = "vinculada-3-importe", number = "3.vinculada.3.importe"}, {casilla_id = "vinculada-3-ingreso-pago", number = "3.vinculada.3.ingreso-pago"}, {casilla_id = "vinculada-3-metodo-valoracion", number = "3.vinculada.3.metodo-valoracion"}, {casilla_id = "vinculada-3-nif", number = "3.vinculada.3.nif"}, {casilla_id = "vinculada-3-provincia-pais", number = "3.vinculada.3.provincia-pais"}, {casilla_id = "vinculada-3-razon-social", number = "3.vinculada.3.razon-social"}, {casilla_id = "vinculada-3-tipo-operacion", number = "3.vinculada.3.tipo-operacion"}, {casilla_id = "vinculada-3-tipo-vinculacion", number = "3.vinculada.3.tipo-vinculacion"}, {casilla_id = "vinculada-4-fjo", number = "3.vinculada.4.fjo"}, {casilla_id = "vinculada-4-importe", number = "3.vinculada.4.importe"}, {casilla_id = "vinculada-4-ingreso-pago", number = "3.vinculada.4.ingreso-pago"}, {casilla_id = "vinculada-4-metodo-valoracion", number = "3.vinculada.4.metodo-valoracion"}, {casilla_id = "vinculada-4-nif", number = "3.vinculada.4.nif"}, {casilla_id = "vinculada-4-provincia-pais", number = "3.vinculada.4.provincia-pais"}, {casilla_id = "vinculada-4-razon-social", number = "3.vinculada.4.razon-social"}, {casilla_id = "vinculada-4-tipo-operacion", number = "3.vinculada.4.tipo-operacion"}, {casilla_id = "vinculada-4-tipo-vinculacion", number = "3.vinculada.4.tipo-vinculacion"}, {casilla_id = "vinculada-5-fjo", number = "3.vinculada.5.fjo"}, {casilla_id = "vinculada-5-importe", number = "3.vinculada.5.importe"}, {casilla_id = "vinculada-5-ingreso-pago", number = "3.vinculada.5.ingreso-pago"}, {casilla_id = "vinculada-5-metodo-valoracion", number = "3.vinculada.5.metodo-valoracion"}, {casilla_id = "vinculada-5-nif", number = "3.vinculada.5.nif"}, {casilla_id = "vinculada-5-provincia-pais", number = "3.vinculada.5.provincia-pais"}, {casilla_id = "vinculada-5-razon-social", number = "3.vinculada.5.razon-social"}, {casilla_id = "vinculada-5-tipo-operacion", number = "3.vinculada.5.tipo-operacion"}, {casilla_id = "vinculada-5-tipo-vinculacion", number = "3.vinculada.5.tipo-vinculacion"}], source_refs = ["aeat-dr-232-2018"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2018-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2016-2017", id = "modelo-232-2016-0a"}
+
+[[revisions."2018-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2016-2017", id = "modelo-232-2017-0a"}

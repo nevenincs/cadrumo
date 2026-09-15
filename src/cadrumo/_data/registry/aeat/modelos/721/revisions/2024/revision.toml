@@ -43,6 +43,8 @@ remain empty. NOT CLAIMED -- no independent figure oracle exists and the informa
 or informational facts.
 """
 reviewed_at = 2026-08-30
+family_storage_baseline = "2023"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2024".family_dispositions.formulas]
 reason = """
@@ -155,3 +157,29 @@ to_revision = "2024"
 origin = "seeded"
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-2", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-721-2024-layout"]
+
+[[revisions."2024".family_overrides]]
+family = "constructs"
+selector = {revision = "2023", id = "modelo-721-informative"}
+sequence_additions = {deadline_windows = ["modelo-721-2024-0a"], legal_refs = ["orden-hac-1504-2024:art-9", "orden-hac-1504-2024:df-unica"], source_refs = ["boe-modelo-721-2024-layout"]}
+sequence_removals = {deadline_windows = [0], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 7, 8, 6], source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-721-filing"}
+sequence_additions = {source_refs = ["boe-modelo-721-2024-layout"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2023", id = "modelo-721-dr"}
+fields = {fixture_id = "modelo-721-record-design-layout-2024", workbook_source = "boe-modelo-721-2024-layout"}
+sequence_additions = {legal_refs = ["orden-hac-1504-2024:art-9", "orden-hac-1504-2024:df-unica"], source_refs = ["boe-modelo-721-2024-layout"]}
+sequence_removals = {legal_refs = [0], source_refs = [0]}
+sequence_order = {legal_refs = [1, 2, 0]}
+
+[[revisions."2024".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-721-2023-0a"}

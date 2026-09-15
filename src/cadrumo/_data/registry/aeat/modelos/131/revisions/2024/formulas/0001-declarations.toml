@@ -1,26 +1,4 @@
 [[revisions."2024".formulas]]
-id = "modelo-131-saldo-negativo-fin-periodo"
-target_casilla_id = "saldo-negativo-fin-periodo"
-expression = { op = "max", args = [
-    { literal = "0" },
-    { op = "negate", args = [{ casilla_id = "10" }] },
-] }
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
-[[revisions."2024".formulas.source_citations]]
-source_ref = "aeat-modelo-131-instructions"
-required_text = ["Resultados negativos"]
-# M131 estimación-objetiva módulos engine formulas (tabled activities).
-#
-# Fase 1ª — rendimiento neto previo: dispatches the units×coefficient product
-# through the m131_resolve_modulos_previo op, which reads the epígrafe (text)
-# plus up to seven módulo unit-count casillas (the highest signo count among
-# the tabled activities, 644.1/644.2/644.3) and the registry-declared
-# keyed-bracket coefficient table (m131-modulos-coeficientes-2024). An
-# untabled epígrafe or a blank epígrafe resolves to zero (see the op's
-# docstring in _formula_runtime.py).
-[[revisions."2024".formulas]]
 id = "modelo-131-modulos-rendimiento-neto-previo"
 target_casilla_id = "modulos-rendimiento-neto-previo"
 expression = { op = "m131_resolve_modulos_previo", args = [

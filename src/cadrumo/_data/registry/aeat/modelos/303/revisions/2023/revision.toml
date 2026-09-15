@@ -47,6 +47,8 @@ source_refs = [
     "boe-orden-hfp-1172-2022-iva-authority",
     "boe-modelo-303-2008-form",
 ]
+family_storage_baseline = "2022"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions.2023.period_selector]
 year_from = 2023
@@ -59,3 +61,1453 @@ periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08
 reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023"]
+
+[[revisions.2023.lineage_attestations]]
+family = "casillas"
+continuidad_id = "dr303-64"
+from_revision = "2022"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[[revisions.2023.lineage_attestations]]
+family = "casillas"
+continuidad_id = "dr303-66"
+from_revision = "2022"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[[revisions.2023.lineage_attestations]]
+family = "casillas"
+continuidad_id = "dr303-71"
+from_revision = "2022"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[[revisions.2023.lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-resultado-autoliquidacion"
+from_revision = "2022"
+to_revision = "2023"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+source_refs = ["aeat-dr-303-2023", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "27" }
+fields = { formula = "modelo-303-dr303-27-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "29" }
+fields = { formula = "modelo-303-dr303-29-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "33" }
+fields = { formula = "modelo-303-dr303-33-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "37" }
+fields = { formula = "modelo-303-dr303-37-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "45" }
+fields = { formula = "modelo-303-dr303-45-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "120" }
+fields = { binding = "modelo-303-casilla-120-no-sujetas-localizacion-base", input_kind = "bound", legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"] }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "122" }
+fields = { binding = "modelo-303-casilla-122-inversion-sujeto-pasivo-base", input_kind = "bound", legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"] }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "64" }
+fields = { additional_source_refs = ["aeat-modelo-303-procedure"], formula = "modelo-303-iva-suma-resultados", input_kind = "computed", legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "65" }
+fields = { binding = "modelo-303-profile-state-attribution-ratio", input_kind = "bound" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "66" }
+fields = { additional_source_refs = ["aeat-modelo-303-procedure"], formula = "modelo-303-iva-atribuible-estado", input_kind = "computed", legal_refs = ["rd-1624-1992:art-71"] }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "71" }
+fields = { additional_source_refs = ["aeat-modelo-303-procedure"], formula = "modelo-303-iva-resultado-final", input_kind = "computed", legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"] }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "iva.resultado" }
+fields = { additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"], legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"] }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "03" }
+fields = { formula = "modelo-303-dr303-03-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "06" }
+fields = { formula = "modelo-303-dr303-06-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "09" }
+fields = { formula = "modelo-303-dr303-09-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "10" }
+fields = { formula = "modelo-303-dr303-10-projection", input_kind = "computed", legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"] }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "11" }
+fields = { formula = "modelo-303-dr303-11-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "13" }
+fields = { formula = "modelo-303-dr303-13-projection", input_kind = "computed" }
+removed_fields = []
+
+[[revisions.2023.casilla_overrides]]
+selector = { revision = "2022", id = "18" }
+fields = { binding = "modelo-303-recargo-equivalencia-super-reducido-cuota", input_kind = "bound", legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"] }
+removed_fields = []
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-compensacion-aplicada-periodo"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-compensacion-disponible-fin-periodo"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-compensacion-generada-periodo"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-compensacion-pendiente-periodos-posteriores"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-iva-cuota-deducible-total"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-iva-cuota-devengada-total"}
+sequence_additions = {"expression.args" = [{casilla_id = "iva.repercutido.reducido.transitorio"}, {casilla_id = "iva.autoconsumo.promotor.cuota"}, {casilla_id = "158"}, {casilla_id = "26"}, {casilla_id = "15"}, {casilla_id = "152"}], source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {"expression.args" = [0, 1, 2, 8, 3, 4, 9, 5, 6, 7, 10, 11, 12, 13], source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-iva-prorrata-porcentaje"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-iva-resultado"}
+sequence_additions = {"expression.args" = [{op = "add", args = [{op = "add", args = [{casilla_id = "66"}, {casilla_id = "77"}]}, {casilla_id = "68"}]}], source_citations = [{source_ref = "aeat-modelo-303-procedure", required_text = ["modelo 303"]}], source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {"expression.args" = [0], legal_refs = [6], source_refs = [0]}
+sequence_order = {"expression.args" = [1, 0], source_refs = [2, 1, 0]}
+
+[[revisions.2023.family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-303-iva-resultado-regimen-general"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2022", id = "modelo-303-declaracion-pdf"}
+fields = {min_coverage = "0.8333"}
+sequence_additions = {legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-29", "rd-1624-1992:art-30"], source_refs = ["aeat-dr-303-2023"], target_casillas = [{casilla_id = "37", match_strategy = "named_label", value_kind = "amount", label_pattern = "En\\s+adquisiciones\\s+intracomunitarias\\s+de\\s+bienes\\s+y\\s+servicios\\s+corrientes"}, {casilla_id = "iva.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = "Resultado\\s+r[eé]gimen\\s+general\\s+\\(27\\s*-\\s*45\\)"}, {casilla_id = "64", match_strategy = "named_label", value_kind = "amount", label_pattern = "Suma\\s+de\\s+resultados"}, {casilla_id = "66", match_strategy = "named_label", value_kind = "amount", label_pattern = "Atribuible\\s+a\\s+la\\s+Administraci[oó]n\\s+del\\s+Estado"}, {casilla_id = "iva.compensacion-pendiente-periodos-anteriores", match_strategy = "named_label", value_kind = "amount", label_pattern = "Cuotas\\s+a\\s+compensar\\s+pendientes\\s+de\\s+periodos\\s+anteriores"}, {casilla_id = "iva.compensacion-aplicada-periodo", match_strategy = "named_label", value_kind = "amount", label_pattern = "Cuotas\\s+a\\s+compensar\\s+de\\s+periodos\\s+anteriores\\s+aplicadas\\s+en\\s+este\\s+periodo"}, {casilla_id = "iva.compensacion-pendiente-periodos-posteriores", match_strategy = "named_label", value_kind = "amount", label_pattern = "Cuotas\\s+a\\s+compensar\\s+de\\s+periodos\\s+previos\\s+pendientes\\s+para\\s+periodos\\s+posteriores\\s+\\(110\\s*-\\s*78\\)"}, {casilla_id = "iva.resultado", match_strategy = "named_label", value_kind = "amount", label_pattern = "Resultado\\s+de\\s+la\\s+autoliquidaci[oó]n\\s+\\(66[^\\)]*\\)"}, {casilla_id = "71", match_strategy = "named_label", value_kind = "amount", label_pattern = "Resultado\\s+\\(69\\s*-\\s*70\\s*\\+\\s*109\\)"}]}
+sequence_removals = {source_refs = [0], target_casillas = [3]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 15, 6, 7], source_refs = [2, 0, 1], target_casillas = [0, 1, 3, 2, 4, 5, 6, 7, 8, 9, 10, 11]}
+
+[[revisions.2023.family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2022", id = "modelo-303-dep-self-prior-quarter"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-303-iva-autoliquidacion"}
+sequence_additions = {bindings = ["modelo-303-iva-autorepercutido-intracomunitaria-devengado-base", "modelo-303-autoconsumo-promotor-base", "modelo-303-iva-repercutido-reducido-transitorio-base", "modelo-303-iva-repercutido-reducido-transitorio-cuota"], casilla_ids = ["iva.repercutido.reducido.transitorio", "iva.autorepercutido.intracomunitaria.devengado.base", "iva.autoconsumo.promotor.base", "iva.autoconsumo.promotor.cuota", "58", "76", "64", "65", "66", "77", "68", "70", "109", "71", "01", "04", "07", "153", "28"], filing_schedules = ["modelo-303-mensual"], formulas = ["modelo-303-autoconsumo-promotor-cuota", "modelo-303-iva-suma-resultados", "modelo-303-iva-atribuible-estado", "modelo-303-iva-resultado-final", "modelo-303-dr303-09-projection", "modelo-303-dr303-06-projection", "modelo-303-dr303-03-projection", "modelo-303-dr303-154-rate", "modelo-303-dr303-155-projection", "modelo-303-dr303-10-projection", "modelo-303-dr303-11-projection", "modelo-303-dr303-13-projection", "modelo-303-dr303-27-projection", "modelo-303-dr303-29-projection", "modelo-303-dr303-33-projection", "modelo-303-dr303-37-projection", "modelo-303-dr303-45-projection"], legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-121", "rd-596-2016", "orden-hfp-1172-2022:art-4"], source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {bindings = [14, 15], casilla_ids = [24, 25, 26], deadline_windows = [0, 1, 2, 3], legal_refs = [7, 8, 9], source_refs = [0, 3, 4]}
+sequence_order = {bindings = [0, 1, 2, 3, 4, 5, 6, 24, 7, 8, 9, 10, 25, 11, 12, 13, 14, 15, 16, 26, 27, 17, 18, 19, 20, 21, 22, 23], casilla_ids = [0, 1, 2, 28, 3, 4, 5, 6, 29, 7, 8, 9, 30, 31, 10, 11, 12, 32, 33, 34, 35, 36, 37, 38, 13, 14, 15, 16, 39, 40, 41, 17, 18, 19, 20, 21, 22, 23, 24, 25, 42, 43, 44, 45, 46, 26, 27], formulas = [0, 9, 1, 2, 10, 11, 3, 4, 5, 12, 6, 7, 8, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25], legal_refs = [0, 1, 37, 2, 3, 4, 5, 6, 7, 38, 8, 9, 10, 11, 12, 13, 14, 31, 32, 33, 34, 35, 36, 39, 15, 16, 17, 18, 22, 23, 40, 24, 25, 26, 27, 28, 29, 30, 19, 20, 21, 41], source_refs = [2, 0, 1, 3]}
+
+[[revisions.2023.family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-303-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-303-export"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-303-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "m303-bien-inversion-divisor-inmueble"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"], values = [{value = "10", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "m303-bien-inversion-divisor-mueble"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"], values = [{value = "5", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "m303-bien-inversion-regularizacion-umbral-puntos"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"], values = [{value = "10", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "m303-bien-inversion-ventana-anos-inmueble"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"], values = [{value = "9", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "m303-bien-inversion-ventana-anos-mueble"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"], values = [{value = "4", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "m303-modulos-iva-dificil-justificacion-forfait"}
+sequence_additions = {source_citations = [{source_ref = "boe-orden-hfp-1172-2022-iva-authority", required_text = ["será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación"]}], source_refs = ["boe-orden-hfp-1172-2022-iva-authority"], values = [{value = "1", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "m303-prorrata-especial-obligatoria-margen-porcentaje"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"], values = [{value = "10", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31, comparison = "inclusive"}]}
+sequence_removals = {source_refs = [0], values = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-domestic-current-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-domestic-current-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-domestic-current-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-domestic-current-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-domestic-investment-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-domestic-investment-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-domestic-investment-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-domestic-investment-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-import-current-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-import-current-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-import-current-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-import-current-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-import-investment-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-import-investment-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-import-investment-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-import-investment-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-intra-eu-current-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-intra-eu-current-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-intra-eu-current-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-intra-eu-current-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-intra-eu-investment-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-intra-eu-investment-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-intra-eu-investment-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-intra-eu-investment-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-investment-regularisation.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-investment-regularisation.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-reagp-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-reagp-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-reagp-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-reagp-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-rectification-base.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-rectification-base.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-rectification-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-rectification-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-total.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-differentiated-deduction:field-total.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-activity-code.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-activity-code.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-activity-code.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-activity-code.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-activity-code.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-activity-code.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-6"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-exonerado-390-operaciones-terceros"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-cnae.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-cnae.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-cnae.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-cnae.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-cnae.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-total.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-total.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-total.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-total.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-operaciones-total.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-porcentaje.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-porcentaje.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-porcentaje.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-porcentaje.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-porcentaje.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-tipo.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-tipo.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-tipo.slot-3"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-tipo.slot-4"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-prorrata-activity:field-tipo.slot-5"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-activity:cohort-agricola.field-activity-code.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-activity:cohort-agricola.field-activity-code.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-auxiliary-activity-indicator.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-auxiliary-activity-indicator.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-iae-epigrafe.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-iae-epigrafe.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-devengada.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-devengada.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-soportada-operaciones-corrientes.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-soportada-operaciones-corrientes.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-indice-cuota.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-indice-cuota.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-ingreso-cuenta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-ingreso-cuenta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-porcentaje-ingreso-cuenta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-porcentaje-ingreso-cuenta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-volumen-ingresos.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-agricola.fact-volumen-ingresos.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-devengada-operaciones-corrientes.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-devengada-operaciones-corrientes.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-minima.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-minima.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-operaciones-corrientes.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-operaciones-corrientes.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-devolucion-cuotas-soportadas-otros-paises.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-devolucion-cuotas-soportadas-otros-paises.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividad-temporada.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividad-temporada.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividades-temporada.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividades-temporada.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-ingreso-cuenta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-ingreso-cuenta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-cuota-minima.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-cuota-minima.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-ingreso-cuenta.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-ingreso-cuenta.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reducciones.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reducciones.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-resultado-cuarto-trimestre.slot-1"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-resultado-cuarto-trimestre.slot-2"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-1.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-1.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-2.value-cuota-devengada"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2022", id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-2.value-declared-quantity"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023", "boe-orden-hfp-1172-2022-iva-authority"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2022", id = "implies-nonzero:prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"}
+fields = {predicate_id = "modelo-303-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-bienes-inversion-regularizacion-casilla-43"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-casilla-59-entregas-intracomunitarias-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-casilla-60-exportaciones-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-compensacion-pendiente-anteriores"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-criterio-caja-adquisiciones-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-criterio-caja-adquisiciones-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-criterio-caja-entregas-art75-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-criterio-caja-entregas-art75-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-autorepercutido-interior-devengado-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"}
+sequence_additions = {"provider.rate_kinds" = ["zero"], source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {"provider.rate_kinds" = [3, 0, 1, 2], source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"}
+sequence_additions = {"provider.rate_kinds" = ["zero"], source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {"provider.rate_kinds" = [3, 0, 1, 2], source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-repercutido-general-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-repercutido-general-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-repercutido-reducido-base"}
+fields = {provider = {applied_rates = ["0.10"]}}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-repercutido-reducido-cuota"}
+fields = {provider = {applied_rates = ["0.10"]}}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-repercutido-super-reducido-base"}
+fields = {provider = {applied_rates = ["0.04"]}}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-repercutido-super-reducido-cuota"}
+fields = {provider = {applied_rates = ["0.04"]}}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-soportado-importaciones-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-soportado-interiores-base"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-iva-soportado-interiores-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-prorrata-regularizacion-casilla-44"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-recargo-equivalencia-general-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-recargo-equivalencia-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-303-recargo-equivalencia-super-reducido-cuota"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2022", id = "modelo-303-dr"}
+fields = {fixture_id = "modelo-303-2023-record-design-layout", workbook_source = "aeat-dr-303-2023"}
+sequence_additions = {source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions.2023.family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2022", id = "modelo-303-iva-chain-verification"}
+sequence_additions = {computed_casilla_ids = ["64", "66", "71", "27", "45"], source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {computed_casilla_ids = [0, 1, 2, 8, 9, 3, 4, 5, 10, 6, 7, 11, 12], source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2022", id = "modelo-303-reconcile-when-present"}
+sequence_additions = {legal_refs = ["ley-37-1992:art-104"], reconcile_when_present_casilla_ids = ["03", "06", "09", "11", "13", "29", "33", "37", "10", "154", "155", "iva.autoconsumo.promotor.cuota"], source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 6, 4, 5], reconcile_when_present_casilla_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0], source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2022", id = "aeat-dr-303-2022"}
+replacement_id = "aeat-dr-303-2023"
+sequence_additions = {casillas = [{casilla_id = "109", number = "109"}, {casilla_id = "58", number = "58"}, {casilla_id = "64", number = "64"}, {casilla_id = "65", number = "65"}, {casilla_id = "66", number = "66"}, {casilla_id = "68", number = "68"}, {casilla_id = "70", number = "70"}, {casilla_id = "71", number = "71"}, {casilla_id = "76", number = "76"}, {casilla_id = "77", number = "77"}, {casilla_id = "iva.autoconsumo.promotor.base", number = "iva.autoconsumo.promotor.base"}, {casilla_id = "iva.autoconsumo.promotor.cuota", number = "iva.autoconsumo.promotor.cuota"}, {casilla_id = "iva.autorepercutido.intracomunitaria.devengado.base", number = "iva.autorepercutido.intracomunitaria.devengado.base"}, {casilla_id = "03", number = "03"}, {casilla_id = "06", number = "06"}, {casilla_id = "09", number = "09"}, {casilla_id = "10", number = "10"}, {casilla_id = "11", number = "11"}, {casilla_id = "13", number = "13"}, {casilla_id = "27", number = "27"}, {casilla_id = "29", number = "29"}, {casilla_id = "33", number = "33"}, {casilla_id = "37", number = "37"}, {casilla_id = "45", number = "45"}, {casilla_id = "122", number = "122"}, {casilla_id = "120", number = "120"}, {casilla_id = "158", number = "158"}, {casilla_id = "153", number = "153"}, {casilla_id = "154", number = "154"}, {casilla_id = "155", number = "155"}, {casilla_id = "iva.repercutido.reducido.transitorio", number = "iva.repercutido.reducido.transitorio"}, {casilla_id = "26", number = "26"}, {casilla_id = "15", number = "15"}, {casilla_id = "152", number = "152"}], legal_refs = ["ley-12-2002:art-29", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "ley-37-1992:art-79", "ley-37-1992:art-9"], source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {casillas = [37, 9, 38, 39, 40, 41, 42, 10, 43, 44, 45, 46, 11, 12, 13, 14, 47, 48, 15, 16, 17, 49, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 0, 1, 61, 62, 63, 4, 2, 3, 5, 6, 7, 8, 31, 32, 33, 34, 35, 36, 64, 65, 66, 67, 68, 69, 70], legal_refs = [36, 0, 1, 2, 3, 4, 5, 6, 7, 8, 37, 38, 39, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 40, 24, 25, 41, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35], source_refs = [2, 0, 1]}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-01-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-02-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-03-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-04-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-05-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-06-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-07-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-08-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-09-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-10-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-11-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-12-mensual"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-1t"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-2t"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-3t"}
+
+[[revisions.2023.family_removals]]
+family = "deadline_windows"
+selector = {revision = "2022", id = "modelo-303-2022-4t"}
+
+[[revisions.2023.family_positions]]
+family = "verification_expectations"
+id = "modelo-303-total-cuota-verification"
+position = 1

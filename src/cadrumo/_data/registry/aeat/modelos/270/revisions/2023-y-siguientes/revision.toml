@@ -46,6 +46,8 @@ captured 2026-08-26, which still publish the 2023 design as CURRENT -- AEAT reis
 for modelo 347 under this same orden and did NOT for modelo 270. Its df unica applies the \
 orden "por primera vez ... al ejercicio 2025 y siguientes", so 2025 is governed here."""
 reviewed_at = 2026-08-30
+family_storage_baseline = "2013-2022"
+scoped_families = ["export_layouts", "workbook_parity_refs"]
 
 [[revisions."2023-y-siguientes".lineage_attestations]]
 family = "casillas"
@@ -271,3 +273,92 @@ to_revision = "2023-y-siguientes"
 origin = "seeded"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "total-perceptores-count"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-total-importe-premios"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2013-2022", id = "decl.total-perceptores" }
+fields = { legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], number = "138-146" }
+removed_fields = []
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2013-2022", id = "decl.total-importe-premios" }
+fields = { constraints = { legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"] }, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], number = "147-163" }
+removed_fields = []
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2013-2022", id = "decl.total-base-retencion" }
+fields = { constraints = { legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"] }, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], number = "164-180" }
+removed_fields = []
+
+[[revisions."2023-y-siguientes".casilla_overrides]]
+selector = { revision = "2013-2022", id = "decl.total-retenciones" }
+fields = { constraints = { legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"] }, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], number = "181-197" }
+removed_fields = []
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2013-2022", id = "modelo-270-informative"}
+fields = {deadline_windows = ["modelo-270-2024-0a"]}
+sequence_additions = {legal_refs = ["orden-hfp-1286-2023:art-2", "orden-hfp-1286-2023:df-unica"], source_refs = ["aeat-dr-270-2023"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {legal_refs = [0, 1, 3, 4, 2]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2013-2022", id = "modelo-270-export"}
+sequence_additions = {legal_refs = ["orden-hfp-1286-2023:art-2"], source_refs = ["aeat-dr-270-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 2, 1]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "export_layouts"
+selector = {revision = "2013-2022", id = "modelo-270-fichero-boe"}
+sequence_additions = {legal_refs = ["orden-hfp-1286-2023:art-2", "orden-hfp-1286-2023:df-unica"], records = [{id = "modelo-270-declarante", record_type = "declarante", order = 0, encoding = "iso-8859-1", line_ending = "none", fields = [{id = "modelo-270-decl-record-type", offset = 1, length = 1, kind = "literal", literal = "1", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-modelo", offset = 2, length = 3, kind = "literal", literal = "270", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-year", offset = 5, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-nif", offset = 9, length = 9, kind = "header", producer_key = "presenter.tax_id", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-razon-social", offset = 18, length = 40, kind = "header", producer_key = "taxpayer.legal_name", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-tipo-soporte", offset = 58, length = 1, kind = "literal", literal = "T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-persona-contacto-telefono", offset = 59, length = 9, kind = "casilla", casilla_id = "decl.persona-contacto-telefono", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-persona-contacto-nombre", offset = 68, length = 40, kind = "casilla", casilla_id = "decl.persona-contacto-nombre", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-numero-identificativo", offset = 108, length = 13, kind = "casilla", casilla_id = "decl.numero-identificativo", data_type = "text", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-complementaria", offset = 121, length = 1, kind = "casilla", casilla_id = "decl.complementaria", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-sustitutiva", offset = 122, length = 1, kind = "casilla", casilla_id = "decl.sustitutiva", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-numero-identificativo-anterior", offset = 123, length = 13, kind = "casilla", casilla_id = "decl.numero-identificativo-anterior", data_type = "text", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-periodo", offset = 136, length = 2, kind = "draft", draft_attribute = "period_code", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-total-perceptores", offset = 138, length = 9, kind = "casilla", casilla_id = "decl.total-perceptores", data_type = "integer", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-total-importe-premios", offset = 147, length = 17, kind = "casilla", casilla_id = "decl.total-importe-premios", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-total-base-retencion", offset = 164, length = 17, kind = "casilla", casilla_id = "decl.total-base-retencion", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-total-retenciones", offset = 181, length = 17, kind = "casilla", casilla_id = "decl.total-retenciones", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-decl-blancos", offset = 198, length = 303, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}]}, {id = "modelo-270-perceptor", record_type = "perceptor", order = 1, encoding = "iso-8859-1", line_ending = "none", fields = [{id = "modelo-270-perc-record-type", offset = 1, length = 1, kind = "literal", literal = "2", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-modelo", offset = 2, length = 3, kind = "literal", literal = "270", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-year", offset = 5, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-decl-nif", offset = 9, length = 9, kind = "header", producer_key = "presenter.tax_id", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-nif", offset = 18, length = 9, kind = "casilla", casilla_id = "perc.nif", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-nif-representante-legal", offset = 27, length = 9, kind = "casilla", casilla_id = "perc.nif-representante-legal", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-nombre", offset = 36, length = 40, kind = "casilla", casilla_id = "perc.nombre", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-nombre-representante", offset = 76, length = 40, kind = "casilla", casilla_id = "perc.nombre-representante", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-tipo-perceptor", offset = 116, length = 1, kind = "casilla", casilla_id = "perc.tipo-perceptor", data_type = "integer", required = true, padding = "left_zero", justification = "right", signed = false, value_policy = "enumerated-digits", allowed_values = ["1", "2", "3", "4", "5"], legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-clave-personalidad", offset = 117, length = 1, kind = "casilla", casilla_id = "perc.clave-personalidad", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-provincia", offset = 118, length = 2, kind = "casilla", casilla_id = "perc.provincia", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-fecha-sorteo", offset = 120, length = 8, kind = "casilla", casilla_id = "perc.fecha-sorteo", data_type = "date", date_format = "aaaammdd", value_policy = "yyyymmdd", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-fecha-pago", offset = 128, length = 8, kind = "casilla", casilla_id = "perc.fecha-pago", data_type = "date", date_format = "aaaammdd", value_policy = "yyyymmdd", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-importe-premio", offset = 136, length = 15, kind = "casilla", casilla_id = "perc.importe-premio", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-base-retencion", offset = 151, length = 15, kind = "casilla", casilla_id = "perc.base-retencion", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-retencion", offset = 166, length = 15, kind = "casilla", casilla_id = "perc.retencion", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-gestor-cobro", offset = 181, length = 1, kind = "casilla", casilla_id = "perc.gestor-cobro", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-blancos", offset = 182, length = 251, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-nif-pais-residencia", offset = 433, length = 20, kind = "casilla", casilla_id = "perc.nif-pais-residencia", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-fecha-nacimiento", offset = 453, length = 8, kind = "casilla", casilla_id = "perc.fecha-nacimiento", data_type = "date", date_format = "aaaammdd", value_policy = "yyyymmdd", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-lugar-nacimiento", offset = 461, length = 37, kind = "casilla", casilla_id = "perc.lugar-nacimiento", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-pais-residencia", offset = 498, length = 2, kind = "casilla", casilla_id = "perc.pais-residencia", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}, {id = "modelo-270-perc-blanco-final", offset = 500, length = 1, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023"]}]}], source_refs = ["aeat-dr-270-2023"]}
+sequence_removals = {records = [0, 1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 5, 2, 3]}
+
+[[revisions."2023-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2013-2022", id = "modelo-270-orden-static-layout"}
+fields = {workbook_source = "aeat-dr-270-2023"}
+sequence_additions = {source_refs = ["aeat-dr-270-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2013-2022", id = "modelo-270-2022-0a"}

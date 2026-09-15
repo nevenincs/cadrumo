@@ -55,6 +55,9 @@ source_refs = [
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
     "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
+family_storage_baseline = "2021-2025"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
 [revisions."2026-desde-02".family_dispositions.parameters]
 reason = """
 A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. 353 applies none. It is an AGGREGATION return: every cuota it reports was already determined, at its own rate, on the member entity's own Modelo 322, and 353 only sums those results and nets them against the group's pending compensaciones and prior payments. Every formula on this revision is addition and subtraction over casillas whose values arrive from the members; not one \
@@ -177,3 +180,909 @@ to_revision = "2026-desde-02"
 origin = "seeded"
 legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-agregado-reconciliacion-devengada-322"
+from_revision = "2021-2025"
+to_revision = "2026-desde-02"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-agregado-reconciliacion-deducible-322"
+from_revision = "2021-2025"
+to_revision = "2026-desde-02"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-agregado-reconciliacion-resultado-322"
+from_revision = "2021-2025"
+to_revision = "2026-desde-02"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".casilla_overrides]]
+selector = { revision = "2021-2025", id = "iva.reconciliacion.devengada-322" }
+fields = {  }
+removed_fields = ["export_exemption_reason"]
+
+[[revisions."2026-desde-02".casilla_overrides]]
+selector = { revision = "2021-2025", id = "iva.reconciliacion.deducible-322" }
+fields = {  }
+removed_fields = ["export_exemption_reason"]
+
+[[revisions."2026-desde-02".casilla_overrides]]
+selector = { revision = "2021-2025", id = "iva.reconciliacion.resultado-322" }
+fields = {  }
+removed_fields = ["export_exemption_reason"]
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2021-2025", id = "modelo-353-mensual"}
+sequence_removals = {periods = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2021-2025", id = "modelo-353-dep-322"}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_order = {source_refs = [0, 1, 5, 2, 3, 4]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "constructs"
+selector = {revision = "2021-2025", id = "modelo-353-iva-grupo-agregado"}
+sequence_additions = {casilla_ids = ["01", "02", "08", "09", "03", "04", "10", "05"], deadline_windows = ["modelo-353-2026-02", "modelo-353-2026-03", "modelo-353-2026-04", "modelo-353-2026-05", "modelo-353-2026-06", "modelo-353-2026-07", "modelo-353-2026-08", "modelo-353-2026-09", "modelo-353-2026-10", "modelo-353-2026-11", "modelo-353-2026-12"], source_refs = ["aeat-dr-353-2026", "aeat-modelo-303-procedure", "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]}
+sequence_removals = {bindings = [0, 1, 2, 3, 4], casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7], deadline_windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47], formulas = [0, 1, 2], source_refs = [5, 6, 7, 8]}
+sequence_order = {casilla_ids = [2, 3, 4, 5, 6, 7, 8, 9, 0, 1], formulas = [2, 0, 1], source_refs = [0, 1, 6, 2, 7, 8, 3, 4, 9, 5]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "application_links"
+selector = {revision = "2021-2025", id = "modelo-353-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "application_links"
+selector = {revision = "2021-2025", id = "modelo-353-export"}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "application_links"
+selector = {revision = "2021-2025", id = "modelo-353-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2021-2025", id = "implies-nonzero:resultado-implica-resultado-autoliquidacion"}
+fields = {predicate_id = "modelo-353-2026-resultado-implica-resultado-autoliquidacion"}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2021-2025", id = "implies-nonzero:resultado-total-implica-resultado"}
+fields = {predicate_id = "modelo-353-2026-resultado-total-implica-resultado"}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-1-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 195}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-1-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 169}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-1-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 200}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-1-entidades-dependientes-resultado"}
+fields = {provider = {offset = 178}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-10-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 618}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-10-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 592}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-10-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 623}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-10-entidades-dependientes-resultado"}
+fields = {provider = {offset = 601}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-11-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 665}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-11-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 639}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-11-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 670}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-11-entidades-dependientes-resultado"}
+fields = {provider = {offset = 648}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-12-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 712}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-12-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 686}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-12-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 717}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-12-entidades-dependientes-resultado"}
+fields = {provider = {offset = 695}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-13-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 759}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-13-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 733}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-13-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 764}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-13-entidades-dependientes-resultado"}
+fields = {provider = {offset = 742}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-14-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 806}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-14-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 780}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-14-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 811}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-14-entidades-dependientes-resultado"}
+fields = {provider = {offset = 789}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-15-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 853}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-15-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 827}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-15-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 858}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-15-entidades-dependientes-resultado"}
+fields = {provider = {offset = 836}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-16-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 900}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-16-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 874}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-16-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 905}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-16-entidades-dependientes-resultado"}
+fields = {provider = {offset = 883}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-17-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 947}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-17-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 921}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-17-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 952}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-17-entidades-dependientes-resultado"}
+fields = {provider = {offset = 930}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-18-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 994}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-18-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 968}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-18-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 999}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-18-entidades-dependientes-resultado"}
+fields = {provider = {offset = 977}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-19-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 1041}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-19-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 1015}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-19-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 1046}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-19-entidades-dependientes-resultado"}
+fields = {provider = {offset = 1024}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-2-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 242}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-2-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 216}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-2-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 247}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-2-entidades-dependientes-resultado"}
+fields = {provider = {offset = 225}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-20-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 1088}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-20-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 1062}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-20-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 1093}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-20-entidades-dependientes-resultado"}
+fields = {provider = {offset = 1071}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-3-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 289}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-3-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 263}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-3-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 294}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-3-entidades-dependientes-resultado"}
+fields = {provider = {offset = 272}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-4-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 336}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-4-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 310}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-4-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 341}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-4-entidades-dependientes-resultado"}
+fields = {provider = {offset = 319}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-5-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 383}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-5-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 357}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-5-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 388}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-5-entidades-dependientes-resultado"}
+fields = {provider = {offset = 366}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-6-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 430}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-6-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 404}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-6-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 435}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-6-entidades-dependientes-resultado"}
+fields = {provider = {offset = 413}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-7-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 477}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-7-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 451}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-7-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 482}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-7-entidades-dependientes-resultado"}
+fields = {provider = {offset = 460}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-8-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 524}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-8-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 498}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-8-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 529}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-8-entidades-dependientes-resultado"}
+fields = {provider = {offset = 507}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-9-ent-depndtes-de-participac-al-final-del"}
+fields = {provider = {offset = 571}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-9-entidades-dependientes-n-i-f"}
+fields = {provider = {offset = 545}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-9-entidades-dependientes-numero-de-justifi"}
+fields = {provider = {offset = 576}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-9-entidades-dependientes-resultado"}
+fields = {provider = {offset = 554}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-dominante-entidad-dominante-n-i-f"}
+fields = {provider = {offset = 122}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-dominante-entidad-dominante-numero-de-justificante"}
+fields = {provider = {offset = 153}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353.page_01.entidad-dominante-entidad-dominante-resultado"}
+fields = {provider = {offset = 131}}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2021-2025", id = "modelo-353-dr"}
+fields = {workbook_source = "aeat-dr-353-2026"}
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2021-2025", id = "modelo-353-iva-chain-verification"}
+removed_fields = ["externally_grounded_casilla_ids"]
+sequence_additions = {computed_casilla_ids = ["03", "05", "09"], source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {computed_casilla_ids = [0, 1, 2], source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2026-desde-02".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2021-2025", id = "aeat-dr-353-2021-2025"}
+replacement_id = "aeat-dr-353-2026"
+sequence_additions = {source_refs = ["aeat-dr-353-2026"]}
+sequence_removals = {casillas = [0, 1, 2, 3, 4, 5, 6, 7], legal_refs = [0, 1, 2], source_refs = [0]}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-01"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-02"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-03"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-04"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-05"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-06"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-07"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-08"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-09"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-10"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-11"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2022-12"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-01"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-02"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-03"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-04"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-05"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-06"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-07"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-08"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-09"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-10"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-11"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2023-12"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-01"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-02"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-03"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-04"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-05"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-06"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-07"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-08"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-09"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-10"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-11"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2024-12"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-01"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-02"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-03"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-04"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-05"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-06"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-07"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-08"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-09"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-10"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-11"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2021-2025", id = "modelo-353-2025-12"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353-iva-autorepercutido-intracomunitaria-cuota"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353-iva-repercutido-general-cuota"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353-iva-repercutido-reducido-cuota"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353-iva-repercutido-super-reducido-cuota"}
+
+[[revisions."2026-desde-02".family_removals]]
+family = "bindings"
+selector = {revision = "2021-2025", id = "modelo-353-iva-soportado-interiores-cuota"}

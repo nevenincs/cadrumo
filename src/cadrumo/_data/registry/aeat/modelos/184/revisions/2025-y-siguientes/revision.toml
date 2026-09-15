@@ -38,6 +38,8 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-16
+family_storage_baseline = "2023-2024"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
@@ -846,3 +848,65 @@ to_revision = "2025-y-siguientes"
 origin = "seeded"
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2023-2024", id = "modelo-184-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-184-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2023-2024", id = "modelo-184-informative"}
+sequence_additions = {deadline_windows = ["modelo-184-2025-0a", "modelo-184-2026-0a"], source_refs = ["aeat-dr-184-2025"]}
+sequence_removals = {deadline_windows = [0, 1]}
+sequence_order = {source_refs = [0, 3, 1, 2]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2023-2024", id = "modelo-184-export"}
+sequence_additions = {source_refs = ["aeat-dr-184-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2023-2024", id = "modelo-184-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-184-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2023-2024", id = "modelo-184-filing"}
+sequence_additions = {source_refs = ["aeat-dr-184-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2023-2024", id = "modelo-184-dr"}
+fields = {workbook_source = "aeat-dr-184-2025"}
+sequence_additions = {source_refs = ["aeat-dr-184-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2023-2024", id = "modelo-184-informative-summary-verification"}
+sequence_additions = {source_refs = ["aeat-dr-184-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2023-2024", id = "aeat-dr-184-2023-2024"}
+replacement_id = "aeat-dr-184-2025"
+sequence_additions = {source_refs = ["aeat-dr-184-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023-2024", id = "modelo-184-2023-0a"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023-2024", id = "modelo-184-2024-0a"}

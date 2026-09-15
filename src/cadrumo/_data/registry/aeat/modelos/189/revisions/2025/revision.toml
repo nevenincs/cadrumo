@@ -1,4 +1,5 @@
 [revisions."2025"]
+casilla_storage_baseline = "2024"
 casilla_source_refs = ["boe-modelo-189-base-order"]
 authority_grade = "applicability"
 # valid_to is open, and the selector is now open with it. The approving Orden
@@ -40,6 +41,7 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-09-12
+family_storage_baseline = "2024"
 
 [revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
@@ -57,3 +59,168 @@ source_refs = [
     "boe-modelo-189-2025-values",
 ]
 
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "declarante-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "ejercicio-declaracion" }
+fields = { additional_source_refs = ["aeat-modelo-189-procedure"], continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "declarado-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "declarado-nombre" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "codigo-pais" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "clave-valor" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "valoracion" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2025-values"], continuidad_origin = "seeded", legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hac-132-2026:art-unico"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "numero-valores" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284", "boe-modelo-189-2025-values"], continuidad_origin = "seeded", legal_refs = ["orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "nominal-unitario-valores" }
+fields = { additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284", "boe-modelo-189-2025-values"], continuidad_origin = "seeded", legal_refs = ["orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "declarante-razon-social" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "tipo-soporte" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "persona-relacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "numero-justificante" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "declaracion-complementaria-sustitutiva" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "numero-identificativo-anterior" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "numero-total-declarados" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "valoracion-total" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "representante-legal-nif" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "codigo-provincia" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "clave-mercado" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "clave-identificacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "identificacion-valores" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "clave-representacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "porcentaje-participacion" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "clave-titularidad" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2025".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2024", id = "modelo-189-anual"}
+sequence_additions = {source_refs = ["aeat-modelo-189-procedure"]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-189-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-189-procedure"]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-189-2024-0a"}

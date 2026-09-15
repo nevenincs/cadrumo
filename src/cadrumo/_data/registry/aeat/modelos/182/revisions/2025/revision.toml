@@ -69,6 +69,7 @@ calculation refuses them rather than resolving a silent blank. NOT CLAIMED -- no
 per-donor detail rows are not modelled. NOT CLAIMED -- all 3 locales are complete for the 7 labels, \
 but the translated strings were not audited for accuracy."""
 reviewed_at = 2026-09-12
+family_storage_baseline = "2024"
 
 [[revisions."2025".lineage_attestations]]
 family = "casillas"
@@ -129,3 +130,22 @@ origin = "grounded"
 evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:376-395 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 79-83 Numérico % DE DEDUCCIÓN; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:376-395 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
 legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
+
+[[revisions."2025".lineage_attestations]]
+family = "casillas"
+continuidad_id = "donativo-recurrente"
+from_revision = "2024"
+to_revision = "2025"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:548-572 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 position 132 RECURRENCIA DONATIVOS; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:548-574 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same position, with the amended same-entity test recorded in its evolution."
+legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93", "orden-hac-1430-2025:art-2"]
+source_refs = ["enrolled-modelo-182-procedure"]
+
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "tipo2.recurrencia" }
+fields = { legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93", "orden-hac-1430-2025:art-2"] }
+removed_fields = []
+
+[[revisions."2025".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-182-2024-0a"}
