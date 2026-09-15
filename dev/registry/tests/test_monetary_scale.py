@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
 from ..analysis.monetary_scale import CENTS_SCALE, SELF_SCALING_WIRE_TYPES, scale_findings, screen_authority
@@ -18,6 +18,14 @@ from ..maintenance_support import resolved_export_endpoints
 #: The amount width modelo 353 declares for every importe of its declaration
 #: record, and the width both cents spellings appear at side by side.
 _WIDTH_17 = 17
+
+
+def _registry_modelo_ids() -> tuple[str, ...]:
+    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
+
+    with bundled_indexed_authority().operation() as operation:
+        return tuple(sorted(str(code) for code in registry_modelo_codes(operation=operation)))
+
 
 #: Floor for the monetary endpoints the absence claim below is measured over.
 #: Live m303's 2025 revision resolves 150 of 174 endpoints to a monetary
@@ -126,9 +134,8 @@ def test_the_unscaled_fields_are_concentrated_and_bounded(authority: ValidatedRe
     ``test_money_rendered_by_an_unscaled_wire_type_is_reported``, which fails if
     the screen stops reporting it, not by the corpus staying defective.
     """
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
-    modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
+    modelo_ids = _registry_modelo_ids()
     unscaled = [item for item in screen_authority(authority, modelo_ids) if item.kind == "money_without_scale"]
     assert len({item.modelo for item in unscaled}) <= 6
 
@@ -227,11 +234,10 @@ def test_the_corpus_reports_no_sibling_scale_disagreement(
     the comparison still fires lives in the constructed case below, which is
     what keeps this assertion from passing because the screen stopped looking.
     """
-    from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
     from ..analysis.monetary_scale import screen_authority as scale_screen
 
-    modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
+    modelo_ids = _registry_modelo_ids()
     disagreements = [item for item in scale_screen(authority, modelo_ids) if item.kind == "sibling_scale_disagrees"]
     reported = sorted((item.modelo, item.revision, str(item.casilla_id)) for item in disagreements)
     assert reported == [], f"a sibling-scale disagreement is reported: {reported}"

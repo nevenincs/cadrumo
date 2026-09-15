@@ -24,6 +24,7 @@ from cadrumo.core.result_disposition import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import provider_member
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -345,35 +346,37 @@ def _calculate_390_from_observations_and_303_filings(
         )
         for period, result in quarterly_results.items()
     )
-    normalized_m303_envelopes = tuple(
-        normalize_m303_carry_observation_envelope(
-            ObservationEnvelopePayload(
-                observation=observation,
-                captured_at=_M303_APP_FILING_CAPTURED_AT,
-                source_kind="app_filing",
-                stamped_revision_id=str(
-                    compiled_bundled_authority()
-                    .snapshot(
-                        "303",
-                        filing_year=filing_year,
-                        period=period,
-                    )
-                    .revision.id
+    with bundled_indexed_authority().operation() as operation:
+        normalized_m303_envelopes = tuple(
+            normalize_m303_carry_observation_envelope(
+                ObservationEnvelopePayload(
+                    observation=observation,
+                    captured_at=_M303_APP_FILING_CAPTURED_AT,
+                    source_kind="app_filing",
+                    stamped_revision_id=str(
+                        compiled_bundled_authority()
+                        .snapshot(
+                            "303",
+                            filing_year=filing_year,
+                            period=period,
+                        )
+                        .revision.id
+                    ),
+                    result_disposition=ResultDispositionProjection(
+                        disposition=_filing_result_disposition(result),
+                        provenance_kind="app_filing",
+                        provenance_locator=f"test-local-filing:{filing_year}:{period}",
+                    ),
+                    m303_compensation_basis=M303CompensationBasis.RESULTADO,
                 ),
-                result_disposition=ResultDispositionProjection(
-                    disposition=_filing_result_disposition(result),
-                    provenance_kind="app_filing",
-                    provenance_locator=f"test-local-filing:{filing_year}:{period}",
-                ),
-                m303_compensation_basis=M303CompensationBasis.RESULTADO,
-            ),
+                operation=operation,
+            )
+            for (period, result), observation in zip(
+                quarterly_results.items(),
+                m303_observations,
+                strict=True,
+            )
         )
-        for (period, result), observation in zip(
-            quarterly_results.items(),
-            m303_observations,
-            strict=True,
-        )
-    )
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         m303_observations,
@@ -381,11 +384,13 @@ def _calculate_390_from_observations_and_303_filings(
         period="0A",
     )
     relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
-    annual_partition_values = resolve_iva_compensation_annual_partition_binding_values(
-        snapshot.revision,
-        normalized_m303_envelopes,
-        filing_year=filing_year,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        annual_partition_values = resolve_iva_compensation_annual_partition_binding_values(
+            snapshot.revision,
+            normalized_m303_envelopes,
+            filing_year=filing_year,
+            operation=operation,
+        )
     binding_values = {
         **ledger_binding_values,
         **relation_binding_values,
@@ -401,4 +406,4 @@ def _calculate_390_from_observations_and_303_filings(
     )
 
 
-from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority  # noqa: E402

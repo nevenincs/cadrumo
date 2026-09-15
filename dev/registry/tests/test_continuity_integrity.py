@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 
 from ..analysis.casilla_id_grammar import classify_casilla_id
 from ..analysis.continuity_integrity import chain_index, continuity_census, definition_findings, screen_authority
@@ -114,7 +114,8 @@ def test_the_census_reports_coverage_without_making_it_a_finding(
     """
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
-    modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
+    with bundled_indexed_authority().operation() as operation:
+        modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes(operation=operation)))
     census = continuity_census(authority, modelo_ids)
     assert census.casillas > census.with_chain > 0
     assert census.chains > 0

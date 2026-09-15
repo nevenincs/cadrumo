@@ -39,7 +39,7 @@ import pytest
 
 from cadrumo.adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 from dev.quality.unread_inputs import report_unread
@@ -86,7 +86,8 @@ def authority() -> ValidatedRegistryAuthority:
 
 @pytest.fixture(scope="module")
 def modelo_ids() -> tuple[str, ...]:
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
+    with bundled_indexed_authority().operation() as operation:
+        return tuple(sorted(str(code) for code in registry_modelo_codes(operation=operation)))
 
 
 def _python_target_resolves(target: str) -> bool:
@@ -941,11 +942,12 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
 def _export_fields(authority: ValidatedRegistryAuthority) -> list[tuple[str, str, ExportFieldDefinition]]:
     """Return every export field in the corpus with the coordinate that owns it."""
     found: list[tuple[str, str, ExportFieldDefinition]] = []
-    for code in sorted(str(item) for item in registry_modelo_codes()):
-        for revision_id, revision in authority.modelo(code).revisions.items():
-            for layout in revision.export_layouts:
-                for record in layout.records:
-                    found.extend((code, str(revision_id), field) for field in record.fields)
+    with bundled_indexed_authority().operation() as operation:
+        for code in sorted(str(item) for item in registry_modelo_codes(operation=operation)):
+            for revision_id, revision in authority.modelo(code).revisions.items():
+                for layout in revision.export_layouts:
+                    for record in layout.records:
+                        found.extend((code, str(revision_id), field) for field in record.fields)
     return found
 
 

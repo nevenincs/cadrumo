@@ -16,6 +16,8 @@ from pydantic import ValidationError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
+)
+from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
 
@@ -159,9 +161,7 @@ def test_a_revision_without_a_generated_layout_is_refused_by_name(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         without_layout = [
             (modelo, revision_id)
-            for modelo in sorted(
-                str(code) for code in registry_modelo_codes(operation=_authority_operation_for_test)
-            )
+            for modelo in sorted(str(code) for code in registry_modelo_codes(operation=_authority_operation_for_test))
             for revision_id, revision in authority.modelo(modelo).revisions.items()
             if not revision.export_layouts
         ]
@@ -199,9 +199,7 @@ def test_a_cited_source_of_the_wrong_kind_is_refused_by_name_not_treated_as_the_
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         candidates = [
             (modelo, revision_id, str(ref))
-            for modelo in sorted(
-                str(code) for code in registry_modelo_codes(operation=_authority_operation_for_test)
-            )
+            for modelo in sorted(str(code) for code in registry_modelo_codes(operation=_authority_operation_for_test))
             for revision_id, revision in authority.modelo(modelo).revisions.items()
             for ref in revision.source_refs
             if (source := sources.get(ref)) is not None and source.kind != "record_design"
@@ -247,13 +245,9 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
 
     drifting: set[str] = set()
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        for code in sorted(
-            str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)
-        ):
+        for code in sorted(str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)):
             for revision_id in authority.modelo(code).revisions:
-                if not bundled_path(
-                    "registry", "aeat", "modelos", code, "revisions", revision_id, "export"
-                ).is_dir():
+                if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
                     continue
                 comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
                 if comparison.disposition_class == "record_drift":
@@ -280,13 +274,9 @@ def test_every_manifest_stale_tree_really_does_reproduce_its_records(
 
     unsafe: list[str] = []
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        for code in sorted(
-            str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)
-        ):
+        for code in sorted(str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)):
             for revision_id in authority.modelo(code).revisions:
-                if not bundled_path(
-                    "registry", "aeat", "modelos", code, "revisions", revision_id, "export"
-                ).is_dir():
+                if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
                     continue
                 comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
                 if comparison.disposition_class == "provenance_only" and not comparison.semantically_reproduced:

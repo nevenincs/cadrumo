@@ -13,7 +13,7 @@ from typing import override
 import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..analysis.modelo_capability import capability_census, screen_authority
@@ -29,7 +29,8 @@ def authority() -> ValidatedRegistryAuthority:
 
 @pytest.fixture(scope="module")
 def modelo_ids() -> tuple[str, ...]:
-    return tuple(sorted(str(code) for code in registry_modelo_codes()))
+    with bundled_indexed_authority().operation() as operation:
+        return tuple(sorted(str(code) for code in registry_modelo_codes(operation=operation)))
 
 
 def test_a_censal_modelo_carrying_nothing_produces_no_finding(authority: ValidatedRegistryAuthority) -> None:

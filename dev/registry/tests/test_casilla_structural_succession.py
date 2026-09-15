@@ -164,7 +164,7 @@ def test_relationship_never_inherits_into_grandchild(tmp_path: Path) -> None:
 
 
 def test_one_to_one_and_many_to_many_are_not_structural_shapes() -> None:
-    payload = dict(
+    payload: dict[str, object] = dict(
         id="invalid",
         kind="split",
         from_revision="2024",
@@ -178,7 +178,7 @@ def test_one_to_one_and_many_to_many_are_not_structural_shapes() -> None:
     )
     with pytest.raises(RegistryError, match="one-to-many"):
         CasillaStructuralSuccession.model_validate(payload)
-    payload.update(source_lineages=("a", "c"), target_lineages=("b", "d"))
+    payload.update({"source_lineages": ("a", "c"), "target_lineages": ("b", "d")})
     with pytest.raises(RegistryError, match="one-to-many"):
         CasillaStructuralSuccession.model_validate(payload)
 

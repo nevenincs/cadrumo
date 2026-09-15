@@ -32,8 +32,14 @@ from cadrumo.domain.bienes_inversion.register import (
 )
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from cadrumo.domain.calculations.registry.m303_differentiated_deduction_projection import (
     project_m303_differentiated_deduction_rows,
@@ -126,11 +132,10 @@ def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
     return ProrrataRegister(entries=entries, sector_definitions=definitions)
 
 
-def _contributions() -> tuple[IvaDifferentiatedDeductionContribution, ...]:
-    kinds = tuple(
-        kind
-        for kind in IvaDeductionFactKind
-        if kind is not IvaDeductionFactKind._from_registry("investment_goods_regularisation")
+def _contributions(*, authority: ValidatedRegistryAuthority) -> tuple[IvaDifferentiatedDeductionContribution, ...]:
+    kinds = iva_deduction_fact_kinds(
+        effective_date=_PROVENANCE.resolved_on,
+        authority=authority,
     )
     return tuple(
         IvaDifferentiatedDeductionContribution(
@@ -215,7 +220,9 @@ def test_real_dp30305_geometry_is_exact_for_every_revision(
     )
 
 
-def test_apportioned_contributions_and_regularisation_project_once() -> None:
+def test_apportioned_contributions_and_regularisation_project_once(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
     regularisation = RegistroRegularizacionResult(
         regularizacion_year=2025,
         rows=(
@@ -247,7 +254,7 @@ def test_apportioned_contributions_and_regularisation_project_once() -> None:
         projection_refs=_projection_refs(),
         register=_register(),
         ejercicio=2025,
-        contributions=_contributions(),
+        contributions=_contributions(authority=registry_authority),
         regularisation_result=regularisation,
     )
     assert tuple((row.slot, row.sector_id, row.percentage) for row in projection) == (
@@ -259,12 +266,15 @@ def test_apportioned_contributions_and_regularisation_project_once() -> None:
     )
     assert projection[0].endpoints[-2].value == Decimal("5")
     assert projection[0].endpoints[-1].value == sum(
-        (item.deducible_iva_amount for item in _contributions() if item.sector_id == "a"), Decimal("5")
+        (item.deducible_iva_amount for item in _contributions(authority=registry_authority) if item.sector_id == "a"),
+        Decimal("5"),
     )
 
 
-def test_projection_refuses_incomplete_or_double_consumed_sources() -> None:
-    contributions = _contributions()
+def test_projection_refuses_incomplete_or_double_consumed_sources(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    contributions = _contributions(authority=registry_authority)
     with pytest.raises(RegistryValidationError, match="incomplete apportioned source"):
         project_m303_differentiated_deduction_rows(
             projection_refs=_projection_refs(), register=_register(), ejercicio=2025, contributions=contributions[:-1]
@@ -368,8 +378,10 @@ def test_wrong_owner_regularisation_cannot_become_a_ledger_observation() -> None
         _observation("wrong-owner", kind=IvaDeductionFactKind._from_registry("investment_goods_regularisation"))
 
 
-def test_projector_refuses_reused_source_ledger_across_kinds() -> None:
-    contributions = list(_contributions())
+def test_projector_refuses_reused_source_ledger_across_kinds(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    contributions = list(_contributions(authority=registry_authority))
     contributions[1] = contributions[1].model_copy(update={"source_ledger_ids": contributions[0].source_ledger_ids})
     with pytest.raises(RegistryValidationError, match="source ledgers are double-consumed"):
         project_m303_differentiated_deduction_rows(
@@ -377,8 +389,10 @@ def test_projector_refuses_reused_source_ledger_across_kinds() -> None:
         )
 
 
-def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forged() -> None:
-    contributions = list(_contributions())
+def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forged(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    contributions = list(_contributions(authority=registry_authority))
     contributions[0] = contributions[0].model_copy(
         update={"deduction_fact_kind": IvaDeductionFactKind._from_registry("investment_goods_regularisation")}
     )
@@ -414,16 +428,23 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
     ),
 )
 def test_projector_refuses_inactive_or_percentage_less_active_sector(
-    entry: ProrrataRegisterEntry, message: str
+    entry: ProrrataRegisterEntry,
+    message: str,
+    registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     register = _register().model_copy(update={"entries": (entry, _register().entry_for(2025, sector_id="b"))})
     with pytest.raises(RegistryValidationError, match=message):
         project_m303_differentiated_deduction_rows(
-            projection_refs=_projection_refs(), register=register, ejercicio=2025, contributions=_contributions()
+            projection_refs=_projection_refs(),
+            register=register,
+            ejercicio=2025,
+            contributions=_contributions(authority=registry_authority),
         )
 
 
-def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> None:
+def test_projector_refuses_unlinked_and_duplicate_regularisation_assets(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
     row = RegistroRegularizacionRow(
         identifier="asset-a",
         kind=BienInversionKind._from_registry("mueble"),
@@ -447,7 +468,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> Non
             projection_refs=_projection_refs(),
             register=_register(),
             ejercicio=2025,
-            contributions=_contributions(),
+            contributions=_contributions(authority=registry_authority),
             regularisation_result=unlinked,
         )
     duplicated = RegistroRegularizacionResult(
@@ -467,12 +488,14 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> Non
             projection_refs=_projection_refs(),
             register=_register(),
             ejercicio=2025,
-            contributions=_contributions(),
+            contributions=_contributions(authority=registry_authority),
             regularisation_result=duplicated,
         )
 
 
-def test_projector_refuses_regularisation_asset_sector_mismatch() -> None:
+def test_projector_refuses_regularisation_asset_sector_mismatch(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
     result = RegistroRegularizacionResult(
         regularizacion_year=2025,
         rows=(
@@ -497,6 +520,6 @@ def test_projector_refuses_regularisation_asset_sector_mismatch() -> None:
             projection_refs=_projection_refs(),
             register=_register(),
             ejercicio=2025,
-            contributions=_contributions(),
+            contributions=_contributions(authority=registry_authority),
             regularisation_result=result,
         )

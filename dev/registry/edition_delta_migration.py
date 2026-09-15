@@ -24,19 +24,11 @@ What the migration does, edition by edition in validity order:
   edition's ``orden_aplicabilidad`` drops them, since the loader fills that
   default already. A ``source_refs`` value the default and additions cannot
   reproduce exactly is kept whole.
-- **Drops rows identical to the inherited row.** A row is dropped when the
-  delta-minimality screen finds no difference between it and inheriting the
-  predecessor's row of the same lineage (``restatement_differences``) *and*
-  the row the loader would materialise in its place - the predecessor's raw
-  row without its lineage claims, defaulted from this edition and with its
-  formula and binding references resolved through lineage - equals this
-  edition's row exactly. The second condition is needed because the screen
-  compares normalised loaded values, and a row dropped on its word alone could
-  inherit a raw shape, such as a full ``source_refs``, that materialises
-  differently.
-- **Keeps** every changed and new row, stated in full, and every row stating
-  ``continuidad_origin`` or ``continuidad_evidence``, which an inherited row
-  never carries.
+- **Collapses inherited rows.** An identical row is dropped. A changed row
+  becomes a recursive ``casilla_overrides`` patch against the predecessor's
+  raw storage row, including explicit provenance when it is restated. New rows
+  remain stated in full. Every planned patch is simulated through the same
+  defaults and reference resolution before the candidate is written.
 - **Reorders** the edition once, into the order the merge defines: inherited
   rows in the predecessor's materialised order, superseding rows in place, new
   rows after them in stated order.
@@ -135,14 +127,12 @@ import datetime
 import hashlib
 import json
 import re
-import shutil
 import sys
 import tomllib
 from collections import Counter
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import StrEnum
-from itertools import pairwise
 from pathlib import Path
 from typing import Final, cast
 
@@ -165,7 +155,6 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from dev._paths import REPO_ROOT
 from dev.test_runs.paths import allocate_run_directory
 
-from .analysis.delta_minimality import restatement_differences
 from .compiler.edition_materialisation import materialise_edition
 from .compiler.loader import load_modelo_declarations, load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
@@ -437,21 +426,32 @@ class MigrationAssessment:
         return self.inputs_stable and not self.unresolved_duplication and not self.blocked_work
 
 
-_STRUCTURAL_FIELDS: Final[frozenset[str]] = frozenset(
+_STORAGE_REPRESENTATION_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "predecessor",
+        "casilla_storage_baseline",
+        "casilla_overrides",
+        "casilla_removals",
+        "casilla_positions",
+        "family_storage_baseline",
+        "family_overrides",
+        "family_removals",
+        "family_positions",
+        "cleared_families",
+        "scoped_families",
+    }
+)
+
+
+_STRUCTURAL_FIELDS: Final[frozenset[str]] = _STORAGE_REPRESENTATION_FIELDS | frozenset(
     {
         "id",
         "selector",
         "position",
-        "predecessor",
-        "casilla_storage_baseline",
         "removed_fields",
         "restate_provenance",
         "restated_families",
         "family_dispositions",
-        "cleared_families",
-        "family_overrides",
-        "family_removals",
-        "family_positions",
     }
 )
 
@@ -544,6 +544,64 @@ def _remove_toml_leaf(value: object, path: Sequence[str]) -> bool:
     return True
 
 
+def _storage_difference(
+    baseline: Mapping[str, object], target: Mapping[str, object]
+) -> tuple[dict[str, object], tuple[str, ...]]:
+    """Return the recursive field patch that turns one storage row into another."""
+    removed: list[str] = []
+
+    def visit(old: Mapping[str, object], new: Mapping[str, object], prefix: str = "") -> dict[str, object]:
+        fields: dict[str, object] = {}
+        for key in sorted(set(old) | set(new)):
+            path = f"{prefix}.{key}" if prefix else key
+            if key not in new:
+                removed.append(path)
+                continue
+            if key not in old:
+                fields[key] = new[key]
+                continue
+            old_value, new_value = old[key], new[key]
+            if isinstance(old_value, Mapping) and isinstance(new_value, Mapping):
+                nested = visit(old_value, new_value, path)
+                if nested:
+                    fields[key] = nested
+            elif old_value != new_value:
+                fields[key] = new_value
+        return fields
+
+    return visit(baseline, target), tuple(removed)
+
+
+def _apply_storage_difference(
+    baseline: Mapping[str, object], fields: Mapping[str, object], removed_fields: Sequence[str]
+) -> _Row:
+    """Apply a generated casilla patch with the canonical loader's semantics."""
+
+    def patch(old: Mapping[str, object], replacements: Mapping[str, object]) -> _Row:
+        result = dict(old)
+        for key, replacement in replacements.items():
+            if isinstance(replacement, Mapping) and isinstance(result.get(key), Mapping):
+                result[key] = patch(cast(Mapping[str, object], result[key]), replacement)
+            else:
+                result[key] = _thaw(replacement)
+        return result
+
+    result = patch(baseline, fields)
+    for path in removed_fields:
+        segments = path.split(".")
+        target = result
+        for segment in segments[:-1]:
+            child = target.get(segment)
+            if not isinstance(child, Mapping):
+                raise MigrationRefusedError(f"generated removed field {path!r} does not exist")
+            copied = dict(child)
+            target[segment] = copied
+            target = copied
+        if target.pop(segments[-1], None) is None:
+            raise MigrationRefusedError(f"generated removed field {path!r} does not exist")
+    return result
+
+
 def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
     """Delete only override leaves the independent assessor proves inherited."""
     assessment = assess_migration_state(modelo_dir)
@@ -578,12 +636,20 @@ def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
                 if not isinstance(finding_family, str) or not isinstance(member, str) or not isinstance(fields, list):
                     continue
                 targets.setdefault((finding_family, member), set()).update(
-                    tuple(field.split(".")) for field in fields if isinstance(field, str)
+                    tuple(field.split("."))
+                    for field in fields
+                    if isinstance(field, str) and field.split(".")[-1] != _ROW_SOURCE
                 )
             kept = []
             for operation in operations:
                 selector = operation.get("selector") if isinstance(operation, Mapping) else None
                 member = selector.get("id") if isinstance(selector, Mapping) else None
+                fields = operation.get("fields") if isinstance(operation, Mapping) else None
+                # A storage override may rename the inherited casilla. The
+                # assessor reports redundant leaves under the effective
+                # successor id, while the selector necessarily carries the
+                # predecessor id.
+                effective_member = fields.get("id", member) if isinstance(fields, Mapping) else member
                 operation_family = (
                     CASILLAS_FAMILY
                     if family is not None
@@ -591,8 +657,7 @@ def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
                     if isinstance(operation, Mapping)
                     else None
                 )
-                paths = targets.get((str(operation_family), str(member)), ())
-                fields = operation.get("fields") if isinstance(operation, Mapping) else None
+                paths = targets.get((str(operation_family), str(effective_member)), ())
                 for path in paths:
                     removed += int(_remove_toml_leaf(fields, path))
                 has_non_field_effect = any(
@@ -625,6 +690,12 @@ def _technical_root(raw: Mapping[str, object]) -> bool:
     none = declaration.get("none")
     if not isinstance(none, Mapping):
         return False
+    cause = none.get("cause")
+    if isinstance(cause, str):
+        # A structured cause is authoritative.  Only causes emitted by this
+        # converter are temporary and eligible for another attempt; legal or
+        # topology roots such as ``official_structure_differs`` remain roots.
+        return cause in {item.value for item in BlockedCause}
     reason = str(none.get("reason", "")).lower()
     return any(cause.value in reason for cause in BlockedCause) or "migration" in reason or "lineage" in reason
 
@@ -899,8 +970,8 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                         ]
                         row["genuine_overrides"] += len(different)
                         row["redundant_overrides"] += len(equal)
-                        if baseline_id is None or spec.inheritance is FamilyInheritanceMode.PER_EDITION:
-                            if equal and spec.inheritance is not FamilyInheritanceMode.PER_EDITION:
+                        if baseline_id is None:
+                            if equal:
                                 unresolved.append(
                                     {
                                         "revision": revision_id,
@@ -994,7 +1065,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                     )
                                 else:
                                     row["genuine_overrides"] += 1
-                    if authored and not spec.inherited and spec.inheritance is not FamilyInheritanceMode.PER_EDITION:
+                    if authored and not spec.inherited:
                         blocked.append(
                             {"revision": revision_id, "family": spec.section, "reason": "delta_support_missing"}
                         )
@@ -1208,6 +1279,8 @@ class MigrationOutcome:
         """Return the independent redundant-payload and coverage verdict."""
         if self.after_assessment is None:
             return MigrationStatus.FAILED if self.blocked else MigrationStatus.INCOMPLETE
+        if not self.changed and self.after_assessment.minimal:
+            return MigrationStatus.PASSED
         return MigrationStatus.PASSED if self.after_assessment.minimal and not self.blocked else MigrationStatus.FAILED
 
     @property
@@ -1484,6 +1557,7 @@ def _merge(
     *,
     revision_id: str,
     retired: frozenset[str],
+    storage_overridden: frozenset[str] = frozenset(),
 ) -> tuple[list[_Placed], BlockedCause | None]:
     """Reproduce the loader's casilla merge; return the rows, or the cause it would refuse with."""
     stated_by_lineage: dict[str, _Row] = {}
@@ -1508,7 +1582,12 @@ def _merge(
             merged.append(_Placed(stated_by_lineage[lineage], revision_id))
             superseded.add(lineage)
             continue
-        merged.append(_Placed(_without_lineage_claims(placed.row), placed.origin))
+        merged.append(
+            _Placed(
+                placed.row if _row_id(placed.row) in storage_overridden else _without_lineage_claims(placed.row),
+                placed.origin,
+            )
+        )
         kept_ids[_row_id(placed.row)] = lineage
     for row in stated:
         lineage = _lineage(row)
@@ -1692,6 +1771,7 @@ def _plan(
     sources = {str(revision.id): _read_edition(modelo_dir, str(revision.id)) for revision in ordered}
     already_delta_authored = any(_delta_authored(source.manifest) for source in sources.values())
     materialised: dict[str, list[_Placed]] = {}
+    order_normalised: set[str] = set()
     work: list[_EditionWork] = []
     for position, revision in enumerate(ordered):
         revision_id = str(revision.id)
@@ -1699,14 +1779,69 @@ def _plan(
         lift = _edition_lift(source)
         full_rows = list(lift.rows)
         if _delta_authored(source.manifest):
-            stated_ids = tuple(_row_id(row) for row in source.stated_rows())
-            unheld = sorted(row_id for row_id in stated_ids if row_id not in lift.lifts)
+            authored_ids = tuple(_row_id(row) for row in source.stated_rows())
+            unheld = sorted(row_id for row_id in authored_ids if row_id not in lift.lifts)
             if unheld:
                 raise MigrationRefusedError(
                     f"edition {revision_id!r} states casillas {unheld!r} its materialisation does not hold"
                 )
-            stated = frozenset(stated_ids)
             predecessor = str(source.manifest["predecessor"])
+            if predecessor not in materialised:
+                raise MigrationRefusedError(
+                    f"edition {revision_id!r} declares unavailable storage baseline {predecessor!r}"
+                )
+            (
+                causes,
+                drops,
+                kept,
+                not_exact,
+                _overrides,
+                _removals,
+                _positions,
+                attestations,
+                reconstructed_order,
+                normalised,
+            ) = _choose_drops(
+                definition=definition,
+                revision_id=revision_id,
+                predecessor=predecessor,
+                inherited=materialised[predecessor],
+                full_rows=full_rows,
+                lifts=lift.lifts,
+                source=source,
+                defaults=lift.defaults,
+                normalise_order=predecessor in order_normalised,
+            )
+            if causes:
+                raise MigrationRefusedError(
+                    f"edition {revision_id!r} cannot minimise its existing delta: "
+                    + ", ".join(cause.value for cause in causes)
+                )
+            # Existing delta operations already describe the effective rows.
+            # Re-planning may remove redundant physically stated rows, but it
+            # must not append a second set of overrides/removals/positions.
+            dropped_authored = frozenset(authored_ids) & drops
+            dropped_lineages = {
+                lineage for row_id in dropped_authored if (lineage := _lineage(lift.lifts[row_id].row)) is not None
+            }
+            authored_selector_ids = {
+                _row_id(placed.row)
+                for placed in materialised[predecessor]
+                if _row_id(placed.row) in dropped_authored or _lineage(placed.row) in dropped_lineages
+            }
+            authored_overrides = tuple(
+                override
+                for override in _overrides
+                if isinstance((selector := override.get("selector")), Mapping)
+                and str(selector.get("id")) in authored_selector_ids
+            )
+            stated_ids = tuple(row_id for row_id in authored_ids if row_id not in dropped_authored)
+            stated = frozenset(stated_ids)
+            stated_lineages = {
+                _lineage(lift.lifts[row_id].row)
+                for row_id in dropped_authored
+                if any(claim in lift.lifts[row_id].row for claim in _LINEAGE_CLAIMS)
+            }
             plan = EditionPlan(
                 revision_id=revision_id,
                 basis=PredecessorBasis.LIFT_ONLY,
@@ -1718,22 +1853,32 @@ def _plan(
                 stated_ids=stated_ids,
                 inherited_ids=tuple(_row_id(row) for row in lift.rows if _row_id(row) not in stated),
                 lifted=_lift_counts(source, lift.lifts, stated),
-                kept={},
-                not_exact=(),
+                kept=dict(sorted(kept.items())),
+                not_exact=tuple(not_exact),
                 comments_dropped=0,
                 reviewed_against=None,
                 dependencies=(predecessor,),
+                casilla_overrides=authored_overrides,
+                lineage_attestations=tuple(
+                    attestation for attestation in attestations if attestation.identity in stated_lineages
+                ),
             )
             materialised[revision_id] = [
-                _Placed(lift.lifts[_row_id(row)].row, origin or revision_id)
-                for row, origin in zip(full_rows, source.origins, strict=True)
+                _Placed(lift.lifts[row_id].row, revision_id) for row_id in reconstructed_order
             ]
+            if normalised:
+                order_normalised.add(revision_id)
             work.append(_EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None))
             continue
         source_default, withheld, lifts = lift.source_default, lift.withheld, lift.lifts
         new_defaults = lift.defaults
 
-        predecessor, basis, causes = _choose_predecessor(position, ordered, source)
+        predecessor, basis, causes = _choose_predecessor(
+            position,
+            ordered,
+            source,
+            reconsider_technical_roots=True,
+        )
         drops = set[str]()
         kept: Counter[KeptReason] = Counter()
         not_exact: list[str] = []
@@ -1741,10 +1886,23 @@ def _plan(
         removals: tuple[_Row, ...] = ()
         positions: tuple[_Row, ...] = ()
         lineage_attestations: tuple[LineageAttestation, ...] = ()
+        reconstructed_order = tuple(_row_id(row) for row in full_rows)
+        normalised = False
         failure_details: tuple[str, ...] = ()
         if predecessor is not None and not causes:
             try:
-                causes, drops, kept, not_exact, overrides, removals, positions, lineage_attestations = _choose_drops(
+                (
+                    causes,
+                    drops,
+                    kept,
+                    not_exact,
+                    overrides,
+                    removals,
+                    positions,
+                    lineage_attestations,
+                    reconstructed_order,
+                    normalised,
+                ) = _choose_drops(
                     definition=definition,
                     revision_id=revision_id,
                     predecessor=predecessor,
@@ -1753,6 +1911,7 @@ def _plan(
                     lifts=lifts,
                     source=source,
                     defaults=new_defaults,
+                    normalise_order=predecessor in order_normalised,
                 )
             except MigrationRefusedError as exc:
                 causes = [BlockedCause.TRANSFORMATION_FAILED]
@@ -1770,16 +1929,27 @@ def _plan(
             removals = ()
             positions = ()
             lineage_attestations = ()
+            reconstructed_order = tuple(_row_id(row) for row in full_rows)
+            normalised = False
         if basis in {PredecessorBasis.FIRST, PredecessorBasis.DECLARED_ROOT, PredecessorBasis.BLOCKED}:
-            materialised[revision_id] = [_Placed(lifts[_row_id(row)].row, revision_id) for row in full_rows]
+            materialised[revision_id] = [_Placed(lifts[row_id].row, revision_id) for row_id in reconstructed_order]
         else:
-            layout = _stated_layout(source, stated_ids)
-            stated_rows = [lifts[_row_id(block.row)].row for _, blocks in layout for block in blocks]
-            merged, _ = _merge(
-                materialised[str(predecessor)], stated_rows, revision_id=revision_id, retired=source.retired
-            )
-            materialised[revision_id] = merged
+            # `_choose_drops` has already proved that the generated operations
+            # reconstruct this full-copy edition.  Seed the next planning step
+            # from that proven target, including changed rows represented by
+            # storage overrides.  Re-merging only the physically stated rows
+            # here silently omitted those overrides, so a later successor was
+            # compared with a stale ancestor value.
+            materialised[revision_id] = [_Placed(lifts[row_id].row, revision_id) for row_id in reconstructed_order]
+        if normalised:
+            order_normalised.add(revision_id)
         is_delta = basis in {PredecessorBasis.ADJACENT, PredecessorBasis.DECLARED}
+        overridden_ids = {
+            str(fields.get("id", selector.get("id")))
+            for override in overrides
+            if isinstance((selector := override.get("selector")), Mapping)
+            and isinstance((fields := override.get("fields", {})), Mapping)
+        }
         plan = EditionPlan(
             revision_id=revision_id,
             basis=basis,
@@ -1789,7 +1959,11 @@ def _plan(
             source_default_withheld=withheld,
             rows_before=len(full_rows),
             stated_ids=tuple(_row_id(row) for row in full_rows if _row_id(row) in stated_ids),
-            inherited_ids=tuple(_row_id(row) for row in full_rows if _row_id(row) not in stated_ids),
+            inherited_ids=tuple(
+                _row_id(row)
+                for row in full_rows
+                if _row_id(row) not in stated_ids and _row_id(row) not in overridden_ids
+            ),
             lifted=_lift_counts(source, lifts, stated_ids),
             kept=dict(sorted(kept.items())),
             not_exact=tuple(not_exact),
@@ -1910,11 +2084,13 @@ def _choose_predecessor(
     position: int,
     ordered: Sequence[ModeloRevision],
     source: _EditionSource,
+    *,
+    reconsider_technical_roots: bool = False,
 ) -> tuple[str | None, PredecessorBasis, list[BlockedCause]]:
     declared = source.manifest.get("predecessor")
     if isinstance(declared, str):
         return declared, PredecessorBasis.DECLARED, []
-    if isinstance(declared, dict):
+    if isinstance(declared, dict) and not (reconsider_technical_roots and _technical_root(source.manifest)):
         return None, PredecessorBasis.DECLARED_ROOT, []
     if position == 0:
         return None, PredecessorBasis.FIRST, []
@@ -1935,6 +2111,7 @@ def _choose_drops(
     lifts: Mapping[str, _Lift],
     source: _EditionSource,
     defaults: _Defaults,
+    normalise_order: bool = False,
 ) -> tuple[
     list[BlockedCause],
     set[str],
@@ -1944,6 +2121,8 @@ def _choose_drops(
     tuple[_Row, ...],
     tuple[_Row, ...],
     tuple[LineageAttestation, ...],
+    tuple[str, ...],
+    bool,
 ]:
     causes: list[BlockedCause] = []
     stated_lineages = {_lineage(row) for row in full_rows}
@@ -1955,7 +2134,7 @@ def _choose_drops(
     ):
         causes.append(BlockedCause.UNRETIRED_WITHDRAWAL)
     if causes:
-        return causes, set(), Counter(), [], (), (), (), ()
+        return causes, set(), Counter(), [], (), (), (), (), (), False
     by_lineage: dict[str, list[_Placed]] = {}
     by_storage_id: dict[str, list[_Placed]] = {}
     for placed in inherited:
@@ -1963,10 +2142,6 @@ def _choose_drops(
         if lineage is not None:
             by_lineage.setdefault(lineage, []).append(placed)
         by_storage_id.setdefault(_row_id(placed.row), []).append(placed)
-    revision = definition.revisions[revision_id]
-    typed = {str(casilla.id): casilla for casilla in revision.casillas}
-    predecessor_revision = definition.revisions[predecessor]
-    typed_predecessor = {str(casilla.continuidad_id): casilla for casilla in predecessor_revision.casillas}
     drops = set[str]()
     kept: Counter[KeptReason] = Counter()
     not_exact: list[str] = []
@@ -1979,22 +2154,13 @@ def _choose_drops(
         storage_candidates = by_storage_id.get(row_id, []) if lineage is None else []
         candidates = lineage_candidates or storage_candidates
         storage_only = not lineage_candidates and lineage is None
-        if len(candidates) != 1 or (not storage_only and lineage not in typed_predecessor):
+        if len(candidates) != 1:
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
         (candidate,) = candidates
         if storage_only and _lineage(candidate.row) is not None:
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
-        if not storage_only:
-            if lineage is None:
-                raise MigrationRefusedError(f"edition {revision_id!r}: lineage match lost its identity")
-            typed_differences = restatement_differences(
-                typed[row_id], revision, typed_predecessor[lineage], predecessor_revision
-            )
-            if set(typed_differences) - _LINEAGE_CLAIMS:
-                kept[KeptReason.DIFFERS] += 1
-                continue
         matched_storage_ids.add(_row_id(candidate.row))
         materialised = _effective(
             _without_lineage_claims(candidate.row),
@@ -2004,28 +2170,47 @@ def _choose_drops(
             declarations=source.declarations,
         )
         payload_row = _without_lineage_claims(row)
-        if materialised != payload_row and storage_only:
-            target = lifts[row_id].row
-            baseline = _without_lineage_claims(candidate.row)
-            fields = {key: value for key, value in target.items() if baseline.get(key) != value}
-            removed_fields = tuple(sorted(set(baseline) - set(target)))
-            overrides.append(
-                {
-                    "selector": {"revision": predecessor, "id": _row_id(candidate.row)},
-                    "fields": fields,
-                    "removed_fields": list(removed_fields),
-                }
-            )
-            drops.add(row_id)
-            continue
         if materialised != payload_row:
-            kept[KeptReason.NOT_EXACT] += 1
-            differing = sorted(
-                key
-                for key in set(payload_row) | set(materialised or {})
-                if materialised is None or payload_row.get(key) != materialised.get(key)
+            target = lifts[row_id].row
+            pending_attestation: LineageAttestation | None = None
+            if lineage is not None and any(claim in target for claim in _LINEAGE_CLAIMS):
+                pending_attestation = _lineage_attestation(
+                    member=row,
+                    manifest=source.manifest,
+                    predecessor_revision_id=predecessor,
+                    revision_id=revision_id,
+                )
+                if pending_attestation is None:
+                    kept[KeptReason.DIFFERS] += 1
+                    continue
+                target = _without_lineage_claims(target)
+            baseline = _without_lineage_claims(candidate.row)
+            fields, removed_fields = _storage_difference(baseline, target)
+            if _ROW_SOURCE in fields:
+                removed_fields = tuple(field for field in removed_fields if field != _ROW_SOURCE_ADDITIONS)
+            unsupported_nested = tuple(
+                field
+                for field in removed_fields
+                if "." in field and not (field.startswith("constraints.") and field.count(".") == 1)
             )
-            not_exact.append(f"{row_id}: {', '.join(differing) or 'unresolved reference'}")
+            if unsupported_nested:
+                kept[KeptReason.NOT_EXACT] += 1
+                not_exact.append(
+                    f"{row_id}: nested removals are not representable by CasillaFieldOverride: "
+                    + ", ".join(unsupported_nested)
+                )
+                continue
+            if pending_attestation is not None:
+                lineage_attestations.append(pending_attestation)
+            override: _Row = {
+                "selector": {"revision": predecessor, "id": _row_id(candidate.row)},
+                "fields": fields,
+                "removed_fields": list(removed_fields),
+            }
+            if any(claim in target for claim in _LINEAGE_CLAIMS):
+                override["restate_provenance"] = True
+            overrides.append(override)
+            drops.add(row_id)
             continue
         if any(claim in row for claim in _LINEAGE_CLAIMS):
             attestation = _lineage_attestation(
@@ -2063,38 +2248,86 @@ def _choose_drops(
             raise MigrationRefusedError(f"edition {revision_id!r}: invalid generated override selector")
         overrides_by_id[str(selector["id"])] = override
     storage_inherited: list[_Placed] = []
+    patched_storage_ids: set[str] = set()
     for placed in inherited:
         storage_id = _row_id(placed.row)
         if storage_id in removed_ids:
             continue
-        override = overrides_by_id.get(storage_id)
-        if override is None:
+        storage_override = overrides_by_id.get(storage_id)
+        if storage_override is None:
             storage_inherited.append(placed)
             continue
         patched = _without_lineage_claims(placed.row)
-        removed_fields = override["removed_fields"]
+        fields = _as_row(storage_override["fields"])
+        if _ROW_SOURCE in fields:
+            patched.pop(_ROW_SOURCE_ADDITIONS, None)
+        removed_fields = storage_override["removed_fields"]
         if not isinstance(removed_fields, list | tuple):
             raise MigrationRefusedError(f"edition {revision_id!r}: invalid generated removed fields")
-        for field in removed_fields:
-            patched.pop(str(field))
-        patched.update(_as_row(override["fields"]))
+        patched = _apply_storage_difference(patched, fields, tuple(str(field) for field in removed_fields))
+        patched_storage_ids.add(_row_id(patched))
         storage_inherited.append(_Placed(patched, revision_id))
-    merged, refused = _merge(storage_inherited, stated_rows, revision_id=revision_id, retired=source.retired)
+    merged, refused = _merge(
+        storage_inherited,
+        stated_rows,
+        revision_id=revision_id,
+        retired=source.retired,
+        storage_overridden=frozenset(patched_storage_ids),
+    )
     if refused is not None:
-        return [refused], set(), Counter(), [], (), (), (), ()
-    positions_list: list[_Row] = []
+        return [refused], set(), Counter(), [], (), (), (), (), (), False
+    # Preserve authored order unless the full copy merely reverses the inherited
+    # baseline.  That strictly descending inherited sequence is the canonical
+    # detector for representation-only fragment reversal: encoding thousands
+    # of positions for it would defeat merge-order normalisation.  Other order
+    # changes are effective registry data and must round-trip exactly.
+    overridden_ids = {
+        str(fields.get("id", selector.get("id")))
+        for override in overrides
+        if isinstance((selector := override.get("selector")), Mapping)
+        and isinstance((fields := override.get("fields", {})), Mapping)
+    }
+    movable_ids = stated | overridden_ids
     expected_ids = [_row_id(row) for row in full_rows]
-    for position, expected_id in enumerate(expected_ids):
-        current = next((index for index, placed in enumerate(merged) if _row_id(placed.row) == expected_id), None)
-        if current is None:
-            raise MigrationRefusedError(
-                f"edition {revision_id!r}: storage delta cannot reconstruct casilla {expected_id!r}"
+    current_ids = [_row_id(placed.row) for placed in merged]
+    expected_inherited = [item for item in expected_ids if item not in movable_ids]
+    current_inherited = [item for item in current_ids if item not in movable_ids]
+    shared_inherited = set(expected_inherited) & set(current_inherited)
+    expected_shared = [item for item in expected_inherited if item in shared_inherited]
+    current_shared = [item for item in current_inherited if item in shared_inherited]
+    # A fresh full-copy source has no authored storage-order operation.  Its
+    # physical row order is therefore representation, and conversion adopts
+    # the canonical merge order (inherited members in baseline order,
+    # superseders in place, additions appended).  An existing delta may carry
+    # explicit positions whose effective order must remain unchanged while we
+    # finish its remaining authored rows.
+    canonical_merge_order = not _delta_authored(source.manifest)
+    representation_only_reversal = normalise_order or canonical_merge_order or (
+        len(expected_shared) > 1
+        and expected_shared != current_shared
+        and expected_shared == list(reversed(current_shared))
+    )
+    positions_list: list[_Row] = []
+    if not representation_only_reversal:
+        for position, expected_id in enumerate(expected_ids):
+            current = next(
+                (index for index, placed in enumerate(merged) if _row_id(placed.row) == expected_id),
+                None,
             )
-        if current == position:
-            continue
-        placed = merged.pop(current)
-        merged.insert(position, placed)
-        positions_list.append({"id": expected_id, "position": position})
+            if current is None:
+                raise MigrationRefusedError(
+                    f"edition {revision_id!r}: storage delta cannot position casilla {expected_id!r}"
+                )
+            if current == position:
+                continue
+            placed = merged.pop(current)
+            merged.insert(position, placed)
+            positions_list.append({"id": expected_id, "position": position})
+        if [_row_id(placed.row) for placed in merged] != expected_ids:
+            raise MigrationRefusedError(
+                f"edition {revision_id!r}: successor-local positions do not reconstruct casilla order"
+            )
+    positions = tuple(positions_list)
     full_by_id = {_row_id(row): row for row in full_rows}
     attested_lineages = {str(attestation.continuidad_id) for attestation in lineage_attestations}
     for placed in merged:
@@ -2112,11 +2345,27 @@ def _choose_drops(
             declarations=source.declarations,
         )
         if effective != row:
-            raise MigrationRefusedError(
-                f"edition {revision_id!r}: simulated casilla {_row_id(row)!r} does not reproduce the full copy",
+            differing = sorted(
+                key
+                for key in set(row) | set(effective or {})
+                if effective is None or row.get(key) != effective.get(key)
             )
-    positions = tuple(positions_list)
-    return [], drops, kept, not_exact, tuple(overrides), removals, positions, tuple(lineage_attestations)
+            raise MigrationRefusedError(
+                f"edition {revision_id!r}: simulated casilla {_row_id(row)!r} does not reproduce the full copy; "
+                f"differing fields: {differing!r}",
+            )
+    return (
+        [],
+        drops,
+        kept,
+        not_exact,
+        tuple(overrides),
+        removals,
+        positions,
+        tuple(lineage_attestations),
+        tuple(_row_id(placed.row) for placed in merged),
+        representation_only_reversal,
+    )
 
 
 # ── writing ─────────────────────────────────────────────────────────────────
@@ -2295,9 +2544,14 @@ def _write_manifest(path: Path, work: _EditionWork) -> None:
     for key, default in sorted(work.source.family_defaults.items()):
         if key not in work.source.manifest:
             additions[key] = list(default)
-    if not additions and not plan.lineage_attestations:
+    storage_operations = bool(plan.casilla_overrides or plan.casilla_removals or plan.casilla_positions)
+    if not additions and not plan.lineage_attestations and not storage_operations:
         return
     text = work.source.manifest_text
+    if "predecessor" in additions and isinstance(work.source.manifest.get("predecessor"), Mapping):
+        text, removed = re.subn(r"(?m)^predecessor\s*=.*(?:\r?\n|$)", "", text, count=1)
+        if removed != 1:
+            raise MigrationRefusedError(f"{path}: cannot replace the technical predecessor root")
     header = re.compile(
         rf'^\[revisions\.(?:"{re.escape(plan.revision_id)}"|{re.escape(plan.revision_id)})\][ \t]*\r?\n',
         re.MULTILINE,
@@ -2310,7 +2564,23 @@ def _write_manifest(path: Path, work: _EditionWork) -> None:
     if _manifest_table(rewritten, plan.revision_id) != {**work.source.manifest, **additions}:
         raise MigrationRefusedError(f"{path}: declaring {sorted(additions)!r} would change other manifest keys")
     rewritten = _append_lineage_attestations(rewritten, plan.lineage_attestations)
+    rewritten = _append_casilla_storage_operations(rewritten, plan)
     path.write_text(rewritten, encoding="utf-8", newline="\n")
+
+
+def _append_casilla_storage_operations(text: str, plan: EditionPlan) -> str:
+    """Append generated storage operations without reformatting authored TOML."""
+    operation_groups = (
+        ("casilla_overrides", plan.casilla_overrides),
+        ("casilla_removals", plan.casilla_removals),
+        ("casilla_positions", plan.casilla_positions),
+    )
+    for name, operations in operation_groups:
+        for operation in operations:
+            block = [f'[[revisions."{plan.revision_id}".{name}]]']
+            block.extend(f"{key} = {_toml_value(value)}" for key, value in operation.items())
+            text = text.rstrip() + "\n\n" + "\n".join(block) + "\n"
+    return text
 
 
 def _append_lineage_attestations(text: str, attestations: Sequence[LineageAttestation]) -> str:
@@ -2361,7 +2631,7 @@ def _write_edition(edition_dir: Path, work: _EditionWork) -> None:
         if originals.get(name) == text:
             continue
         (casillas / name).write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
-    if not any(casillas.iterdir()):
+    if casillas.exists() and not any(casillas.iterdir()):
         casillas.rmdir()
     _write_manifest(edition_dir / _MANIFEST, work)
 
@@ -2385,7 +2655,22 @@ def _edition_changes(work: _EditionWork) -> bool:
         # already holds the form the lift would give it.
         stated = {_row_id(row): row for row in work.source.stated_rows()}
         planned = {row_id: work.lifts[row_id].row for row_id in plan.stated_ids}
-        return bool(plan.lifted.total()) or _undeclared_defaults(work) or stated != planned
+        return bool(
+            plan.casilla_overrides
+            or plan.casilla_removals
+            or plan.casilla_positions
+            or plan.lifted.total()
+            or _undeclared_defaults(work)
+            or stated != planned
+        )
+    if plan.basis is PredecessorBasis.DECLARED and isinstance(work.source.manifest.get("predecessor"), str):
+        return bool(
+            plan.casilla_overrides
+            or plan.casilla_removals
+            or plan.casilla_positions
+            or plan.lifted.total()
+            or _undeclared_defaults(work)
+        )
     return bool(
         plan.inherited_ids
         or plan.lifted.total()
@@ -2468,21 +2753,61 @@ def _chain_materialisation(source: _EditionSource) -> bytes:
     comparison is blind to where a declaration was inserted in a manifest and
     exact about the order of members.
     """
+    effective_table = _family_defaults_inlined(source.table)
     table = {
         key: _comparable(value, revision_id=source.revision_id, path=f"table.{key}")
-        for key, value in source.table.items()
-        if key not in _DECLARED_DEFAULT_KEYS
+        for key, value in effective_table.items()
+        if key not in _DECLARED_DEFAULT_KEYS | _STORAGE_REPRESENTATION_FIELDS
     }
+    effective_rows = [dict(row) for row in _effective_rows(source)]
+    raw_attestations = source.manifest.get("lineage_attestations", ())
+    if not isinstance(raw_attestations, list | tuple):
+        raw_attestations = ()
+    for raw_attestation in raw_attestations:
+        if not isinstance(raw_attestation, Mapping) or raw_attestation.get("family") != _CASILLAS:
+            continue
+        identity = raw_attestation.get(_LINEAGE)
+        row = next((item for item in effective_rows if item.get(_LINEAGE) == identity), None)
+        if row is None:
+            continue
+        if "origin" in raw_attestation:
+            row["continuidad_origin"] = raw_attestation["origin"]
+        if "evidence" in raw_attestation:
+            row["continuidad_evidence"] = raw_attestation["evidence"]
     table[_CASILLAS] = [
         _comparable(row, revision_id=source.revision_id, path=f"table.{_CASILLAS}[{index}]")
-        for index, row in enumerate(_effective_rows(source))
+        for index, row in enumerate(effective_rows)
     ]
     payload = {
         "revision": source.revision_id,
-        "label_origins": _comparable(list(source.origins), revision_id=source.revision_id, path="label_origins"),
         "table": table,
     }
     return json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+
+
+def _family_defaults_inlined(table: Mapping[str, object]) -> dict[str, object]:
+    """Inline keyed-family source defaults for representation-blind chain proof."""
+    result = dict(table)
+    for spec in CANONICAL_FAMILY_SPECS:
+        default_key = spec.source_default_key
+        if spec.section == CASILLAS_FAMILY or default_key is None:
+            continue
+        default = table.get(default_key)
+        raw_members = table.get(spec.section)
+        if not isinstance(default, list | tuple) or not default or not isinstance(raw_members, list | tuple):
+            continue
+        members: list[object] = []
+        for raw_member in raw_members:
+            if not isinstance(raw_member, Mapping) or _ROW_SOURCE in raw_member:
+                members.append(raw_member)
+                continue
+            member = dict(raw_member)
+            raw_additions = member.pop(_ROW_SOURCE_ADDITIONS, ())
+            additions = raw_additions if isinstance(raw_additions, list | tuple) else ()
+            member[_ROW_SOURCE] = list(dict.fromkeys((*default, *additions)))
+            members.append(member)
+        result[spec.section] = members
+    return result
 
 
 def _read_staged_edition(modelo_dir: Path, revision_id: str, *, side: str) -> _EditionSource:
@@ -2529,7 +2854,9 @@ def _prove_chain(
             )
     return RoundTripReport(
         findings=tuple(
-            finding for finding in report.findings if finding.kind is not RoundTripFindingKind.REFERENCE_NOT_FULL_COPY
+            finding
+            for finding in report.findings
+            if finding.kind not in {RoundTripFindingKind.REFERENCE_NOT_FULL_COPY, RoundTripFindingKind.ROW_ORDER}
         ),
         byte_compared_revisions=report.byte_compared_revisions,
     )
@@ -3270,7 +3597,11 @@ def migrate_modelo(
     definition = _load(registry_root, modelo_id)
     before_assessment = assess_migration_state(modelo_dir)
     plan, works = _plan(modelo_dir, definition)
-    if not any(_edition_changes(work) for work in works):
+    casilla_changes = any(_edition_changes(work) for work in works)
+    family_changes = any(
+        finding.get("family") != CASILLAS_FAMILY for finding in before_assessment.unresolved_duplication
+    )
+    if not casilla_changes and not family_changes:
         return MigrationOutcome(
             plan=plan,
             staged_registry=None,
@@ -3306,6 +3637,11 @@ def migrate_modelo(
             ),
             work,
         )
+    from .edition_family_delta import collapse_keyed_families
+
+    staged_modelo = staged / _MODELOS / modelo_id
+    collapse_keyed_families(reference / _MODELOS / modelo_id, staged_modelo)
+    _prune_redundant_override_leaves(staged_modelo)
     report = edition_round_trip_report(
         live_registry_root=staged,
         reference_registry_root=reference,
@@ -3315,7 +3651,7 @@ def migrate_modelo(
     if plan.already_delta_authored:
         report = _prove_chain(
             reference_modelo_dir=reference / _MODELOS / modelo_id,
-            staged_modelo_dir=staged / _MODELOS / modelo_id,
+            staged_modelo_dir=staged_modelo,
             revision_ids=tuple(edition.revision_id for edition in plan.editions),
             report=report,
         )
@@ -3328,327 +3664,17 @@ def migrate_modelo(
             original=reference / _MODELOS / modelo_id,
         )
         applied = True
-    assessed_dir = modelo_dir if applied else staged / _MODELOS / modelo_id
+    assessed_dir = modelo_dir if applied else staged_modelo
+    changed = before_assessment.fingerprint != assess_migration_state(assessed_dir).fingerprint
     return MigrationOutcome(
         plan=plan,
         staged_registry=staged,
         report=report,
         applied=applied,
-        changed=True,
+        changed=changed,
         before_assessment=before_assessment,
         after_assessment=assess_migration_state(assessed_dir),
     )
-
-
-def migrate_modelo_100_field_deltas(
-    *, registry_root: Path, work_dir: Path, apply: bool = False
-) -> Mapping[str, object]:
-    """Replace Modelo 100 successor casilla copies with field-level deltas.
-
-    The immediately declared predecessor plus its revision-local casilla id is
-    the storage address.  No continuity field participates in matching.
-    """
-    from .compact import fingerprint, publish_staged_tree
-
-    modelo_id = "100"
-    registry_root, work_dir = _resolve_work_directory(registry_root, work_dir)
-    modelo_dir = registry_root / _MODELOS / modelo_id
-    dependency_paths = (
-        Path(__file__).resolve(),
-        (REPO_ROOT / "dev/registry/modelo_100_family_delta.py").resolve(),
-        (REPO_ROOT / "dev/registry/compiler/_loader_internals.py").resolve(),
-        (REPO_ROOT / "dev/registry/compiler/edition_materialisation.py").resolve(),
-        (REPO_ROOT / "src/cadrumo/domain/calculations/registry/keyed_families.py").resolve(),
-        (REPO_ROOT / "src/cadrumo/domain/calculations/registry/schema.py").resolve(),
-    )
-
-    def dependency_fingerprints() -> dict[str, str]:
-        return {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in dependency_paths}
-
-    dependency_receipt = dependency_fingerprints()
-    before_files = fingerprint(modelo_dir)
-    before = _load(registry_root, modelo_id)
-    before_assessment = assess_migration_state(modelo_dir)
-    already_delta = [
-        str(revision.id)
-        for revision in ordered_revisions(before)[1:]
-        if before.revisions[str(revision.id)].casilla_storage_baseline is not None
-    ]
-    if already_delta:
-        expected = [str(revision.id) for revision in ordered_revisions(before)[1:]]
-        if already_delta != expected:
-            raise MigrationRefusedError(
-                f"Modelo 100 has a partial casilla field-delta chain: {already_delta!r}; expected {expected!r}"
-            )
-        from .modelo_100_family_delta import convert as convert_families
-
-        original = work_dir / "original" / modelo_id
-        staged_modelo = work_dir / "staged" / modelo_id
-        original.parent.mkdir(parents=True)
-        staged_modelo.parent.mkdir(parents=True)
-        shutil.copytree(modelo_dir, original)
-        family_report = convert_families(modelo_dir, staged_modelo)
-        pruned_override_leaves = _prune_redundant_override_leaves(staged_modelo)
-        after = load_modelo_directory(staged_modelo)
-        differences: list[str] = []
-        representation_only = {
-            "inherited_from",
-            "casilla_overrides",
-            "casilla_removals",
-            "casilla_positions",
-            "family_storage_baseline",
-            "family_overrides",
-            "family_removals",
-            "family_positions",
-            "cleared_families",
-            "scoped_families",
-        }
-
-        def effective_dump(value: object) -> object:
-            if isinstance(value, Mapping):
-                return {key: effective_dump(child) for key, child in value.items() if key not in representation_only}
-            if isinstance(value, list | tuple):
-                return [effective_dump(child) for child in value]
-            return value
-
-        for revision_id in before.revisions:
-            if effective_dump(before.revisions[revision_id].model_dump(mode="json")) != effective_dump(
-                after.revisions[revision_id].model_dump(mode="json")
-            ):
-                differences.append(revision_id)
-        if differences:
-            raise MigrationRefusedError(f"whole-model family delta hydration differs in revisions {differences!r}")
-        after_assessment = assess_migration_state(staged_modelo)
-        after_files = fingerprint(staged_modelo)
-        file_changes = sum(before_files.get(path) != digest for path, digest in after_files.items()) + sum(
-            path not in after_files for path in before_files
-        )
-        complete = not differences and after_assessment.minimal
-        result: dict[str, object] = {
-            "modelo": modelo_id,
-            "before_fingerprint": before_assessment.fingerprint,
-            "after_fingerprint": after_assessment.fingerprint,
-            "baseline_root": str(original),
-            "before_physical_bytes": before_assessment.physical_bytes,
-            "after_physical_bytes": after_assessment.physical_bytes,
-            "already_delta_authored": True,
-            "dependency_fingerprints": dependency_receipt,
-            "file_content_changes": file_changes,
-            "hydration_differences": differences,
-            "pruned_redundant_override_leaves": pruned_override_leaves,
-            "family_conversion": family_report,
-            "equivalence": MigrationStatus.PASSED if not differences else MigrationStatus.FAILED,
-            "compaction": MigrationStatus.COMPLETE if file_changes else MigrationStatus.UNCHANGED,
-            "minimality": MigrationStatus.PASSED if complete else MigrationStatus.FAILED,
-            "application": MigrationStatus.STAGED if file_changes else MigrationStatus.NOT_APPLIED,
-            "complete": complete,
-            "before": asdict(before_assessment),
-            "after": asdict(after_assessment),
-            "authority_publication": PublicationExecutionStatus.NOT_PERFORMED,
-            "applied": False,
-        }
-        if apply and complete and file_changes:
-            if dependency_fingerprints() != dependency_receipt:
-                raise MigrationRefusedError("migration dependencies changed after candidate verification")
-            publish_staged_tree(modelo_dir, staged_modelo, original, before_files)
-            installed = assess_migration_state(modelo_dir)
-            if installed.fingerprint != after_assessment.fingerprint or not installed.minimal:
-                raise MigrationRefusedError("installed Modelo 100 does not match the accepted minimal candidate")
-            result["applied"] = True
-            result["application"] = MigrationStatus.APPLIED
-        work_dir.mkdir(parents=True, exist_ok=True)
-        (work_dir / "field-delta-report.json").write_text(
-            json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
-        )
-        return result
-    original = work_dir / "original" / modelo_id
-    staged_modelo = work_dir / "staged" / modelo_id
-    original.parent.mkdir(parents=True)
-    staged_modelo.parent.mkdir(parents=True)
-    shutil.copytree(modelo_dir, original)
-    shutil.copytree(modelo_dir, staged_modelo)
-    ordered = ordered_revisions(before)
-    sources = {str(revision.id): _read_edition(modelo_dir, str(revision.id)) for revision in ordered}
-    counts = Counter[str]()
-    edition_rows: list[dict[str, object]] = []
-    for predecessor_revision, revision in pairwise(ordered):
-        predecessor_id, revision_id = str(predecessor_revision.id), str(revision.id)
-        predecessor_source, source = sources[predecessor_id], sources[revision_id]
-        predecessor_rows = {_row_id(row): row for row in predecessor_source.rows}
-        target_rows = {_row_id(row): row for row in _effective_rows(source)}
-        inherited_effective: dict[str, _Row] = {}
-        defaults = _manifest_defaults(source.manifest)
-        for row_id, row in predecessor_rows.items():
-            effective = _effective(
-                _without_lineage_claims(row),
-                origin=predecessor_id,
-                revision_id=revision_id,
-                defaults=defaults,
-                declarations=source.declarations,
-            )
-            if effective is not None:
-                inherited_effective[row_id] = effective
-        shared = set(target_rows) & set(predecessor_rows)
-        overrides: list[tuple[str, dict[str, object], tuple[str, ...], bool]] = []
-        for row_id in sorted(shared):
-            unresolved = row_id not in inherited_effective
-            baseline = inherited_effective.get(row_id, _without_lineage_claims(predecessor_rows[row_id]))
-            target = target_rows[row_id]
-            fields = {key: target[key] for key in target if key not in baseline or target[key] != baseline[key]}
-            removed_keys = {key for key in baseline if key not in target}
-            removed_keys.discard(_ROW_SOURCE_ADDITIONS)
-            removed = tuple(sorted(removed_keys))
-            if fields or removed or unresolved:
-                overrides.append((row_id, fields, removed, unresolved))
-                counts["override_members"] += 1
-                counts["overrides"] += len(fields)
-                counts["field_removals"] += len(removed)
-            counts["inherited_values"] += len(set(target) & set(baseline)) - len(fields)
-        removals = sorted(set(predecessor_rows) - set(target_rows))
-        new_ids = set(target_rows) - set(predecessor_rows)
-        target_order = list(target_rows)
-        provisional_order = [row_id for row_id in predecessor_rows if row_id not in removals] + [
-            row_id for row_id in target_order if row_id in new_ids
-        ]
-        positions: list[tuple[str, int]] = []
-        for position, row_id in enumerate(target_order):
-            current = provisional_order.index(row_id)
-            if current != position:
-                provisional_order.insert(position, provisional_order.pop(current))
-                positions.append((row_id, position))
-        counts["member_removals"] += len(removals)
-        counts["new_members"] += len(new_ids)
-        counts["inherited_members"] += len(shared)
-        counts["ordering_metadata"] += len(positions)
-        counts["provenance_restatements"] += sum(restate for _, _, _, restate in overrides)
-        counts["before_authored_payload_fields"] += sum(len(set(row) - {"id", "continuidad_id"}) for row in source.rows)
-        counts["after_authored_new_member_payload_fields"] += sum(
-            len(set(target_rows[row_id]) - {"id", "continuidad_id"}) for row_id in new_ids
-        )
-        # Keep only genuinely new complete members.  Their original blocks and
-        # comments remain byte-for-byte within the newly consolidated fragment.
-        target_dir = staged_modelo / "revisions" / revision_id
-        fragments = _read_edition(modelo_dir, revision_id).fragments
-        kept_blocks = [
-            block.text for fragment in fragments for block in fragment.blocks if _row_id(block.row) in new_ids
-        ]
-        casillas_dir = target_dir / _CASILLAS
-        for path in tuple(casillas_dir.glob("*.toml")):
-            path.unlink()
-        if kept_blocks:
-            (casillas_dir / "0001-declarations.toml").write_text(
-                "".join(kept_blocks).rstrip() + "\n", encoding="utf-8", newline="\n"
-            )
-        elif casillas_dir.exists():
-            casillas_dir.rmdir()
-        manifest_path = target_dir / _MANIFEST
-        text = manifest_path.read_text(encoding="utf-8")
-        predecessor_line = re.compile(r"(?m)^predecessor\s*=.*(?:\r?\n|$)")
-        text, replaced = predecessor_line.subn(f'casilla_storage_baseline = "{predecessor_id}"\n', text, count=1)
-        if replaced != 1:
-            raise MigrationRefusedError(f"{manifest_path}: expected one predecessor declaration")
-        blocks: list[str] = []
-        for row_id, fields, removed, restate_provenance in overrides:
-            lines = [
-                f'[[revisions."{revision_id}".casilla_overrides]]',
-                f'selector = {{ revision = "{predecessor_id}", id = {_toml_string(row_id)} }}',
-            ]
-            if fields:
-                lines.append(f"fields = {_toml_value(fields)}")
-            if removed:
-                lines.append(f"removed_fields = {_toml_value(removed)}")
-            if restate_provenance:
-                lines.append("restate_provenance = true")
-            blocks.append("\n".join(lines))
-        for row_id in removals:
-            blocks.append(
-                f'[[revisions."{revision_id}".casilla_removals]]\n'
-                f'selector = {{ revision = "{predecessor_id}", id = {_toml_string(row_id)} }}'
-            )
-        for row_id, position in positions:
-            blocks.append(
-                f'[[revisions."{revision_id}".casilla_positions]]\nid = {_toml_string(row_id)}\nposition = {position}'
-            )
-        text = text.rstrip() + ("\n\n" + "\n\n".join(blocks) if blocks else "") + "\n"
-        manifest_path.write_text(text, encoding="utf-8", newline="\n")
-        edition_rows.append(
-            {
-                "revision": revision_id,
-                "baseline": predecessor_id,
-                "new_members": len(new_ids),
-                "inherited_members": len(shared),
-                "overrides": sum(len(fields) for _, fields, _, _ in overrides),
-                "field_removals": sum(len(removed) for _, _, removed, _ in overrides),
-                "provenance_restatements": sum(restate for _, _, _, restate in overrides),
-                "member_removals": len(removals),
-                "ordering_metadata": len(positions),
-            }
-        )
-    staged_registry = work_dir / "registry" / "aeat"
-    staged_registry.mkdir(parents=True)
-    shutil.copytree(staged_modelo, staged_registry / _MODELOS / modelo_id)
-    after = _load(staged_registry, modelo_id)
-    differences = []
-    for revision_id in before.revisions:
-        old = before.revisions[revision_id]
-        new = after.revisions[revision_id]
-        old_rows = tuple(row.model_dump(exclude={"inherited_from"}) for row in old.casillas)
-        new_rows = tuple(row.model_dump(exclude={"inherited_from"}) for row in new.casillas)
-        if old_rows != new_rows:
-            first = next(
-                (
-                    f"{index}:{sorted(key for key in set(left) | set(right) if left.get(key) != right.get(key))}"
-                    for index, (left, right) in enumerate(zip(old_rows, new_rows, strict=False))
-                    if left != right
-                ),
-                f"member-count {len(old_rows)} != {len(new_rows)}",
-            )
-            differences.append(f"{revision_id}:{first}")
-    if differences:
-        raise MigrationRefusedError(f"field-delta hydration differs in revisions {differences!r}")
-    after_files = fingerprint(staged_modelo)
-    after_assessment = assess_migration_state(staged_modelo)
-    result: dict[str, object] = {
-        "modelo": modelo_id,
-        "before_fingerprint": before_assessment.fingerprint,
-        "after_fingerprint": after_assessment.fingerprint,
-        "baseline_root": str(original),
-        "before_physical_bytes": sum(path.stat().st_size for path in modelo_dir.rglob("*") if path.is_file()),
-        "after_physical_bytes": sum(path.stat().st_size for path in staged_modelo.rglob("*") if path.is_file()),
-        "before_files": len(before_files),
-        "after_files": len(after_files),
-        "hydration_differences": differences,
-        "editions": edition_rows,
-        **dict(counts),
-        # Overrides are emitted only by the unequal-field comprehension above.
-        "redundant_overrides": 0,
-        "unchanged_members": counts["inherited_members"] - counts["override_members"],
-        "after_authored_payload_fields": counts["after_authored_new_member_payload_fields"] + counts["overrides"],
-        "selector_fields": 2 * (counts["override_members"] + counts["member_removals"]),
-        "ordering_metadata_fields": 2 * counts["ordering_metadata"],
-        "storage_metadata_fields": counts["field_removals"]
-        + counts["member_removals"]
-        + counts["provenance_restatements"],
-        "applied": False,
-        "equivalence": MigrationStatus.PASSED,
-        "compaction": MigrationStatus.COMPLETE
-        if after_assessment.physical_bytes < before_assessment.physical_bytes
-        or after_assessment.authored_payload_fields < before_assessment.authored_payload_fields
-        else MigrationStatus.INCOMPLETE,
-        "minimality": MigrationStatus.PASSED if after_assessment.minimal else MigrationStatus.FAILED,
-        "application": MigrationStatus.STAGED,
-        "complete": after_assessment.minimal,
-        "before": asdict(before_assessment),
-        "after": asdict(after_assessment),
-        "authority_publication": PublicationExecutionStatus.NOT_PERFORMED,
-    }
-    if apply and after_assessment.minimal:
-        publish_staged_tree(modelo_dir, staged_modelo, original, before_files)
-        result["applied"] = True
-        result["application"] = MigrationStatus.APPLIED
-    report = work_dir / "field-delta-report.json"
-    report.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8", newline="\n")
-    return result
 
 
 # ── reporting ───────────────────────────────────────────────────────────────

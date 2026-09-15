@@ -349,6 +349,17 @@ def _withholding_observation(
         clave=RetencionClave(clave),
         percibido_dinerario=percibido_dinerario,
         retencion_practicada=retencion_practicada,
+        incapacity_cash_perception=Decimal("0"),
+        incapacity_cash_withholding=Decimal("0"),
+        incapacity_kind_value=Decimal("0"),
+        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+        incapacity_kind_repercutido=Decimal("0"),
+        foral_retention_estatal=Decimal("0"),
+        foral_retention_navarra=Decimal("0"),
+        foral_retention_araba=Decimal("0"),
+        foral_retention_gipuzkoa=Decimal("0"),
+        foral_retention_bizkaia=Decimal("0"),
+        base_retenciones=Decimal("0"),
     )
 
 

@@ -107,7 +107,9 @@ def verify(excerpt: Excerpt) -> tuple[bool, str]:
         return True, "no version in response"
     latest = max(versions)
     claimed = excerpt.claimed.replace("-", "")
-    return latest == claimed, f"claims {claimed}, BOE latest {latest}"
+    matches_claim = bool(latest == claimed)
+    detail = f"claims {claimed}, BOE latest {latest}"
+    return matches_claim, detail
 
 
 def main(argv: list[str] | None = None) -> int:

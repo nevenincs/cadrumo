@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.schema_references import PeriodSelecto
 from cadrumo.domain.calculations.registry.snapshot import validate_materialized_export_record_families
 
 from ..author_family_identities import derive_projection_endpoint_id
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader_semantics import (
     compile_export_semantic_field as _compile_export_semantic_field,
 )

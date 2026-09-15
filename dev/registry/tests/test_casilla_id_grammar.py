@@ -10,7 +10,7 @@ import dataclasses
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 
 from ..analysis.casilla_id_grammar import GRAMMARS, classify_casilla_id, screen_authority
 from ..compiler.authority import compiled_bundled_authority
@@ -68,7 +68,8 @@ def test_every_bundled_identifier_falls_in_a_named_grammar(authority: ValidatedR
     """
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
-    modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
+    with bundled_indexed_authority().operation() as operation:
+        modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes(operation=operation)))
     uses = screen_authority(authority, modelo_ids)
     unclassified = {use.modelo: dict(use.counts).get("unclassified", 0) for use in uses}
     assert not {modelo: count for modelo, count in unclassified.items() if count}

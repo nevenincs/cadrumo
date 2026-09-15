@@ -78,7 +78,11 @@ def _records(document: Mapping[str, object], member: str, model: type[Any], iden
 
 def _carve_outs(document: Mapping[str, object]) -> dict[str, TerritoryCarveOut]:
     """Compile carve-outs and refuse assimilation chains that cannot terminate."""
-    rows = _records(document, "carve_out", TerritoryCarveOut, "code")
+    rows: dict[str, TerritoryCarveOut] = {}
+    for code, raw_row in _records(document, "carve_out", TerritoryCarveOut, "code").items():
+        if not isinstance(raw_row, TerritoryCarveOut):
+            raise RegistryValidationError("runtime carve-out catalogue contains an invalid model row")
+        rows[code] = raw_row
     for code, row in rows.items():
         if row.assimilated_to == code:
             raise RegistryValidationError(f"territory carve-out {code!r} is assimilated to itself")

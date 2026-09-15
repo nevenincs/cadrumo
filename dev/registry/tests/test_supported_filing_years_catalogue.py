@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -21,6 +22,19 @@ from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_registry_tree, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+class _SociedadesCoverageFixtureOverrides(TypedDict, total=False):
+    """Typed overrides accepted by the invalid-coverage fixture cases."""
+
+    coverage_year: int
+    source_ref: str
+    declared_source_ref: str
+    source_kind: str
+    source_authority: str
+    corpus_path: str
+    applies_from: str
+    applies_to: str
 
 
 def test_bundled_tree_declares_one_ordered_supported_year_catalogue() -> None:
@@ -58,7 +72,7 @@ def test_supported_year_declaration_refuses_noncanonical_bounds(bounds: dict[str
     and silently claim an empty span.
     """
     with pytest.raises(ValidationError):
-        SupportedFilingYearsCatalogue(**bounds)
+        SupportedFilingYearsCatalogue.model_validate(bounds)
 
 
 def test_supported_year_declaration_derives_its_span_from_its_bounds() -> None:
@@ -240,7 +254,7 @@ def test_shared_catalogue_refuses_duplicate_sociedades_annual_manual_coverage(tm
 )
 def test_shared_catalogue_refuses_invalid_sociedades_annual_manual_source(
     tmp_path: Path,
-    kwargs: dict[str, str | int],
+    kwargs: _SociedadesCoverageFixtureOverrides,
     message: str,
 ) -> None:
     _write_sociedades_coverage_fixture(tmp_path, **kwargs)

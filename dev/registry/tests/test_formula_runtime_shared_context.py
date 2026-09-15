@@ -117,11 +117,6 @@ def _build_case(
             operand_refs.append(leaf.binding)
             operand_values.append(binding_values[leaf.binding])
             max_leaf_depth = max(max_leaf_depth, depth)
-        elif leaf.relation is not None:
-            relation_values.setdefault(leaf.relation, supplied)
-            operand_refs.append(leaf.relation)
-            operand_values.append(relation_values[leaf.relation])
-            max_leaf_depth = max(max_leaf_depth, depth)
 
     return _TreeCase(
         modelo_id=modelo_id,
@@ -284,4 +279,4 @@ def test_eval_context_is_frozen_and_slotted() -> None:
     )
     assert not hasattr(ctx, "__dict__")
     with pytest.raises(dataclasses.FrozenInstanceError):
-        ctx.operand_refs = []  # type: ignore[misc]
+        ctx.operand_refs = []

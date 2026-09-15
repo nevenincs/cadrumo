@@ -875,7 +875,17 @@ def _raw_casilla_tables(document: object, revision_id: str) -> tuple[dict[str, o
     casillas = revision.get("casillas", ())
     if not isinstance(casillas, list):
         return ()
-    return tuple(table for table in casillas if isinstance(table, dict))
+    tables: list[dict[str, object]] = []
+    for raw_table in casillas:
+        if not isinstance(raw_table, dict):
+            continue
+        table: dict[str, object] = {}
+        for key, value in raw_table.items():
+            if not isinstance(key, str):
+                continue
+            table[key] = value
+        tables.append(table)
+    return tuple(tables)
 
 
 def _locate_casilla_file(
@@ -1004,13 +1014,15 @@ def _pair_endpoints(entry: ChainPlanEntry, pair: EvolutionPair) -> tuple[AeipOcc
 
 def _evolution_core(record: object) -> tuple[str, str, str, str] | None:
     """Get the identity-bearing fields from a loaded evolution record."""
-    values = []
+    values: list[str] = []
     for field_name in ("continuidad_id", "from_revision", "to_revision", "evolution_kind"):
         value = getattr(record, field_name, None)
         if value is None:
             return None
         values.append(str(getattr(value, "value", value)))
-    return tuple(values)  # type: ignore[return-value]
+    if len(values) != 4:
+        return None
+    return values[0], values[1], values[2], values[3]
 
 
 def _expected_evolution_id(modelo_id: str, casilla_id: str, pair: EvolutionPair) -> str:

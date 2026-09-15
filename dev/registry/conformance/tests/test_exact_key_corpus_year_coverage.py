@@ -148,7 +148,10 @@ def _narrow_by_rewriting_citation_windows(source: Path, year: int) -> None:
 def _iva_catalogue_years(source: Path) -> frozenset[int]:
     regulations = _regulations(_read(source))
     return years_covered_by_every_group(
-        [ValidityWindow(valid_from=citation.valid_from, valid_to=citation.valid_to) for citation in regulation.citations]
+        [
+            ValidityWindow(valid_from=citation.valid_from, valid_to=citation.valid_to)
+            for citation in regulation.citations
+        ]
         for regulation in regulations.values()
         if not regulation.legal_basis_exempt
     )

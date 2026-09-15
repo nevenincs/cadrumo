@@ -224,6 +224,12 @@ _EXCLUDED_FROM_EQUALITY: Final = frozenset(
         "casilla_overrides",
         "casilla_removals",
         "casilla_positions",
+        "family_storage_baseline",
+        "family_overrides",
+        "family_removals",
+        "family_positions",
+        "cleared_families",
+        "scoped_families",
         # Migration may move row-level continuity claims into a typed sidecar.
         # The hydrated casilla fields remain fully compared below, including
         # continuity identity, origin, evidence, legal refs and source refs.

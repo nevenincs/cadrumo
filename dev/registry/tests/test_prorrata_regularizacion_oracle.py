@@ -42,10 +42,16 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.calculations.prorrata_regularizacion import project_prorrata_regularizacion_feed
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.money.rounding import round_to_cents
+from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataRegularizacionOutput,
+    ProrrataRegularizacionProvider,
+)
 from cadrumo.domain.iva.prorrata import (
     ProrrataInputs,
     ProrrataKind,
@@ -208,11 +214,19 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     assert result.deduccion_provisional == _MANUAL_FIRST_THREE_QUARTERS_DEDUCTION
     assert result.deduccion_definitiva == _MANUAL_FIRST_THREE_QUARTERS_CORRECT_DEDUCTION
     assert -result.importe == _MANUAL_EXCESS_DEDUCTION
-    assert projection.modelo_303_casilla_44_id == _CASILLA_44_ID
-    assert projection.modelo_303_casilla_44_value == _MANUAL_CASILLA_44_REGULARIZACION
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=payload.filing_year, period="4T")
+    prorrata_binding = next(
+        binding
+        for binding in snapshot.revision.bindings
+        if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
+        and isinstance(binding.provider, ProrrataRegularizacionProvider)
+        and binding.provider.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+    )
+    assert casillas_by_binding(snapshot.revision)[prorrata_binding.id] == (_CASILLA_44_ID,)
+    assert projection.proposed_value == _MANUAL_CASILLA_44_REGULARIZACION
 
     fourth_quarter_deductible = round_to_cents(_FOURTH_QUARTER_INPUT_IVA * definitive_percentage / Decimal("100"))
-    regularizacion_value = projection.modelo_303_casilla_44_value
+    regularizacion_value = projection.proposed_value
     definitive_deduction = result.deduccion_definitiva
     assert regularizacion_value is not None
     assert definitive_deduction is not None

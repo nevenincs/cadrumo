@@ -23,6 +23,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import ModeloDraft
@@ -150,7 +151,7 @@ class FilingExportConformanceRenderInputs(BaseModel):
 
     @model_validator(mode="after")
     def _bind_vector_to_coordinate(self) -> FilingExportConformanceRenderInputs:
-        _require_export_inputs_match(
+        _require_export_inputs_structurally_match(
             self.coordinate,
             self.draft,
             self.producer_snapshot,
@@ -219,7 +220,7 @@ class FilingExportSecureReplayEvidence(BaseModel):
 
     @model_validator(mode="after")
     def _bind_source_owned_inputs(self) -> FilingExportSecureReplayEvidence:
-        _require_export_inputs_match(
+        _require_export_inputs_structurally_match(
             self.coordinate,
             self.draft,
             self.producer_snapshot,
@@ -318,7 +319,7 @@ class FilingExportProof(BaseModel):
         return self
 
 
-def _require_export_inputs_match(
+def _require_export_inputs_structurally_match(
     coordinate: FilingExportProofCoordinate,
     draft: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
@@ -328,9 +329,7 @@ def _require_export_inputs_match(
 ) -> None:
     if draft.snapshot_ref != coordinate.snapshot_ref:
         raise ValueError("proof draft registry coordinate must match the requested coordinate")
-    outcome = revision_carry_outcome(coordinate.snapshot_ref)
-    if outcome.refused:
-        raise ValueError(f"proof registry coordinate cannot be re-confirmed: {outcome.detail}")
+
     if draft.status is not ModeloDraftStatus.APROBADO:
         raise ValueError("proof draft must be approved")
     if (
@@ -340,6 +339,28 @@ def _require_export_inputs_match(
         or producer_snapshot.modelo.value != coordinate.modelo
     ):
         raise ValueError("proof draft and producer snapshot must match the requested coordinate")
+
+
+def _require_export_inputs_match(
+    coordinate: FilingExportProofCoordinate,
+    draft: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    *,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Require structural proof coherence and re-confirm its registry coordinate."""
+    _require_export_inputs_structurally_match(
+        coordinate,
+        draft,
+        producer_snapshot,
+        filing_year=filing_year,
+        period=period,
+    )
+    outcome = revision_carry_outcome(coordinate.snapshot_ref, operation=operation)
+    if outcome.refused:
+        raise ValueError(f"proof registry coordinate cannot be re-confirmed: {outcome.detail}")
 
 
 def _require_unique_dictionary_fields(values: tuple[FilingExportDictionaryValue, ...]) -> None:

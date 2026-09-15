@@ -169,11 +169,11 @@ def test_the_gate_applies_only_to_a_registry_that_enrolls_fact_providers(monkeyp
     """The obligation exists where the migration happened: in a registry enrolling governed-fact providers."""
     empty = GovernedFactCatalogue(facts={})
 
-    enrolled_failures = migrated_legal_parameter_fact_failures(empty, source_refs={})
+    enrolled_failures = retired_fact_provider_closure_failures(empty, source_refs={})
     monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", ())
-    unenrolled_failures = migrated_legal_parameter_fact_failures(empty, source_refs={})
+    unenrolled_failures = retired_fact_provider_closure_failures(empty, source_refs={})
 
-    assert "migrated legal-parameter fact 'liva-art-161:recargo-rate-general' is not authored" in enrolled_failures
+    assert "retired-provider fact 'liva-art-161:recargo-rate-general' is not authored" in enrolled_failures
     assert unenrolled_failures == ()
 
 

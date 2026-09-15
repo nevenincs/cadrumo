@@ -472,12 +472,12 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
     box_97_binding = bindings["modelo-390-prev-303-compensacion-ultimo-periodo"]
     box_662_binding = bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"]
     assert box_97_binding.source == "iva_compensation_annual_partition"
-    box_97_selector: Any = box_97_binding.selector
+    box_97_selector: Any = box_97_binding.provider
     assert box_97_selector.source_modelo == "303"
     assert binding_source_casilla_ids(box_97_binding) == compensation_source_ids
     assert box_97_selector.partition_output == "last_period_amount"
     assert box_662_binding.source == "iva_compensation_annual_partition"
-    box_662_selector: Any = box_662_binding.selector
+    box_662_selector: Any = box_662_binding.provider
     assert box_662_selector.source_modelo == "303"
     assert binding_source_casilla_ids(box_662_binding) == compensation_source_ids
     assert box_662_selector.partition_output == "generated_not_in_last_amount"

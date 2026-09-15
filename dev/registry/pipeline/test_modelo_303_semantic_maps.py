@@ -848,6 +848,7 @@ def _bundled_design_note_forms() -> tuple[_NoteBearingForm, ...]:
         if not design_refs:
             continue
         inspection, selector_year = _resolve_owning_inspection(str(design_refs[0]))
+        assert inspection.source_root is not None
         for design_ref in design_refs:
             source = inspection.sources[str(design_ref)]
             assert source.record_design_epoch is not None
@@ -880,6 +881,7 @@ def _authorities(design_epoch: str) -> _EpochAuthorities:
     semantic_map = load_semantic_map(_MAPPING_ROOT / design_epoch)
     assert semantic_map.design_epoch == design_epoch
     inspection, filing_year = _resolve_owning_inspection(str(semantic_map.source_ref))
+    assert inspection.source_root is not None
     intermediate = load_record_design_intermediate(
         inspection.source_root,
         inspection.sources,

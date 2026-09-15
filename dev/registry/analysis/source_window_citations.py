@@ -27,6 +27,7 @@ import sys
 import tomllib
 from datetime import date
 from pathlib import Path
+from typing import TypedDict
 
 from cadrumo.domain.calculations.registry.schema_references import (
     source_window_applies_across,
@@ -230,7 +231,20 @@ ROLES = (
 )
 
 
-def tally(findings: list[dict[str, object]]) -> dict[str, int]:
+class SourceWindowFinding(TypedDict):
+    """Structured finding emitted by the source-window citation scan."""
+
+    modelo: str
+    revision: str
+    revision_span: list[str | None]
+    source: str
+    source_window: list[str | None]
+    catalogue: str
+    cited_in: list[str]
+    role: str
+
+
+def tally(findings: list[SourceWindowFinding]) -> dict[str, int]:
     """Count findings per role, naming every role even at zero.
 
     A role absent from the line reads as "not measured"; a role at zero reads as
@@ -239,7 +253,7 @@ def tally(findings: list[dict[str, object]]) -> dict[str, int]:
     return {role: sum(1 for f in findings if f["role"] == role) for role in ROLES}
 
 
-def screen_line(findings: list[dict[str, object]], revisions: int, citations: int) -> str:
+def screen_line(findings: list[SourceWindowFinding], revisions: int, citations: int) -> str:
     """One grepable line in the grammar the other registry screens use."""
     counts = tally(findings)
     return "source_windows " + " ".join(
@@ -251,7 +265,7 @@ def scan(
     legal_dir: Path | None = None,
     modelos_dir: Path | None = None,
     only_modelo: str | None = None,
-) -> tuple[list[dict[str, object]], int, int]:
+) -> tuple[list[SourceWindowFinding], int, int]:
     """Return (findings, revisions_checked, citations_checked).
 
     Directories are parameters so a gate can point this at a constructed tree
@@ -264,7 +278,7 @@ def scan(
     # catalogue wins so an id is never counted twice under two roles.
     legal = {k: v for k, v in legal.items() if k not in windows}
     known = set(windows) | set(legal)
-    findings: list[dict[str, object]] = []
+    findings: list[SourceWindowFinding] = []
     revisions_checked = citations_checked = 0
 
     for modelo_dir in sorted((modelos_dir or MODELOS).iterdir()):

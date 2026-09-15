@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev._paths import REPO_ROOT
 
-from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, definition_findings, restatement_differences
+from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, restatement_differences
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
@@ -102,7 +102,25 @@ def _registry(destination: Path, modelo_id: str) -> Path:
                 row["constraints"] = constraints
             expanded_rows.append(row)
         table["casillas"] = tuple(expanded_rows)
-        for key in ("predecessor", "restated_families", "casilla_source_refs"):
+        # ``materialise_edition`` returns effective content, but some current
+        # enrolled editions still expose their on-disk storage operations in
+        # that table.  This fixture writes every family out in full, so retain
+        # no operation whose selectors describe the detached source tree.
+        for key in (
+            "predecessor",
+            "restated_families",
+            "casilla_source_refs",
+            "casilla_storage_baseline",
+            "casilla_overrides",
+            "casilla_removals",
+            "casilla_positions",
+            "family_storage_baseline",
+            "family_overrides",
+            "family_removals",
+            "family_positions",
+            "cleared_families",
+            "scoped_families",
+        ):
             table.pop(key, None)
         # A deliberate authored ordering, independent of the migration's merge
         # order, preserves the order-detector's non-vacuity after enrollment.
@@ -256,13 +274,15 @@ def test_the_pilot_migrates_every_successor_edition_in_merge_order(
     assert reordered, "no edition was reordered, so the merge-order rule was never exercised"
 
 
-def test_the_migrated_pilot_is_minimal_where_the_unmigrated_one_is_not(
-    pilot: MigrationOutcome, pilot_before: ModeloDefinition
-) -> None:
-    """The screen judges only what each edition states, through the loader's inheritance markers."""
+def test_the_migrated_pilot_is_minimal_where_the_unmigrated_one_is_not(pilot: MigrationOutcome) -> None:
+    """The independent assessor sees duplication before conversion and none after it."""
     assert pilot.staged_registry is not None
-    assert any(item.kind == "restated_unchanged" for item in definition_findings(pilot_before, modelo_id=_PILOT))
-    assert definition_findings(_load(pilot.staged_registry, _PILOT), modelo_id=_PILOT) == ()
+    assert pilot.before_assessment is not None
+    assert pilot.after_assessment is not None
+    assert pilot.before_assessment.unresolved_duplication
+    assert not pilot.before_assessment.minimal
+    assert pilot.after_assessment.unresolved_duplication == ()
+    assert pilot.after_assessment.minimal
 
 
 def test_references_beyond_the_default_are_stated_as_additions(
@@ -430,7 +450,7 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
     write_standard_manifest(modelo_dir, "Storage fixture")
     legal_ref = "ley-58-2003:art-29"
 
-    def write_revision(revision_id: str, year: int, *, changed_number: str) -> None:
+    def write_revision(revision_id: str, year: int, *, changed_number: str, insert_local: bool = False) -> None:
         revision_dir = modelo_dir / "revisions" / revision_id
         (revision_dir / "casillas").mkdir(parents=True)
         (revision_dir / "revision.toml").write_text(
@@ -440,22 +460,29 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
             encoding="utf-8",
             newline="\n",
         )
+        local = (
+            f'[[revisions."{revision_id}".casillas]]\nid = "0003"\nnumber = "3"\n'
+            f'section = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n\n'
+            if insert_local
+            else ""
+        )
         rows = (
             f'[[revisions."{revision_id}".casillas]]\nid = "0001"\nnumber = "{changed_number}"\n'
             f'section = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n\n'
+            f"{local}"
             f'[[revisions."{revision_id}".casillas]]\nid = "0002"\nnumber = "2"\n'
             f'section = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n'
         )
         (revision_dir / "casillas" / "c0001__c0002.toml").write_text(rows, encoding="utf-8", newline="\n")
 
     write_revision("2024", 2024, changed_number="1")
-    write_revision("2025", 2025, changed_number="11")
+    write_revision("2025", 2025, changed_number="11", insert_local=True)
     plan = plan_migration(modelo_dir, load_modelo_directory(modelo_dir))
 
     successor = next(item for item in plan.editions if item.revision_id == "2025")
     assert successor.blocked == ()
-    assert successor.stated_ids == ()
-    assert successor.inherited_ids == ("0001", "0002")
+    assert successor.stated_ids == ("0003",)
+    assert successor.inherited_ids == ("0002",)
     assert successor.casilla_overrides == (
         {
             "selector": {"revision": "2024", "id": "0001"},
@@ -463,6 +490,7 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
             "removed_fields": [],
         },
     )
+    assert successor.casilla_positions == ({"id": "0003", "position": 1},)
 
 
 def _withdrawable_row(definition: ModeloDefinition, edition_dir: Path, candidates: tuple[str, ...]) -> str:
@@ -688,9 +716,9 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     (summary,) = [line for line in output.splitlines() if line.startswith("summary ")]
     (persisted_line,) = [line for line in output.splitlines() if line.startswith("report persisted to ")]
     persisted = Path(persisted_line.removeprefix("report persisted to "))
-    assert exit_code == 1, output
+    assert exit_code == 0, output
     assert " equivalence_status=passed " in summary, output
-    assert " minimality_status=failed " in summary, output
+    assert " minimality_status=passed " in summary, output
     assert " source_status=accepted " in summary, output
     assert " publication_readiness_status=failed " in summary, output
     assert " publication_execution_status=not_performed " in summary, output

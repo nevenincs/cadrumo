@@ -23,6 +23,7 @@ import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypedDict
 
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import CasillaRowKey
 
@@ -31,6 +32,15 @@ from .casilla_lineage_seed import LEDGER_PATH
 __all__ = ["LedgerRefusal", "load_ledger_refusals"]
 
 _REQUIRED = ("modelo", "revision", "casilla", "category", "reason")
+
+
+class _CarriageKwargs(TypedDict, total=False):
+    """Validated optional carriage fields passed to :class:`LedgerRefusal`."""
+
+    carried_from_previous_run: bool
+    carried_reason: str
+    last_judged: str
+    carried_runs: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,7 +82,7 @@ def load_ledger_refusals(path: Path = LEDGER_PATH) -> Mapping[CasillaRowKey, Led
     return refusals
 
 
-def _carriage(path: Path, index: int, entry: Mapping[str, object]) -> dict[str, object]:
+def _carriage(path: Path, index: int, entry: Mapping[str, object]) -> _CarriageKwargs:
     """The carriage fields of one entry, refusing a carried entry that dates nothing."""
     carried = entry.get("carried_from_previous_run", False)
     if not isinstance(carried, bool):

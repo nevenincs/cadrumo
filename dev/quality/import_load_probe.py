@@ -106,7 +106,15 @@ def _root_cause_summary(failures: list[dict[str, object]]) -> list[dict[str, obj
                 "path": first.get("path"),
             }
         )
-    return sorted(result, key=lambda item: (-int(item["affected_modules"]), str(item["cause"])))
+    return sorted(result, key=lambda item: (-_affected_module_count(item), str(item["cause"])))
+
+
+def _affected_module_count(item: dict[str, object]) -> int:
+    """Return the validated module count stored in one root-cause row."""
+    count = item.get("affected_modules")
+    if not isinstance(count, int):
+        raise TypeError("root-cause affected_modules must be an integer")
+    return count
 
 
 def _module_name(path: Path, root: RootPackage) -> str:
@@ -140,7 +148,13 @@ def compile_load_target_inventory(authority: Authority) -> dict[str, object]:
             subpackages=(),
             target_set=root.name,
         )
-        target_sets.update(document["target_sets"])
+        raw_target_sets = document.get("target_sets")
+        if not isinstance(raw_target_sets, dict):
+            raise TypeError("compiled inventory target_sets must be a mapping")
+        for target_set_name, target_set in raw_target_sets.items():
+            if not isinstance(target_set_name, str):
+                raise TypeError("compiled inventory target-set names must be strings")
+            target_sets[target_set_name] = target_set
     return {"schema_version": 1, "target_sets": dict(sorted(target_sets.items()))}
 
 

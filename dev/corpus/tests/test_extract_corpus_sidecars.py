@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from openpyxl import Workbook
+from openpyxl.worksheet.worksheet import Worksheet
 
 from dev.docs.preprocess.sidecar import EXTRACTED_JSON_SUFFIX, EXTRACTED_TEXT_SUFFIX
 
@@ -27,9 +28,11 @@ def _fixture_corpus(tmp_path: Path) -> tuple[Path, Path]:
     workbook_path = corpus / "aeat_official" / "disenos_registro" / "modelo.xlsx"
     workbook_path.parent.mkdir(parents=True)
     workbook = Workbook()
-    workbook.active.title = "Datos"
-    workbook.active.append(["Campo", "Descripción"])
-    workbook.active.append(["01", "Importe"])
+    worksheet = workbook.active
+    assert isinstance(worksheet, Worksheet)
+    worksheet.title = "Datos"
+    worksheet.append(["Campo", "Descripción"])
+    worksheet.append(["01", "Importe"])
     workbook.save(workbook_path)
     return corpus, tmp_path
 

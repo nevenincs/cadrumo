@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -13,9 +13,11 @@ from cadrumo.application.aggregation.source_profile import ProfileSourceResolver
 from cadrumo.core.aggregation import BindingTypedEnumKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.rental_reduction import resolve_rental_reduction_art232_tier_catalogue
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.renta.rental_reduction import RentalReductionArt232Tier
@@ -48,6 +50,12 @@ def m100_2024_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> Re
         revision_id="2024",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _calculate(
@@ -239,6 +247,7 @@ def _dispatch_keys(node: FormulaExpression) -> set[str]:
 
 def test_tier_binding_declares_the_closed_substrate_enum(
     m100_2024_compiled_snapshot: RegistrySnapshot,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The tier is a closed-membership axis, and its value contract says so.
 
@@ -257,34 +266,49 @@ def test_tier_binding_declares_the_closed_substrate_enum(
         for item in m100_2024_compiled_snapshot.revision.formulas
         if item.id == "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"
     )
-    assert _dispatch_keys(formula.expression) == {member.value for member in RentalReductionArt232Tier}
+    catalogue = resolve_rental_reduction_art232_tier_catalogue(
+        effective_date=_FILING_DATE,
+        authority=authority_operation,
+    )
+    assert _dispatch_keys(formula.expression) == {member.value for member in catalogue.all_tiers}
 
 
-@pytest.mark.parametrize("tier", list(RentalReductionArt232Tier))
 def test_declared_tier_resolves_onto_the_enum_channel_through_the_profile_resolver(
     m100_2024_compiled_snapshot: RegistrySnapshot,
-    tier: RentalReductionArt232Tier,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Every tier member travels the live profile resolver onto the enum channel."""
-    resolution = ProfileSourceResolver(
-        registry_snapshot=m100_2024_compiled_snapshot,
-        profile_record=_tier_profile_record(tier),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=_PROFILE_ID,
-            modelo="100",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "0A"),
-            revision=m100_2024_compiled_snapshot.revision,
-        ),
+    catalogue = resolve_rental_reduction_art232_tier_catalogue(
+        effective_date=_FILING_DATE,
+        authority=authority_operation,
     )
+    for tier in catalogue.all_tiers:
+        resolution = ProfileSourceResolver(
+            registry_snapshot=m100_2024_compiled_snapshot,
+            profile_record=_tier_profile_record(tier),
+            operation=authority_operation,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_PROFILE_ID,
+                modelo="100",
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "0A"),
+                revision=m100_2024_compiled_snapshot.revision,
+            ),
+        )
 
-    assert resolution.enum_binding_values[_TIER_DECLARED_ID] == tier.value
-    assert _TIER_DECLARED_ID not in resolution.binding_values
+        assert resolution.enum_binding_values[_TIER_DECLARED_ID] == tier.value
+        assert _TIER_DECLARED_ID not in resolution.binding_values
 
 
-def test_profile_schema_and_substrate_enum_declare_the_same_tiers() -> None:
+def test_profile_schema_and_substrate_enum_declare_the_same_tiers(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The taxpayer-facing vocabulary and the substrate enum cannot drift apart."""
     schema = load_user_profile_schema()
+    catalogue = resolve_rental_reduction_art232_tier_catalogue(
+        effective_date=_FILING_DATE,
+        authority=authority_operation,
+    )
 
-    assert set(schema.field(_TIER_PROFILE_KEY).enum_values) == {member.value for member in RentalReductionArt232Tier}
+    assert set(schema.field(_TIER_PROFILE_KEY).enum_values) == {member.value for member in catalogue.all_tiers}

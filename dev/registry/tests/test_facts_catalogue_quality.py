@@ -8,9 +8,16 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from pydantic import TypeAdapter
 
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery, resolve_governed_fact
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.schema import (
+    GovernedFact,
+    GovernedFactCatalogue,
+    GovernedFactFamily,
+    GovernedFactVariant,
+)
+from dev._paths import REPO_ROOT
 
 from ..analysis.facts_catalogue_quality import (
     FactQualityKind,
@@ -37,6 +44,16 @@ def _provider(provider_id: str, directory: str) -> FactProviderRegistration:
 
 def _fact(fact_id: str, *variants: dict[str, object]) -> GovernedFact:
     return GovernedFact.model_validate({"fact_id": fact_id, "family": "scalar", "variants": variants})
+
+
+def _unvalidated_fact(fact_id: str, *variants: dict[str, object]) -> GovernedFact:
+    """Build one malformed cross-variant fixture for the catalogue detector."""
+    parsed_variants = tuple(GovernedFactVariant.model_validate(variant) for variant in variants)
+    return GovernedFact.model_construct(
+        fact_id=fact_id,
+        family=GovernedFactFamily.SCALAR,
+        variants=parsed_variants,
+    )
 
 
 def _variant(
@@ -153,7 +170,7 @@ def test_fact_and_variant_identity_are_global_across_providers() -> None:
 
 def test_overlapping_same_coordinate_requires_explicit_acyclic_precedence() -> None:
     provider = _provider("authored", "facts")
-    ambiguous = _fact(
+    ambiguous = _unvalidated_fact(
         "iva-rate",
         _variant("ordinary", date(2025, 1, 1)),
         _variant("override", date(2025, 6, 1), date(2025, 6, 30)),
@@ -172,7 +189,7 @@ def test_overlapping_same_coordinate_requires_explicit_acyclic_precedence() -> N
 
 def test_cycles_and_precedence_between_disjoint_windows_are_rejected() -> None:
     provider = _provider("authored", "facts")
-    fact = _fact(
+    fact = _unvalidated_fact(
         "iva-rate",
         _variant("old", date(2024, 1, 1), date(2024, 12, 31), precedence_over=("new",)),
         _variant("new", date(2025, 1, 1), precedence_over=("old",)),
@@ -209,8 +226,12 @@ def test_applicable_resolved_fact_without_provenance_is_rejected() -> None:
 
 
 def _live_iva_retirement_ledger() -> dict[str, object]:
-    return tomllib.loads(
-        (Path(__file__).parents[1] / "analysis" / "facts_iva_retirement.toml").read_text(encoding="utf-8"),
+    return TypeAdapter(dict[str, object]).validate_python(
+        tomllib.loads(
+            (REPO_ROOT / "dev" / "registry" / "analysis" / "facts_iva_retirement.toml").read_text(
+                encoding="utf-8",
+            ),
+        ),
     )
 
 
@@ -274,10 +295,10 @@ def test_live_gate_resolves_registered_modelo_projections_with_actual_modelos(
     provider = FactProviderRegistration(
         provider_id="projection-provider",
         owned_directories=(),
-        compile=lambda _root: (),
+        compile=lambda registry_root: (),
         collect_fingerprints=lambda _root: (),
         reset=lambda: None,
-        project_modelos=lambda _modelos: (),
+        project_modelos=lambda modelos: (),
         inherited_identity_domains=("modelos",),
     )
     marker = object()
@@ -298,7 +319,9 @@ def test_live_gate_resolves_registered_modelo_projections_with_actual_modelos(
 
 
 def test_gate_imports_no_modelo_denominator() -> None:
-    source = (Path(__file__).parents[1] / "analysis/facts_catalogue_quality.py").read_text(encoding="utf-8")
+    source = (REPO_ROOT / "dev" / "registry" / "analysis" / "facts_catalogue_quality.py").read_text(
+        encoding="utf-8",
+    )
     tree = ast.parse(source)
     imports = {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)} | {
         alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names

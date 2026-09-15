@@ -301,7 +301,14 @@ def run_loadability(
                 check=False,
                 timeout=timeout,
             )
-            payload = json.loads(report_path.read_text(encoding=UTF_8))
+            decoded_payload: object = json.loads(report_path.read_text(encoding=UTF_8))
+            if not isinstance(decoded_payload, dict):
+                raise ValueError("loadability report must be a JSON object")
+            payload: dict[str, object] = {}
+            for key, value in decoded_payload.items():
+                if not isinstance(key, str):
+                    raise ValueError("loadability report object keys must be strings")
+                payload[key] = value
             if payload.get("schema_version") != 1:
                 raise ValueError("unsupported loadability report schema")
             if artifact_directory:
