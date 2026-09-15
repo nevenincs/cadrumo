@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -118,7 +119,9 @@ def test_a_reviewed_delta_edition_preserves_its_review_when_materialised(
 
     assert edition.table["review_status"] == "agent_reviewed"
     assert edition.table["reviewed_by"] == "agent:reviewer"
-    assert edition.table["reviewed_at"].isoformat() == "2026-09-10"
+    reviewed_at = edition.table["reviewed_at"]
+    assert isinstance(reviewed_at, date)
+    assert reviewed_at.isoformat() == "2026-09-10"
     assert edition.table["reviewed_against"] == "2024"
     assert edition.table["engineered_by"] == "agent:author"
     standalone = _standalone(edition.table)

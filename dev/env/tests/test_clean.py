@@ -15,12 +15,12 @@ A rule that spared everything would pass one half and fail the other.
 from __future__ import annotations
 
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.command_execution import run_command
 from dev.test_runs.reaper import COMPLETED_RETENTION_SECONDS
 
 from ..clean import (
@@ -63,14 +63,13 @@ scratch/
 def _git(repository: Path, *arguments: str) -> str:
     executable = shutil.which("git")
     assert executable is not None, "git must be on PATH for this gate to mean anything"
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, temporary repository
+    completed = run_command(
         [executable, "-c", "user.email=gate@example.invalid", "-c", "user.name=gate", *arguments],
         cwd=repository,
-        capture_output=True,
-        text=True,
-        check=True,
-        timeout=120,
+        timeout_seconds=120,
     )
+    if completed.returncode != 0:
+        raise RuntimeError(completed.stderr)
     return completed.stdout
 
 

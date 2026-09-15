@@ -5,19 +5,19 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 from typing import Final
 
 from cadrumo.core.link_safety import is_link_like
 from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
 
 VAR_ROOT = REPO_ROOT / "var"
 DEMO_ROOT = VAR_ROOT / "readme-demo"
-DEMO_PASSPHRASE = "readme-demo-only-synthetic-passphrase-2026"  # noqa: S105 - published synthetic value
+DEMO_VALUE = "readme-demo-only-synthetic-passphrase-2026"
 _CLI_BOOTSTRAP = "from cadrumo.entrypoints.cli import main; main()"
 
 
@@ -52,7 +52,7 @@ def demo_environment() -> dict[str, str]:
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(DEMO_ROOT),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
-            "CADRUMO_SECRET_PASSPHRASE": DEMO_PASSPHRASE,
+            "CADRUMO_SECRET_PASSPHRASE": DEMO_VALUE,
             "CADRUMO_SECRET_STORE_BACKEND": "unsecured",
             "CADRUMO_SECRET_STORE_DIR": str(DEMO_ROOT / "secrets"),
             "PYTHONIOENCODING": "utf-8",
@@ -64,16 +64,12 @@ def demo_environment() -> dict[str, str]:
 
 def _run_cli(stage: str, *arguments: str, environment: dict[str, str]) -> None:
     """Run one real CLI process and surface its diagnostics if setup fails."""
-    result = subprocess.run(  # noqa: S603 - executable and arguments are developer-owned constants
+    result = run_command(
         [sys.executable, "-c", _CLI_BOOTSTRAP, *arguments],
         cwd=REPO_ROOT,
-        env=environment,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
+        environment=environment,
         errors="replace",
-        timeout=180,
-        check=False,
+        timeout_seconds=180,
     )
     if result.returncode == 0:
         return

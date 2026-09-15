@@ -57,6 +57,7 @@ from dev.registry.edition_delta_migration import (
     assess_migration_state,
     migrate_modelo,
 )
+from dev.registry.edition_round_trip import copy_registry_tree
 from dev.registry.pipeline.authority_publication import publish_sqlite_authority_candidate
 
 _MODELOS: Final = "modelos"
@@ -997,6 +998,16 @@ def canonical_converter(source: Path, candidate: Path) -> Mapping[str, object]:
         raise RuntimeError(f"candidate path has no candidates scratch ancestor: {candidate}")
     runs_root = candidates_root.parent / "converter-runs"
     runs_root.mkdir(parents=True, exist_ok=True)
+    closure_root = copy_registry_tree(
+        registry_root,
+        runs_root / f"{modelo_id}-{uuid4().hex}-dependencies" / "registry" / "aeat",
+        modelo_id=modelo_id,
+    )
+    candidate_modelos = candidate_registry / _MODELOS
+    for dependency in (closure_root / _MODELOS).iterdir():
+        target = candidate_modelos / dependency.name
+        if dependency.name != modelo_id and not target.exists():
+            shutil.copytree(dependency, target)
     work_dir = runs_root / f"{modelo_id}-{uuid4().hex}"
     outcome = migrate_modelo(
         registry_root=registry_root,

@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 from typing import cast
@@ -13,6 +12,8 @@ from typing import cast
 import pytest
 
 from dev.source_tree import repository_files, snapshot
+
+from ..command_execution import run_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -109,13 +110,10 @@ def _run_probe(
     environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
     if editable_site is not None:
         environment["AEAT_EDITABLE_SITE"] = str(editable_site)
-    completed = subprocess.run(  # noqa: S603 - selected lane interpreter and fixed probe
+    completed = run_command(
         [str(python), "-S", "-c", _PROBE],
         cwd=cwd,
-        env=environment,
-        check=False,
-        capture_output=True,
-        text=True,
+        environment=environment,
     )
     assert completed.returncode == 0, completed.stderr
     decoded = json.loads(completed.stdout)
@@ -153,10 +151,11 @@ def test_clean_tracked_checkout_direct_source_and_editable_install(tmp_path: Pat
     editable_target = checkout / ".editable-target"
     uv = shutil.which("uv")
     assert uv is not None
-    subprocess.run(  # noqa: S603 - resolved uv executable and isolated authored checkout
+    completed = run_command(
         [uv, "pip", "install", "--target", str(editable_target), "--no-deps", "--editable", str(checkout)],
-        check=True,
+        cwd=checkout,
     )
+    assert completed.returncode == 0, completed.stderr
     _assert_complete_projection(
         _run_probe(
             python=Path(sys.executable),

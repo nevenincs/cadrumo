@@ -13,13 +13,13 @@ from __future__ import annotations
 
 import os
 import re
-import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.command_execution import run_command
 
 from ._artifacts import FrameFailureKind, ThemeName
 from ._viewports import Viewport
@@ -130,16 +130,12 @@ def _environment(workspace: str) -> dict[str, str]:
 
 def _run(arguments: tuple[str, ...], *, workspace: str) -> str:
     """Run one harness command and return its stdout, or raise its refusal."""
-    result = subprocess.run(  # noqa: S603 - module and arguments are developer-owned constants
+    result = run_command(
         [sys.executable, "-m", HARNESS_MODULE, *arguments],
         cwd=REPO_ROOT,
-        env=_environment(workspace),
-        capture_output=True,
-        text=True,
-        encoding=UTF_8,
         errors="replace",
-        timeout=_TIMEOUT_SECONDS,
-        check=False,
+        environment=_environment(workspace),
+        timeout_seconds=_TIMEOUT_SECONDS,
     )
     if result.returncode != 0:
         diagnostics = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())

@@ -53,7 +53,6 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
-import subprocess
 import sys
 from dataclasses import dataclass
 from enum import Enum
@@ -61,8 +60,9 @@ from pathlib import Path
 from typing import Final, TextIO
 
 from cadrumo.core.link_safety import is_link_like
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT
 from dev.packaging.build_scratch_reclaim import report_var_scratch
+from dev.packaging.command_execution import run_command
 
 from .temp_reaper import report_temporary_storage
 
@@ -358,15 +358,11 @@ def _git(repo_root: Path, *arguments: str) -> str:
     executable = shutil.which("git")
     if executable is None:
         raise SystemExit("git is not on PATH, so the worktree cannot be enumerated")
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
+    completed = run_command(
         [executable, *arguments],
         cwd=repo_root,
-        capture_output=True,
-        text=True,
-        encoding=UTF_8,
         errors="replace",
-        check=False,
-        timeout=GIT_TIMEOUT_SECONDS,
+        timeout_seconds=GIT_TIMEOUT_SECONDS,
     )
     return completed.stdout
 

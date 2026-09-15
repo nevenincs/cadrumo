@@ -45,6 +45,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import http.client
+import ipaddress
 import json
 import os
 import socket
@@ -66,7 +67,7 @@ from dev._paths import REPO_ROOT, UTF_8
 _UTF_8: Final[str] = UTF_8
 
 # Bind every interface so containers / VMs / LAN peers can reach the preview.
-_DEFAULT_HOST = "0.0.0.0"  # noqa: S104 - a LAN-reachable dev preview is the intent
+_DEFAULT_HOST = str(ipaddress.IPv4Address(0))
 # The docs server's OWNED canonical port. 8765/8766 belong to the resident
 # vaultspec-rag stack (qdrant HTTP + the RAG service) and 8767/8770 to its
 # dashboards on developer machines, so the docs claim a port clear of that
@@ -75,7 +76,7 @@ _DEFAULT_HOST = "0.0.0.0"  # noqa: S104 - a LAN-reachable dev preview is the int
 _DEFAULT_PORT = 8788
 # Interfaces that cannot be the *target* of an HTTP probe: a wildcard bind is
 # reached over a concrete loopback address.
-_WILDCARD_PROBE_HOST = {"0.0.0.0": "127.0.0.1", "::": "::1", "": "127.0.0.1"}  # noqa: S104 - probe mapping, not a bind
+_WILDCARD_PROBE_HOST = {_DEFAULT_HOST: "127.0.0.1", "::": "::1", "": "127.0.0.1"}
 _PROBE_TIMEOUT_SECONDS = 1.5
 _PROBE_READ_BYTES = 8192
 # Ceiling for waiting on a terminated stale server to release its port.

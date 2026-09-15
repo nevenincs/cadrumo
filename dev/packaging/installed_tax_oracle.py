@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib
 import json
 import os
 import re
@@ -27,10 +28,14 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
-from ._installed_wheel_binding import installed_wheel_payload_sha256  # noqa: E402
-from ._recovery_enrollment import enrolled_profile_creation  # noqa: E402
-from .command_execution import CommandResult, run_command  # noqa: E402
-from .hashing import sha256_path  # noqa: E402
+_INSTALLED_WHEEL_BINDING = importlib.import_module("dev.packaging._installed_wheel_binding")
+installed_wheel_payload_sha256 = _INSTALLED_WHEEL_BINDING.installed_wheel_payload_sha256
+_RECOVERY_ENROLLMENT = importlib.import_module("dev.packaging._recovery_enrollment")
+enrolled_profile_creation = _RECOVERY_ENROLLMENT.enrolled_profile_creation
+_COMMAND_EXECUTION = importlib.import_module("dev.packaging.command_execution")
+CommandResult = _COMMAND_EXECUTION.CommandResult
+run_command = _COMMAND_EXECUTION.run_command
+sha256_path = importlib.import_module("dev.packaging.hashing").sha256_path
 
 _UTF_8: Final[str] = "utf-8"
 _JSON_FORMAT: Final[tuple[str, ...]] = ("--format", "json")

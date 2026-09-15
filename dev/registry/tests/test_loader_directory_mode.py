@@ -293,8 +293,8 @@ reviewed_by = "registry-test"
         load_shared_catalogues(tmp_path)
 
 
-def test_shared_catalogues_preserves_valid_parameter_key_identity(tmp_path: Path) -> None:
-    """A valid TOML key is the identity of the loaded typed parameter."""
+def test_shared_catalogues_reject_retired_parameters_in_catalogue_toml(tmp_path: Path) -> None:
+    """Directory-mode shared loading must refuse the retired global parameters section."""
 
     legal_dir = tmp_path / "legal"
     legal_dir.mkdir()
@@ -328,10 +328,11 @@ reviewed_by = "registry-test"
     )
     write_minimal_shared_catalogues(legal_dir, floor=2026, horizon=2026)
 
-    parameters = load_shared_catalogues(tmp_path).parameters
-
-    assert tuple(parameters) == ("test-rate",)
-    assert parameters["test-rate"].id == "test-rate"
+    with pytest.raises(
+        RegistryLoadError,
+        match=r"retired global \[parameters\] catalogue section is forbidden",
+    ):
+        load_shared_catalogues(tmp_path)
 
 
 def test_registry_tree_rejects_parameter_unknown_legal_refs(tmp_path: Path) -> None:

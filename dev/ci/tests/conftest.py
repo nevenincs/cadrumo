@@ -27,5 +27,4 @@ marks each as used by collection rather than by any statement in this file.
 
 from __future__ import annotations
 
-from cadrumo.conftest import compose_runtime_ports  # noqa: F401
-from cadrumo.entrypoints.cli.conftest import overview_cli_backend  # noqa: F401
+pytest_plugins = ("cadrumo.conftest", "cadrumo.entrypoints.cli.conftest")

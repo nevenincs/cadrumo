@@ -34,9 +34,10 @@ Run it with::
 
 from __future__ import annotations
 
+import http.client
 import io
-import urllib.request
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 
@@ -233,9 +234,21 @@ def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
             page_path, anchor = concept_url.split("#", 1)
             # Fetch the deep-link page from the local test server to prove it
             # resolves (the loopback URL is the gate's own fixture, not input).
-            with urllib.request.urlopen(base + page_path, timeout=10) as resp:  # noqa: S310
+            deep_link = base + page_path
+            parsed = urlsplit(deep_link)
+            if parsed.scheme != "http" or parsed.hostname is None:
+                raise AssertionError(f"unexpected local deep-link URL: {deep_link}")
+            connection = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=10)
+            try:
+                target = parsed.path or "/"
+                if parsed.query:
+                    target = f"{target}?{parsed.query}"
+                connection.request("GET", target)
+                resp = connection.getresponse()
                 assert resp.status == 200, page_path
                 body = resp.read().decode("utf-8")
+            finally:
+                connection.close()
             assert f'id="{anchor}"' in body, f"{anchor} not in built glossary"
 
             # A relevant how-to / explanation page appears in the full-text tier.

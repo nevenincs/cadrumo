@@ -99,13 +99,19 @@ def verify(excerpt: Excerpt) -> tuple[bool, str]:
     parsed_url = urllib.parse.urlsplit(excerpt.api_url)
     if parsed_url.scheme != "https" or parsed_url.netloc != "www.boe.es":
         return True, "unsupported URL"
+    hostname = parsed_url.hostname
+    if hostname is None:
+        return True, "unsupported URL"
     try:
         target = parsed_url.path or "/"
         if parsed_url.query:
             target = f"{target}?{parsed_url.query}"
-        with http.client.HTTPSConnection(parsed_url.hostname, timeout=45) as connection:
+        connection = http.client.HTTPSConnection(hostname, timeout=45)
+        try:
             connection.request("GET", target, headers={"Accept": "application/xml"})
             payload = connection.getresponse().read()
+        finally:
+            connection.close()
     except (http.client.HTTPException, OSError):
         return True, "fetch failed"
     versions = _BLOCK_VIGENCIA.findall(payload.decode("utf-8", errors="replace"))

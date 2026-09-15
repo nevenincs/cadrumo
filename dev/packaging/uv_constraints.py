@@ -21,11 +21,11 @@ pinned.
 from __future__ import annotations
 
 import shutil
-import subprocess
 import tomllib
 from pathlib import Path
 
 from dev._paths import UTF_8
+from dev.packaging.command_execution import run_command
 
 _UTF_8 = UTF_8
 #: The distribution whose resolution is exported.
@@ -106,13 +106,9 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
     ]
     for package in local_product_packages(repo_root=repo_root):
         command.extend(("--no-emit-package", package))
-    result = subprocess.run(  # noqa: S603 - fixed uv argv against the repository lockfile
+    result = run_command(
         command,
         cwd=repo_root,
-        capture_output=True,
-        text=True,
-        check=False,
-        encoding=_UTF_8,
     )
     if result.returncode != 0:
         raise SystemExit(f"uv export failed: {result.stderr.strip()}")

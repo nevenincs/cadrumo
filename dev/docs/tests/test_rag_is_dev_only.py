@@ -17,7 +17,6 @@ fails this gate loudly instead of breaking non-dev environments silently.
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 from typing import Final
@@ -26,6 +25,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -70,12 +70,9 @@ print("DOCS-WORK-RAG-FREE")
 def test_docs_work_modules_import_without_vaultspec_rag() -> None:
     """Every docs-work module imports with vaultspec_rag made unimportable."""
     script = _BLOCKER_TEMPLATE.format(modules=list(_DOCS_WORK_MODULES))
-    result = subprocess.run(  # noqa: S603 - fixed interpreter, repo-internal script
+    result = run_command(
         [sys.executable, "-c", script],
-        capture_output=True,
-        text=True,
         cwd=_REPO_ROOT,
-        env=None,
     )
     assert result.returncode == 0, f"docs-work import failed under the vaultspec_rag blocker:\n{result.stderr[-2000:]}"
     assert "DOCS-WORK-RAG-FREE" in result.stdout

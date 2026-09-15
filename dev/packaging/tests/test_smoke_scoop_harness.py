@@ -22,12 +22,13 @@ import base64
 import os
 import shutil
 import stat
-import subprocess
 import sys
 from pathlib import Path
 from typing import Final
 
 import pytest
+
+from ..command_execution import CommandResult, run_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -64,7 +65,7 @@ def test_invoke_native_gates_on_exit_code_not_stderr_presence() -> None:
     assert "2>&1" in body  # stderr stays captured, never silenced
 
 
-def _run_invoke_native(interpreter: str, inner_command: str, extra: str = "") -> subprocess.CompletedProcess[str]:
+def _run_invoke_native(interpreter: str, inner_command: str, extra: str = "") -> CommandResult:
     """Execute the SHIPPED Invoke-Native text against a real native command.
 
     The inner command rides ``-EncodedCommand`` so no quoting layer (Windows
@@ -85,12 +86,10 @@ $ErrorActionPreference = 'Stop'
 Invoke-Native -FilePath '{interpreter}' -ArgumentList @('-NoProfile', '-EncodedCommand', '{encoded}') {extra}
 Write-Output 'INVOKE-NATIVE-SURVIVED'
 """
-    return subprocess.run(  # noqa: S603 - explicit resolved interpreter, literal in-test driver
+    return run_command(
         [interpreter, "-NoProfile", "-Command", driver],
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=120,
+        cwd=Path.cwd(),
+        timeout_seconds=120,
     )
 
 
@@ -132,7 +131,7 @@ def test_final_cleanup_routes_every_uninstall_through_the_retry_helper() -> None
     assert "cleanup retained the staged Scoop app" in finally_body
 
 
-def _run_uninstall_retry(interpreter: str, *, app_root: Path, scoop_bin_dir: Path) -> subprocess.CompletedProcess[str]:
+def _run_uninstall_retry(interpreter: str, *, app_root: Path, scoop_bin_dir: Path) -> CommandResult:
     """Drive the SHIPPED retry helper against a real scripted scoop on PATH.
 
     The variable is spelled ``PATH``, in capitals, because PowerShell inherits
@@ -165,12 +164,10 @@ $retryArguments = @{{
 $result = Invoke-ScoopUninstallWithRetry @retryArguments
 Write-Output "RESULT=$result"
 """
-    return subprocess.run(  # noqa: S603 - explicit resolved interpreter, literal in-test driver
+    return run_command(
         [interpreter, "-NoProfile", "-Command", driver],
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=180,
+        cwd=Path.cwd(),
+        timeout_seconds=180,
     )
 
 
@@ -270,12 +267,10 @@ finally {{
     }}
 }}
 """
-    completed = subprocess.run(  # noqa: S603 - explicit resolved interpreter, literal in-test driver
+    completed = run_command(
         [interpreter, "-NoProfile", "-Command", driver],
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=180,
+        cwd=Path.cwd(),
+        timeout_seconds=180,
     )
     assert completed.returncode == 0, completed.stderr
     assert "UNDER_EXITED=True" in completed.stdout

@@ -14,6 +14,7 @@ harness wheel to build, install, or attest.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import inspect
 import json
@@ -21,13 +22,11 @@ import os
 import re
 import shutil
 import sqlite3
-import subprocess
 import sys
-import threading
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO, Any, cast
+from typing import Any, cast
 
 import pytest
 
@@ -977,17 +976,65 @@ def _retired_state_environment(base: Path) -> dict[str, str]:
     return environment
 
 
-def _read_mcp_response(stdout: IO[str], target_id: int) -> dict[str, Any]:
+async def _read_mcp_response_async(stdout: asyncio.StreamReader, target_id: int) -> dict[str, Any]:
     while True:
-        line = stdout.readline()
+        line = await stdout.readline()
         if not line:
             raise AssertionError(f"server closed stdout before answering request id {target_id}")
-        stripped = line.strip()
+        stripped = line.decode("utf-8", errors="replace").strip()
         if not stripped:
             continue
         message = json.loads(stripped)
         if isinstance(message, dict) and message.get("id") == target_id:
             return message
+
+
+async def _drive_mcp_server(
+    executable: Path,
+    *,
+    environment: dict[str, str],
+) -> tuple[dict[str, Any], dict[str, Any], str]:
+    """Drive the installed stdio server until tools are listed, then stop it."""
+    process = await asyncio.create_subprocess_exec(
+        str(executable),
+        cwd=str(Path.cwd()),
+        env=environment,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    assert process.stdin is not None
+    assert process.stdout is not None
+    assert process.stderr is not None
+    try:
+        initialize_request = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2025-06-18",
+                "capabilities": {},
+                "clientInfo": {"name": "storage-root-regression", "version": "0"},
+            },
+        }
+        process.stdin.write((json.dumps(initialize_request) + "\n").encode("utf-8"))
+        await process.stdin.drain()
+        initialize = await asyncio.wait_for(_read_mcp_response_async(process.stdout, 1), timeout=300)
+        process.stdin.write(
+            (
+                json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"})
+                + "\n"
+                + json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
+                + "\n"
+            ).encode("utf-8")
+        )
+        await process.stdin.drain()
+        tools = await asyncio.wait_for(_read_mcp_response_async(process.stdout, 2), timeout=300)
+    finally:
+        if process.returncode is None:
+            process.kill()
+        _stdout, stderr = await process.communicate()
+    return initialize, tools, stderr.decode("utf-8", errors="replace")
 
 
 def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort: InstalledCohort) -> None:
@@ -1005,41 +1052,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     """
     cohort = installed_cohort
     environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal")
-    process = subprocess.Popen(  # noqa: S603 - the executable is the cohort's own installed console script
-        [str(cohort.mcp_server)],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=environment,
-        text=True,
-        encoding="utf-8",
-    )
-    watchdog = threading.Timer(300.0, process.kill)
-    watchdog.start()
-    try:
-        assert process.stdin is not None
-        assert process.stdout is not None
-        initialize_request = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2025-06-18",
-                "capabilities": {},
-                "clientInfo": {"name": "storage-root-regression", "version": "0"},
-            },
-        }
-        process.stdin.write(json.dumps(initialize_request) + "\n")
-        process.stdin.flush()
-        initialize = _read_mcp_response(process.stdout, 1)
-        process.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
-        process.stdin.write(json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}) + "\n")
-        process.stdin.flush()
-        tools = _read_mcp_response(process.stdout, 2)
-    finally:
-        watchdog.cancel()
-        process.kill()
-        stderr_text = process.stderr.read() if process.stderr is not None else ""
+    initialize, tools, stderr_text = asyncio.run(_drive_mcp_server(cohort.mcp_server, environment=environment))
     assert initialize["result"]["serverInfo"]["name"] == "cadrumo"
     assert len(tools["result"]["tools"]) > 0
     # The degradation is visible, never silent: the startup note names the

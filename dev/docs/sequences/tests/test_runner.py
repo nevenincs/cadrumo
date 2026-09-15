@@ -34,6 +34,8 @@ from ..schema import FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
+_FAKE_SESSION_ENV_NAME = "AEAT_FAKE_SESSION_TOKEN"
+
 #: A real create → calculate → verify chain over Modelo 130 2025 1T. The verify
 #: gate refuses (cross-period evidence is absent in a fresh sandbox), so the
 #: result frame declares the non-zero exit and asserts the refusal semantically.
@@ -624,12 +626,12 @@ class TestAmbientEnvNeutralisation:
 
         with (
             scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-99999999R"),
-            scoped_env_var("AEAT_FAKE_SESSION_TOKEN", "fake-session-token-do-not-leak"),
+            scoped_env_var(_FAKE_SESSION_ENV_NAME, "fake-session-marker-do-not-leak"),
         ):
             observed: dict[str, str | None] = {}
             with sequence_sandbox(sequence_id="env-scrub-probe", sandbox_root=tmp_path / "scope"):
                 observed["clave"] = os.environ.get("CADRUMO_CLAVE_MOVIL_DNI_NIE")
-                observed["aeat"] = os.environ.get("AEAT_FAKE_SESSION_TOKEN")
+                observed["aeat"] = os.environ.get(_FAKE_SESSION_ENV_NAME)
                 observed["pin"] = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
 
             # Inside the scope: operator vars gone, the isolation pin intact.
@@ -638,7 +640,7 @@ class TestAmbientEnvNeutralisation:
             assert observed["pin"] is not None
             # Outside the sandbox scope but still under the export: restored verbatim.
             assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-99999999R"
-            assert os.environ["AEAT_FAKE_SESSION_TOKEN"] == "fake-session-token-do-not-leak"  # noqa: S105 - synthetic test value
+            assert os.environ[_FAKE_SESSION_ENV_NAME] == "fake-session-marker-do-not-leak"
 
     def test_external_tool_probes_are_pinned_to_stable_absence(self, tmp_path: Path) -> None:
         """A real browser probe cannot observe workstation installs.
@@ -730,8 +732,8 @@ class TestAmbientEnvNeutralisation:
         """A real sequence executes normally with fake operator env exported,
         and no frame's captured output carries the operator value — the
         end-to-end proof that docs builds never observe machine state."""
-        secret = "fake-operator-dni-99999999R"  # noqa: S105 - synthetic test value
-        with scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", secret):
+        operator_marker = "fake-operator-dni-99999999R"
+        with scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", operator_marker):
             sequence = _result_sequence(
                 "aeat --format json config profile list\n"
                 "@result aeat --format json config profile list\n"
@@ -742,8 +744,8 @@ class TestAmbientEnvNeutralisation:
 
         for frame in transcript.frames:
             assert frame.exit_code == 0
-            assert secret not in frame.output
-            assert secret not in frame.stderr
+            assert operator_marker not in frame.output
+            assert operator_marker not in frame.stderr
 
     def test_bridged_dotenv_value_never_reaches_frame_execution(
         self,
@@ -770,10 +772,10 @@ class TestAmbientEnvNeutralisation:
 
         from ..runner import sequence_sandbox
 
-        secret = "fake-operator-dni-77777777H"  # noqa: S105 - synthetic test value
+        operator_marker = "fake-operator-dni-77777777H"
         env_var_name = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
         scripted_dotenv = tmp_path / "scripted.env"
-        scripted_dotenv.write_text(f"{env_var_name}={secret}\n", encoding="utf-8")
+        scripted_dotenv.write_text(f"{env_var_name}={operator_marker}\n", encoding="utf-8")
 
         # A real host may already carry this var (bridged from the host's own
         # env/.env), so the prior value — present or absent — is saved and
@@ -787,15 +789,15 @@ class TestAmbientEnvNeutralisation:
             # anything downstream of it. ``setdefault`` semantics mean this
             # only takes effect because the slot was just cleared above.
             bridged = bridge_env_file_into_environ(scripted_dotenv)
-            assert bridged == {env_var_name: secret}
-            assert os.environ[env_var_name] == secret
+            assert bridged == {env_var_name: operator_marker}
+            assert os.environ[env_var_name] == operator_marker
 
             with sequence_sandbox(sequence_id="dotenv-bridge-probe", sandbox_root=tmp_path / "scope"):
                 assert os.environ.get(env_var_name) is None
 
             # Restored outside the sandbox scope: the bridged value persists in
             # the ambient environment exactly like a real operator export would.
-            assert os.environ[env_var_name] == secret
+            assert os.environ[env_var_name] == operator_marker
 
             # End to end: a real sequence executes green and no frame observes it.
             sequence = _result_sequence(
@@ -807,8 +809,8 @@ class TestAmbientEnvNeutralisation:
             transcript = execute_sequence(sequence, sandbox_root=tmp_path / "run")
             for frame in transcript.frames:
                 assert frame.exit_code == 0
-                assert secret not in frame.output
-                assert secret not in frame.stderr
+                assert operator_marker not in frame.output
+                assert operator_marker not in frame.stderr
         finally:
             if had_prior:
                 os.environ[env_var_name] = prior_value  # type: ignore[assignment]

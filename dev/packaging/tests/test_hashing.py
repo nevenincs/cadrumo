@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import hashlib
-import subprocess
 import sys
 from pathlib import Path
 from typing import Final
@@ -14,6 +13,7 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from .. import cohort_manifest, distribution_evidence_emit, evidence, proof_cache, smoke_homebrew
+from ..command_execution import run_command
 from ..hashing import sha256_path, sha256_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -271,13 +271,9 @@ def test_rehomed_digest_module_uses_the_canonical_helper(module: object) -> None
 def test_standalone_digest_entrypoint_starts_from_a_bare_script_path(relative_path: str) -> None:
     """Standalone lanes load the canonical owner without package invocation."""
     repository_root = REPO_ROOT
-    completed = subprocess.run(  # noqa: S603 - fixed repository script paths exercised with --help.
+    completed = run_command(
         [sys.executable, str(repository_root / relative_path), "--help"],
         cwd=repository_root,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
     )
 
     assert completed.returncode == 0, completed.stderr

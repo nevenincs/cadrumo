@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -39,6 +38,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
 from dev.ci.lane_reachability import resolve_just_executable
 from dev.ci.workflow_run_text import executed_text
+from dev.packaging.command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -162,7 +162,7 @@ def _dump(justfile: Path) -> dict[str, object]:
     parser risks gating a graph the tool does not agree with.
     """
     just = resolve_just_executable()
-    result = subprocess.run(  # noqa: S603 - execute the resolved real just binary against repository recipes.
+    result = run_command(
         [
             just,
             "--justfile",
@@ -174,9 +174,6 @@ def _dump(justfile: Path) -> dict[str, object]:
             "--dump-format",
             "json",
         ],
-        capture_output=True,
-        text=True,
-        check=False,
     )
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)["recipes"]

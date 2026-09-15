@@ -25,9 +25,9 @@ matter how the writer behaved.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -130,6 +130,46 @@ def _write_with_retry(location: Path, text: str) -> None:
             return
 
 
+async def _run_reader_race(
+    *,
+    location: Path,
+    environment: dict[str, str],
+) -> tuple[int, list[list[list[object] | None]]]:
+    """Run readers while the parent rewrites the stamp for a measured window."""
+    readers = [
+        await asyncio.create_subprocess_exec(
+            sys.executable,
+            "-c",
+            _READER_SOURCE,
+            cwd=str(Path.cwd()),
+            env=environment,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        for _ in range(_READER_PROCESSES)
+    ]
+    payloads = (_SHORT_DIGEST, _LONG_DIGEST)
+    step = 0
+    deadline = time.monotonic() + _WRITER_WINDOW_SECONDS
+    try:
+        while time.monotonic() < deadline:
+            _write_with_retry(location, _stamp_text(payloads[step % 2]))
+            step += 1
+            await asyncio.sleep(0)
+
+        results: list[list[list[object] | None]] = []
+        for reader in readers:
+            stdout, stderr = await asyncio.wait_for(reader.communicate(), timeout=_SUBPROCESS_TIMEOUT_SECONDS)
+            assert reader.returncode == 0, f"a reading child failed: {stderr.decode('utf-8', errors='replace')}"
+            results.append(json.loads(stdout.decode("utf-8", errors="replace")))
+        return step, results
+    finally:
+        for reader in readers:
+            if reader.returncode is None:
+                reader.kill()
+        await asyncio.gather(*(reader.wait() for reader in readers), return_exceptions=True)
+
+
 def test_concurrent_readers_never_observe_a_half_written_stamp(tmp_path: Path) -> None:
     """Every read taken while the stamp is being rewritten is whole, or nothing."""
     root = tmp_path / "registry" / "aeat"
@@ -139,30 +179,7 @@ def test_concurrent_readers_never_observe_a_half_written_stamp(tmp_path: Path) -
     _write_with_retry(location, _stamp_text(_SHORT_DIGEST))
 
     env = {**os.environ, _CHILD_ROOT_ENV_VAR: str(root)}
-    readers = [
-        subprocess.Popen(  # noqa: S603 - fixed interpreter, in-test source, no shell
-            [sys.executable, "-c", _READER_SOURCE],
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-        )
-        for _ in range(_READER_PROCESSES)
-    ]
-
-    payloads = (_SHORT_DIGEST, _LONG_DIGEST)
-    step = 0
-    deadline = time.monotonic() + _WRITER_WINDOW_SECONDS
-    while time.monotonic() < deadline:
-        _write_with_retry(location, _stamp_text(payloads[step % 2]))
-        step += 1
-
-    results: list[list[list[object] | None]] = []
-    for reader in readers:
-        stdout, stderr = reader.communicate(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
-        assert reader.returncode == 0, f"a reading child failed: {stderr}"
-        results.append(json.loads(stdout))
+    step, results = asyncio.run(_run_reader_race(location=location, environment=env))
 
     reads = [entry for child_reads in results for entry in child_reads]
     assert step > _MINIMUM_READS, f"the writer only managed {step} rewrites; the race window was too short"

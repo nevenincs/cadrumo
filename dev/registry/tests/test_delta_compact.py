@@ -72,7 +72,8 @@ def test_ordinary_migration_and_family_drop_relocate_the_same_claim(tmp_path: Pa
     family_root.mkdir()
     family_directory = lineage_tree(family_root)
     compact_deltas(family_directory, tmp_path / "family-work", apply=True)
-    family_revision = load_modelo_directory(family_directory).revisions["2025"]
+    family_definition = load_modelo_directory(family_directory)
+    family_revision = family_definition.revisions["2025"]
 
     registry_root = tmp_path / "ordinary" / "registry" / "aeat"
     ordinary_directory = registry_root / "modelos" / "999"
@@ -91,12 +92,27 @@ def test_ordinary_migration_and_family_drop_relocate_the_same_claim(tmp_path: Pa
         work_dir=tmp_path / "ordinary-work",
     )
     assert outcome.staged_registry is not None
-    ordinary_revision = load_modelo_directory(outcome.staged_registry / "modelos" / "999").revisions["2025"]
+    ordinary_definition = load_modelo_directory(outcome.staged_registry / "modelos" / "999")
+    ordinary_revision = ordinary_definition.revisions["2025"]
 
     assert not (outcome.staged_registry / "modelos" / "999" / "revisions" / "2025" / "casillas").exists()
-    assert ordinary_revision.casillas == family_revision.casillas
-    assert ordinary_revision.lineage_attestations == family_revision.lineage_attestations
-    assert len(ordinary_revision.lineage_attestations) == 1
+    ordinary_row, family_row = ordinary_revision.casillas[0], family_revision.casillas[0]
+    assert ordinary_row.model_dump(mode="python") == family_row.model_dump(mode="python")
+    assert tuple(row.continuidad_id for row in ordinary_revision.casillas) == tuple(
+        row.continuidad_id for row in family_revision.casillas
+    )
+    assert ordinary_row.localization_keys[0] == family_row.localization_keys[0]
+    assert family_row.localization_keys == (
+        ordinary_row.localization_keys[0],
+        casilla_occurrence_locale_key("999", "2024", "0001", ModeloLocalizationFieldKind.LABEL),
+        *ordinary_row.localization_keys[1:],
+    )
+    assert ordinary_row.legal_refs == family_row.legal_refs
+    assert ordinary_row.source_refs == family_row.source_refs
+    assert ordinary_row.inherited_from is None
+    assert family_row.inherited_from == "2024"
+    assert ordinary_revision.lineage_attestations == ()
+    assert len(family_revision.lineage_attestations) == 1
     again = migrate_modelo(
         registry_root=outcome.staged_registry,
         modelo_id="999",

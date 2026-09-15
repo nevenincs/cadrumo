@@ -38,6 +38,7 @@ from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.packaging.command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
 _TARGETS: Final[tuple[str, ...]] = ("src/cadrumo", "dev/audit/vulture_whitelist.py")
@@ -216,15 +217,11 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
         )
 
     try:
-        completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        completed = run_command(
             vulture_command(),
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
             errors="replace",
-            check=False,
             cwd=repo_root,
-            timeout=timeout,
+            timeout_seconds=timeout,
         )
     except subprocess.TimeoutExpired:
         return DeadCodeResult.error(f"vulture exceeded its {timeout:g}s timeout")

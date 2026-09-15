@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import http.server
 import shutil
-import subprocess
 import sys
 import threading
 from collections.abc import Iterator
@@ -37,6 +36,7 @@ from typing import NamedTuple, override
 import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.command_execution import run_command
 
 from ..version_identity import PYPI_PROJECTS, VersionIdentityError, pypi_projects_owning
 
@@ -200,13 +200,10 @@ def test_a_malformed_ledger_refuses_with_a_message_rather_than_a_traceback(tmp_p
         shutil.copy2(REPO_ROOT / "dev" / "release" / name, package / name)
     (package / "burned_versions.json").write_text('{"burned": "not a list"}', encoding=UTF_8)
 
-    completed = subprocess.run(  # noqa: S603 - fixed argv over this interpreter and this repository's own module.
+    completed = run_command(
         [sys.executable, "-m", "dev.release.version_identity", "--version", _CANDIDATE, "--scope", "seal"],
         cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=120,
+        timeout_seconds=120,
     )
 
     assert completed.returncode == 1, completed.stdout + completed.stderr
@@ -228,13 +225,10 @@ def test_the_same_invocation_passes_over_the_ledger_it_ships(tmp_path: Path) -> 
     for name in ("__init__.py", "version_identity.py", "burned_versions.py", "burned_versions.json"):
         shutil.copy2(REPO_ROOT / "dev" / "release" / name, package / name)
 
-    completed = subprocess.run(  # noqa: S603 - fixed argv over this interpreter and this repository's own module.
+    completed = run_command(
         [sys.executable, "-m", "dev.release.version_identity", "--version", _CANDIDATE, "--scope", "seal"],
         cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=120,
+        timeout_seconds=120,
     )
 
     assert completed.returncode == 0, completed.stdout + completed.stderr

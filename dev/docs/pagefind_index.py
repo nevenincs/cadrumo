@@ -52,6 +52,7 @@ import zlib
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
@@ -291,7 +292,7 @@ class SearchIndexResult:
     output_subdir: str
 
 
-def _require_pagefind() -> None:
+def _require_pagefind() -> ModuleType:
     """Confirm the vendored Pagefind package is importable, else raise.
 
     Raises:
@@ -299,7 +300,9 @@ def _require_pagefind() -> None:
             ``pagefind[extended]`` wheel was not vendored into the env).
     """
     try:
-        import pagefind.index  # noqa: F401
+        import pagefind.index as pagefind_index
+
+        return pagefind_index
     except ImportError as exc:  # pragma: no cover - exercised via the gate test
         raise PagefindUnavailableError(
             "the vendored Pagefind package is not importable; install the "

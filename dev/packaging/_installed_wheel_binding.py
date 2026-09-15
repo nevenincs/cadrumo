@@ -5,11 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import struct
-import subprocess
 import zipfile
 from pathlib import Path, PurePosixPath
 
 from dev._paths import UTF_8
+from dev.packaging.command_execution import run_command
 
 _GENERATED_METADATA = frozenset({"INSTALLER", "RECORD", "REQUESTED", "direct_url.json", "uv_cache.json"})
 
@@ -150,12 +150,8 @@ for item in dist.files or ():
 payload = json.dumps(sorted(rows), ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 print(hashlib.sha256(payload).hexdigest())
 """
-    completed = subprocess.run(  # noqa: S603 - interpreter is resolved from the installed CLI.
+    completed = run_command(
         [str(python), "-I", "-c", script, distribution],
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding=UTF_8,
         errors="strict",
     )
     if completed.returncode != 0:
@@ -223,14 +219,10 @@ for component in expected.split(":", 1)[1].split("."):
 if not callable(target):
     raise SystemExit("console entry-point target is not callable")
 """
-    completed = subprocess.run(  # noqa: S603 - interpreter belongs to the confined installed environment.
+    completed = run_command(
         [str(python), "-I", "-c", script, distribution, entry_point, expected_value],
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding=UTF_8,
         errors="strict",
-        timeout=15,
+        timeout_seconds=15,
     )
     if completed.returncode != 0:
         raise RuntimeError(f"installed console entry-point binding failed: {completed.stderr.strip()}")

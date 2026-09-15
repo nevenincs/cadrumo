@@ -33,13 +33,13 @@ See Also:
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
 import shutil
 import subprocess
 import tempfile
-import urllib.error
-import urllib.request
+import urllib.parse
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -215,17 +215,32 @@ def ensure_alert_label(*, repository: str, gh_executable: str | None = None) -> 
 def post_webhook(url: str, alert: ReleaseAlert) -> None:
     """POST the alert to an operator-nominated webhook."""
     body = json.dumps({"text": alert_payload(alert), "workflow": alert.workflow, "run_url": alert.run_url})
-    request = urllib.request.Request(  # noqa: S310 - operator-nominated https endpoint
-        url,
-        data=body.encode(_UTF_8),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    endpoint = urllib.parse.urlsplit(url)
+    if endpoint.scheme != "https" or endpoint.hostname is None or endpoint.username or endpoint.password:
+        raise AlertError("alert webhook URL must be an HTTPS endpoint without embedded credentials")
     try:
-        with urllib.request.urlopen(request, timeout=_WEBHOOK_TIMEOUT_SECONDS):  # noqa: S310
-            return
-    except (urllib.error.URLError, OSError) as error:
+        port = endpoint.port
+    except ValueError as error:
+        raise AlertError("alert webhook URL has an invalid port") from error
+    path = endpoint.path or "/"
+    if endpoint.query:
+        path = f"{path}?{endpoint.query}"
+    connection = http.client.HTTPSConnection(endpoint.hostname, port, timeout=_WEBHOOK_TIMEOUT_SECONDS)
+    try:
+        connection.request(
+            "POST",
+            path,
+            body=body.encode(_UTF_8),
+            headers={"Content-Type": "application/json"},
+        )
+        response = connection.getresponse()
+        response.read()
+        if not 200 <= response.status < 300:
+            raise AlertError(f"alert webhook refused the delivery: HTTP {response.status}")
+    except (http.client.HTTPException, OSError) as error:
         raise AlertError(f"alert webhook refused the delivery: {error}") from error
+    finally:
+        connection.close()
 
 
 def emit_alert(

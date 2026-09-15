@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.evidence import (
     AcquisitionIdentity,
     CommandTranscript,
@@ -34,14 +34,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _ROW = "current-platform-python"
 
 
-def _run(*arguments: str, cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(  # noqa: S603 - tests invoke a fixed Python command directly
+def _run(*arguments: str, cwd: Path) -> CommandResult:
+    result = run_command(
         arguments,
         cwd=cwd,
-        capture_output=True,
-        text=True,
-        check=True,
     )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr)
+    return result
 
 
 def _source_tree(root: Path) -> str:

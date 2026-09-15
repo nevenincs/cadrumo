@@ -88,6 +88,7 @@ Where the gate stops
 
 from __future__ import annotations
 
+import asyncio
 import os
 import re
 import shutil
@@ -381,14 +382,39 @@ def materialise_reference_registry(
 def run_git(repo_root: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
     """Run git in ``repo_root`` with every variable that could redirect it to another repository removed."""
     environment = {name: value for name, value in os.environ.items() if name not in _GIT_LOCATION_VARIABLES}
-    return subprocess.run(  # noqa: S603 - fixed git argv, no shell
-        ["git", "-c", "core.autocrlf=false", *arguments],  # noqa: S607 - git is resolved from PATH by design
-        cwd=repo_root,
-        env=environment,
-        capture_output=True,
-        check=False,
-        timeout=_GIT_TIMEOUT_SECONDS,
+    executable = shutil.which("git")
+    if executable is None:
+        raise RuntimeError("git executable is required for edition round-trip checks")
+    command = (str(Path(executable).resolve(strict=True)), "-c", "core.autocrlf=false", *arguments)
+    returncode, stdout, stderr = asyncio.run(
+        _run_git_process(command, repo_root=repo_root, environment=environment),
     )
+    return subprocess.CompletedProcess(command, returncode, stdout, stderr)
+
+
+async def _run_git_process(
+    command: tuple[str, ...],
+    *,
+    repo_root: Path,
+    environment: Mapping[str, str],
+) -> tuple[int, bytes, bytes]:
+    """Run the resolved git executable while retaining archive bytes exactly."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        cwd=repo_root,
+        env=dict(environment),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), _GIT_TIMEOUT_SECONDS)
+    except TimeoutError as error:
+        process.kill()
+        stdout, stderr = await process.communicate()
+        raise subprocess.TimeoutExpired(command, _GIT_TIMEOUT_SECONDS, output=stdout, stderr=stderr) from error
+    if process.returncode is None:  # pragma: no cover - communicate() waits for process exit
+        raise RuntimeError("git process completed without a return code")
+    return process.returncode, stdout, stderr
 
 
 # ── the gate ────────────────────────────────────────────────────────────────
@@ -531,40 +557,15 @@ def merge_order(full_copy: tuple[RowKey, ...], predecessor_order: tuple[RowKey, 
 
 
 def merge_orders(reference: ModeloDefinition, live: ModeloDefinition) -> dict[str, tuple[RowKey, ...]]:
-    """Every reference edition's rows in the merge order its live predecessor declaration defines.
-
-    A live declaration naming an edition the reference lacks, or closing a
-    cycle, leaves the edition in its reference order; the edition-set finding
-    and the live load report those trees respectively.
-    """
-    orders: dict[str, tuple[RowKey, ...]] = {}
-
-    def order_of(revision_id: str, trail: frozenset[str]) -> tuple[RowKey, ...]:
-        cached = orders.get(revision_id)
-        if cached is not None:
-            return cached
-        rows = tuple(
+    """Return each reference edition's exact effective casilla order."""
+    del live
+    return {
+        revision_id: tuple(
             (str(casilla.id), str(casilla.continuidad_id) if casilla.continuidad_id is not None else None)
             for casilla in reference.revisions[revision_id].casillas
         )
-        live_revision = live.revisions.get(revision_id)
-        declared = None if live_revision is None else live_revision.predecessor
-        storage_baseline = None if live_revision is None else live_revision.casilla_storage_baseline
-        predecessor_id = (
-            str(declared.revision_id)
-            if isinstance(declared, DeclaredPredecessor)
-            else str(storage_baseline)
-            if storage_baseline is not None
-            else None
-        )
-        if predecessor_id is not None and predecessor_id in reference.revisions and predecessor_id not in trail:
-            rows = merge_order(rows, order_of(predecessor_id, trail | {revision_id}))
-        orders[revision_id] = rows
-        return rows
-
-    for revision_id in reference.revisions:
-        order_of(revision_id, frozenset({revision_id}))
-    return orders
+        for revision_id in reference.revisions
+    }
 
 
 def _edition_findings(
@@ -573,7 +574,7 @@ def _edition_findings(
     live: ModeloRevision,
     expected_order: tuple[RowKey, ...],
 ) -> list[RoundTripFinding]:
-    """Order of casilla rows against the merge order, then the whole edition element-wise with rows aligned by id."""
+    """Compare exact casilla order, then the whole edition element-wise with rows aligned by id."""
     findings: list[RoundTripFinding] = []
     expected_ids = [casilla_id for casilla_id, _ in expected_order]
     live_ids = [str(casilla.id) for casilla in live.casillas]
@@ -585,7 +586,7 @@ def _edition_findings(
             RoundTripFinding(
                 RoundTripFindingKind.ROW_ORDER,
                 revision_id,
-                f"casilla rows first diverge from the merge order at position {position}: "
+                f"casilla rows first diverge from the reference order at position {position}: "
                 f"expected {expected_ids[position]!r}, live {live_ids[position]!r}",
             )
         )

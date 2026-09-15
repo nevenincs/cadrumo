@@ -67,8 +67,10 @@ def test_a_revision_declaring_no_codes_reports_none_rather_than_a_default() -> N
         period_selector = None
 
     class _EmptySelector:
-        class period_selector:  # noqa: N801 - a stand-in shape, not a public type
+        class _PeriodSelector:
             periods: tuple[str, ...] = ()
+
+        period_selector = _PeriodSelector
 
     assert declared_period_codes(_NoSelector()) == ()
     assert declared_period_codes(_EmptySelector()) == ()

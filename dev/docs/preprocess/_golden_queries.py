@@ -29,10 +29,11 @@ cross-lingual matching, per the accepted decision).
 from __future__ import annotations
 
 import json
-import subprocess
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+
+from dev.packaging.command_execution import run_command
 
 #: Default service port (single-writer store; all search routes here).
 RAG_SERVICE_PORT = 8766
@@ -207,13 +208,10 @@ def run_query(
         str(int(timeout_s)),
         "--json",
     ]
-    result = subprocess.run(  # noqa: S603
+    result = run_command(
         cmd,
         cwd=repo_root,
-        capture_output=True,
-        text=True,
-        timeout=timeout_s + 30.0,
-        check=False,
+        timeout_seconds=timeout_s + 30.0,
     )
     try:
         payload = json.loads(result.stdout)

@@ -6,7 +6,6 @@ Run from the repository root with
 
 from __future__ import annotations
 
-import subprocess
 import sys
 import textwrap
 from functools import cache
@@ -19,6 +18,7 @@ from cadrumo.application.filing.runtime import build_runtime_schema_provider
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from dev._paths import REPO_ROOT, UTF_8
+from dev.packaging.command_execution import run_command
 
 from .prepare_cli_demo import DEMO_ROOT, demo_environment, prepare_demo
 
@@ -69,16 +69,12 @@ _FONT_SHA256 = "06520d032ec274fa5040b22c6f4a1d829081b24ba40b2da56dae89bf10c7b481
 
 def _run_quickfile() -> tuple[str, ...]:
     """Run the production CLI and return the stable, reader-relevant output rows."""
-    result = subprocess.run(  # noqa: S603 - executable and arguments are developer-owned constants
+    result = run_command(
         [sys.executable, "-c", _CLI_BOOTSTRAP, *_CLI_ARGUMENTS],
         cwd=REPO_ROOT,
-        env=demo_environment(),
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
+        environment=demo_environment(),
         errors="replace",
-        timeout=180,
-        check=False,
+        timeout_seconds=180,
     )
     if result.returncode != 0:
         diagnostics = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())

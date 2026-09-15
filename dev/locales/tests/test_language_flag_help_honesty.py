@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -28,6 +27,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import dev_test_database_password
 from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.entrypoints.cli.language_argv import language_from_argv
+from dev.packaging.command_execution import CommandResult, run_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -66,18 +66,14 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
     return env
 
 
-def _run_console(args: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+def _run_console(args: list[str], env: dict[str, str]) -> CommandResult:
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None, "the aeat console script must be installed for this test"
-    return subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
+    return run_command(
         [aeat_exe, *args],
         cwd=Path.cwd(),
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=120,
-        check=False,
+        environment=env,
+        timeout_seconds=120,
     )
 
 

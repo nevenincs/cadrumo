@@ -31,11 +31,11 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import CommandResult, run_command
 
 DOCS = REPO_ROOT / "docs"
 
@@ -114,7 +114,7 @@ def run_nitpicky_dummy_build(
     docs_source: Path,
     out_dir: Path,
     env: dict[str, str],
-) -> subprocess.CompletedProcess[str]:
+) -> CommandResult:
     """Run one real ``-b dummy -n -W`` Sphinx build over ``docs_source``.
 
     Uses the ``dummy`` builder, not ``html``: the gate only asserts that the
@@ -122,7 +122,7 @@ def run_nitpicky_dummy_build(
     fire) raise no warnings under ``-W``; it does not need rendered HTML, so
     rendered-page emission is skipped.
     """
-    return subprocess.run(  # noqa: S603 - fixed interpreter, repository-owned inputs.
+    return run_command(
         [
             sys.executable,
             "-m",
@@ -137,9 +137,6 @@ def run_nitpicky_dummy_build(
             str(out_dir),
         ],
         cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
-        timeout=SUBPROCESS_TIMEOUT_S,
+        environment=env,
+        timeout_seconds=SUBPROCESS_TIMEOUT_S,
     )

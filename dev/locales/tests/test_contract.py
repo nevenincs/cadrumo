@@ -74,6 +74,7 @@ from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.external_constants import OutputLanguage
+from dev.packaging.command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -160,11 +161,10 @@ def test_contract_models_are_strict_and_immutable() -> None:
             },
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(root, "purpose", "mutated")  # noqa: B010 - frozen-model refusal is the assertion
+        root.purpose = "mutated"
 
 
 def test_operator_surface_application_package_has_no_typer_dependency() -> None:
-    import subprocess
     import sys
     import textwrap
 
@@ -187,11 +187,9 @@ def test_operator_surface_application_package_has_no_typer_dependency() -> None:
         )
         assert leaked == [], leaked
     """)
-    result = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+    result = run_command(
         [sys.executable, "-c", script],
-        capture_output=True,
-        text=True,
-        timeout=30,
+        timeout_seconds=30,
     )
 
     assert result.returncode == 0, (

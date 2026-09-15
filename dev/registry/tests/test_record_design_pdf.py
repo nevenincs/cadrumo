@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from io import BytesIO
 from pathlib import Path
@@ -11,6 +10,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.packaging.command_execution import run_command
 
 from ..compiler.record_design import (
     extract_record_design,
@@ -365,7 +365,7 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
 _PARSER_BACKEND_IMPORT_PROBE = """
 import sys
 
-import cadrumo.domain.calculations.registry  # noqa: F401
+import cadrumo.domain.calculations.registry
 
 deferred = [name for name in ("openpyxl", "pdfplumber", "pypdfium2", "xlrd") if name in sys.modules]
 print(",".join(deferred) if deferred else "clean")
@@ -386,11 +386,8 @@ def test_registry_import_does_not_load_the_pdf_and_xls_parser_backends() -> None
     TWO eager importers, so deferring only one of them freed nothing. A partial
     fix here is indistinguishable from no fix unless every importer is covered.
     """
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+    completed = run_command(
         [sys.executable, "-c", _PARSER_BACKEND_IMPORT_PROBE],
-        capture_output=True,
-        text=True,
-        check=False,
     )
 
     assert completed.returncode == 0, completed.stderr
@@ -425,7 +422,7 @@ def test_a_design_yielding_no_fields_is_never_reported_complete() -> None:
             continue
         try:
             extraction = extract_record_design(path)
-        except Exception:  # noqa: S112 - an unreadable design is the sibling gate's subject, not this one's
+        except (OSError, ValueError, KeyError, IndexError, RegistryValidationError):
             continue
         if sum(len(sheet.fields) for sheet in extraction.sheets):
             continue

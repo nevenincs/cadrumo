@@ -20,8 +20,9 @@ module rather than an internal of the preprocessing package.
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
+
+from dev.packaging.command_execution import run_command
 
 #: Default port of the resident vaultspec-rag service (the single-writer
 #: store). Every reindex/search routes here so jobs serialise through the
@@ -69,16 +70,10 @@ def run_incremental_reindex(
         "--port",
         str(port),
     ]
-    # The command is a fixed literal argv (no shell, no untrusted input); the
-    # only variable is the integer port rendered via str() - hence the S603
-    # suppression on the call below.
-    result = subprocess.run(  # noqa: S603
+    result = run_command(
         cmd,
         cwd=repo_root,
-        capture_output=True,
-        text=True,
-        timeout=timeout_s,
-        check=False,
+        timeout_seconds=timeout_s,
     )
     if result.returncode != 0:
         detail = result.stderr.strip() or result.stdout.strip()

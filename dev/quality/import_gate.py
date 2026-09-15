@@ -29,6 +29,7 @@ from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
+from dev.packaging.command_execution import run_command
 
 from .import_checker import (
     Authority,
@@ -94,16 +95,12 @@ def run_import_linter(
         "--no-logo",
     )
     try:
-        completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
+        completed = run_command(
             command,
             cwd=authority.repository,
-            env=environment,
-            capture_output=True,
-            text=True,
-            encoding=UTF_8,
+            environment=environment,
             errors="replace",
-            check=False,
-            timeout=timeout,
+            timeout_seconds=timeout,
         )
     except FileNotFoundError:
         return ComponentResult(
@@ -182,16 +179,12 @@ def run_subordinate(
                 "--report",
                 str(report_path),
             )
-            completed = subprocess.run(  # noqa: S603 - fixed interpreter and argv, no shell
+            completed = run_command(
                 command,
                 cwd=authority.repository,
-                env=environment,
-                capture_output=True,
-                text=True,
-                encoding=UTF_8,
+                environment=environment,
                 errors="replace",
-                check=False,
-                timeout=timeout,
+                timeout_seconds=timeout,
             )
             checker_result = _read_checker_report(report_path, authority)
     except Exception as exc:  # broad: component boundary must fail closed
@@ -290,16 +283,12 @@ def run_loadability(
                 "--report",
                 str(report_path),
             )
-            completed = subprocess.run(  # noqa: S603 - fixed interpreter and argv, no shell
+            completed = run_command(
                 command,
                 cwd=authority.repository,
-                env=environment,
-                capture_output=True,
-                text=True,
-                encoding=UTF_8,
+                environment=environment,
                 errors="replace",
-                check=False,
-                timeout=timeout,
+                timeout_seconds=timeout,
             )
             decoded_payload: object = json.loads(report_path.read_text(encoding=UTF_8))
             if not isinstance(decoded_payload, dict):

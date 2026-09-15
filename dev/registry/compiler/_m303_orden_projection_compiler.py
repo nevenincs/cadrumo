@@ -19,6 +19,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadOrdenAnual,
     AutoridadAgricolaOrdenAnualNoResuelta,
     DificilJustificacionOrdenAnual,
+    IndicadorAuxiliarActividad,
     IndiceCuotaDevengadaAgricolaOrdenAnual,
     IndiceTemporadaOrdenAnual,
     ModuloOrdenAnual,
@@ -168,9 +169,11 @@ def _compile_actividad_orden_anual(
         kind="no_agricola",
         activity_code=activity_code,
         iae_epigrafe=raw_activity.iae_epigrafe,
-        auxiliary_activity_indicator=auxiliary_indicators.for_activity(
-            iae_epigrafe=raw_activity.iae_epigrafe,
-            activity_code=activity_code,
+        auxiliary_activity_indicator=_validated_auxiliary_activity_indicator(
+            auxiliary_indicators.for_activity(
+                iae_epigrafe=raw_activity.iae_epigrafe,
+                activity_code=activity_code,
+            ),
         ),
         modulos=modules,
         cuota_minima_pct=raw_activity.cuota_minima_pct,
@@ -185,3 +188,14 @@ def _canonical_activity_code(activity_name: str) -> str:
     if not compact:
         raise RegistryValidationError("annual Orden activity heading has no canonical ASCII identity")
     return compact[:160]
+
+
+def _validated_auxiliary_activity_indicator(value: str | None) -> IndicadorAuxiliarActividad | None:
+    """Refuse registry indicators outside the M303 activity wire vocabulary."""
+    if value is None:
+        return None
+    if value == "1":
+        return "1"
+    if value == "2":
+        return "2"
+    raise RegistryValidationError("annual Orden auxiliary-activity indicator must be '1' or '2'")

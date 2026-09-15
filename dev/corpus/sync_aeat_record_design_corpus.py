@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib
 import json
 import re
 import sys
@@ -23,18 +24,19 @@ if str(_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.corpus"
 
-from cadrumo.core.directory_scan import iter_directory, scan_directory  # noqa: E402
-from cadrumo.domain.calculations.registry.artifact_catalogue import (  # noqa: E402
-    ArtifactCatalogue,
-    ArtifactDiagnostic,
-    ArtifactDiagnosticKind,
-    ArtifactRole,
-    DerivedArtifact,
-    SemanticAnnotation,
-    compile_artifact_catalogue,
-    record_design_manifest_identities,
-)
-from dev.packaging.hashing import sha256_path  # noqa: E402
+_DIRECTORY_SCAN = importlib.import_module("cadrumo.core.directory_scan")
+iter_directory = _DIRECTORY_SCAN.iter_directory
+scan_directory = _DIRECTORY_SCAN.scan_directory
+_ARTIFACT_CATALOGUE = importlib.import_module("cadrumo.domain.calculations.registry.artifact_catalogue")
+ArtifactCatalogue = _ARTIFACT_CATALOGUE.ArtifactCatalogue
+ArtifactDiagnostic = _ARTIFACT_CATALOGUE.ArtifactDiagnostic
+ArtifactDiagnosticKind = _ARTIFACT_CATALOGUE.ArtifactDiagnosticKind
+ArtifactRole = _ARTIFACT_CATALOGUE.ArtifactRole
+DerivedArtifact = _ARTIFACT_CATALOGUE.DerivedArtifact
+SemanticAnnotation = _ARTIFACT_CATALOGUE.SemanticAnnotation
+compile_artifact_catalogue = _ARTIFACT_CATALOGUE.compile_artifact_catalogue
+record_design_manifest_identities = _ARTIFACT_CATALOGUE.record_design_manifest_identities
+sha256_path = importlib.import_module("dev.packaging.hashing").sha256_path
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"

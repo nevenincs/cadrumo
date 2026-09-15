@@ -219,7 +219,7 @@ def test_no_revision_spans_a_design_relayout() -> None:
             # A false positive on a boundary other signals already name costs nothing; one
             # that NAMES a boundary alone is the case a reader must judge rather than act
             # on, and it is invisible unless the verdict says so.
-            f"{description_suffix(evidence)}"
+            f"{description_suffix(tuple(evidence))}"
             f" ({' + '.join(evidence)})"
             for (earlier, later), evidence in sorted(boundaries.items())
         )

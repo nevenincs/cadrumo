@@ -20,11 +20,12 @@ standard library and the distribution it is checking.
 
 from __future__ import annotations
 
+import asyncio
 import importlib.metadata
 import os
 import shutil
-import subprocess
 import sys
+from dataclasses import dataclass
 from typing import NoReturn
 
 CLI_SCRIPT = "aeat"
@@ -32,6 +33,13 @@ MCP_SCRIPT = "cadrumo-mcp"
 COMPANIONS = ("cadrumo-data-manuals", "cadrumo-data-official")
 
 _TIMEOUT = 120
+
+
+@dataclass(frozen=True)
+class _Completed:
+    returncode: int
+    stdout: str
+    stderr: str
 
 
 def _fail(message: str) -> NoReturn:
@@ -43,18 +51,31 @@ def _ok(message: str) -> None:
     print(f"ok: {message}")
 
 
-def _run(name: str, args: list[str], *, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+async def _run_async(command: list[str], environment: dict[str, str]) -> _Completed:
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        env=environment,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=_TIMEOUT)
+    except TimeoutError:
+        process.kill()
+        await process.wait()
+        raise
+    return _Completed(
+        process.returncode,
+        stdout.decode(errors="replace"),
+        stderr.decode(errors="replace"),
+    )
+
+
+def _run(name: str, args: list[str], *, env: dict[str, str] | None = None) -> _Completed:
     """Run a console script, falling back to ``python -m`` when not on PATH."""
     script = shutil.which(name)
     command = [script, *args] if script else [sys.executable, "-m", name.replace("-", "_"), *args]
-    return subprocess.run(  # noqa: S603 - argv is built from module constants only.
-        command,
-        capture_output=True,
-        text=True,
-        timeout=_TIMEOUT,
-        env={**os.environ, **(env or {})},
-        check=False,
-    )
+    return asyncio.run(_run_async(command, {**os.environ, **(env or {})}))
 
 
 def installed_version(distribution: str) -> str:
@@ -134,13 +155,10 @@ def check_mcp_script() -> None:
         _fail(f"{MCP_SCRIPT} --help exited {result.returncode}: {result.stderr.strip()[:400]}")
     if "--profile-secrets-file" not in result.stdout:
         _fail(f"{MCP_SCRIPT} --help does not offer --profile-secrets-file: {result.stdout.strip()[:200]}")
-    imported = subprocess.run(
+    imported = asyncio.run(_run_async(
         [sys.executable, "-c", "from cadrumo_harness.mcp.server import serve; assert callable(serve)"],
-        capture_output=True,
-        text=True,
-        timeout=_TIMEOUT,
-        check=False,
-    )
+        dict(os.environ),
+    ))
     if imported.returncode != 0:
         _fail(f"{MCP_SCRIPT} server runtime did not import: {imported.stderr.strip()[:400]}")
     _ok(f"{MCP_SCRIPT} resolves and its server runtime imports")

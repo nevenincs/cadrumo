@@ -89,6 +89,7 @@ def convenio_authority_from_facts(
             raise RegistryValidationError(
                 f"convenio fact variant {variant.variant_id!r} tipo_renta must be text",
             )
+        validity_window = fact.validity_window(variant)
         rows_by_country.setdefault(country_code, []).append(
             ConvenioOverrideRow(
                 tipo_renta=require_tipo_renta_irnr(tipo_renta_value, authority=candidate),
@@ -96,8 +97,8 @@ def convenio_authority_from_facts(
                 rate=str(variant.payload.value) if variant.payload.value is not None else None,
                 legal_ref_anchor=legal_ref_anchor,
                 legal_refs=variant.legal_refs,
-                valid_from=variant.valid_from,
-                valid_to=variant.valid_to,
+                valid_from=validity_window.valid_from,
+                valid_to=validity_window.valid_to,
             ),
         )
     return ConvenioAuthority(

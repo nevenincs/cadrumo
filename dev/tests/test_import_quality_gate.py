@@ -19,6 +19,7 @@ import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
+from dev.packaging.command_execution import run_command
 from dev.quality.import_checker import (
     Authority,
     RootPackage,
@@ -105,16 +106,12 @@ def _run_real_gate(root: Path, **updates: str) -> tuple[int, str]:
     environment.update(updates)
     just_executable = shutil.which("just")
     assert just_executable is not None, "the real just driver is required for planted-defect proofs"
-    result = subprocess.run(  # noqa: S603 - resolved just executable, fixed argv, no shell
+    result = run_command(
         [just_executable, "check-import-boundaries"],
         cwd=REPO_ROOT,
-        env=environment,
-        capture_output=True,
-        text=True,
-        encoding=UTF_8,
+        environment=environment,
         errors="replace",
-        check=False,
-        timeout=120,
+        timeout_seconds=120,
     )
     return result.returncode, (result.stdout + result.stderr)
 

@@ -26,9 +26,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
-)
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo_harness.mcp.hitl import ConfirmationPolicy, confirmation_for_tool
@@ -44,6 +41,7 @@ from ._scripted_registration_channels import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytest_plugins = ("cadrumo.adapters.persistence.storage.tests.secure_sql",)
 
 _PROFILE_ID = "operator"
 _MODELO = "347"
@@ -191,7 +189,7 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
         )
 
 
-def test_confirmation_command_reports_the_real_active_profile(_isolated_cli_backend: Path) -> None:  # noqa: F811
+def test_confirmation_command_reports_the_real_active_profile(isolated_cli_backend: Path) -> None:
     """Real repro: ``config profile status`` genuinely surfaces which profile is active.
 
     Grounds the confirmation step against a live dispatch before it is used as a
@@ -203,7 +201,7 @@ def test_confirmation_command_reports_the_real_active_profile(_isolated_cli_back
     assert active_profile == _PROFILE_ID
 
 
-def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
+def test_confirmed_trajectory_passes_the_dimension(isolated_cli_backend: Path) -> None:
     """PASS: a real trajectory that confirms the active profile before mutating it passes.
 
     Dispatches the real sequence an onboarding-then-preparer handoff must follow -
@@ -234,7 +232,7 @@ def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: Path) 
     assert result.confirmed_before_each_mutation
 
 
-def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
+def test_trajectory_missing_confirmation_fails_the_dimension(isolated_cli_backend: Path) -> None:
     """FAIL-catch (anti-tautology): a real mutating sequence with no prior confirmation MUST fail.
 
     Dispatches the SAME real mutating sequence with the confirmation step omitted -
@@ -266,7 +264,7 @@ def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backe
     )
 
 
-def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
+def test_confirmation_after_the_first_mutation_still_fails_the_dimension(isolated_cli_backend: Path) -> None:
     """FAIL-catch: a confirmation dispatched AFTER the first mutating verb does not satisfy the prefix.
 
     A trajectory that eventually confirms - just too late - is the same hazard as never
@@ -292,7 +290,7 @@ def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolat
     assert not result.confirmed_before_each_mutation
 
 
-def test_profile_switch_requires_reconfirmation_before_later_mutation(_isolated_cli_backend: Path) -> None:  # noqa: F811
+def test_profile_switch_requires_reconfirmation_before_later_mutation(isolated_cli_backend: Path) -> None:
     """FAIL-catch: an observed profile switch invalidates earlier confirmation before the next mutation."""
     _create_profile()
 

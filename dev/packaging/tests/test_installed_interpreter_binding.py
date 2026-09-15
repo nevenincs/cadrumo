@@ -18,7 +18,6 @@ installed bytes have since moved.
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -30,6 +29,7 @@ from .._installed_wheel_binding import (
     installed_python_for_cli,
     sealed_wheel_payload_sha256,
 )
+from ..command_execution import run_command
 from ..release_cohort_support import _real_product_wheel, _uv_executable, client_venv_template
 
 # Serial and integration for the same reason as the sibling evidence suite:
@@ -56,12 +56,10 @@ def _install_product_wheel(root: Path) -> Path:
         [uv, "venv", "--python", sys.executable, str(venv)],
         [uv, "pip", "install", "--python", str(interpreter), str(_real_product_wheel())],
     ):
-        completed = subprocess.run(  # noqa: S603 - fixed uv argv over fixture-owned paths.
+        completed = run_command(
             argv,
-            check=False,
-            capture_output=True,
-            text=True,
-            env=_UV_ENVIRONMENT,
+            cwd=root,
+            environment=_UV_ENVIRONMENT,
         )
         if completed.returncode != 0:
             raise RuntimeError(f"tamper-case environment build failed: {argv!r}\n{completed.stderr}")

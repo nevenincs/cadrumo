@@ -42,6 +42,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 
 from ..terminology_handbook.enums import TermStatus
 from ..terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
@@ -298,17 +299,13 @@ class ServiceRagSearchClient:
             str(int(self._timeout_s)),
             "--json",
         ]
-        # Fixed literal argv (no shell); the variable parts are the query string
-        # and integer flags. The query is operator vocabulary, not untrusted
-        # input, and is passed as a single argv element (never interpolated into
-        # a shell), hence the S603 suppression.
+        # The command runner receives one explicit argv element per query and
+        # never interpolates the vocabulary into a shell command.
         try:
-            result = subprocess.run(  # noqa: S603
+            result = run_command(
                 cmd,
-                capture_output=True,
-                text=True,
-                timeout=self._timeout_s + 30.0,
-                check=False,
+                cwd=_REPO_ROOT,
+                timeout_seconds=self._timeout_s + 30.0,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise SweepError(f"RAG search for {query!r} could not run: {exc}") from exc

@@ -9,12 +9,12 @@ runner against a live process.
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 
 from ..dead_code import DeadCodeOutcome, offered_module_population, run_dead_code_scan
 
@@ -75,8 +75,8 @@ def test_whitelist_does_not_mask_former_protocol_parameter_names(tmp_path: Path,
     candidate.write_text(f"def {unused_name}():\n    pass\n", encoding="utf-8")
     config = _isolated_vulture_config(tmp_path)
 
-    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
-        [  # noqa: S607 - fixed executable path within the project environment
+    completed = run_command(
+        [
             "uv",
             "run",
             "--no-sync",
@@ -86,10 +86,6 @@ def test_whitelist_does_not_mask_former_protocol_parameter_names(tmp_path: Path,
             str(candidate),
             "dev/audit/vulture_whitelist.py",
         ],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
         cwd=_REPO_ROOT,
     )
 
@@ -107,8 +103,8 @@ def test_vulture_detects_a_type_import_used_only_in_a_quoted_cast(tmp_path: Path
     )
     config = _isolated_vulture_config(tmp_path)
 
-    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
-        [  # noqa: S607 - fixed executable path within the project environment
+    completed = run_command(
+        [
             "uv",
             "run",
             "--no-sync",
@@ -117,10 +113,6 @@ def test_vulture_detects_a_type_import_used_only_in_a_quoted_cast(tmp_path: Path
             str(config),
             str(candidate),
         ],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
         cwd=_REPO_ROOT,
     )
 

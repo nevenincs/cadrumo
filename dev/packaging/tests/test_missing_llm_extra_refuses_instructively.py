@@ -12,7 +12,6 @@ from __future__ import annotations
 import ast
 import json
 import shutil
-import subprocess
 import sys
 import textwrap
 from pathlib import Path
@@ -23,6 +22,7 @@ from cadrumo.adapters.outbound import llm
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.optional_extras import LLM_EXTRA
 
+from ..command_execution import run_command
 from ..lane_verification_core import (
     build_companion_wheels,
     build_root_snapshot,
@@ -218,16 +218,12 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
         )
         """,
     )
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
+    completed = run_command(
         [str(python), "-c", code],
         cwd=work_dir,
-        env=_isolated_environment(work_dir),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
+        environment=_isolated_environment(work_dir),
         errors="replace",
-        timeout=180,
-        check=False,
+        timeout_seconds=180,
     )
     assert completed.returncode == 0, completed.stderr
     line = next((row for row in completed.stdout.splitlines() if row.startswith(_MARKER)), None)

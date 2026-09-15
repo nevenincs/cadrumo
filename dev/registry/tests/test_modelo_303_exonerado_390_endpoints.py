@@ -9,6 +9,7 @@ import pytest
 
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
@@ -177,7 +178,7 @@ def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_
             str(casilla_id)
             for binding in revision.bindings
             if binding.source == "relation_prefill"
-            for casilla_id in binding.provider.declared_source_casilla_ids
+            for casilla_id in binding_source_casilla_ids(binding)
         }.isdisjoint(_ENDPOINTS)
         # No PARALLEL producer on the export axis either: each endpoint owns
         # exactly one export field and no two endpoints share one. This asserted

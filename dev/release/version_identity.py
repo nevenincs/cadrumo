@@ -77,13 +77,13 @@ See Also:
 from __future__ import annotations
 
 import argparse
+import asyncio
+import http.client
 import json
 import re
-import subprocess
+import shutil
 import sys
-import urllib.error
 import urllib.parse
-import urllib.request
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -394,48 +394,79 @@ def pypi_projects_owning(
     Canonicalising is done here rather than at the caller for the same reason
     the ledger does it: a caller that forgets is not visible as a mistake.
     """
-    scheme = urllib.parse.urlsplit(index_url).scheme
+    endpoint = urllib.parse.urlsplit(index_url)
+    scheme = endpoint.scheme
     if scheme not in _INDEX_SCHEMES:
         raise VersionIdentityError(f"index endpoint {index_url!r} is not an HTTP endpoint")
+    if endpoint.hostname is None:
+        raise VersionIdentityError(f"index endpoint {index_url!r} has no host")
+    try:
+        port = endpoint.port
+    except ValueError as exc:
+        raise VersionIdentityError(f"index endpoint {index_url!r} has an invalid port") from exc
     number = canonical_version(version)
     if number is None:
         raise VersionIdentityError(f"candidate version {version!r} is not a valid version")
     owning: list[str] = []
     for project in projects:
-        request = urllib.request.Request(  # noqa: S310 - scheme checked above.
-            f"{index_url}/{project}/{number}/json",
-            headers={"Accept": "application/json"},
-        )
+        path = f"{endpoint.path.rstrip('/')}/{project}/{number}/json"
+        if endpoint.query:
+            path = f"{path}?{endpoint.query}"
+        connection_type = http.client.HTTPSConnection if scheme == "https" else http.client.HTTPConnection
+        connection = connection_type(endpoint.hostname, port, timeout=_PROBE_TIMEOUT_S)
         try:
-            with urllib.request.urlopen(request, timeout=_PROBE_TIMEOUT_S) as response:  # noqa: S310
-                response.read(1)
-        except urllib.error.HTTPError as exc:
-            if exc.code == 404:
-                continue
-            raise VersionIdentityError(f"index check failed for {project}: HTTP {exc.code}") from exc
-        except urllib.error.URLError as exc:
-            raise VersionIdentityError(f"index check failed for {project}: {exc.reason}") from exc
+            connection.request("GET", path, headers={"Accept": "application/json"})
+            response = connection.getresponse()
+            response.read(1)
+        except (OSError, http.client.HTTPException, ValueError) as exc:
+            raise VersionIdentityError(f"index check failed for {project}: {exc}") from exc
+        finally:
+            connection.close()
+        if response.status == 404:
+            continue
+        if not 200 <= response.status < 300:
+            raise VersionIdentityError(f"index check failed for {project}: HTTP {response.status}")
         owning.append(project)
     return tuple(owning)
 
 
 def _forge_refs(endpoint: str, jq: str) -> tuple[str, ...]:
     """Return forge ref names, refusing rather than defaulting to empty."""
+    gh = shutil.which("gh")
+    if gh is None:
+        raise VersionIdentityError("forge check needs the gh CLI on PATH")
     try:
-        completed = subprocess.run(  # noqa: S603 - fixed argv, no shell.
-            ["gh", "api", endpoint, "--paginate", "--jq", jq],  # noqa: S607 - resolved from PATH like every dev gate.
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=_PROBE_TIMEOUT_S * 3,
+        returncode, stdout, stderr = asyncio.run(
+            _run_forge_command(
+            [gh, "api", endpoint, "--paginate", "--jq", jq],
+            ),
         )
-    except FileNotFoundError as exc:
-        raise VersionIdentityError("forge check needs the gh CLI on PATH") from exc
-    except subprocess.TimeoutExpired as exc:
+    except TimeoutError as exc:
         raise VersionIdentityError(f"forge check timed out for {endpoint}") from exc
-    except subprocess.CalledProcessError as exc:
-        raise VersionIdentityError(f"forge check failed for {endpoint}: {exc.stderr.strip()}") from exc
-    return tuple(line.strip() for line in completed.stdout.splitlines() if line.strip())
+    except OSError as exc:
+        raise VersionIdentityError(f"forge check could not run for {endpoint}: {exc}") from exc
+    if returncode != 0:
+        raise VersionIdentityError(f"forge check failed for {endpoint}: {stderr.strip()}")
+    return tuple(line.strip() for line in stdout.splitlines() if line.strip())
+
+
+async def _run_forge_command(command: list[str]) -> tuple[int, str, str]:
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=_PROBE_TIMEOUT_S * 3)
+    except TimeoutError:
+        process.kill()
+        await process.wait()
+        raise
+    return (
+        process.returncode,
+        stdout.decode(_UTF_8, errors="replace"),
+        stderr.decode(_UTF_8, errors="replace"),
+    )
 
 
 def forge_tags_owning(version: str, *, repository: str, own_source_commit: str | None = None) -> tuple[str, ...]:

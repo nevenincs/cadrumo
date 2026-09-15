@@ -46,13 +46,13 @@ samples -- never against fabricated production data.
 
 from __future__ import annotations
 
-import xml.etree.ElementTree as ElementTree
 from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Self
 
+from defusedxml import ElementTree
 from pydantic import BaseModel, StringConstraints, model_validator
 
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
@@ -247,7 +247,7 @@ def _read_xml(path: Path, source: SeedSource) -> ElementTree.Element[str]:
     if not path.is_file():
         raise SeedImportError(f"{path}: {source.value} export not found")
     try:
-        tree = ElementTree.parse(path)  # noqa: S314 — local fixture/operator file, not untrusted network input
+        tree = ElementTree.parse(path)
     except ElementTree.ParseError as exc:
         raise SeedImportError(f"{path}: malformed {source.value} XML: {exc}") from exc
     return tree.getroot()

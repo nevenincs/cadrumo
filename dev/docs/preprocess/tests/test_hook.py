@@ -17,7 +17,6 @@ Three surfaces are locked together:
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -28,6 +27,7 @@ from pathspec import PathSpec
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 
 from ..hook import (
     UPSTREAM_SCHEMA_VERSION,
@@ -298,13 +298,12 @@ def test_hook_units_are_parity_with_committed_sidecars(pattern: str) -> None:
 def test_hook_cli_emits_utf8_json_bytes() -> None:
     """The CLI writes UTF-8 bytes so the upstream runner decodes on Windows."""
     source = _smallest("*.html")
-    result = subprocess.run(  # noqa: S603 - fixed interpreter, repo-internal module
+    result = run_command(
         [sys.executable, "-m", "dev.docs.preprocess.hook", str(source)],
-        capture_output=True,
-        check=True,
         cwd=_REPO_ROOT,
     )
-    payload = json.loads(result.stdout.decode("utf-8"))
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
     assert payload["schema_version"] == UPSTREAM_SCHEMA_VERSION
     assert payload["units"]
 
@@ -312,13 +311,12 @@ def test_hook_cli_emits_utf8_json_bytes() -> None:
 def test_properties_hook_cli_emits_cp1252_punctuation_as_utf8() -> None:
     """The adapter preserves file04's en dash without replacement or C1 text."""
     source = next((_CORPUS / "aeat_official" / "disenos_registro" / "modelo_100" / "files").glob("04-*.properties"))
-    result = subprocess.run(  # noqa: S603 - fixed interpreter, repo-internal module
+    result = run_command(
         [sys.executable, "-m", "dev.docs.preprocess.hook", str(source)],
-        capture_output=True,
-        check=True,
         cwd=_REPO_ROOT,
     )
-    payload = json.loads(result.stdout.decode("utf-8"))
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
     units = cast(list[dict[str, object]], payload["units"])
     text = "\n".join(cast(str, unit["text"]) for unit in units)
     assert "\u2013[0454]" in text

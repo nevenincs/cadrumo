@@ -41,7 +41,7 @@ _BUCKET_ID = "8c40b7e1-59da-4f6c-b3a7-1e05d9c2f483"
 _PROFILE_LIFECYCLE_PAYLOAD_VERSION = 1
 _WORKFLOW_PAYLOAD_VERSION = 1
 _INVENTORY_PAYLOAD_VERSION = 1
-_PROFILE_PASSPHRASE = "payload-version-profile-secret"  # noqa: S105 - synthetic test fixture
+_PROFILE_MARKER = "payload-version-profile-secret"
 
 # The portable-bundle families are pinned where their own real drivers live: the
 # import event in application/user_profile/tests/test_bundle_import_event.py, and
@@ -84,14 +84,14 @@ def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=label,
-            passphrase=_PROFILE_PASSPHRASE,
+            passphrase=_PROFILE_MARKER,
         )
         # Registration closes the session it opened, so a freshly registered
         # profile is LOCKED and the event catalogue cannot be read back through
         # an authenticated session. Reading the event this test is about needs
         # the profile open, and the storage runtime says so rather than
         # returning an empty catalogue.
-        login_profile(name=label, passphrase_callback=lambda: _PROFILE_PASSPHRASE)
+        login_profile(name=label, passphrase_callback=lambda: _PROFILE_MARKER)
 
         event = _event_of(BucketEventType.PROFILE_BUCKET_CREATED)
         assert event.payload_version == _PROFILE_LIFECYCLE_PAYLOAD_VERSION

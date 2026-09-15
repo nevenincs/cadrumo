@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import compile_validated_authority
@@ -56,7 +57,7 @@ def test_authority_publication_rejects_divergent_record_design_manifest_binding(
 
     published = compile_validated_authority(registry_root, bundled_path())
 
-    assert published._registry_validated is True
+    assert isinstance(published, ValidatedRegistryAuthority)
 
     declaration_path = next(path for path in registry_root.rglob("*.toml") if f'"{source.id}"' in path.read_text())
     declaration = declaration_path.read_text(encoding="utf-8")

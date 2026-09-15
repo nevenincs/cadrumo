@@ -49,6 +49,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
+from dev.packaging.command_execution import CommandResult, run_command
 
 from ..compiler.loader import (
     clear_registry_tree_cache,
@@ -392,9 +393,9 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         encoding="utf-8",
     )
 
-    def _run_real_pytest_session() -> subprocess.CompletedProcess[str]:
+    def _run_real_pytest_session() -> CommandResult:
         node_id = f"{scratch_module_path}::test_touch_bundled_registry"
-        return subprocess.run(  # noqa: S603 -- fixed interpreter and test-owned node id
+        return run_command(
             [
                 sys.executable,
                 "-m",
@@ -421,10 +422,8 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
                 node_id,
             ],
             cwd=scratch_pkg,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+            errors="replace",
+            timeout_seconds=_SUBPROCESS_TIMEOUT_SECONDS,
         )
 
     with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir)):

@@ -10,11 +10,9 @@ import re
 import shutil
 import subprocess
 import sys
-import urllib.error
-import urllib.request
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from http.client import HTTPException, HTTPSConnection
+from http.client import HTTPConnection, HTTPException, HTTPSConnection
 from pathlib import Path
 from typing import Final
 from urllib.parse import urlsplit
@@ -25,6 +23,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 from dev.docs import i18n as _docs_i18n
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+from dev.packaging.command_execution import CommandResult, run_command
 
 CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
 CANONICAL_SITE_DOMAIN = "cadrumo.neve.md"
@@ -91,19 +90,21 @@ def _run(
     cwd: Path,
     env: dict[str, str] | None = None,
     stream_output: bool = False,
-) -> subprocess.CompletedProcess[str]:
+) -> CommandResult:
     """Run one local command and stop on its real exit status."""
     print(f"+ {_command_label(command)}", flush=True)
     # Callers build fixed Python/AWS command vectors; externally supplied IDs are validated.
-    completed = subprocess.run(  # noqa: S603
+    completed = run_command(
         list(command),
         cwd=cwd,
-        env=env,
-        text=True,
-        capture_output=not stream_output,
-        check=False,
+        environment=env,
     )
-    if not stream_output:
+    if stream_output:
+        if completed.stdout:
+            print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n", flush=True)
+        if completed.stderr:
+            print(completed.stderr, end="" if completed.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
+    else:
         if completed.stdout:
             print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n", flush=True)
         if completed.stderr:
@@ -186,16 +187,31 @@ def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LAT
     socket instead of faking the response.
     """
     destination = repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
-    request = urllib.request.Request(  # noqa: S310 — fixed HTTPS GitHub release URL (or test-supplied local URL)
-        source_url,
-        headers={"User-Agent": "cadrumo-docs-delivery"},
-    )
+    endpoint = urlsplit(source_url)
+    if endpoint.scheme not in {"http", "https"} or endpoint.hostname is None:
+        _invalidate_download_latest(destination, f"download-latest.json unavailable (invalid URL: {source_url})")
+        return
     try:
-        with urllib.request.urlopen(request, timeout=_DOWNLOAD_LATEST_TIMEOUT_SECONDS) as response:  # noqa: S310
-            body = response.read()
-    except (urllib.error.URLError, HTTPException, TimeoutError, OSError) as exc:
+        port = endpoint.port
+    except ValueError as exc:
         _invalidate_download_latest(destination, f"download-latest.json unavailable ({exc})")
         return
+    path = endpoint.path or "/"
+    if endpoint.query:
+        path = f"{path}?{endpoint.query}"
+    connection_type = HTTPSConnection if endpoint.scheme == "https" else HTTPConnection
+    connection = connection_type(endpoint.hostname, port, timeout=_DOWNLOAD_LATEST_TIMEOUT_SECONDS)
+    try:
+        connection.request("GET", path, headers={"User-Agent": "cadrumo-docs-delivery"})
+        response = connection.getresponse()
+        body = response.read()
+        if not 200 <= response.status < 300:
+            raise OSError(f"HTTP {response.status}")
+    except (HTTPException, TimeoutError, OSError) as exc:
+        _invalidate_download_latest(destination, f"download-latest.json unavailable ({exc})")
+        return
+    finally:
+        connection.close()
     try:
         payload = json.loads(body)
     except json.JSONDecodeError:

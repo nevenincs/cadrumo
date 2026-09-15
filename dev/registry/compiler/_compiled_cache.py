@@ -15,7 +15,7 @@ Persists the compiled ``(modelos, catalogues)`` set so a warm process skips the
   digest mismatch, schema-version mismatch, deserialisation failure, or foreign
   shape DELETES the file and returns ``None`` so the loader recompiles from TOML.
 
-Serialisation is pickle, not pydantic JSON: the compiled models are strict and
+Serialisation is a restricted pickle frame, not pydantic JSON: the compiled models are strict and
 frozen (:class:`RegistryModel`) and the recursive ``FormulaExpression.args``
 tuple combined with a ``mode="before"`` validator makes ``model_validate_json``
 reject JSON arrays for the strict tuple, so a pydantic-JSON round-trip is not
@@ -38,8 +38,10 @@ import enum
 import hashlib
 import hmac
 import inspect
+import io
 import logging
 import pickle
+import struct
 import sys
 import time
 import typing
@@ -54,6 +56,10 @@ import cadrumo
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.paths import select_filesystem_retention_survivors
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    CandidateFactAuthority,
+    validating_governed_facts,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
 from .loader_cache import registry_disk_cache_max_entries
@@ -73,10 +79,50 @@ _COMPILED_CACHE_SCHEMA_VERSION = b"compiled-registry-v2"
 _CACHE_FILENAME_PREFIX = "cadrumo_registry_"
 _CACHE_FILENAME_SUFFIX = ".pkl"
 _FRAME_SEPARATOR = b"\n"
+_PAYLOAD_ENVELOPE_PREFIX = b"cadrumo-compiled-registry-envelope-v1\x00"
 _READ_ATTEMPTS = 3
 _READ_RETRY_BASE_DELAY_SECONDS = 0.01
 
 _LOGGER = logging.getLogger(__name__)
+
+_SAFE_PICKLE_BUILTINS: Final[frozenset[str]] = frozenset(
+    {
+        "bool",
+        "bytes",
+        "complex",
+        "dict",
+        "float",
+        "frozenset",
+        "int",
+        "list",
+        "object",
+        "set",
+        "str",
+        "tuple",
+    },
+)
+_SAFE_PICKLE_MODULES: Final[frozenset[str]] = frozenset({"datetime", "decimal"})
+_SAFE_PICKLE_PREFIXES: Final[tuple[str, ...]] = ("cadrumo.", "dev.registry.")
+
+
+class _CompiledCacheUnpickler(pickle.Unpickler):
+    """Load only the first-party model graph and inert value types."""
+
+    def find_class(self, module: str, name: str) -> object:
+        if module == "builtins" and name in _SAFE_PICKLE_BUILTINS:
+            return super().find_class(module, name)
+        if module in _SAFE_PICKLE_MODULES or module.startswith(_SAFE_PICKLE_PREFIXES):
+            resolved = super().find_class(module, name)
+            if not hasattr(resolved, "_from_registry"):
+                return resolved
+            registry_constructor = resolved._from_registry
+
+            class _RegistryProjectedType(resolved):
+                def __new__(cls, *args: object, **kwargs: object) -> object:
+                    return registry_constructor(*args, **kwargs)
+
+            return _RegistryProjectedType
+        raise pickle.UnpicklingError(f"compiled cache references forbidden global {module}.{name}")
 
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
 
@@ -405,7 +451,14 @@ def _evict_stale_registry_pickles(cache_dir: Path, *, logger: logging.Logger) ->
 
 def _encode_frame(payload: CompiledRegistryPayload) -> bytes:
     """Serialise ``payload`` into the newline-framed version, digest, and pickle bytes."""
-    payload_bytes = pickle.dumps(payload, protocol=pickle.HIGHEST_PROTOCOL)  # nosemgrep
+    if isinstance(payload, tuple) and len(payload) == 2 and isinstance(payload[1], RegistryCatalogues):
+        modelos, catalogues = payload
+        catalogue_bytes = pickle.dumps(catalogues, protocol=pickle.HIGHEST_PROTOCOL)
+        modelos_bytes = pickle.dumps(modelos, protocol=pickle.HIGHEST_PROTOCOL)
+        payload_bytes = _PAYLOAD_ENVELOPE_PREFIX + struct.pack("!Q", len(catalogue_bytes))
+        payload_bytes += catalogue_bytes + modelos_bytes
+    else:
+        payload_bytes = pickle.dumps(payload, protocol=pickle.HIGHEST_PROTOCOL)
     digest = _payload_digest(payload_bytes)
     return _FRAME_SEPARATOR.join((_COMPILED_CACHE_SCHEMA_VERSION, digest, payload_bytes))
 
@@ -421,17 +474,35 @@ def _decode_and_validate(raw: bytes) -> CompiledRegistryPayload | None:
     if not _digests_equal(digest, _payload_digest(payload_bytes)):
         return None
     try:
-        # Same-user performance cache of first-party compiled registry data only.
-        # The bytes are produced solely by _encode_frame above and are gated by the
-        # integrity digest verified immediately before this load; a corrupt/foreign
-        # payload is refused. See the module docstring for the threat model.
-        payload: object = pickle.loads(payload_bytes)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
+        payload = _decode_payload_bytes(payload_bytes)
     except Exception:
         _LOGGER.debug("Compiled registry cache payload could not be deserialised; recomputing", exc_info=True)
         return None
     if not _is_compiled_registry_payload(payload):
         return None
     return payload
+
+
+def _decode_payload_bytes(payload_bytes: bytes) -> object:
+    """Restore one cache payload, scoping opaque model tokens to its catalogue."""
+    if not payload_bytes.startswith(_PAYLOAD_ENVELOPE_PREFIX):
+        return _CompiledCacheUnpickler(io.BytesIO(payload_bytes)).load()
+    offset = len(_PAYLOAD_ENVELOPE_PREFIX)
+    if len(payload_bytes) < offset + 8:
+        raise pickle.UnpicklingError("compiled cache envelope is truncated")
+    (catalogue_length,) = struct.unpack("!Q", payload_bytes[offset : offset + 8])
+    catalogue_start = offset + 8
+    catalogue_end = catalogue_start + catalogue_length
+    if catalogue_end > len(payload_bytes):
+        raise pickle.UnpicklingError("compiled cache catalogue frame is truncated")
+    catalogues = _CompiledCacheUnpickler(io.BytesIO(payload_bytes[catalogue_start:catalogue_end])).load()
+    modelos_bytes = payload_bytes[catalogue_end:]
+    if not isinstance(catalogues, RegistryCatalogues):
+        raise pickle.UnpicklingError("compiled cache catalogue has a foreign shape")
+    authority = CandidateFactAuthority(catalogues.facts)
+    with validating_governed_facts(authority):
+        modelos = _CompiledCacheUnpickler(io.BytesIO(modelos_bytes)).load()
+    return modelos, catalogues
 
 
 def _payload_digest(payload_bytes: bytes) -> bytes:

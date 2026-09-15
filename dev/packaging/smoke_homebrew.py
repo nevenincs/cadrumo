@@ -12,12 +12,12 @@ from __future__ import annotations
 
 import argparse
 import http.server
+import importlib
 import json
 import os
 import platform
 import re
 import shutil
-import subprocess
 import sys
 import threading
 from datetime import UTC, datetime
@@ -30,11 +30,14 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
-from dev._paths import REPO_ROOT  # noqa: E402
-
-from .command_execution import CommandResult, run_command  # noqa: E402
-from .hashing import sha256_path, sha256_text  # noqa: E402
-from .python_cohort import load_python_cohort  # noqa: E402
+REPO_ROOT = importlib.import_module("dev._paths").REPO_ROOT
+_COMMAND_EXECUTION = importlib.import_module("dev.packaging.command_execution")
+CommandResult = _COMMAND_EXECUTION.CommandResult
+run_command = _COMMAND_EXECUTION.run_command
+_HASHING = importlib.import_module("dev.packaging.hashing")
+sha256_path = _HASHING.sha256_path
+sha256_text = _HASHING.sha256_text
+load_python_cohort = importlib.import_module("dev.packaging.python_cohort").load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
 _FORMULA_NAME: Final[str] = "cadrumo"
@@ -586,13 +589,9 @@ def _run_brew_cleanup(
     cleanup_errors: list[str] = []
 
     def cleanup_lines(arguments: list[str], *, label: str) -> set[str]:
-        completed = subprocess.run(  # noqa: S603
+        completed = run_command(
             [str(brew), *arguments],
             cwd=run_root,
-            check=False,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
             errors="strict",
         )
         (logs / f"{label}.log").write_text(
@@ -613,13 +612,9 @@ def _run_brew_cleanup(
     )
     new_formulae = current_formulae - preexisting_formulae
     if installed_prefix is not None or _FORMULA_NAME in new_formulae:
-        completed = subprocess.run(  # noqa: S603
+        completed = run_command(
             [str(brew), "uninstall", "--force", _FORMULA_NAME],
             cwd=run_root,
-            check=False,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
             errors="strict",
         )
         (logs / "brew-uninstall-cadrumo.log").write_text(
@@ -637,13 +632,9 @@ def _run_brew_cleanup(
         - preexisting_formulae
     )
     for formula in sorted(remaining_new, reverse=True):
-        completed = subprocess.run(  # noqa: S603
+        completed = run_command(
             [str(brew), "uninstall", "--force", "--ignore-dependencies", formula],
             cwd=run_root,
-            check=False,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
             errors="strict",
         )
         (logs / f"brew-uninstall-{formula.replace('@', '_')}.log").write_text(
@@ -659,13 +650,9 @@ def _run_brew_cleanup(
         label="brew-taps-before-cleanup",
     )
     if tap_registered or tap_name in current_taps - preexisting_taps:
-        completed = subprocess.run(  # noqa: S603
+        completed = run_command(
             [str(brew), "untap", tap_name],
             cwd=run_root,
-            check=False,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
             errors="strict",
         )
         (logs / "brew-untap.log").write_text(

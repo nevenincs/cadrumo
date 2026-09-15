@@ -20,4 +20,4 @@ to notice when it changes.
 
 from __future__ import annotations
 
-from cadrumo.conftest import compose_runtime_ports  # noqa: F401
+pytest_plugins = ("cadrumo.conftest",)
