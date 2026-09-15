@@ -54,6 +54,7 @@ from datetime import datetime
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -250,14 +251,16 @@ def persist_filed_revision_observation(
     )
     if history_repo is not None and taxpayer_nif is not None:
         filing_ref = filing_record_id or key
-        persist_observation_envelope_and_iva_history(
-            observation_repository=repository,
-            history_repository=history_repo,
-            envelope=payload,
-            taxpayer_nif=taxpayer_nif.strip(),
-            provenance=IvaCompensationStateProvenance.APP_FILING,
-            source_observation_key=f"{key}:local:{filing_ref[:64]}",
-        )
+        with bundled_indexed_authority().operation() as operation:
+            persist_observation_envelope_and_iva_history(
+                observation_repository=repository,
+                history_repository=history_repo,
+                envelope=payload,
+                taxpayer_nif=taxpayer_nif.strip(),
+                provenance=IvaCompensationStateProvenance.APP_FILING,
+                source_observation_key=f"{key}:local:{filing_ref[:64]}",
+                operation=operation,
+            )
     else:
         repository.save(payload)
     return key

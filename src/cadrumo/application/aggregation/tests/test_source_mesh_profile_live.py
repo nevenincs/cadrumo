@@ -278,15 +278,16 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
 
 
 def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> None:
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
+        target_registry_snapshot_ref=snapshot.snapshot_ref,
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("1200"),
         decided_at=_CLOCK,
     )
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
     resolution = IvaWalletDecisionSourceResolver(decision).resolve(
         CalculationSourceContext(

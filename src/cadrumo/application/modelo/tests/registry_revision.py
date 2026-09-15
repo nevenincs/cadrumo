@@ -9,11 +9,18 @@ target silently moved to ``2026-y-siguientes``).
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ....core.period import Period
 from ..work_addressing import law_selected_revision_for_work_target
 
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
-def active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -> str:
+
+def active_registry_revision_id(
+    *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
+) -> str:
     """Return the law-determined registry revision for a filing target.
 
     AEAT binds every ``(modelo, filing_year, period)`` triple to exactly one
@@ -26,4 +33,5 @@ def active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         requested_revision_id=None,
+        operation=operation,
     )

@@ -403,6 +403,7 @@ def create_work_unit(
         filing_year=filing_year,
         period=period,
         requested_revision_id=revision_id,
+        operation=operation,
     )
 
     require_profile_ready_for_modelo_work(

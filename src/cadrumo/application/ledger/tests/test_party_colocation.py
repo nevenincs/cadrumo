@@ -26,6 +26,7 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.confirmation_gate import ConfirmationBlockReason
@@ -381,7 +382,9 @@ def test_the_stacked_header_still_partitions_so_the_zero_is_about_layout() -> No
     assert set(regions) == {"supplier", "customer"}
 
 
-def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_advisory() -> None:
+def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_advisory(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """On the real layout the unverified-attribution stamp IS the mechanism.
 
     The honest state made executable. On a document the resolver cannot
@@ -410,4 +413,11 @@ def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_adviso
         assert stamps["customer_postal_code"] is True
         # Advisory, never blocker: an unpartitionable layout is not a contradiction.
         assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
-        assert party_attribution_advisory(grounded) is not None
+        assert (
+            party_attribution_advisory(
+                grounded,
+                legends=_registry_legends(operation),
+                operation=operation,
+            )
+            is not None
+        )

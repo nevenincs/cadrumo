@@ -61,7 +61,7 @@ _RECORD_TYPES = (
 )
 
 
-def _module_source(anchor: object) -> str:
+def _module_source(anchor: type[object]) -> str:
     source = inspect.getsourcefile(anchor)
     assert source is not None
     return Path(source).read_text(encoding="utf-8")

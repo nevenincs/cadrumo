@@ -33,6 +33,7 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.invoices.catalogue_reads_ports import (
+    InvoiceCatalogueReader,
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
@@ -59,7 +60,7 @@ class _EmptyTransactionCatalogueReader:
         return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
 
 
-def _read_ports(invoice_reader: object) -> InvoiceCatalogueReadPorts:
+def _read_ports(invoice_reader: InvoiceCatalogueReader) -> InvoiceCatalogueReadPorts:
     return InvoiceCatalogueReadPorts(
         invoice_reader=invoice_reader,
         transaction_reader=_EmptyTransactionCatalogueReader(),

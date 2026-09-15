@@ -31,6 +31,7 @@ from typing import Literal
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -191,12 +192,14 @@ def modelo_work_deadline_posture(
 
     days_overdue = (resolved_reference_on - closes_on).days
     try:
-        recovery = build_recovery_for_overdue(
-            closes_on=closes_on,
-            reference_today=resolved_reference_on,
-            modelo=str(work_unit.modelo),
-            period=work_unit.period,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            recovery = build_recovery_for_overdue(
+                closes_on=closes_on,
+                reference_today=resolved_reference_on,
+                modelo=str(work_unit.modelo),
+                period=work_unit.period,
+                operation=operation,
+            )
     except DeadlineValidationError:
         _LOG.debug(
             "modelo work deadline preview resolution failed; returning overdue posture without preview "

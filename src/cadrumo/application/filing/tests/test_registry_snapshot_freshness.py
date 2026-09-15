@@ -7,6 +7,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
 from ..draft_construction import _load_registry_snapshot
+from ..runtime import RegistrySchemaAccessor, schema_provider_from_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -14,13 +15,23 @@ _MODELO = "130"
 _PERIOD = Period(filing_year=2024, code="1T")
 
 
+def _schema_provider(period: Period) -> RegistrySchemaAccessor:
+    """Project the compiled authority through the filing snapshot boundary."""
+    return schema_provider_from_authority(
+        compiled_bundled_authority(),
+        modelos=(_MODELO,),
+        filing_year=period.filing_year,
+        period=period,
+    )
+
+
 def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
     """Repeated filing resolution reuses the authority entry while isolating callers."""
     authority = compiled_bundled_authority()
 
-    first = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
+    first = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_schema_provider(_PERIOD))
     cache_size = len(authority._snapshots)
-    warm = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
+    warm = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_schema_provider(_PERIOD))
 
     assert warm == first
     assert warm is not first
@@ -53,7 +64,7 @@ def test_law_determined_resolution_is_preserved() -> None:
 
     for filing_year in (2023, 2024):
         period = Period(filing_year=filing_year, code="1T")
-        resolved = _load_registry_snapshot(modelo=_MODELO, period=period)
+        resolved = _load_registry_snapshot(modelo=_MODELO, period=period, schema_provider=_schema_provider(period))
         expected = authority.snapshot(_MODELO, filing_year=filing_year, period="1T")
         assert resolved.revision.id == expected.revision.id, (
             f"filing year {filing_year} resolved revision {resolved.revision.id!r}, but the "

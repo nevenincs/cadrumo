@@ -57,7 +57,8 @@ def _walk(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) -> t
     commit) but stops short of the submit assertion, so the review
     projection can be inspected for a blocked run as well as a passing one.
     """
-    definition = setup_flow_definition(registry_setup_flow)
+    with _indexed_authority_for_test().operation() as operation:
+        definition = setup_flow_definition(registry_setup_flow, operation=operation)
     _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     state = start_flow(definition, mode=FlowMode.CREATE)
     while True:
@@ -76,7 +77,8 @@ def _review(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) ->
 
 def _submit_refusal(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) -> FlowSubmitError:
     """Drive the production scripted path and return its submit refusal."""
-    definition = setup_flow_definition(registry_setup_flow)
+    with _indexed_authority_for_test().operation() as operation:
+        definition = setup_flow_definition(registry_setup_flow, operation=operation)
     tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     with pytest.raises(FlowSubmitError) as caught:
         run_scripted_flow(

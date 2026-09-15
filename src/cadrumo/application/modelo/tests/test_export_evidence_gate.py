@@ -15,6 +15,7 @@ import pytest
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_revision import (
@@ -39,6 +40,7 @@ def _revision(
     *,
     source_transaction_ids: tuple[str, ...],
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
         bucket_id="bucket-operator",
@@ -48,7 +50,7 @@ def _revision(
         revision_id="gate",
     )
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "1T"), reference="test:export-evidence-gate"
+        Period.from_year_and_code(2026, "1T"), reference="test:export-evidence-gate", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -90,26 +92,29 @@ def _revision(
     )
 
 
-def test_export_refuses_ledger_revision_without_bundled_evidence_or_reference() -> None:
-    revision = _revision(source_transaction_ids=(_TX_ID,))
+def test_export_refuses_ledger_revision_without_bundled_evidence_or_reference(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    revision = _revision(source_transaction_ids=(_TX_ID,), operation=operation)
 
     with pytest.raises(ModeloExportEvidenceMissingError):
         _raise_if_ledger_export_evidence_missing(revision)
 
 
-def test_export_allows_non_ledger_revision_without_evidence() -> None:
-    revision = _revision(source_transaction_ids=())
+def test_export_allows_non_ledger_revision_without_evidence(*, operation: PinnedAuthorityOperation) -> None:
+    revision = _revision(source_transaction_ids=(), operation=operation)
 
     _raise_if_ledger_export_evidence_missing(revision)
 
 
-def test_export_allows_ledger_revision_with_snapshot_reference() -> None:
+def test_export_allows_ledger_revision_with_snapshot_reference(*, operation: PinnedAuthorityOperation) -> None:
     revision = _revision(
         source_transaction_ids=(_TX_ID,),
         ledger_filing_snapshot=LedgerFilingSnapshot(
             snapshot_fingerprint="f" * 64,
             captured_at=_NOW,
         ),
+        operation=operation,
     )
 
     _raise_if_ledger_export_evidence_missing(revision)

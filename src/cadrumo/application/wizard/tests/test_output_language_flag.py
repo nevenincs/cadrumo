@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import click
 import pytest
+import typer
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
@@ -41,6 +42,7 @@ def test_wizard_output_language_flag_constrains_to_supported_set() -> None:
     subcommand's language flag.
     """
     info = SETUP_OPTION_INFOS["output-language"]
+    assert isinstance(info, typer.models.OptionInfo)
     choice = info.click_type
     assert isinstance(choice, click.Choice), type(choice).__name__
     assert tuple(choice.choices) == tuple(SUPPORTED_OUTPUT_LANGUAGES)

@@ -287,6 +287,7 @@ def run_modelo_quickfile(
             modelo=command.modelo,
             filing_year=command.filing_year,
             period=command.period,
+            operation=operation,
             requested_revision_id=command.registry_revision_id,
         )
     except CadrumoError as exc:

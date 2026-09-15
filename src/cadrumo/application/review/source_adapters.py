@@ -275,14 +275,14 @@ def drafts_pending(
     Callers see only drafts owned by the active profile.
     """
     if drafts is None:
-        drafts = load_drafts(ports=ports)
+        drafts = load_drafts(ports=ports, operation=operation)
     active_tax_id = _resolve_review_active_tax_id(ports.profile_repository, bucket_id=bucket_id)
     if active_tax_id is None:
         return ()
     items: list[FindingReviewItem] = []
     seen: set[tuple[str, str, str]] = set()
     for path, stored in drafts:
-        stored = require_modelo_draft_coordinates_current(stored)
+        stored = require_modelo_draft_coordinates_current(stored, operation=operation)
         if (stored.profile_tax_id or "") != active_tax_id:
             continue
         draft, stale_reasons = reviewed_against_current_state(
@@ -427,7 +427,11 @@ def _resolve_review_active_tax_id(
     return tax_id if isinstance(tax_id, str) and tax_id else None
 
 
-def load_drafts(*, ports: DraftReviewPorts) -> tuple[tuple[Path, ModeloDraft], ...]:
+def load_drafts(
+    *,
+    ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[Path, ModeloDraft], ...]:
     """Iterate every persisted draft via the composed application capability.
 
     Drafts are ciphertext-at-rest only. The helper returns the secure
@@ -439,7 +443,7 @@ def load_drafts(*, ports: DraftReviewPorts) -> tuple[tuple[Path, ModeloDraft], .
     out: list[tuple[Path, ModeloDraft]] = []
     try:
         for draft in repository.iter_drafts():
-            draft = require_modelo_draft_coordinates_current(draft)
+            draft = require_modelo_draft_coordinates_current(draft, operation=operation)
             out.append((repository.envelope_path_for(draft.draft_id), draft))
     except (CadrumoError, ValidationError, OSError, ValueError) as exc:
         raise ReviewSourceLoadError(

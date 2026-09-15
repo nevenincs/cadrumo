@@ -149,7 +149,7 @@ def test_modelo_100_2024_personal_family_construct_is_profile_backed() -> None:
         assert casilla.binding == binding_id
         binding = bindings[binding_id]
         assert binding.source is BindingSourceKind.PROFILE
-        selector: Any = binding.selector
+        selector: Any = binding.provider
         assert selector.dictionary_field == casilla_id
 
 
@@ -162,7 +162,7 @@ def test_modelo_100_2024_profile_binding_selectors_target_real_profile_schema() 
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
     for binding_id in _CASILLA_TO_BINDING.values():
-        selectors = profile_binding_selectors(bindings[binding_id].selector)
+        selectors = profile_binding_selectors(bindings[binding_id].provider)
         assert selectors, binding_id
         missing = set(selectors) - schema_selectors
         assert not missing, f"{binding_id}: selectors outside profile schema: {sorted(missing)}"
@@ -184,7 +184,7 @@ def test_modelo_100_2024_family_row_bindings_address_repeating_profile_collectio
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
     for binding_id, (collection, field) in _ROW_BINDINGS.items():
-        selector: Any = bindings[binding_id].selector
+        selector: Any = bindings[binding_id].provider
         assert selector.profile_model == "RentaFamilyProfile"
         assert selector.collection == collection
         assert selector.field == field

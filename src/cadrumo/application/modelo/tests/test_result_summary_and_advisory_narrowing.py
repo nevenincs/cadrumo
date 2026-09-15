@@ -10,23 +10,52 @@ from __future__ import annotations
 
 import decimal
 from datetime import UTC, datetime
-from types import SimpleNamespace
 from typing import NoReturn
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.hierarchy import CadrumoError
+from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..action_errors import WorkUnitRevisionDivergenceError
 from ..verification_predicates import evaluate_advisory_predicate_fires
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_WORK_UNIT_BUCKET = "result-summary-narrowing-test"
+_WORK_UNIT_REVISION = "2026-y-siguientes"
+_WORK_UNIT_NOW = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+
+
+def _work_unit() -> WorkUnit:
+    period = Period.from_year_and_code(2026, "1T")
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_WORK_UNIT_BUCKET,
+            modelo="303",
+            filing_year=2026,
+            period=period,
+            revision_id=_WORK_UNIT_REVISION,
+        ),
+        bucket_id=_WORK_UNIT_BUCKET,
+        modelo=ModeloCode("303"),
+        filing_year=2026,
+        period=period,
+        revision_id=_WORK_UNIT_REVISION,
+        name="303-2026-1T",
+        created_at=_WORK_UNIT_NOW,
+        updated_at=_WORK_UNIT_NOW,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -77,7 +106,7 @@ class TestResultSummaryNarrowing:
     """calculation_result_summary returns None on typed errors, propagates unexpected ones."""
 
     def _revision(self) -> CalculationRevision:
-        work_unit_id = "0" * 64
+        work_unit_id = _work_unit().work_unit_id
         revision_id = derive_calculation_revision_id(
             work_unit_id=work_unit_id,
             input_values_by_casilla_id={},
@@ -104,7 +133,7 @@ class TestResultSummaryNarrowing:
             source_provenance=(),
         )
 
-    def test_cadrumo_error_from_get_work_unit_returns_none(self) -> None:
+    def test_cadrumo_error_from_get_work_unit_returns_none(self, operation: PinnedAuthorityOperation) -> None:
         """An CadrumoError from get_work_unit is caught and returns None."""
         from ..result_summary import calculation_result_summary
 
@@ -112,11 +141,11 @@ class TestResultSummaryNarrowing:
             del work_unit_id
             raise CadrumoError("typed failure")
 
-        result = calculation_result_summary(self._revision(), work_unit_resolver=_raising)
+        result = calculation_result_summary(self._revision(), work_unit_resolver=_raising, operation=operation)
 
         assert result is None
 
-    def test_lookup_error_from_get_work_unit_returns_none(self) -> None:
+    def test_lookup_error_from_get_work_unit_returns_none(self, operation: PinnedAuthorityOperation) -> None:
         """A LookupError from get_work_unit returns None."""
         from ..result_summary import calculation_result_summary
 
@@ -124,11 +153,13 @@ class TestResultSummaryNarrowing:
             del work_unit_id
             raise LookupError("not found")
 
-        result = calculation_result_summary(self._revision(), work_unit_resolver=_raising)
+        result = calculation_result_summary(self._revision(), work_unit_resolver=_raising, operation=operation)
 
         assert result is None
 
-    def test_summary_requests_calculation_grade_snapshot(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_summary_requests_calculation_grade_snapshot(
+        self, monkeypatch: pytest.MonkeyPatch, operation: PinnedAuthorityOperation
+    ) -> None:
         """Displaying a calculation must not strengthen authority to filing grade."""
         from .. import result_summary
 
@@ -142,14 +173,13 @@ class TestResultSummaryNarrowing:
 
         assert (
             result_summary.calculation_result_summary(
-                self._revision(),
-                work_unit_resolver=lambda _work_unit_id: SimpleNamespace(work_unit_id="observed"),  # type: ignore[arg-type,return-value]
+                self._revision(), work_unit_resolver=lambda _work_unit_id: _work_unit(), operation=operation
             )
             is None
         )
         assert observed == [RegistryAuthorityGrade.CALCULATION]
 
-    def test_runtime_error_from_get_work_unit_propagates(self) -> None:
+    def test_runtime_error_from_get_work_unit_propagates(self, operation: PinnedAuthorityOperation) -> None:
         """A RuntimeError from get_work_unit propagates — not swallowed."""
         from ..result_summary import calculation_result_summary
 
@@ -158,9 +188,11 @@ class TestResultSummaryNarrowing:
             raise RuntimeError("unexpected db failure")
 
         with pytest.raises(RuntimeError, match="unexpected db failure"):
-            calculation_result_summary(self._revision(), work_unit_resolver=_raising)
+            calculation_result_summary(self._revision(), work_unit_resolver=_raising, operation=operation)
 
-    def test_stale_registry_coordinate_refuses_before_summary_projection(self) -> None:
+    def test_stale_registry_coordinate_refuses_before_summary_projection(
+        self, operation: PinnedAuthorityOperation
+    ) -> None:
         """A display fallback cannot expose values from a drifted revision."""
         from ..result_summary import calculation_result_summary
 
@@ -173,4 +205,6 @@ class TestResultSummaryNarrowing:
         )
 
         with pytest.raises(WorkUnitRevisionDivergenceError):
-            calculation_result_summary(revision, work_unit_resolver=lambda _work_unit_id: None)  # type: ignore[arg-type,return-value]
+            calculation_result_summary(
+                revision, work_unit_resolver=lambda _work_unit_id: _work_unit(), operation=operation
+            )

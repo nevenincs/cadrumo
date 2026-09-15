@@ -145,24 +145,33 @@ def test_provider_absent_modelo_error_is_localized() -> None:
 
 def test_blank_modelo_selection_error_is_localized() -> None:
     with pytest.raises(ModeloBuilderError) as exc_info:
-        build_runtime_schema_provider(modelos=[" "])
+        build_runtime_schema_provider(
+            modelos=[" "],
+            filing_year=_TEST_YEAR,
+            period=_TEST_PERIOD,
+        )
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.blank_modelo_selection"
 
 
 def test_missing_requested_modelo_error_is_localized() -> None:
     with pytest.raises(ModeloBuilderError) as exc_info:
-        build_runtime_schema_provider(modelos=["999"])
+        build_runtime_schema_provider(
+            modelos=["999"],
+            filing_year=_TEST_YEAR,
+            period=_TEST_PERIOD,
+        )
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.registry_missing_requested_modelos"
     assert exc_info.value.context == {"modelos": "999"}
 
 
-def test_filing_year_period_pair_error_is_localized() -> None:
+def test_missing_period_error_is_localized() -> None:
     with pytest.raises(ModeloBuilderError) as exc_info:
-        build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR)
+        build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=None)
 
-    assert exc_info.value.translated_message == "application.filing.runtime.errors.filing_year_period_pair"
+    assert exc_info.value.translated_message == "application.filing.runtime.errors.period_type"
+    assert exc_info.value.context == {"period_type": "NoneType"}
 
 
 def test_runtime_schema_provider_rejects_raw_period_string() -> None:

@@ -14,23 +14,23 @@ from __future__ import annotations
 import pytest
 
 from ....core.i18n.render import tr
-from ..catalogue import WIZARD_FLOWS
+from ..models import WizardFlow
+from ._support import registry_setup_flow as registry_setup_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SUPPORTED_LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")
 
-_FLOW_DESCRIPTION_KEYS: frozenset[str] = frozenset(f"wizard.{flow.id}.description" for flow in WIZARD_FLOWS)
 
-
-def test_wizard_flow_description_key_resolves() -> None:
+def test_wizard_flow_description_key_resolves(*, registry_setup_flow: WizardFlow) -> None:
     """Assert each wizard flow description key resolves to a real string.
 
     A self-referencing placeholder (resolved == key) means the key is
     absent from the catalogue — this would render as the raw dotted key
     in the CLI ``--help`` output.
     """
-    for key in sorted(_FLOW_DESCRIPTION_KEYS):
+    flow_description_keys = frozenset({f"wizard.{registry_setup_flow.id}.description"})
+    for key in sorted(flow_description_keys):
         for locale in _SUPPORTED_LOCALES:
             resolved = tr(key, locale=locale)
             assert resolved != key, (

@@ -6,6 +6,7 @@ from datetime import date
 from typing import TypeAlias
 
 from ...core.irnr import TipoRentaIrnr
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.convenio import (
     ResolvedConvenioOverride,
     resolve_convenio_override,
@@ -21,11 +22,13 @@ def resolve_m210_convenio_override(
     devengo_date: date,
 ) -> ResolvedM210ConvenioOverride | None:
     """Resolve the exact dated treaty fact for Modelo 210."""
-    return resolve_convenio_override(
-        country_code=country_code,
-        tipo_renta=tipo_renta,
-        devengo_date=devengo_date,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_convenio_override(
+            country_code=country_code,
+            tipo_renta=tipo_renta,
+            devengo_date=devengo_date,
+            operation=operation,
+        )
 
 
 __all__ = ["ResolvedM210ConvenioOverride", "resolve_m210_convenio_override"]

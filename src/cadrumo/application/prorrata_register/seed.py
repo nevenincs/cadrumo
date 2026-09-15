@@ -33,6 +33,7 @@ from typing import Final
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
@@ -110,6 +111,7 @@ def evaluate_carried_prior_definitiva_seed(
     *,
     ejercicio: int,
     observation_repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     sector_id: str | None = None,
 ) -> ProrrataPriorDefinitivaSeedEvaluation:
     """Evaluate the carried-prior-definitive seed and surface findings.
@@ -126,7 +128,8 @@ def evaluate_carried_prior_definitiva_seed(
                 revision_id=source.stamped_revision_id,
                 modelo_year=source.source_filing_year,
                 period=source.source_period,
-            )
+            ),
+            operation=operation,
         )
         if revision_outcome.refused:
             return ProrrataPriorDefinitivaSeedEvaluation(
@@ -150,6 +153,7 @@ def cross_check_prorrata_entry_against_prior_observation(
     entry: ProrrataRegisterEntry,
     *,
     observation_repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ProrrataSeedFinding, ...]:
     """Cross-check a register entry against the prior definitive observation.
 
@@ -165,6 +169,7 @@ def cross_check_prorrata_entry_against_prior_observation(
     evaluation = evaluate_carried_prior_definitiva_seed(
         ejercicio=entry.ejercicio,
         observation_repository=observation_repository,
+        operation=operation,
         sector_id=entry.sector_id,
     )
     seed = evaluation.seed

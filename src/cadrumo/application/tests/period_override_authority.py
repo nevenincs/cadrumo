@@ -17,8 +17,20 @@ from typing import Final
 
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
+from ...domain.calculations.registry.authority_artifact import (
+    AuthorityComponentKind,
+    AuthorityComponentQuery,
+    ExportLayoutComponentQuery,
+    ModeloDirectoryComponentQuery,
+    ModeloRevisionComponentQuery,
+    ReferenceComponentQuery,
+    SnapshotGlobalsComponentQuery,
+)
+from ...domain.calculations.registry.schema import SnapshotGlobalCatalogues
 from ...domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
+from ...domain.calculations.registry.temporal import ModeloRevisionDirectory
+from ...domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 
 OVERRIDE_MODELO: Final = "216"
 """The modelo the fixture rebuilds; every other bundled modelo is carried verbatim."""
@@ -84,3 +96,27 @@ def override_authority() -> ValidatedRegistryAuthority:
         year=OVERRIDE_YEAR,
         periods=OVERRIDE_PERIODS,
     )
+
+
+def pinned_operation_for_authority(authority: ValidatedRegistryAuthority) -> PinnedAuthorityOperation:
+    """Expose a validated fixture through the same pinned component contract as production."""
+    components: dict[AuthorityComponentQuery, object] = {
+        SnapshotGlobalsComponentQuery(): SnapshotGlobalCatalogues.from_catalogues(authority.catalogues),
+    }
+    for modelo in authority.modelos:
+        modelo_id = str(modelo.id)
+        components[ModeloDirectoryComponentQuery(modelo_id)] = ModeloRevisionDirectory.from_modelo(
+            modelo,
+            support=authority.catalogues.supported_filing_years,
+        )
+        for revision in modelo.revisions.values():
+            revision_id = str(revision.id)
+            components[ModeloRevisionComponentQuery(modelo_id, revision_id)] = revision
+            for layout in revision.export_layouts:
+                components[ExportLayoutComponentQuery(modelo_id, revision_id, str(layout.id))] = layout
+    for reference_id, reference in authority.catalogues.legal.items():
+        components[ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.LEGAL_REFERENCE)] = reference
+    for reference_id, reference in authority.catalogues.sources.items():
+        components[ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)] = reference
+    reader = FakeAuthorityComponentReader(components)
+    return PinnedAuthorityOperation(reader, reader.pin())

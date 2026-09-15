@@ -62,18 +62,21 @@ def _drive_scripted(
     a question the walk visited carries a key in the map, a gate-hidden
     question is absent.
     """
-    definition = _force_pages_visible(setup_flow_definition(registry_setup_flow), force_visible)
-    tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
-    state, _projection = run_scripted_flow(
-        definition,
-        tokens,
-        mode=FlowMode.CREATE,
-        defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
-    )
-    committed = dict(state.answers)
-    answers = _answers_model_from_canonical(registry_setup_flow, committed)
-    assert isinstance(answers, SetupAnswers)
-    return answers, committed
+    with _indexed_authority_for_test().operation() as operation:
+        definition = _force_pages_visible(
+            setup_flow_definition(registry_setup_flow, operation=operation), force_visible
+        )
+        tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+        state, _projection = run_scripted_flow(
+            definition,
+            tokens,
+            mode=FlowMode.CREATE,
+            defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
+        )
+        committed = dict(state.answers)
+        answers = _answers_model_from_canonical(registry_setup_flow, committed)
+        assert isinstance(answers, SetupAnswers)
+        return answers, committed
 
 
 def _scripted_answers_for_individual_declaration(*, registry_setup_flow: WizardFlow) -> deque[str]:
@@ -89,8 +92,9 @@ def _scripted_answers_for_individual_declaration(*, registry_setup_flow: WizardF
     """
 
     canonical = _individual_declaration_canonical()
-    definition = setup_flow_definition(registry_setup_flow)
-    _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+    with _indexed_authority_for_test().operation() as operation:
+        definition = setup_flow_definition(registry_setup_flow, operation=operation)
+        _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     # The shared fixture carries no token for the descendant count page:
     # the sibling scripted-walk helper defaults that page in walk order, so
     # a positional token for it would misfeed the next visible page.

@@ -7,6 +7,8 @@ from datetime import UTC, datetime
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -82,7 +84,7 @@ def _non_m303_work_unit() -> WorkUnit:
     )
 
 
-def _evidence(period: Period) -> FilingInstanceEvidence:
+def _evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
     scope = _general_scope()
     registry_snapshot = compiled_bundled_authority().snapshot(
         "303",
@@ -112,12 +114,13 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
                     scope_decision=scope,
                 ),
                 dana_2024_eligibility=None,
+                operation=operation,
             ),
         ),
     )
 
 
-def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None:
+def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted(*, operation: PinnedAuthorityOperation) -> None:
     work_unit = _non_m303_work_unit()
     registry_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
 
@@ -128,6 +131,7 @@ def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None
             evidence=None,
             casilla_values={},
             observations=(),
+            operation=operation,
         )
         is None
     )
@@ -136,9 +140,10 @@ def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=work_unit,
             registry_snapshot=registry_snapshot,
-            evidence=_evidence(Period.from_year_and_code(2026, "1T")),
+            evidence=_evidence(Period.from_year_and_code(2026, "1T"), operation=operation),
             casilla_values={},
             observations=(),
+            operation=operation,
         )
 
     failure = raised_unsupported_modelo.value.precondition_failure
@@ -147,7 +152,7 @@ def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None
     assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.unsupported_modelo"
 
 
-def test_m303_evidence_is_required_before_profile_lookup() -> None:
+def test_m303_evidence_is_required_before_profile_lookup(*, operation: PinnedAuthorityOperation) -> None:
     period = Period.from_year_and_code(2026, "1T")
 
     with pytest.raises(M303FilingEvidenceError) as raised_missing:
@@ -157,6 +162,7 @@ def test_m303_evidence_is_required_before_profile_lookup() -> None:
             evidence=None,
             casilla_values={},
             observations=(),
+            operation=operation,
         )
 
     failure = raised_missing.value.precondition_failure
@@ -165,7 +171,7 @@ def test_m303_evidence_is_required_before_profile_lookup() -> None:
     assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.missing"
 
 
-def test_evidence_for_another_work_period_refuses_before_persistence() -> None:
+def test_evidence_for_another_work_period_refuses_before_persistence(*, operation: PinnedAuthorityOperation) -> None:
     work_period = Period.from_year_and_code(2026, "1T")
     evidence_period = Period.from_year_and_code(2026, "2T")
 
@@ -173,9 +179,10 @@ def test_evidence_for_another_work_period_refuses_before_persistence() -> None:
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=_work_unit(work_period),
             registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T"),
-            evidence=_evidence(evidence_period),
+            evidence=_evidence(evidence_period, operation=operation),
             casilla_values={},
             observations=(),
+            operation=operation,
         )
 
     failure = raised_period_mismatch.value.precondition_failure

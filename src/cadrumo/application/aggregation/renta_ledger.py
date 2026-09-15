@@ -260,6 +260,8 @@ def _seguro_enfermedad_person_counts(
     operation: PinnedAuthorityOperation,
 ) -> dict[str, int]:
     """Resolve insured-person variant counts using selected registry declarations."""
+    if profile_decode_context is None:
+        profile_decode_context = operation.profile_decode_context()
     declarations = _registry_renta_ledger_declarations(
         modelo=modelo,
         filing_year=filing_year,
@@ -298,6 +300,7 @@ def _resolve_residence_ccaa(
     bucket_id: str,
     profile_record: UserProfileRecord | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CCAA | None:
     """Derive the ordinary-residence comunidad autonoma from the bucket's profile.
 
@@ -318,6 +321,8 @@ def _resolve_residence_ccaa(
         profile_decode_context: Optional decode context from the caller-held
             authority operation used when the record is loaded.
     """
+    if profile_decode_context is None:
+        profile_decode_context = operation.profile_decode_context()
     record = profile_record
     if record is None:
         try:
@@ -380,6 +385,8 @@ def resolve_iva_deduction_ratio(
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
             )
+    if profile_decode_context is None:
+        profile_decode_context = operation.profile_decode_context()
     ratio_policy = _registry_renta_iva_ratio_declarations(filing_year=ejercicio, operation=operation)
     exempt_ratio = Decimal(
         _required_renta_ledger_declaration(ratio_policy, "exempt_regime.deduction_ratio"),
@@ -467,6 +474,8 @@ def aggregate_renta_ledger_expenses_from_repositories(
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
             )
+    if profile_decode_context is None:
+        profile_decode_context = operation.profile_decode_context()
     # NOT pre-filtered by date range: a transaction's OWN
     # date can fall outside the requested annual window while its LINKED
     # INVOICE's issue date (the actual ``fact.filing_date`` the classifier
@@ -484,6 +493,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=bucket_id,
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
+        operation=operation,
     )
     resolved_ejercicio = profile_year if profile_year is not None else period.filing_year
     iva_deduction_ratio = resolve_iva_deduction_ratio(
@@ -585,6 +595,8 @@ def aggregate_renta_ledger_expenses(
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
             )
+    if profile_decode_context is None:
+        profile_decode_context = operation.profile_decode_context()
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.filing_year
     profiles = resolve_category_profiles(resolved_profile_year, operation=operation)

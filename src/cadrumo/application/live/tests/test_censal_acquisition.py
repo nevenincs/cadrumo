@@ -20,6 +20,11 @@ import inspect
 
 import pytest
 
+from cadrumo.application.auth.protocols import BrowserSessionPort
+from cadrumo.application.auth.session_types import AeatSession
+from cadrumo.application.user_profile.censal_observation import CensalObservation
+from cadrumo.core.config import Settings
+
 from ....core.access_gate.errors import AeatLiveReadNotEnabledError
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..censo import (
@@ -32,12 +37,17 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
-async def _unused_browser_session_factory(settings: object) -> object:
+async def _unused_browser_session_factory(settings: Settings) -> BrowserSessionPort:
     del settings
     raise AssertionError("the live-read gate must refuse before opening a browser")
 
 
-async def _unused_censal_fetch(session: object, *, taxpayer_nif: str, settings: object) -> object:
+async def _unused_censal_fetch(
+    session: AeatSession,
+    *,
+    taxpayer_nif: str,
+    settings: Settings,
+) -> CensalObservation:
     del session, taxpayer_nif, settings
     raise AssertionError("the live-read gate must refuse before fetching censo data")
 

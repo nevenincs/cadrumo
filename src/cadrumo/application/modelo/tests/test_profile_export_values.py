@@ -23,6 +23,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingSourceKind
@@ -78,13 +79,14 @@ def _export_bindings() -> tuple[BindingDefinition, ...]:
     )
 
 
-def _resolve(*facts: UserProfileFact) -> dict[str, object]:
+def _resolve(*facts: UserProfileFact, operation: PinnedAuthorityOperation) -> dict[str, object]:
     return dict(
         resolve_profile_export_values(
             _export_bindings(),
             bucket_id=_BUCKET,
             profile_record=_record(facts),
             schema=load_user_profile_schema(),
+            operation=operation,
         ),
     )
 
@@ -101,7 +103,7 @@ _SPOUSE = (
 )
 
 
-def test_a_declared_identity_slot_is_populated_from_the_profile() -> None:
+def test_a_declared_identity_slot_is_populated_from_the_profile(*, operation: PinnedAuthorityOperation) -> None:
     """The registry's own declarations drive the join, so nothing is named twice.
 
     Each of these lands because a binding declares it, not because the composer
@@ -117,6 +119,7 @@ def test_a_declared_identity_slot_is_populated_from_the_profile() -> None:
         # replaced was not a value the field can hold.
         _fact("tax_residence.ccaa", "madrid"),
         _fact("renta_filing.declaration_type", "1"),
+        operation=operation,
     )
 
     assert values["DP_APENOM_D"] == "GARCIA LOPEZ MARIA"
@@ -133,7 +136,7 @@ def test_a_declared_identity_slot_is_populated_from_the_profile() -> None:
     assert values["TIPOTRIBUTACION"] == Decimal("1")
 
 
-def test_an_individual_filing_writes_no_spouse_row() -> None:
+def test_an_individual_filing_writes_no_spouse_row(*, operation: PinnedAuthorityOperation) -> None:
     """A spouse on the profile does not put a spouse on an individual return.
 
     The conjunta-only slots are declared with a precondition, and honouring it
@@ -147,12 +150,13 @@ def test_an_individual_filing_writes_no_spouse_row() -> None:
         *_SPOUSE,
         _fact("renta_spouse.sex", "H"),
         _fact("renta_filing.declaration_type", "1"),
+        operation=operation,
     )
 
     assert [field for field in values if field.endswith("_C")] == []
 
 
-def test_a_conjunta_filing_writes_the_spouse_rows() -> None:
+def test_a_conjunta_filing_writes_the_spouse_rows(*, operation: PinnedAuthorityOperation) -> None:
     """Positive control for the precondition: satisfied, the slots are written.
 
     Without this, a resolver that dropped every conditional binding outright
@@ -164,6 +168,7 @@ def test_a_conjunta_filing_writes_the_spouse_rows() -> None:
         *_SPOUSE,
         _fact("renta_spouse.sex", "H"),
         _fact("renta_filing.declaration_type", "2"),
+        operation=operation,
     )
 
     assert values["DP_APENOM_C"] == "PEREZ RUIZ JUAN"
@@ -171,19 +176,19 @@ def test_a_conjunta_filing_writes_the_spouse_rows() -> None:
     assert values["SEXO_C"] == "H"
 
 
-def test_an_unanswered_precondition_does_not_disclose() -> None:
+def test_an_unanswered_precondition_does_not_disclose(*, operation: PinnedAuthorityOperation) -> None:
     """Absent is not satisfied: silence must not open a conditional slot.
 
     A profile that never recorded a declaration type has not said the filing is
     conjunta. Treating a missing gate fact as permissive would put the spouse's
     identity on the declaration on the strength of an unanswered question.
     """
-    values = _resolve(*_DECLARANTE, *_SPOUSE)
+    values = _resolve(*_DECLARANTE, *_SPOUSE, operation=operation)
 
     assert [field for field in values if field.endswith("_C")] == []
 
 
-def test_the_precondition_fact_is_never_used_as_the_value() -> None:
+def test_the_precondition_fact_is_never_used_as_the_value(*, operation: PinnedAuthorityOperation) -> None:
     """A gate fact says WHETHER a slot applies, never WHAT it holds.
 
     ``profile_binding_selectors`` returns a binding's whole dependency set,
@@ -200,20 +205,21 @@ def test_the_precondition_fact_is_never_used_as_the_value() -> None:
         *_DECLARANTE,
         *_SPOUSE,
         _fact("renta_filing.declaration_type", "2"),
+        operation=operation,
     )
 
     assert "DPFNAC_C" not in values
     assert values["DPNIF_C"] == "87654321X"
 
 
-def test_a_multi_part_name_is_composed_rather_than_truncated() -> None:
+def test_a_multi_part_name_is_composed_rather_than_truncated(*, operation: PinnedAuthorityOperation) -> None:
     """``surnames_name`` declares PARTS, not fallbacks.
 
     The shared resolver returns the first non-blank selector, which for a
     two-key binding would file the surnames alone as the taxpayer's full legal
     name. The declared format is what says the keys compose.
     """
-    values = _resolve(*_DECLARANTE, _fact("renta_filing.declaration_type", "1"))
+    values = _resolve(*_DECLARANTE, _fact("renta_filing.declaration_type", "1"), operation=operation)
 
     assert values["DP_APENOM_D"] == "GARCIA LOPEZ MARIA"
     assert values["DP_APENOM_D"] != "GARCIA LOPEZ"
@@ -225,7 +231,7 @@ def test_a_blank_name_part_contributes_no_separator() -> None:
     assert compose_legal_full_name(surnames="GARCIA LOPEZ", name="MARIA") == "GARCIA LOPEZ MARIA"
 
 
-def test_a_value_keeps_the_type_the_renderer_decides_from() -> None:
+def test_a_value_keeps_the_type_the_renderer_decides_from(*, operation: PinnedAuthorityOperation) -> None:
     """Values are carried, not rendered, so the renderer keeps its one authority.
 
     ``_format_xml_dictionary_value`` decides a row's rendering from the Python
@@ -236,12 +242,13 @@ def test_a_value_keeps_the_type_the_renderer_decides_from() -> None:
         *_DECLARANTE,
         _fact("renta_taxpayer.birth_date", date(1980, 5, 17)),
         _fact("renta_filing.declaration_type", "1"),
+        operation=operation,
     )
 
     assert values["DPFNAC_D"] == date(1980, 5, 17)
 
 
-def test_the_repeating_family_slots_are_a_known_structural_gap() -> None:
+def test_the_repeating_family_slots_are_a_known_structural_gap(*, operation: PinnedAuthorityOperation) -> None:
     """The per-child and per-ascendant rows resolve to nothing, on purpose.
 
     These name array paths (``RentaFamilyProfile.descendants.*`` /
@@ -266,6 +273,7 @@ def test_the_repeating_family_slots_are_a_known_structural_gap() -> None:
         *_DECLARANTE,
         _fact("renta_family.descendiente.0.birth_date", "2020-01-01"),
         _fact("renta_filing.declaration_type", "1"),
+        operation=operation,
     )
 
     assert repeating, "the revision no longer declares repeating export bindings; revisit this pin"

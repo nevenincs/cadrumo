@@ -9,7 +9,6 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
@@ -37,6 +36,7 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_base import ThresholdComparison
@@ -353,31 +353,33 @@ def m303_exonerado_390_evidence(*, applicable: bool) -> M303Exonerado390FilingEv
 
 
 def _m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
-    scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
-    )
-    snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=compiled_bundled_authority().snapshot(
-            "303",
-            filing_year=period.filing_year,
-            period="1T",
-        ),
-        scope_decision=scope,
-    )
-    return M303FilingInstanceEvidence(
-        period=period,
-        joint_return_elected=False,
-        annual_volume_nonzero=False,
-        insolvency=None,
-        exonerado_390=m303_exonerado_390_evidence(applicable=False),
-        regimen_simplificado=regimen_simplificado_filing_evidence(
-            period=period,
+    with bundled_indexed_authority().operation() as operation:
+        scope = M303RegimenSimplificadoScopeDecision(
+            scope=m303_regime_composition_simplified_scope("general", authority=operation),
+        )
+        snapshot = resolve_m303_regimen_simplificado_snapshot(
+            registry_snapshot=operation.snapshot(
+                "303",
+                filing_year=period.filing_year,
+                period="1T",
+            ),
             scope_decision=scope,
-            rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
-            regimen_snapshot=snapshot,
-            dana_2024_eligibility=None,
-        ),
-    )
+        )
+        return M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=False,
+            annual_volume_nonzero=False,
+            insolvency=None,
+            exonerado_390=m303_exonerado_390_evidence(applicable=False),
+            regimen_simplificado=regimen_simplificado_filing_evidence(
+                period=period,
+                scope_decision=scope,
+                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+                regimen_snapshot=snapshot,
+                dana_2024_eligibility=None,
+                operation=operation,
+            ),
+        )
 
 
 def _m303_prorrata_transition_arrival(

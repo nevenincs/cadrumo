@@ -203,10 +203,12 @@ def build_obligation_coverage(
     # Deferred to break a module-load cycle: application.modelo is a heavier
     # sibling package and importing it at module scope would couple overview's
     # import graph to it. The lookup itself is cheap (cached authority).
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..modelo.registry_discovery import registry_modelo_codes
 
     surfaced_set = frozenset(surfaced_modelos)
-    registry_codes = frozenset(registry_modelo_codes())
+    with bundled_indexed_authority().operation() as operation:
+        registry_codes = frozenset(registry_modelo_codes(operation=operation))
     unmodeled_codes = {str(code) for code in _UNMODELED_OBLIGATIONS}
     out_of_scope_codes = {str(code) for code in _OUT_OF_SCOPE_OBLIGATIONS}
     # The AEAT obligation universe is the registry directory plus every recognized

@@ -28,6 +28,7 @@ from enum import StrEnum
 import pytest
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..profile_keys import profile_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -105,20 +106,20 @@ def _schema_facts() -> tuple[set[str], set[str], dict[str, bool]]:
     return paths, required, repeatable
 
 
-def _key_facts() -> tuple[set[str], set[str]]:
+def _key_facts(operation: PinnedAuthorityOperation) -> tuple[set[str], set[str]]:
     """Return every wizard key path and the subset the wizard marks REQUIRED.
 
-    ``profile_keys()`` compiles the wizard-owned catalogue on first use and
-    returns its deterministic application projection.
+    ``profile_keys()`` compiles the wizard-owned catalogue through the caller's
+    pinned operation and returns its deterministic application projection.
     """
     from ....core.requirement import Requirement
 
-    paths = {entry.key for entry in profile_keys()}
-    required = {entry.key for entry in profile_keys() if entry.requirement is Requirement.REQUIRED}
+    paths = {entry.key for entry in profile_keys(operation=operation)}
+    required = {entry.key for entry in profile_keys(operation=operation) if entry.requirement is Requirement.REQUIRED}
     return paths, required
 
 
-def test_no_new_schema_required_field_diverges_from_the_wizard() -> None:
+def test_no_new_schema_required_field_diverges_from_the_wizard(operation: PinnedAuthorityOperation) -> None:
     """A newly schema-required field must be reconciled or explicitly pinned here.
 
     Without this, a field added as schema-required and never wired into the
@@ -126,7 +127,7 @@ def test_no_new_schema_required_field_diverges_from_the_wizard() -> None:
     verdicts on the same record.
     """
     _, schema_required, _ = _schema_facts()
-    _, keys_required = _key_facts()
+    _, keys_required = _key_facts(operation)
 
     diverging = schema_required - keys_required
     unpinned = sorted(diverging - set(_KNOWN_DIVERGENCES))
@@ -138,14 +139,14 @@ def test_no_new_schema_required_field_diverges_from_the_wizard() -> None:
     )
 
 
-def test_no_pinned_divergence_outlives_its_cause() -> None:
+def test_no_pinned_divergence_outlives_its_cause(operation: PinnedAuthorityOperation) -> None:
     """A pinned entry whose field stopped diverging must be removed, not left standing.
 
     A stale entry pre-approves whatever later occupies that path and reads to the
     next author as a decision rather than as residue.
     """
     _, schema_required, _ = _schema_facts()
-    _, keys_required = _key_facts()
+    _, keys_required = _key_facts(operation)
 
     diverging = schema_required - keys_required
     stale = sorted(path for path in _KNOWN_DIVERGENCES if path not in diverging)
@@ -171,14 +172,16 @@ def test_every_repeatable_row_cause_names_an_actually_repeatable_section() -> No
     assert not misdescribed, f"excused as repeatable-row fields but their section is not repeatable: {misdescribed}"
 
 
-def test_every_conditional_rescue_cause_names_a_field_the_wizard_actually_carries() -> None:
+def test_every_conditional_rescue_cause_names_a_field_the_wizard_actually_carries(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The CONDITIONAL_RESCUE cause claims the wizard knows the field at all.
 
     The claim is that the wizard carries the field but at a weaker requirement
     level. A field absent from the key space entirely is a different, larger
     divergence and must not hide behind this cause.
     """
-    key_paths, _ = _key_facts()
+    key_paths, _ = _key_facts(operation)
 
     absent = sorted(
         path
@@ -196,7 +199,7 @@ def test_every_pinned_divergence_states_a_reason() -> None:
     assert not unexplained, f"pinned divergences must state a reason: {unexplained}"
 
 
-def test_the_wizard_never_requires_a_fact_the_schema_does_not() -> None:
+def test_the_wizard_never_requires_a_fact_the_schema_does_not(operation: PinnedAuthorityOperation) -> None:
     """The divergence must stay one-directional.
 
     The schema is the canonical declaration. A wizard key required where the
@@ -205,16 +208,16 @@ def test_the_wizard_never_requires_a_fact_the_schema_does_not() -> None:
     it stays absent rather than being discovered later.
     """
     _, schema_required, _ = _schema_facts()
-    _, keys_required = _key_facts()
+    _, keys_required = _key_facts(operation)
 
     assert not sorted(keys_required - schema_required), (
         "the wizard requires facts the schema does not, inverting which declaration is canonical"
     )
 
 
-def test_every_wizard_key_names_a_real_schema_path() -> None:
+def test_every_wizard_key_names_a_real_schema_path(operation: PinnedAuthorityOperation) -> None:
     """A wizard key naming no schema field collects a value nothing can validate."""
     schema_paths, _, _ = _schema_facts()
-    key_paths, _ = _key_facts()
+    key_paths, _ = _key_facts(operation)
 
     assert not sorted(key_paths - schema_paths), "wizard keys naming no schema field"

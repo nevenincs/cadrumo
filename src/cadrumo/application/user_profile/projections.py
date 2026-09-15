@@ -338,13 +338,18 @@ def profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
     each carried a copy that described itself as reading through "the SINGLE
     projection" while being one of two.
     """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ...domain.user_profile.errors import ProfileNotFoundError
     from .profile_record_repository import ProfileRecordRepository
 
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
-        return None
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            record = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=operation.profile_decode_context(),
+            ).load(bucket_id)
+        except ProfileNotFoundError:
+            return None
     return record_to_path_values(record)
 
 

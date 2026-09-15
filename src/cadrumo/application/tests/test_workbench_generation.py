@@ -12,6 +12,9 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
+
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -82,7 +85,9 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 def _test_censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=build_censal_fetch_port(),
     )
 
 

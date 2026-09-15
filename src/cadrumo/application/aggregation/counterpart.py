@@ -53,7 +53,10 @@ class _CounterpartRegistryCatalogue:
     @property
     def operation_kinds(self) -> frozenset[str]:
         """Return the union used by the operator-boundary vocabulary check."""
-        return frozenset().union(*self.model_kinds.values())
+        operation_kinds: set[str] = set()
+        for model_kinds in self.model_kinds.values():
+            operation_kinds.update(model_kinds)
+        return frozenset(operation_kinds)
 
 
 # fact-relocation: selected M347/M349 counterpart declarations are consumed through

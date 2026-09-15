@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -103,16 +104,18 @@ def test_borrador_snapshot_refuses_noncanonical_snapshot_identity(snapshot_id: s
 
 def test_borrador_snapshot_requires_canonical_registry_coordinate() -> None:
     with pytest.raises(ValidationError, match="registry_snapshot_ref"):
-        Borrador100Snapshot(
-            snapshot_id="a" * 64,
-            bucket_id=_BUCKET_ID,
-            modelo="100",
-            filing_year=2025,
-            period=_PERIOD,
-            captured_at=_CAPTURED_AT,
-            source_url=_SOURCE,
-            state=SnapshotLifecycleState.ACTIVE,
-            binding_values={},
+        Borrador100Snapshot.model_validate(
+            {
+                "snapshot_id": "a" * 64,
+                "bucket_id": _BUCKET_ID,
+                "modelo": "100",
+                "filing_year": 2025,
+                "period": _PERIOD,
+                "captured_at": _CAPTURED_AT,
+                "source_url": _SOURCE,
+                "state": SnapshotLifecycleState.ACTIVE,
+                "binding_values": {},
+            }
         )
 
 
@@ -161,8 +164,9 @@ def test_borrador_show_refuses_persisted_registry_revision_divergence() -> None:
         )
     )
 
-    with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
-        service.show(snapshot.snapshot_id)
+    with bundled_indexed_authority().operation() as operation:
+        with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+            service.show(snapshot.snapshot_id, operation=operation)
 
 
 def test_borrador_100_snapshot_service_rejects_non_binding_id_keys() -> None:

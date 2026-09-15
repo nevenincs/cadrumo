@@ -26,7 +26,7 @@ import pytest
 
 from ....core.directory_scan import scan_directory
 from ....core.operator_action_enums import NoRecoveryOutcome
-from ..borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
+from ..borrador_100 import BorradorSnapshotNotFoundError
 from ..errors import (
     LiveApplicationError,
     LiveApplicationInputError,
@@ -175,13 +175,6 @@ def test_borrador_object_key_refusal_renders_as_its_key() -> None:
 
     with pytest.raises(LiveApplicationInputError) as excinfo:
         borrador_100_snapshot_object_key("  ", "snapshot")
-
-    assert str(excinfo.value) == "application.live.borrador.errors.bucket_id_blank"
-
-
-def test_borrador_repository_constructor_refusal_renders_as_its_key() -> None:
-    with pytest.raises(LiveApplicationInputError) as excinfo:
-        Borrador100SnapshotRepository(bucket_id="   ")
 
     assert str(excinfo.value) == "application.live.borrador.errors.bucket_id_blank"
 

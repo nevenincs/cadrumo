@@ -19,6 +19,7 @@ from typing import override
 
 import pytest
 
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import (
@@ -28,7 +29,6 @@ from ....domain.transactions.models import (
     Transaction,
     TransactionCatalogue,
 )
-from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..history_query import (
     LEDGER_EVIDENCE_HISTORY_EVENT_TYPES,
@@ -37,6 +37,7 @@ from ..history_query import (
     ledger_history_object_ids,
     read_ledger_history,
 )
+from ..protocols import TransactionCatalogueCoCommitWriterProtocol
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -51,8 +52,27 @@ class _EmptyBucketEventHistory:
     def load(self) -> BucketEventHistoryCatalogue:
         return BucketEventHistoryCatalogue()
 
+    def exists(self) -> bool:
+        return False
 
-class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
+    def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
+        del catalogue
+        raise AssertionError("history event fake does not support writes")
+
+    def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
+        return self.load(), "fixture-revision"
+
+    def to_secure_object_write(
+        self,
+        catalogue: BucketEventHistoryCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        del catalogue, expected_revision_id
+        raise AssertionError("history event fake does not support secure-object writes")
+
+
+class _InMemoryTransactionRepository(TransactionCatalogueCoCommitWriterProtocol):
     """Deterministic inward fake for the history transaction read port."""
 
     def __init__(self, *, bucket_id: str, catalogue: TransactionCatalogue) -> None:
@@ -113,6 +133,16 @@ class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
     def save(self, catalogue: TransactionCatalogue) -> None:
         self._catalogue = catalogue
 
+    @override
+    def save_with_secure_object_writes(
+        self,
+        catalogue: TransactionCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        if extra_writes:
+            raise AssertionError("history transaction fake does not support secure-object writes")
+        self.save(catalogue)
+
 
 def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> Transaction:
     raw = RawTransaction(
@@ -148,7 +178,7 @@ def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> 
 
 
 @contextmanager
-def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueRepositoryProtocol]:
+def _stored(*transactions: Transaction) -> Iterator[TransactionCatalogueCoCommitWriterProtocol]:
     """Build a deterministic catalogue through the application read protocol."""
     yield _InMemoryTransactionRepository(
         bucket_id=_BUCKET,

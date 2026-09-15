@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -172,7 +174,7 @@ def _fact(work_unit_id: str, *, fact_id: str = "fact-1") -> DeclarationsSanitize
     )
 
 
-def test_projection_preserves_exact_zone_source_state_and_count_matrix() -> None:
+def test_projection_preserves_exact_zone_source_state_and_count_matrix(operation: PinnedAuthorityOperation) -> None:
     work, revisions, filings = _filed_snapshot()
     work_unit_id = next(iter(work.values())).work_unit_id
     projection = project_declarations_workspace(
@@ -182,6 +184,7 @@ def test_projection_preserves_exact_zone_source_state_and_count_matrix() -> None
         filing_records=filings,
         lifecycle_facts=(_fact(work_unit_id),),
         zone_observations=_observations(),
+        operation=operation,
     )
 
     assert tuple((row.zone, row.sources, row.availability, row.item_count) for row in projection.zones) == (
@@ -218,7 +221,7 @@ def test_projection_preserves_exact_zone_source_state_and_count_matrix() -> None
     assert filing.evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
 
 
-def test_projection_refuses_a_divergent_persisted_calculation_coordinate() -> None:
+def test_projection_refuses_a_divergent_persisted_calculation_coordinate(operation: PinnedAuthorityOperation) -> None:
     """The TUI-facing declarations projection cannot expose stale revision data."""
     work, revisions, filings = _filed_snapshot()
     calculation_revision_id, revision = next(iter(revisions.revisions.items()))
@@ -238,10 +241,13 @@ def test_projection_refuses_a_divergent_persisted_calculation_coordinate() -> No
             filing_records=filings,
             lifecycle_facts=(),
             zone_observations=_observations(),
+            operation=operation,
         )
 
 
-def test_sensitive_payload_and_protected_identities_never_serialize_or_repr() -> None:
+def test_sensitive_payload_and_protected_identities_never_serialize_or_repr(
+    operation: PinnedAuthorityOperation,
+) -> None:
     work, revisions, filings = _filed_snapshot()
     unit = next(iter(work.values()))
     revision = next(iter(revisions.values()))
@@ -253,6 +259,7 @@ def test_sensitive_payload_and_protected_identities_never_serialize_or_repr() ->
         filing_records=filings,
         lifecycle_facts=(_fact(unit.work_unit_id, fact_id="private-event-id"),),
         zone_observations=_observations(),
+        operation=operation,
     )
     exposed = projection.model_dump_json() + repr(projection)
     for secret in (
@@ -271,7 +278,7 @@ def test_sensitive_payload_and_protected_identities_never_serialize_or_repr() ->
         assert secret not in exposed
 
 
-def test_unavailable_never_captured_and_stale_are_not_false_empty() -> None:
+def test_unavailable_never_captured_and_stale_are_not_false_empty(operation: PinnedAuthorityOperation) -> None:
     work, revisions, filings = _filed_snapshot()
     unit = next(iter(work.values()))
     projection = project_declarations_workspace(
@@ -285,6 +292,7 @@ def test_unavailable_never_captured_and_stale_are_not_false_empty() -> None:
             DeclarationsWorkspaceAvailability.NEVER_CAPTURED,
             DeclarationsWorkspaceAvailability.STALE,
         ),
+        operation=operation,
     )
     assert projection.declarations == ()
     assert projection.calculation_revisions == ()
@@ -293,7 +301,7 @@ def test_unavailable_never_captured_and_stale_are_not_false_empty() -> None:
     assert projection.zones[2].observed_at == _T2
 
 
-def test_available_empty_is_measured_zero_and_deterministic() -> None:
+def test_available_empty_is_measured_zero_and_deterministic(operation: PinnedAuthorityOperation) -> None:
     first = project_declarations_workspace(
         bucket_id=_BUCKET,
         work_units=WorkUnitCatalogue(),
@@ -301,6 +309,7 @@ def test_available_empty_is_measured_zero_and_deterministic() -> None:
         filing_records=ModeloRecordCatalogue(),
         lifecycle_facts=(),
         zone_observations=_observations(),
+        operation=operation,
     )
     second = project_declarations_workspace(
         bucket_id=_BUCKET,
@@ -309,13 +318,14 @@ def test_available_empty_is_measured_zero_and_deterministic() -> None:
         filing_records=ModeloRecordCatalogue(),
         lifecycle_facts=(),
         zone_observations=_observations(),
+        operation=operation,
     )
     assert tuple(zone.item_count for zone in first.zones) == (0, 0, 0)
     assert first == second
     assert first.model_dump_json() == second.model_dump_json()
 
 
-def test_reordered_multirow_inputs_project_in_semantic_chronological_order() -> None:
+def test_reordered_multirow_inputs_project_in_semantic_chronological_order(operation: PinnedAuthorityOperation) -> None:
     work, revisions, filings = _filed_snapshot()
     first_unit = next(iter(work.values()))
     second_period = Period.from_year_and_code(2025, "4T")
@@ -351,6 +361,7 @@ def test_reordered_multirow_inputs_project_in_semantic_chronological_order() -> 
         filing_records=filings,
         lifecycle_facts=(later, earlier),
         zone_observations=_observations(),
+        operation=operation,
     )
     assert tuple(str(row.modelo) for row in projection.declarations) == ("130", "303")
     assert tuple(row.kind for row in projection.lifecycle) == (
@@ -360,7 +371,7 @@ def test_reordered_multirow_inputs_project_in_semantic_chronological_order() -> 
     assert tuple(zone.item_count for zone in projection.zones) == (2, 1, 3)
 
 
-def test_foreign_bucket_refuses_before_any_projection() -> None:
+def test_foreign_bucket_refuses_before_any_projection(operation: PinnedAuthorityOperation) -> None:
     work, revisions, filings = _filed_snapshot()
     unit = next(iter(work.values())).model_copy(update={"bucket_id": _OTHER_BUCKET})
     with pytest.raises(DeclarationsWorkspaceProjectionError, match="foreign bucket"):
@@ -371,10 +382,11 @@ def test_foreign_bucket_refuses_before_any_projection() -> None:
             filing_records=filings,
             lifecycle_facts=(),
             zone_observations=_observations(),
+            operation=operation,
         )
 
 
-def test_orphan_revision_and_duplicate_lifecycle_identity_refuse() -> None:
+def test_orphan_revision_and_duplicate_lifecycle_identity_refuse(operation: PinnedAuthorityOperation) -> None:
     work, revisions, filings = _filed_snapshot()
     unit = next(iter(work.values()))
     revision = next(iter(revisions.values()))
@@ -390,6 +402,7 @@ def test_orphan_revision_and_duplicate_lifecycle_identity_refuse() -> None:
             filing_records=ModeloRecordCatalogue(),
             lifecycle_facts=(),
             zone_observations=_observations(),
+            operation=operation,
         )
     duplicate = _fact(unit.work_unit_id)
     with pytest.raises(DeclarationsWorkspaceProjectionError, match="duplicate identities"):
@@ -400,6 +413,7 @@ def test_orphan_revision_and_duplicate_lifecycle_identity_refuse() -> None:
             filing_records=filings,
             lifecycle_facts=(duplicate, duplicate),
             zone_observations=_observations(),
+            operation=operation,
         )
 
 
@@ -418,7 +432,9 @@ def test_orphan_revision_and_duplicate_lifecycle_identity_refuse() -> None:
         "superseded_record_with_current_revision",
     ),
 )
-def test_filing_pointer_record_and_revision_matrix_refuses_every_contradiction(case: str) -> None:
+def test_filing_pointer_record_and_revision_matrix_refuses_every_contradiction(
+    case: str, operation: PinnedAuthorityOperation
+) -> None:
     work, revisions, filings = _filed_snapshot()
     unit = next(iter(work.values()))
     revision = next(iter(revisions.values()))
@@ -508,6 +524,7 @@ def test_filing_pointer_record_and_revision_matrix_refuses_every_contradiction(c
             filing_records=ModeloRecordCatalogue.model_construct(records=filing_rows),
             lifecycle_facts=(),
             zone_observations=_observations(),
+            operation=operation,
         )
 
 

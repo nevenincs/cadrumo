@@ -6,7 +6,7 @@ import secrets
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -62,6 +62,9 @@ from .censo_sync import (
 from .cotejo_apply import apply_cotejo
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_effective_facts
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 CENSAL_OPERATION_DEFINITION_ID = "user-profile.censo-review"
 CENSAL_PHASE_PREFLIGHT = "censo.preflight"
@@ -325,12 +328,19 @@ class CensalOperationAcquisition:
     resource: AsyncCloseable | None = None
 
 
-def _load_exact_baseline(request: OperationRequest[CensalOperationRequest]) -> UserProfileRecord:
+def _load_exact_baseline(
+    request: OperationRequest[CensalOperationRequest],
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> UserProfileRecord:
     profile_id = require_active_bucket_id()
     baseline = request.payload.baseline
     if request.subject_ref != str(baseline.profile_id) or profile_id != str(baseline.profile_id):
         raise ProfileRecordConflictError("censal operation baseline does not identify the active profile")
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
     if (
         record.profile_id != baseline.profile_id
         or record.record_revision != baseline.record_revision
@@ -370,7 +380,7 @@ class CensalOperationExecutor:
                 censal_fetch_port=censal_fetch_port,
             )
         )
-        self._apply = apply or _apply_reviewed_cotejo
+        self._apply = apply
         self._before_irreversible_section = before_irreversible_section or _ready_for_irreversible_section
 
     async def execute(
@@ -382,7 +392,10 @@ class CensalOperationExecutor:
         if await _acknowledge_if_cancelled(context):
             return None
         await context.events.phase(CENSAL_PHASE_PREFLIGHT)
-        record = _load_exact_baseline(request)
+        record = _load_exact_baseline(
+            request,
+            profile_decode_context=context.authority_operation.profile_decode_context(),
+        )
         if await _acknowledge_if_cancelled(context):
             return None
         await context.events.phase(CENSAL_PHASE_CLAVE_DEVICE_WAIT)
@@ -402,7 +415,10 @@ class CensalOperationExecutor:
         if await _acknowledge_if_cancelled(context):
             return None
         await context.events.phase(CENSAL_PHASE_PROPOSAL)
-        current = _load_exact_baseline(request)
+        current = _load_exact_baseline(
+            request,
+            profile_decode_context=context.authority_operation.profile_decode_context(),
+        )
         reconcile_censal_read(
             current,
             censal_facts_from_read(observation),
@@ -457,7 +473,10 @@ class CensalOperationExecutor:
         await context.events.phase(CENSAL_PHASE_APPLY)
         if await _acknowledge_if_cancelled(context):
             return None
-        _require_current_operand_baseline(operand)
+        _require_current_operand_baseline(
+            operand,
+            profile_decode_context=context.authority_operation.profile_decode_context(),
+        )
         await self._before_irreversible_section()
         entered_irreversible_section = False
         stale_conflict: ProfileRecordConflictError | None = None
@@ -466,7 +485,13 @@ class CensalOperationExecutor:
                 entered_irreversible_section = True
                 await context.events.effect(OperationEffect.UNKNOWN)
                 try:
-                    self._apply(operand)
+                    if self._apply is None:
+                        _apply_reviewed_cotejo(
+                            operand,
+                            profile_decode_context=context.authority_operation.profile_decode_context(),
+                        )
+                    else:
+                        self._apply(operand)
                 except ProfileRecordConflictError as exc:
                     stale_conflict = exc
         except ValueError:
@@ -500,11 +525,18 @@ async def _pull_censal_datos(
     )
 
 
-def _require_current_operand_baseline(operand: CensalReviewedOperand) -> None:
+def _require_current_operand_baseline(
+    operand: CensalReviewedOperand,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> None:
     """Keep proven stale state at NONE before entering the ambiguous write window."""
     profile_id = require_active_bucket_id()
     baseline = operand.baseline
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
     if (
         profile_id != str(baseline.profile_id)
         or record.profile_id != baseline.profile_id
@@ -514,9 +546,17 @@ def _require_current_operand_baseline(operand: CensalReviewedOperand) -> None:
         raise ProfileRecordConflictError("reviewed censal proposal baseline is stale")
 
 
-def _apply_reviewed_cotejo(operand: CensalReviewedOperand) -> None:
+def _apply_reviewed_cotejo(
+    operand: CensalReviewedOperand,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> None:
     """Delegate to the sole exact censal mutation authority."""
-    apply_cotejo(None, reviewed_proposal=operand)
+    apply_cotejo(
+        None,
+        reviewed_proposal=operand,
+        profile_decode_context=profile_decode_context,
+    )
 
 
 async def _ready_for_irreversible_section() -> None:

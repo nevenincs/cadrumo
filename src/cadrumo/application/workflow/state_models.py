@@ -77,7 +77,10 @@ class WorkflowState(BaseModel):
         gone, and a projection that guesses between them tells the operator
         their financial records are missing when they merely need to log in.
         """
-        return resolve_active_profile_record().record
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            return resolve_active_profile_record(profile_decode_context=operation.profile_decode_context()).record
 
     def active_profile_bucket_id(self) -> str | None:
         """Return the selected profile's canonical secure bucket UUID.

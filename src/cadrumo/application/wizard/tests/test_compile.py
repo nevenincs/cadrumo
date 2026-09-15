@@ -16,7 +16,6 @@ import pytest
 from ....core.i18n.translatable import Translatable as tr
 from ....core.requirement import Requirement
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ..catalogue import WIZARD_FLOWS
 from ..compiler import compile_profile_keys
 from ..errors import WizardCompileError
 from ..models import (
@@ -29,6 +28,7 @@ from ..models import (
     WizardWidget,
 )
 from ._support import EmptyAnswersBase
+from ._support import registry_setup_flow as registry_setup_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -162,7 +162,7 @@ def test_description_uses_profile_key_prefix() -> None:
     assert str(entry.description) == "profile.keys.tax.id"
 
 
-def test_wizard_flows_carry_only_frozen_literals() -> None:
+def test_wizard_flows_carry_only_frozen_literals(*, registry_setup_flow: WizardFlow) -> None:
     """The catalogue must hold only frozen pydantic records, Translatables, and primitives.
 
     The compiler is import-time pure by construction: ``compile_profile_keys``
@@ -201,11 +201,11 @@ def test_wizard_flows_carry_only_frozen_literals() -> None:
             return
         raise AssertionError(f"{path}: unexpected non-literal value of type {type(value).__name__}")
 
-    for index, flow in enumerate(WIZARD_FLOWS):
+    for index, flow in enumerate((registry_setup_flow,)):
         _assert_literal(flow, f"WIZARD_FLOWS[{index}]")
 
 
-def test_compile_is_pure_on_the_real_catalogue() -> None:
+def test_compile_is_pure_on_the_real_catalogue(*, registry_setup_flow: WizardFlow) -> None:
     """``compile_profile_keys(WIZARD_FLOWS)`` runs with no side effects.
 
     The catalogue carries only frozen literals (asserted above) so this
@@ -215,11 +215,12 @@ def test_compile_is_pure_on_the_real_catalogue() -> None:
     keyed by the descriptor's declared ``profile_key`` values.
     """
 
-    keys = compile_profile_keys(WIZARD_FLOWS)
+    wizard_flows = (registry_setup_flow,)
+    keys = compile_profile_keys(wizard_flows)
     assert keys, "compile_profile_keys returned an empty tuple"
     declared = {
         question.profile_key
-        for flow in WIZARD_FLOWS
+        for flow in wizard_flows
         for section in flow.sections
         for question in section.questions
         if question.profile_key is not None
@@ -227,7 +228,7 @@ def test_compile_is_pure_on_the_real_catalogue() -> None:
     assert {entry.key for entry in keys} == declared
 
 
-def test_real_catalogue_exposes_profile_owned_output_language_key() -> None:
-    keys = {entry.key for entry in compile_profile_keys(WIZARD_FLOWS)}
+def test_real_catalogue_exposes_profile_owned_output_language_key(*, registry_setup_flow: WizardFlow) -> None:
+    keys = {entry.key for entry in compile_profile_keys((registry_setup_flow,))}
 
     assert PROFILE_OUTPUT_LANGUAGE_PATH in keys

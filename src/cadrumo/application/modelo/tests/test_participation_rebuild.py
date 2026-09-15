@@ -7,13 +7,16 @@ application projection and its replacement semantics without importing storage.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import UTC, datetime, timedelta
+from typing import override
 
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -35,8 +38,13 @@ from ....domain.modelos.participation_index import (
     TransactionRevisionParticipationIndex,
     upsert_transaction_participation,
 )
+from ....domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..participation_index_rebuild import rebuild_participation_index
 from ..participation_index_rebuild_ports import ParticipationIndexRebuildPorts
 
@@ -49,54 +57,221 @@ _TX_FILED = "1" * 64
 _TX_VERIFIED = "2" * 64
 _TX_BORRADOR = "3" * 64
 _TX_SHARED = "4" * 64  # touched by both the filed and the verified revision
+_REPOSITORY_REVISION_ID = "0" * 64
 _IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "iva.base-imponible",
     surface="_IVA_BASE_IMPONIBLE_CASILLA",
 )
 
 
-class _CalculationRepository:
+def _secure_write(
+    *,
+    namespace: str,
+    object_key: str,
+    payload: bytes,
+    expected_revision_id: str | None = None,
+) -> SecureObjectWrite:
+    """Build the typed write DTO required by the catalogue repository ports."""
+    return SecureObjectWrite(
+        namespace=namespace,
+        object_key=object_key,
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=_T0,
+        payload=payload,
+        expected_revision_id=expected_revision_id,
+    )
+
+
+class _CalculationRepository(CalculationRevisionCatalogueRepositoryProtocol):
     """Inward fake for the calculation-revision catalogue capability."""
 
     def __init__(self) -> None:
         self._catalogue = CalculationRevisionCatalogue()
 
+    @property
+    @override
+    def bucket_id(self) -> str:
+        """Return the bucket whose in-memory catalogue is being rebuilt."""
+        return _BUCKET_ID
+
+    @override
     def load(self) -> CalculationRevisionCatalogue:
         """Return the current in-memory calculation catalogue."""
         return self._catalogue
 
+    @override
+    def exists(self) -> bool:
+        """Report whether this fake contains at least one calculation revision."""
+        return bool(self._catalogue.revisions)
+
+    @override
+    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+        """Return the catalogue and its stable in-memory revision marker."""
+        return self._catalogue, _REPOSITORY_REVISION_ID
+
+    @override
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
         """Replace the in-memory calculation catalogue."""
         self._catalogue = catalogue
 
+    @override
+    def to_secure_object_write(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Prepare a typed calculation-catalogue write without persistence."""
+        return _secure_write(
+            namespace="application-test-calculation-revisions",
+            object_key="participation-rebuild",
+            payload=catalogue.model_dump_json().encode("utf-8"),
+            expected_revision_id=expected_revision_id,
+        )
 
-class _WorkUnitRepository:
+    @override
+    def save_with_secure_object_writes(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
+    ) -> None:
+        """Persist the catalogue while accepting the co-write contract."""
+        del extra_writes, expected_revision_id
+        self._catalogue = catalogue
+
+
+class _WorkUnitRepository(WorkUnitCatalogueRepositoryProtocol):
     """Inward fake for the work-unit catalogue capability."""
 
     def __init__(self) -> None:
         self._catalogue = WorkUnitCatalogue()
 
+    @property
+    @override
+    def bucket_id(self) -> str:
+        """Return the bucket whose in-memory catalogue is being rebuilt."""
+        return _BUCKET_ID
+
+    @override
     def load(self) -> WorkUnitCatalogue:
         """Return the current in-memory work-unit catalogue."""
         return self._catalogue
 
+    @override
+    def exists(self) -> bool:
+        """Report whether this fake contains at least one work unit."""
+        return bool(self._catalogue.work_units)
+
+    @override
+    def load_revisioned(self) -> tuple[WorkUnitCatalogue, str]:
+        """Return the catalogue and its stable in-memory revision marker."""
+        return self._catalogue, _REPOSITORY_REVISION_ID
+
+    @override
     def save(self, catalogue: WorkUnitCatalogue) -> None:
         """Replace the in-memory work-unit catalogue."""
         self._catalogue = catalogue
 
+    @override
+    def mutate(self, mutation: Callable[[WorkUnitCatalogue], WorkUnitCatalogue]) -> WorkUnitCatalogue:
+        """Apply one catalogue mutation and retain its result."""
+        self._catalogue = mutation(self._catalogue)
+        return self._catalogue
 
-class _FilingRepository:
+    @override
+    def to_secure_object_write(
+        self,
+        catalogue: WorkUnitCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Prepare a typed work-unit-catalogue write without persistence."""
+        return _secure_write(
+            namespace="application-test-work-units",
+            object_key="participation-rebuild",
+            payload=catalogue.model_dump_json().encode("utf-8"),
+            expected_revision_id=expected_revision_id,
+        )
+
+    @override
+    def save_with_secure_object_writes(
+        self,
+        catalogue: WorkUnitCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
+    ) -> None:
+        """Persist the catalogue while accepting the co-write contract."""
+        del extra_writes, expected_revision_id
+        self._catalogue = catalogue
+
+
+class _FilingRepository(ModeloRecordCatalogueRepositoryProtocol):
     """Inward fake for the filing-record catalogue capability."""
 
     def __init__(self) -> None:
         self._catalogue = ModeloRecordCatalogue()
 
+    @property
+    @override
+    def bucket_id(self) -> str:
+        """Return the bucket whose in-memory catalogue is being rebuilt."""
+        return _BUCKET_ID
+
+    @override
     def load(self) -> ModeloRecordCatalogue:
         """Return the current in-memory filing-record catalogue."""
         return self._catalogue
 
+    @override
+    def exists(self) -> bool:
+        """Report whether this fake contains at least one filing record."""
+        return bool(self._catalogue.records)
+
+    @override
+    def load_revisioned(self) -> tuple[ModeloRecordCatalogue, str]:
+        """Return the catalogue and its stable in-memory revision marker."""
+        return self._catalogue, _REPOSITORY_REVISION_ID
+
+    @override
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
         """Replace the in-memory filing-record catalogue."""
+        self._catalogue = catalogue
+
+    @override
+    def mutate(self, mutation: Callable[[ModeloRecordCatalogue], ModeloRecordCatalogue]) -> ModeloRecordCatalogue:
+        """Apply one catalogue mutation and retain its result."""
+        self._catalogue = mutation(self._catalogue)
+        return self._catalogue
+
+    @override
+    def to_secure_object_write(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Prepare a typed filing-catalogue write without persistence."""
+        return _secure_write(
+            namespace="application-test-filing-records",
+            object_key="participation-rebuild",
+            payload=catalogue.model_dump_json().encode("utf-8"),
+            expected_revision_id=expected_revision_id,
+        )
+
+    @override
+    def save_with_secure_object_writes(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        expected_revision_id: str | None = None,
+    ) -> None:
+        """Persist the catalogue while accepting the co-write contract."""
+        del extra_writes, expected_revision_id
         self._catalogue = catalogue
 
 

@@ -27,7 +27,12 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope, TransactionKind
 from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
 
@@ -58,7 +63,9 @@ _SPANISH_CIF = "B12345678"
 _TAXABLE = ClassifierInputs(counterparty_taxable_person=CounterpartyTaxablePersonStatus.TAXABLE_PERSON)
 
 
-def _missing_fields(*, declared: DeclaredFacts, customer_identifier: str | None = None) -> set[str]:
+def _missing_fields(
+    *, declared: DeclaredFacts, customer_identifier: str | None = None, operation: PinnedAuthorityOperation
+) -> set[str]:
     """Return which criteria fields one assembly attempt could not fill."""
     assembly = assemble_classification_criteria(
         transaction_date=_DATE,
@@ -66,6 +73,7 @@ def _missing_fields(*, declared: DeclaredFacts, customer_identifier: str | None 
         inputs=_TAXABLE,
         declared=declared,
         customer_identifier=customer_identifier,
+        operation=operation,
     )
     return {gap.field for gap in assembly.missing}
 
@@ -73,21 +81,27 @@ def _missing_fields(*, declared: DeclaredFacts, customer_identifier: str | None 
 class TestARegistrationSettlesNoPlace:
     """Symmetrically: the foreign side must stop being decisive, the Spanish side stay refused."""
 
-    def test_a_printed_german_number_alone_leaves_the_establishment_unsettled(self) -> None:
+    def test_a_printed_german_number_alone_leaves_the_establishment_unsettled(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The failure that produced this split: it used to resolve silently to EU_MEMBER."""
         assert "customer_residency" in _missing_fields(
             declared=DeclaredFacts(),
             customer_identifier=_GERMAN_IVA_NUMBER,
+            operation=operation,
         )
 
-    def test_a_printed_spanish_number_alone_leaves_the_establishment_unsettled(self) -> None:
+    def test_a_printed_spanish_number_alone_leaves_the_establishment_unsettled(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """The side that already failed loud, pinned unchanged by the same assertion."""
         assert "customer_residency" in _missing_fields(
             declared=DeclaredFacts(),
             customer_identifier=_SPANISH_CIF,
+            operation=operation,
         )
 
-    def test_the_two_sides_report_the_same_establishment_gaps(self) -> None:
+    def test_the_two_sides_report_the_same_establishment_gaps(self, *, operation: PinnedAuthorityOperation) -> None:
         """The symmetry itself, rather than each side separately.
 
         A repair that made one side safe by tightening the other would satisfy
@@ -99,8 +113,8 @@ class TestARegistrationSettlesNoPlace:
         gate exists to refuse.
         """
         establishment_fields = {"issuer_residency", "customer_residency"}
-        german = _missing_fields(declared=DeclaredFacts(), customer_identifier=_GERMAN_IVA_NUMBER)
-        spanish = _missing_fields(declared=DeclaredFacts(), customer_identifier=_SPANISH_CIF)
+        german = _missing_fields(declared=DeclaredFacts(), customer_identifier=_GERMAN_IVA_NUMBER, operation=operation)
+        spanish = _missing_fields(declared=DeclaredFacts(), customer_identifier=_SPANISH_CIF, operation=operation)
         assert german & establishment_fields == spanish & establishment_fields == establishment_fields
 
     def test_an_asserted_establishment_does_not_supply_an_identification(self) -> None:

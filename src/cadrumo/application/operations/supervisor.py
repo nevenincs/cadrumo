@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast, override
 
 from pydantic import BaseModel
 
@@ -29,11 +29,13 @@ from .financial_operand_submission import (
 )
 from .interactions import (
     OperationConsumedInteraction,
+    OperationPendingInteraction,
     OperationRejectResponse,
 )
 from .models import (
     OperationId,
     OperationIdentity,
+    OperationReference,
     OperationRequest,
 )
 from .persistence.events import (
@@ -65,6 +67,7 @@ from .secret_submission import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ._supervisor_settlement import SupervisorHost as SettlementSupervisorHost
 
 
 def _financial_operand_broker(
@@ -161,6 +164,50 @@ class OperationSupervisor(
             self._financial_operands,
         )
 
+    @override
+    async def _renew_while_executing(
+        self,
+        *,
+        identity: OperationIdentity,
+        executor: Coroutine[Any, Any, OperationReference | None],
+    ) -> OperationReference | None:
+        result = await OperationSupervisorLeaseMixin._renew_while_executing(
+            self,
+            identity=identity,
+            executor=executor,
+        )
+        return cast("OperationReference | None", result)
+
+    @override
+    async def _resume_from_checkpoint(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        definition: OperationDefinition,
+        continuation: OperationPendingInteraction | OperationConsumedInteraction,
+    ) -> OperationPersistedSnapshot:
+        return await SupervisorReconciliationMixin._resume_from_checkpoint(
+            self,
+            snapshot,
+            definition,
+            continuation,
+        )
+
+    @override
+    async def _acknowledge_cancellation(
+        self: SettlementSupervisorHost,
+        context_snapshot: OperationPersistedSnapshot,
+    ) -> OperationPersistedSnapshot:
+        return await SupervisorSettlementMixin._acknowledge_cancellation(self, context_snapshot)
+
+    @override
+    async def _set_cancellation_deferred(
+        self: SettlementSupervisorHost,
+        context_snapshot: OperationPersistedSnapshot,
+        deferred: bool,
+    ) -> OperationPersistedSnapshot:
+        return await SupervisorSettlementMixin._set_cancellation_deferred(self, context_snapshot, deferred)
+
+    @override
     @staticmethod
     def _validate_request_payload[RequestPayloadT: BaseModel](
         request: OperationRequest[RequestPayloadT], request_type: type[BaseModel]
@@ -168,6 +215,7 @@ class OperationSupervisor(
         if not isinstance(request.payload, request_type):
             raise ValueError("request payload does not match definition")
 
+    @override
     def _bound_financial_operand(
         self,
         identity: OperationIdentity,
@@ -181,6 +229,7 @@ class OperationSupervisor(
             revision=0,
         )
 
+    @override
     async def _settle_financial_operand_custody(self, operation_id: OperationId) -> None:
         """Acknowledge and release every operand one finished invocation held."""
         if self._financial_operands is None:
@@ -193,10 +242,12 @@ class OperationSupervisor(
         if self._financial_operands is not None:
             self._financial_operands.close()
 
+    @override
     def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None:
         if cancellation is not OperationCancellation.UNSUPPORTED and self._cleanup_timeout is None:
             raise ValueError("cancellable operation requires a configured cleanup timeout")
 
+    @override
     @staticmethod
     def _acknowledged_cancellation_condition(snapshot: OperationPersistedSnapshot) -> OperationTerminalCondition:
         """Derive the sole terminal fact a cooperatively stopped executor permits."""
@@ -207,6 +258,7 @@ class OperationSupervisor(
             return OperationTerminalCondition.TIMED_OUT
         return OperationTerminalCondition.CANCELLED
 
+    @override
     @staticmethod
     async def _wait_for_executor_or_deadline(
         executor_task: asyncio.Task[object],
@@ -217,6 +269,7 @@ class OperationSupervisor(
         remaining_seconds = max((deadline - now).total_seconds(), 0.0)
         await asyncio.wait((executor_task,), timeout=remaining_seconds)
 
+    @override
     async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Load the authoritative current snapshot for one operation."""
         return await self._load_pinned_snapshot(operation_id)
@@ -240,6 +293,7 @@ class OperationSupervisor(
         """Release a frontend without mutating the durable operation."""
         return await self.inspect(operation_id)
 
+    @override
     def _continuation_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None:
         """Observe scheduled completion so task failures are never orphaned by asyncio."""
         if task.cancelled():

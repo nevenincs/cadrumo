@@ -35,4 +35,6 @@ def test_each_live_unrouted_revision_is_refused(revision, expected_gaps: tuple[s
         assert_no_novel_source_kinds(revision)
 
     assert exc_info.value.context is not None
-    assert tuple(exc_info.value.context["novel_source_kinds"]) == expected_gaps
+    novel_source_kinds = exc_info.value.context["novel_source_kinds"]
+    assert isinstance(novel_source_kinds, list)
+    assert tuple(novel_source_kinds) == expected_gaps

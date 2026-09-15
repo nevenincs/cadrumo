@@ -100,6 +100,7 @@ _REFERENCE_ELISION = "..."
 
 if TYPE_CHECKING:
     from ...core.period import Period
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.calculations.registry.schema_verification import RegistryVerificationPolicy
@@ -330,7 +331,11 @@ def _require_declaration_enrolled_modelo(
     return work_unit
 
 
-def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:
+def modelo_reconcile(
+    command: ModeloReconciliationCommand,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ModeloReconciliationReport:
     """Reconcile a modelo work unit against a justificante or declaración PDF file.
 
     Local-only: never contacts AEAT and never invokes ``require_live_read``.
@@ -386,6 +391,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
             source_ref=str(command.source_path),
             actor=command.actor,
             declaracion=declaracion,
+            operation=operation,
         )
 
     try:
@@ -403,10 +409,15 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         source_ref=str(command.source_path),
         actor=command.actor,
         justificante=justificante,
+        operation=operation,
     )
 
 
-def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloReconciliationReport:
+def modelo_reconcile_bytes(
+    command: ModeloReconciliationBytesCommand,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ModeloReconciliationReport:
     """Reconcile secure-storage evidence bytes without materialising a plaintext file.
 
     Declaración reconciliation is not offered on this bytes path, but not
@@ -447,6 +458,7 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
         source_ref=command.source_ref,
         actor=command.actor,
         justificante=justificante,
+        operation=operation,
     )
 
 
@@ -457,6 +469,7 @@ def reconcile_parsed_justificante(
     source_ref: str,
     actor: str,
     justificante: Justificante,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloReconciliationReport:
     active_bucket_id = work_unit.bucket_id
 
@@ -474,7 +487,11 @@ def reconcile_parsed_justificante(
         ),
     )
 
-    total_diffs, total_advisories = _reconcile_receipt_totals(work_unit=work_unit, justificante=justificante)
+    total_diffs, total_advisories = _reconcile_receipt_totals(
+        work_unit=work_unit,
+        justificante=justificante,
+        operation=operation,
+    )
     diffs.extend(total_diffs)
     advisories.extend(total_advisories)
 
@@ -496,6 +513,7 @@ def reconcile_parsed_declaracion(
     source_ref: str,
     actor: str,
     declaracion: ReconciliationDeclaracionObservation,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloReconciliationReport:
     active_bucket_id = work_unit.bucket_id
     if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
@@ -528,7 +546,11 @@ def reconcile_parsed_declaracion(
         ),
     )
 
-    casilla_diffs, casilla_advisories = _reconcile_declaracion_casillas(work_unit=work_unit, declaracion=declaracion)
+    casilla_diffs, casilla_advisories = _reconcile_declaracion_casillas(
+        work_unit=work_unit,
+        declaracion=declaracion,
+        operation=operation,
+    )
     diffs.extend(casilla_diffs)
     advisories.extend(casilla_advisories)
 
@@ -792,6 +814,7 @@ def _reconcile_receipt_totals(
     *,
     work_unit: WorkUnit,
     justificante: Justificante,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[ModeloReconciliationDiff], list[ModeloReconciliationAdvisory]]:
     """Reconcile the receipt total against the canonical computed result casilla.
 
@@ -808,7 +831,7 @@ def _reconcile_receipt_totals(
     """
     modelo = str(work_unit.modelo)
     try:
-        targets = _total_targets_for_work_unit(work_unit)
+        targets = _total_targets_for_work_unit(work_unit, operation=operation)
     except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return [], [_totals_not_reconciled("snapshot_unavailable", modelo=modelo)]
     if not targets:
@@ -823,7 +846,7 @@ def _reconcile_receipt_totals(
         return [], [_totals_not_reconciled("receipt_kind_unmapped", modelo=modelo, detail=receipt_kind)]
 
     try:
-        computed = _computed_result_value(work_unit, target.casilla_id)
+        computed = _computed_result_value(work_unit, target.casilla_id, operation=operation)
     except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return [], [_totals_not_reconciled("no_persisted_revision", modelo=modelo)]
     if computed is None:
@@ -870,7 +893,11 @@ class _TotalTarget:
         self.source_refs = source_refs
 
 
-def _total_targets_for_work_unit(work_unit: WorkUnit) -> dict[str, _TotalTarget]:
+def _total_targets_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, _TotalTarget]:
     """Collect the ``{ingresar|devolver: _TotalTarget}`` map from the snapshot.
 
     First declaration wins per kind (mirroring ``calculation_result_summary``),
@@ -879,7 +906,7 @@ def _total_targets_for_work_unit(work_unit: WorkUnit) -> dict[str, _TotalTarget]
     """
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
 
-    snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
+    snapshot = resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
     # Deliberately NOT folded through fold_reconciliation_total_casilla_ids.
     # That fold answers "which casilla is the total for this kind" and returns
     # the mapping alone; this site needs the tolerance, legal_refs and
@@ -903,12 +930,14 @@ def _total_targets_for_work_unit(work_unit: WorkUnit) -> dict[str, _TotalTarget]
 
 def _declaracion_registry_context(
     work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[RegistrySnapshot, RegistryVerificationPolicy] | None:
     """Resolve the registry snapshot and folded policy for a declaration compare."""
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     try:
-        snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
+        snapshot = resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
         policy = snapshot.verification_policy()
     except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return None
@@ -992,6 +1021,7 @@ def _reconcile_declaracion_casillas(
     *,
     work_unit: WorkUnit,
     declaracion: ReconciliationDeclaracionObservation,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[ModeloReconciliationDiff], list[ModeloReconciliationAdvisory]]:
     """Compare every registry-reconciled casilla against the filed declaración.
 
@@ -1020,14 +1050,14 @@ def _reconcile_declaracion_casillas(
     comparison the reconcile could not perform.
     """
     modelo = str(work_unit.modelo)
-    registry_context = _declaracion_registry_context(work_unit)
+    registry_context = _declaracion_registry_context(work_unit, operation=operation)
     if registry_context is None:
         return [], [_totals_not_reconciled("snapshot_unavailable", modelo=modelo)]
     snapshot, policy = registry_context
     if not policy.computed_casilla_ids and not policy.reconcile_when_present_casilla_ids:
         return [], [_totals_not_reconciled("map_not_declared", modelo=modelo)]
 
-    revision = _filed_revision_for_work_unit(work_unit)
+    revision = _filed_revision_for_work_unit(work_unit, operation=operation)
     if revision is None:
         return [], [_totals_not_reconciled("no_persisted_revision", modelo=modelo)]
 
@@ -1113,7 +1143,12 @@ def _decimal_declaracion_values(declaracion: ReconciliationDeclaracionObservatio
     return values
 
 
-def _computed_result_value(work_unit: WorkUnit, casilla_id: str) -> Decimal | None:
+def _computed_result_value(
+    work_unit: WorkUnit,
+    casilla_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Decimal | None:
     """Return the canonical computed value of ``casilla_id`` for ``work_unit``.
 
     Reads the persisted filed / verified calculation revision (never a fresh
@@ -1122,13 +1157,17 @@ def _computed_result_value(work_unit: WorkUnit, casilla_id: str) -> Decimal | No
     surfaces render (``aeat-calculation-aggregation``). Returns
     ``None`` when no persisted revision carries the casilla.
     """
-    revision = _filed_revision_for_work_unit(work_unit)
+    revision = _filed_revision_for_work_unit(work_unit, operation=operation)
     if revision is None:
         return None
     return revision.casilla_values.get(casilla_id)
 
 
-def _filed_revision_for_work_unit(work_unit: WorkUnit) -> CalculationRevision | None:
+def _filed_revision_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision | None:
     """Return the persisted filed / verified revision selected for ``work_unit``.
 
     Shared read path for both the receipt-total compare
@@ -1140,7 +1179,7 @@ def _filed_revision_for_work_unit(work_unit: WorkUnit) -> CalculationRevision | 
     catalogue = calculation_revision_catalogue_repository(bucket_id=str(work_unit.bucket_id)).load()
     revision = _select_filed_revision(catalogue.for_work_unit(str(work_unit.work_unit_id)))
     if revision is not None:
-        require_calculation_revision_coordinates_current(revision)
+        require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision
 
 
@@ -1206,17 +1245,23 @@ def _bounded_payload_reference(reference: str) -> str:
 
 
 def _active_profile_tax_id(bucket_id: str) -> str:
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values, record_to_values
 
-    repository = ProfileRecordRepository.for_current_session(bucket_id)
-    record = repository.load(bucket_id)
-    path_values = record_to_path_values(record)
-    profile_tax_id = _normalise_tax_id(path_values.get("identity.tax_id"))
-    if profile_tax_id:
-        return profile_tax_id
-    selector_values = record_to_values(record, schema=repository.session.profile_decode_context.schema)
-    return _normalise_tax_id(selector_values.get("tax.id"))
+    with bundled_indexed_authority().operation() as operation:
+        profile_decode_context = operation.profile_decode_context()
+        repository = ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=profile_decode_context,
+        )
+        record = repository.load(bucket_id)
+        path_values = record_to_path_values(record)
+        profile_tax_id = _normalise_tax_id(path_values.get("identity.tax_id"))
+        if profile_tax_id:
+            return profile_tax_id
+        selector_values = record_to_values(record, schema=profile_decode_context.schema)
+        return _normalise_tax_id(selector_values.get("tax.id"))
 
 
 def _normalise_tax_id(value: object) -> str:

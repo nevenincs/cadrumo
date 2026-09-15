@@ -135,6 +135,8 @@ def _can_reuse_active_session(
     """
     if not operator_scope_ports.session.serves_bucket(active_session, bucket_id):
         return False
+    if active_session is None:
+        return False
     if active_session.storage_root is not None:
         return _canonical_storage_root(active_session.storage_root) == target_storage_root
     return not explicitly_routed and ambient_storage_root == target_storage_root

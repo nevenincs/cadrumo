@@ -16,14 +16,28 @@ what the table can mint without publishing the rows.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....core.aggregation import IntracomOperationType
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
-from ....domain.iva.classification import PartyFact, classifiable_categories
+from ....domain.iva.classification import (
+    IvaClassificationRule,
+    PartyFact,
+    classifiable_categories,
+    resolve_iva_classification_inputs,
+)
 from ..source_resolver import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+
+def _classification_rules() -> tuple[IvaClassificationRule, ...]:
+    """Project the current registry-owned IVA classification rows."""
+    with bundled_indexed_authority().operation() as operation:
+        return resolve_iva_classification_inputs(effective_date=date.today(), operation=operation).rules
 
 
 class TestEveryReportedCategoryIsMintedByADeclaringBranch:
@@ -40,8 +54,9 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
     """
 
     def test_every_clave_reported_category_has_a_declaring_rule(self) -> None:
-        declaring = classifiable_categories(consuming=PartyFact.IVA_IDENTIFICATION_STATE)
-        mintable = classifiable_categories()
+        rules = _classification_rules()
+        declaring = classifiable_categories(rules, consuming=PartyFact.IVA_IDENTIFICATION_STATE)
+        mintable = classifiable_categories(rules)
         catalogue = resolve_iva_category_catalogue()
         reported = {
             category
@@ -69,7 +84,8 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
         strict and non-empty -- only the intra-community rows read the
         identifying State, and they are the rows the clave map reports.
         """
-        declaring = classifiable_categories(consuming=PartyFact.IVA_IDENTIFICATION_STATE)
-        mintable = classifiable_categories()
+        rules = _classification_rules()
+        declaring = classifiable_categories(rules, consuming=PartyFact.IVA_IDENTIFICATION_STATE)
+        mintable = classifiable_categories(rules)
         assert declaring
         assert declaring < mintable

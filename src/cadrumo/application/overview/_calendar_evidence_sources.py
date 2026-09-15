@@ -21,7 +21,7 @@ from ..calculations.observations_repository import (
     ObservationSourceKind,
     is_official_aeat_observation_source,
 )
-from ..calculations.ports import FiledDeclaracionObservationProtocol
+from ..calculations.ports import FiledDeclaracionArtefactProtocol, FiledDeclaracionObservationProtocol
 from .calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEvent,
@@ -305,13 +305,12 @@ def _filed_declaration_verified_csv(
 
 
 def _is_verified_justificante_artefact(
-    artefact: object,
+    artefact: FiledDeclaracionArtefactProtocol,
     verified_artefact_refs: frozenset[str],
 ) -> bool:
     """Whether one observation artefact is a storage-verified justificante PDF."""
-    kind = getattr(artefact, "kind", None)
-    storage_ref = getattr(artefact, "storage_ref", None)
-    return kind == "justificante_pdf" and storage_ref is not None and storage_ref in verified_artefact_refs
+    storage_ref = artefact.storage_ref
+    return artefact.kind == "justificante_pdf" and storage_ref is not None and storage_ref in verified_artefact_refs
 
 
 def is_active_aeat_filing_status(status: str | None) -> bool:

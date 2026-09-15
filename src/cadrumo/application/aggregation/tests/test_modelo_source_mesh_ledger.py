@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
@@ -16,6 +17,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
@@ -100,6 +102,20 @@ class _InMemoryTransactionCatalogueRepository:
     def load(self) -> TransactionCatalogue:
         return self._catalogue
 
+    def exists(self) -> bool:
+        return bool(self._catalogue.transactions)
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        requested = frozenset(transaction_ids)
+        return TransactionCatalogue.from_transactions(
+            transaction for transaction in self._catalogue if transaction.transaction_id in requested
+        )
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        return TransactionCatalogue.from_transactions(
+            transaction for transaction in self._catalogue if start <= transaction_filing_date(transaction) <= end
+        )
+
     def save(self, catalogue: TransactionCatalogue) -> None:
         self._catalogue = catalogue
 
@@ -151,6 +167,18 @@ class _InMemoryProrrataRegisterRepository:
 
     def load(self) -> ProrrataRegister:
         return self._register
+
+    def load_revisioned(self) -> tuple[ProrrataRegister, str]:
+        return self._register, "fixture-revision"
+
+    def to_secure_object_write(
+        self,
+        register: ProrrataRegister,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        del register, expected_revision_id
+        raise AssertionError("source-mesh prorrata fake does not support secure-object writes")
 
     def save(self, register: ProrrataRegister) -> None:
         self._register = register
@@ -1010,7 +1038,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         ports=_catalogue_read_ports(invoice_repository=invoice_repo, transaction_repository=tx_repo),
         prorrata_register_repository=_empty_prorrata_repository(),
-        usage_ratio_profile_loader=lambda *, bucket_id: UsageRatioProfile(),
+        usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
     ).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,

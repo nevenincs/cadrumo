@@ -44,6 +44,7 @@ from ...aggregation.source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, Calculatio
 from .._minimo_descendientes_advisory import (
     _guarderia_madre_meses_advisory,
     _guarderia_shape_advisory,
+    _RegistryScope,
 )
 from ..minimo_descendientes_advisory import (
     _count_desync_advisory,
@@ -139,13 +140,19 @@ def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagno
     guarderia = validated_casilla_id("0613")
     indices = _worst_case_indices()
     revision = _headroom_revision()
+    scope = _RegistryScope(
+        revision=revision,
+        bindings=tuple(revision.bindings),
+        filing_year=2024,
+        period_token="0A",
+    )
     return [
         ("undeclared", lambda: _undeclared_advisory(revision, casilla)),
         ("prorrata_inferred", lambda: _prorrata_inferred_advisory(revision, indices, casilla)),
         ("rentas_undeclared", lambda: _rentas_undeclared_advisory(revision, indices, casilla)),
         ("entry_date_missing", lambda: _entry_date_missing_advisory(indices, casilla)),
-        ("guarderia_shape", lambda: _guarderia_shape_advisory(indices, guarderia)),
-        ("guarderia_madre_meses", lambda: _guarderia_madre_meses_advisory(indices, guarderia)),
+        ("guarderia_shape", lambda: _guarderia_shape_advisory(indices, guarderia, scope)),
+        ("guarderia_madre_meses", lambda: _guarderia_madre_meses_advisory(indices, guarderia, scope)),
         ("dependencia_assimilated", lambda: _dependencia_assimilated_advisory(indices, casilla)),
         ("dependencia_suppressed", lambda: _dependencia_suppressed_advisory(indices, casilla)),
         ("count_desync", lambda: _count_desync_advisory(Decimal(_WORST_COUNT), _WORST_COUNT)),

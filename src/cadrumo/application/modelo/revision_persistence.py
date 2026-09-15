@@ -52,6 +52,7 @@ from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.event_repository import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets.event_repository import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.ids import (

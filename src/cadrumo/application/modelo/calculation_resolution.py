@@ -147,6 +147,7 @@ def resolve_calculation_binding_channels(
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
         borrador_snapshot_repository=borrador_snapshot_repository,
+        operation=operation,
     )
     profile_resolution = resolve_profile_source_tier(
         bucket_id=work_unit.bucket_id,

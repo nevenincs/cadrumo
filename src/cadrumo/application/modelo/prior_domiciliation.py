@@ -19,6 +19,7 @@ from ...core.modelo import Modelo
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord
@@ -102,6 +103,7 @@ def _require_official_baseline_observation(
     baseline_evidence: ExternalEvidence,
     baseline_id: str,
     observation_repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> ObservationEnvelopePayload:
     """Return the official filed observation joined to the baseline, or refuse.
 
@@ -116,7 +118,7 @@ def _require_official_baseline_observation(
             "prior domiciliation cancellation/modification requires an official baseline filed observation",
             context={"baseline_filing_record_id": baseline_id},
         )
-    require_observation_envelope_coordinates_current(observation)
+    require_observation_envelope_coordinates_current(observation, operation=operation)
     if (
         observation.observation.filing_year != baseline.filing_year
         or observation.observation.period != baseline.period.registry_token
@@ -133,6 +135,7 @@ def _require_submitted_file_domiciliacion_header(
     *,
     observation: ObservationEnvelopePayload,
     baseline_id: str,
+    operation: PinnedAuthorityOperation,
 ) -> ObservedHeaderFact:
     """Return the single submitted-file ``U`` declaration-type header, or refuse.
 
@@ -142,6 +145,7 @@ def _require_submitted_file_domiciliacion_header(
     header_key = m303_declaration_type_header_key(
         filing_year=observation.observation.filing_year,
         period=observation.observation.period,
+        operation=operation,
     )
     declaration_type_headers = tuple(header for header in observation.source_headers if header.header_key == header_key)
     if len(declaration_type_headers) != 1:
@@ -174,6 +178,7 @@ def resolveprior_domiciliation_election(
     revision: CalculationRevision,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> PriorDomiciliationElectionProjection:
     """Return safe election provenance, refusing any unproven ``X`` request.
 
@@ -212,10 +217,12 @@ def resolveprior_domiciliation_election(
         baseline_evidence=baseline_evidence,
         baseline_id=baseline_id,
         observation_repository=observation_repository,
+        operation=operation,
     )
     declaration_type_header = _require_submitted_file_domiciliacion_header(
         observation=observation,
         baseline_id=baseline_id,
+        operation=operation,
     )
 
     disposition = observation.result_disposition

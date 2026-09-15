@@ -25,7 +25,12 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.applicability import iter_modelo_applicability_rules
@@ -98,7 +103,9 @@ _PERSONAS = pytest.mark.parametrize(
 )
 
 
-def _universe(unmodeled: Mapping[Modelo, str] = UNMODELED_OBLIGATIONS) -> set[str]:
+def _universe(
+    unmodeled: Mapping[Modelo, str] = UNMODELED_OBLIGATIONS, *, operation: PinnedAuthorityOperation
+) -> set[str]:
     """The AEAT obligation universe: registry plus recognized-unmodeled plus out-of-scope.
 
     ``unmodeled`` is a parameter rather than a fixed read of
@@ -109,7 +116,7 @@ def _universe(unmodeled: Mapping[Modelo, str] = UNMODELED_OBLIGATIONS) -> set[st
     still empty.
     """
     return (
-        set(registry_modelo_codes())
+        set(registry_modelo_codes(operation=operation))
         | {str(code) for code in unmodeled}
         | {str(code) for code in OUT_OF_SCOPE_OBLIGATIONS}
     )
@@ -119,6 +126,7 @@ def _assert_total_partition(
     report: ObligationCoverageReport,
     *,
     unmodeled: Mapping[Modelo, str] = UNMODELED_OBLIGATIONS,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     surfaced = set(report.surfaced)
     excluded = set(report.confidently_excluded)
@@ -130,7 +138,7 @@ def _assert_total_partition(
     # invariant binds to AEAT reality (registry + recognized-unmodeled), not to
     # the registry's current contents, so nothing can be silently absent.
     union = surfaced | excluded | advised | out_of_scope
-    assert union == _universe(unmodeled)
+    assert union == _universe(unmodeled, operation=operation)
 
     # The buckets are pairwise disjoint (each modelo has exactly one disposition).
     for i, left in enumerate(buckets):
@@ -174,7 +182,7 @@ def test_report_refuses_one_modelo_repeated_inside_a_disposition() -> None:
     assert "surfaced" in message
 
 
-def test_a_real_built_report_satisfies_the_partition_invariant() -> None:
+def test_a_real_built_report_satisfies_the_partition_invariant(*, operation: PinnedAuthorityOperation) -> None:
     """The production builder produces a report the invariant accepts.
 
     The refusal above is only worth having if the live path clears it: this
@@ -182,16 +190,18 @@ def test_a_real_built_report_satisfies_the_partition_invariant() -> None:
     registry-backed build rather than a hand-built fixture.
     """
     report = build_obligation_coverage(_paying_autonomo(), {"100", "303"}, today=_TODAY)
-    _assert_total_partition(report)
+    _assert_total_partition(report, operation=operation)
 
 
 @_PERSONAS
-def test_coverage_partitions_full_registry_set(profile_factory: Callable[[], TaxpayerProfile]) -> None:
+def test_coverage_partitions_full_registry_set(
+    profile_factory: Callable[[], TaxpayerProfile], *, operation: PinnedAuthorityOperation
+) -> None:
     """No registry modelo is silently absent from the coverage report."""
     profile = profile_factory()
     surfaced = {"100", "130", "303"}  # an illustrative surfaced subset
     report = build_obligation_coverage(profile, surfaced, today=_TODAY)
-    _assert_total_partition(report)
+    _assert_total_partition(report, operation=operation)
 
 
 def test_out_of_scope_bucket_matches_central_declaration() -> None:
@@ -242,7 +252,7 @@ def test_applicable_but_unsurfaced_modelo_is_advised_not_silently_absent() -> No
     assert advised["190"] is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING
 
 
-def test_every_declared_unmodeled_obligation_surfaces_as_advised() -> None:
+def test_every_declared_unmodeled_obligation_surfaces_as_advised(*, operation: PinnedAuthorityOperation) -> None:
     """Whatever the real declaration holds reaches the report as registry-unmodeled.
 
     The external-universe guarantee, asserted against the live declaration in
@@ -253,7 +263,7 @@ def test_every_declared_unmodeled_obligation_surfaces_as_advised() -> None:
     exercises the same disposition over a non-empty declaration.
     """
     report = build_obligation_coverage(_paying_autonomo(), {"100", "303"}, today=_TODAY)
-    _assert_total_partition(report)
+    _assert_total_partition(report, operation=operation)
 
     registry_unmodeled_advised = {
         item.modelo for item in report.advised if item.reason is CoverageAdviceReason.REGISTRY_UNMODELED
@@ -261,7 +271,7 @@ def test_every_declared_unmodeled_obligation_surfaces_as_advised() -> None:
     assert registry_unmodeled_advised == {str(modelo) for modelo in UNMODELED_OBLIGATIONS}
 
 
-def test_a_recognized_unmodeled_obligation_is_advised_not_invisible() -> None:
+def test_a_recognized_unmodeled_obligation_is_advised_not_invisible(*, operation: PinnedAuthorityOperation) -> None:
     """A universe member the registry cannot model lands in advised, never nowhere.
 
     This is the property the registry-unmodeled disposition exists to guarantee,
@@ -289,7 +299,7 @@ def test_a_recognized_unmodeled_obligation_is_advised_not_invisible() -> None:
     )
     with scoped_attribute(_coverage, "_UNMODELED_OBLIGATIONS", declared):
         report = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
-        _assert_total_partition(report, unmodeled=declared)
+        _assert_total_partition(report, unmodeled=declared, operation=operation)
 
         advised = {item.modelo: item.reason for item in report.advised}
         assert advised[unmodelled_code] is CoverageAdviceReason.REGISTRY_UNMODELED
@@ -306,7 +316,7 @@ def _dispositions(report: ObligationCoverageReport) -> set[str]:
 
 
 def test_calendar_attaches_coverage_by_default(
-    calendar_operation: PinnedAuthorityOperation,
+    calendar_operation: PinnedAuthorityOperation, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A default calendar build (show_suppressed=False) still carries coverage.
 
@@ -319,21 +329,21 @@ def test_calendar_attaches_coverage_by_default(
         operation=calendar_operation,
         today=_TODAY,
     )
-    _assert_total_partition(calendar.coverage)
+    _assert_total_partition(calendar.coverage, operation=operation)
     assert calendar.coverage.has_advisories
     assert "190" in {entry.modelo for entry in calendar.entries}
     assert "190" in calendar.coverage.surfaced
     assert "190" not in calendar.coverage.advised_modelos
 
 
-def test_agenda_and_backlog_inherit_calendar_coverage() -> None:
+def test_agenda_and_backlog_inherit_calendar_coverage(*, operation: PinnedAuthorityOperation) -> None:
     """Agenda and backlog compose the calendar, so they inherit its coverage."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         profile = _paying_autonomo()
         agenda = build_overview_agenda(profile, as_of=_TODAY, operation=_authority_operation_for_test)
         backlog = build_overview_backlog(profile, as_of=_TODAY, operation=_authority_operation_for_test)
-        _assert_total_partition(agenda.coverage)
-        _assert_total_partition(backlog.coverage)
+        _assert_total_partition(agenda.coverage, operation=operation)
+        _assert_total_partition(backlog.coverage, operation=operation)
         assert "190" in agenda.coverage.surfaced
         assert "190" in backlog.coverage.surfaced
         assert "190" not in agenda.coverage.advised_modelos

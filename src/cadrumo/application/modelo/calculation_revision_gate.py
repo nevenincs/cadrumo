@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from .action_errors import WorkUnitRevisionDivergenceError
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
-def require_calculation_revision_coordinates_current(revision: CalculationRevision) -> None:
+
+def require_calculation_revision_coordinates_current(
+    revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Refuse a persisted calculation whose producing registry coordinate diverges."""
-    outcome = revision_carry_outcome(revision.registry_snapshot_ref)
+    outcome = revision_carry_outcome(revision.registry_snapshot_ref, operation=operation)
     if not outcome.refused:
         return
     snapshot_ref = revision.registry_snapshot_ref

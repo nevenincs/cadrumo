@@ -197,9 +197,13 @@ def discover_modelo_work_wizard_steps(
     return (*casilla_steps, *binding_steps)
 
 
-def _binding_grounding_lookup(unit: WorkUnit) -> dict[str, tuple[tuple[str, ...], tuple[str, ...]]]:
+def _binding_grounding_lookup(
+    unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, tuple[tuple[str, ...], tuple[str, ...]]]:
     """Return binding and relation IDs mapped to their registry grounding."""
-    bindings_report = registry_bindings_for_scope(str(unit.modelo), period=unit.period)
+    bindings_report = registry_bindings_for_scope(str(unit.modelo), period=unit.period, operation=operation)
     lookup: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {}
     for row in bindings_report.rows:
         grounding = (tuple(row.legal_refs), tuple(row.source_refs))
@@ -213,12 +217,13 @@ def modelo_work_wizard_follow_up_step(
     error: RegistryValidationError,
     *,
     unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloWorkWizardStep | None:
     """Convert a recognised missing calculation input into one extra question."""
     if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
         return None
     context = error.context or {}
-    grounding_lookup = _binding_grounding_lookup(unit)
+    grounding_lookup = _binding_grounding_lookup(unit, operation=operation)
     if error.translated_message == "errors.calc.relation_value_missing":
         relation_id = context.get("relation_id")
         if not isinstance(relation_id, str):

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.period import Period
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
@@ -38,6 +40,7 @@ def regimen_simplificado_filing_evidence(
     rows: RegimenSimplificadoFilingRows,
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
     dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
+    operation: PinnedAuthorityOperation,
 ) -> M303RegimenSimplificadoFilingEvidence:
     """Build real calculation-bearing simplified-regime evidence for a test filing."""
     return M303RegimenSimplificadoFilingEvidence(
@@ -52,11 +55,14 @@ def regimen_simplificado_filing_evidence(
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=dana_2024_eligibility,
             authority=compiled_bundled_authority(),
+            operation=operation,
         ),
     )
 
 
-def general_m303_filing_evidence(period: Period, *, reference: str) -> FilingInstanceEvidence:
+def general_m303_filing_evidence(
+    period: Period, *, reference: str, operation: PinnedAuthorityOperation
+) -> FilingInstanceEvidence:
     """Build explicit not-claimed evidence bound to the exact registry snapshot."""
     scope = M303RegimenSimplificadoScopeDecision(
         scope=_m303_scope_for_composition("general"),
@@ -89,6 +95,7 @@ def general_m303_filing_evidence(period: Period, *, reference: str) -> FilingIns
                     scope_decision=scope,
                 ),
                 dana_2024_eligibility=None,
+                operation=operation,
             ),
         ),
     )
@@ -99,6 +106,7 @@ def general_m303_filing_evidence_from_regimen_snapshot(
     *,
     reference: str,
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
+    operation: PinnedAuthorityOperation,
 ) -> FilingInstanceEvidence:
     """Build real general-scope evidence from an already validated static authority coordinate."""
     scope = M303RegimenSimplificadoScopeDecision(
@@ -124,6 +132,7 @@ def general_m303_filing_evidence_from_regimen_snapshot(
                 rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
                 regimen_snapshot=regimen_snapshot,
                 dana_2024_eligibility=None,
+                operation=operation,
             ),
         ),
     )

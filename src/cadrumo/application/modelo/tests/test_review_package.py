@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import zipfile
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -24,6 +25,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -49,6 +51,12 @@ _NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-TEST"
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:
@@ -136,7 +144,10 @@ def _revision(
     )
 
 
-def test_build_review_package_then_verify_clean(tmp_path: Path) -> None:
+def test_build_review_package_then_verify_clean(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     revision = _revision(work_unit)
     output_path = tmp_path / "review-package.zip"
@@ -147,6 +158,7 @@ def test_build_review_package_then_verify_clean(tmp_path: Path) -> None:
         draft_bytes=_DRAFT_BYTES,
         output_path=output_path,
         built_by="operator",
+        operation=authority_operation,
         notes="shared with accountant for Q1 review",
     )
 
@@ -162,7 +174,7 @@ def test_build_review_package_then_verify_clean(tmp_path: Path) -> None:
     assert build_result.manifest.has_ledger_evidence is False
     assert build_result.manifest.notes == "shared with accountant for Q1 review"
 
-    verification = verify_review_package(output_path)
+    verification = verify_review_package(output_path, operation=authority_operation)
     assert verification.is_clean is True
     assert verification.missing == ()
     assert verification.unexpected == ()
@@ -171,11 +183,14 @@ def test_build_review_package_then_verify_clean(tmp_path: Path) -> None:
 
     # Real-behavior anti-tautology proof: assert_review_package_verifies must
     # not raise and must return the identical manifest for a clean package.
-    manifest = assert_review_package_verifies(output_path)
+    manifest = assert_review_package_verifies(output_path, operation=authority_operation)
     assert manifest == build_result.manifest
 
 
-def test_build_review_package_bundles_ledger_evidence_when_present(tmp_path: Path) -> None:
+def test_build_review_package_bundles_ledger_evidence_when_present(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     evidence = LedgerFilingEvidence(snapshot_fingerprint="a" * 64, rows=(), manual_entries=(), captured_at=_NOW)
     revision = _revision(work_unit, ledger_filing_evidence=evidence)
@@ -187,6 +202,7 @@ def test_build_review_package_bundles_ledger_evidence_when_present(tmp_path: Pat
         draft_bytes=_DRAFT_BYTES,
         output_path=output_path,
         built_by="operator",
+        operation=authority_operation,
     )
     assert build_result.manifest.has_ledger_evidence is True
 
@@ -194,12 +210,15 @@ def test_build_review_package_bundles_ledger_evidence_when_present(tmp_path: Pat
         evidence_payload = json.loads(archive.read("evidence.json"))
     assert evidence_payload["snapshot_fingerprint"] == "a" * 64
 
-    verification = verify_review_package(output_path)
+    verification = verify_review_package(output_path, operation=authority_operation)
     assert verification.is_clean is True
     assert verification.manifest.has_ledger_evidence is True
 
 
-def test_build_review_package_refuses_borrador_revision(tmp_path: Path) -> None:
+def test_build_review_package_refuses_borrador_revision(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     revision = _revision(
         work_unit,
@@ -216,6 +235,7 @@ def test_build_review_package_refuses_borrador_revision(tmp_path: Path) -> None:
             draft_bytes=_DRAFT_BYTES,
             output_path=output_path,
             built_by="operator",
+            operation=authority_operation,
         )
 
     assert exc_info.value.context is not None
@@ -223,7 +243,10 @@ def test_build_review_package_refuses_borrador_revision(tmp_path: Path) -> None:
     assert not output_path.exists()
 
 
-def test_build_review_package_refuses_superseded_revision(tmp_path: Path) -> None:
+def test_build_review_package_refuses_superseded_revision(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     revision = _revision(
         work_unit,
@@ -241,6 +264,7 @@ def test_build_review_package_refuses_superseded_revision(tmp_path: Path) -> Non
             draft_bytes=_DRAFT_BYTES,
             output_path=output_path,
             built_by="operator",
+            operation=authority_operation,
         )
 
     assert exc_info.value.context is not None
@@ -248,7 +272,10 @@ def test_build_review_package_refuses_superseded_revision(tmp_path: Path) -> Non
     assert not output_path.exists()
 
 
-def test_build_review_package_refuses_work_unit_revision_mismatch(tmp_path: Path) -> None:
+def test_build_review_package_refuses_work_unit_revision_mismatch(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     other_work_unit = _work_unit(bucket_id="bucket-other")
     revision = _revision(work_unit)
@@ -260,10 +287,14 @@ def test_build_review_package_refuses_work_unit_revision_mismatch(tmp_path: Path
             draft_bytes=_DRAFT_BYTES,
             output_path=tmp_path / "mismatch.zip",
             built_by="operator",
+            operation=authority_operation,
         )
 
 
-def test_verify_review_package_flags_mismatched_member_by_name(tmp_path: Path) -> None:
+def test_verify_review_package_flags_mismatched_member_by_name(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     revision = _revision(work_unit)
     output_path = tmp_path / "review-package.zip"
@@ -273,23 +304,27 @@ def test_verify_review_package_flags_mismatched_member_by_name(tmp_path: Path) -
         draft_bytes=_DRAFT_BYTES,
         output_path=output_path,
         built_by="operator",
+        operation=authority_operation,
     )
 
     _tamper_member(output_path, "draft.fichero-boe", b"TAMPERED FICHERO BYTES")
 
-    result = verify_review_package(output_path)
+    result = verify_review_package(output_path, operation=authority_operation)
     assert result.is_clean is False
     assert result.mismatched == ("draft.fichero-boe",)
     assert result.missing == ()
     assert result.unexpected == ()
 
     with pytest.raises(ReviewPackageIntegrityError) as exc_info:
-        assert_review_package_verifies(output_path)
+        assert_review_package_verifies(output_path, operation=authority_operation)
     assert exc_info.value.context is not None
     assert exc_info.value.context["mismatched"] == "draft.fichero-boe"
 
 
-def test_verify_review_package_flags_missing_member_by_name(tmp_path: Path) -> None:
+def test_verify_review_package_flags_missing_member_by_name(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     revision = _revision(work_unit)
     output_path = tmp_path / "review-package.zip"
@@ -299,21 +334,25 @@ def test_verify_review_package_flags_missing_member_by_name(tmp_path: Path) -> N
         draft_bytes=_DRAFT_BYTES,
         output_path=output_path,
         built_by="operator",
+        operation=authority_operation,
     )
 
     _drop_member(output_path, "revision.json")
 
-    result = verify_review_package(output_path)
+    result = verify_review_package(output_path, operation=authority_operation)
     assert result.is_clean is False
     assert result.missing == ("revision.json",)
 
     with pytest.raises(ReviewPackageIntegrityError) as exc_info:
-        assert_review_package_verifies(output_path)
+        assert_review_package_verifies(output_path, operation=authority_operation)
     assert exc_info.value.context is not None
     assert exc_info.value.context["missing"] == "revision.json"
 
 
-def test_verify_review_package_flags_unexpected_extra_member(tmp_path: Path) -> None:
+def test_verify_review_package_flags_unexpected_extra_member(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     revision = _revision(work_unit)
     output_path = tmp_path / "review-package.zip"
@@ -323,6 +362,7 @@ def test_verify_review_package_flags_unexpected_extra_member(tmp_path: Path) -> 
         draft_bytes=_DRAFT_BYTES,
         output_path=output_path,
         built_by="operator",
+        operation=authority_operation,
     )
 
     with zipfile.ZipFile(output_path, "r") as src, zipfile.ZipFile(output_path.with_suffix(".rewritten"), "w") as dst:
@@ -331,14 +371,17 @@ def test_verify_review_package_flags_unexpected_extra_member(tmp_path: Path) -> 
         dst.writestr("unexpected-extra-member.txt", b"not declared by the manifest")
     output_path.with_suffix(".rewritten").replace(output_path)
 
-    result = verify_review_package(output_path)
+    result = verify_review_package(output_path, operation=authority_operation)
     assert result.is_clean is False
     assert result.unexpected == ("unexpected-extra-member.txt",)
     assert result.missing == ()
     assert result.mismatched == ()
 
 
-def test_verify_review_package_raises_on_tampered_package_info_descriptor(tmp_path: Path) -> None:
+def test_verify_review_package_raises_on_tampered_package_info_descriptor(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     work_unit = _work_unit()
     revision = _revision(work_unit)
     output_path = tmp_path / "review-package.zip"
@@ -348,28 +391,38 @@ def test_verify_review_package_raises_on_tampered_package_info_descriptor(tmp_pa
         draft_bytes=_DRAFT_BYTES,
         output_path=output_path,
         built_by="operator",
+        operation=authority_operation,
     )
 
     _tamper_member(output_path, "package-info.json", b'{"not": "a valid manifest"}')
 
     with pytest.raises(ReviewPackageIntegrityError):
-        verify_review_package(output_path)
+        verify_review_package(output_path, operation=authority_operation)
 
 
-def test_verify_review_package_raises_file_not_found_for_missing_path(tmp_path: Path) -> None:
+def test_verify_review_package_raises_file_not_found_for_missing_path(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     with pytest.raises(FileNotFoundError):
-        verify_review_package(tmp_path / "does-not-exist.zip")
+        verify_review_package(tmp_path / "does-not-exist.zip", operation=authority_operation)
 
 
-def test_verify_review_package_raises_on_not_a_zip_file(tmp_path: Path) -> None:
+def test_verify_review_package_raises_on_not_a_zip_file(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     not_a_zip = tmp_path / "not-a-package.zip"
     not_a_zip.write_bytes(b"this is definitely not a zip archive")
 
     with pytest.raises(ReviewPackageIntegrityError):
-        verify_review_package(not_a_zip)
+        verify_review_package(not_a_zip, operation=authority_operation)
 
 
-def test_review_package_manifest_survives_json_roundtrip(tmp_path: Path) -> None:
+def test_review_package_manifest_survives_json_roundtrip(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Anti-tautology proof for the descriptor itself.
 
     Directly mutates the persisted ``package-info.json`` payload (deleting a
@@ -387,6 +440,7 @@ def test_review_package_manifest_survives_json_roundtrip(tmp_path: Path) -> None
         draft_bytes=_DRAFT_BYTES,
         output_path=output_path,
         built_by="operator",
+        operation=authority_operation,
     )
 
     with zipfile.ZipFile(output_path, "r") as archive:
@@ -398,7 +452,7 @@ def test_review_package_manifest_survives_json_roundtrip(tmp_path: Path) -> None
     _tamper_member(output_path, "package-info.json", mutated)
 
     with pytest.raises(ReviewPackageIntegrityError):
-        verify_review_package(output_path)
+        verify_review_package(output_path, operation=authority_operation)
 
     # Confirm the ORIGINAL build result manifest is unaffected by the on-disk
     # mutation (it is an independent in-memory object), proving the failure

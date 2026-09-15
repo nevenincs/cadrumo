@@ -529,10 +529,20 @@ def _assess_selected_profile(
     return _assess_registered_profile(registered_pointer, source, total_keys, state, operation)
 
 
-def _profile_record_session_is_missing(bucket_id: str) -> bool:
+def _profile_record_session_is_missing(
+    bucket_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> bool:
     """Probe custody before encrypted workflow access so locked stays benign."""
     with override_settings(cadrumo_active_profile=bucket_id):
-        return profile_record_session_if_authenticated(bucket_id) is None
+        return (
+            profile_record_session_if_authenticated(
+                bucket_id,
+                profile_decode_context=operation.profile_decode_context(),
+            )
+            is None
+        )
 
 
 def _load_workflow_state_for_health(bucket_id: str, state: WorkflowState | None) -> None:
@@ -606,7 +616,7 @@ def _assess_registered_profile(
 ) -> ActiveProfileHealth:
     """Assess the committed profile after discovery has established its identity."""
     active_profile = pointer.bucket_id
-    if _profile_record_session_is_missing(active_profile):
+    if _profile_record_session_is_missing(active_profile, operation=operation):
         return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
@@ -632,7 +642,9 @@ def _assess_registered_profile(
         )
     try:
         with override_settings(cadrumo_active_profile=active_profile):
-            resolution = resolve_active_profile_record()
+            resolution = resolve_active_profile_record(
+                profile_decode_context=operation.profile_decode_context(),
+            )
     except (CadrumoError, ValueError) as exc:
         # CadrumoError: domain or registry failures resolving the profile record.
         # ValueError (including pydantic ValidationError): stored record fails strict validation.

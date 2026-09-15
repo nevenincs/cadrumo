@@ -18,7 +18,7 @@ from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
-from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole
+from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole
 from ..iva_ledger import IvaLedgerCandidate, aggregate_iva_ledger_candidates, validate_iva_ledger_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -43,6 +43,7 @@ def _domestic_current_candidate() -> IvaLedgerCandidate:
         iva_amount=Decimal("21.00"),
         deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
         deduction_provenance=_invoice_provenance("invoice:purchase-2026-001"),
+        cash_accounting_treatment=IvaCashAccountingTreatment("none"),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
@@ -88,6 +89,7 @@ def test_signed_rectification_with_one_corrected_fact_is_accepted_once() -> None
                 evidence_digest="b" * 64,
             ),
             rectifies_ledger_id="current-purchase",
+            cash_accounting_treatment=IvaCashAccountingTreatment("none"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
 
@@ -142,6 +144,7 @@ def test_rectification_preserves_the_corrected_import_or_intra_eu_legal_axes(
                 evidence_digest="c" * 64,
             ),
             rectifies_ledger_id="corrected-source",
+            cash_accounting_treatment=IvaCashAccountingTreatment("none"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
 
@@ -210,6 +213,7 @@ def _investment_candidate(*, ledger_id: str, asset_id: str, sector_id: str) -> I
         deduction_provenance=_invoice_provenance(f"invoice:{ledger_id}"),
         investment_asset_id=asset_id,
         prorrata_sector_id=sector_id,
+        cash_accounting_treatment=IvaCashAccountingTreatment("none"),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 

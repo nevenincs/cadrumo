@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from collections.abc import Iterable
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -20,12 +21,51 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ..verification_actions import _collect_revision_verification_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+
+
+class _EmptyTransactionRepository:
+    """Deterministic empty transaction port for the verification path."""
+
+    def __init__(self, bucket_id: str) -> None:
+        self._bucket_id = bucket_id
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    @staticmethod
+    def exists() -> bool:
+        return False
+
+    @staticmethod
+    def load() -> TransactionCatalogue:
+        return TransactionCatalogue()
+
+    @staticmethod
+    def load_for_date_range(start: date, end: date) -> TransactionCatalogue:
+        del start, end
+        return TransactionCatalogue()
+
+    @staticmethod
+    def load_by_ids(transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        del transaction_ids
+        return TransactionCatalogue()
+
+    @staticmethod
+    def partition_by_date_range(start: date, end: date) -> LedgerDatePartition:
+        del start, end
+        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
+
+    @staticmethod
+    def save(catalogue: TransactionCatalogue) -> None:
+        del catalogue
 
 
 def _work_unit(*, modelo: str = "131", filing_year: int = 2024) -> WorkUnit:
@@ -192,7 +232,7 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
             work_unit=work_unit,
             target=_calculation_revision(work_unit),
             profile=profile,
-            transaction_repository=None,
+            transaction_repository=_EmptyTransactionRepository(work_unit.bucket_id),
             operation=_authority_operation_for_test,
         )
 

@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import Literal
+from typing import Literal, override
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
-from pydantic import AnyHttpUrl, BaseModel, TypeAdapter
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
@@ -37,6 +38,11 @@ from ....domain.modelos.filing_record import (
 )
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ...calculations.observations_repository import ObservationEnvelopePayload, ResultDispositionProjection
+from ...calculations.ports import (
+    FiledDeclaracionArtefactProtocol,
+    FiledDeclaracionObservationProtocol,
+    ObservedCasillaValueProtocol,
+)
 from ..calendar import build_overview_calendar
 from ..calendar_models import (
     OverviewCalendar,
@@ -54,26 +60,98 @@ FILED_JUSTIFICANTE_STORAGE_REF = "secure-object:financial:" + "d" * 64
 OBSERVED_CASILLA: CasillaId = validated_casilla_id("01", surface="overview calendar observed casilla")
 
 
-class _CalendarFiledArtefact(BaseModel):
+@dataclass(frozen=True)
+class _CalendarFiledArtefact(FiledDeclaracionArtefactProtocol):
     """Application-test fake for the artefact fields the calendar reads."""
 
-    kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
-    sha256: str | None = None
-    storage_ref: str | None = None
+    _kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
+    _sha256: str | None = None
+    _storage_ref: str | None = None
+
+    @property
+    @override
+    def kind(self) -> str:
+        return self._kind
+
+    @property
+    @override
+    def sha256(self) -> str | None:
+        return self._sha256
+
+    @property
+    @override
+    def storage_ref(self) -> str | None:
+        return self._storage_ref
 
 
-class _CalendarFiledObservation(BaseModel):
+@dataclass(frozen=True)
+class _CalendarFiledObservation(FiledDeclaracionObservationProtocol):
     """Application-test fake implementing the overview filed-observation port."""
 
-    modelo: str
-    ejercicio: int
-    period: Period
-    expediente_id: str
-    status: str
-    presented_at: datetime
-    authenticated_identity: str
-    artefacts: tuple[_CalendarFiledArtefact, ...]
-    casillas: tuple[object, ...] = ()
+    _modelo: str
+    _ejercicio: int
+    _period: Period
+    _expediente_id: str
+    _status: str
+    _presented_at: datetime
+    _authenticated_identity: str
+    _artefacts: tuple[_CalendarFiledArtefact, ...]
+    _casillas: tuple[ObservedCasillaValueProtocol, ...] = ()
+
+    @property
+    @override
+    def modelo(self) -> str:
+        return self._modelo
+
+    @property
+    @override
+    def ejercicio(self) -> int:
+        return self._ejercicio
+
+    @property
+    @override
+    def period(self) -> Period:
+        return self._period
+
+    @property
+    @override
+    def expediente_id(self) -> str:
+        return self._expediente_id
+
+    @property
+    @override
+    def status(self) -> str:
+        return self._status
+
+    @property
+    @override
+    def presented_at(self) -> datetime:
+        return self._presented_at
+
+    @property
+    @override
+    def authenticated_identity(self) -> str:
+        return self._authenticated_identity
+
+    @property
+    @override
+    def artefacts(self) -> tuple[FiledDeclaracionArtefactProtocol, ...]:
+        return self._artefacts
+
+    @property
+    @override
+    def casillas(self) -> tuple[ObservedCasillaValueProtocol, ...]:
+        return self._casillas
+
+    def model_copy(self, *, update: Mapping[str, str]) -> _CalendarFiledObservation:
+        unknown = set(update) - {"status", "authenticated_identity"}
+        if unknown:
+            raise ValueError(f"unsupported calendar observation update: {sorted(unknown)}")
+        return replace(
+            self,
+            _status=update.get("status", self._status),
+            _authenticated_identity=update.get("authenticated_identity", self._authenticated_identity),
+        )
 
 
 @cache
@@ -171,14 +249,14 @@ def filed_declaration_observation(
     expediente_id: str = "12345678901234567890",
 ) -> _CalendarFiledObservation:
     return _CalendarFiledObservation(
-        modelo="303",
-        ejercicio=2025,
-        period=PERIOD_2025_1T,
-        expediente_id=expediente_id,
-        status="ALTA",
-        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-        authenticated_identity="X1234567L",
-        artefacts=artefacts,
+        _modelo="303",
+        _ejercicio=2025,
+        _period=PERIOD_2025_1T,
+        _expediente_id=expediente_id,
+        _status="ALTA",
+        _presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+        _authenticated_identity="X1234567L",
+        _artefacts=artefacts,
     )
 
 
@@ -190,9 +268,9 @@ def filed_declaration_artefact(
 ) -> _CalendarFiledArtefact:
     del byte_count
     return _CalendarFiledArtefact(
-        kind=kind,
-        sha256="d" * 64,
-        storage_ref=storage_ref,
+        _kind=kind,
+        _sha256="d" * 64,
+        _storage_ref=storage_ref,
     )
 
 

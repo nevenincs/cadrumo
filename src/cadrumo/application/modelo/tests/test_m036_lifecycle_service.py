@@ -9,11 +9,13 @@ adapter test package.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date
+import hashlib
+from datetime import UTC, date, datetime
 
 import pytest
 
+from ....core.classification.policies import SensitivityClass
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....domain.modelos.errors import Modelo036PriorAltaRequiredError
@@ -26,10 +28,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE_ID = "32323232-3232-4232-8232-323232323232"
 
 
-@dataclass(frozen=True)
-class _PreparedEventWrite:
+class _PreparedEventWrite(SecureObjectWrite):
     catalogue: BucketEventHistoryCatalogue
-    expected_revision_id: str | None
 
 
 class _EventRepository:
@@ -37,7 +37,7 @@ class _EventRepository:
 
     def __init__(self) -> None:
         self.catalogue = BucketEventHistoryCatalogue()
-        self.revision = "0"
+        self.revision = "0" * 64
 
     def exists(self) -> bool:
         return bool(self.catalogue.events)
@@ -47,7 +47,7 @@ class _EventRepository:
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         self.catalogue = catalogue
-        self.revision = str(int(self.revision) + 1)
+        self.revision = hashlib.sha256(self.revision.encode()).hexdigest()
 
     def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
         return self.catalogue, self.revision
@@ -57,10 +57,21 @@ class _EventRepository:
         catalogue: BucketEventHistoryCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> _PreparedEventWrite:
-        return _PreparedEventWrite(catalogue, expected_revision_id)
+    ) -> SecureObjectWrite:
+        return _PreparedEventWrite(
+            namespace="test",
+            object_key="m036-event-history",
+            classification=SensitivityClass.AUDIT,
+            schema_version=1,
+            written_at=datetime(2026, 6, 4, tzinfo=UTC),
+            payload=b"m036-event-history",
+            expected_revision_id=expected_revision_id,
+            catalogue=catalogue,
+        )
 
-    def commit(self, write: _PreparedEventWrite) -> None:
+    def commit(self, write: SecureObjectWrite) -> None:
+        if not isinstance(write, _PreparedEventWrite):
+            raise TypeError("m036 fake received an unexpected secure-object write")
         if write.expected_revision_id != self.revision:
             raise AssertionError("stale fake event write")
         self.save(write.catalogue)
@@ -94,8 +105,10 @@ class _DeclarationRepository:
     def save_with_secure_object_writes(
         self,
         declaration: M036DeclarationResult,
-        extra_writes: tuple[_PreparedEventWrite, ...],
+        extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
+        if not extra_writes:
+            raise AssertionError("m036 declaration requires one event write")
         self.events.commit(extra_writes[0])
         self.save(declaration)
 

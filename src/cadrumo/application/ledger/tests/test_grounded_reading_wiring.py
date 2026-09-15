@@ -22,9 +22,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
-from ....core.config import load_settings
+from ....core.config import Settings, load_settings
+from ....core.config_support import LLMProvider
 from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
@@ -48,10 +50,16 @@ from ..grounded_reading import (
     verified_provenance,
 )
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
-from ..invoice_draft_extraction_ports import InvoiceDraftExtractionPorts, InvoiceDraftReaderUnavailableError
+from ..invoice_draft_extraction_ports import (
+    EvidenceConsentProof,
+    InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderUnavailableError,
+    VisionImage,
+)
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..preconditions import LedgerPreconditionCondition
+from ..structured_invoice_ports import StructuredInvoiceRecord
 from ._evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -97,19 +105,33 @@ class _ReaderUnavailableForTest(Exception):
 def _reader_unavailable_ports() -> InvoiceDraftExtractionPorts:
     """Bind the application reader seam to a focused unavailable-reader fake."""
 
-    def unavailable(*args: object, **kwargs: object) -> object:
+    def unavailable(
+        _transcription: DocumentTranscription,
+        _settings: Settings,
+        _off_host_provider: LLMProvider | None,
+        _consent_token: EvidenceConsentProof | None,
+        _authority_values: object,
+        /,
+    ) -> InvoiceDraft:
         raise InvoiceDraftReaderUnavailableError(_ReaderUnavailableForTest("reader unavailable"))
 
-    def structured_reader_was_not_expected(*args: object, **kwargs: object) -> object:
+    def structured_reader_was_not_expected(data: bytes) -> StructuredInvoiceRecord:
         raise AssertionError("the structured reader is not part of this text-reader case")
 
-    def vision_reader_was_not_expected(*args: object, **kwargs: object) -> object:
+    def vision_reader_was_not_expected(
+        _images: tuple[VisionImage, ...],
+        _prompt: str,
+        _settings: Settings,
+        _off_host_provider: LLMProvider | None,
+        _consent_token: EvidenceConsentProof | None,
+        /,
+    ) -> DocumentTranscription:
         raise AssertionError("the vision reader is not part of this text-reader case")
 
     return InvoiceDraftExtractionPorts(
         resolve_evidence_input=lambda *args, **kwargs: _control_evidence(),
         evidence_input_ports=EvidenceInputPorts(
-            document_shape_probe=lambda _data: DocumentShape.PDF_TEXT_LAYER,
+            document_shape_probe=lambda data: DocumentShape.PDF_TEXT_LAYER,
         ),
         text_layer_ports=_CONTROL_TEXT_LAYER_PORTS,
         parse_structured_invoice=structured_reader_was_not_expected,
@@ -481,6 +503,8 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
                 _control_transcription(),
                 settings=load_settings(),
                 ports=_reader_unavailable_ports(),
+                authority_period=default_invoice_extraction_period(),
+                legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             )
 
@@ -648,7 +672,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         assert candidates, "the fixture must produce candidates, or this passes vacuously"
         assert all(not candidate.role_evidence for candidate in candidates)
 
-    def test_the_measured_defect_no_longer_grounds_the_lone_survivor(self) -> None:
+    def test_the_measured_defect_no_longer_grounds_the_lone_survivor(self, operation: PinnedAuthorityOperation) -> None:
         """True supplier's id fails its control character; an unrelated valid id survives.
 
         The case the filter exists for. Previously the survivor resolved with a
@@ -659,12 +683,13 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             candidates=self._candidates(supplier_tax_id="B1234567X", customer_tax_id="B12345674"),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert resolution.resolved is None, "a lone survivor must not be grounded as the counterparty"
         assert resolution.provenance.grounding is not FieldGroundingOutcome.ANCHORED
 
-    def test_the_filter_still_grounds_when_real_evidence_is_present(self) -> None:
+    def test_the_filter_still_grounds_when_real_evidence_is_present(self, operation: PinnedAuthorityOperation) -> None:
         """The mechanism is intact and waiting on evidence, not disabled.
 
         Without this the change would be indistinguishable from deleting the
@@ -679,12 +704,13 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             ),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert resolution.resolved == "B12345674"
         assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
 
-    def test_the_no_role_evidence_fallback_note_finally_renders(self) -> None:
+    def test_the_no_role_evidence_fallback_note_finally_renders(self, operation: PinnedAuthorityOperation) -> None:
         """That message was unreachable while every candidate carried manufactured evidence.
 
         Two identifiers both verify and neither is evidenced, so both are
@@ -697,6 +723,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             candidates=self._candidates(supplier_tax_id="B12345674", customer_tax_id="A82645177"),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert resolution.resolved is None
@@ -706,7 +733,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             for candidate in resolution.provenance.candidates
         )
 
-    def test_role_evidence_the_document_prints_reaches_the_resolver(self) -> None:
+    def test_role_evidence_the_document_prints_reaches_the_resolver(self, operation: PinnedAuthorityOperation) -> None:
         """The half with teeth: a printed heading is admitted and promotes.
 
         Rows two and three of the measured table -- an ordinary invoice with one
@@ -729,13 +756,14 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             candidates=candidates,
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert resolution.resolved == "B12345674"
         assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
         assert resolution.provenance.role_evidence is None or "Proveedor" in str(resolution.provenance.note)
 
-    def test_role_evidence_the_document_does_not_print_is_dropped(self) -> None:
+    def test_role_evidence_the_document_does_not_print_is_dropped(self, operation: PinnedAuthorityOperation) -> None:
         """A reader that invents a heading loses its evidence and its identity.
 
         This is the assertion that distinguishes the new payload field from the
@@ -762,12 +790,13 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             candidates=candidates,
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert resolution.resolved is None
         assert resolution.provenance.grounding is not FieldGroundingOutcome.ANCHORED
 
-    def test_two_printed_headings_compete_rather_than_one_winning(self) -> None:
+    def test_two_printed_headings_compete_rather_than_one_winning(self, operation: PinnedAuthorityOperation) -> None:
         """Real evidence on both sides is ambiguity, not a ranking.
 
         The bound on the previous test: admitting printed evidence must not
@@ -787,6 +816,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             candidates=candidates,
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
+            operation=operation,
         )
 
         assert resolution.resolved is None

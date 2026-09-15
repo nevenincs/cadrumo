@@ -30,6 +30,16 @@ if TYPE_CHECKING:
 
 class _AuthorityHost:
     if TYPE_CHECKING:
+        operation_id: OperationId
+        interaction_id: OperationInteractionId
+        revision: int
+        reviewed_proposal_digest: ContentDigest
+        actor_ref: OperationActorReference
+        expires_at: datetime | None
+        intents: frozenset[OperationResponseIntent]
+        clock: Callable[[], datetime]
+        _token: bytearray
+        _closed: bool
 
         def __getattr__(self, name: str) -> Any: ...
 

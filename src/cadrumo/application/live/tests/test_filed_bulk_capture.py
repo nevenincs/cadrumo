@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -27,23 +28,24 @@ from .filed_observation_test_support import in_memory_filed_observation_test_bun
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+@dataclass(frozen=True, slots=True)
 class _Declaration:
     """Minimal inward register-row fake for application tests."""
 
-    modelo = "303"
-    ejercicio = 2025
-    period = Period.from_year_and_code(2025, "1T")
-    expediente_id = "12345678901234567890"
-    estado = "ALTA"
-    tipo_solicitud = None
-    observaciones = None
-    justificante_link_text = None
-    archive_link_text = None
-    declaration_copy_link_text = None
-    justificante_cell_index = 7
-    archive_cell_index = 8
-    declaration_copy_cell_index = None
-    presented_at = datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    modelo: str = "303"
+    ejercicio: int = 2025
+    period: Period = field(default_factory=lambda: Period.from_year_and_code(2025, "1T"))
+    expediente_id: str = "12345678901234567890"
+    estado: str = "ALTA"
+    tipo_solicitud: str | None = None
+    observaciones: str | None = None
+    justificante_link_text: str | None = None
+    archive_link_text: str | None = None
+    declaration_copy_link_text: str | None = None
+    justificante_cell_index: int = 7
+    archive_cell_index: int | None = 8
+    declaration_copy_cell_index: int | None = None
+    presented_at: datetime = datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
 
 
 def _declaration() -> FiledRegisterDeclarationProtocol:

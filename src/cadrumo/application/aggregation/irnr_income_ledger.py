@@ -116,7 +116,7 @@ def _resolve_irnr_registry_revision(
     )
     if str(selected.id) != str(revision.id):
         raise AggregationValidationError(
-            "selected registry revision does not match the requested IRNR scope",
+            t("aggregation.irnr_income_ledger.errors.registry_revision_mismatch"),
         )
     return revision
 
@@ -287,7 +287,7 @@ def _resolve_selected_income_type_codes(revision: ModeloRevision, period: Period
     )
     if len(candidates) != 1:
         raise AggregationValidationError(
-            "selected registry revision must expose exactly one coded income namespace",
+            t("aggregation.irnr_income_ledger.errors.income_type_namespace_missing"),
         )
     coordinate = period.start_date
     declared = frozenset(
@@ -297,7 +297,7 @@ def _resolve_selected_income_type_codes(revision: ModeloRevision, period: Period
     )
     if not declared:
         raise AggregationValidationError(
-            "selected registry revision exposes no income codes for the requested period",
+            t("aggregation.irnr_income_ledger.errors.income_type_codes_missing"),
         )
     return declared
 
@@ -363,9 +363,12 @@ def _classify_irnr_income_transaction(
         return None
 
     transaction_id = transaction.transaction_id
-    jurisdiction_issue = _irnr_source_jurisdiction_issue(transaction_id, transaction.source_jurisdiction)
+    source_jurisdiction = transaction.source_jurisdiction
+    jurisdiction_issue = _irnr_source_jurisdiction_issue(transaction_id, source_jurisdiction)
     if jurisdiction_issue is not None:
         return jurisdiction_issue
+    if source_jurisdiction is None:
+        raise ValueError("source jurisdiction issue helper returned no issue for an absent jurisdiction")
 
     classification = transaction.m210_income_classification
     classification_issue = _irnr_classification_issue(
@@ -404,7 +407,7 @@ def _classify_irnr_income_transaction(
         payer_id=classification.payer_id,
         asset_or_right_id=classification.asset_or_right_id,
         filing_date=filing_date,
-        source_jurisdiction=transaction.source_jurisdiction,
+        source_jurisdiction=source_jurisdiction,
     )
 
 

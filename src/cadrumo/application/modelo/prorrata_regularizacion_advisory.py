@@ -355,7 +355,6 @@ def collect_prorrata_regularizacion_diagnostics(
             modelo=modelo,
             filing_year=filing_year,
             prorrata_register_repository=prorrata_register_repository,
-            transaction_repository=transaction_repository,
             bucket_id=bucket_id,
             operation=operation,
         )

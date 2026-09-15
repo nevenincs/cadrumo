@@ -43,6 +43,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import normalize_decimal_separators
@@ -117,6 +118,9 @@ from .work_selection import (
     select_modelo_work_resolution,
 )
 from .work_unit_repository import work_unit_catalogue_repository
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,6 +298,7 @@ def _create_external_source_work_unit(
     bucket_id: str,
     actor: str,
     ports: WorkLifecyclePorts,
+    operation: PinnedAuthorityOperation,
     clock: datetime | None,
 ) -> WorkUnit:
     """Create a source import target using the law-selected registry revision."""
@@ -302,6 +307,7 @@ def _create_external_source_work_unit(
         filing_year=source.filing_year,
         period=source.period,
         requested_revision_id=source.registry_revision_id,
+        operation=operation,
     )
     return create_work_unit(
         bucket_id=bucket_id,
@@ -311,6 +317,7 @@ def _create_external_source_work_unit(
         revision_id=revision_id,
         actor=actor,
         ports=ports,
+        operation=operation,
         clock=clock,
     )
 
@@ -321,6 +328,7 @@ def _resolve_external_source_work_unit(
     bucket_id: str,
     actor: str,
     ports: WorkLifecyclePorts,
+    operation: PinnedAuthorityOperation,
     clock: datetime | None,
 ) -> WorkUnit:
     """Resolve the active target or create one when the target is absent."""
@@ -334,6 +342,7 @@ def _resolve_external_source_work_unit(
         bucket_id=bucket_id,
         actor=actor,
         ports=ports,
+        operation=operation,
         clock=clock,
     )
 
@@ -343,6 +352,7 @@ def import_external_filing_source(
     *,
     bucket_id: str,
     work_lifecycle_ports: WorkLifecyclePorts,
+    operation: PinnedAuthorityOperation,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     actor: str = "aeat-import",
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
@@ -383,6 +393,7 @@ def import_external_filing_source(
         bucket_id=bucket_id,
         actor=actor,
         ports=work_lifecycle_ports,
+        operation=operation,
         clock=clock,
     )
     return import_external_filing_evidence(

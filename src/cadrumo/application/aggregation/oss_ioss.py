@@ -199,7 +199,7 @@ def validate_oss_ioss_observation(
     )
     if transaction_kind.value not in catalogue.transaction_kinds_for(regime):
         raise AggregationValidationError(
-            "transaction_kind is not admitted by the supplied OSS/IOSS regime",
+            t("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
         )
     expected = _expected_iva_amount(candidate, operation=operation)
     persisted = round_to_cents(candidate.iva_amount)
@@ -408,7 +408,7 @@ def _exterior_detail_row_fields(
         operation=operation,
     ).pct
     fields = {
-        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country.name,
+        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country.value,
         f"3-prestaciones-de-servicios-tipo-iva-{row}": declarations[f"rate_code.{rate_kind.value}"],
     }
     decimals = {

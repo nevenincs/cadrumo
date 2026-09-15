@@ -149,10 +149,10 @@ def _readable_secure_state_repair_checks(
     profile_decode_context: ProfileDecodeContext | None = None,
 ) -> tuple[list[_DiagnosticCheck], WizardStatusReport]:
     """Read secure workflow state and build its healthy diagnostic rows."""
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
     from .wizard.status import build_wizard_status
     from .workflow.persistence import workflow_state_repository
     from .workflow.profile_health import assess_active_profile_health
-    from ..domain.calculations.registry.authority import bundled_indexed_authority
 
     # Read the secure state through whatever session the operator already
     # holds. This probe deliberately opens none of its own: it used to enter
@@ -225,8 +225,8 @@ def _unreadable_secure_state_repair_checks(
     ports: DiagnosticsPorts,
 ) -> list[_DiagnosticCheck]:
     """Build the redacted secure-state, profile, and auth fallback rows."""
-    from .workflow.profile_health import assess_active_profile_health
     from ..domain.calculations.registry.authority import bundled_indexed_authority
+    from .workflow.profile_health import assess_active_profile_health
 
     _log.debug("config repair secure state probe failed", exc_info=True)
     with bundled_indexed_authority().operation() as operation:
@@ -529,8 +529,8 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
     whether the key is required or optional. The parent readiness row owns the
     single typed profile-editor action, avoiding per-finding transport prose.
     """
-    from .user_profile.profile_keys import profile_keys
     from ..domain.calculations.registry.authority import bundled_indexed_authority
+    from .user_profile.profile_keys import profile_keys
 
     if state is None:
         return ()

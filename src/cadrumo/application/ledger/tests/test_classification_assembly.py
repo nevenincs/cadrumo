@@ -13,7 +13,12 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import (
@@ -22,6 +27,7 @@ from ....domain.iva.classification import (
     IvaTerritorialScope,
     TransactionKind,
     domestic_rate_tier_is_required,
+    resolve_iva_classification_catalogue,
 )
 from ....domain.iva.schema import IvaCategory, IvaRateKind
 from ....domain.iva.supply_nature import SupplyNature
@@ -853,7 +859,11 @@ def test_the_undetermined_status_placeholder_never_changes_the_outcome() -> None
         )
 
         assert placeholder is not None
-        for status in CustomerTaxStatus:
+        classification_catalogue = resolve_iva_classification_catalogue(
+            _DATE,
+            operation=_authority_operation_for_test,
+        )
+        for status in classification_catalogue.customer_tax_statuses:
             if status is CustomerTaxStatus._from_registry("unknown"):
                 continue
             stated = classify_from_assembled_criteria(
@@ -904,7 +914,7 @@ def test_an_unplaced_operation_is_not_certified_indifferent() -> None:
     assert "customer_tax_status" in {m.field for m in assembly.missing}
 
 
-def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
+def test_the_undetermined_status_can_only_ride_status_blind_rules(*, operation: PinnedAuthorityOperation) -> None:
     """The safety asymmetry, asserted structurally rather than left to the probe.
 
     ``UNKNOWN`` is supplied where nobody established a status, so it must never
@@ -939,8 +949,11 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
     fallthrough = "R99_fallthrough"
     reachable_kinds = (TransactionKind("goods"), TransactionKind("services_general"))
     ridden_without_reading_the_status: set[str] = set()
+    classification_catalogue = resolve_iva_classification_catalogue(_DATE, operation=operation)
 
-    def _rule(status: CustomerTaxStatus, issuer, customer, kind, direction) -> str:
+    def _rule(
+        status: CustomerTaxStatus, issuer, customer, kind, direction, *, operation: PinnedAuthorityOperation
+    ) -> str:
         return classify_iva(
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
@@ -957,19 +970,20 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
                 else None,
                 rate_tier=IvaRateKind("general"),
             ),
+            operation=operation,
         ).matched_rule_id
 
-    for issuer in IvaTerritorialScope:
-        for customer in IvaTerritorialScope:
+    for issuer in classification_catalogue.territorial_scopes:
+        for customer in classification_catalogue.territorial_scopes:
             for kind in reachable_kinds:
                 for direction in InvoiceKind:
                     shape = (issuer, customer, kind, direction)
-                    matched = _rule(CustomerTaxStatus._from_registry("unknown"), *shape)
+                    matched = _rule(CustomerTaxStatus._from_registry("unknown"), *shape, operation=operation)
                     if matched == fallthrough:
                         continue
                     ridden_without_reading_the_status.add(matched)
-                    for status in CustomerTaxStatus:
-                        assert _rule(status, *shape) == matched, (
+                    for status in classification_catalogue.customer_tax_statuses:
+                        assert _rule(status, *shape, operation=operation) == matched, (
                             f"UNKNOWN matched {matched} on {shape} but {status} does not: "
                             "the rule reads the customer status, so UNKNOWN triggered it"
                         )

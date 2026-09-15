@@ -10,6 +10,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.application.user_profile.validation import reject_invalid_profile_facts
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
@@ -30,6 +31,7 @@ def test_operator_write_door_refuses_a_value_at_the_derived_aggregate_path() -> 
             _BUCKET,
             (UserProfileFact(path=_DERIVED_PATH, value=_SENTINEL),),
             require_complete=False,
+            schema=load_user_profile_schema(),
         )
 
     assert _DERIVED_PATH in str(refusal.value)

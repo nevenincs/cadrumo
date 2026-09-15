@@ -25,7 +25,8 @@ from typing import override
 
 import pytest
 
-from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.iva.classification import IvaTerritorialScope, resolve_iva_classification_catalogue
 from ....domain.iva.schema import EUMemberState
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFacts,
@@ -131,19 +132,19 @@ def test_an_unanswered_identification_resolves_to_nothing(
     assert resolution.identification is None
 
 
-@pytest.mark.parametrize("scope", list(IvaTerritorialScope))
 def test_no_territory_ever_produces_an_identification(
     repository: CounterpartyEstablishmentRepositoryProtocol,
-    scope: IvaTerritorialScope,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
-    """Swept across every member of the territory enum, not just a convenient one.
+    """Sweep every registry-projected territory, not just a convenient one.
 
     A cross-reading would most plausibly be written for one territory -- the EU
     member case -- so checking that case alone could pass while another leaked.
     """
-    _confirm(repository, scope=scope)
-
-    assert _resolve(repository).identification is None
+    for scope in resolve_iva_classification_catalogue(None, operation=operation).territorial_scopes:
+        _confirm(repository, scope=scope)
+        assert _resolve(repository).identification is None
 
 
 def test_answering_the_identification_later_is_an_addition_not_a_conflict(

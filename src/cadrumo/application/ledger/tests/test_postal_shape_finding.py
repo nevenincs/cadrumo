@@ -11,13 +11,16 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
 from ..deterministic_findings import deterministic_check_names, deterministic_findings
 from ..invoice_draft_records import InvoiceDraft
+from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..postal_shape_finding import postal_shape_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -30,8 +33,12 @@ _ADDRESS_BLOB = "Calle Mayor 3, 28013 Madrid"
 _BRITISH_CODE = "SW1A 1AA"
 
 
-def _kinds(draft: InvoiceDraft) -> list[str]:
-    return [finding.field or "" for finding in postal_shape_findings(draft)]
+def _kinds(draft: InvoiceDraft, *, operation: PinnedAuthorityOperation) -> list[str]:
+    return [finding.field or "" for finding in postal_shape_findings(draft, operation=operation)]
+
+
+def _legends(operation: PinnedAuthorityOperation):
+    return resolve_regime_legends(operation=operation, effective_date=default_invoice_extraction_period().end_date)
 
 
 class TestItFiresWhereTheCodeWasNeeded:
@@ -48,11 +55,13 @@ class TestItFiresWhereTheCodeWasNeeded:
             assert findings[0].field == "supplier_postal_code"
             assert "issuing party" in findings[0].detail
 
-    def test_an_unreadable_code_with_no_country_printed_is_reported(self) -> None:
+    def test_an_unreadable_code_with_no_country_printed_is_reported(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """Nothing established the party at all, so the code was the only evidence."""
         draft = InvoiceDraft(supplier_postal_code=_BRITISH_CODE)
 
-        assert _kinds(draft) == ["supplier_postal_code"]
+        assert _kinds(draft, operation=operation) == ["supplier_postal_code"]
 
     def test_the_detail_quotes_what_the_field_actually_holds(self) -> None:
         """An operator shown the printed text can read the real code out of it."""
@@ -100,16 +109,16 @@ class TestItStaysSilentWhereTheCodeCostNothing:
 class TestBothPartiesAreAskedIndependently:
     """On an issued invoice the CUSTOMER is the counterparty whose territory decides."""
 
-    def test_the_customer_side_is_checked(self) -> None:
+    def test_the_customer_side_is_checked(self, *, operation: PinnedAuthorityOperation) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(customer_postal_code=_ADDRESS_BLOB, customer_country="España")
 
             findings = postal_shape_findings(draft, operation=_authority_operation_for_test)
 
-            assert _kinds(draft) == ["customer_postal_code"]
+            assert _kinds(draft, operation=operation) == ["customer_postal_code"]
             assert "billed party" in findings[0].detail
 
-    def test_one_party_settled_does_not_silence_the_other(self) -> None:
+    def test_one_party_settled_does_not_silence_the_other(self, *, operation: PinnedAuthorityOperation) -> None:
         draft = InvoiceDraft(
             supplier_postal_code=_BRITISH_CODE,
             supplier_country="Reino Unido",
@@ -117,9 +126,9 @@ class TestBothPartiesAreAskedIndependently:
             customer_country="España",
         )
 
-        assert _kinds(draft) == ["customer_postal_code"]
+        assert _kinds(draft, operation=operation) == ["customer_postal_code"]
 
-    def test_both_unsettled_parties_are_each_reported(self) -> None:
+    def test_both_unsettled_parties_are_each_reported(self, *, operation: PinnedAuthorityOperation) -> None:
         draft = InvoiceDraft(
             supplier_postal_code=_ADDRESS_BLOB,
             supplier_country="España",
@@ -127,7 +136,7 @@ class TestBothPartiesAreAskedIndependently:
             customer_country="España",
         )
 
-        assert _kinds(draft) == ["supplier_postal_code", "customer_postal_code"]
+        assert _kinds(draft, operation=operation) == ["supplier_postal_code", "customer_postal_code"]
 
 
 class TestTheCheckIsWiredWhereItMustBe:
@@ -141,7 +150,11 @@ class TestTheCheckIsWiredWhereItMustBe:
             assert "postal_code_shape" in deterministic_check_names()
             assert any(
                 finding.kind is DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE
-                for finding in deterministic_findings(draft, operation=_authority_operation_for_test)
+                for finding in deterministic_findings(
+                    draft,
+                    legends=_legends(_authority_operation_for_test),
+                    operation=_authority_operation_for_test,
+                )
             )
 
     def test_the_kind_blocks_confirmation_under_its_own_reason(self) -> None:
@@ -149,7 +162,13 @@ class TestTheCheckIsWiredWhereItMustBe:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code=_ADDRESS_BLOB, supplier_country="España")
             reviewed = draft.model_copy(
-                update={"discrepancies": deterministic_findings(draft, operation=_authority_operation_for_test)}
+                update={
+                    "discrepancies": deterministic_findings(
+                        draft,
+                        legends=_legends(_authority_operation_for_test),
+                        operation=_authority_operation_for_test,
+                    )
+                }
             )
 
             blockers = confirmation_blockers(reviewed)

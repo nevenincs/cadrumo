@@ -29,7 +29,6 @@ from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.ids import (
     BindingId,
     ParameterId,
-    RelationId,
 )
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from .errors import CalcSheetsEngineError
@@ -231,8 +230,6 @@ def _translate_leaf(expression: FormulaExpression, *, layout: SheetLayout) -> st
         return _parameter_reference(expression.parameter, layout=layout)
     if expression.binding is not None:
         return _binding_reference(expression.binding, layout=layout)
-    if expression.relation is not None:
-        return _relation_reference(expression.relation, layout=layout)
     if expression.dispatch_table is not None:
         raise TranslationError()
     raise TranslationError()
@@ -414,16 +411,6 @@ def _binding_reference(binding: BindingId, *, layout: SheetLayout) -> str:
     except CalcSheetsEngineError as exc:
         raise TranslationError(
             hint="the layout planner must reserve a cell for every referenced binding",
-        ) from exc
-    return address.qualified()
-
-
-def _relation_reference(relation: RelationId, *, layout: SheetLayout) -> str:
-    try:
-        address = layout.address_for_relation(relation)
-    except CalcSheetsEngineError as exc:
-        raise TranslationError(
-            hint="the layout planner must mirror every referenced relation into Tarifas",
         ) from exc
     return address.qualified()
 

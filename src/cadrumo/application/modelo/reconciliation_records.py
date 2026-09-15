@@ -24,7 +24,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
 from enum import StrEnum
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
@@ -43,6 +43,9 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.modelos.filing_text import ModeloActorLabel
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from .action_errors import WorkUnitRevisionDivergenceError
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class ModeloReconciliationEvidenceKind(StrEnum):
@@ -310,6 +313,7 @@ def modelo_reconciliation_persistence() -> ModeloReconciliationPersistencePort:
 def list_modelo_reconciliations(
     *,
     bucket_id: BucketId,
+    operation: PinnedAuthorityOperation,
     work_unit_id: WorkUnitId | None = None,
 ) -> tuple[ModeloReconciliationHistoryEntry, ...]:
     """Return every recorded reconciliation in ``bucket_id`` as typed entries.
@@ -336,7 +340,7 @@ def list_modelo_reconciliations(
     for record in modelo_reconciliation_persistence().iter_records():
         if record.bucket_id != bucket_id or (work_unit_id is not None and record.work_unit_id != work_unit_id):
             continue
-        outcome = revision_carry_outcome(record.registry_snapshot_ref)
+        outcome = revision_carry_outcome(record.registry_snapshot_ref, operation=operation)
         if outcome.refused:
             ref = record.registry_snapshot_ref
             raise WorkUnitRevisionDivergenceError(

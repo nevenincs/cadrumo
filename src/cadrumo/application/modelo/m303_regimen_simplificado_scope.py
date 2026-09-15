@@ -39,20 +39,27 @@ def m303_profile_readiness_failure(
 
 def active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
     """Return the work unit's active, setup-complete taxpayer profile, or raise."""
-    try:
-        record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
-    except ProfileNotFoundError as exc:
-        raise ModeloProfileReadinessError(
-            precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
-        ) from exc
-    if record.setup_state is not ProfileSetupState.COMPLETE:
-        raise ModeloProfileReadinessError(
-            precondition_failure=m303_profile_readiness_failure(
-                "profile_inactive",
-                {"profile_present": True, "profile_setup_state": str(record.setup_state)},
-            ),
-        )
-    return projection_for_taxpayer(record)
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        profile_decode_context = operation.profile_decode_context()
+        try:
+            record = ProfileRecordRepository.for_current_session(
+                work_unit.bucket_id,
+                profile_decode_context=profile_decode_context,
+            ).load(work_unit.bucket_id)
+        except ProfileNotFoundError as exc:
+            raise ModeloProfileReadinessError(
+                precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
+            ) from exc
+        if record.setup_state is not ProfileSetupState.COMPLETE:
+            raise ModeloProfileReadinessError(
+                precondition_failure=m303_profile_readiness_failure(
+                    "profile_inactive",
+                    {"profile_present": True, "profile_setup_state": str(record.setup_state)},
+                ),
+            )
+        return projection_for_taxpayer(record, schema=profile_decode_context.schema)
 
 
 def m303_regimen_simplificado_scope_for_profile(

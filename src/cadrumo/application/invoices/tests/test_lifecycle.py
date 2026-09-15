@@ -12,6 +12,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+
 from ....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
@@ -36,6 +38,7 @@ def _build(invoice_number: str) -> Invoice:
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
+        rate_provider=default_ecb_rate_provider(),
     )
 
 

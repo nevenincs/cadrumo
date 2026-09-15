@@ -58,7 +58,13 @@ from ..iva_ledger import (
 )
 from ..renta_income_ledger import aggregate_renta_income_ledger
 from .iva_authority_support import aggregate_iva_ledger_observations
-from .renta_income_aggregation_support import raw_transaction
+from .renta_income_aggregation_support import (
+    _M130_INGRESOS_CASILLA,
+    _M130_MODELO,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+    raw_transaction,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -208,7 +214,15 @@ def test_a_grounded_invoice_reconciles_across_income_retenciones_and_iva() -> No
     transaction = _invoice_transaction(with_substrate=True)
     catalogue = _catalogue(transaction)
 
-    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    income = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=_BUCKET,
+        period=_PERIOD,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
     assert len(income.observations) == 1
@@ -273,7 +287,15 @@ def test_an_ungrounded_invoice_is_never_silently_dropped_nor_silently_folded() -
     transaction = _invoice_transaction(with_substrate=False)
     catalogue = _catalogue(transaction)
 
-    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    income = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=_BUCKET,
+        period=_PERIOD,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
     # IVA: excluded, with a reason naming the missing fact.
@@ -304,6 +326,10 @@ def test_the_ungrounded_invoice_costs_the_taxpayer_in_both_directions_at_once() 
         _catalogue(_invoice_transaction(with_substrate=False)),
         bucket_id=_BUCKET,
         period=_PERIOD,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
     )
     observation = income.observations[0]
 
@@ -475,7 +501,15 @@ def test_the_filed_figures_close_the_invoice_identity() -> None:
     """
     revision = _modelo_130_revision()
     catalogue = _catalogue(_invoice_transaction(with_substrate=True))
-    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    income = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=_BUCKET,
+        period=_PERIOD,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, income.observations)
@@ -567,7 +601,15 @@ def test_the_two_modelos_draw_the_same_base_from_one_invoice(
     agreeing on a wrong number.
     """
     catalogue = _catalogue(_invoice_transaction(with_substrate=True))
-    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    income = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=_BUCKET,
+        period=_PERIOD,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
     iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
     m130 = resolve_ledger_renta_income_aggregation_binding_values(_modelo_130_revision(), income.observations)

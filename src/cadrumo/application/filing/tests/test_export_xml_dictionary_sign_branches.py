@@ -20,6 +20,7 @@ signature.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 from xml.etree.ElementTree import Element
@@ -28,9 +29,11 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.export_parse import XmlDictionaryEntry, xml_dictionary_entries
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .._export_xml_dictionary import _modelo_100_sign_branch_value
+from .._export_xml_dictionary import _modelo_100_sign_branch_value, _registry_modelo_100_xml_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,6 +42,13 @@ _MODELO_100_2024_XSD = "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026
 _SIGN_BRANCH_CASILLA = "0695"
 _NON_NEGATIVE_BRANCH = "TCPP112"
 _NEGATIVE_BRANCH = "TCNN112"
+
+
+@pytest.fixture(scope="module")
+def _declarations(operation: PinnedAuthorityOperation) -> Mapping[str, str]:
+    """Resolve Modelo 100 XML routing declarations through the pinned authority."""
+    with validating_governed_facts(operation):
+        return _registry_modelo_100_xml_declarations()
 
 
 def _dictionary_entries() -> tuple[XmlDictionaryEntry, ...]:
@@ -92,32 +102,47 @@ def test_both_branches_are_mandatory_so_the_idle_one_is_zeroed_not_omitted() -> 
     )
 
 
-def test_a_positive_amount_reaches_only_the_amount_to_pay_branch() -> None:
+def test_a_positive_amount_reaches_only_the_amount_to_pay_branch(_declarations: Mapping[str, str]) -> None:
     """A positive 0695 is money still owed, and no refund is being requested."""
     entries = _branch_entries()
 
-    assert _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], Decimal("1234.56")) == Decimal("1234.56")
-    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("1234.56")) == Decimal("0")
+    assert _modelo_100_sign_branch_value(
+        entries[_NON_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
+    ) == Decimal("1234.56")
+    assert _modelo_100_sign_branch_value(
+        entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
+    ) == Decimal("0")
 
 
-def test_a_negative_amount_reaches_only_the_refund_branch() -> None:
+def test_a_negative_amount_reaches_only_the_refund_branch(_declarations: Mapping[str, str]) -> None:
     """A negative 0695 is a refund being requested, and nothing is owed."""
     entries = _branch_entries()
 
-    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("-987.65")) == Decimal("-987.65")
-    assert _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], Decimal("-987.65")) == Decimal("0")
+    assert _modelo_100_sign_branch_value(
+        entries[_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations
+    ) == Decimal("-987.65")
+    assert _modelo_100_sign_branch_value(
+        entries[_NON_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations
+    ) == Decimal("0")
 
 
-def test_zero_needs_no_tie_break_because_both_branches_agree_on_it() -> None:
+def test_zero_needs_no_tie_break_because_both_branches_agree_on_it(_declarations: Mapping[str, str]) -> None:
     """Both labels admit zero, and both rules yield zero, so the ambiguity is moot."""
     entries = _branch_entries()
 
-    assert _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], Decimal("0")) == Decimal("0")
-    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("0")) == Decimal("0")
+    assert _modelo_100_sign_branch_value(
+        entries[_NON_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations
+    ) == Decimal("0")
+    assert _modelo_100_sign_branch_value(
+        entries[_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations
+    ) == Decimal("0")
 
 
 @pytest.mark.parametrize("uncoercible", ["abc", "", "1.234,56", True, None])
-def test_a_value_that_will_not_coerce_selects_a_branch_instead_of_raising(uncoercible: object) -> None:
+def test_a_value_that_will_not_coerce_selects_a_branch_instead_of_raising(
+    uncoercible: object,
+    _declarations: Mapping[str, str],
+) -> None:
     """Branch selection must not fail on a value it cannot read a sign from.
 
     ``coerce_decimal`` answers ``None`` for these, so comparing the result
@@ -127,11 +152,16 @@ def test_a_value_that_will_not_coerce_selects_a_branch_instead_of_raising(uncoer
     """
     entries = _branch_entries()
 
-    assert _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], uncoercible) is uncoercible
-    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], uncoercible) == Decimal("0")
+    assert (
+        _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], uncoercible, declarations=_declarations)
+        is uncoercible
+    )
+    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], uncoercible, declarations=_declarations) == Decimal(
+        "0"
+    )
 
 
-def test_the_carry_class_is_left_alone() -> None:
+def test_the_carry_class_is_left_alone(_declarations: Mapping[str, str]) -> None:
     """Casillas that legitimately write every declared path must pass through.
 
     0435 and 0460 are carried into the base-liquidable block on AEAT's own
@@ -142,7 +172,7 @@ def test_the_carry_class_is_left_alone() -> None:
     assert len(carried) == 4, f"expected two rows each for 0435 and 0460, found {len(carried)}"
     for entry in carried:
         for amount in (Decimal("500.00"), Decimal("-500.00"), Decimal("0")):
-            assert _modelo_100_sign_branch_value(entry, amount) == amount
+            assert _modelo_100_sign_branch_value(entry, amount, declarations=_declarations) == amount
 
 
 def test_restoring_all_write_fails_every_branch_assertion() -> None:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -15,6 +15,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -115,6 +116,13 @@ class _InMemoryBorradorSnapshotRepository:
 @pytest.fixture
 def snapshot_repository() -> Generator[Borrador100SnapshotRepository]:
     yield _InMemoryBorradorSnapshotRepository(bucket_id=_BUCKET_ID)
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one indexed authority generation for each binding-resolution test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:
@@ -326,11 +334,13 @@ def test_borrador_binding_command_rejects_noncanonical_caller_binding_keys() -> 
 
 def test_borrador_resolution_is_inert_without_named_snapshot(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     result = resolve_modelo_100_borrador_bindings(
         _command(borrador_snapshot_id=None),
         registry_snapshot=_modelo_100_registry_snapshot(),
         snapshot_repository=snapshot_repository,
+        operation=authority_operation,
     )
 
     assert result.borrador_provenance is None
@@ -347,6 +357,7 @@ def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() ->
 
 def test_borrador_resolution_rejects_registry_without_borrador_capability(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
@@ -360,6 +371,7 @@ def test_borrador_resolution_rejects_registry_without_borrador_capability(
             ),
             registry_snapshot=registry_snapshot,
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.unsupported_modelo"
@@ -368,6 +380,7 @@ def test_borrador_resolution_rejects_registry_without_borrador_capability(
 
 def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
@@ -381,6 +394,7 @@ def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
         _command(borrador_snapshot_id=snapshot_id),
         registry_snapshot=_modelo_100_registry_snapshot(),
         snapshot_repository=snapshot_repository,
+        operation=authority_operation,
     )
 
     assert result.borrador_provenance is not None
@@ -392,6 +406,7 @@ def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
 
 def test_borrador_source_resolver_matches_application_binding_resolution(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
@@ -405,6 +420,7 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
         _command(borrador_snapshot_id=snapshot_id),
         registry_snapshot=registry_snapshot,
         snapshot_repository=snapshot_repository,
+        operation=authority_operation,
     )
 
     resolution = Modelo100BorradorSourceResolver(
@@ -413,6 +429,7 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
         caller_enum_binding_values={},
         registry_snapshot=registry_snapshot,
         snapshot_repository=snapshot_repository,
+        operation=authority_operation,
     ).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
@@ -470,6 +487,7 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
 
 def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
@@ -487,6 +505,7 @@ def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
         ),
         registry_snapshot=_modelo_100_registry_snapshot(),
         snapshot_repository=snapshot_repository,
+        operation=authority_operation,
     )
 
     assert result.binding_values == {}
@@ -497,6 +516,7 @@ def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
 
 def test_borrador_resolution_rejects_registry_unmarked_binding_values(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_UNMARKED_BINDING: Decimal("1")})
 
@@ -505,6 +525,7 @@ def test_borrador_resolution_rejects_registry_unmarked_binding_values(
             _command(borrador_snapshot_id=snapshot_id),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.forbidden_bindings"
@@ -513,6 +534,7 @@ def test_borrador_resolution_rejects_registry_unmarked_binding_values(
 
 def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_DECIMAL_BINDING: "not-a-decimal"})
 
@@ -521,6 +543,7 @@ def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(
             _command(borrador_snapshot_id=snapshot_id),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
@@ -564,12 +587,14 @@ def test_borrador_resolution_rejects_non_finite_string_and_decimal_values(
 
 def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="missing-snapshot"),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_load_failed"
@@ -581,12 +606,14 @@ def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(
 
 def test_borrador_resolution_rejects_non_modelo_100_consumers(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="snapshot-does-not-need-loading", modelo="303"),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     assert (
@@ -598,12 +625,14 @@ def test_borrador_resolution_rejects_non_modelo_100_consumers(
 
 def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id="snapshot-does-not-need-loading", filing_year=2024),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     assert (
@@ -620,6 +649,7 @@ def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
 
 def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
@@ -633,6 +663,7 @@ def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(
             _command(borrador_snapshot_id=snapshot_id),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     failure = exc_info.value.precondition_failure
@@ -642,6 +673,7 @@ def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(
 
 def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot_id = _save_snapshot(
         snapshot_repository,
@@ -655,6 +687,7 @@ def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(
             _command(borrador_snapshot_id=snapshot_id),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     failure = exc_info.value.precondition_failure
@@ -664,6 +697,7 @@ def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(
 
 def test_borrador_resolution_rejects_bucket_or_axis_mismatch(
     snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot_id = _save_snapshot(snapshot_repository, {_DECIMAL_BINDING: Decimal("1")})
 
@@ -672,6 +706,7 @@ def test_borrador_resolution_rejects_bucket_or_axis_mismatch(
             _command(borrador_snapshot_id=snapshot_id, bucket_id="other-bucket"),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
+            operation=authority_operation,
         )
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_bucket_mismatch"

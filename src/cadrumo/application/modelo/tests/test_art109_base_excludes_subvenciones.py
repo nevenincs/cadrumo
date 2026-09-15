@@ -30,6 +30,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
+from ....domain.calculations.registry.facts.schema import EntitySetFactPayload
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -113,7 +114,10 @@ def _coverage(*rows: Transaction):
 
 def _declared_concepts(fact_id: str) -> frozenset[ConceptoIngreso]:
     fact = compiled_bundled_authority().catalogues.facts.facts[fact_id]
-    return frozenset(ConceptoIngreso(token) for token in fact.variants[0].payload.entities)
+    payload = fact.variants[0].payload
+    if not isinstance(payload, EntitySetFactPayload):
+        raise TypeError(f"fact {fact_id!r} must use an entity-set payload")
+    return frozenset(ConceptoIngreso(token) for token in payload.entities)
 
 
 def test_the_two_provisions_disagree_on_exactly_one_concept() -> None:

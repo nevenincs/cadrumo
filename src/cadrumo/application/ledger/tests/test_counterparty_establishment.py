@@ -28,10 +28,19 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import IvaTerritorialScope, classify_iva
+from ....domain.iva.classification import (
+    IvaTerritorialScope,
+    classify_iva,
+    resolve_iva_classification_catalogue,
+)
 from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
@@ -83,17 +92,16 @@ def _confirm(
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("scope", list(IvaTerritorialScope))
 def test_an_empty_store_never_answers_with_any_territory(
     repository: CounterpartyEstablishmentRepositoryProtocol,
-    scope: IvaTerritorialScope,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
-    """No member of the enum is reachable from an empty store.
+    """No member of the registry-projected catalogue is reachable from an empty store.
 
-    Parameterised over the WHOLE enum rather than asserting "not mainland".
+    Swept over the whole catalogue rather than asserting "not mainland".
     Spot-checking the mainland would leave a default at any other member
-    invisible, and the sweep joins a new member on the day it is declared rather
-    than on the day someone remembers this test.
+    invisible, and the sweep joins a new member on the day it is declared.
     """
     resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
@@ -103,7 +111,8 @@ def test_an_empty_store_never_answers_with_any_territory(
 
     assert resolution.fact is None
     assert resolution.contradiction is None
-    assert resolution.fact is None or resolution.fact.value is not scope
+    for scope in resolve_iva_classification_catalogue(None, operation=operation).territorial_scopes:
+        assert resolution.fact is None or resolution.fact.value is not scope
 
 
 def test_the_bare_cif_domestic_invoice_resolves_to_nothing(

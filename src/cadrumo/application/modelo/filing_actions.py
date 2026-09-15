@@ -251,7 +251,7 @@ def file_modelo_revision(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
-    require_calculation_revision_coordinates_current(target)
+    require_calculation_revision_coordinates_current(target, operation=operation)
     work_units = wu_repo.load()
     work_unit = work_units.get(target.work_unit_id)
     if work_unit is None:
@@ -298,6 +298,7 @@ def file_modelo_revision(
                 revision=target,
                 filing_repository=fr_repo,
                 observation_repository=obs_repo,
+                operation=operation,
             )
             return existing
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
@@ -356,6 +357,7 @@ def file_modelo_revision(
         revision=target,
         filing_repository=fr_repo,
         observation_repository=obs_repo,
+        operation=operation,
     )
 
     return persist_filed_revision(

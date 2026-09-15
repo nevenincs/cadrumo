@@ -36,10 +36,15 @@ from typing import override
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
+from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope, resolve_iva_classification_catalogue
 from ....domain.iva.errors import IvaCatalogueError
 from ....domain.iva.establishment import (
     country_code_for_printed_tax_identifier,
@@ -130,6 +135,7 @@ def _resolve(
     country_name: str | None = None,
     country_code: str | None = None,
     postal_code: str | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CounterpartyEstablishment:
     return resolve_counterparty_establishment_scope(
         bucket_id=_BUCKET_ID,
@@ -138,6 +144,8 @@ def _resolve(
         resolved_country_code=country_code,
         postal_code=postal_code,
         repository=repository,
+        legends=_registry_legends(operation),
+        operation=operation,
     )
 
 
@@ -162,9 +170,11 @@ def test_ladder_composes_the_measured_cases(
     postal_code: str | None,
     expected_rung: EstablishmentRung | None,
     expected_scope: IvaTerritorialScope | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Each measured case resolves through the rung that owns it, or through none."""
-    resolved = _resolve(repository, country_name=country_name, postal_code=postal_code)
+    resolved = _resolve(repository, country_name=country_name, postal_code=postal_code, operation=operation)
 
     assert resolved.scope is expected_scope
     assert resolved.rung is expected_rung
@@ -172,7 +182,7 @@ def test_ladder_composes_the_measured_cases(
 
 
 def test_spain_named_is_the_postal_trigger_not_an_exhausted_rung(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A positively named Spain opens the postal rung rather than ending the ladder.
 
@@ -185,14 +195,14 @@ def test_spain_named_is_the_postal_trigger_not_an_exhausted_rung(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country("ES", operation=_authority_operation_for_test) is None
 
-        resolved = _resolve(repository, country_name="España", postal_code=_MADRID)
+        resolved = _resolve(repository, country_name="España", postal_code=_MADRID, operation=operation)
 
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
         assert resolved.scope is IvaTerritorialScope._from_registry("es_mainland")
 
 
 def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A French party is not read as Spanish, and the skipped rung would have said so.
 
@@ -201,7 +211,7 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
     rung, had it been consulted, would have returned a different territory.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        resolved = _resolve(repository, country_name="France", postal_code=_PARIS)
+        resolved = _resolve(repository, country_name="France", postal_code=_PARIS, operation=operation)
 
         assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
@@ -212,7 +222,7 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
 
 
 def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The sharper form: an ungated postal rung would put a French party outside LIVA.
 
@@ -222,7 +232,7 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
     the tax at all.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        resolved = _resolve(repository, country_name="France", postal_code=_CEUTA)
+        resolved = _resolve(repository, country_name="France", postal_code=_CEUTA, operation=operation)
 
         assert resolved.scope is IvaTerritorialScope._from_registry("eu_member")
         assert territorial_scope_for_spanish_postal_code(
@@ -231,7 +241,7 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
 
 
 def test_a_registration_disagreeing_with_the_address_settles_neither(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A German IVA number on a page addressed to Las Palmas settles NOTHING.
 
@@ -252,6 +262,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
             tax_identifier=_GERMAN_IVA,
             country_name="España",
             postal_code=_LAS_PALMAS,
+            operation=operation,
         )
 
         assert resolved.conflicted
@@ -267,7 +278,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
 
 
 def test_a_greek_iva_prefix_resolves_through_its_iso_code(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """``EL`` is Greece's IVA prefix while ``GR`` is its ISO code, and the catalogues are ISO-keyed.
 
@@ -277,7 +288,7 @@ def test_a_greek_iva_prefix_resolves_through_its_iso_code(
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert country_code_for_printed_tax_identifier(_GREEK_IVA, operation=_authority_operation_for_test) == "GR"
 
-        resolved = _resolve(repository, tax_identifier=_GREEK_IVA)
+        resolved = _resolve(repository, tax_identifier=_GREEK_IVA, operation=operation)
 
         # The divergence now bites on the fact a registration actually settles. Left
         # untranslated the number names no Member State at all, so the party's
@@ -287,12 +298,12 @@ def test_a_greek_iva_prefix_resolves_through_its_iso_code(
         # And it carries through to the territory once something corroborates it,
         # which is where a mistranslation would have reclassified an intra-community
         # acquisition as an import.
-        corroborated = _resolve(repository, tax_identifier=_GREEK_IVA, country_name="Grecia")
+        corroborated = _resolve(repository, tax_identifier=_GREEK_IVA, country_name="Grecia", operation=operation)
         assert corroborated.scope is IvaTerritorialScope._from_registry("eu_member")
 
 
 def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Registration is not establishment, so neither Spanish spelling opens a rung.
 
@@ -324,17 +335,17 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
             is None
         )
 
-        resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
+        resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, operation=operation)
 
         assert resolved.scope is None
         assert resolved.rung is None
 
 
 def test_a_prefix_on_arbitrary_text_is_not_a_country(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Two leading letters are not an IVA number, so the body must match its own State's shape."""
-    resolved = _resolve(repository, tax_identifier="FRANCISCO")
+    resolved = _resolve(repository, tax_identifier="FRANCISCO", operation=operation)
 
     assert resolved.scope is None
     assert resolved.rung is None
@@ -344,6 +355,8 @@ def test_a_prefix_on_arbitrary_text_is_not_a_country(
 def test_the_bare_domestic_invoice_exhausts_to_nothing(
     repository: CounterpartyEstablishmentRepositoryProtocol,
     printed_identifier: str,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The ruling's own fixture: a Spanish identifier, no country, a Spanish postal code.
 
@@ -359,7 +372,7 @@ def test_the_bare_domestic_invoice_exhausts_to_nothing(
     assembled ladder" are different statements, and it is the second one the
     ruling makes. Driving only the bare CIF gated the easier half.
     """
-    resolved = _resolve(repository, tax_identifier=printed_identifier, postal_code=_MADRID)
+    resolved = _resolve(repository, tax_identifier=printed_identifier, postal_code=_MADRID, operation=operation)
 
     assert resolved.scope is None
     assert resolved.rung is None
@@ -367,33 +380,37 @@ def test_the_bare_domestic_invoice_exhausts_to_nothing(
     assert resolved.declared_fact is None
 
 
-@pytest.mark.parametrize("scope", list(IvaTerritorialScope))
 def test_no_scope_is_reachable_from_absent_evidence(
     repository: CounterpartyEstablishmentRepositoryProtocol,
-    scope: IvaTerritorialScope,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Sweep the whole closed set: absence produces no member of it, not merely not the mainland."""
-    resolved = _resolve(repository)
+    catalogue = resolve_iva_classification_catalogue(
+        default_invoice_extraction_period().end_date,
+        operation=operation,
+    )
+    resolved = _resolve(repository, operation=operation)
 
-    assert resolved.scope is not scope
     assert resolved.scope is None
+    assert all(resolved.scope is not scope for scope in catalogue.territorial_scopes)
 
 
 def test_an_unrecognised_country_name_never_degrades_to_a_country(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A name outside the vocabulary establishes nothing, and does not fall through to the postal rung."""
-    resolved = _resolve(repository, country_name="Wakanda", postal_code=_MADRID)
+    resolved = _resolve(repository, country_name="Wakanda", postal_code=_MADRID, operation=operation)
 
     assert resolved.scope is None
     assert resolved.rung is None
 
 
 def test_the_printed_evidence_rungs_are_backed_by_the_document(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """An evidence rung records a page as its backing, so an auditor is sent to one."""
-    resolved = _resolve(repository, country_name="España", postal_code=_LAS_PALMAS)
+    resolved = _resolve(repository, country_name="España", postal_code=_LAS_PALMAS, operation=operation)
 
     assert resolved.source is ClassifierInputSource.DOCUMENT_EVIDENCE
     declared = resolved.declared_fact
@@ -403,7 +420,7 @@ def test_the_printed_evidence_rungs_are_backed_by_the_document(
 
 
 def test_a_confirmed_fact_answers_only_once_the_paper_has_settled_nothing(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The last rung carries an operator's backing, not a document's.
 
@@ -420,7 +437,7 @@ def test_a_confirmed_fact_answers_only_once_the_paper_has_settled_nothing(
         repository=repository,
     )
 
-    resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
+    resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, operation=operation)
 
     assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
     assert resolved.rung is EstablishmentRung.CONFIRMED_COUNTERPARTY_FACT
@@ -428,7 +445,7 @@ def test_a_confirmed_fact_answers_only_once_the_paper_has_settled_nothing(
 
 
 def test_decisive_paper_disagreeing_with_a_confirmed_fact_settles_nothing(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Disagreement is carried with NO scope, so neither side is preferred by accident.
 
@@ -445,7 +462,9 @@ def test_decisive_paper_disagreeing_with_a_confirmed_fact_settles_nothing(
         repository=repository,
     )
 
-    resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_MADRID)
+    resolved = _resolve(
+        repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_MADRID, operation=operation
+    )
 
     assert resolved.contradicted
     assert resolved.scope is None
@@ -458,7 +477,7 @@ def test_decisive_paper_disagreeing_with_a_confirmed_fact_settles_nothing(
 
 
 def test_agreeing_paper_leaves_the_evidence_rung_as_the_answer(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A stored fact that agrees does not demote the page that proved it."""
     record_confirmed_counterparty_facts(
@@ -470,7 +489,9 @@ def test_agreeing_paper_leaves_the_evidence_rung_as_the_answer(
         repository=repository,
     )
 
-    resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_LAS_PALMAS)
+    resolved = _resolve(
+        repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_LAS_PALMAS, operation=operation
+    )
 
     assert resolved.scope is IvaTerritorialScope._from_registry("es_canarias")
     assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
@@ -493,7 +514,7 @@ def _refusing_rung(*_args: object, **_kwargs: object) -> str | None:
 
 
 def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_party(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A broken data file raises out of the ladder, and is not a counterparty question.
 
@@ -506,11 +527,11 @@ def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_par
         scoped_attribute(ladder_module, "country_code_for_printed_country_name", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
-        _resolve(repository, country_name="España", postal_code=_MADRID)
+        _resolve(repository, country_name="España", postal_code=_MADRID, operation=operation)
 
 
 def test_a_corrupt_territory_registry_refuses_from_inside_the_rung_walk(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The postal rung's refusal survives the walk too, not only the lookup before it.
 
@@ -524,11 +545,11 @@ def test_a_corrupt_territory_registry_refuses_from_inside_the_rung_walk(
         scoped_attribute(ladder_module, "territorial_scope_for_spanish_postal_code", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
-        _resolve(repository, country_name="España", postal_code=_MADRID)
+        _resolve(repository, country_name="España", postal_code=_MADRID, operation=operation)
 
 
 def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The first lookup of the walk is covered on the same terms as the last.
 
@@ -542,11 +563,11 @@ def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
         scoped_attribute(ladder_module, "identification_state_for_printed_tax_identifier", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
-        _resolve(repository, tax_identifier=_GERMAN_IVA)
+        _resolve(repository, tax_identifier=_GERMAN_IVA, operation=operation)
 
 
 def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The rung BETWEEN the other three, which bracketing them left uncovered.
 
@@ -565,11 +586,11 @@ def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
         scoped_attribute(ladder_module, "territorial_scope_for_country", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
-        _resolve(repository, country_name="France")
+        _resolve(repository, country_name="France", operation=operation)
 
 
 def test_a_store_that_cannot_be_read_refuses_rather_than_reporting_no_confirmed_fact(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The confirmed-fact rung propagates on the same terms as the document rungs.
 
@@ -594,18 +615,18 @@ def test_a_store_that_cannot_be_read_refuses_rather_than_reporting_no_confirmed_
         scoped_attribute(ladder_module, "resolve_confirmed_counterparty_facts", _unreadable_store),
         pytest.raises(CounterpartyEstablishmentPersistenceError),
     ):
-        _resolve(repository, tax_identifier=_SPANISH_CIF)
+        _resolve(repository, tax_identifier=_SPANISH_CIF, operation=operation)
 
 
 def test_the_same_call_reports_an_unestablished_party_against_the_real_registry(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
+    repository: CounterpartyEstablishmentRepositoryProtocol, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The control for the refusal above: not-established is a returned value, never an exception.
 
     Without this pair the refusal test proves only that something raised, not
     that the two outcomes travel on different channels.
     """
-    resolved = _resolve(repository, country_name="Wakanda", postal_code=_MADRID)
+    resolved = _resolve(repository, country_name="Wakanda", postal_code=_MADRID, operation=operation)
 
     assert resolved.scope is None
     assert resolved.contradiction is None

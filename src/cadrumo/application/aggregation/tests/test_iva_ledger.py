@@ -16,6 +16,7 @@ from ....core.period import Period
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
+from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
@@ -53,13 +54,15 @@ def aggregate_iva_ledger_observations(
     period: Period,
 ) -> IvaLedgerAggregation:
     """Exercise the public path with an explicit empty authority owned by this test profile."""
-    return _aggregate_iva_ledger_observations_with_authority(
-        transactions,
-        period=period,
-        ledger_profile_id="test-profile",
-        investment_asset_register=_TEST_ASSET_REGISTER,
-        investment_asset_profile_id="test-profile",
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        return _aggregate_iva_ledger_observations_with_authority(
+            transactions,
+            period=period,
+            ledger_profile_id="test-profile",
+            investment_asset_register=_TEST_ASSET_REGISTER,
+            investment_asset_profile_id="test-profile",
+            operation=_authority_operation_for_test,
+        )
 
 
 def _iva_binding(
@@ -260,8 +263,13 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
     )
     catalogue = TransactionCatalogue.from_transactions((transaction,))
 
-    with pytest.raises(TypeError, match="investment_asset_register"):
-        cast(Any, _aggregate_iva_ledger_observations_with_authority)(catalogue, period=_Q2_2026)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(TypeError, match="investment_asset_register"):
+            cast(Any, _aggregate_iva_ledger_observations_with_authority)(
+                catalogue,
+                period=_Q2_2026,
+                operation=_authority_operation_for_test,
+            )
 
 
 def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> None:
@@ -287,13 +295,15 @@ def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> N
         )
     )
 
-    result = _aggregate_iva_ledger_observations_with_authority(
-        TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2_2026,
-        ledger_profile_id="test-profile",
-        investment_asset_register=register,
-        investment_asset_profile_id="test-profile",
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = _aggregate_iva_ledger_observations_with_authority(
+            TransactionCatalogue.from_transactions((transaction,)),
+            period=_Q2_2026,
+            ledger_profile_id="test-profile",
+            investment_asset_register=register,
+            investment_asset_profile_id="test-profile",
+            operation=_authority_operation_for_test,
+        )
 
     assert result.observations[0].investment_asset_id == "asset-direct"
 

@@ -663,6 +663,17 @@ def test_the_model_itself_no_longer_supplies_a_country() -> None:
         perceptor_legal_name="Perceptor One",
         transaction_date=date(2025, 12, 31),
         clave="A",
+        incapacity_cash_perception=Decimal("0"),
+        incapacity_cash_withholding=Decimal("0"),
+        incapacity_kind_value=Decimal("0"),
+        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+        incapacity_kind_repercutido=Decimal("0"),
+        foral_retention_estatal=Decimal("0"),
+        foral_retention_navarra=Decimal("0"),
+        foral_retention_araba=Decimal("0"),
+        foral_retention_gipuzkoa=Decimal("0"),
+        foral_retention_bizkaia=Decimal("0"),
+        base_retenciones=Decimal("0"),
     )
 
     assert observation.country_code is None
@@ -677,6 +688,17 @@ def test_a_stated_country_still_arrives_intact() -> None:
         country_code="FR",
         transaction_date=date(2025, 12, 31),
         clave="A",
+        incapacity_cash_perception=Decimal("0"),
+        incapacity_cash_withholding=Decimal("0"),
+        incapacity_kind_value=Decimal("0"),
+        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+        incapacity_kind_repercutido=Decimal("0"),
+        foral_retention_estatal=Decimal("0"),
+        foral_retention_navarra=Decimal("0"),
+        foral_retention_araba=Decimal("0"),
+        foral_retention_gipuzkoa=Decimal("0"),
+        foral_retention_bizkaia=Decimal("0"),
+        base_retenciones=Decimal("0"),
     )
 
     assert observation.country_code == "FR"

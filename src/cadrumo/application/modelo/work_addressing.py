@@ -349,7 +349,6 @@ class ModeloWorkPeriodTokenError(ModeloError):
         token: str,
         modelo: str | None,
         declared_tokens: tuple[str, ...],
-        fallback: str | None = None,
     ) -> None:
         """Record the rejected token and the declared alternatives for its target."""
         context = {
@@ -364,7 +363,6 @@ class ModeloWorkPeriodTokenError(ModeloError):
                 translated_message="application.modelo.errors.work_period_token_invalid",
             )
             return
-        del fallback
         super().__init__(
             context=context,
             translated_message="application.modelo.errors.work_period_token_unrecognised",
@@ -391,7 +389,8 @@ def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddres
 
 def _modelo_work_period_from_core(year: int, period: Period, *, modelo: str | None = None) -> Period:
     """Resolve a modelo work period through the core ``Period`` value object only."""
-    declared = declared_modelo_period_tokens(modelo)
+    with bundled_indexed_authority().operation() as operation:
+        declared = declared_modelo_period_tokens(modelo, operation=operation)
     if period.filing_year != year:
         raise ModeloWorkPeriodTokenError(
             year=year,
@@ -921,7 +920,7 @@ def law_selected_revision_for_work_target(
     period: Period,
     requested_revision_id: RevisionId | None = None,
     stored_revision_id: RevisionId | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RevisionId:
     """Capture the law-selected revision once and assert every supplied axis.
 
@@ -929,16 +928,6 @@ def law_selected_revision_for_work_target(
     ``(modelo, filing_year, period)``, so the work path performs one registry
     read and both axes are judged against the same atomic projection.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return law_selected_revision_for_work_target(
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                requested_revision_id=requested_revision_id,
-                stored_revision_id=stored_revision_id,
-                operation=indexed_operation,
-            )
     capture = RegistryAuthorityCapture(
         projection=operation.snapshot(
             modelo.strip(),
@@ -1193,32 +1182,42 @@ def ensure_modelo_work_unit_for_active_target(
         unit = resolution.work_unit
         from .profile_readiness_gate import require_profile_ready_for_work_unit
 
-        require_profile_ready_for_work_unit(unit, enforce_applicability=enforce_applicability)
-        name_applied: str | None = None
-        if name is not None and name.strip() and name.strip() != unit.name:
-            unit = rename_work_unit(unit.work_unit_id, name, actor=actor, ports=ports)
-            name_applied = unit.name
-        return ModeloWorkEnsureResult(work_unit=unit, reused=True, name_applied=name_applied)
+        with bundled_indexed_authority().operation() as operation:
+            profile_decode_context = operation.profile_decode_context()
+            require_profile_ready_for_work_unit(
+                unit,
+                enforce_applicability=enforce_applicability,
+                profile_decode_context=profile_decode_context,
+                operation=operation,
+            )
+            name_applied: str | None = None
+            if name is not None and name.strip() and name.strip() != unit.name:
+                unit = rename_work_unit(unit.work_unit_id, name, actor=actor, ports=ports)
+                name_applied = unit.name
+            return ModeloWorkEnsureResult(work_unit=unit, reused=True, name_applied=name_applied)
 
-    revision_id = law_selected_revision_for_work_target(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        requested_revision_id=requested_revision,
-    )
-    unit = create_work_unit(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        revision_id=revision_id,
-        name=name,
-        actor=actor,
-        causante_ccaa=causante_ccaa,
-        enforce_applicability=enforce_applicability,
-        ports=ports,
-    )
-    return ModeloWorkEnsureResult(work_unit=unit, reused=False)
+    with bundled_indexed_authority().operation() as operation:
+        revision_id = law_selected_revision_for_work_target(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            requested_revision_id=requested_revision,
+            operation=operation,
+        )
+        unit = create_work_unit(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=revision_id,
+            name=name,
+            actor=actor,
+            causante_ccaa=causante_ccaa,
+            enforce_applicability=enforce_applicability,
+            ports=ports,
+            operation=operation,
+        )
+        return ModeloWorkEnsureResult(work_unit=unit, reused=False)
 
 
 def resolve_modelo_work_address(
@@ -1314,6 +1313,7 @@ def resolve_modelo_calculation_revision_address(
         calculation_revision_id=calculation_revision_id,
         default_for=default_for,
         calculation_repository=ports.calculation_repository,
+        operation=ports.operation,
     ).revision
     return _require_revision_parent_admitted_for_operation(
         revision,
@@ -1393,6 +1393,7 @@ def resolve_modelo_revision_pick(
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloResolvedRevisionProjection:
     """Resolve and project a revision selection as :class:`ModeloResolvedRevisionProjection`."""
     if pick is None:
@@ -1408,6 +1409,7 @@ def resolve_modelo_revision_pick(
         calculation_revision_id=pick.calculation_revision_id,
         default_for=pick.default_for,
         calculation_repository=calculation_repository,
+        operation=operation,
     )
     return ModeloResolvedRevisionProjection.from_revision(selection.revision, selector=selection.selector)
 

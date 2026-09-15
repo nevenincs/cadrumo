@@ -37,6 +37,7 @@ from typing import NoReturn
 from ...application.invoices.catalogue_creation import resolve_iva_rate_slot
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing.dates import parse_iso8601_date
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.invoices.enums import (
     InvoiceClass,
     invoice_class_ordinaria,
@@ -235,9 +236,13 @@ def domestic_rate_tier_from_the_document(draft: InvoiceDraft, *, invoice_date: d
         return None
     # The lookup takes the rate as a FRACTION, matching how a transaction stores
     # it; the draft carries the bare percentage the document prints.
-    tiers = rate_kinds_for_declared_rate(
-        spanish_eu_member_state(effective_date=invoice_date), entry.iva_rate / Decimal("100"), invoice_date
-    )
+    with bundled_indexed_authority().operation() as operation:
+        tiers = rate_kinds_for_declared_rate(
+            spanish_eu_member_state(effective_date=invoice_date),
+            entry.iva_rate / Decimal("100"),
+            invoice_date,
+            operation=operation,
+        )
     if len(tiers) != 1:
         return None
     return tiers[0]

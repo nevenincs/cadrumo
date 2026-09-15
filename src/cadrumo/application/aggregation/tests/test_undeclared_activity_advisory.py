@@ -28,6 +28,7 @@ from functools import cache
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
@@ -112,6 +113,17 @@ def _advisories(
         _catalogue(*transactions),
         bucket_id=_BUCKET,
         period=_Q1,
+        modelo=Modelo("131").value,
+        target_casilla_id=validated_casilla_id(_CASILLA_05),
+        agrarian_activity_codes=frozenset(
+            TipoActividad(code)
+            for code in tipo_actividad_code_set(
+                "modelo-131:selector-m036-volumen-ingresos-agrario",
+                effective_date=_Q1.end_date,
+            )
+        ),
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
     )
     return aggregation, undeclared_activity_income_advisory_observations(aggregation, _m131_revision())
 

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
@@ -67,6 +68,9 @@ from .edit_services import (
     validate_scalar_intent,
     writable_scalar_entry,
 )
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _UNSUPPORTED_RECONSIDERATION = "resubmit without this intent once its follow-on Step lands, or split the submission"
 
@@ -178,7 +182,7 @@ def _apply_detail_row_intent(
         if intent.address.natural_key not in keys:
             return _detail_row_natural_key_refusal(intent.address)
         rows[keys.index(intent.address.natural_key)] = intent.row
-    elif intent.kind is ModeloEditDetailRowIntentKind.DELETE_ROW:
+    else:
         if intent.address.natural_key not in keys:
             return _detail_row_natural_key_refusal(intent.address)
         rows.pop(keys.index(intent.address.natural_key))
@@ -327,6 +331,7 @@ def _reconstruct_current_edit_detail_rows(
     baseline: ModeloEditBaselineV1,
     calculation_catalogue: CalculationRevisionCatalogue,
     detail_row_intents: tuple[ModeloDetailRowEditIntentV1, ...],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloDetailRow, ...] | ModeloEditExecutionNoEffectV1:
     """Revalidate the current revision coordinate before reconstructing its rows."""
     current_revision = (
@@ -335,7 +340,7 @@ def _reconstruct_current_edit_detail_rows(
         else None
     )
     if current_revision is not None:
-        require_calculation_revision_coordinates_current(current_revision)
+        require_calculation_revision_coordinates_current(current_revision, operation=operation)
     return _reconstruct_detail_rows(
         current_detail_rows=current_revision.detail_rows if current_revision is not None else (),
         detail_row_intents=detail_row_intents,
@@ -388,6 +393,7 @@ def apply_modelo_edit(
         baseline=baseline,
         calculation_catalogue=calculation_catalogue,
         detail_row_intents=submission.detail_row_intents,
+        operation=ports.operation,
     )
     if isinstance(reconstructed_detail_rows, ModeloEditExecutionNoEffectV1):
         return reconstructed_detail_rows

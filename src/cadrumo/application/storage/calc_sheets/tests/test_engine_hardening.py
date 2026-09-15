@@ -71,7 +71,7 @@ def test_blank_relation_values_carry_registry_grounding() -> None:
 
     assert plan.relation_provenance is not None
     relations_by_id = {
-        binding.id: provider for binding, provider in relation_prefill_bindings_for_period(snapshot.revision)
+        binding.id: (binding, provider) for binding, provider in relation_prefill_bindings_for_period(snapshot.revision)
     }
     requirements_by_relation = relation_requirement_index(
         relation_source_requirements(snapshot.revision, filing_year=snapshot.filing_year, period=snapshot.period),
@@ -79,14 +79,14 @@ def test_blank_relation_values_carry_registry_grounding() -> None:
     relation_rows = plan.relation_provenance.values
     assert relation_rows
     for row in relation_rows:
-        relation = relations_by_id[row.relation]
+        binding, provider = relations_by_id[row.relation]
         assert row.value is None
         assert row.provenance == "operator_manual"
-        assert row.source_modelo == relation.source_modelo
-        assert row.source_casilla_ids == (relation.source_casilla_id,)
+        assert row.source_modelo == provider.source_modelo
+        assert row.source_casilla_ids == provider.declared_source_casilla_ids
         assert row.dependency_treatment == requirements_by_relation[row.relation].dependency_treatment
-        assert set(relation.legal_refs) <= set(row.legal_refs)
-        assert set(relation.source_refs) <= set(row.source_refs)
+        assert set(binding.legal_refs) <= set(row.legal_refs)
+        assert set(binding.source_refs) <= set(row.source_refs)
 
     assert any(row.dependency_treatment for row in relation_rows), (
         "test precondition: the live snapshot declares treatment"

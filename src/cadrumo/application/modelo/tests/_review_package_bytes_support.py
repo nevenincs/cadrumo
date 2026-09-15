@@ -14,10 +14,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.work_unit import WorkUnit
 from ..review_package import build_review_package
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = ["build_package_bytes", "build_package_path"]
 
@@ -29,6 +33,7 @@ def build_package_path(
     work_unit_factory: Callable[..., WorkUnit],
     revision_factory: Callable[[WorkUnit], CalculationRevision],
     draft_bytes: bytes,
+    operation: PinnedAuthorityOperation,
     filename_template: str = "review-package.zip",
 ) -> Path:
     """Build a review package for ``bucket_id`` and return the written path.
@@ -41,6 +46,7 @@ def build_package_path(
         work_unit_factory: The caller's own ``_work_unit``-shaped builder.
         revision_factory: The caller's own ``_revision``-shaped builder.
         draft_bytes: The caller's own draft-bytes fixture, unchanged.
+        operation: The pinned authority operation for registry carry validation.
         filename_template: The output filename, formatted with ``bucket_id``.
             Callers that build several packages under one ``tmp_path`` in a
             single test bind ``"review-package-{bucket_id}.zip"`` so the
@@ -59,6 +65,7 @@ def build_package_path(
         draft_bytes=draft_bytes,
         output_path=output_path,
         built_by="operator",
+        operation=operation,
     )
     return output_path
 
@@ -70,6 +77,7 @@ def build_package_bytes(
     work_unit_factory: Callable[..., WorkUnit],
     revision_factory: Callable[[WorkUnit], CalculationRevision],
     draft_bytes: bytes,
+    operation: PinnedAuthorityOperation,
 ) -> bytes:
     """Build a review package for ``bucket_id`` and return its raw bytes.
 
@@ -91,4 +99,5 @@ def build_package_bytes(
         work_unit_factory=work_unit_factory,
         revision_factory=revision_factory,
         draft_bytes=draft_bytes,
+        operation=operation,
     ).read_bytes()

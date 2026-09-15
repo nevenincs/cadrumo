@@ -33,6 +33,7 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -143,9 +144,11 @@ _build_package = functools.partial(
 )
 
 
-def test_sign_then_verify_with_correct_public_key_passes(tmp_path: Path) -> None:
+def test_sign_then_verify_with_correct_public_key_passes(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     bucket_id = _OWNER_BUCKET_ID
-    package_path = _build_package(tmp_path, bucket_id=bucket_id)
+    package_path = _build_package(tmp_path, bucket_id=bucket_id, operation=operation)
     keypair = ensure_review_package_signing_keypair(
         bucket_id=bucket_id,
         signing_keypair=_SIGNING_CAPABILITY,
@@ -173,10 +176,12 @@ def test_sign_then_verify_with_correct_public_key_passes(tmp_path: Path) -> None
         pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
     ),
 )
-def test_sign_refuses_a_naive_or_non_utc_envelope_timestamp(tmp_path: Path, signed_at: datetime) -> None:
+def test_sign_refuses_a_naive_or_non_utc_envelope_timestamp(
+    tmp_path: Path, signed_at: datetime, *, operation: PinnedAuthorityOperation
+) -> None:
     """A signature envelope must carry one explicit UTC instant."""
     bucket_id = _OWNER_BUCKET_ID
-    package_path = _build_package(tmp_path, bucket_id=bucket_id)
+    package_path = _build_package(tmp_path, bucket_id=bucket_id, operation=operation)
     keypair = ensure_review_package_signing_keypair(
         bucket_id=bucket_id,
         signing_keypair=_SIGNING_CAPABILITY,
@@ -186,12 +191,14 @@ def test_sign_refuses_a_naive_or_non_utc_envelope_timestamp(tmp_path: Path, sign
         sign_review_package(package_path, keypair=keypair, signed_at=signed_at)
 
 
-def test_verify_fails_when_package_tampered_after_signing(tmp_path: Path) -> None:
+def test_verify_fails_when_package_tampered_after_signing(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """Tampering the archive after signing must fail verification (integrity-then-signature)."""
     import zipfile
 
     bucket_id = _OWNER_BUCKET_ID
-    package_path = _build_package(tmp_path, bucket_id=bucket_id)
+    package_path = _build_package(tmp_path, bucket_id=bucket_id, operation=operation)
     keypair = ensure_review_package_signing_keypair(
         bucket_id=bucket_id,
         signing_keypair=_SIGNING_CAPABILITY,
@@ -209,9 +216,9 @@ def test_verify_fails_when_package_tampered_after_signing(tmp_path: Path) -> Non
     assert verify_review_package_signature(package_path, signed, public_key_hex=keypair.public_key_hex) is False
 
 
-def test_verify_fails_with_wrong_public_key(tmp_path: Path) -> None:
+def test_verify_fails_with_wrong_public_key(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
     bucket_id = _OWNER_BUCKET_ID
-    package_path = _build_package(tmp_path, bucket_id=bucket_id)
+    package_path = _build_package(tmp_path, bucket_id=bucket_id, operation=operation)
     keypair = ensure_review_package_signing_keypair(
         bucket_id=bucket_id,
         signing_keypair=_SIGNING_CAPABILITY,
@@ -229,10 +236,12 @@ def test_verify_fails_with_wrong_public_key(tmp_path: Path) -> None:
     assert verify_review_package_signature(package_path, signed, public_key_hex=wrong_public_key_hex) is False
 
 
-def test_verify_fails_when_signature_bytes_are_corrupted(tmp_path: Path) -> None:
+def test_verify_fails_when_signature_bytes_are_corrupted(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
     """A structurally-valid but wrong signature (same length, different bytes) must fail."""
     bucket_id = _OWNER_BUCKET_ID
-    package_path = _build_package(tmp_path, bucket_id=bucket_id)
+    package_path = _build_package(tmp_path, bucket_id=bucket_id, operation=operation)
     keypair = ensure_review_package_signing_keypair(
         bucket_id=bucket_id,
         signing_keypair=_SIGNING_CAPABILITY,

@@ -13,11 +13,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_censo_source_tag_is_declared_by_the_schema() -> None:
     """The Censo projection never stamps a provenance value the record rejects."""
-    assert CENSO_SOURCE_TAG in declared_provenance_sources()
+    assert CENSO_SOURCE_TAG in declared_provenance_sources(schema=load_user_profile_schema())
 
 
 def test_declared_provenance_sources_are_read_from_the_schema() -> None:
     """The application validates against the schema authority, not a copy."""
-    assert declared_provenance_sources() == frozenset(
+    assert declared_provenance_sources(schema=load_user_profile_schema()) == frozenset(
         load_user_profile_schema().field("provenance.source").enum_values,
     )

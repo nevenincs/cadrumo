@@ -52,6 +52,7 @@ from ..regime_contradiction import draft_prints_a_repercutido_line, regime_contr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 @pytest.fixture
 def registry_legends() -> tuple[RegimeLegend, ...]:
     """Resolve the registry vocabulary on one pinned authority lease."""
@@ -83,7 +84,9 @@ def test_only_one_contradiction_shape_is_reachable(registry_legends: tuple[Regim
     declaring = tuple(legend for legend in registry_legends if legend.declares is not None)
     assert len(declaring) == 1
     assert declaring[0].expects_repercutido_line is False
-    assert not [legend for legend in registry_legends if legend.declares is not None and legend.expects_repercutido_line]
+    assert not [
+        legend for legend in registry_legends if legend.declares is not None and legend.expects_repercutido_line
+    ]
 
 
 def test_a_reverse_charge_mention_beside_a_charged_cuota_is_a_finding(

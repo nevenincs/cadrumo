@@ -33,6 +33,7 @@ from importlib import import_module
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
 from ....tests.attribute_scope import scoped_attribute
 
@@ -44,6 +45,7 @@ from ..deterministic_findings import (
     deterministic_check_names,
     deterministic_findings,
 )
+from ..invoice_extraction_authority import default_invoice_extraction_period
 
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
@@ -75,7 +77,7 @@ def test_a_check_added_to_the_declaration_moves_the_stamp_by_itself() -> None:
     """
     before = deterministic_check_names()
 
-    added = DeterministicCheck("a_check_that_did_not_exist", lambda draft: ())
+    added = DeterministicCheck("a_check_that_did_not_exist", lambda _draft, _legends, _operation: ())
     with scoped_attribute(deterministic_findings_module, "DETERMINISTIC_CHECKS", (*DETERMINISTIC_CHECKS, added)):
         after = deterministic_check_names()
 
@@ -98,9 +100,19 @@ def test_a_check_added_to_the_declaration_also_runs() -> None:
         with scoped_attribute(
             deterministic_findings_module,
             "DETERMINISTIC_CHECKS",
-            (*DETERMINISTIC_CHECKS, DeterministicCheck("sentinel_check", lambda draft: (sentinel,))),
+            (
+                *DETERMINISTIC_CHECKS,
+                DeterministicCheck("sentinel_check", lambda _draft, _legends, _operation: (sentinel,)),
+            ),
         ):
-            findings = deterministic_findings(InvoiceDraft(), operation=_authority_operation_for_test)
+            findings = deterministic_findings(
+                InvoiceDraft(),
+                legends=resolve_regime_legends(
+                    operation=_authority_operation_for_test,
+                    effective_date=default_invoice_extraction_period().end_date,
+                ),
+                operation=_authority_operation_for_test,
+            )
 
         assert sentinel in findings
 
@@ -175,7 +187,7 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
     with scoped_attribute(
         deterministic_findings_module,
         "DETERMINISTIC_CHECKS",
-        (*DETERMINISTIC_CHECKS, DeterministicCheck("late_arrival", lambda draft: ())),
+        (*DETERMINISTIC_CHECKS, DeterministicCheck("late_arrival", lambda _draft, _legends, _operation: ())),
     ):
         after = _mint()
 

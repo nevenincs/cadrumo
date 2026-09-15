@@ -34,6 +34,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.contribuyente.descendant import DescendantInfo
@@ -69,9 +70,9 @@ def _record_declaring_months(filing_year: int) -> UserProfileRecord:
     )
 
 
-def _resolution(filing_year: int):
+def _resolution(filing_year: int, *, operation: PinnedAuthorityOperation):
     snapshot = compiled_bundled_authority().snapshot("100", filing_year=filing_year, period="0A")
-    return resolve_maternidad_meses(_record_declaring_months(filing_year), snapshot)
+    return resolve_maternidad_meses(_record_declaring_months(filing_year), snapshot, operation=operation)
 
 
 def _retired_ceiling_year() -> int:
@@ -86,35 +87,35 @@ def _retired_ceiling_year() -> int:
 class TestCotizacionesCeilingYears:
     """A descendant the engine would otherwise grant must yield nothing before 2023."""
 
-    def test_no_deduccion_is_granted_while_the_ceiling_applied(self) -> None:
+    def test_no_deduccion_is_granted_while_the_ceiling_applied(self, *, operation: PinnedAuthorityOperation) -> None:
         """The over-grant this test closes, one assertion per affected year.
 
         The descendant is eligible on every other axis, so a granted figure here
         would be un-capped by the cotizaciones the statute required.
         """
         for filing_year in _CEILINGED_YEARS:
-            resolution = _resolution(filing_year)
+            resolution = _resolution(filing_year, operation=operation)
             assert resolution.pairs == (), filing_year
 
-    def test_the_withholding_is_disclosed_rather_than_silent(self) -> None:
+    def test_the_withholding_is_disclosed_rather_than_silent(self, *, operation: PinnedAuthorityOperation) -> None:
         """A declared figure that vanishes without explanation is the other failure.
 
         The operator typed months and receives nothing; the flag that drives the
         advisory must be set so the calculate path can say why.
         """
         for filing_year in _CEILINGED_YEARS:
-            resolution = _resolution(filing_year)
+            resolution = _resolution(filing_year, operation=operation)
             assert resolution.cotizaciones_ceiling_inexpressible is True, filing_year
             assert resolution.declares_meses is True, filing_year
 
-    def test_the_year_the_limitation_ended_is_granted_in_full(self) -> None:
+    def test_the_year_the_limitation_ended_is_granted_in_full(self, *, operation: PinnedAuthorityOperation) -> None:
         """2023 is the boundary and is NOT affected.
 
         Including it would trade this over-grant for an under-grant in the first
         year the deduccion was correctly un-capped -- the same year-scoping error
         arriving from the opposite direction.
         """
-        resolution = _resolution(_FIRST_UNCEILINGED_YEAR)
+        resolution = _resolution(_FIRST_UNCEILINGED_YEAR, operation=operation)
 
         assert resolution.pairs == (("0", 12),)
         assert resolution.cotizaciones_ceiling_inexpressible is False

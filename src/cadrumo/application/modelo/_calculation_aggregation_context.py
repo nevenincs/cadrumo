@@ -22,19 +22,27 @@ def load_bucket_aggregation_context(
         repository_bucket_id=work_unit_repository.bucket_id,
         use=ActiveWorkUnitUse.CALCULATE,
     )
-    require_profile_ready_for_work_unit(work_unit)
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
-    # The calculate path needs the rung that computes amounts, not the filing
-    # rung: a revision that honestly declares calculation must not be refused
-    # for work this application does entirely in memory. The work unit is held
-    # for ``ActiveWorkUnitUse.CALCULATE`` and no fichero or export layout is
-    # rendered here, so the filing rung would be an authority this path never
-    # exercises -- and demanding it makes a deliberate calculation-grade
-    # revision uncalculable, not merely unfilable.
-    return work_unit, _resolve_registry_snapshot_for_work_unit(
-        work_unit,
-        grade=RegistryAuthorityGrade.CALCULATION,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        require_profile_ready_for_work_unit(
+            work_unit,
+            profile_decode_context=operation.profile_decode_context(),
+            operation=operation,
+        )
+
+        # The calculate path needs the rung that computes amounts, not the filing
+        # rung: a revision that honestly declares calculation must not be refused
+        # for work this application does entirely in memory. The work unit is held
+        # for ``ActiveWorkUnitUse.CALCULATE`` and no fichero or export layout is
+        # rendered here, so the filing rung would be an authority this path never
+        # exercises -- and demanding it makes a deliberate calculation-grade
+        # revision uncalculable, not merely unfilable.
+        return work_unit, _resolve_registry_snapshot_for_work_unit(
+            work_unit,
+            grade=RegistryAuthorityGrade.CALCULATION,
+            operation=operation,
+        )
 
 
 __all__ = ["load_bucket_aggregation_context"]

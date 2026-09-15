@@ -188,6 +188,7 @@ def _validate_unobservable_result_state(
 
 def _read_declarations_workspace(
     *,
+    operation: PinnedAuthorityOperation,
     bucket_id: str,
     work_units: WorkUnitCatalogue,
     calculation_revisions: CalculationRevisionCatalogue,
@@ -197,6 +198,7 @@ def _read_declarations_workspace(
 ) -> DeclarationsWorkspaceProjectionV1 | None:
     try:
         return project_declarations_workspace(
+            operation=operation,
             bucket_id=bucket_id,
             work_units=work_units,
             calculation_revisions=calculation_revisions,
@@ -435,6 +437,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings, filings_revision = self.filing_repository.load_revisioned()
 
         declarations = _read_declarations_workspace(
+            operation=self.operation,
             bucket_id=self.profile_id,
             work_units=work_units,
             calculation_revisions=revisions,
@@ -541,7 +544,10 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         """
         if self.verification_repository is None:
             return None
-        return require_verification_report_coordinates_current(self.verification_repository.load())
+        return require_verification_report_coordinates_current(
+            self.verification_repository.load(),
+            operation=self.operation,
+        )
 
     def _load_ledger_sources(self) -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
         """Read the ledger stores once, as the value the guard compares.

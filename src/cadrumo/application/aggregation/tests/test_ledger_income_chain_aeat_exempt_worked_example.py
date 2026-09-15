@@ -107,6 +107,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..renta_income_ledger import aggregate_renta_m100_income_ledger
+from .renta_income_aggregation_support import _m130_activity_category_matcher, _m130_employment_category_matcher
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -307,7 +308,15 @@ def _aggregated(
             _income_row("conferencias-y-publicaciones", _CONFERENCIAS, date(_FILING_YEAR, 11, 15)),
         ),
     )
-    return aggregate_renta_m100_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    return aggregate_renta_m100_income_ledger(
+        catalogue,
+        bucket_id=_BUCKET,
+        period=_PERIOD,
+        modelo="100",
+        target_casilla_id=_CASILLA_INGRESOS_EXPLOTACION,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
 
 
 def _bound_casilla_inputs(revision: ModeloRevision, resolved: dict[str, Decimal]) -> dict[CasillaId, Decimal]:

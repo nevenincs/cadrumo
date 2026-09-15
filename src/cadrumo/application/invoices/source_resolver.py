@@ -744,16 +744,22 @@ def _m347_filer_declaration_roles(bucket_id: BucketId) -> frozenset[ThirdPartyDe
     set means claves C, D and E simply do not classify for this filer --
     never that A, B, F or G are affected, since those read no profile fact.
     """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import projection_for_taxpayer
 
-    try:
-        repository = ProfileRecordRepository.for_current_session(bucket_id)
-        record = repository.load(bucket_id)
-    except ProfileNotFoundError:
-        return frozenset[ThirdPartyDeclarationRole]()
-    return projection_for_taxpayer(record, schema=repository.session.profile_decode_context.schema).declaration_roles
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            profile_decode_context = operation.profile_decode_context()
+            repository = ProfileRecordRepository.for_current_session(
+                bucket_id,
+                profile_decode_context=profile_decode_context,
+            )
+            record = repository.load(bucket_id)
+        except ProfileNotFoundError:
+            return frozenset[ThirdPartyDeclarationRole]()
+        return projection_for_taxpayer(record, schema=profile_decode_context.schema).declaration_roles
 
 
 def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:

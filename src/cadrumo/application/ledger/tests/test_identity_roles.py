@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -348,19 +350,19 @@ def test_an_intra_eu_counterparty_verifies_rather_than_being_discarded() -> None
     assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
 
 
-def test_a_malformed_eu_identifier_does_not_verify() -> None:
+def test_a_malformed_eu_identifier_does_not_verify(operation: PinnedAuthorityOperation) -> None:
     """Positive control for the EU path: it validates rather than waving through."""
-    assert canonical_identity_token("FR00", country_code="FR") is None
-    assert canonical_identity_token("XX123456789", country_code="XX") is None
+    assert canonical_identity_token("FR00", country_code="FR", operation=operation) is None
+    assert canonical_identity_token("XX123456789", country_code="XX", operation=operation) is None
 
 
-def test_the_spanish_path_still_rejects_a_bad_control_character() -> None:
+def test_the_spanish_path_still_rejects_a_bad_control_character(operation: PinnedAuthorityOperation) -> None:
     """Positive control for the Spanish path."""
-    assert canonical_identity_token(_SUPPLIER_CIF_FAILING_CHECKSUM) is None
-    assert canonical_identity_token(_UNRELATED_VALID_CIF) == _UNRELATED_VALID_CIF
+    assert canonical_identity_token(_SUPPLIER_CIF_FAILING_CHECKSUM, operation=operation) is None
+    assert canonical_identity_token(_UNRELATED_VALID_CIF, operation=operation) == _UNRELATED_VALID_CIF
 
 
-def test_an_absent_country_does_not_verify_a_foreign_identifier_as_spanish() -> None:
+def test_an_absent_country_does_not_verify_a_foreign_identifier_as_spanish(operation: PinnedAuthorityOperation) -> None:
     """The country parameter is nullable here, so absence must not become Spain.
 
     The ledger transaction's counterparty country is itself optional, so this
@@ -376,11 +378,11 @@ def test_an_absent_country_does_not_verify_a_foreign_identifier_as_spanish() -> 
     """
     bare_foreign_number = "811907980"
 
-    assert canonical_identity_token(bare_foreign_number, country_code=None) is None
-    assert canonical_identity_token(bare_foreign_number) is None
+    assert canonical_identity_token(bare_foreign_number, country_code=None, operation=operation) is None
+    assert canonical_identity_token(bare_foreign_number, operation=operation) is None
 
     # Positive controls: an absent country must not break the two cases that
     # can answer for themselves, or the assertion above would hold for a helper
     # that simply verifies nothing.
-    assert canonical_identity_token("A58818501", country_code=None) == "A58818501"
-    assert canonical_identity_token("DE811907980", country_code=None) == "DE811907980"
+    assert canonical_identity_token("A58818501", country_code=None, operation=operation) == "A58818501"
+    assert canonical_identity_token("DE811907980", country_code=None, operation=operation) == "DE811907980"

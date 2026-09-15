@@ -24,11 +24,17 @@ from typing import Any
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ....domain.contribuyente.family_profile import RentaFamilyProfile
 from ....domain.contribuyente.family_types import MinimoDescendientesThresholds
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
@@ -71,9 +77,9 @@ def _autonomico_key(year: int) -> str:
     return f"renta_family.descendientes_minimos_aggregate_autonomico_{year}"
 
 
-def _inject(facts: dict[str, object], snapshot: RegistrySnapshot) -> None:
+def _inject(facts: dict[str, object], snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation) -> None:
     narrowed: Any = facts
-    inject_derived_minimo_descendientes_facts(narrowed, snapshot)
+    inject_derived_minimo_descendientes_facts(narrowed, snapshot, operation=operation)
 
 
 # ---------------------------------------------------------------------------
@@ -99,7 +105,9 @@ def test_every_revision_publishes_both_eligibility_thresholds() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_descendant_above_rentas_cap_contributes_zero_to_both_aggregates() -> None:
+def test_descendant_above_rentas_cap_contributes_zero_to_both_aggregates(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """A descendant over the Art. 58.1 ceiling generates no mínimo at all.
 
     Expected value is exact zero, which is what "no tenga rentas anuales,
@@ -113,12 +121,12 @@ def test_descendant_above_rentas_cap_contributes_zero_to_both_aggregates() -> No
             "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
             "renta_family.descendiente.0.rentas_anuales": str(over_cap),
         }
-        _inject(facts, snapshot)
+        _inject(facts, snapshot, operation=operation)
         assert facts[_estatal_key(year)] == Decimal("0"), year
         assert facts[_autonomico_key(year)] == Decimal("0"), year
 
 
-def test_descendant_exactly_at_the_cap_keeps_the_full_minimo() -> None:
+def test_descendant_exactly_at_the_cap_keeps_the_full_minimo(*, operation: PinnedAuthorityOperation) -> None:
     """Art. 58.1 excludes rentas "superiores a" the ceiling, so equality qualifies.
 
     Anti-tautology pair for the test above: the same machinery that returns
@@ -132,11 +140,11 @@ def test_descendant_exactly_at_the_cap_keeps_the_full_minimo() -> None:
             "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
             "renta_family.descendiente.0.rentas_anuales": str(at_cap),
         }
-        _inject(facts, snapshot)
+        _inject(facts, snapshot, operation=operation)
         assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo"), year
 
 
-def test_undeclared_rentas_do_not_exclude() -> None:
+def test_undeclared_rentas_do_not_exclude(*, operation: PinnedAuthorityOperation) -> None:
     """An absent figure is not evidence of income.
 
     Pins the deliberate direction of the default: a descendant nobody has
@@ -146,11 +154,11 @@ def test_undeclared_rentas_do_not_exclude() -> None:
     year = 2024
     snapshot = _snapshot(year)
     facts: dict[str, object] = {"renta_family.descendiente.0.birth_date": f"{year - 10}-05-01"}
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo")
 
 
-def test_excluded_descendant_does_not_consume_a_birth_order_rank() -> None:
+def test_excluded_descendant_does_not_consume_a_birth_order_rank(*, operation: PinnedAuthorityOperation) -> None:
     """An excluded elder sibling must not push the younger one down a tranche.
 
     The AEAT manual ranks "el primero / el segundo" over descendants who
@@ -165,7 +173,7 @@ def test_excluded_descendant_does_not_consume_a_birth_order_rank() -> None:
         "renta_family.descendiente.0.rentas_anuales": str(over_cap),
         "renta_family.descendiente.1.birth_date": f"{year - 10}-01-01",
     }
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo")
 
 
@@ -174,7 +182,7 @@ def test_excluded_descendant_does_not_consume_a_birth_order_rank() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_own_return_above_norma_2a_figure_excludes() -> None:
+def test_own_return_above_norma_2a_figure_excludes(*, operation: PinnedAuthorityOperation) -> None:
     """ "No procederá la aplicación del mínimo ... presenten declaración ... superiores a 1.800 euros"."""
     year = 2024
     snapshot = _snapshot(year)
@@ -184,11 +192,11 @@ def test_own_return_above_norma_2a_figure_excludes() -> None:
         "renta_family.descendiente.0.rentas_anuales": str(above),
         "renta_family.descendiente.0.declaracion_propia": "true",
     }
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == Decimal("0")
 
 
-def test_own_return_at_or_below_norma_2a_figure_keeps_the_minimo() -> None:
+def test_own_return_at_or_below_norma_2a_figure_keeps_the_minimo(*, operation: PinnedAuthorityOperation) -> None:
     """The AEAT manual states the below-threshold case explicitly.
 
     "Si el descendiente presenta declaración individual del IRPF ... con rentas
@@ -204,11 +212,13 @@ def test_own_return_at_or_below_norma_2a_figure_keeps_the_minimo() -> None:
         "renta_family.descendiente.0.rentas_anuales": str(at_figure),
         "renta_family.descendiente.0.declaracion_propia": "true",
     }
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo")
 
 
-def test_rentas_below_norma_2a_figure_without_own_return_keep_the_minimo() -> None:
+def test_rentas_below_norma_2a_figure_without_own_return_keep_the_minimo(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """Rentas alone are governed by the Art. 58.1 ceiling, not by norma 2ª.
 
     Isolates the two conditions: a descendant with rentas between the norma 2ª
@@ -223,7 +233,7 @@ def test_rentas_below_norma_2a_figure_without_own_return_keep_the_minimo() -> No
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_family.descendiente.0.rentas_anuales": str(between),
     }
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo")
 
 
@@ -232,7 +242,7 @@ def test_rentas_below_norma_2a_figure_without_own_return_keep_the_minimo() -> No
 # ---------------------------------------------------------------------------
 
 
-def test_two_entitled_filers_declaring_individually_each_take_half() -> None:
+def test_two_entitled_filers_declaring_individually_each_take_half(*, operation: PinnedAuthorityOperation) -> None:
     """The ordinary two-parent household, and the largest gap this closes.
 
     Norma 1ª: "Cuando dos o más contribuyentes tengan derecho a la aplicación
@@ -247,11 +257,11 @@ def test_two_entitled_filers_declaring_individually_each_take_half() -> None:
         "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
         "renta_filing.declaration_type": "1",
     }
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo") * Decimal("0.5")
 
 
-def test_conjunta_return_is_not_prorated() -> None:
+def test_conjunta_return_is_not_prorated(*, operation: PinnedAuthorityOperation) -> None:
     """A tributación conjunta unit files once, so there is no second filer to share with.
 
     Anti-tautology pair for the test above: the same profile switched to a
@@ -265,11 +275,11 @@ def test_conjunta_return_is_not_prorated() -> None:
         "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
         "renta_filing.declaration_type": "2",
     }
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo")
 
 
-def test_unpartnered_individual_filer_takes_the_full_minimo() -> None:
+def test_unpartnered_individual_filer_takes_the_full_minimo(*, operation: PinnedAuthorityOperation) -> None:
     """No signal of a second entitled contribuyente means no prorrateo."""
     year = 2024
     snapshot = _snapshot(year)
@@ -278,11 +288,11 @@ def test_unpartnered_individual_filer_takes_the_full_minimo() -> None:
         "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
         "renta_filing.declaration_type": "1",
     }
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo")
 
 
-def test_explicit_override_beats_the_derivation_in_both_directions() -> None:
+def test_explicit_override_beats_the_derivation_in_both_directions(*, operation: PinnedAuthorityOperation) -> None:
     """An operator answer always wins over the inference.
 
     Both directions are asserted from the same partnered-individual profile, so
@@ -298,15 +308,15 @@ def test_explicit_override_beats_the_derivation_in_both_directions() -> None:
     }
 
     claims_full = {**base, "renta_family.descendiente.0.prorrata_minimo": "false"}
-    _inject(claims_full, snapshot)
+    _inject(claims_full, snapshot, operation=operation)
     assert claims_full[_estatal_key(year)] == full
 
     accepts_split = {**base, "renta_family.descendiente.0.prorrata_minimo": "true"}
-    _inject(accepts_split, snapshot)
+    _inject(accepts_split, snapshot, operation=operation)
     assert accepts_split[_estatal_key(year)] == full * Decimal("0.5")
 
 
-def test_shared_custody_still_prorates_without_any_partner_signal() -> None:
+def test_shared_custody_still_prorates_without_any_partner_signal(*, operation: PinnedAuthorityOperation) -> None:
     """Custodia compartida is preserved as a trigger of the general rule."""
     year = 2024
     snapshot = _snapshot(year)
@@ -316,7 +326,7 @@ def test_shared_custody_still_prorates_without_any_partner_signal() -> None:
         "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
         "renta_filing.declaration_type": "1",
     }
-    _inject(facts, snapshot)
+    _inject(facts, snapshot, operation=operation)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo") * Decimal("0.5")
 
 
@@ -417,7 +427,9 @@ def test_an_unreadable_rentas_figure_refuses_rather_than_restoring_the_minimo() 
         )
 
 
-def test_profile_carrying_the_new_facts_produces_a_prorated_and_capped_aggregate() -> None:
+def test_profile_carrying_the_new_facts_produces_a_prorated_and_capped_aggregate(
+    *, operation: PinnedAuthorityOperation
+) -> None:
     """End-to-end: three descendants, one capped, one excluded, one entitled and prorated.
 
     Expected value is the published first-child tranche halved. The two
@@ -452,6 +464,11 @@ def test_profile_carrying_the_new_facts_produces_a_prorated_and_capped_aggregate
         menor_tres_supplement=_parameter(snapshot, "menor-tres-anos"),
         fallecimiento_amount=_parameter(snapshot, "fallecimiento"),
         thresholds=thresholds,
+        context=FamilyFactResolutionContext(
+            authority=operation,
+            filing_period=date(year, 12, 31),
+            devengo_date=date(year, 12, 31),
+        ),
         second_filer_indicated=True,
     )
     assert total == _parameter(snapshot, "primer-hijo") * Decimal("0.5")

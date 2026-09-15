@@ -27,6 +27,7 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ....domain.calculations.export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.iva_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
@@ -380,20 +381,21 @@ def _m303_filing_facts(
             for activity in annual_activities
         ),
     )
-    regimen_evidence = M303RegimenSimplificadoFilingEvidence(
-        scope_decision=scope,
-        rows=regimen_rows,
-        regimen_snapshot=regimen_snapshot,
-        dana_2024_eligibility=None,
-        calculation_result=calculate_m303_regimen_simplificado_result(
-            period=period,
+    with bundled_indexed_authority().operation() as operation:
+        regimen_evidence = M303RegimenSimplificadoFilingEvidence(
             scope_decision=scope,
             rows=regimen_rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            authority=compiled_bundled_authority(),
-        ),
-    )
+            calculation_result=calculate_m303_regimen_simplificado_result(
+                period=period,
+                scope_decision=scope,
+                rows=regimen_rows,
+                regimen_snapshot=regimen_snapshot,
+                dana_2024_eligibility=None,
+                operation=operation,
+            ),
+        )
     return M303FilingFacts(
         joint_return_elected=False,
         annual_volume_nonzero=False,

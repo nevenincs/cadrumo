@@ -20,11 +20,16 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.casilla_id import validated_casilla_id
 from ....core.concepto_ingreso import ConceptoIngreso
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
+from ..modelo_bindings import _activity_category_matcher, _employment_category_matcher
 from ..renta_income_ledger import aggregate_renta_m131_agrario_income_ledger
 from .renta_income_aggregation_support import raw_transaction
 
@@ -74,7 +79,25 @@ def _total(*transactions: Transaction) -> Decimal:
     catalogue = TransactionCatalogue.model_validate(
         {"transactions": {t.transaction_id: t for t in transactions}},
     )
-    aggregation = aggregate_renta_m131_agrario_income_ledger(catalogue, bucket_id=_BUCKET, period=_Q1)
+    with bundled_indexed_authority().operation() as operation:
+        agrarian_activity_codes = frozenset(
+            TipoActividad(code)
+            for code in tipo_actividad_code_set(
+                "modelo-131:selector-m036-volumen-ingresos-agrario",
+                effective_date=_Q1.end_date,
+                authority=operation,
+            )
+        )
+        aggregation = aggregate_renta_m131_agrario_income_ledger(
+            catalogue,
+            bucket_id=_BUCKET,
+            period=_Q1,
+            modelo=Modelo("131").value,
+            target_casilla_id=validated_casilla_id("05"),
+            agrarian_activity_codes=agrarian_activity_codes,
+            activity_category_matcher=_activity_category_matcher(operation),
+            employment_category_matcher=_employment_category_matcher(operation),
+        )
     return sum((o.gross_amount for o in aggregation.observations), start=Decimal("0"))
 
 

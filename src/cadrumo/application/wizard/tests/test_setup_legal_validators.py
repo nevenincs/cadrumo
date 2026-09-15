@@ -26,6 +26,7 @@ from pydantic import BaseModel
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_monoparental_required
 from cadrumo.domain.contribuyente.renta_codes import SituacionFamiliar
 
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
@@ -63,14 +64,14 @@ def test_monoparental_required_is_registration_agnostic() -> None:
     bond, so every non-married situation — including a de-facto couple whether
     or not it is registered — is monoparental-only; only CASADO opts as a
     couple (Art. 82.1.1ª)."""
-    assert SituacionFamiliar._from_registry("casado").monoparental_required() is False
+    assert situacion_familiar_monoparental_required(SituacionFamiliar._from_registry("casado")) is False
     for situacion in (
         SituacionFamiliar._from_registry("soltero"),
         SituacionFamiliar._from_registry("separado_divorciado"),
         SituacionFamiliar._from_registry("pareja_hecho_registrada"),
         SituacionFamiliar._from_registry("pareja_hecho_no_registrada"),
     ):
-        assert situacion.monoparental_required() is True, situacion
+        assert situacion_familiar_monoparental_required(situacion) is True, situacion
 
 
 # ---------------------------------------------------------------------------

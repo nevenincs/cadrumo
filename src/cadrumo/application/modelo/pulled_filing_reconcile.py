@@ -64,6 +64,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -97,7 +98,8 @@ def _pulled_filed_values(
     stored = repository.load_observation(str(work_unit.modelo), work_unit.period)
     if stored is None:
         return None
-    require_observation_envelope_coordinates_current(stored)
+    with bundled_indexed_authority().operation() as operation:
+        require_observation_envelope_coordinates_current(stored, operation=operation)
     return dict(stored.observation.casilla_values)
 
 

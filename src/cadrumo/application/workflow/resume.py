@@ -555,6 +555,7 @@ def _resolve_revision_for_resume_target(
         catalogue=catalogue,
         resolved_bucket_id=bucket_id,
         calculation_repository=ports.calculation_repository,
+        operation=ports.operation,
     )
 
 

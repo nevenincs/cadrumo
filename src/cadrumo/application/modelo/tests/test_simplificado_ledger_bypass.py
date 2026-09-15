@@ -32,6 +32,7 @@ from cadrumo.application.modelo import _calculation_preparation
 from cadrumo.application.modelo._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
@@ -174,17 +175,22 @@ def _seed_blocking_transaction(bucket_id: str) -> TransactionCatalogueRepository
     )
 
 
-def _empty_usage_ratio_profile(*, bucket_id: str) -> UsageRatioProfile:
-    del bucket_id
+def _empty_usage_ratio_profile(*, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:
+    del bucket_id, operation
     return UsageRatioProfile()
 
 
 def _set_iva_regime(monkeypatch: pytest.MonkeyPatch, regime: IVARegime) -> None:
-    monkeypatch.setattr(_calculation_preparation, "_iva_regime_for_bucket", lambda bucket_id: regime)
+    def resolve(_bucket_id: str, *, operation: PinnedAuthorityOperation) -> IVARegime:
+        del operation
+        return regime
+
+    monkeypatch.setattr(_calculation_preparation, "_iva_regime_for_bucket", resolve)
 
 
 def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassified(
     monkeypatch: pytest.MonkeyPatch,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """SIMPLIFICADO work unit must not be blocked even when unclassified transactions exist.
 
@@ -204,11 +210,13 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
         revision=snapshot.revision,
         transaction_repository=tx_repo,
         usage_ratio_profile_loader=_empty_usage_ratio_profile,
+        operation=operation,
     )
 
 
 def test_general_profile_raises_preflight_error_when_transactions_are_unclassified(
     monkeypatch: pytest.MonkeyPatch,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Anti-tautology: GENERAL-regime work unit MUST be blocked by the same inputs.
 
@@ -227,5 +235,6 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
             revision=snapshot.revision,
             transaction_repository=tx_repo,
             usage_ratio_profile_loader=_empty_usage_ratio_profile,
+            operation=operation,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"

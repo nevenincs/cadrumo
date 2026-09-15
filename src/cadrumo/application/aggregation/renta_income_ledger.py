@@ -33,7 +33,7 @@ from typing import NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.aggregation import LedgerIncomeGrounding
+from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as t
 from ...core.identity.transaction_ids import TransactionId
@@ -164,6 +164,7 @@ class RentaIncomeObservation(BaseModel):
     gross_amount: Decimal = Field(ge=Decimal("0"))
     taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     withheld_amount: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
+    withheld_derivation: LedgerWithholdingDerivation
     filing_date: date
     source_jurisdiction: str | None = None
     grounding: LedgerIncomeGrounding
@@ -950,6 +951,7 @@ def _income_observation(
         gross_amount=gross_amount,
         taxable_base_amount=taxable_base_amount,
         withheld_amount=withheld.amount,
+        withheld_derivation=withheld.derivation,
         sales_invoice_refusal=evidence_refusal,
         filing_date=filing_date,
         source_jurisdiction=transaction.source_jurisdiction,

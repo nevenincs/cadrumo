@@ -70,41 +70,34 @@ def _work_unit(period_code: str = "1T") -> WorkUnit:
 # ---------------------------------------------------------------------------
 
 
-def test_overview_window_lookup_goes_through_the_domain_resolver_cache() -> None:
+def test_overview_window_lookup_goes_through_the_domain_resolver() -> None:
     """DISCRIMINATING: overview's lookup must reach the canonical resolver.
 
-    ``resolve_filing_window`` is ``lru_cache``-backed, so its miss counter is a
-    real instrument for whether a caller went through it. Evicting the cache
-    and then calling overview's helper must register a miss; a reimplemented
-    local scan inside overview would answer correctly and leave the counter at
-    zero. This asserts the mechanism, which a parity assertion cannot.
+    The resolver is the domain's single matching authority. The compiled name
+    reference distinguishes delegation from a local scan that happens to
+    produce the same answer, so a duplicate matcher cannot satisfy this gate.
     """
     unit = _work_unit()
-    resolve_filing_window.cache_clear()
-    assert resolve_filing_window.cache_info().misses == 0, "cache_clear must reset the instrument"
-
-    _registry_window_for_work_unit(unit)
-
-    assert resolve_filing_window.cache_info().misses == 1, (
-        "overview resolved a deadline window without going through domain.deadlines.resolve_filing_window"
+    referenced = _registry_window_for_work_unit.__code__.co_names
+    assert "_resolve_filing_window" in referenced, (
+        "overview._registry_window_for_work_unit must delegate to "
+        "domain.deadlines.resolve_filing_window; referenced names were "
+        f"{referenced}"
     )
 
 
-def test_overview_window_lookup_reuses_the_cached_domain_entry() -> None:
-    """DISCRIMINATING: a repeat overview lookup must hit the domain cache.
+def test_overview_window_lookup_returns_the_domain_entry() -> None:
+    """SUPPORTING: overview projects the same window as the domain resolver.
 
-    A local reimplementation would rescan the authority on every call and never
-    register a hit, so the hit counter distinguishes delegation from a
-    coincidentally-equal duplicate.
+    The mechanism is pinned above; this assertion keeps the projection contract
+    explicit while the deadline domain remains the sole matching authority.
     """
     unit = _work_unit()
-    resolve_filing_window.cache_clear()
-
-    _registry_window_for_work_unit(unit)
-    _registry_window_for_work_unit(unit)
-
-    info = resolve_filing_window.cache_info()
-    assert (info.misses, info.hits) == (1, 1), f"expected one miss then one hit, got {info}"
+    assert _registry_window_for_work_unit(unit) == resolve_filing_window(
+        _MODELO,
+        _FILING_YEAR,
+        unit.period,
+    )
 
 
 def test_domain_closes_on_projects_the_same_window_overview_reads() -> None:

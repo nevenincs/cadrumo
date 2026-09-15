@@ -9,13 +9,19 @@ through ``tr()`` so the operator-facing surface is localised.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
 
 from ....core.aggregation import BindingSourceKind
@@ -46,6 +52,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ...workflow.errors import WorkflowInputMismatchError
 from ..action_errors import ModeloAggregationBindingError
 from ..art20_advisory import art20_reduccion_advisory_finding
@@ -102,6 +109,48 @@ _MODELO_FACT_CONTEXT = ModeloFactResolutionContext(
     filing_period=date(2025, 12, 31),
     devengo_date=date(2025, 12, 31),
 )
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one authority generation for the advisory resolvers under test."""
+    with _indexed_authority_for_test().operation() as operation:
+        yield operation
+
+
+class _EmptyTransactionRepository:
+    """Deterministic empty transaction port for the unresolved-snapshot test."""
+
+    @property
+    def bucket_id(self) -> str:
+        return _BUCKET_ID
+
+    @staticmethod
+    def exists() -> bool:
+        return False
+
+    @staticmethod
+    def load() -> TransactionCatalogue:
+        return TransactionCatalogue()
+
+    @staticmethod
+    def load_for_date_range(start: date, end: date) -> TransactionCatalogue:
+        del start, end
+        return TransactionCatalogue()
+
+    @staticmethod
+    def load_by_ids(transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        del transaction_ids
+        return TransactionCatalogue()
+
+    @staticmethod
+    def partition_by_date_range(start: date, end: date) -> LedgerDatePartition:
+        del start, end
+        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
+
+    @staticmethod
+    def save(catalogue: TransactionCatalogue) -> None:
+        del catalogue
 
 
 def _test_casilla_definition(
@@ -452,7 +501,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
             work_unit=work_unit,
             target=target,
             profile=_resident_profile(),
-            transaction_repository=None,
+            transaction_repository=_EmptyTransactionRepository(),
             operation=_authority_operation_for_test,
         )
         assert len(findings) == 1
@@ -473,7 +522,9 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_dt12_reduccion_advisory_message_is_localised() -> None:
+def test_dt12_reduccion_advisory_message_is_localised(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """dt12_reduccion_advisory_finding emits a tr()-rendered message.
 
     A real revision object carrying two casillas with the correct semantic
@@ -483,7 +534,7 @@ def test_dt12_reduccion_advisory_message_is_localised() -> None:
     revision = _dt12_revision()
     casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
 
-    finding = dt12_reduccion_advisory_finding(revision, casilla_values, operation=_MODELO_OPERATION)
+    finding = dt12_reduccion_advisory_finding(revision, casilla_values, operation=authority_operation)
 
     assert finding is not None
     assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_possible"
@@ -562,7 +613,9 @@ def test_art20_reduccion_advisory_silent_when_roles_absent() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() -> None:
+def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """art52_reduccion_advisory_finding warns on a purely-individual over-reduction.
 
     A purely-individual filer (no plan-de-empleo worker contribution, no
@@ -582,7 +635,7 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() ->
     finding = art52_reduccion_advisory_finding(
         revision,
         casilla_values,
-        operation=_MODELO_OPERATION,
+        operation=authority_operation,
         modelo="100",
     )
 
@@ -600,7 +653,9 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() ->
     assert "next_action" not in finding.model_dump(mode="json")
 
 
-def test_art52_reduccion_advisory_silent_when_employer_backed() -> None:
+def test_art52_reduccion_advisory_silent_when_employer_backed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """No false positive when a contribución empresarial (0427) backs the reducción.
 
     The same over-1.500 reducción as the firing case, but with a positive
@@ -619,14 +674,16 @@ def test_art52_reduccion_advisory_silent_when_employer_backed() -> None:
         art52_reduccion_advisory_finding(
             revision,
             casilla_values,
-            operation=_MODELO_OPERATION,
+            operation=authority_operation,
             modelo="100",
         )
         is None
     )
 
 
-def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed() -> None:
+def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """No false positive when a plan-de-empleo worker contribution (0426) backs it."""
     revision = _art52_revision()
     casilla_values = {
@@ -640,14 +697,16 @@ def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed() -> None:
         art52_reduccion_advisory_finding(
             revision,
             casilla_values,
-            operation=_MODELO_OPERATION,
+            operation=authority_operation,
             modelo="100",
         )
         is None
     )
 
 
-def test_art52_reduccion_advisory_silent_when_autonomo_backed() -> None:
+def test_art52_reduccion_advisory_silent_when_autonomo_backed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """No false positive when an autónomo/empresario-individual aportación (0499) backs it.
 
     Casilla 0499 legitimately unlocks the art. 52.1.2º EUR 4.250 increment (not the
@@ -668,14 +727,16 @@ def test_art52_reduccion_advisory_silent_when_autonomo_backed() -> None:
         art52_reduccion_advisory_finding(
             revision,
             casilla_values,
-            operation=_MODELO_OPERATION,
+            operation=authority_operation,
             modelo="100",
         )
         is None
     )
 
 
-def test_art52_reduccion_advisory_silent_when_under_sublimit() -> None:
+def test_art52_reduccion_advisory_silent_when_under_sublimit(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """No false positive when the purely-individual reducción is at or below EUR 1.500."""
     revision = _art52_revision()
     casilla_values = {
@@ -689,19 +750,21 @@ def test_art52_reduccion_advisory_silent_when_under_sublimit() -> None:
         art52_reduccion_advisory_finding(
             revision,
             casilla_values,
-            operation=_MODELO_OPERATION,
+            operation=authority_operation,
             modelo="100",
         )
         is None
     )
 
 
-def test_art52_reduccion_advisory_silent_when_roles_absent() -> None:
+def test_art52_reduccion_advisory_silent_when_roles_absent(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     assert (
         art52_reduccion_advisory_finding(
             _test_revision(),
             {},
-            operation=_MODELO_OPERATION,
+            operation=authority_operation,
             modelo="100",
         )
         is None
@@ -713,7 +776,9 @@ def test_art52_reduccion_advisory_silent_when_roles_absent() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
+def test_dt12_antiquity_advisory_fires_when_reduccion_applied(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """dt12_antiquity_advisory_finding warns to confirm antiquity when 40% applies.
 
     A strictly positive trabajo reducción prompts the operator to confirm the
@@ -726,7 +791,7 @@ def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
     finding = dt12_antiquity_advisory_finding(
         revision,
         casilla_values,
-        operation=_MODELO_OPERATION,
+        operation=authority_operation,
         modelo="100",
     )
 
@@ -743,7 +808,9 @@ def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
     assert "next_action" not in finding.model_dump(mode="json")
 
 
-def test_dt12_antiquity_advisory_silent_when_reduccion_zero() -> None:
+def test_dt12_antiquity_advisory_silent_when_reduccion_zero(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """No false positive when no reducción has been applied at all."""
     revision = _dt12_antiquity_revision()
     casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("0")}
@@ -752,19 +819,21 @@ def test_dt12_antiquity_advisory_silent_when_reduccion_zero() -> None:
         dt12_antiquity_advisory_finding(
             revision,
             casilla_values,
-            operation=_MODELO_OPERATION,
+            operation=authority_operation,
             modelo="100",
         )
         is None
     )
 
 
-def test_dt12_antiquity_advisory_silent_when_roles_absent() -> None:
+def test_dt12_antiquity_advisory_silent_when_roles_absent(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     assert (
         dt12_antiquity_advisory_finding(
             _test_revision(),
             {},
-            operation=_MODELO_OPERATION,
+            operation=authority_operation,
             modelo="100",
         )
         is None

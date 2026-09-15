@@ -20,13 +20,14 @@ from pathlib import Path
 
 import pytest
 
-from .....application.workflow.active_profile import resolve_active_profile_record
-from .....application.workflow.state_models import WorkflowState
-from .....core.bucket_pointer import BucketPointer, resolve_active_bucket_id, write_pointer
-from .....core.config import override_settings
-from .....core.errors.error_codes import get_registered_error_code
-from .....core.errors.hierarchy import NoActiveProfileError
-from .....core.profile_session import ProfileRecordUnavailability
+from ....application.workflow.active_profile import resolve_active_profile_record
+from ....application.workflow.state_models import WorkflowState
+from ....core.bucket_pointer import BucketPointer, resolve_active_bucket_id, write_pointer
+from ....core.config import override_settings
+from ....core.errors.error_codes import get_registered_error_code
+from ....core.errors.hierarchy import NoActiveProfileError
+from ....core.profile_session import ProfileRecordUnavailability
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -85,7 +86,8 @@ def test_active_profile_record_names_an_absent_capsule_as_the_reason(
 
         state = WorkflowState()
         assert state.active_profile_record() is None
-        resolution = resolve_active_profile_record()
+        with bundled_indexed_authority().operation() as operation:
+            resolution = resolve_active_profile_record(profile_decode_context=operation.profile_decode_context())
 
     assert resolution.record is None
     assert resolution.unavailability is ProfileRecordUnavailability.NO_LIVE_CAPSULE
