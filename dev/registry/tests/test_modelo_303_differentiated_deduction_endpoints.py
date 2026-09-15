@@ -348,23 +348,22 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
 
 
 @pytest.mark.parametrize(
-    ("observations", "message"),
+    ("rows", "message"),
     (
-        ((_observation("same"), _observation("same")), "duplicate ledger identity"),
-        ((_observation("missing", sector_id=None),), "missing or unknown sectors"),
-        ((_observation("unknown", sector_id="unknown"),), "missing or unknown sectors"),
+        ((("same", "a"), ("same", "a")), "duplicate ledger identity"),
+        ((("missing", None),), "missing or unknown sectors"),
+        ((("unknown", "unknown"),), "missing or unknown sectors"),
     ),
 )
 def test_canonical_aggregation_refuses_unattributable_duplicate_and_wrong_owner_rows(
-    observations: tuple[IvaLedgerObservation, ...], message: str
+    rows: tuple[tuple[str, str | None], ...], message: str
 ) -> None:
-    with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
-        pytest.raises(ValueError, match=message),
-    ):
-        resolve_iva_differentiated_deduction_contributions(
-            _revision(), observations, apportionment=_apportionment(), operation=_authority_operation_for_test
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        observations = tuple(_observation(ledger_id, sector_id=sector_id) for ledger_id, sector_id in rows)
+        with pytest.raises(ValueError, match=message):
+            resolve_iva_differentiated_deduction_contributions(
+                _revision(), observations, apportionment=_apportionment(), operation=_authority_operation_for_test
+            )
 
 
 def test_especial_common_use_must_be_explicit() -> None:

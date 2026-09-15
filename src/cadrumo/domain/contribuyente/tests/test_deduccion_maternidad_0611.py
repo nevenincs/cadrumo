@@ -40,6 +40,7 @@ from ...calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_entitling_tokens,
     descendant_relacion_tokens,
 )
+from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -436,12 +437,13 @@ class TestArt811EntryWindowDivergesFromArt582:
 
     #: Inscribed 15 November 2021. Art. 58.2 grants periods 2021, 2022 and 2023.
     #: Art. 81.1 runs from November 2021 to October 2024 inclusive.
-    _ADOPTADO = DescendantInfo(
-        birth_date=date(2016, 3, 2),
-        relacion=DescendantRelacion.from_registry("adoptado"),
-        inscripcion_registro_civil_date=date(2021, 11, 15),
-        meses_madre_trabajo=tuple(range(1, 13)),
-    )
+    with validating_governed_facts(compiled_bundled_authority()):
+        _ADOPTADO = DescendantInfo(
+            birth_date=date(2016, 3, 2),
+            relacion=DescendantRelacion.from_registry("adoptado"),
+            inscripcion_registro_civil_date=date(2021, 11, 15),
+            meses_madre_trabajo=tuple(range(1, 13)),
+        )
 
     def test_the_entry_period_is_whole_for_art_58_2_and_partial_for_art_81_1(self) -> None:
         """First direction: the period limb is wider in the year of entry."""

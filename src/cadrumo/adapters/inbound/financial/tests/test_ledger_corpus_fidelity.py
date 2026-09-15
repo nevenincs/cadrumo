@@ -58,7 +58,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
+from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.tests.ecb_stub import ecb_csv_fetch
@@ -67,7 +67,6 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_inbound_adapter,
-    pytest.mark.hex_outbound_adapter,
 ]
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
@@ -188,9 +187,7 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
                 "category_id": rule.get("category_id"),
                 "iva_category": IvaCategory(iva_category) if iva_category else None,
                 "counterparty_country": counterparty_country,
-                "counterparty_identification_state": (
-                    EUMemberState(eu_member_state.lower()) if eu_member_state else None
-                ),
+                "counterparty_identification_state": eu_member_state.lower() if eu_member_state else None,
                 "irpf_category": rule.get("irpf_category"),
                 "source_jurisdiction": "ES",
                 "group_label": None,
@@ -206,9 +203,20 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
     return built
 
 
-# Build once at import; each row building through the strict pydantic model is
-# itself a fidelity assertion (invalid field combinations would raise here).
-_BUILT = _build_transactions()
+type _CorpusRows = list[tuple[Transaction, dict[str, Any], str]]
+
+
+@pytest.fixture(scope="module")
+def built() -> _CorpusRows:
+    """Build the corpus once per module inside one generation-pinned operation.
+
+    Each row building through the strict pydantic model is itself a fidelity
+    assertion (invalid field combinations would raise here).
+    """
+    with _indexed_authority_for_test().operation():
+        return _build_transactions()
+
+
 _QUARTERLY_TEST_PERIODS = (
     Period.from_year_and_code(2025, "1T"),
     Period.from_year_and_code(2025, "2T"),
@@ -219,28 +227,28 @@ _QUARTERLY_TEST_PERIODS = (
 )
 
 
-def test_corpus_is_operating_scale() -> None:
-    assert len(_BUILT) >= 500
-    assert all(isinstance(tx, Transaction) for tx, _, _ in _BUILT)
+def test_corpus_is_operating_scale(built: _CorpusRows) -> None:
+    assert len(built) >= 500
+    assert all(isinstance(tx, Transaction) for tx, _, _ in built)
 
 
-def test_foreign_currency_rows_carry_eur_conversion() -> None:
-    foreign = [(tx, ccy) for tx, _, ccy in _BUILT if ccy != "EUR"]
+def test_foreign_currency_rows_carry_eur_conversion(built: _CorpusRows) -> None:
+    foreign = [(tx, ccy) for tx, _, ccy in built if ccy != "EUR"]
     assert foreign, "corpus must contain foreign-currency rows"
     for tx, _ccy in foreign:
         assert tx.fx_rate is not None
         assert tx.value_in_eur is not None
 
 
-def _catalogue() -> TransactionCatalogue:
-    return TransactionCatalogue.from_transactions(tuple(tx for tx, _, _ in _BUILT))
+def _catalogue(built: _CorpusRows) -> TransactionCatalogue:
+    return TransactionCatalogue.from_transactions(tuple(tx for tx, _, _ in built))
 
 
-def test_iva_pipeline_gates_transfers_personal_and_nondeclarable() -> None:
+def test_iva_pipeline_gates_transfers_personal_and_nondeclarable(built: _CorpusRows) -> None:
     """No gated row may ever surface as an IVA observation, any period."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        gated_ids = {tx.transaction_id for tx, rule, _ in _BUILT if not rule.get("iva_declarable", False)}
-        catalogue = _catalogue()
+        gated_ids = {tx.transaction_id for tx, rule, _ in built if not rule.get("iva_declarable", False)}
+        catalogue = _catalogue(built)
         emitted: set[str] = set()
         for period in _QUARTERLY_TEST_PERIODS:
             result = aggregate_iva_ledger_observations(
@@ -256,11 +264,11 @@ def test_iva_pipeline_gates_transfers_personal_and_nondeclarable() -> None:
         assert not leaked, f"{len(leaked)} non-declarable rows leaked into IVA observations"
 
 
-def test_iva_observations_match_oracle_category_and_flow() -> None:
+def test_iva_observations_match_oracle_category_and_flow(built: _CorpusRows) -> None:
     """Every emitted observation matches the oracle's category and flow."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        by_id = {tx.transaction_id: rule for tx, rule, _ in _BUILT}
-        catalogue = _catalogue()
+        by_id = {tx.transaction_id: rule for tx, rule, _ in built}
+        catalogue = _catalogue(built)
         seen = 0
         for period in _QUARTERLY_TEST_PERIODS:
             result = aggregate_iva_ledger_observations(
@@ -290,10 +298,10 @@ def test_iva_observations_match_oracle_category_and_flow() -> None:
         assert seen > 0
 
 
-def test_iva_pipeline_refuses_input_categories_without_authoritative_deduction_evidence() -> None:
+def test_iva_pipeline_refuses_input_categories_without_authoritative_deduction_evidence(built: _CorpusRows) -> None:
     """Legacy corpus input categories remain blocked until their evidence oracle is extended."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        catalogue = _catalogue()
+        catalogue = _catalogue(built)
         categories: set[IvaCategory] = set()
         refusal_count = 0
         for period in _QUARTERLY_TEST_PERIODS:
@@ -321,11 +329,11 @@ def test_iva_pipeline_refuses_input_categories_without_authoritative_deduction_e
         assert refusal_count > 0
 
 
-def test_renta_income_excludes_salary_rent_and_interest_from_m130() -> None:
+def test_renta_income_excludes_salary_rent_and_interest_from_m130(built: _CorpusRows) -> None:
     """Trabajo / capital income must not feed M130 actividad income."""
-    excluded_ids = {tx.transaction_id for tx, rule, _ in _BUILT if "excluded_m130" in rule.get("feeds", [])}
+    excluded_ids = {tx.transaction_id for tx, rule, _ in built if "excluded_m130" in rule.get("feeds", [])}
     assert excluded_ids, "corpus must contain salary/rent/interest income"
-    catalogue = _catalogue()
+    catalogue = _catalogue(built)
     emitted: set[str] = set()
     for period in _QUARTERLY_TEST_PERIODS:
         result = aggregate_renta_income_ledger(
@@ -342,16 +350,16 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130() -> None:
     assert not leaked, f"{len(leaked)} trabajo/capital rows leaked into M130 income"
 
 
-def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
+def test_recargo_equivalencia_is_not_deductible_input_iva(built: _CorpusRows) -> None:
     """The RE anomaly row must never surface as deductible soportado IVA."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         re_ids = {
             tx.transaction_id
-            for tx, rule, _ in _BUILT
+            for tx, rule, _ in built
             if rule.get("iva_category") == IvaCategory("recargo_equivalencia").value
         }
         assert re_ids, "corpus must contain the recargo-equivalencia anomaly row"
-        catalogue = _catalogue()
+        catalogue = _catalogue(built)
         for period in _QUARTERLY_TEST_PERIODS:
             result = aggregate_iva_ledger_observations(
                 catalogue,

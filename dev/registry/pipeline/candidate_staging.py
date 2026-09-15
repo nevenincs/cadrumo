@@ -33,6 +33,7 @@ __all__ = [
     "stage_continuity_metadata",
     "stage_generated_export_candidate",
     "stage_supplementary_orden_authority",
+    "write_complete_edition",
 ]
 
 
@@ -294,7 +295,7 @@ def stage_generated_export_candidate(
         if sibling.name != revision:
             shutil.rmtree(sibling)
     if _DETACHMENT_DECLARATIONS.intersection(edition.table):
-        _write_complete_candidate_edition(staged_modelo_root / "revisions" / revision, edition)
+        write_complete_edition(staged_modelo_root / "revisions" / revision, edition)
     if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
         retarget_bootstrap_construct_export_layout(
             staged_modelo_root,
@@ -311,11 +312,14 @@ def stage_generated_export_candidate(
     return staged_modelo_root
 
 
-def _write_complete_candidate_edition(revision_root: Path, edition: MaterialisedEdition) -> None:
+def write_complete_edition(revision_root: Path, edition: MaterialisedEdition) -> None:
     """Rewrite a staged delta edition's own directory as the complete edition it stands for.
 
-    The directory stays a fragment tree because the generated layout is
-    rendered into it. ``revision.toml`` keeps its own members as resolved, which
+    The directory stays a fragment tree: the loader accepts no other revision
+    layout, and the export tree a generated candidate renders into it, or a
+    published edition already carries, stays where the loader resolves it.
+    Export authority members are never rewritten. ``revision.toml`` keeps its
+    own members as resolved, which
     drops the predecessor and any review claim the full copy does not carry, and
     the casilla section becomes one fragment holding every resolved row in the
     loader's order.

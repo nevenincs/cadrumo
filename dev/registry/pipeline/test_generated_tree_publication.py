@@ -17,6 +17,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..compiler.loader import load_modelo_directory
 from . import _tree_publication
 from ._export_tree import RenderedExportTree
+from ._generated_tree_test_support import (
+    ISOLATED_TREE,
+    isolated_render_profile,
+    write_isolated_generated_authority_tree,
+)
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
@@ -33,12 +38,6 @@ from .joined_record_design import JoinedRecordDesign
 from .render_check import RevisionRenderInputs
 from .render_profile import RenderProfile, RenderProfileSourceEvidence
 from .semantic_map import SemanticMap
-from .test_export_tree import _wire_evidence, _wire_profile
-from .test_generated_export_tree_validation import (
-    _ISOLATED_TREE,
-    _isolated_render_profile,
-    _write_isolated_generated_authority_tree,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -46,29 +45,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Substring of the registry's filing-grade review refusal. Publication selects a
 #: filing-grade snapshot partway through, so an unreviewed target revision raises the
 #: same exception type a drift case expects, before the drift under test is reached.
-#: Substring of the registry's filing-grade review refusal. Pinned to the
-#: message the refusal ACTUALLY raises: it once read "requires
-#: operator_reviewed" and was relaxed to admit any reviewed status, agent or
-#: operator, because demanding the operator stamp made a filing-grade
-#: snapshot unreachable by construction. This pin was not swept with it, so
-#: the guard below matched nothing and silently stopped distinguishing a
-#: review-gate refusal from the injected defect -- an anti-tautology check
-#: that cannot fire is worse than none, because it reads as coverage.
+#: The pin must equal the message the review gate raises, or the guard below cannot fire.
 _REVIEW_GATE_REFUSAL = "filing-grade snapshot requires a reviewed revision"
 
+#: Substring of publication's candidate-path precondition. It runs before journal
+#: recovery, so a case that disturbs the caller's candidate export is refused here
+#: without any recovery comparison being reached.
+_MISSING_CANDIDATE_REFUSAL = "generated candidate export root is missing"
 
-# Modelo 130 throughout: `_write_isolated_generated_authority_tree` in
-# `test_export_tree` builds its isolated tree for modelo 130, because the
-# modelo 200 revision it used to target now declares 578 projection endpoints
-# that semantic-map validation checks as a bijection, which a synthetic map
-# cannot satisfy. These modules consume that helper, so their own paths and
-# snapshot must name the same modelo or the tree and the paths disagree.
+
 def _require_the_drift_was_reached(refusal: BaseException, drift: str) -> None:
-    """Refuse a pass earned by the review gate rather than by the injected drift."""
-    assert _REVIEW_GATE_REFUSAL not in str(refusal), (
+    """Refuse a pass earned by an earlier gate rather than by the injected drift."""
+    message = str(refusal)
+    assert _REVIEW_GATE_REFUSAL not in message, (
         f"drift {drift!r} was not detected on its own terms: publication refused on the "
         f"registry's filing-grade review gate before reaching the recovery check this case "
         f"exercises, so a green result here would prove nothing about the injected drift"
+    )
+    assert _MISSING_CANDIDATE_REFUSAL not in message, (
+        f"drift {drift!r} was not detected on its own terms: publication refused its "
+        f"candidate-path precondition before journal recovery ran, so a green result here "
+        f"would prove nothing about the injected drift"
     )
 
 
@@ -89,20 +86,25 @@ def _non_export_authority_bytes(revision_root: Path) -> dict[str, bytes]:
     }
 
 
-def _publication_inputs(tmp_path: Path, *, existing_export: bool, legacy_export: bool = False):
+def _publication_inputs(
+    tmp_path: Path,
+    *,
+    existing_export: bool,
+    legacy_export: bool = False,
+) -> tuple[GeneratedExportTreePublicationContext, JoinedRecordDesign, SemanticMap, RenderedExportTree, Path]:
     """Build independent candidates through the export-tree renderer, never from a shipped tree."""
     temporary_root = tmp_path / "temporary-root"
-    validation, joined, semantic_map, rendered, _candidate_export = _write_isolated_generated_authority_tree(
+    validation, joined, semantic_map, rendered, _candidate_export = write_isolated_generated_authority_tree(
         temporary_root,
     )
     target_root = tmp_path / "publication-root" / "registry" / "aeat"
-    target_revision_root = target_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision
+    target_revision_root = target_root / "modelos" / ISOLATED_TREE.modelo / "revisions" / ISOLATED_TREE.revision
     target_revision_root.parent.mkdir(parents=True)
-    prior = _write_isolated_generated_authority_tree(tmp_path / "prior-root")
+    prior = write_isolated_generated_authority_tree(tmp_path / "prior-root")
     prior_context = prior[0]
-    prior_model_root = prior_context.registry_root / "modelos" / _ISOLATED_TREE.modelo
-    os.replace(prior_model_root / "manifest.toml", target_root / "modelos" / _ISOLATED_TREE.modelo / "manifest.toml")
-    prior_revision_root = prior_model_root / "revisions" / _ISOLATED_TREE.revision
+    prior_model_root = prior_context.registry_root / "modelos" / ISOLATED_TREE.modelo
+    os.replace(prior_model_root / "manifest.toml", target_root / "modelos" / ISOLATED_TREE.modelo / "manifest.toml")
+    prior_revision_root = prior_model_root / "revisions" / ISOLATED_TREE.revision
     os.replace(prior_revision_root, target_revision_root)
     if not existing_export:
         rmtree(target_revision_root / "export")
@@ -115,7 +117,7 @@ def _publication_inputs(tmp_path: Path, *, existing_export: bool, legacy_export:
         target_export_root=target_revision_root / "export",
     )
     candidate_export_root = (
-        validation.registry_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
+        validation.registry_root / "modelos" / ISOLATED_TREE.modelo / "revisions" / ISOLATED_TREE.revision / "export"
     )
     return context, joined, semantic_map, rendered, candidate_export_root
 
@@ -133,8 +135,8 @@ def _stage_interrupted_verified_candidate(
     staged_candidate_export_root = _tree_publication._stage_verified_candidate_package(
         candidate_export_root=candidate_export_root,
         target_root=context.target_root.resolve(),
-        modelo=_ISOLATED_TREE.modelo,
-        revision_id=_ISOLATED_TREE.revision,
+        modelo=ISOLATED_TREE.modelo,
+        revision_id=ISOLATED_TREE.revision,
         expected_manifest_sha256=_tree_publication._sha256(
             candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
         ),
@@ -142,14 +144,14 @@ def _stage_interrupted_verified_candidate(
     )
     backup_export_root = _tree_publication._rollback_sibling(
         target_root=context.target_root.resolve(),
-        modelo=_ISOLATED_TREE.modelo,
-        revision_id=_ISOLATED_TREE.revision,
+        modelo=ISOLATED_TREE.modelo,
+        revision_id=ISOLATED_TREE.revision,
     )
     journal = _tree_publication._PublicationJournal(
         schema_version=1,
         state="backup_staged",
-        modelo=_ISOLATED_TREE.modelo,
-        revision_id=_ISOLATED_TREE.revision,
+        modelo=ISOLATED_TREE.modelo,
+        revision_id=ISOLATED_TREE.revision,
         candidate_export=str(staged_candidate_export_root),
         backup_export=str(backup_export_root),
         candidate_manifest_sha256=_tree_publication._sha256(
@@ -372,8 +374,8 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(tmp_path: Pa
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_isolated_render_profile()[0],
-        render_profile_source_evidence=_isolated_render_profile()[1],
+        render_profile=isolated_render_profile()[0],
+        render_profile_source_evidence=isolated_render_profile()[1],
     )
 
     assert published.export_root == context.target_export_root
@@ -401,8 +403,8 @@ def test_publication_creates_missing_export_without_touching_revision_authority(
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_isolated_render_profile()[0],
-        render_profile_source_evidence=_isolated_render_profile()[1],
+        render_profile=isolated_render_profile()[0],
+        render_profile_source_evidence=isolated_render_profile()[1],
     )
 
     assert _tree_bytes(context.target_export_root) == expected_export
@@ -433,8 +435,8 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
+            render_profile=isolated_render_profile()[0],
+            render_profile_source_evidence=isolated_render_profile()[1],
         )
 
     assert _tree_bytes(context.target_export_root) == before
@@ -521,8 +523,8 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
+            render_profile=isolated_render_profile()[0],
+            render_profile_source_evidence=isolated_render_profile()[1],
         )
 
     assert _tree_bytes(context.target_export_root) == before_export
@@ -554,8 +556,8 @@ def test_publication_restores_live_export_after_staged_cutover_refusal(monkeypat
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
+            render_profile=isolated_render_profile()[0],
+            render_profile_source_evidence=isolated_render_profile()[1],
         )
 
     assert _tree_bytes(context.target_export_root) == before
@@ -575,19 +577,19 @@ def test_publication_discards_only_a_completed_rollback_journal_from_an_abandone
     expected_export = _tree_bytes(candidate_export_root)
     abandoned_candidate = _tree_publication._staging_sibling(
         target_root=context.target_root.resolve(),
-        modelo=_ISOLATED_TREE.modelo,
-        revision_id=_ISOLATED_TREE.revision,
+        modelo=ISOLATED_TREE.modelo,
+        revision_id=ISOLATED_TREE.revision,
     )
     backup_export_root = _tree_publication._rollback_sibling(
         target_root=context.target_root.resolve(),
-        modelo=_ISOLATED_TREE.modelo,
-        revision_id=_ISOLATED_TREE.revision,
+        modelo=ISOLATED_TREE.modelo,
+        revision_id=ISOLATED_TREE.revision,
     )
     journal = _tree_publication._PublicationJournal(
         schema_version=1,
         state="backup_staged",
-        modelo=_ISOLATED_TREE.modelo,
-        revision_id=_ISOLATED_TREE.revision,
+        modelo=ISOLATED_TREE.modelo,
+        revision_id=ISOLATED_TREE.revision,
         candidate_export=str(abandoned_candidate),
         backup_export=str(backup_export_root),
         candidate_manifest_sha256="a" * 64,
@@ -600,8 +602,8 @@ def test_publication_discards_only_a_completed_rollback_journal_from_an_abandone
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_isolated_render_profile()[0],
-        render_profile_source_evidence=_isolated_render_profile()[1],
+        render_profile=isolated_render_profile()[0],
+        render_profile_source_evidence=isolated_render_profile()[1],
     )
 
     assert published.validated is not None
@@ -622,8 +624,8 @@ def test_publication_completes_a_real_interrupted_verified_candidate(tmp_path: P
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_isolated_render_profile()[0],
-        render_profile_source_evidence=_isolated_render_profile()[1],
+        render_profile=isolated_render_profile()[0],
+        render_profile_source_evidence=isolated_render_profile()[1],
     )
     expected_export = _tree_bytes(candidate_export_root)
     before_authority = _non_export_authority_bytes(context.target_export_root.parent)
@@ -634,8 +636,8 @@ def test_publication_completes_a_real_interrupted_verified_candidate(tmp_path: P
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
-        render_profile=_isolated_render_profile()[0],
-        render_profile_source_evidence=_isolated_render_profile()[1],
+        render_profile=isolated_render_profile()[0],
+        render_profile_source_evidence=isolated_render_profile()[1],
     )
 
     assert recovered.validated is None
@@ -645,25 +647,72 @@ def test_publication_completes_a_real_interrupted_verified_candidate(tmp_path: P
     assert not _tree_publication._journal_path(context).exists()
 
 
-@pytest.mark.parametrize("drift", ("profile", "evidence"))
-def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_mutation(
-    tmp_path,
-    drift: str,
-) -> None:
+def _stage_interrupted_live_candidate(
+    tmp_path: Path,
+) -> tuple[GeneratedExportTreePublicationContext, JoinedRecordDesign, SemanticMap, RenderedExportTree, Path, Path]:
+    """Stage a crash after the journaled candidate went live but before commit.
+
+    The journal's own staged package is moved into ``export/``, exactly as the
+    publication swap does. The caller's candidate export stays in place, so
+    publication's candidate-path precondition passes and journal recovery runs.
+    """
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
         existing_export=True,
     )
     backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
-    os.replace(candidate_export_root, context.target_export_root)
     journal_path = _tree_publication._journal_path(context)
     journal = _tree_publication._load_journal(journal_path)
+    os.replace(journal.candidate_export, context.target_export_root)
     _tree_publication._write_journal(
         journal_path,
         journal.model_copy(update={"state": "candidate_live"}),
     )
-    profile = _wire_profile()
-    evidence = _wire_evidence()
+    return context, joined, semantic_map, rendered, candidate_export_root, backup_export_root
+
+
+def test_interrupted_live_candidate_recovers_under_current_profile_and_evidence(tmp_path: Path) -> None:
+    """With no drift, recovery of the live candidate completes, so the drift cases below
+    are refused by their injected drift rather than by the staged interruption itself."""
+    context, joined, semantic_map, rendered, candidate_export_root, backup_export_root = (
+        _stage_interrupted_live_candidate(tmp_path)
+    )
+    expected_export = _tree_bytes(context.target_export_root)
+    render_profile, render_evidence = isolated_render_profile()
+
+    recovered = publish_validated_generated_export_tree(
+        context=context,
+        joined=joined,
+        semantic_map=semantic_map,
+        rendered=rendered,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_evidence,
+    )
+
+    assert recovered.validated is None
+    assert _tree_bytes(context.target_export_root) == expected_export
+    assert candidate_export_root.exists()
+    assert not backup_export_root.exists()
+    assert not _tree_publication._journal_path(context).exists()
+
+
+@pytest.mark.parametrize(
+    ("drift", "refusal_message"),
+    (
+        ("profile", "does not match current generation authorities: {'render_profile_sha256'"),
+        ("evidence", "render profile source evidence does not match the exact official design identity"),
+    ),
+)
+def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_mutation(
+    tmp_path: Path,
+    drift: str,
+    refusal_message: str,
+) -> None:
+    context, joined, semantic_map, rendered, candidate_export_root, backup_export_root = (
+        _stage_interrupted_live_candidate(tmp_path)
+    )
+    journal_path = _tree_publication._journal_path(context)
+    profile, evidence = isolated_render_profile()
     if drift == "profile":
         profile = profile.model_copy(update={"fragment_ids": ("current-profile-drift",)})
     else:
@@ -672,6 +721,7 @@ def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_
                 "design_identity": evidence.design_identity.model_copy(update={"source_sha256": "b" * 64}),
             },
         )
+    candidate_before = _tree_bytes(candidate_export_root)
     target_before = _tree_bytes(context.target_export_root)
     backup_before = _tree_bytes(backup_export_root)
     journal_before = journal_path.read_bytes()
@@ -687,7 +737,8 @@ def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_
         )
 
     _require_the_drift_was_reached(refusal.value, drift)
-    assert not candidate_export_root.exists()
+    assert refusal_message in str(refusal.value)
+    assert _tree_bytes(candidate_export_root) == candidate_before
     assert _tree_bytes(context.target_export_root) == target_before
     assert _tree_bytes(backup_export_root) == backup_before
     assert journal_path.read_bytes() == journal_before
@@ -700,7 +751,7 @@ def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(tmp_pat
         existing_export=False,
     )
     loaded = load_modelo_directory(candidate_export_root.parent.parent.parent)
-    assert loaded.revisions[_ISOLATED_TREE.revision].export_layouts == (rendered.layout,)
+    assert loaded.revisions[ISOLATED_TREE.revision].export_layouts == (rendered.layout,)
     (candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).unlink()
 
     with pytest.raises(RegistryValidationError, match="provenance manifest"):
@@ -709,8 +760,8 @@ def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(tmp_pat
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
+            render_profile=isolated_render_profile()[0],
+            render_profile_source_evidence=isolated_render_profile()[1],
         )
 
 
@@ -729,8 +780,8 @@ def test_publication_refuses_stale_sibling_provenance_before_cutover(tmp_path: P
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
+            render_profile=isolated_render_profile()[0],
+            render_profile_source_evidence=isolated_render_profile()[1],
         )
 
 

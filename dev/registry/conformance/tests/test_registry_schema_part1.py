@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
@@ -172,8 +171,8 @@ def _with_binding(revision: ModeloRevision, binding: BindingDefinition) -> Model
 
 
 @pytest.fixture
-def modelo_130_snapshot(registry_snapshot: Callable[[str, int, str], RegistrySnapshot]) -> RegistrySnapshot:
-    return registry_snapshot("130", 2024, "3T")
+def modelo_130_snapshot(registry_authority: ValidatedRegistryAuthority) -> RegistrySnapshot:
+    return registry_authority.snapshot("130", filing_year=2024, period="3T")
 
 
 def test_formula_expression_dispatch_table_entry_contract() -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterator
 from decimal import Decimal
 from operator import methodcaller
 from pathlib import Path
@@ -14,6 +15,7 @@ from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...invoices.enums import IvaRate
 from ..classification import InvoiceKind
@@ -28,6 +30,12 @@ from ..schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservati
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@pytest.fixture(scope="module", autouse=True)
+def _registry_authority_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
+
+
 def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido() -> None:
     cases: tuple[tuple[IvaRate, IvaCategory, IvaRateKind], ...] = (
         (IvaRate.from_registry("RATE_0"), IvaCategory("domestic_zero"), IvaRateKind("zero")),
@@ -40,8 +48,8 @@ def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido() -> 
     for iva_rate, expected_category, expected_kind in cases:
         classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED)
         assert classification.category == expected_category, iva_rate
-        assert classification.rate_kind is expected_kind, iva_rate
-        assert classification.flow_direction is IvaFlowDirection.from_registry("repercutido"), iva_rate
+        assert classification.rate_kind == expected_kind, iva_rate
+        assert classification.flow_direction == IvaFlowDirection.from_registry("repercutido"), iva_rate
         assert classification.settlement_sides == frozenset({IvaSettlementSide.from_registry("devengada")}), iva_rate
 
 
@@ -54,7 +62,7 @@ def test_classify_received_invoice_resolves_to_soportado() -> None:
         IvaRate.from_registry("EXEMPT"),
     ):
         classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.RECEIVED)
-        assert classification.flow_direction is IvaFlowDirection.from_registry("soportado"), iva_rate
+        assert classification.flow_direction == IvaFlowDirection.from_registry("soportado"), iva_rate
         assert classification.settlement_sides == frozenset({IvaSettlementSide.from_registry("deducible")}), iva_rate
 
 
@@ -162,8 +170,8 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
     assert obs.ledger_id == "inv-001"
     assert obs.transaction_date == date(2025, 6, 15)
     assert obs.category == IvaCategory("domestic_general")
-    assert obs.rate_kind is IvaRateKind("general")
-    assert obs.flow_direction is IvaFlowDirection.from_registry("repercutido")
+    assert obs.rate_kind == IvaRateKind("general")
+    assert obs.flow_direction == IvaFlowDirection.from_registry("repercutido")
     assert obs.base_amount == Decimal("1000")
     assert obs.iva_amount == Decimal("210")
 
@@ -211,7 +219,7 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
 
     assert two_percent.applied_rate == Decimal("0.02")
     assert four_percent.applied_rate == Decimal("0.04")
-    assert two_percent.rate_kind is four_percent.rate_kind is IvaRateKind("super_reduced")
+    assert two_percent.rate_kind is four_percent.rate_kind == IvaRateKind("super_reduced")
     assert two_percent.applied_rate != four_percent.applied_rate, (
         "both slots share the super-reducido tier, so a tier-resolved applied_rate would collapse them "
         "and the 2 % line would be indistinguishable from a 4 % one at the annual return"
@@ -340,10 +348,10 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
             evidence_digest="a" * 64,
         ),
     )
-    assert obs.flow_direction is IvaFlowDirection.from_registry("soportado")
+    assert obs.flow_direction == IvaFlowDirection.from_registry("soportado")
     assert obs.category == IvaCategory("domestic_reduced")
-    assert obs.rate_kind is IvaRateKind("reduced")
-    assert obs.deduction_fact_kind is IvaDeductionFactKind.from_registry("domestic_current")
+    assert obs.rate_kind == IvaRateKind("reduced")
+    assert obs.deduction_fact_kind == IvaDeductionFactKind.from_registry("domestic_current")
 
 
 def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_authority() -> None:

@@ -1,7 +1,7 @@
 """Repository-owned ``-n auto`` worker-count policy for pytest-xdist.
 
 This module is test-infrastructure, not a production module. It is imported
-from the repo-root ``conftest.py`` (mirroring the ``_marker_hook`` delegation
+from the repo-root ``conftest.py`` (mirroring the ``marker_hook`` delegation
 pattern) so every pytest invocation shape — bare ``uv run pytest``,
 path-scoped runs, subprocess-spawning gates, and the justfile's
 ``test-unit`` recipe — resolves ``-n auto`` through the same policy.

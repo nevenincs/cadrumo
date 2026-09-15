@@ -77,6 +77,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.retencion_facts import load_retencion_actividades_rates
 
+from ..compiler.authority import compiled_bundled_authority
 from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -323,7 +324,11 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
 # invoices.
 
 _INICIO_RETENCION = (
-    _BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate
+    _BASE
+    * load_retencion_actividades_rates(
+        effective_date=_VALUE_DATE,
+        authority=compiled_bundled_authority(),
+    ).inicio_actividad_rate
 ).quantize(Decimal("0.01"))
 _INICIO_CASH = _TOTAL - _INICIO_RETENCION
 

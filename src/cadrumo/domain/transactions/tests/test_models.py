@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -13,6 +14,7 @@ from pydantic import ValidationError
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....core.tipos_actividad import TipoActividad
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...iva.prorrata import InputClassification
 from ...iva.schema import IvaCategory, IvaExemptionArticle
 from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -30,6 +32,13 @@ from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Build every ledger row inside one generation-pinned authority operation."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def _sample_raw(

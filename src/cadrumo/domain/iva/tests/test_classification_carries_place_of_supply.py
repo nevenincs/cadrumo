@@ -36,12 +36,12 @@ from ..classification import (
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
     TransactionKind,
-    classify_iva,
 )
 from ..errors import IvaCatalogueError
 from ..place_of_supply import place_of_supply_rule
 from ..schema import EUMemberState, IvaCategory, IvaRateKind
 from ..supply_nature import SupplyNature
+from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -95,7 +95,7 @@ def _domestic_at_general_rate(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassifi
 def test_cross_border_result_carries_its_governing_article_and_nature() -> None:
     """``R12`` arrives with art. 69 as its establishing provision and the services nature."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        result = classify_iva(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
 
         assert result.matched_rule_id == "R12_services_b2b_eu_outbound"
         grounding = result.place_of_supply
@@ -121,7 +121,7 @@ def test_cross_border_result_carries_its_governing_article_and_nature() -> None:
 def test_a_silent_nature_is_present_and_grounded_rather_than_missing() -> None:
     """``R05`` carries a grounded row whose articles say nothing about the nature."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        result = classify_iva(_domestic_at_general_rate(), operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(_domestic_at_general_rate(), operation=_authority_operation_for_test)
 
         assert result.matched_rule_id == "R05_domestic_at_rate_tier"
         grounding = result.place_of_supply
@@ -150,7 +150,9 @@ def test_a_resolution_that_cannot_be_performed_raises_instead_of_arriving_absent
         _indexed_authority_for_test().operation() as _authority_operation_for_test,
         pytest.raises(IvaCatalogueError, match=r"place-of-supply|grounding"),
     ):
-        classify_iva(_domestic_at_general_rate(on=_AFTER_GROUNDING), operation=_authority_operation_for_test)
+        classify_with_registry_rules(
+            _domestic_at_general_rate(on=_AFTER_GROUNDING), operation=_authority_operation_for_test
+        )
 
 
 def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> None:
@@ -162,10 +164,10 @@ def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> 
     goods. A grounding derived from the category could not tell them apart.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        services = classify_iva(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
-        goods = classify_iva(_distance_sale_b2c(), operation=_authority_operation_for_test)
+        services = classify_with_registry_rules(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
+        goods = classify_with_registry_rules(_distance_sale_b2c(), operation=_authority_operation_for_test)
 
-        assert services.category is goods.category is IvaCategory("domestic_not_subject")
+        assert services.category is goods.category == IvaCategory("domestic_not_subject")
         assert services.matched_rule_id != goods.matched_rule_id
 
         services_grounding = services.place_of_supply
@@ -192,7 +194,7 @@ def test_the_grounding_is_resolved_against_the_transaction_date() -> None:
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         for day in (_FIRST_GROUNDED_DAY, _LAST_GROUNDED_DAY):
-            grounding = classify_iva(
+            grounding = classify_with_registry_rules(
                 _services_b2b_eu_outbound(on=day), operation=_authority_operation_for_test
             ).place_of_supply
             assert grounding is not None
@@ -202,7 +204,7 @@ def test_the_grounding_is_resolved_against_the_transaction_date() -> None:
 
         for day in (_BEFORE_GROUNDING, _AFTER_GROUNDING):
             with pytest.raises(IvaCatalogueError, match=str(day.year)):
-                classify_iva(_services_b2b_eu_outbound(on=day), operation=_authority_operation_for_test)
+                classify_with_registry_rules(_services_b2b_eu_outbound(on=day), operation=_authority_operation_for_test)
 
 
 def test_the_fallthrough_carries_the_row_that_says_it_grounds_nothing() -> None:
@@ -222,7 +224,7 @@ def test_the_fallthrough_carries_the_row_that_says_it_grounds_nothing() -> None:
             kind=TransactionKind("services_general"),
             direction=InvoiceKind.ISSUED,
         )
-        result = classify_iva(unclassifiable, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(unclassifiable, operation=_authority_operation_for_test)
 
         assert result.category == IvaCategory("unknown")
         grounding = result.place_of_supply

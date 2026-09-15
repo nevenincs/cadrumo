@@ -6,7 +6,7 @@ this repository supplied one, so the marker was honoured only by the justfile
 splitting the integration lane into a ``not serial`` parallel pass and a ``-n0``
 serial pass. Every other invocation ran isolation-sensitive tests against a
 run-varying set of co-resident files.
-:func:`~tests._marker_hook._hold_serial_items_from_xdist` closes that, and this
+:func:`~tests.marker_hook._hold_serial_items_from_xdist` closes that, and this
 module is its proof.
 
 The proof runs a REAL nested pytest over a generated two-test package -- one
@@ -21,9 +21,9 @@ simply dropped every serial test, or one that never fired at all, fails one leg
 or the other -- neither can satisfy both.
 
 See Also:
-    :mod:`~tests._marker_hook`
+    :mod:`~tests.marker_hook`
         Hosts the collection hook this module exercises.
-    :mod:`~tests._deselection_hook`
+    :mod:`~tests.deselection_hook`
         Reports deselection; documents why the worker-side deselected count
         never reaches the controller, which is why the hold also warns.
 """
@@ -41,38 +41,37 @@ from cadrumo.tests.audited_process import ensure_text_completed_process, run_aud
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_MARKER_HOOK_MODULE = Path(__file__).resolve().parent / "_marker_hook.py"
-
 _CONFTEST = """\
-import sys
-from pathlib import Path
-
-sys.path.insert(0, {marker_hook_dir!r})
-
-import _marker_hook
+from cadrumo.tests.marker_hook import (
+    apply,
+    fail_session_on_held_serials,
+    record_held_from_node,
+    report_held_serials,
+    reset_held_serials,
+)
 
 
 def pytest_configure(config):
-    _marker_hook.reset_held_serials()
+    reset_held_serials()
     config.addinivalue_line("markers", "serial: isolation-sensitive")
     for name in ("unit", "hex_core"):
         config.addinivalue_line("markers", name + ": taxonomy marker")
 
 
 def pytest_collection_modifyitems(config, items):
-    _marker_hook.apply(config, items)
+    apply(config, items)
 
 
 def pytest_testnodedown(node, error):
-    _marker_hook.record_held_from_node(node)
+    record_held_from_node(node)
 
 
 def pytest_sessionfinish(session, exitstatus):
-    _marker_hook.fail_session_on_held_serials(session)
+    fail_session_on_held_serials(session)
 
 
 def pytest_terminal_summary(terminalreporter):
-    _marker_hook.report_held_serials(terminalreporter)
+    report_held_serials(terminalreporter)
 """
 
 _TEST_MODULE = """\
@@ -122,7 +121,7 @@ def serial_marker_package(tmp_path: Path) -> Path:
     """Materialise a two-test package wired to the real marker hook."""
     (tmp_path / "pytest.ini").write_text("[pytest]\naddopts =\n", encoding="utf-8")
     (tmp_path / "conftest.py").write_text(
-        textwrap.dedent(_CONFTEST).format(marker_hook_dir=str(_MARKER_HOOK_MODULE.parent)),
+        textwrap.dedent(_CONFTEST),
         encoding="utf-8",
     )
     (tmp_path / "test_generated.py").write_text(textwrap.dedent(_TEST_MODULE), encoding="utf-8")

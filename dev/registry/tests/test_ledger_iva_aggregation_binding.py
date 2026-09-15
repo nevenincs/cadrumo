@@ -135,17 +135,18 @@ def _minimal_revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevis
     )
 
 
-_MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES = (
-    pytest.param({"exemption_articles": ()}, id="empty-exemption-articles"),
-    pytest.param({"exemption_articles": ("bogus",)}, id="unknown-exemption-article"),
-    pytest.param(
-        {
-            "categories": (_category("domestic_general"),),
-            "exemption_articles": (_exemption("art_20_uno_14"),),
-        },
-        id="exemption-article-without-domestic-exempt-category",
-    ),
-)
+with validating_governed_facts(compiled_bundled_authority()):
+    _MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES = (
+        pytest.param({"exemption_articles": ()}, id="empty-exemption-articles"),
+        pytest.param({"exemption_articles": ("bogus",)}, id="unknown-exemption-article"),
+        pytest.param(
+            {
+                "categories": (_category("domestic_general"),),
+                "exemption_articles": (_exemption("art_20_uno_14"),),
+            },
+            id="exemption-article-without-domestic-exempt-category",
+        ),
+    )
 
 
 @pytest.mark.parametrize("selector_updates", _MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES)
@@ -156,68 +157,69 @@ def test_validate_rejects_malformed_exemption_article_selector_without_registry_
         _article_filter_binding(**selector_updates)
 
 
-_SINGLE_BINDING_SELECTOR_CASES = (
-    pytest.param(
-        "modelo-303-iva-repercutido-general-cuota",
-        (
-            _observation(applied_rate=Decimal("0.21"), flow=_flow("repercutido"), iva=Decimal("210")),
-            _observation(
-                applied_rate=Decimal("0.21"),
-                flow=_flow("soportado"),
-                iva=Decimal("105"),
-                deduction_fact_kind=_deduction_kind("domestic_current"),
-                deduction_authority=_deduction_authority("invoice_evidence"),
+with validating_governed_facts(compiled_bundled_authority()):
+    _SINGLE_BINDING_SELECTOR_CASES = (
+        pytest.param(
+            "modelo-303-iva-repercutido-general-cuota",
+            (
+                _observation(applied_rate=Decimal("0.21"), flow=_flow("repercutido"), iva=Decimal("210")),
+                _observation(
+                    applied_rate=Decimal("0.21"),
+                    flow=_flow("soportado"),
+                    iva=Decimal("105"),
+                    deduction_fact_kind=_deduction_kind("domestic_current"),
+                    deduction_authority=_deduction_authority("invoice_evidence"),
+                ),
+                _observation(
+                    applied_rate=Decimal("0.21"),
+                    flow=_flow("inversion_sujeto_pasivo"),
+                    iva=Decimal("90"),
+                    deduction_fact_kind=_deduction_kind("domestic_current"),
+                    deduction_authority=_deduction_authority("invoice_evidence"),
+                ),
             ),
-            _observation(
-                applied_rate=Decimal("0.21"),
-                flow=_flow("inversion_sujeto_pasivo"),
-                iva=Decimal("90"),
-                deduction_fact_kind=_deduction_kind("domestic_current"),
-                deduction_authority=_deduction_authority("invoice_evidence"),
-            ),
+            Decimal("210"),
+            id="repercutido",
         ),
-        Decimal("210"),
-        id="repercutido",
-    ),
-    pytest.param(
-        "modelo-303-iva-soportado-interiores-cuota",
-        (
-            _observation(applied_rate=Decimal("0.21"), flow=_flow("repercutido"), iva=Decimal("210")),
-            _observation(
-                applied_rate=Decimal("0.21"),
-                flow=_flow("soportado"),
-                iva=Decimal("105"),
-                deduction_fact_kind=_deduction_kind("domestic_current"),
-                deduction_authority=_deduction_authority("invoice_evidence"),
+        pytest.param(
+            "modelo-303-iva-soportado-interiores-cuota",
+            (
+                _observation(applied_rate=Decimal("0.21"), flow=_flow("repercutido"), iva=Decimal("210")),
+                _observation(
+                    applied_rate=Decimal("0.21"),
+                    flow=_flow("soportado"),
+                    iva=Decimal("105"),
+                    deduction_fact_kind=_deduction_kind("domestic_current"),
+                    deduction_authority=_deduction_authority("invoice_evidence"),
+                ),
             ),
+            Decimal("105"),
+            id="soportado",
         ),
-        Decimal("105"),
-        id="soportado",
-    ),
-    pytest.param(
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
-        (
-            _observation(
-                applied_rate=Decimal("0.21"),
-                category=_category("intra_community_acquisition_reverse_charge"),
-                flow=_flow("inversion_sujeto_pasivo"),
-                iva=Decimal("42"),
-                deduction_fact_kind=_deduction_kind("intra_eu_current"),
-                deduction_authority=_deduction_authority("intra_eu_self_assessment"),
+        pytest.param(
+            "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+            (
+                _observation(
+                    applied_rate=Decimal("0.21"),
+                    category=_category("intra_community_acquisition_reverse_charge"),
+                    flow=_flow("inversion_sujeto_pasivo"),
+                    iva=Decimal("42"),
+                    deduction_fact_kind=_deduction_kind("intra_eu_current"),
+                    deduction_authority=_deduction_authority("intra_eu_self_assessment"),
+                ),
+                _observation(
+                    applied_rate=Decimal("0.21"),
+                    category=_category("domestic_general"),
+                    flow=_flow("soportado"),
+                    iva=Decimal("99"),
+                    deduction_fact_kind=_deduction_kind("domestic_current"),
+                    deduction_authority=_deduction_authority("invoice_evidence"),
+                ),
             ),
-            _observation(
-                applied_rate=Decimal("0.21"),
-                category=_category("domestic_general"),
-                flow=_flow("soportado"),
-                iva=Decimal("99"),
-                deduction_fact_kind=_deduction_kind("domestic_current"),
-                deduction_authority=_deduction_authority("invoice_evidence"),
-            ),
+            Decimal("42"),
+            id="autorepercutido-intracomunitaria",
         ),
-        Decimal("42"),
-        id="autorepercutido-intracomunitaria",
-    ),
-)
+    )
 
 
 @pytest.mark.parametrize(("binding_id", "observations", "expected_amount"), _SINGLE_BINDING_SELECTOR_CASES)

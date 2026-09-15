@@ -62,7 +62,7 @@ def _parameter(filing_year: int, suffix: str) -> Decimal:
     """Resolve one ``minimo-descendientes`` parameter for *filing_year*."""
     by_id = {parameter.id: parameter for parameter in _inspection(filing_year).parameters}
     return resolve_parameter(
-        by_id[f"renta-{filing_year}-minimo-descendientes-{suffix}-{filing_year}"],
+        by_id[f"renta-minimo-descendientes-{suffix}"],
         {"filing_period": date(filing_year, 12, 31)},
     )
 

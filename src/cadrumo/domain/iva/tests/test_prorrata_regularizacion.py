@@ -13,10 +13,12 @@ delta from the statutory procedure, not from a synthetic formula authored here.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
+from ...calculations.registry.authority import bundled_indexed_authority
 from ..errors import ProrrataInputError
 from ..prorrata import (
     ProrrataInputs,
@@ -27,6 +29,12 @@ from ..prorrata import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _registry_authority_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _deduccion(cuotas: Decimal, pct: Decimal) -> Decimal:
@@ -59,7 +67,7 @@ def test_definitiva_percentage_comes_from_the_full_year_art104_substrate() -> No
         ),
         year=2025,
     )
-    assert result.kind is ProrrataKind.from_registry("definitiva")
+    assert result.kind == ProrrataKind.from_registry("definitiva")
     assert result.period == "annual"
     assert result.percentage == Decimal("90")
 

@@ -21,7 +21,7 @@ every deselection is stated plainly, and a run that selected nothing at
 all is reported as the non-event it is rather than as success.
 
 See Also:
-    :mod:`cadrumo.tests._marker_hook`
+    :mod:`cadrumo.tests.marker_hook`
         The marker-contract enforcer sharing this collection surface.
 """
 

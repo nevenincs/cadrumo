@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
@@ -189,6 +190,7 @@ class InvoiceLine(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_inputs(cls, data: object) -> object:
         """Coerce JSON-decoded strings into their strict pydantic types."""
         if isinstance(data, cls):
@@ -210,6 +212,7 @@ class InvoiceLine(BaseModel):
 
     @field_validator("oss_rate_kind")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_oss_rate_kind(cls, value: IvaRateKind | None) -> IvaRateKind | None:
         """Refuse an OSS/IOSS rate tier absent from the IVA facts catalogue."""
         if value is None:
@@ -218,6 +221,7 @@ class InvoiceLine(BaseModel):
 
     @field_validator("description")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_description(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
@@ -226,6 +230,7 @@ class InvoiceLine(BaseModel):
 
     @field_validator("spending_category_id")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_spending_category_id(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -236,6 +241,7 @@ class InvoiceLine(BaseModel):
 
     @field_validator("quantity")
     @classmethod
+    @pydantic_validation_boundary
     def _require_positive_quantity(cls, value: Decimal) -> Decimal:
         if value <= Decimal("0"):
             raise InvoiceValidationError("quantity must be strictly positive")
@@ -243,12 +249,14 @@ class InvoiceLine(BaseModel):
 
     @field_validator("unit_price", "subtotal", "iva_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _require_non_negative(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
             raise InvoiceValidationError("monetary value must be non-negative")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_arithmetic(self) -> Self:
         expected_subtotal = (self.quantity * self.unit_price).quantize(Decimal("0.0001"))
         if abs(self.subtotal - expected_subtotal) > CENT:
@@ -484,6 +492,7 @@ class Invoice(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_and_derive_invoice_id(cls, data: object) -> object:
         """Canonicalise identity-bearing fields and derive ``invoice_id``."""
         if isinstance(data, cls):
@@ -517,6 +526,7 @@ class Invoice(BaseModel):
 
     @field_validator("base_total", "iva_total", "grand_total")
     @classmethod
+    @pydantic_validation_boundary
     def _require_non_negative_totals(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
             raise InvoiceValidationError("invoice totals must be non-negative")
@@ -524,12 +534,14 @@ class Invoice(BaseModel):
 
     @field_validator("lines")
     @classmethod
+    @pydantic_validation_boundary
     def _require_lines(cls, value: tuple[InvoiceLine, ...]) -> tuple[InvoiceLine, ...]:
         if not value:
             raise InvoiceValidationError("invoice must carry at least one line")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_fx_conversion_coherence(self) -> Self:
         """Reject an incoherent conversion stamp.
 
@@ -565,6 +577,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_line_rates_were_in_force(self) -> Self:
         """Refuse a line naming a rate the statute did not offer on the devengo date.
 
@@ -600,6 +613,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_totals_and_exempt_invariants(self) -> Self:
         line_subtotal_sum = sum((line.subtotal for line in self.lines), start=Decimal("0"))
         line_iva_sum = sum((line.iva_amount for line in self.lines), start=Decimal("0"))
@@ -650,6 +664,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_retencion_consistency(self) -> Self:
         """Enforce the retención invariants, holding retención outside the totals.
 
@@ -708,6 +723,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_recargo_consistency(self) -> Self:
         """Enforce the recargo de equivalencia invariants, holding it inside the total.
 
@@ -750,6 +766,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_suplido_consistency(self) -> Self:
         """Enforce the suplido invariant, holding it inside the total alongside recargo.
 
@@ -777,6 +794,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_invoice_class_consistency(self) -> Self:
         """Enforce the RD 1619/2012 art. 6.1 invoice-class axis.
 
@@ -861,6 +879,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_intracommunity_acquirer_identification(self) -> Self:
         """Refuse an entrega intracomunitaria exenta to a Spanish-IDENTIFIED acquirer.
 
@@ -902,6 +921,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_operation_date_consistency(self) -> Self:
         """Enforce the LIVA art. 75 devengo-date axis art. 6.1.i lets an invoice state.
 
@@ -935,6 +955,7 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_oss_ioss_axes(self) -> Self:
         """Validate the optional OSS/IOSS projection axes used by Modelo 369."""
         has_oss_line_rate = any(line.oss_rate_kind is not None for line in self.lines)
@@ -1063,6 +1084,7 @@ class InvoiceCatalogue(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_catalogue_input(cls, data: object) -> object:
         """Accept a catalogue, its canonical payload, or an iterable of invoices.
 
@@ -1097,6 +1119,7 @@ class InvoiceCatalogue(BaseModel):
         return data
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_mapping_keys(self) -> Self:
         for key, invoice in self.invoices.items():
             if key != invoice.invoice_id:

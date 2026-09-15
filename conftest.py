@@ -2,7 +2,7 @@
 
 Hosts the hexagonal marker collection hook from the repo root so every item
 gathered through this root passes through the same enforcement surface. The
-hook body lives in :mod:`cadrumo.tests._marker_hook`; this conftest is a thin
+hook body lives in :mod:`cadrumo.tests.marker_hook`; this conftest is a thin
 wrapper.
 
 Also hosts the project-branded ``CADRUMO_PYTEST_WORKERS`` worker-count policy
@@ -103,26 +103,16 @@ bridge_env_file_into_environ = import_module("cadrumo.tests.env_loader").bridge_
 # against is already set by the pure-stdlib line above.
 bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
 
-_deselection_hook = import_module("cadrumo.tests._deselection_hook")
-_report_deselection = _deselection_hook.apply
-_record_collected_markers = _deselection_hook.record_collected_markers
+# The collection-policy and reporting hooks load by their public package path,
+# after the storage-root and env bridging above; a top-of-file import statement
+# would run before those lines.
+deselection_hook = import_module("cadrumo.tests.deselection_hook")
+fixture_resolution_hook = import_module("cadrumo.tests.fixture_resolution_hook")
+lost_test_hook = import_module("cadrumo.tests.lost_test_hook")
+marker_hook = import_module("cadrumo.tests.marker_hook")
 _host_load_hook = import_module("cadrumo.tests._host_load_hook")
 _arm_host_load_stamp = _host_load_hook.arm_pre_timeout_stamp
 _disarm_host_load_stamp = _host_load_hook.disarm_pre_timeout_stamp
-_report_lost_tests = import_module("cadrumo.tests._lost_test_hook").apply
-_fixture_resolution_hook = import_module("cadrumo.tests._fixture_resolution_hook")
-_refuse_unresolved_fixtures = _fixture_resolution_hook.apply
-_fail_on_refused_fixtures = _fixture_resolution_hook.fail_session_on_refused_requests
-_record_refused_fixtures = _fixture_resolution_hook.record_refused_from_node
-_report_refused_fixtures = _fixture_resolution_hook.report_refused_requests
-_reset_refused_fixtures = _fixture_resolution_hook.reset_refused_requests
-_marker_hook = import_module("cadrumo.tests._marker_hook")
-_apply_marker_contract = _marker_hook.apply
-_apply_banned_live_import_policy = _marker_hook.apply_banned_live_import_policy
-_fail_on_held_serials = _marker_hook.fail_session_on_held_serials
-_record_held_serials = _marker_hook.record_held_from_node
-_report_held_serials = _marker_hook.report_held_serials
-_reset_held_serials = _marker_hook.reset_held_serials
 _resolve_auto_num_workers = import_module("cadrumo.tests._worker_count_hook").resolve_auto_num_workers
 temporary_env = import_module("cadrumo.tests.env").temporary_env
 
@@ -141,8 +131,8 @@ register_collection_storage_root_cleanup(collection_storage_root())
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config: pytest.Config) -> None:
     """Create and announce this pytest invocation's durable run log."""
-    _reset_held_serials()
-    _reset_refused_fixtures()
+    marker_hook.reset_held_serials()
+    fixture_resolution_hook.reset_refused_requests()
     _run_logging.configure(config)
 
 
@@ -163,18 +153,18 @@ def pytest_collectreport(report: pytest.CollectReport) -> None:
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
-    """Fail incomplete serial runs and worker-refused fixture requests, then finalize metadata."""
+    """Fail incomplete serial runs and sessions with unresolved fixture requests, then finalize metadata."""
     del exitstatus
-    _fail_on_held_serials(session)
-    _fail_on_refused_fixtures(session)
+    marker_hook.fail_session_on_held_serials(session)
+    fixture_resolution_hook.fail_session_on_refused_requests(session)
     _run_logging.finish(session.config, session.exitstatus)
 
 
 def pytest_testnodedown(node: object, error: object | None) -> None:
     """Collect serial items held, and fixture requests refused, inside an xdist worker."""
     del error
-    _record_held_serials(node)
-    _record_refused_fixtures(node)
+    marker_hook.record_held_from_node(node)
+    fixture_resolution_hook.record_refused_from_node(node)
 
 
 @pytest.hookimpl(trylast=True)
@@ -214,13 +204,13 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     # First, before the marker contract holds serial items back and before
     # marker selection deselects anything: a dead test must be refused even in
     # a lane that would never execute it.
-    _refuse_unresolved_fixtures(config, items)
-    _apply_marker_contract(config, items)
-    _apply_banned_live_import_policy(items)
+    fixture_resolution_hook.apply(config, items)
+    marker_hook.apply(config, items)
+    marker_hook.apply_banned_live_import_policy(items)
     # Recorded here, before selection removes anything, so the empty-selection
     # banner can name the markers these tests actually carry instead of
     # guessing a lane that may be just as empty.
-    _record_collected_markers(config, items)
+    deselection_hook.record_collected_markers(config, items)
 
 
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:
@@ -251,6 +241,7 @@ def pytest_terminal_summary(
     config: pytest.Config,
 ) -> None:
     """Delegate to the shared deselection and lost-test reporters."""
-    _report_deselection(terminalreporter, exitstatus, config)
-    _report_held_serials(terminalreporter)
-    _report_lost_tests(terminalreporter, exitstatus, config)
+    deselection_hook.apply(terminalreporter, exitstatus, config)
+    marker_hook.report_held_serials(terminalreporter)
+    fixture_resolution_hook.report_refused_requests(terminalreporter)
+    lost_test_hook.apply(terminalreporter, exitstatus, config)

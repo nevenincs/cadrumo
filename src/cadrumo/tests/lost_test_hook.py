@@ -18,7 +18,7 @@ between what collection found and what the reporter heard back, so a run
 with a hole in it announces the hole.
 
 See Also:
-    :mod:`cadrumo.tests._deselection_hook`
+    :mod:`cadrumo.tests.deselection_hook`
         The sibling reporter for the other way a run under-executes, where
         the tests were deliberately not selected rather than lost.
 """

@@ -128,7 +128,7 @@ filename, module-level marker, execution-scope, hex-layer, or retired
 marker rules.
 
 The repo-root `conftest.py` invokes the collection policy in
-`cadrumo.tests._marker_hook` once for every collected subtree. It raises
+`cadrumo.tests.marker_hook` once for every collected subtree. It raises
 `pytest.UsageError` when a test item lacks exactly one execution marker or
 exactly one accepted `hex_*` marker.
 
@@ -219,7 +219,7 @@ Checklist:
 
 ## Cross-References
 
-- `src/cadrumo/tests/_marker_hook.py` - shared collection hook body.
+- `src/cadrumo/tests/marker_hook.py` - shared collection hook body.
 - `src/cadrumo/tests/test_marker_integrity.py` - AST-backed drift detector.
 - `pyproject.toml` - pytest discovery, marker registry, and coverage
   omit settings.

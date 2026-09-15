@@ -215,12 +215,19 @@ def _tree_bytes(root: Path) -> dict[str, bytes]:
 
 
 def _without_label_origin_fallback(revision: ModeloRevision) -> ModeloRevision:
-    """Drop the one locale key the live load adds to rows it inherited, which no staged tree can author."""
+    """Drop what the live load derives for rows it inherited, which no staged full copy can author.
+
+    That is the origin edition's locale key and the loader-owned ``inherited_from``
+    marker: a full copy states every row itself, so neither exists for it.
+    """
     return revision.model_copy(
         update={
             "casillas": tuple(
                 casilla.model_copy(
-                    update={"localization_keys": casilla.localization_keys[:1] + casilla.localization_keys[2:]}
+                    update={
+                        "localization_keys": casilla.localization_keys[:1] + casilla.localization_keys[2:],
+                        "inherited_from": None,
+                    }
                 )
                 if casilla.id != "0004"
                 else casilla
@@ -238,8 +245,8 @@ def test_a_migrated_successor_stages_as_the_complete_edition_it_stands_for(tmp_p
         source, tmp_path / "staged" / "999", revision="2025", **_locale_roots(tmp_path)
     ).modelo_root
 
-    assert sorted(path.name for path in (staged_root / "revisions").iterdir()) == ["2025.toml"]
-    assert "predecessor" not in (staged_root / "revisions" / "2025.toml").read_text(encoding="utf-8")
+    assert sorted(path.name for path in (staged_root / "revisions").iterdir()) == ["2025"]
+    assert "predecessor" not in (staged_root / "revisions" / "2025" / "revision.toml").read_text(encoding="utf-8")
     staged_definition = load_modelo_directory(staged_root)
     assert tuple(staged_definition.revisions) == ("2025",)
     staged = staged_definition.revisions["2025"]

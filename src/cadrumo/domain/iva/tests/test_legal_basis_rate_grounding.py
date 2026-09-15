@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import re
 import tomllib
+from collections.abc import Iterator
 from datetime import date
 from datetime import date as _esp_date
 from decimal import Decimal
@@ -46,6 +47,12 @@ from ..lookup import lookup_rate
 from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _registry_authority_scope() -> Iterator[None]:
+    with _indexed_authority_for_test().operation():
+        yield
 
 
 #: An explicit resolved margin. These tests exercise the PREDICATE and the

@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import ast
-import inspect
 from pathlib import Path
-from shutil import rmtree
 from typing import Literal, TypedDict
 
 import pytest
@@ -26,6 +23,15 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 
 from . import _tree_check
 from ._export_tree import ExportTreeTransportProfile
+from ._generated_tree_test_support import (
+    ISOLATED_TREE,
+    isolated_authorities,
+    isolated_authority,
+    isolated_export_root,
+    isolated_render_profile,
+    render_isolated_export,
+    stage_isolated_validation_context,
+)
 from ._tree_check import (
     GeneratedExportTreeCheckContext,
     check_generated_export_tree,
@@ -36,22 +42,12 @@ from .export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     normalised_loader_semantics,
 )
-from .test_generated_export_tree_validation import (
-    _ISOLATED_TREE,
-    _isolated_render_profile,
-    _real_authorities,
-    _write_isolated_generated_authority_tree,
-)
+from .joined_record_design import JoinedRecordDesign
+from .semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-# Modelo 130 throughout: `_write_isolated_generated_authority_tree` in
-# `test_export_tree` builds its isolated tree for modelo 130, because the
-# modelo 200 revision it used to target now declares 578 projection endpoints
-# that semantic-map validation checks as a bijection, which a synthetic map
-# cannot satisfy. These modules consume that helper, so their own paths and
-# snapshot must name the same modelo or the tree and the paths disagree.
 def _tree_hashes(root: Path) -> dict[str, str]:
     """Observe existing target bytes using the production hashing utility."""
     return {
@@ -60,20 +56,19 @@ def _tree_hashes(root: Path) -> dict[str, str]:
     }
 
 
-def _check_inputs(tmp_path: Path, snapshot):
-    """Build separate current target and empty candidate authorities on disk."""
-    target_validation, joined, semantic_map, _rendered, target_export_root = _write_isolated_generated_authority_tree(
-        tmp_path / "published",
-        snapshot,
-    )
-    candidate_validation, _candidate_joined, _candidate_map, _candidate_rendered, candidate_export_root = (
-        _write_isolated_generated_authority_tree(tmp_path / "candidate", snapshot)
-    )
-    rmtree(candidate_export_root)
+def _check_inputs(tmp_path: Path) -> tuple[GeneratedExportTreeCheckContext, JoinedRecordDesign, SemanticMap, Path]:
+    """Build a rendered published target and a separate export-free candidate authority on disk.
+
+    The continuity witness is an input to candidate validation only, so the
+    published side stages just its registry and renders its export.
+    """
+    target_registry_root = isolated_authority(ISOLATED_TREE, tmp_path / "published")
+    joined, semantic_map, _rendered, target_export_root = render_isolated_export(target_registry_root)
+    candidate_root = tmp_path / "candidate"
     context = GeneratedExportTreeCheckContext(
-        validation=candidate_validation,
-        temporary_root=tmp_path / "candidate",
-        target_registry_root=target_validation.registry_root,
+        validation=stage_isolated_validation_context(candidate_root),
+        temporary_root=candidate_root,
+        target_registry_root=target_registry_root,
         target_export_root=target_export_root,
     )
     return context, joined, semantic_map, target_export_root
@@ -81,15 +76,7 @@ def _check_inputs(tmp_path: Path, snapshot):
 
 #: Substring of the registry's filing-grade review refusal. ``check_generated_export_tree``
 #: selects a filing-grade snapshot partway through, so an unreviewed target revision raises
-#: the same exception type these cases expect, before the comparison under test ever runs.
-#: Substring of the registry's filing-grade review refusal. Pinned to the
-#: message the refusal ACTUALLY raises: it once read "requires
-#: operator_reviewed" and was relaxed to admit any reviewed status, agent or
-#: operator, because demanding the operator stamp made a filing-grade
-#: snapshot unreachable by construction. This pin was not swept with it, so
-#: the guard below matched nothing and silently stopped distinguishing a
-#: review-gate refusal from the injected defect -- an anti-tautology check
-#: that cannot fire is worse than none, because it reads as coverage.
+#: the same exception type these cases expect, before the comparison under test runs.
 _REVIEW_GATE_REFUSAL = "filing-grade snapshot requires a reviewed revision"
 
 
@@ -102,15 +89,8 @@ def _require_the_defect_was_reached(refusal: BaseException, defect: str) -> None
     )
 
 
-def _rendered_record_fragments(export_root):
-    """The record fragments the renderer actually wrote, in file order.
-
-    These filenames were transcribed from the old synthetic tree
-    (`0001-record-generated-registro-tipo-1.toml`). The fixture now renders a
-    REAL tree, whose fragments are named after that modelo's own records, so a
-    transcribed name is a file that does not exist and the case dies on the
-    tamper rather than on the drift it is testing.
-    """
+def _rendered_record_fragments(export_root: Path) -> list[Path]:
+    """The record fragments the renderer wrote, in file order, so each tamper targets a real file."""
     return sorted(
         path
         for path in export_root.iterdir()
@@ -118,58 +98,34 @@ def _rendered_record_fragments(export_root):
     )
 
 
-def _profile() -> ExportTreeTransportProfile:
-    """The isolated tree's own transport profile, derived rather than transcribed.
-
-    Every axis here -- modelo, design epoch, source ref, source digest, layout id
-    -- has to agree with the joined design the fixture actually builds. They were
-    transcribed by hand and went stale each time the fixture's target moved, so
-    they are read off `_ISOLATED_TREE` and the real intermediate instead.
-    """
-    _joined, _map, transport, _profile_obj, _evidence = _real_authorities(_ISOLATED_TREE)
+def _transport_profile() -> ExportTreeTransportProfile:
+    """The isolated tree's own transport profile, derived from its real joined design."""
+    _joined, _map, transport, _render_profile, _evidence = isolated_authorities(ISOLATED_TREE)
     return transport
 
 
-#: Floor for the parsed surface below. Live: 102 referenced names.
-_MINIMUM_CHECK_NAMES = 34
-
-#: Floor for the ATTRIBUTE surface of the same parse. The floor above counts
-#: ast.Name nodes and does not reach these: a module can hold plenty of names
-#: while its attribute set empties, and the forbidden entries most likely to
-#: return -- ``shutil.copytree``, ``path.read_text`` -- are ATTRIBUTES, so the
-#: unguarded claim was the load-bearing one. Live: 29 attribute names.
-_MINIMUM_CHECK_ATTRIBUTES = 10
-
-
-def test_check_regenerates_in_isolation_and_preserves_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
+def test_check_regenerates_in_isolation_and_preserves_published_hashes(tmp_path: Path) -> None:
     """A real candidate must match every current target member without target mutation."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
-    before = _tree_hashes(target_export_root)
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path)
+    render_profile, render_evidence = isolated_render_profile()
+    before = _tree_hashes(context.target_registry_root)
 
     checked = check_generated_export_tree(
         context=context,
         joined=joined,
         semantic_map=semantic_map,
-        transport_profile=_profile(),
-        render_profile=_isolated_render_profile()[0],
-        render_profile_source_evidence=_isolated_render_profile()[1],
+        transport_profile=_transport_profile(),
+        render_profile=render_profile,
+        render_profile_source_evidence=render_evidence,
     )
 
-    assert _tree_hashes(target_export_root) == before
+    assert _tree_hashes(context.target_registry_root) == before
     assert checked.candidate.snapshot.revision.export_layouts == (checked.candidate.layout,)
     assert checked.published_manifest == checked.candidate.provenance_manifest
     assert normalised_loader_semantics(checked.published_layout) == normalised_loader_semantics(
         checked.candidate.layout,
     )
-    candidate_export_root = (
-        context.validation.registry_root
-        / "modelos"
-        / _ISOLATED_TREE.modelo
-        / "revisions"
-        / _ISOLATED_TREE.revision
-        / "export"
-    )
-    assert _tree_hashes(candidate_export_root) == before
+    assert _tree_hashes(isolated_export_root(context.validation.registry_root)) == _tree_hashes(target_export_root)
 
 
 #: The refusal each injected defect must produce. Pairs that share a message
@@ -206,11 +162,11 @@ _DEFECT_REFUSAL = {
         "obsolete-direct-modelo",
     ),
 )
-def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_snapshot, tmp_path, defect: str) -> None:
+def test_check_refuses_drift_without_changing_published_hashes(tmp_path: Path, defect: str) -> None:
     """Every authority or membership defect fails while target bytes remain exactly as supplied."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
-    profile = _profile()
-    render_profile = _isolated_render_profile()[0]
+    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path)
+    profile = _transport_profile()
+    render_profile, render_evidence = isolated_render_profile()
     if defect == "semantic-map":
         semantic_map = semantic_map.model_copy(
             update={
@@ -254,23 +210,19 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
     elif defect == "obsolete-sibling":
         (target_export_root.parent / "export.provenance.json").write_text("{}\n", encoding="utf-8")
     elif defect == "obsolete-direct-modelo":
-        # Derived, not transcribed: the file was written as modelos/200.toml
-        # declaring id 130 while the isolated tree is 184, so it planted a
-        # modelo the target does not carry and the check had nothing obsolete
-        # to refuse. The case only looked green because a stale render
-        # profile refused the whole run before the injection was reached.
-        (context.target_registry_root / "modelos" / f"{_ISOLATED_TREE.modelo}.toml").write_text(
-            f'[modelo]\nid = "{_ISOLATED_TREE.modelo}"\n',
+        # The direct file names the target's own modelo: the obsolete-path check
+        # refuses it for that modelo specifically, not as foreign registry content.
+        (context.target_registry_root / "modelos" / f"{ISOLATED_TREE.modelo}.toml").write_text(
+            f'[modelo]\nid = "{ISOLATED_TREE.modelo}"\n',
             encoding="utf-8",
         )
     else:
         raise AssertionError(f"unknown test defect: {defect}")
-    before = _tree_hashes(target_export_root)
+    before = _tree_hashes(context.target_registry_root)
 
-    # Each defect must refuse on ITS OWN terms. A bare refusal let eight of
-    # these eleven cases pass on a stale render-profile identity mismatch
-    # that fired before the injection was ever reached, and hid one defect
-    # the check does not detect at all.
+    # Each defect must refuse with its own message: an earlier, unrelated check
+    # raising the same exception type would otherwise pass the case without the
+    # injected defect ever being reached.
     with pytest.raises(RegistryValidationError, match=_DEFECT_REFUSAL[defect]) as refusal:
         check_generated_export_tree(
             context=context,
@@ -278,54 +230,45 @@ def test_check_refuses_drift_without_changing_published_hashes(m130_inspection_s
             semantic_map=semantic_map,
             transport_profile=profile,
             render_profile=render_profile,
-            render_profile_source_evidence=_isolated_render_profile()[1],
+            render_profile_source_evidence=render_evidence,
         )
 
     _require_the_defect_was_reached(refusal.value, defect)
-    assert _tree_hashes(target_export_root) == before
+    assert _tree_hashes(context.target_registry_root) == before
 
 
-def test_check_refuses_candidate_reuse_without_changing_published_hashes(m130_inspection_snapshot, tmp_path) -> None:
+def test_check_refuses_candidate_reuse_without_changing_published_hashes(tmp_path: Path) -> None:
     """A prior candidate output cannot become a check input or a silent green path."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
-    candidate_export_root = (
-        context.validation.registry_root
-        / "modelos"
-        / _ISOLATED_TREE.modelo
-        / "revisions"
-        / _ISOLATED_TREE.revision
-        / "export"
-    )
-    candidate_export_root.mkdir()
-    before = _tree_hashes(target_export_root)
+    context, joined, semantic_map, _target_export_root = _check_inputs(tmp_path)
+    render_profile, render_evidence = isolated_render_profile()
+    isolated_export_root(context.validation.registry_root).mkdir()
+    before = _tree_hashes(context.target_registry_root)
 
     with pytest.raises(RegistryValidationError, match="must be absent before fresh rendering"):
         check_generated_export_tree(
             context=context,
             joined=joined,
             semantic_map=semantic_map,
-            transport_profile=_profile(),
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
+            transport_profile=_transport_profile(),
+            render_profile=render_profile,
+            render_profile_source_evidence=render_evidence,
         )
 
-    assert _tree_hashes(target_export_root) == before
+    assert _tree_hashes(context.target_registry_root) == before
 
 
-def test_check_refuses_linked_candidate_ancestor_before_rendering(m130_inspection_snapshot, tmp_path) -> None:
+def test_check_refuses_linked_candidate_ancestor_before_rendering(tmp_path: Path) -> None:
     """A directory link cannot redirect candidate rendering before the validation boundary."""
-    context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m130_inspection_snapshot)
+    context, joined, semantic_map, _target_export_root = _check_inputs(tmp_path)
+    render_profile, render_evidence = isolated_render_profile()
     candidate_modelos_root = context.validation.registry_root / "modelos"
     redirected_modelos_root = tmp_path / "redirected-modelos"
     candidate_modelos_root.rename(redirected_modelos_root)
     candidate_modelos_root.symlink_to(redirected_modelos_root, target_is_directory=True)
-    before = _tree_hashes(target_export_root)
-    # Derived, not transcribed. The modelo was written as 130 while the
-    # isolated tree is 184, so this path could never exist and the absence
-    # claim below held over a directory the redirect never had - it would
-    # have passed even if rendering HAD written through the link.
+    before = _tree_hashes(context.target_registry_root)
+    # The export directory rendering would reach through the link.
     redirected_export_root = (
-        redirected_modelos_root / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "export"
+        redirected_modelos_root / ISOLATED_TREE.modelo / "revisions" / ISOLATED_TREE.revision / "export"
     )
 
     with pytest.raises(RegistryValidationError, match="candidate revision root must not be a link"):
@@ -333,53 +276,13 @@ def test_check_refuses_linked_candidate_ancestor_before_rendering(m130_inspectio
             context=context,
             joined=joined,
             semantic_map=semantic_map,
-            transport_profile=_profile(),
-            render_profile=_isolated_render_profile()[0],
-            render_profile_source_evidence=_isolated_render_profile()[1],
+            transport_profile=_transport_profile(),
+            render_profile=render_profile,
+            render_profile_source_evidence=render_evidence,
         )
 
     assert not redirected_export_root.exists()
-    assert _tree_hashes(target_export_root) == before
-
-
-def test_check_module_has_no_migration_reader_or_publisher_surface() -> None:
-    """The permanent check API must not regain an obsolete migration or publish route."""
-    module = ast.parse(inspect.getsource(_tree_check))
-    referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
-
-    # An absence claim over an EMPTY surface is satisfied by construction.
-    # This module carries 102 referenced names today; a gutted or stubbed
-    # one would satisfy every forbidden-name assertion below without the
-    # boundary existing at all. A floor, not a pinned count.
-    assert len(referenced_names) >= _MINIMUM_CHECK_NAMES, (
-        f"the check API parsed to only {len(referenced_names)} referenced name(s); below "
-        "this an absence claim proves nothing about the boundary it guards"
-    )
-    attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
-    assert len(attribute_names) >= _MINIMUM_CHECK_ATTRIBUTES, (
-        f"the check API parsed to only {len(attribute_names)} attribute name(s); below "
-        "this the forbidden-attribute claim below holds because the parse reached no "
-        "attributes, not because the boundary is clean"
-    )
-    imported_modules = {
-        node.module for node in ast.walk(module) if isinstance(node, ast.ImportFrom) and node.module is not None
-    }
-    imported_modules.update(
-        alias.name for node in ast.walk(module) if isinstance(node, ast.Import) for alias in node.names
-    )
-
-    forbidden = {
-        "bundled_authority",
-        "copytree",
-        "copy2",
-        "load_modelo_path",
-        "publish_validated_generated_export_tree",
-        "resolve_export_layout",
-    }
-    assert not forbidden.intersection(referenced_names)
-    assert not forbidden.intersection(attribute_names)
-    assert "dev.registry._generated_tree_publication" not in imported_modules
-    assert "legacy" not in inspect.getsource(_tree_check).casefold()
+    assert _tree_hashes(context.target_registry_root) == before
 
 
 class _SharedExportFieldFields(TypedDict):

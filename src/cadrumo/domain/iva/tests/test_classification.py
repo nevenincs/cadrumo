@@ -20,9 +20,10 @@ from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
 from ..classification import (
     InvoiceKind,
     IvaInvoiceClassificationCriteria,
-    classify_iva,
 )
+from ..errors import IvaValidationError
 from ..schema import IvaCategory
+from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -109,7 +110,7 @@ _CLASSIFICATION_CASES = (
         "r10-intra-community-supply-goods",
         {
             "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
-            "customer_identification_state": require_eu_member_state("DE"),
+            "customer_identification_state": "DE",
             "kind": TransactionKind("goods"),
             "direction": InvoiceKind.ISSUED,
         },
@@ -122,7 +123,7 @@ _CLASSIFICATION_CASES = (
         "r11-intra-community-acquisition-goods",
         {
             "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
-            "issuer_identification_state": require_eu_member_state("DE"),
+            "issuer_identification_state": "DE",
             "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
             "kind": TransactionKind("goods"),
             "direction": InvoiceKind.RECEIVED,
@@ -136,7 +137,7 @@ _CLASSIFICATION_CASES = (
         "r12-services-b2b-eu-outbound",
         {
             "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
-            "customer_identification_state": require_eu_member_state("FR"),
+            "customer_identification_state": "FR",
             "kind": TransactionKind("services_general"),
             "direction": InvoiceKind.ISSUED,
         },
@@ -149,7 +150,7 @@ _CLASSIFICATION_CASES = (
         "r13-services-b2b-eu-inbound",
         {
             "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
-            "issuer_identification_state": require_eu_member_state("FR"),
+            "issuer_identification_state": "FR",
             "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
             "kind": TransactionKind("services_general"),
             "direction": InvoiceKind.RECEIVED,
@@ -163,7 +164,7 @@ _CLASSIFICATION_CASES = (
         "r19-oss-union-services",
         {
             "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
-            "customer_identification_state": require_eu_member_state("IT"),
+            "customer_identification_state": "IT",
             "customer_tax_status": CustomerTaxStatus.from_registry("b2c_consumer"),
             "kind": TransactionKind("oss_union_services"),
             "direction": InvoiceKind.ISSUED,
@@ -240,9 +241,9 @@ _CLASSIFICATION_CASES = (
         "r99-fallthrough",
         {
             "issuer_residency": IvaTerritorialScope.from_registry("eu_member"),
-            "issuer_identification_state": require_eu_member_state("DE"),
+            "issuer_identification_state": "DE",
             "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
-            "customer_identification_state": require_eu_member_state("FR"),
+            "customer_identification_state": "FR",
             "kind": TransactionKind("goods"),
             "direction": InvoiceKind.ISSUED,
         },
@@ -264,12 +265,12 @@ def test_classification_rule_cases() -> None:
             expected_reverse_charge,
             expected_rate_pct,
         ) in _CLASSIFICATION_CASES:
-            result = classify_iva(_criteria(**overrides), operation=_authority_operation_for_test)
+            result = classify_with_registry_rules(_criteria(**overrides), operation=_authority_operation_for_test)
             assert result.category == expected_category, case_id
             if expected_rule_id is not None:
                 assert result.matched_rule_id == expected_rule_id, case_id
             if expected_reverse_charge is not None:
-                assert result.requires_reverse_charge is expected_reverse_charge, case_id
+                assert result.requires_reverse_charge == expected_reverse_charge, case_id
             if expected_rate_pct is not None:
                 assert result.rate is not None, case_id
                 assert result.rate.pct == expected_rate_pct, case_id
@@ -278,7 +279,7 @@ def test_classification_rule_cases() -> None:
 def test_r03_electronics_b2c_does_not_trigger_reverse_charge() -> None:
     """Electronics RC requires B2B; a B2C consumer falls through to R05."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        result = classify_iva(
+        result = classify_with_registry_rules(
             _criteria(
                 kind=TransactionKind("electronics_reverse_charge"),
                 customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
@@ -292,9 +293,9 @@ def test_classify_iva_is_deterministic() -> None:
     """Same criteria ⇒ same rule + same category across N invocations."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         criteria = _criteria()
-        first = classify_iva(criteria, operation=_authority_operation_for_test)
+        first = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         for _ in range(20):
-            repeat = classify_iva(criteria, operation=_authority_operation_for_test)
+            repeat = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
             assert repeat.matched_rule_id == first.matched_rule_id
             assert repeat.category == first.category
 
@@ -322,9 +323,9 @@ def test_eu_member_residency_does_not_require_an_identification_state() -> None:
 
 
 def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
-    """ES-to-ES domestic GOODS / SERVICES criteria without rate_tier raise."""
-    with pytest.raises(ValueError, match="rate_tier is required"):
-        IvaInvoiceClassificationCriteria(
+    """ES-to-ES domestic GOODS / SERVICES criteria without rate_tier are refused at classification."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -333,6 +334,8 @@ def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
         )
+        with pytest.raises(IvaValidationError, match="rate/category mapping"):
+            classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
 
 
 def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
@@ -348,7 +351,7 @@ def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
         )
-        result = classify_iva(criteria, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         assert result.matched_rule_id == "R01_construction_reverse_charge"
 
 
@@ -364,7 +367,7 @@ def test_es_to_es_immovable_property_does_not_require_rate_tier() -> None:
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
         )
-        result = classify_iva(criteria, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         assert result.category == IvaCategory("domestic_exempt")
 
 
@@ -382,7 +385,7 @@ def test_cross_border_criteria_do_not_require_rate_tier() -> None:
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
         )
-        result = classify_iva(criteria, operation=_authority_operation_for_test)
+        result = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         assert result.category == IvaCategory("intra_community_supply")
 
 
@@ -398,11 +401,11 @@ def test_classification_rate_resolution_uses_transaction_date() -> None:
     window's edges.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        earlier = classify_iva(
+        earlier = classify_with_registry_rules(
             _criteria(transaction_date=date(2024, 6, 15), rate_tier=IvaRateKind("general")),
             operation=_authority_operation_for_test,
         )
-        later = classify_iva(
+        later = classify_with_registry_rules(
             _criteria(transaction_date=date(2025, 6, 15), rate_tier=IvaRateKind("general")),
             operation=_authority_operation_for_test,
         )
@@ -419,7 +422,7 @@ def test_classification_rate_resolution_uses_transaction_date() -> None:
 def test_classification_rate_resolution_returns_none_for_export() -> None:
     """Exports carry no domestic rate; rate is None."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        result = classify_iva(
+        result = classify_with_registry_rules(
             _criteria(
                 customer_residency=IvaTerritorialScope.from_registry("third_country"),
                 kind=TransactionKind("goods"),

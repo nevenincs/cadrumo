@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
 
 from ....core.period import Period
+from ...calculations.registry.authority import bundled_indexed_authority
 from ..m303_settlement import (
     is_m303_annual_settlement_period,
     m303_annual_settlement_order_key,
@@ -14,6 +16,12 @@ from ..m303_settlement import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _registry_authority_scope() -> Iterator[None]:
+    with bundled_indexed_authority().operation():
+        yield
 
 
 @pytest.mark.parametrize(

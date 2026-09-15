@@ -48,21 +48,32 @@ _MINIMO_1 = registry_birth_order_amounts(FILING_YEAR)[0]
 _MENOR_TRES = registry_menor_tres_supplement(FILING_YEAR)
 _THRESHOLDS = registry_thresholds(FILING_YEAR)
 _CUSTODIA_FACT_KEY = "renta_family.descendiente.0.custodia_compartida"
-_CUSTODIA_FIELD_CASES = (
-    ("default", DescendantInfo(birth_date=date(2020, 3, 15)), False),
-    ("explicit-true", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True), True),
-)
-_CUSTODIA_COUNT_CASES = (
-    ("no-descendants", (), 0),
-    ("none-flagged", (DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),), 0),
-    ("one-eligible", (DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),), 1),
-    ("ineligible", (DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True),), 0),
-)
-_PRORRATA_FACTOR_CASES = (
-    ("custodia-eligible", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True), Decimal("0.5")),
-    ("no-custodia", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False), Decimal("1")),
-    ("ineligible-custodia", DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True), Decimal("1")),
-)
+
+
+def _custodia_field_cases() -> tuple[tuple[str, DescendantInfo, bool], ...]:
+    return (
+        ("default", DescendantInfo(birth_date=date(2020, 3, 15)), False),
+        ("explicit-true", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True), True),
+    )
+
+
+def _custodia_count_cases() -> tuple[tuple[str, tuple[DescendantInfo, ...], int], ...]:
+    return (
+        ("no-descendants", (), 0),
+        ("none-flagged", (DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),), 0),
+        ("one-eligible", (DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),), 1),
+        ("ineligible", (DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True),), 0),
+    )
+
+
+def _prorrata_factor_cases() -> tuple[tuple[str, DescendantInfo, Decimal], ...]:
+    return (
+        ("custodia-eligible", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True), Decimal("0.5")),
+        ("no-custodia", DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False), Decimal("1")),
+        ("ineligible-custodia", DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True), Decimal("1")),
+    )
+
+
 _PARSE_CUSTODIA_CASES = (
     ("true", "NACIMIENTO=2020-03-15,CUSTODIA=true", True),
     ("false", "NACIMIENTO=2020-03-15,CUSTODIA=false", False),
@@ -77,7 +88,7 @@ _PARSE_CUSTODIA_CASES = (
 
 
 def test_custodia_compartida_field_cases() -> None:
-    for case_id, descendant, expected in _CUSTODIA_FIELD_CASES:
+    for case_id, descendant, expected in _custodia_field_cases():
         assert descendant.custodia_compartida is expected, case_id
 
 
@@ -87,7 +98,7 @@ def test_custodia_compartida_field_cases() -> None:
 
 
 def test_custodia_compartida_count_cases() -> None:
-    for case_id, descendants, expected in _CUSTODIA_COUNT_CASES:
+    for case_id, descendants, expected in _custodia_count_cases():
         p = RentaFamilyProfile(descendientes=descendants)
         assert p.custodia_compartida_count(FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT) == expected, case_id
 
@@ -98,7 +109,7 @@ def test_custodia_compartida_count_cases() -> None:
 
 
 def test_prorrata_factor_cases() -> None:
-    for case_id, descendant, expected in _PRORRATA_FACTOR_CASES:
+    for case_id, descendant, expected in _prorrata_factor_cases():
         p = RentaFamilyProfile(descendientes=(descendant,))
         assert (
             p.minimo_prorrata_factor(descendant, FILING_YEAR, thresholds=_THRESHOLDS, context=_CONTEXT) == expected

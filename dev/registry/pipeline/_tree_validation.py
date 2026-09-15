@@ -17,6 +17,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
@@ -242,26 +243,31 @@ def _validated_target_snapshot(
         },
     )
     scoped_modelos = tuple(witness if str(modelo.id) == modelo_id else modelo for modelo in loaded_modelos)
-    continuity_failures = validate_registry_scope(scoped_modelos)
-    if continuity_failures:
-        raise RegistryValidationError(
-            "registry validation failed:\n" + "\n".join(f" - {failure}" for failure in continuity_failures)
-        )
+    # Binding validators and snapshot selection resolve governed vocabulary. They
+    # must read the candidate's own compiled facts, exactly as the full authority
+    # compile does, never whatever authority happens to be ambient.
+    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+        continuity_failures = validate_registry_scope(scoped_modelos)
+        if continuity_failures:
+            raise RegistryValidationError(
+                "registry validation failed:\n" + "\n".join(f" - {failure}" for failure in continuity_failures)
+            )
 
-    # ``build_snapshot`` owns exactly the model-local validation and requested-grade
-    # selection that the production authority delegates to after its registry
-    # scope has passed.  The scope above is the same existing validator, with
-    # the copied predecessor facts used only to make strict continuity answerable.
-    return build_snapshot(
-        target_definition,
-        catalogues,
-        source_root=source_root,
-        filing_year=context.filing_year,
-        period=context.period,
-        on=context.on,
-        revision_id=revision_id,
-        grade=context.required_grade,
-    )
+        # ``build_snapshot`` owns exactly the model-local validation and
+        # requested-grade selection that the production authority delegates to
+        # after its registry scope has passed. The scope above is the same
+        # existing validator, with the copied predecessor facts used only to
+        # make strict continuity answerable.
+        return build_snapshot(
+            target_definition,
+            catalogues,
+            source_root=source_root,
+            filing_year=context.filing_year,
+            period=context.period,
+            on=context.on,
+            revision_id=revision_id,
+            grade=context.required_grade,
+        )
 
 
 def _load_continuity_metadata_modelo(
