@@ -32,9 +32,9 @@ def legal_ids_fixture() -> frozenset[str]:
 
     Consumers only check that a profile-schema legal ref resolves against the
     catalogue -- a pure structural lookup, never a filing operation -- so this
-    reads the compile-only tree directly rather than through
-    ``compiled_bundled_authority()``, whose ``.load()`` validates every
-    modelo in the bundled tree before returning anything.
+    reads the registry tree directly rather than through a full authority
+    load, which validates every modelo in the bundled tree before returning
+    anything.
     """
     _modelos, catalogues = bundled_registry_tree()
     return frozenset(catalogues.legal)

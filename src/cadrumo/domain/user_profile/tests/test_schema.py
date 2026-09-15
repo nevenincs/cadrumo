@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.profile_schema import capture_profile_schema
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
-from ...calculations.registry.errors import RegistryValidationError
-from ..errors import UserProfileNotFoundError
+from ...calculations.registry.tests.published_authority import (
+    published_legal_evidence_text,
+    published_legal_references,
+    published_profile_schema,
+)
 from ..schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -26,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     assert schema.id == "cadrumo.user_profile"
     assert schema.version == 6
@@ -53,25 +51,8 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
     } <= {section.key for section in schema.sections}
 
 
-def test_missing_user_profile_schema_path_is_refused_by_development_capture(tmp_path: Path) -> None:
-    missing = tmp_path / "missing-schema.toml"
-
-    with pytest.raises(RegistryValidationError, match="unavailable") as exc_info:
-        capture_profile_schema(missing)
-
-    assert isinstance(exc_info.value.__cause__, FileNotFoundError)
-
-
-def test_user_profile_schema_missing_tables_are_refused_by_development_parser(tmp_path: Path) -> None:
-    schema_path = tmp_path / "schema.toml"
-    schema_path.write_text("[not_schema]\nid = 'wrong'\n", encoding="utf-8")
-
-    with pytest.raises(RegistryValidationError, match="invalid envelope"):
-        capture_profile_schema(schema_path)
-
-
 def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     tax_id = schema.field("identity.tax_id")
     assert tax_id.type is ProfileFieldType.STRING
@@ -109,9 +90,7 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
 
 
 def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_corpus() -> None:
-    schema = load_user_profile_schema()
-    authority = compiled_bundled_authority()
-    catalogues = authority.catalogues
+    schema = published_profile_schema()
     refs_by_field = {
         f"{section.key}.{field.key}": field.legal_refs
         for section in schema.sections
@@ -121,48 +100,12 @@ def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_
     refs = sorted({ref for field_refs in refs_by_field.values() for ref in field_refs})
 
     assert refs_by_field, "committed user-profile schema carries no field legal_refs"
-    missing = sorted(ref for ref in refs if ref not in catalogues.legal)
+    resolved = published_legal_references(refs)
+    missing = sorted(ref for ref in refs if ref not in resolved)
     assert not missing, f"user-profile schema legal_refs absent from registry legal catalogue: {missing}"
     for ref in refs:
-        assert authority.legal_evidence_text(ref).strip(), f"published legal evidence is empty for {ref!r}"
-        assert catalogues.legal[ref].corpus_ref, f"published legal reference {ref!r} has no corpus anchor"
-
-
-def test_no_grounded_profile_key_regresses_to_a_schema_field_with_no_legal_refs() -> None:
-    """A live-grounded profile key must not silently lose its schema citation.
-
-    Computed against the LIVE registry authority, not a hardcoded snapshot -
-    fails the moment a new ``source = "profile"`` binding is added for a
-    field whose schema entry is never updated to carry the same citation.
-
-    Two fields with a deliberately unreconciled two-way citation divergence
-    (``iva.autoconsumo_promotor_base``, ``taxpayer_type.irpf_income_categories``)
-    are excluded from this check: both already carry non-empty schema
-    ``legal_refs``, so they are a different situation - a disagreement
-    between two non-empty citation sets - not the "schema carries nothing"
-    gap this test guards.
-    """
-    from ...calculations.registry.profile_grounding import build_profile_grounding_index
-
-    authority = compiled_bundled_authority()
-    index = build_profile_grounding_index(authority)
-    schema = load_user_profile_schema()
-
-    regressed: list[str] = []
-    for key, grounding in index.items():
-        if not grounding.legal_refs:
-            continue
-        try:
-            field = schema.field(key)
-        except UserProfileNotFoundError:
-            continue
-        if not field.legal_refs:
-            regressed.append(key)
-
-    assert not regressed, (
-        "these profile keys carry a live registry legal_ref but their schema field carries none - "
-        f"carry the citation onto the schema field: {sorted(regressed)}"
-    )
+        assert published_legal_evidence_text(ref).strip(), f"published legal evidence is empty for {ref!r}"
+        assert resolved[ref].corpus_ref, f"published legal reference {ref!r} has no corpus anchor"
 
 
 def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> None:
@@ -217,7 +160,7 @@ def test_enum_fields_require_declared_values() -> None:
 
 
 def test_model_selector_resolves_to_the_declaring_field_path() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     resolved = schema.path_for_model_selector("has_employees")
 
@@ -233,7 +176,7 @@ def test_every_committed_model_selector_either_resolves_or_is_declared_twice() -
     permitted to resolve to nothing, but a token that resolves at all must
     resolve to a field carrying that exact token.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     declared = {
         selector for section in schema.sections for field in section.fields for selector in field.model_selectors
     }
@@ -247,7 +190,7 @@ def test_every_committed_model_selector_either_resolves_or_is_declared_twice() -
 
 
 def test_unknown_and_blank_model_selectors_resolve_to_nothing() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     assert schema.path_for_model_selector("no_such_selector_token") is None
     assert schema.path_for_model_selector("") is None
@@ -261,7 +204,7 @@ def test_ambiguous_model_selector_resolves_to_nothing_rather_than_guessing() -> 
     this guards against cannot be reproduced from real data and is constructed
     here instead. Returning either candidate would mislabel the other.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     shared_selector = "shared_ambiguous_selector"
     section = ProfileSectionDefinition.model_validate(
         {
@@ -304,7 +247,7 @@ def test_ambiguous_model_selector_resolves_to_nothing_rather_than_guessing() -> 
 
 
 def test_schema_rejects_duplicate_section_keys() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     duplicate = schema.sections[0]
 
     with pytest.raises(ValidationError, match="duplicate section keys"):

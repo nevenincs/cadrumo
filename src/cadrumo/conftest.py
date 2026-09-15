@@ -82,6 +82,20 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
         yield pinned
 
 
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one published authority generation, scoping governed facts for the whole test.
+
+    Deliberately not autouse: a module opts in with
+    ``pytestmark = pytest.mark.usefixtures("authority_operation")``, so a command
+    that forgets to take its own lease is still caught everywhere else.
+    """
+    from .domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 @pytest.fixture(scope="session")
 def source_tree_ast() -> Mapping[Path, ast.AST]:
     """Return a session-cached mapping of every ``src/cadrumo/`` ``.py`` file to its parsed AST.

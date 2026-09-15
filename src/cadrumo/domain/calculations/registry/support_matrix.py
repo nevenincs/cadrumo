@@ -41,6 +41,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import date
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, NonNegativeInt
 
@@ -53,13 +54,16 @@ from .schema import ModeloDefinition, ModeloRevision
 from .schema_base import CalculationClassField, EvidenceTierField
 from .schema_surfaces import CasillaContinuidadEvolutionDefinition
 
+if TYPE_CHECKING:
+    from .temporal import ModeloRevisionDirectory
+
 __all__ = [
     "ModeloEntry",
     "ModeloPortalCompatibilityRef",
     "ModeloRenameRecord",
     "RevisionCapabilityProbe",
     "build_support_matrix",
-    "build_support_matrix_from_modelos",
+    "build_support_matrix_from_directory_views",
     "revision_capability_probe",
 ]
 
@@ -244,12 +248,9 @@ def _rename_record(evolution: CasillaContinuidadEvolutionDefinition) -> ModeloRe
     )
 
 
-def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
+def _entry_for_modelo(modelo: ModeloDefinition, supported_revision_ids: tuple[RevisionId, ...]) -> ModeloEntry:
     revision = _latest_revision(modelo)
     capabilities = revision_capability_probe(revision, modelo_id=modelo.id)
-    supported_revision_ids = tuple(
-        item.id for item in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
-    )
     renames = tuple(_rename_record(evolution) for evolution in revision.casilla_continuidad_evolutions)
     portal_refs = tuple(
         ModeloPortalCompatibilityRef(
@@ -263,7 +264,7 @@ def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
         modelo_id=modelo.id,
         title=modelo.title,
         calculation_class=modelo.calculation_class,
-        revision_count=len(modelo.revisions),
+        revision_count=len(supported_revision_ids),
         latest_revision_id=revision.id,
         latest_revision_valid_from=revision.valid_from,
         supported_revision_ids=supported_revision_ids,
@@ -292,11 +293,35 @@ def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloE
     """
     from .queries import RegistryQueryService
 
-    entries = (_entry_for_modelo(modelo) for modelo in RegistryQueryService(authority).iter_modelo_definitions())
+    entries = (
+        _entry_for_modelo(
+            modelo,
+            tuple(
+                revision.id
+                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+            ),
+        )
+        for modelo in RegistryQueryService(authority).iter_modelo_definitions()
+    )
     return tuple(sorted(entries, key=lambda entry: entry.modelo_id))
 
 
-def build_support_matrix_from_modelos(modelos: Iterable[ModeloDefinition]) -> tuple[ModeloEntry, ...]:
-    """Build the explicit bulk support inventory from point-loaded modelo views."""
-    entries = (_entry_for_modelo(modelo) for modelo in modelos)
+def build_support_matrix_from_directory_views(
+    views: Iterable[tuple[ModeloRevisionDirectory, ModeloDefinition]],
+) -> tuple[ModeloEntry, ...]:
+    """Build the explicit bulk support inventory from point-loaded modelo views.
+
+    A view carries only its selected revision, so the declared revision ids
+    come from the directory the view was materialized from.
+    """
+    entries = (
+        _entry_for_modelo(
+            view,
+            tuple(
+                metadata.id
+                for metadata in sorted(directory.revisions, key=lambda item: (item.valid_from, str(item.id)))
+            ),
+        )
+        for directory, view in views
+    )
     return tuple(sorted(entries, key=lambda entry: entry.modelo_id))

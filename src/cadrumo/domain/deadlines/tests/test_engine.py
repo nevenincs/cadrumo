@@ -37,7 +37,7 @@ def _period(year: int, code: str) -> Period:
 def _profile(**overrides: object) -> TaxpayerProfile:
     base: dict[str, object] = {
         "tax_id": "X1234567L",
-        "iva_regime": IVARegime("general"),
+        "iva_regime": IVARegime("GENERAL"),
         "iva": ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
             regime_composition=M303RegimeComposition.from_registry("general"),

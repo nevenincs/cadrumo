@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.authority_grade import RegistryAuthorityGrade
+from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..authority_artifact import AuthorityComponentQuery, ModeloDirectoryComponentQuery, ModeloRevisionComponentQuery
 from ..errors import RegistryValidationError
-from ..queries import ResolvedRegistryQueryContext
+from ..queries import PinnedRegistryQueryService, ResolvedRegistryQueryContext
 from ..revision_contracts import DeclaredPredecessor
 from ..schema import ModeloDefinition
 from ..temporal import ModeloDirectoryMetadata, ModeloRevisionDirectory
+from .authority_fakes import FakeAuthorityComponentReader
 from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -46,6 +50,66 @@ def test_a_view_stays_valid_inside_a_consumer_model_that_revalidates_it() -> Non
 
     assert tuple(context.definition.revisions) == (_SUCCESSOR,)
     assert context.definition.revisions[_SUCCESSOR].reviewed_against == _PREDECESSOR
+
+
+def _pinned_service(modelo: ModeloDefinition) -> tuple[PinnedRegistryQueryService, FakeAuthorityComponentReader]:
+    components: dict[AuthorityComponentQuery, object] = {
+        ModeloDirectoryComponentQuery(_MODELO): ModeloRevisionDirectory.from_modelo(modelo),
+    }
+    for revision in modelo.revisions.values():
+        components[ModeloRevisionComponentQuery(_MODELO, str(revision.id))] = revision
+    reader = FakeAuthorityComponentReader(components)
+    return PinnedRegistryQueryService(PinnedAuthorityOperation(reader, reader.pin())), reader
+
+
+def test_a_directory_backed_listing_counts_and_filters_by_every_directory_revision() -> None:
+    modelo = _modelo()
+    assert set(modelo.revisions) == {_PREDECESSOR, _SUCCESSOR}
+    assert modelo.revisions[_PREDECESSOR].period_selector.includes_year(2024)
+    assert not modelo.revisions[_SUCCESSOR].period_selector.includes_year(2024)
+    predecessor_query = ModeloRevisionComponentQuery(_MODELO, _PREDECESSOR)
+    service, reader = _pinned_service(modelo)
+
+    (view,) = service.iter_modelo_definitions()
+    (row,) = service.list_modelos().modelos
+    year_rows = service.list_modelos(year=2024).modelos
+
+    assert tuple(view.revisions) == (_SUCCESSOR,)
+    assert row.revision_count == 2
+    assert tuple(year_row.code for year_row in year_rows) == (_MODELO,)
+    assert predecessor_query not in reader.loads
+
+
+def test_a_directory_backed_support_matrix_reports_every_declared_revision() -> None:
+    modelo = _modelo()
+    assert modelo.revisions[_PREDECESSOR].valid_from < modelo.revisions[_SUCCESSOR].valid_from
+    service, _reader = _pinned_service(modelo)
+
+    (view,) = service.iter_modelo_definitions()
+    (entry,) = service.support_matrix().entries
+
+    assert tuple(view.revisions) == (_SUCCESSOR,)
+    assert entry.latest_revision_id == _SUCCESSOR
+    assert entry.supported_revision_ids == (_PREDECESSOR, _SUCCESSOR)
+    assert entry.revision_count == 2
+
+
+def test_a_published_snapshot_keeps_its_cross_revision_view_valid_when_nested() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        directory_ids = {str(metadata.id) for metadata in operation.modelo_directory(_MODELO).revisions}
+        snapshot = operation.snapshot(
+            _MODELO,
+            filing_year=2025,
+            period="01",
+            grade=RegistryAuthorityGrade.APPLICABILITY,
+        )
+
+    assert {_PREDECESSOR, _SUCCESSOR} <= directory_ids
+    assert tuple(snapshot.modelo.revisions) == (_SUCCESSOR,)
+    selected = snapshot.modelo.revisions[_SUCCESSOR]
+    assert selected.reviewed_against == _PREDECESSOR
+    assert isinstance(selected.predecessor, DeclaredPredecessor)
+    assert selected.predecessor.revision_id == _PREDECESSOR
 
 
 def test_a_view_refuses_a_predecessor_its_directory_does_not_declare() -> None:

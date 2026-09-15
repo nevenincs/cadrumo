@@ -10,16 +10,16 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....core.irnr import ConvenioOverrideKind, M210PayerMode, TipoRentaIrnr
+from ....transactions.m210_income_classification import resolve_m210_payer_mode
+from ..authority import PinnedAuthorityOperation
+from ..authority_artifact import SnapshotGlobalsComponentQuery
+from ..convenio import resolve_convenio_override
+from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
+from ..schema import SnapshotGlobalCatalogues
 
-from ...domain.calculations.registry.convenio import resolve_convenio_override
-from ...domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
-from ...domain.transactions.m210_income_classification import resolve_m210_payer_mode
-from ..irnr import ConvenioOverrideKind, M210PayerMode, TipoRentaIrnr
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _EFFECTIVE_DATE = date(2025, 1, 1)
 
@@ -41,7 +41,9 @@ def test_payer_mode_is_projected_by_the_selected_detail_catalogue() -> None:
 
 
 def test_convenio_kind_is_projected_by_the_validated_fact_authority(*, operation: PinnedAuthorityOperation) -> None:
-    convenio = compiled_bundled_authority().catalogues.convenio
+    snapshot_globals = operation.load(SnapshotGlobalsComponentQuery(), pin=operation.generation)
+    assert isinstance(snapshot_globals, SnapshotGlobalCatalogues)
+    convenio = snapshot_globals.convenio
     treaty = next(iter(convenio.treaties.values()))
     row = treaty.overrides[0]
     override = resolve_convenio_override(

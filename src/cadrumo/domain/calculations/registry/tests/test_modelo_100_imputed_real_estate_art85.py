@@ -91,9 +91,7 @@ def _calculate(
     boolean_binding_values = (
         # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
         # when the chain under test is unrelated.
-        {"renta-maritime-path-rebeca": False}
-        if year == 2025
-        else None
+        {"renta-maritime-path-rebeca": False} if year == 2025 else None
     )
     return calculate_registry_snapshot(
         _snapshot(year),

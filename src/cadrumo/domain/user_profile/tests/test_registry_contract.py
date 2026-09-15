@@ -5,8 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
@@ -14,6 +12,7 @@ from ....core.errors.severity import BaseSeverity
 from ...calculations.registry.manual_input_selector import ManualInputProvider
 from ...calculations.registry.profile_bindings import ProfileProvider
 from ...calculations.registry.schema import BindingDefinition
+from ...calculations.registry.tests.published_authority import published_profile_schema, published_revision_definitions
 from ..registry_contract import (
     UserProfileRegistryContractIssue,
     build_user_profile_selector_index,
@@ -57,7 +56,7 @@ def test_registry_contract_issue_uses_base_severity_but_refuses_info() -> None:
 
 
 def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
 
     index = build_user_profile_selector_index(schema)
 
@@ -80,13 +79,13 @@ def test_anualidades_selector_still_resolves_through_its_derived_pattern() -> No
     The companion test below proves the pattern is the ONLY thing holding it
     up, so this is a second route rather than a hole.
     """
-    schema = load_user_profile_schema()
-    model = compiled_bundled_authority().modelo("100")
+    schema = published_profile_schema()
+    modelo_100 = tuple(definition for definition in published_revision_definitions() if definition.id == "100")
     failures: list[str] = []
 
     for year in _MODELO_100_ANUALIDADES_YEARS:
         selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
-        report = validate_user_profile_registry_contract((model,), _schema_without_field(schema, selector))
+        report = validate_user_profile_registry_contract(modelo_100, _schema_without_field(schema, selector))
         if not report.valid:
             failures.append(f"{year}: {selector!r} should resolve through its derived pattern, got {report.errors!r}")
 
@@ -99,14 +98,14 @@ def test_missing_modelo_100_anualidades_selector_is_rejected_for_each_year() -> 
     Both resolution routes are removed, so this keeps pinning the original
     contract: nothing silently excuses an undeclared profile binding selector.
     """
-    schema = load_user_profile_schema()
-    model = compiled_bundled_authority().modelo("100")
+    schema = published_profile_schema()
+    modelo_100 = tuple(definition for definition in published_revision_definitions() if definition.id == "100")
     failures: list[str] = []
 
     for year in _MODELO_100_ANUALIDADES_YEARS:
         selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
         broken_schema = _schema_without_derived_pattern(_schema_without_field(schema, selector), selector)
-        report = validate_user_profile_registry_contract((model,), broken_schema)
+        report = validate_user_profile_registry_contract(modelo_100, broken_schema)
         if report.valid:
             failures.append(f"{year}: removing {selector!r} unexpectedly left the report valid")
             continue
@@ -125,7 +124,7 @@ def test_every_declared_derived_pattern_matches_a_live_binding_selector() -> Non
     refusal will later cover. The reverse direction -- a live selector no
     pattern or field covers -- is already an ERROR in the contract report.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     live_selectors = _live_profile_binding_selectors()
 
     unmatched = [
@@ -149,7 +148,7 @@ def test_anti_rot_gate_detects_a_pattern_that_matches_nothing() -> None:
     catch it. In memory rather than by editing the committed TOML: a
     mutation window on a tracked file in this worktree is shippable state.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     live_selectors = _live_profile_binding_selectors()
     dead = ProfileDerivedSelectorDefinition.model_validate(
         {
@@ -179,7 +178,7 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
     make. The count is asserted alongside the exclusions because a pattern
     that silently stopped matching would otherwise leave every gate green.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     live_selectors = _live_profile_binding_selectors()
 
     covered = {
@@ -203,7 +202,7 @@ def test_aggregate_pattern_does_not_swallow_its_autonomico_sibling() -> None:
     longer's six selectors, which would make deleting the longer pattern
     undetectable by the anti-rot gate above.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     estatal = _derived_pattern_ending(schema, "aggregate_{filing_year}")
     autonomico = _derived_pattern_ending(schema, "aggregate_autonomico_{filing_year}")
 
@@ -353,8 +352,8 @@ def test_a_dropped_profile_selector_field_is_refused_not_silently_missing() -> N
 
 
 def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema() -> None:
-    schema = load_user_profile_schema()
-    modelos = compiled_bundled_authority().modelos
+    schema = published_profile_schema()
+    modelos = published_revision_definitions()
 
     report = validate_user_profile_registry_contract(modelos, schema)
 
@@ -371,7 +370,7 @@ def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema(
 def _live_profile_binding_selectors() -> frozenset[str]:
     """Every profile-sourced binding selector the committed registry declares."""
     selectors: set[str] = set()
-    for modelo in compiled_bundled_authority().modelos:
+    for modelo in published_revision_definitions():
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
                 if binding.source != BindingSourceKind.PROFILE:
