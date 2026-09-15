@@ -18,7 +18,11 @@ from decimal import Decimal
 from typing import cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -28,7 +32,7 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ..draft_construction import build_draft, filing_period_date
-from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, schema_provider_from_authority
+from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -61,12 +65,12 @@ _REUSED_NUMBER_PERIOD_CODE = "0A"
 @pytest.fixture(autouse=True)
 def _pinned_fact_scope() -> Iterator[None]:
     """Keep every boundary construction in this module on one explicit authority."""
-    with validating_governed_facts(compiled_bundled_authority()):
+    with validating_governed_facts(PublishedGovernedFactSource()):
         yield
 
 
 def _profile() -> ModeloOperatorProfile:
-    with validating_governed_facts(compiled_bundled_authority()):
+    with validating_governed_facts(PublishedGovernedFactSource()):
         return ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="build_draft identity contract",
@@ -76,9 +80,8 @@ def _profile() -> ModeloOperatorProfile:
 def _schema_provider(
     *, filing_year: int, period: Period, modelos: tuple[str, ...] | None = None
 ) -> RegistrySchemaAccessor:
-    """Project the development authority through the production filing seam."""
-    return schema_provider_from_authority(
-        compiled_bundled_authority(),
+    """Project the published authority through the production filing seam."""
+    return build_runtime_schema_provider(
         modelos=modelos,
         filing_year=filing_year,
         period=period,
@@ -134,7 +137,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     assert draft.subject_tax_id == "12345678Z"
     assert draft.subject_tax_id == draft.profile_tax_id
 
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    snapshot = published_snapshot("130", filing_year=2026, period="1T", on=date(2026, 4, 1))
 
     assert draft.snapshot_ref is not None
     assert draft.snapshot_ref.modelo == "130"
@@ -182,7 +185,7 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
 ) -> None:
     """Printed numbers and export refs must not be accepted as input casilla references."""
     period = Period.from_year_and_code(2026, "1T")
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
+    snapshot = published_snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
     casilla = next(c for c in snapshot.revision.casillas if c.id == casilla_id)
     if reference_kind == "printed_number":
         input_key = casilla.number
@@ -248,7 +251,7 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
     THAN ONE canonical candidate -- that is the ambiguity, asserted here.
     """
     period = Period.from_year_and_code(_REUSED_NUMBER_FILING_YEAR, _REUSED_NUMBER_PERIOD_CODE)
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         _REUSED_NUMBER_MODELO,
         filing_year=_REUSED_NUMBER_FILING_YEAR,
         period=_REUSED_NUMBER_PERIOD_CODE,

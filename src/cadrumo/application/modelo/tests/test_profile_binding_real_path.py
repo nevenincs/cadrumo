@@ -35,16 +35,18 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_schema,
+    published_snapshot,
+)
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.inventory import REPO_ROOT
@@ -56,7 +58,7 @@ from ..profile_binding import (
     resolve_profile_sourced_bindings,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
@@ -79,7 +81,7 @@ _M100_2025_XSD = (
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return published_snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _profile_bindings() -> list[Any]:
@@ -172,7 +174,7 @@ def test_all_profile_key_selectors_resolve_to_schema_paths() -> None:
     from a real profile record, so it is effectively dead. This pin confirms
     each ``profile_key`` has a live schema counterpart.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     known_paths: set[str] = {f"{section.key}.{field.key}" for section in schema.sections for field in section.fields}
 
     profile_bindings = _profile_bindings()
@@ -198,7 +200,7 @@ def test_profile_model_selector_resolves_via_model_selector_alias() -> None:
     index key is ``TaxResidenceProfile.ccaa`` — an alias, not the canonical
     path. This test confirms the alias round-trip works end-to-end.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     record = _full_m100_profile()
     fact_index = profile_fact_index(record, schema)
 
@@ -229,7 +231,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     - The taxpayer death-date binding (0018) is intentionally absent from the
       fixture and is covered by test_absent_fact_resolves_to_none_anti_tautology.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     record = _full_m100_profile()
     fact_index = profile_fact_index(record, schema)
     # Marriage-derived facts (full_year, month_start, month_end) are not stored as
@@ -389,7 +391,7 @@ def test_typed_values_match_expected_python_types() -> None:
     the strings ``'true'`` / ``'false'``. Dates must be ``date`` objects so
     they can be coerced correctly if needed.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     record = _full_m100_profile()
     fact_index = profile_fact_index(record, schema)
 
@@ -462,7 +464,7 @@ def test_absent_fact_resolves_to_none_anti_tautology() -> None:
     If the resolver were reading stale state or caching across records this
     test would incorrectly return a value.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     record = _full_m100_profile()
     fact_index = profile_fact_index(record, schema)
 
@@ -496,7 +498,7 @@ def test_repeating_collection_selectors_yield_known_alias() -> None:
     yields ``RentaFamilyProfile.<collection>.<field>`` for each. That alias
     must appear in the schema's ``model_selectors`` for the matching field.
     """
-    schema = load_user_profile_schema()
+    schema = published_profile_schema()
     all_aliases: set[str] = {
         alias for section in schema.sections for field in section.fields for alias in field.model_selectors
     }

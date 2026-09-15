@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
 from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
@@ -24,7 +25,7 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
     assert casillas
     known_ids = {casilla.casilla_id for casilla in casillas}
     by_id = {casilla.casilla_id: casilla for casilla in casillas}
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_snapshot("130", filing_year=2026, period="1T")
     formulas = {formula.id: formula for formula in snapshot.revision.formulas}
     formula_bound = {
         casilla.id: tuple(dict.fromkeys(expression_casilla_refs(formulas[casilla.formula].expression)))

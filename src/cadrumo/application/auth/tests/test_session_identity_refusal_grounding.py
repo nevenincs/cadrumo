@@ -9,10 +9,10 @@ kept in step with a schema rename.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
+from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 
 from ...user_profile.preflight import build_profile_preflight_requirement
 from ..sessions import (
@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: refusal could name either, and a path-only assertion would miss the token.
 _TAX_ID_SELECTOR = "tax.id"
 _PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
-    schema=load_user_profile_schema(),
+    schema=published_profile_schema(),
     generation=AuthorityGenerationPin(
         content_hash_hex({"generation": "session-identity-refusal-grounding-fixture"}),
         content_hash_hex({"reader": "session-identity-refusal-grounding-fixture"}),
@@ -38,7 +38,7 @@ _PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
 def _label() -> str:
     return build_profile_preflight_requirement(
         _PROFILE_TAX_ID_PATH,
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     ).label
 
 

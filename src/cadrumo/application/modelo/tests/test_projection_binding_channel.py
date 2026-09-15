@@ -25,10 +25,10 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..calculate_input import ModeloCalculateBindingInputError, ModeloCalculateDecimalInputError
 from ..projection import _parse_projection_binding_overrides
 
@@ -42,7 +42,7 @@ _DATE_BINDING = "renta-profile-taxpayer-birth-date"
 
 @pytest.fixture(scope="module")
 def revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
+    return published_snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
 
 
 def _refusal_context(

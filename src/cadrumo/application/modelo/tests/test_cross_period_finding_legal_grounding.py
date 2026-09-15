@@ -16,12 +16,17 @@ import re
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
+from ....domain.calculations.registry.schema_references import LegalReference
+from ....domain.calculations.registry.tests.published_authority import (
+    published_legal_evidence_text,
+    published_revision_definitions,
+)
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ...calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -42,11 +47,18 @@ _DEFAULT_DEPENDENCY_LEGAL_REFS: tuple[LegalRefId, ...]
 _DEFAULT_DEPENDENCY_SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-modelo-303-procedure",)
 
 
+def _all_legal_references() -> dict[str, LegalReference]:
+    """Return every published legal declaration, keyed by canonical identity."""
+    with bundled_indexed_authority().operation() as operation:
+        return {
+            reference_id: operation.legal_reference(reference_id) for reference_id in operation.legal_reference_ids()
+        }
+
+
 def _published_legal_refs_matching(*markers: str) -> tuple[LegalRefId, ...]:
     """Select legal references from the published authority by evidence text."""
-    authority = compiled_bundled_authority()
     matches = []
-    for reference_id, reference in authority.catalogues.legal.items():
+    for reference_id, reference in _all_legal_references().items():
         evidence = " ".join((reference.notes or "", *reference.required_text)).casefold()
         if all(marker.casefold() in evidence for marker in markers):
             matches.append(reference_id)
@@ -76,15 +88,15 @@ def _activity_start_legal_refs() -> tuple[LegalRefId, ...]:
 
 def _iva_compensation_carry_legal_ref() -> LegalRefId:
     """Read the first legal anchor on the published previous-filing carry binding."""
-    authority = compiled_bundled_authority()
-    for modelo in authority.modelos:
+    legal_reference_ids = set(_all_legal_references())
+    for modelo in published_revision_definitions():
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
                 provider = binding.provider
                 provider_kind = getattr(getattr(provider, "kind", None), "value", None)
                 if provider_kind != "previous_filing" or "compensacion" not in str(binding.id).casefold():
                     continue
-                refs = tuple(ref for ref in binding.legal_refs if ref in authority.catalogues.legal)
+                refs = tuple(ref for ref in binding.legal_refs if ref in legal_reference_ids)
                 if refs:
                     return refs[0]
     raise AssertionError("published authority must carry an IVA compensation previous-filing binding")
@@ -170,16 +182,14 @@ def _application_literal_legal_refs() -> frozenset[str]:
 
 def test_application_legal_refs_resolve_to_bundled_corpus() -> None:
     """Application-level literal legal refs must stay registry and corpus backed."""
-    catalogues = compiled_bundled_authority().catalogues
+    legal_references = _all_legal_references()
     ref_ids = _application_literal_legal_refs()
 
-    missing = sorted(ref_ids - set(catalogues.legal))
+    missing = sorted(ref_ids - set(legal_references))
     assert missing == [], f"application legal_refs absent from the registry: {missing}"
-    references = {ref_id: catalogues.legal[ref_id] for ref_id in sorted(ref_ids)}
+    references = {ref_id: legal_references[ref_id] for ref_id in sorted(ref_ids)}
     for ref_id in sorted(references):
-        assert compiled_bundled_authority().legal_evidence_text(ref_id).strip(), (
-            f"published legal evidence is empty for {ref_id!r}"
-        )
+        assert published_legal_evidence_text(ref_id).strip(), f"published legal evidence is empty for {ref_id!r}"
 
     assert set(_cross_period_dependency_legal_refs()) <= ref_ids
     assert set(_activity_start_legal_refs()) <= ref_ids

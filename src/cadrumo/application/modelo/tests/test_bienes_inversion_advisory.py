@@ -11,7 +11,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.bienes_inversion.register import (
@@ -21,6 +20,7 @@ from ....domain.bienes_inversion.register import (
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -43,7 +43,7 @@ class _InMemoryRegisterRepository:
 
 
 def _revision(modelo: str, *, filing_year: int, period_token: str) -> ModeloRevision:
-    return compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period_token).revision
+    return published_snapshot(modelo, filing_year=filing_year, period=period_token).revision
 
 
 def _record(identifier: str = "bi-2022-maquina") -> BienInversionIvaRecord:

@@ -21,7 +21,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.modelo import Modelo
@@ -375,15 +376,11 @@ def _modelo_111_revision() -> ModeloRevision:
     the bindings asserted are the ones a real calculate would load. A hand-built
     snapshot could agree with this test and disagree with the filing.
     """
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            Modelo("111").value,
-            filing_year=2026,
-            period="1T",
-        )
-        .revision
-    )
+    return published_snapshot(
+        Modelo("111").value,
+        filing_year=2026,
+        period="1T",
+    ).revision
 
 
 def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:

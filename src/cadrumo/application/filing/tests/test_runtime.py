@@ -15,6 +15,7 @@ from collections.abc import Callable
 from datetime import date
 
 import pytest
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
@@ -55,7 +56,7 @@ def test_runtime_provider_exposes_no_application_layer_cache() -> None:
 
 def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
     """Return {casilla_id: legal_refs} from the authoritative CasillaDefinition."""
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -65,7 +66,7 @@ def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
 
 def _source_casilla_source_refs() -> dict[CasillaId, tuple[str, ...]]:
     """Return {casilla_id: source_refs} from the authoritative CasillaDefinition."""
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -105,7 +106,7 @@ def test_refs_survive_projection(
 
 def test_complete_constraints_survive_projection() -> None:
     """Filing schemas carry the registry's complete constraint contract verbatim."""
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -121,7 +122,7 @@ def test_complete_constraints_survive_projection() -> None:
 
 def test_subview_catalogue_ref_ids_survive_projection() -> None:
     """RegistryModeloSubview must carry the same catalogue refs as the source snapshot."""
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,

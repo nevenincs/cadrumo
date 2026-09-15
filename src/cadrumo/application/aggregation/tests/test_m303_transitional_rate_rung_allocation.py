@@ -36,9 +36,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind, require_eu_member_state
 
@@ -88,7 +88,7 @@ _PERIOD_3T_2024 = Period.from_year_and_code(2024, "3T")
 
 
 def _revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot(Modelo("303"), filing_year=2024, period="4T").revision
+    return published_snapshot(Modelo("303"), filing_year=2024, period="4T").revision
 
 
 def _transaction(

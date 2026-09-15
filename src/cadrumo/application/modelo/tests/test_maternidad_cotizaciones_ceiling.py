@@ -29,21 +29,24 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..profile_binding import resolve_maternidad_meses
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000626"
 _T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)
@@ -71,14 +74,14 @@ def _record_declaring_months(filing_year: int) -> UserProfileRecord:
 
 
 def _resolution(filing_year: int, *, operation: PinnedAuthorityOperation):
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=filing_year, period="0A")
+    snapshot = published_snapshot("100", filing_year=filing_year, period="0A")
     return resolve_maternidad_meses(_record_declaring_months(filing_year), snapshot, operation=operation)
 
 
 def _retired_ceiling_year() -> int:
     coordinate = date(_FIRST_UNCEILINGED_YEAR, 12, 31)
     return FamilyFactResolutionContext(
-        authority=compiled_bundled_authority(),
+        authority=PublishedGovernedFactSource(),
         filing_period=coordinate,
         devengo_date=coordinate,
     ).integer("lirpf-art-81-contribution-ceiling-retired-effective-year")

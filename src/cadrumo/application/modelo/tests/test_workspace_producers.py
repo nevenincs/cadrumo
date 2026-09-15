@@ -244,51 +244,49 @@ def test_workspace_epoch_currentness_requires_an_exact_same_domain_coordinate() 
 
 def test_registry_port_captures_the_admission_specific_projection() -> None:
     """REGISTRY's port must expose exactly the admitted shape, never both at once."""
-    from dev.registry.compiler.authority import compiled_bundled_authority
-
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ..workspace_producers import ModeloWorkspaceRegistryPortV1, ModeloWorkspaceRegistryProjectionV1
 
-    registry_authority = compiled_bundled_authority()
-    port = ModeloWorkspaceRegistryPortV1(
-        authority=registry_authority,
-        modelo_id="130",
-        filing_year=2026,
-        period="1T",
-    )
-    captured = port.capture_projection_with_epoch()
+    with bundled_indexed_authority().operation() as operation:
+        port = ModeloWorkspaceRegistryPortV1(
+            authority=operation,
+            modelo_id="130",
+            filing_year=2026,
+            period="1T",
+        )
+        captured = port.capture_projection_with_epoch()
 
-    assert isinstance(captured.projection, ModeloWorkspaceRegistryProjectionV1)
-    assert (captured.projection.inspection is None) != (captured.projection.snapshot is None)
-    captured.require_contract(port.producer_contract)
+        assert isinstance(captured.projection, ModeloWorkspaceRegistryProjectionV1)
+        assert (captured.projection.inspection is None) != (captured.projection.snapshot is None)
+        captured.require_contract(port.producer_contract)
 
-    stamp, epoch = port.read_current_stamp_and_epoch()
-    assert stamp == captured.stamp
-    assert epoch.generation == captured.epoch.generation
+        stamp, epoch = port.read_current_stamp_and_epoch()
+        assert stamp == captured.stamp
+        assert epoch.generation == captured.epoch.generation
 
 
 def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() -> None:
-    from dev.registry.compiler.authority import compiled_bundled_authority
-
     from ....core.authority_grade import RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ..workspace_producers import ModeloWorkspaceRegistryPortV1, ModeloWorkspaceRegistryProjectionV1
 
-    registry_authority = compiled_bundled_authority()
-    inspection_only = ModeloWorkspaceRegistryPortV1(
-        authority=registry_authority,
-        modelo_id="130",
-        filing_year=2026,
-        period="1T",
-    ).capture_projection_with_epoch()
-    snapshot_only = ModeloWorkspaceRegistryPortV1(
-        authority=registry_authority,
-        modelo_id="130",
-        filing_year=2026,
-        period="1T",
-        grade=RegistryAuthorityGrade.APPLICABILITY,
-    ).capture_projection_with_epoch()
+    with bundled_indexed_authority().operation() as operation:
+        inspection_only = ModeloWorkspaceRegistryPortV1(
+            authority=operation,
+            modelo_id="130",
+            filing_year=2026,
+            period="1T",
+        ).capture_projection_with_epoch()
+        snapshot_only = ModeloWorkspaceRegistryPortV1(
+            authority=operation,
+            modelo_id="130",
+            filing_year=2026,
+            period="1T",
+            grade=RegistryAuthorityGrade.APPLICABILITY,
+        ).capture_projection_with_epoch()
 
-    assert inspection_only.projection.inspection is not None
-    assert snapshot_only.projection.snapshot is not None
+        assert inspection_only.projection.inspection is not None
+        assert snapshot_only.projection.snapshot is not None
 
     with pytest.raises(ValidationError, match="exactly one admission shape"):
         ModeloWorkspaceRegistryProjectionV1()

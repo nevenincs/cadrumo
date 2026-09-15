@@ -5,7 +5,11 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.filing_projection_ref import (
@@ -91,14 +95,14 @@ def _evidence(
 
 
 def _snapshot(period: Period) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("303", filing_year=period.filing_year, period=period.code)
+    return published_snapshot("303", filing_year=period.filing_year, period=period.code)
 
 
 def _record_design(registry_snapshot: RegistrySnapshot) -> SourceReference:
     return resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
+            scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
         ),
     ).record_design
 

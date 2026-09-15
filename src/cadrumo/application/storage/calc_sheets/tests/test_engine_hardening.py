@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.config import override_settings
@@ -26,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_workbook_operator_labels_resolve_through_output_language() -> None:
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
     with override_settings(cadrumo_output_language="en"):
         plan = build_export_plan(snapshot)
@@ -42,7 +43,7 @@ def test_workbook_operator_labels_resolve_through_output_language() -> None:
 
 
 def test_guide_paragraphs_resolve_through_output_language() -> None:
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
     with override_settings(cadrumo_output_language="en"):
         plan = build_export_plan(snapshot)
@@ -109,7 +110,7 @@ def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:
 
 
 def _m130_snapshot_with_scalar_tariff_values(*, values: tuple[object, ...]) -> RegistrySnapshot:
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T")
+    snapshot = published_snapshot("130", filing_year=2025, period="1T")
     parameter_id = "irpf.direct_estimation_fractional_payment_rate"
     revision = snapshot.revision.model_copy(
         update={
@@ -138,7 +139,7 @@ def test_missing_scalar_value_error_uses_translated_message_and_structured_conte
 
 
 def test_overlapping_scalar_parameter_windows_refuse_export_through_engine_boundary() -> None:
-    source = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T")
+    source = published_snapshot("130", filing_year=2025, period="1T")
     parameter = next(
         item for item in source.revision.parameters if item.id == "irpf.direct_estimation_fractional_payment_rate"
     )

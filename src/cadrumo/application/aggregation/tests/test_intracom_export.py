@@ -30,7 +30,8 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ids import BindingId
@@ -59,7 +60,7 @@ _CASILLA_BASE_BINDING: dict[CasillaId, BindingId] = {
 
 @cache
 def _modelo_303_revision():
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    return published_snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> Decimal:

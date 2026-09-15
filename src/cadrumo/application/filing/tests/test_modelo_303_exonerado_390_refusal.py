@@ -8,9 +8,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
 
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
@@ -128,7 +131,7 @@ _ENDPOINTS = frozenset(
 
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("general", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
     )
 
 
@@ -165,7 +168,7 @@ def _regimen_evidence(period: Period, *, operation: PinnedAuthorityOperation) ->
         scope_decision=scope,
         rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
         regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
-            registry_snapshot=compiled_bundled_authority().snapshot(
+            registry_snapshot=published_snapshot(
                 "303",
                 filing_year=period.filing_year,
                 period=period.code,

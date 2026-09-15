@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
@@ -262,7 +261,7 @@ def test_secure_profile_provider_contains_rejected_declarations_projection(
 ) -> None:
     """A contradictory declaration catalogue refuses only its workspace source."""
     period = Period.from_year_and_code(2026, "1T")
-    revision_id = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id
+    revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_PROFILE_ID,
@@ -979,8 +978,7 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
     has nothing outstanding -- offering either as blocked work would send the
     operator at something nothing is waiting on.
     """
-    from dev.registry.compiler.authority import compiled_bundled_authority
-
+    from ...domain.calculations.registry.tests.published_authority import published_snapshot
     from ...domain.modelos.verification_report import (
         ModeloVerificationFinding,
         ModeloVerificationFindingKind,
@@ -1016,9 +1014,7 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
                 verified_by="operator",
             ),
             calculation_revision_id="b" * 64,
-            registry_snapshot_ref=compiled_bundled_authority()
-            .snapshot("303", filing_year=2026, period="1T")
-            .snapshot_ref,
+            registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
             completeness_status=status,
             findings=findings,
             run_at=datetime(2026, 9, 4, tzinfo=UTC),

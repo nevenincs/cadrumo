@@ -36,7 +36,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -45,7 +45,7 @@ from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 from ..preconditions import LedgerPreconditionCondition
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 

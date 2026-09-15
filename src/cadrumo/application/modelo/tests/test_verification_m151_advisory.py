@@ -5,12 +5,15 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
@@ -37,10 +40,9 @@ def _m151_advisory_predicate() -> VerificationPredicateDefinition:
     # whichever window governs the latest supported filing year, so the next
     # split moves it automatically. (The successor's name understates its
     # reach: it opens on 2023-01-01.)
-    authority = compiled_bundled_authority()
-    declared_years = authority.catalogues.supported_filing_years
+    declared_years = published_supported_filing_years()
     assert declared_years is not None, "the bundled registry declares no supported filing years"
-    revision = authority.snapshot(
+    revision = published_snapshot(
         "151",
         filing_year=max(declared_years.years),
         period="0A",

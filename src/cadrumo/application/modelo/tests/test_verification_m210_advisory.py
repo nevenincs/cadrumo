@@ -28,7 +28,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
@@ -36,6 +35,7 @@ from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
@@ -61,7 +61,7 @@ _TIPO_RENTA: CasillaId = validated_casilla_id(
 
 def _m210_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 base-imponible silent-under-declaration advisory."""
-    revision = compiled_bundled_authority().validate_modelo("210").revisions["2025"]
+    revision = published_revision("210", "2025")
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
@@ -70,7 +70,7 @@ def _m210_advisory_predicate() -> VerificationPredicateDefinition:
 
 def test_m210_representante_fiscal_predicate_is_preserved_alongside_advisory() -> None:
     """The pre-existing BLOCKING_RULE representante-fiscal predicate stays untouched."""
-    revision = compiled_bundled_authority().validate_modelo("210").revisions["2025"]
+    revision = published_revision("210", "2025")
     representante_fiscal = next(
         p for p in revision.verification_predicates if p.predicate_id == "m210-representante-fiscal-required"
     )
@@ -136,7 +136,7 @@ def test_m210_advisory_silent_when_no_rendimientos() -> None:
 
 def _m210_inmobiliaria_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 inmobiliaria-branch categorical-conditional advisory."""
-    revision = compiled_bundled_authority().validate_modelo("210").revisions["2025"]
+    revision = published_revision("210", "2025")
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _INMOBILIARIA_PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == ('casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])')
@@ -212,7 +212,7 @@ def _eea_irnr_profile() -> TaxpayerProfile:
 
 def _m210_ue_residente_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 ue_residente / EU-EEE residence cross-check advisory."""
-    revision = compiled_bundled_authority().validate_modelo("210").revisions["2025"]
+    revision = published_revision("210", "2025")
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _UE_RESIDENTE_PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == (

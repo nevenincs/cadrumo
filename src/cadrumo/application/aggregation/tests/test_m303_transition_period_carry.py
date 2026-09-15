@@ -13,9 +13,9 @@ cases are asked of the years whose selected edition declares that cadence.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
 from ....domain.calculations.registry.bindings_previous_filing import periodic_carry_bindings_for_period
@@ -40,7 +40,7 @@ _MONTHLY_YEARS: tuple[int, ...] = (2023, 2024, 2025, 2026)
 
 @pytest.mark.parametrize(("filing_year", "period_code", "revision_id"), _EDITION_CONTEXTS)
 def test_each_edition_is_selected_by_its_context(filing_year: int, period_code: str, revision_id: str) -> None:
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period_code)
+    snapshot = published_snapshot("303", filing_year=filing_year, period=period_code)
 
     assert snapshot.snapshot_ref.revision_id == revision_id
 
@@ -52,7 +52,7 @@ def test_every_edition_declares_the_periodic_carry_the_applicability_is_read_fro
     revision_id: str,
 ) -> None:
     """The compensacion carry is what places a period in a recurring filing chain."""
-    revision = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period_code).revision
+    revision = published_snapshot("303", filing_year=filing_year, period=period_code).revision
 
     carries = periodic_carry_bindings_for_period(revision)
 
@@ -108,6 +108,6 @@ def test_january_is_not_a_transition_period(filing_year: int) -> None:
 
 def test_a_revision_without_a_periodic_carry_answers_nothing_rather_than_guessing() -> None:
     """The carry is the evidence; a revision holding none must not name a transition period."""
-    revision = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A").revision
+    revision = published_snapshot("390", filing_year=2025, period="0A").revision
 
     assert periodic_carry_bindings_for_period(revision) == ()

@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
@@ -100,7 +101,7 @@ def _projection_authority() -> tuple[FilingRecordRenderContext, M303ProrrataActi
         legal_refs=_CARRIER_LEGAL_REFS,
         source_refs=_CARRIER_SOURCE_REFS,
     )
-    base = compiled_bundled_authority().snapshot(_CARRIER_MODELO, filing_year=_CARRIER_YEAR, period=_CARRIER_PERIOD)
+    base = published_snapshot(_CARRIER_MODELO, filing_year=_CARRIER_YEAR, period=_CARRIER_PERIOD)
     snapshot = base.model_copy(update={"revision": base.revision.model_copy(update={"export_layouts": (layout,)})})
     return FilingRecordRenderContext(
         registry_snapshot=snapshot,
@@ -166,9 +167,7 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
     context, _reference = _projection_authority()
     # A real snapshot that does NOT own the synthetic layout: same coordinate,
     # but its own declared export layouts, so the ownership check must fire.
-    unrelated_snapshot = compiled_bundled_authority().snapshot(
-        _CARRIER_MODELO, filing_year=_CARRIER_YEAR, period=_CARRIER_PERIOD
-    )
+    unrelated_snapshot = published_snapshot(_CARRIER_MODELO, filing_year=_CARRIER_YEAR, period=_CARRIER_PERIOD)
     with pytest.raises(ValidationError, match="layout is not owned"):
         FilingRecordRenderContext(
             registry_snapshot=unrelated_snapshot,
@@ -189,8 +188,8 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
         charge_account=None,
         m303_filing_facts=_m303_filing_facts(period_code="1T"),
     )
-    snapshot_2026 = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
-    snapshot_2025 = compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T")
+    snapshot_2026 = published_snapshot("303", filing_year=2026, period="1T")
+    snapshot_2025 = published_snapshot("303", filing_year=2025, period="4T")
     with pytest.raises(FilingExportValidationError, match="filing period"):
         build_m303_filing_projection_plan(
             registry_snapshot=snapshot_2025,
@@ -257,7 +256,7 @@ def test_m303_projection_refuses_wrong_annual_orden_authority(orden_update: dict
     wrong_evidence = evidence.model_copy(update={"regimen_snapshot": wrong_regimen_snapshot})
     wrong_facts = facts.model_copy(update={"regimen_simplificado": wrong_evidence})
     wrong_producer = producer.model_copy(update={"m303_filing_facts": wrong_facts})
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     with pytest.raises(FilingExportValidationError, match="annual Orden"):
         _require_regimen_snapshot_matches_registry(snapshot, wrong_producer)

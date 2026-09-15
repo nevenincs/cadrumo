@@ -9,11 +9,11 @@ the record probe, rather than surfacing as a raw dotted path.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileDecodeContext
 
+from ...domain.calculations.registry.tests.published_authority import published_profile_schema
 from ..diagnostics import _grounded_profile_key_summary
 from ..user_profile.preflight import build_profile_preflight_requirement
 
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: A schema-declared path the wizard report can carry in its missing tuples.
 _KNOWN_PATH = "identity.tax_id"
 _PROFILE_DECODE_CONTEXT = ProfileDecodeContext(
-    schema=load_user_profile_schema(),
+    schema=published_profile_schema(),
     generation=AuthorityGenerationPin(
         content_hash_hex({"generation": "diagnostics-profile-grounding-fixture"}),
         content_hash_hex({"reader": "diagnostics-profile-grounding-fixture"}),
@@ -34,7 +34,7 @@ def test_the_known_path_has_a_label_that_differs_from_the_path() -> None:
     """Anchor the fixture: the assertions below are vacuous if they are equal."""
     requirement = build_profile_preflight_requirement(
         _KNOWN_PATH,
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     )
 
     assert requirement.label != _KNOWN_PATH
@@ -46,7 +46,7 @@ def test_a_known_profile_path_is_rendered_with_its_operator_label() -> None:
 
     expected_label = build_profile_preflight_requirement(
         _KNOWN_PATH,
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     ).label
     assert rendered.startswith(f"{_KNOWN_PATH} ")
     assert expected_label in rendered

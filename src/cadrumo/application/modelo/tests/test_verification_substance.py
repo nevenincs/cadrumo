@@ -5,7 +5,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import (
     _CASILLA_01,
@@ -31,6 +30,7 @@ from ....domain.calculations.registry.schema_verification import (
     VerificationPredicateOperator,
     parse_verification_predicate_expression,
 )
+from ....domain.calculations.registry.tests.published_authority import published_revision_definitions
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ..verification_predicates import (
@@ -501,9 +501,11 @@ def _shipped_m100_m200_predicates(
     finding_kind: str,
 ) -> tuple[tuple[VerificationPredicateDefinition, ParsedVerificationPredicate], ...]:
     matches: list[tuple[VerificationPredicateDefinition, ParsedVerificationPredicate]] = []
-    for modelo in (Modelo("100"), Modelo("200")):
-        validated = compiled_bundled_authority().validate_modelo(modelo.value)
-        for revision in validated.revisions.values():
+    modelo_ids = {Modelo("100").value, Modelo("200").value}
+    for modelo in published_revision_definitions():
+        if modelo.id not in modelo_ids:
+            continue
+        for revision in modelo.revisions.values():
             for predicate in revision.verification_predicates:
                 parsed = parse_verification_predicate_expression(predicate.expression)
                 if parsed is not None and parsed.operator is operator and predicate.finding_kind == finding_kind:

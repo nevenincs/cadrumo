@@ -47,7 +47,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -75,7 +76,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def modelo_130_revision():
     """Resolve the shipped Modelo 130 revision used by this runtime oracle."""
-    return compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision
+    return published_snapshot("130", filing_year=2026, period="1T").revision
 
 
 # The invoice, stated once from the document and the cited rate.

@@ -5,7 +5,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -13,6 +12,7 @@ from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...aggregation.iva_ledger import IvaLedgerAggregation
 from ..export import _resolve_m303_export_arrivals
@@ -44,9 +44,7 @@ def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(*, operati
                 definitive_percentage=Decimal("60"),
                 definitive_volume_con_derecho=Decimal("600.00"),
                 definitive_volume_sin_derecho=Decimal("400.00"),
-                source_registry_snapshot_refs=(
-                    compiled_bundled_authority().snapshot("303", filing_year=2026, period="4T").snapshot_ref,
-                ),
+                source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="4T").snapshot_ref,),
             ),
         ),
     )

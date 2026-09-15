@@ -21,13 +21,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -61,15 +61,11 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 
 def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:
     period = Period.from_year_and_code(2026, "1T")
-    revision_id = (
-        compiled_bundled_authority()
-        .snapshot(
-            "303",
-            filing_year=2026,
-            period=period.registry_token,
-        )
-        .revision.id
-    )
+    revision_id = published_snapshot(
+        "303",
+        filing_year=2026,
+        period=period.registry_token,
+    ).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",

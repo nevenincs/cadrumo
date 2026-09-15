@@ -153,11 +153,10 @@ def annual_period_for_year(
     try:
         if isinstance(authority, ValidatedRegistryAuthority):
             definition = authority.validate_modelo(modelo.strip())
+            directory = None
         else:
+            definition = None
             directory = authority.modelo_directory(modelo.strip())
-            selected = select_revision_metadata_for_year(directory, filing_year=filing_year, on=as_of)
-            periods = selected.period_selector.declared_periods
-            return periods[0] if periods else None
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         _log.debug(
             "binding-readiness: annual period unavailable for modelo=%s filing_year=%s; "
@@ -169,12 +168,17 @@ def annual_period_for_year(
         )
         return None
     try:
-        revision = select_revision_for_year(
-            definition,
-            filing_year=filing_year,
-            on=as_of,
-            support=authority.catalogues.supported_filing_years,
-        )
+        if isinstance(authority, ValidatedRegistryAuthority) and definition is not None:
+            selector = select_revision_for_year(
+                definition,
+                filing_year=filing_year,
+                on=as_of,
+                support=authority.catalogues.supported_filing_years,
+            ).period_selector
+        elif directory is not None:
+            selector = select_revision_metadata_for_year(directory, filing_year=filing_year, on=as_of).period_selector
+        else:
+            return None
     except NoRevisionForPeriodError as exc:
         # Logged for the same reason the two sibling branches are: this helper
         # answers None for three distinct causes, and a developer asking why
@@ -214,7 +218,7 @@ def annual_period_for_year(
             exc,
         )
         return None
-    periods = revision.period_selector.periods_for_year(filing_year)
+    periods = selector.periods_for_year(filing_year)
     return periods[0] if periods else None
 
 

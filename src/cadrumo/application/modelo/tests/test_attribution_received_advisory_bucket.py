@@ -12,15 +12,17 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+)
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -29,7 +31,7 @@ from .._attribution_received_advisory import _attribution_received_omission_advi
 if TYPE_CHECKING:
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "20000000-0000-4000-8000-000000000184"
 _CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
@@ -80,7 +82,7 @@ def _profile_record(*facts: UserProfileFact) -> UserProfileRecord:
 
 
 def test_advisory_reads_attribution_facts_from_profile_record(operation: PinnedAuthorityOperation) -> None:
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    snapshot = published_snapshot("100", filing_year=_FILING_YEAR, period="0A")
     findings = _attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,
@@ -94,7 +96,7 @@ def test_advisory_reads_attribution_facts_from_profile_record(operation: PinnedA
 
 
 def test_advisory_with_no_received_profile_facts_returns_no_finding(operation: PinnedAuthorityOperation) -> None:
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    snapshot = published_snapshot("100", filing_year=_FILING_YEAR, period="0A")
     findings = _attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
         snapshot=snapshot,

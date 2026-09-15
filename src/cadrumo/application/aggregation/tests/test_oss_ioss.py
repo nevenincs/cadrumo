@@ -30,7 +30,8 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....core.directory_scan import scan_directory
 from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
@@ -65,8 +66,7 @@ _DEFAULT_TRANSACTION_KIND = TransactionKind("oss_union_services")
 
 @cache
 def _modelo_369_union_revision() -> ModeloRevision:
-    modelo = compiled_bundled_authority().modelo("369")
-    return modelo.revisions["esquema-union"]
+    return published_revision("369", "esquema-union")
 
 
 def _candidate(

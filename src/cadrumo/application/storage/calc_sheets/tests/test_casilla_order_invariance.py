@@ -33,7 +33,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from ....filing.runtime import collection_from_snapshot
@@ -54,7 +55,7 @@ _COVERED = [
 
 
 def _snapshot(modelo: str, year: int, period: str, on: date) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
+    return published_snapshot(modelo, filing_year=year, period=period, on=on)
 
 
 def _reordered(snapshot: RegistrySnapshot) -> RegistrySnapshot:

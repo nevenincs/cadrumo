@@ -28,7 +28,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -38,6 +37,7 @@ from ....domain.calculations.registry.formula_runtime import (
 from ....domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_formula import FormulaExpression
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ...aggregation.source_resolution_operations import merge_source_resolutions
 from .._calculation_source_staging import expected_but_missing_binding_ids
@@ -48,7 +48,7 @@ _LEDGER_IVA = BindingSourceKind.LEDGER_IVA_AGGREGATION
 
 
 def _modelo_303_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
+    return published_snapshot("303", filing_year=2024, period="1T").revision
 
 
 def test_expected_but_missing_fires_when_present_source_resolved_no_value() -> None:

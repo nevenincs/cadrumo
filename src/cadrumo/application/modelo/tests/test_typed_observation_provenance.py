@@ -23,7 +23,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
@@ -31,6 +30,7 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -52,7 +52,7 @@ _PERIOD = "0A"
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return published_snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _engine_result(snapshot: RegistrySnapshot) -> RegistryCalculationResult:

@@ -13,8 +13,9 @@ from decimal import Decimal
 from typing import get_args
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import (
     BindingAggregation,
@@ -210,7 +211,7 @@ def _binding(operation: InventoryProjectionOperation, target: str) -> BindingDef
 
 
 def _revision(*, inventory: bool) -> ModeloRevision:
-    base = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+    base = published_snapshot("100", filing_year=2025, period="0A").revision
     bindings = (
         (
             _binding("complete_acquisition_cost", "0181"),

@@ -23,7 +23,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import (
-    published_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.schema import (
@@ -37,7 +37,7 @@ from ....domain.user_profile.schema import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..preflight import ProfilePreflightService
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "6d1e4b90-2c77-4a53-8e14-9b0f5a2c7d31"
 _PERIOD = Period.from_year_and_code(2024, "1T")

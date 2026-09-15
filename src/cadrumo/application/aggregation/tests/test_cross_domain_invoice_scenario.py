@@ -36,8 +36,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.schema import IvaCategory
 
 from ....core.aggregation import LedgerIncomeGrounding
@@ -479,15 +479,11 @@ def _modelo_130_revision() -> ModeloRevision:
     the bindings asserted below are the ones a real calculate would load. A
     hand-built snapshot could agree with the test and disagree with the filing.
     """
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            Modelo("130").value,
-            filing_year=2024,
-            period="1T",
-        )
-        .revision
-    )
+    return published_snapshot(
+        Modelo("130").value,
+        filing_year=2024,
+        period="1T",
+    ).revision
 
 
 def test_the_filed_figures_close_the_invoice_identity() -> None:
@@ -550,15 +546,11 @@ def _modelo_303_revision() -> ModeloRevision:
     authority, never a test-side snapshot builder, so the bindings asserted
     are the ones a real calculate would load.
     """
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            Modelo("303").value,
-            filing_year=2024,
-            period="1T",
-        )
-        .revision
-    )
+    return published_snapshot(
+        Modelo("303").value,
+        filing_year=2024,
+        period="1T",
+    ).revision
 
 
 def test_the_committed_m303_bindings_receive_the_invoice_figures(

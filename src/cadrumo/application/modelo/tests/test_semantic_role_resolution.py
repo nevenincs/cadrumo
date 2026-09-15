@@ -7,11 +7,14 @@ from decimal import Decimal
 from importlib import import_module
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_revision_definitions,
+    published_snapshot,
+)
 from ....domain.modelos.errors import ModeloError
 from ..semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
@@ -35,7 +38,7 @@ _ART20_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
 @pytest.fixture(scope="module")
 def snapshot_2025() -> RegistrySnapshot:
     """Real Modelo 100 2025 registry snapshot."""
-    return compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    return published_snapshot("100", filing_year=2025, period="0A")
 
 
 def test_unique_semantic_role_resolves_canonical_casilla_id(snapshot_2025: RegistrySnapshot) -> None:
@@ -64,7 +67,7 @@ def test_ambiguous_semantic_role_refuses_before_choosing_a_casilla(snapshot_2025
 
 
 def test_application_single_casilla_resolver_roles_are_unambiguous_in_bundled_registry() -> None:
-    modelos = compiled_bundled_authority().modelos
+    modelos = published_revision_definitions()
     offences: list[str] = []
 
     for modelo in modelos:
@@ -82,7 +85,7 @@ def test_application_single_casilla_resolver_roles_are_unambiguous_in_bundled_re
 
 
 def test_declaration_period_inputs_refuse_ambiguous_semantic_role() -> None:
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T")
+    snapshot = published_snapshot("303", filing_year=2025, period="1T")
     original = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_year")
     duplicate = original.model_copy(update={"id": f"ambiguous-{original.id}"})
     revision = snapshot.revision.model_copy(update={"casillas": (*snapshot.revision.casillas, duplicate)})
@@ -109,7 +112,7 @@ def test_declaration_period_inputs_project_real_registry_period_token(
     the typed text-scalar channel; the Decimal channel carries only the
     int-family ``filing_year`` role.
     """
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period=period_code)
+    snapshot = published_snapshot("303", filing_year=2025, period=period_code)
     filing_period = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period")
     filing_year = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_year")
 
@@ -132,7 +135,7 @@ def test_declaration_period_inputs_express_an_extended_oss_period() -> None:
     Modelo 369 rather than producing a value. The token is total over every
     declared period form, which is what makes this case expressible at all.
     """
-    snapshot = compiled_bundled_authority().snapshot("369", filing_year=2025, period="EXT-1T")
+    snapshot = published_snapshot("369", filing_year=2025, period="EXT-1T")
     filing_period = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period")
     period = Period.from_year_and_code(2025, "EXT-1T")
 

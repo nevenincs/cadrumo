@@ -7,10 +7,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
 from cadrumo.domain.categories.proportionality import ProportionalityKind
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
@@ -47,7 +47,7 @@ from .renta_income_aggregation_support import _period
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 _DEFAULT_SPENDING_CATEGORY = SpendingCategory.from_registry("asesoria_fiscal")
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> BindingDefinition:

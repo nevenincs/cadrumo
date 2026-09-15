@@ -6,7 +6,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from .....domain.calculations.registry.schema_formula import FormulaExpression
 from .._translator import TranslationError, translate_formula
@@ -16,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m130_layout():
-    revision = compiled_bundled_authority().modelo("130").revisions["2019-y-siguientes"]
+    revision = published_revision("130", "2019-y-siguientes")
     return plan_layout(revision, bracket_filter_date=date(2025, 12, 31))
 
 

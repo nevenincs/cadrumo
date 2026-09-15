@@ -14,7 +14,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -41,6 +40,7 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import (
@@ -102,12 +102,14 @@ _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
 _M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = validated_casilla_id("0171")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
-_MODELO_OPERATION = compiled_bundled_authority()
-_MODELO_FACT_CONTEXT = ModeloFactResolutionContext(
-    authority=_MODELO_OPERATION,
-    filing_period=date(2025, 12, 31),
-    devengo_date=date(2025, 12, 31),
-)
+
+
+def _modelo_fact_context(authority: PinnedAuthorityOperation) -> ModeloFactResolutionContext:
+    return ModeloFactResolutionContext(
+        authority=authority,
+        filing_period=date(2025, 12, 31),
+        devengo_date=date(2025, 12, 31),
+    )
 
 
 @pytest.fixture
@@ -314,9 +316,7 @@ def _blocked_wallet_decision(
         taxpayer_nif="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=compiled_bundled_authority()
-        .snapshot("303", filing_year=2026, period="1T")
-        .snapshot_ref,
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="missing",
         selected_amount=None,
@@ -329,7 +329,7 @@ def _blocked_wallet_decision(
 
 
 def _m130_casilla_definition(casilla_id: CasillaId) -> CasillaDefinition:
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_snapshot("130", filing_year=2026, period="1T")
     return next(item for item in snapshot.revision.casillas if item.id == casilla_id)
 
 
@@ -549,7 +549,9 @@ def test_dt12_reduccion_advisory_message_is_localised(
 # ---------------------------------------------------------------------------
 
 
-def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
+def test_art20_reduccion_advisory_fires_within_band_and_is_localised(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """art20_reduccion_advisory_finding warns when RNT is in-band but reduction is zero.
 
     A real revision carrying the rendimiento-neto-del-trabajo role and the
@@ -561,7 +563,9 @@ def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
     revision = _art20_revision()
     casilla_values = {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("0")}
 
-    finding = art20_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT)
+    finding = art20_reduccion_advisory_finding(
+        revision, casilla_values, context=_modelo_fact_context(authority_operation)
+    )
 
     assert finding is not None
     # Non-blocking advisory: the eligibility gate (otras rentas <= 6.500) is not engine-visible.
@@ -594,17 +598,28 @@ def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
 )
 def test_art20_reduccion_advisory_silent_for_declared_or_ineligible_values(
     casilla_values: dict[CasillaId, Decimal],
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The art. 20 advisory must NOT fire when there is nothing to surface.
 
     No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
     the reducción is already declared, or RNT is zero.
     """
-    assert art20_reduccion_advisory_finding(_art20_revision(), casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert (
+        art20_reduccion_advisory_finding(
+            _art20_revision(), casilla_values, context=_modelo_fact_context(authority_operation)
+        )
+        is None
+    )
 
 
-def test_art20_reduccion_advisory_silent_when_roles_absent() -> None:
-    assert art20_reduccion_advisory_finding(_test_revision(), {}, context=_MODELO_FACT_CONTEXT) is None
+def test_art20_reduccion_advisory_silent_when_roles_absent(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    assert (
+        art20_reduccion_advisory_finding(_test_revision(), {}, context=_modelo_fact_context(authority_operation))
+        is None
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1023,7 +1038,7 @@ class TestWorkflowInputMismatchError:
 def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() -> None:
     """Verify-time draft replay must not feed M100 0224 back as an operator input."""
     work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A", revision_id="2024")
+    snapshot = published_snapshot("100", filing_year=2024, period="0A", revision_id="2024")
     binding_values: dict[BindingId, Decimal] = {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-modelo-111-retenciones-periodicas": Decimal("0"),

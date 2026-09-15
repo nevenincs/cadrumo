@@ -29,9 +29,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicability
 from cadrumo.domain.iva.schema import IvaCategory
@@ -90,7 +90,7 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
 
 
 def _revision():
-    return compiled_bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
+    return published_snapshot("303", filing_year=2024, period="1T").revision
 
 
 def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:

@@ -13,8 +13,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
@@ -443,8 +444,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     is the sum of the deductible bases, derived from the inputs — never copied
     from engine output.
     """
-    modelo_def = compiled_bundled_authority().modelo("130")
-    revision = modelo_def.revisions["2019-y-siguientes"]
+    revision = published_revision("130", "2019-y-siguientes")
 
     casilla_02 = next(c for c in revision.casillas if c.id == _M130_GASTOS_CASILLA)
     assert casilla_02.input_kind is InputKind.BOUND

@@ -78,14 +78,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.schema import IvaCategory
 
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
@@ -99,7 +98,6 @@ from ....domain.calculations.registry.tests.scenarios import (
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
-from ....domain.calculations.registry.tests.snapshot_support import build_snapshot
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import category_cuota_is_zero_by_law
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -229,15 +227,7 @@ def _modelo_100_revision() -> ModeloRevision:
     matches is the one a production calculate would load. A hand-assembled
     revision could agree with this module and disagree with the filing.
     """
-    authority = compiled_bundled_authority()
-    modelo, catalogues = authority.modelo("100"), authority.catalogues
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=_FILING_YEAR,
-        period=_PERIOD.registry_token,
-    ).revision
+    return published_snapshot("100", filing_year=_FILING_YEAR, period=_PERIOD.registry_token).revision
 
 
 def _income_row(

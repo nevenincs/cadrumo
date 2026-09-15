@@ -23,9 +23,9 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaRateKind
 
 from ....core.period import Period
@@ -63,15 +63,11 @@ def _revision(modelo_id: str) -> ModeloRevision:
     difference between them here.
     """
     period = "1T" if modelo_id == "303" else "0A"
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            modelo_id,
-            filing_year=_Q1_2025.filing_year,
-            period=period,
-        )
-        .revision
-    )
+    return published_snapshot(
+        modelo_id,
+        filing_year=_Q1_2025.filing_year,
+        period=period,
+    ).revision
 
 
 def _row(category: IvaCategory) -> IvaLedgerObservation:

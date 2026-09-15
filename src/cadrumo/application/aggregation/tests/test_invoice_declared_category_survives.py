@@ -33,7 +33,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -173,7 +174,7 @@ def test_the_preserved_category_does_not_by_itself_declare_the_cuota(
     """
     observation = _observation_for(_received_reverse_charge())
     assert observation is not None
-    revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
+    revision = published_snapshot("303", filing_year=2026, period="2T").revision
 
     resolved = {
         str(k): v

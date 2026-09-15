@@ -20,10 +20,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....domain.calculations.registry.prorrata_register_catalogue import (
     regime_apportions_deduction,
@@ -43,7 +43,7 @@ _PERCENTAGE = Decimal("64")
 
 
 def _prior_m303_snapshot_ref():
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _register(regime: ProrrataRegisterRegime) -> ProrrataRegister:

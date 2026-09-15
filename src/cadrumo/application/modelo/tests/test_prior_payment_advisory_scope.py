@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.facts.resolution import ResolvedMappingFact
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..prior_payment_advisory import _selected_registry_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -16,16 +16,12 @@ _FIRST_QUARTER = "1T"
 
 
 def test_non_m130_work_does_not_apply_the_m130_declaration() -> None:
-    revision = (
-        compiled_bundled_authority()
-        .snapshot(
-            "200",
-            filing_year=2024,
-            period=_ANNUAL_PERIOD,
-            grade=RegistryAuthorityGrade.CALCULATION,
-        )
-        .revision
-    )
+    revision = published_snapshot(
+        "200",
+        filing_year=2024,
+        period=_ANNUAL_PERIOD,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    ).revision
 
     assert (
         _selected_registry_declaration(
@@ -39,15 +35,11 @@ def test_non_m130_work_does_not_apply_the_m130_declaration() -> None:
 
 
 def test_m130_work_uses_its_filing_year_scoped_period_query() -> None:
-    revision = (
-        compiled_bundled_authority()
-        .snapshot(
-            "130",
-            filing_year=2024,
-            period=_FIRST_QUARTER,
-        )
-        .revision
-    )
+    revision = published_snapshot(
+        "130",
+        filing_year=2024,
+        period=_FIRST_QUARTER,
+    ).revision
 
     resolved = _selected_registry_declaration(
         revision,

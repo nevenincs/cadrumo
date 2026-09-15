@@ -42,7 +42,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
@@ -89,15 +90,11 @@ def _m151_revision_for(period: Period) -> ModeloRevision:
     ``2025-y-siguientes``, and every id literal naming the old span stopped
     resolving. Resolution survives the next split; an id literal does not.
     """
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            "151",
-            filing_year=period.filing_year,
-            period=period.registry_token,
-        )
-        .revision
-    )
+    return published_snapshot(
+        "151",
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    ).revision
 
 
 def _impatriado_transaction(

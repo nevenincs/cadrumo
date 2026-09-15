@@ -26,7 +26,8 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
@@ -62,7 +63,7 @@ _CASILLA_05 = "05"
 @cache
 def _m131_revision() -> ModeloRevision:
     """The real Modelo 131 revision, so the grounding assertions read real refs."""
-    return compiled_bundled_authority().modelo(Modelo("131").value).revisions["2026"]
+    return published_revision(Modelo("131").value, "2026")
 
 
 def _income_row(

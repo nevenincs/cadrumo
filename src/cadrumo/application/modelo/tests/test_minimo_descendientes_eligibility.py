@@ -22,7 +22,6 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -33,6 +32,7 @@ from cadrumo.domain.calculations.registry.authority import (
 
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ....domain.contribuyente.family_profile import RentaFamilyProfile
@@ -50,7 +50,7 @@ _ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 
 
 def _snapshot(year: int) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return published_snapshot("100", filing_year=year, period="0A")
 
 
 def _parameter(snapshot: RegistrySnapshot, suffix: str) -> Decimal:

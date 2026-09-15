@@ -32,10 +32,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..taxation_comparison import (
     INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,
@@ -53,7 +53,7 @@ importlib.import_module("....domain.renta", package=__package__)
 def snapshot_2025() -> RegistrySnapshot:
     """Real Modelo 100 2025 registry snapshot (module-level singleton)."""
 
-    return compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    return published_snapshot("100", filing_year=2025, period="0A")
 
 
 def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
@@ -353,7 +353,7 @@ def test_comparison_error_raised_for_non_m100_snapshot() -> None:
     and raise TaxationComparisonError rather than a raw engine error.
     """
 
-    snapshot_303 = compiled_bundled_authority().snapshot("303", filing_year=2025, period="3T")
+    snapshot_303 = published_snapshot("303", filing_year=2025, period="3T")
 
     with pytest.raises(TaxationComparisonError, match="declaration-type"):
         compare_taxation_modes(

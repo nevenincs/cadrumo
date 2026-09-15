@@ -25,7 +25,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo import _calculation_preparation
 from cadrumo.application.modelo._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
@@ -46,6 +45,8 @@ from cadrumo.domain.transactions.models import (
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
+
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -201,7 +202,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
     _set_iva_regime(monkeypatch, IVARegime("SIMPLIFICADO"))
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     # Must not raise for SIMPLIFICADO even with a blocking transaction.
     _raise_if_ledger_preflight_blocks_calculation(
@@ -226,7 +227,7 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     _set_iva_regime(monkeypatch, IVARegime("GENERAL"))
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
         _raise_if_ledger_preflight_blocks_calculation(

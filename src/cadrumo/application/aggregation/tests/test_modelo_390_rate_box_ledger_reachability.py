@@ -57,7 +57,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
@@ -106,7 +107,7 @@ _EXPECTED_TIER = {
 
 
 def _m390_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
+    return published_snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _sale(

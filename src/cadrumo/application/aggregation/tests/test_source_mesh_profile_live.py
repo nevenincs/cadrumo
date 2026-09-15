@@ -9,11 +9,11 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import CalculationSourceLineageRole
@@ -32,7 +32,7 @@ from ...modelo.profile_binding import resolve_profile_sourced_bindings
 from ..source_mesh import CalculationSourceContext
 from ..source_profile import ProfileSourceResolver
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
@@ -73,7 +73,7 @@ def bucket_id() -> str:
 
 @cache
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    return published_snapshot("100", filing_year=2025, period="0A")
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
@@ -252,7 +252,7 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
     # Asking for filing here would refuse 036, which is censal and never filable,
     # and 200, whose filing boundary is deliberately shut while its revision spans
     # two layouts.
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
     )
 
@@ -278,7 +278,7 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
 
 
 def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> None:
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_snapshot("303", filing_year=2026, period="2T")
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif="12345678Z",
         target_year=2026,

@@ -22,7 +22,6 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
@@ -32,6 +31,10 @@ from ....domain.calculations.registry.formula_runtime import (
     evaluate_expression,
 )
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_revision_definitions,
+    published_snapshot,
+)
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ...aggregation.source_resolution_operations import (
@@ -61,7 +64,7 @@ _BIRTH_DATE_BINDING = "renta-profile-taxpayer-birth-date"
 
 
 def _snapshot(year: int = 2025) -> RegistrySnapshot:
-    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return published_snapshot("100", filing_year=year, period="0A")
 
 
 def _binding(snapshot: RegistrySnapshot, binding_id: str) -> Any:
@@ -496,9 +499,8 @@ def test_every_declared_channel_agrees_with_its_consuming_formulas_registry_wide
         expression_date_binding_refs,
     )
 
-    authority = compiled_bundled_authority()
     conflicts: list[str] = []
-    for modelo in authority.modelos:
+    for modelo in published_revision_definitions():
         for revision_id, revision in modelo.revisions.items():
             date_consumed: set[str] = set()
             for formula in revision.formulas:

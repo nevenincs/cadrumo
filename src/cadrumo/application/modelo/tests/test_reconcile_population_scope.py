@@ -15,7 +15,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -23,6 +22,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -48,8 +48,7 @@ _UPDATED_AT = datetime(2026, 5, 6, 17, 45, 5, tzinfo=UTC)
 
 def _m130_revision() -> ModeloRevision:
     """Return the real bundled Modelo 130 revision used as the subject."""
-    modelo = next(definition for definition in compiled_bundled_authority().modelos if definition.id == "130")
-    return modelo.revisions["2019-y-siguientes"]
+    return published_revision("130", "2019-y-siguientes")
 
 
 def _calculation(
