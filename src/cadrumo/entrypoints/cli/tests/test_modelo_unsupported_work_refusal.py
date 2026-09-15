@@ -11,10 +11,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    published_legal_reference,
+    published_modelo_ids,
+    published_source_reference,
 )
 from .._modelo_work_lifecycle_cli import guard_unsupported_work_modelo
 from .cli_runner import invoke_cached_cli
@@ -106,14 +110,12 @@ def test_registry_entries_for_unsupported_local_work_are_legally_grounded() -> N
         "714": ("ley-19-1991:art-28", "boe-modelo-714-layout"),
         "721": ("ley-11-2021:da-10", "boe-modelo-721-2023-layout"),
     }
-    modelos = compiled_bundled_authority().modelos
-    catalogues = compiled_bundled_authority().catalogues
-    modelo_ids = {modelo.id for modelo in modelos}
+    modelo_ids = set(published_modelo_ids())
 
     for modelo, (legal_id, source_id) in expected.items():
         assert modelo in modelo_ids
-        assert legal_id in catalogues.legal
-        assert source_id in catalogues.sources
+        assert published_legal_reference(legal_id).id == legal_id
+        assert published_source_reference(source_id).id == source_id
 
 
 def test_aeat_modelos_are_not_classified_by_a_rollout_census() -> None:

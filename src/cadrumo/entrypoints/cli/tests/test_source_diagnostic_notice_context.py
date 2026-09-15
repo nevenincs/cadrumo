@@ -19,13 +19,13 @@ skip or xfail.
 from __future__ import annotations
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.calculations import relation_prefill
 from ....domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
 )
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .._modelo_rendering import source_diagnostic_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -40,7 +40,7 @@ def _m200_bound_carry_diagnostics():
     registry change that alters a carry's source coordinates flows into this gate
     instead of being masked by a fixture.
     """
-    snapshot = compiled_bundled_authority().snapshot("200", filing_year=2025, period="0A")
+    snapshot = published_snapshot("200", filing_year=2025, period="0A")
     requirements_by_relation = {
         binding_id: requirement
         for requirement in relation_source_requirements(

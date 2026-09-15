@@ -11,7 +11,6 @@ from functools import cache
 from pathlib import Path
 from typing import Literal, override
 
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.domain.contribuyente.entity_type import EntityType
@@ -22,6 +21,7 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.published_authority import published_selected_revision_id
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.models import TaxpayerProfile
@@ -170,9 +170,7 @@ def observed_revision_id() -> str:
     that only wanted the shared taxpayer persona.
     """
     return str(
-        compiled_bundled_authority()
-        .inspect_revision("303", filing_year=2025, period=PERIOD_2025_1T.registry_token)
-        .revision_id,
+        published_selected_revision_id("303", filing_year=2025, period=PERIOD_2025_1T.registry_token),
     )
 
 

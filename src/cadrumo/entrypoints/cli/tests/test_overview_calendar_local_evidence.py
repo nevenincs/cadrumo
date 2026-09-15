@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
@@ -22,6 +21,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests.inventory import FIXTURES_DIR
 from .._overview_evidence import local_calendar_filing_evidence
@@ -42,15 +42,11 @@ _SECOND_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
 
 def _registry_snapshot_ref(*, modelo: str, filing_year: int, period: Period) -> RegistrySnapshotRef:
-    return (
-        compiled_bundled_authority()
-        .snapshot(
-            modelo,
-            filing_year=filing_year,
-            period=period.registry_token,
-        )
-        .snapshot_ref
-    )
+    return published_snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period.registry_token,
+    ).snapshot_ref
 
 
 def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -> None:
@@ -67,9 +63,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 observation,
                 source_kind="aeat_sede_justificante",
                 captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-                stamped_revision_id=str(
-                    compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id
-                ),
+                stamped_revision_id=str(published_snapshot("303", filing_year=2025, period="1T").revision.id),
                 source_metadata={
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "12345678901234567890",

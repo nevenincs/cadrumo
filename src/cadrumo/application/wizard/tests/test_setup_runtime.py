@@ -333,7 +333,7 @@ def test_legal_entity_intra_section_gate_walks_legal_entity_form(*, registry_set
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
     answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
     assert "legal-entity-form" in committed
-    assert answers.legal_entity_form is LegalEntityForm.from_registry("sl")
+    assert answers.legal_entity_form == LegalEntityForm.from_registry("sl")
 
 
 def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions(*, registry_setup_flow: WizardFlow) -> None:

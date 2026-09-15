@@ -20,10 +20,10 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from ....core.config import override_settings
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # opens the active-profile bucket database; with no profile every one
 # must produce the same clean translated refusal.
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    return str(compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period).revision.id)
+    return str(published_snapshot("303", filing_year=filing_year, period=period).revision.id)
 
 
 def _cold_start_verbs() -> tuple[tuple[str, ...], ...]:

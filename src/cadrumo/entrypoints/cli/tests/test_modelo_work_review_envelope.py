@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 from sqlalchemy import select
 from typer.testing import CliRunner
@@ -36,6 +35,7 @@ from ....core.json_contract import (
 )
 from ....core.operator_action_enums import OperatorActionAxis
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -94,8 +94,7 @@ def _persist_blocked_review(
         modelo = ModeloCode("130")
         filing_year = 2026
         period = Period.from_year_and_code(filing_year, "1T")
-        authority = compiled_bundled_authority()
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+        snapshot = published_snapshot(modelo, filing_year=filing_year, period=period.registry_token)
         affected_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.legal_refs)
 
         work_unit_id = derive_work_unit_id(

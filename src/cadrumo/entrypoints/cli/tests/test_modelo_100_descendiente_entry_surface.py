@@ -31,14 +31,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -107,7 +106,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         # Sourced from the schema, never pinned: a literal here goes stale the
         # moment the profile schema is revised, and the record then refuses to
         # validate against its own canonical version.
-        schema_version=load_user_profile_schema().version,
+        schema_version=published_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -136,7 +135,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
 
 def _registry_first_tranche(year: int) -> Decimal:
 
-    snapshot: RegistrySnapshot = compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
+    snapshot: RegistrySnapshot = published_snapshot("100", filing_year=year, period="0A")
     by_id = {p.id: p for p in snapshot.revision.parameters}
     param = by_id[f"renta-{year}-minimo-descendientes-primer-hijo-{year}"]
     return resolve_parameter(param, {"filing_period": date(year, 12, 31)})
@@ -854,7 +853,7 @@ def _registry_guarderia_cap_anual(year: int = 2024) -> Decimal:
     read.
     """
 
-    snapshot: RegistrySnapshot = compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
+    snapshot: RegistrySnapshot = published_snapshot("100", filing_year=year, period="0A")
     by_id = {p.id: p for p in snapshot.revision.parameters}
     return resolve_parameter(
         by_id[f"renta-{year}-guarderia-incremento-cap-anual"], {"filing_period": date(year, 12, 31)}

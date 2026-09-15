@@ -7,12 +7,12 @@ import inspect
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....adapters.outbound.google.calc_sheets_pull_records import RowSetCellEdit, RowSetEdit
 from ....application.storage.calc_sheets.engine import collect_row_sets
 from ....application.storage.calc_sheets.row_set_assembly import assemble_row_sets_for_snapshot
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..errors import CliRefusedBoundaryError
 from ..modelo_spreadsheet_cli import _assemble_pull_observations
 
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtu
 
 
 def _snapshot():
-    return compiled_bundled_authority().snapshot(
+    return published_snapshot(
         "190",
         filing_year=2025,
         period="0A",
@@ -82,7 +82,7 @@ def test_pull_row_assembly_routes_the_whole_pull_through_the_worksheet_ingress_g
 
 def test_pull_refuses_a_binding_substituted_from_another_grouping() -> None:
     """An operator-repurposed cell reaches the CLI as a translated refusal."""
-    snapshot = compiled_bundled_authority().snapshot("349", filing_year=2025, period="1T")
+    snapshot = published_snapshot("349", filing_year=2025, period="1T")
     first_grouping, second_grouping = collect_row_sets(snapshot.revision)
     substituted = RowSetEdit(
         grouping=first_grouping.grouping,

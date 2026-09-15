@@ -21,7 +21,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
@@ -36,6 +35,7 @@ from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRe
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....tests.cli_envelope import unwrap_cli_result as _json
@@ -89,7 +89,7 @@ def _service(authority_operation: PinnedAuthorityOperation) -> ProrrataRegisterS
 
 
 def _law_determined_prior_revision_id() -> str:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_snapshot(
         Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,

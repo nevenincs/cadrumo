@@ -9,9 +9,6 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -48,6 +45,9 @@ from ....core.operator_action_enums import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....entrypoints.adapter_composition import build_work_lifecycle_ports

@@ -16,9 +16,6 @@ break it.
 from __future__ import annotations
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -27,6 +24,9 @@ from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputE
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_territorial_scope
 from ....application.ledger.preconditions import LedgerPreconditionCondition
 from ....core.operator_action_enums import NoRecoveryOutcome
+from ....domain.calculations.registry.tests.published_authority import (
+    published_profile_create_context as _profile_creation_context_for_test,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..common import cli_policy_refusal_projection
 

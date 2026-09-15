@@ -25,7 +25,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.row_models import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
 from .._modelo_rendering import m184_socio_handoff_notices
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
 _WORK_UNIT_ID = "a" * 64

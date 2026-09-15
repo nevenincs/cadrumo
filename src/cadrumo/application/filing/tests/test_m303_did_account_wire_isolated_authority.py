@@ -304,7 +304,7 @@ def _m303_did_producer_snapshot(
 def _taxpayer_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAXPAYER_TAX_ID,
-        iva_regime=IVARegime("general"),
+        iva_regime=IVARegime("GENERAL"),
         iva={
             "tax_territory": M303TaxTerritory.from_registry("common_regime"),
             "regime_composition": M303RegimeComposition.from_registry("general"),

@@ -98,12 +98,11 @@ def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action() -> 
 
 def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_too() -> None:
     """The predicate stays official-source membership, not a Sociedades-only exemption."""
-    from dev.registry.compiler.authority import compiled_bundled_authority
-
     from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
+    from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
     _seed_profile("webco-with-history", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
 
@@ -115,9 +114,7 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
             repository.prepare_observation_envelope(
                 RegistryModeloObservation(modelo="303", filing_year=2025, period="1T"),
                 source_kind="aeat_sede_justificante",
-                stamped_revision_id=str(
-                    compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id
-                ),
+                stamped_revision_id=str(published_snapshot("303", filing_year=2025, period="1T").revision.id),
             ),
         )
 
