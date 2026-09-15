@@ -105,9 +105,10 @@ def _bindings(*, retencion: str) -> dict[str, Decimal]:
 
 
 _REL_2024: dict[str, Decimal] = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    # m111/m123/m193 are exercised through the binding channel above (see
+    # _bindings()); duplicating them here would conflict with a non-zero
+    # retencion on the binding channel and confuse two channels asserting one
+    # value.
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }

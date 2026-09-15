@@ -250,8 +250,12 @@ def test_rent_expense_paid_net_requires_irpf_category() -> None:
 
 
 def test_rent_expense_paid_net_requires_rental_irpf_category() -> None:
-    """An unrelated non-work IRPF tag must not relax outgoing rent gross drift."""
-    with pytest.raises(ValidationError, match=r"taxable_base \+ iva_amount") as raised:
+    """An unrelated non-work IRPF tag must not relax outgoing rent gross drift.
+
+    The activity tag routes the row through the bounded activity-withholding
+    inference, whose registry rate cap refuses a gap the rent tag never unlocked.
+    """
+    with pytest.raises(ValidationError, match=r"exceeds supported activity rate") as raised:
         Transaction.model_validate(
             {
                 "raw": _raw(amount=Decimal("1020.00")),

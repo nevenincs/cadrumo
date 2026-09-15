@@ -15,12 +15,14 @@ only because of the second.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from ....core.identity.documents import IdentityError
@@ -31,6 +33,13 @@ from ..models import Invoice, InvoiceLine
 from ..normalization import normalise_invoice_counterparty
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Validate invoices under the generation-pinned authority production uses."""
+    with bundled_indexed_authority().operation():
+        yield
 
 
 def _valid_payload() -> dict[str, object]:

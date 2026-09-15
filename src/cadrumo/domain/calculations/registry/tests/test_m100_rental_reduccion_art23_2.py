@@ -130,7 +130,7 @@ def test_0150_uses_operator_selected_art23_2_tier(
     assert entry.legal_refs == ("ley-35-2006:art-23",)
     assert entry.source_refs == ("aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority")
     assert _TIER_BINDING in entry.operand_refs
-    assert f"renta-2024-rental-reduccion-rate-{tier}" in entry.operand_refs
+    assert f"renta-rental-reduccion-rate-{tier}" in entry.operand_refs
 
 
 def test_0150_unchecked_eligibility_does_not_require_or_apply_tier(

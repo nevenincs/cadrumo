@@ -929,7 +929,7 @@ def _compile_classification_predicate(
             elif value == "absent_or_excepted":
                 conditions.append(
                     lambda criteria, third_country=third_country: (
-                        not (criteria.art_69_dos_service is not None and criteria.customer_residency is third_country)
+                        not (criteria.art_69_dos_service is not None and criteria.customer_residency == third_country)
                     ),
                 )
             elif value == "absent":

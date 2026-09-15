@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -9,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.aggregation import IntracomOperationType
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind
@@ -31,6 +33,13 @@ from ..service import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Validate invoices under the generation-pinned authority production uses."""
+    with bundled_indexed_authority().operation():
+        yield
 
 _HEX64_A = "a" * 64
 _HEX64_B = "b" * 64

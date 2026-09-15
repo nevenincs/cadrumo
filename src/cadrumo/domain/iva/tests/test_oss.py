@@ -16,6 +16,7 @@ from ..classification import (
     InvoiceKind,
     IvaInvoiceClassificationCriteria,
 )
+from ..errors import IvaValidationError
 from ..oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
 from ..schema import IvaCategory
 from .classification_authority_support import classify_with_registry_rules
@@ -123,8 +124,8 @@ def test_classifier_routes_ioss_low_value_distance_sale_to_r23() -> None:
 
 
 def test_classifier_rejects_retired_digital_b2c_oss_alias() -> None:
-    with pytest.raises(ValueError, match="services_digital_b2c_oss"):
-        IvaInvoiceClassificationCriteria.model_validate(
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        criteria = IvaInvoiceClassificationCriteria.model_validate(
             {
                 "transaction_date": date(2025, 6, 15),
                 "issuer_residency": IvaTerritorialScope.from_registry("es_mainland"),
@@ -135,3 +136,5 @@ def test_classifier_rejects_retired_digital_b2c_oss_alias() -> None:
                 "direction": InvoiceKind.ISSUED,
             },
         )
+        with pytest.raises(IvaValidationError, match="services_digital_b2c_oss"):
+            classify_with_registry_rules(criteria, operation=_authority_operation_for_test)

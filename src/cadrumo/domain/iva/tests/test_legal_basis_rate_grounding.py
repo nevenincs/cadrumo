@@ -112,7 +112,7 @@ def test_liva_art_90_substrate_general_rate_resolves_to_21_per_cent_for_es() -> 
 
 
 def test_iva_rate_21_helper_resolves_to_substrate_general_rate() -> None:
-    """resolve_iva_rate_token("rate_21", date.today()) wrapper must return the substrate's GENERAL
+    """resolve_iva_rate_token("RATE_21", date.today()) wrapper must return the substrate's GENERAL
     rate divided by 100, anchored to LIVA art 90."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         expected = lookup_rate(
@@ -121,7 +121,7 @@ def test_iva_rate_21_helper_resolves_to_substrate_general_rate() -> None:
             _BINDING_DATE,
             operation=_authority_operation_for_test,
         ).pct / Decimal("100")
-        assert iva_rate_percentage(resolve_iva_rate_token("rate_21", date.today()), on_date=_BINDING_DATE) == expected
+        assert iva_rate_percentage(resolve_iva_rate_token("RATE_21", date.today()), on_date=_BINDING_DATE) == expected
 
 
 def test_liva_art_90_legal_entry_carries_required_text() -> None:
@@ -162,7 +162,7 @@ def test_iva_rate_10_helper_resolves_to_substrate_reduced_rate() -> None:
             _BINDING_DATE,
             operation=_authority_operation_for_test,
         ).pct / Decimal("100")
-        assert iva_rate_percentage(resolve_iva_rate_token("rate_10", date.today()), on_date=_BINDING_DATE) == expected
+        assert iva_rate_percentage(resolve_iva_rate_token("RATE_10", date.today()), on_date=_BINDING_DATE) == expected
 
 
 # ---------------------------------------------------------------------------
@@ -189,7 +189,7 @@ def test_iva_rate_4_helper_resolves_to_substrate_super_reduced_rate() -> None:
             _BINDING_DATE,
             operation=_authority_operation_for_test,
         ).pct / Decimal("100")
-        assert iva_rate_percentage(resolve_iva_rate_token("rate_4", date.today()), on_date=_BINDING_DATE) == expected
+        assert iva_rate_percentage(resolve_iva_rate_token("RATE_4", date.today()), on_date=_BINDING_DATE) == expected
 
 
 def test_liva_art_91_legal_entry_carries_both_reduced_and_super_reduced_quotes() -> None:
@@ -314,26 +314,26 @@ def test_iva_rate_slot_to_iva_rate_kind_mapping_is_total_and_consistent() -> Non
         assert {
             rate: iva_rate_kind(rate)
             for rate in (
-                resolve_iva_rate_token("rate_0", date.today()),
-                resolve_iva_rate_token("rate_4", date.today()),
-                resolve_iva_rate_token("rate_10", date.today()),
-                resolve_iva_rate_token("rate_21", date.today()),
-                resolve_iva_rate_token("exempt", date.today()),
-                resolve_iva_rate_token("not_subject", date.today()),
+                resolve_iva_rate_token("RATE_0", date.today()),
+                resolve_iva_rate_token("RATE_4", date.today()),
+                resolve_iva_rate_token("RATE_10", date.today()),
+                resolve_iva_rate_token("RATE_21", date.today()),
+                resolve_iva_rate_token("EXEMPT", date.today()),
+                resolve_iva_rate_token("NOT_SUBJECT", date.today()),
             )
         } == {
-            resolve_iva_rate_token("rate_0", date.today()): IvaRateKind("zero"),
-            resolve_iva_rate_token("rate_4", date.today()): IvaRateKind("super_reduced"),
-            resolve_iva_rate_token("rate_10", date.today()): IvaRateKind("reduced"),
-            resolve_iva_rate_token("rate_21", date.today()): IvaRateKind("general"),
-            resolve_iva_rate_token("exempt", date.today()): IvaRateKind("exempt"),
-            resolve_iva_rate_token("not_subject", date.today()): None,
+            resolve_iva_rate_token("RATE_0", date.today()): IvaRateKind("zero"),
+            resolve_iva_rate_token("RATE_4", date.today()): IvaRateKind("super_reduced"),
+            resolve_iva_rate_token("RATE_10", date.today()): IvaRateKind("reduced"),
+            resolve_iva_rate_token("RATE_21", date.today()): IvaRateKind("general"),
+            resolve_iva_rate_token("EXEMPT", date.today()): IvaRateKind("exempt"),
+            resolve_iva_rate_token("NOT_SUBJECT", date.today()): None,
         }
 
         for rate, kind in (
-            (resolve_iva_rate_token("rate_4", date.today()), IvaRateKind("super_reduced")),
-            (resolve_iva_rate_token("rate_10", date.today()), IvaRateKind("reduced")),
-            (resolve_iva_rate_token("rate_21", date.today()), IvaRateKind("general")),
+            (resolve_iva_rate_token("RATE_4", date.today()), IvaRateKind("super_reduced")),
+            (resolve_iva_rate_token("RATE_10", date.today()), IvaRateKind("reduced")),
+            (resolve_iva_rate_token("RATE_21", date.today()), IvaRateKind("general")),
         ):
             assert (
                 lookup_rate(require_eu_member_state("ES"), kind, _BINDING_DATE, operation=_authority_operation_for_test)
@@ -359,8 +359,8 @@ def test_iva_rate_zero_resolves_to_zero_percent_inside_its_statutory_window() ->
     the law, and `iva_rate_percentage` is the guard that refuses it.
     """
     in_window = date(2024, 8, 20)  # RDL 4/2024 art. 1.Dos.1: 0 % from 07-01 to 09-30
-    assert iva_rate_kind(resolve_iva_rate_token("rate_0", date.today())) == IvaRateKind("zero")
-    assert iva_rate_percentage(resolve_iva_rate_token("rate_0", date.today()), on_date=in_window) == Decimal("0")
+    assert iva_rate_kind(resolve_iva_rate_token("RATE_0", date.today())) == IvaRateKind("zero")
+    assert iva_rate_percentage(resolve_iva_rate_token("RATE_0", date.today()), on_date=in_window) == Decimal("0")
 
 
 def test_iva_rate_zero_resolves_outside_the_food_window_because_zero_rating_outlives_it() -> None:
@@ -392,16 +392,16 @@ def test_iva_rate_zero_resolves_outside_the_food_window_because_zero_rating_outl
     where registry coverage IS complete and the guard stays sound.
     """
     for on_date in (date(2024, 3, 15), _BINDING_DATE):
-        assert iva_rate_percentage(resolve_iva_rate_token("rate_0", date.today()), on_date=on_date) == Decimal("0")
+        assert iva_rate_percentage(resolve_iva_rate_token("RATE_0", date.today()), on_date=on_date) == Decimal("0")
 
 
 def test_iva_rate_exempt_and_not_subject_resolve_to_none() -> None:
     """EXEMPT has a classification tier but no numeric percentage;
     NOT_SUBJECT has neither a rate tier nor a numeric percentage."""
-    assert iva_rate_kind(resolve_iva_rate_token("exempt", date.today())) == IvaRateKind("exempt")
-    assert iva_rate_kind(resolve_iva_rate_token("not_subject", date.today())) is None
-    assert iva_rate_percentage(resolve_iva_rate_token("exempt", date.today()), on_date=_BINDING_DATE) is None
-    assert iva_rate_percentage(resolve_iva_rate_token("not_subject", date.today()), on_date=_BINDING_DATE) is None
+    assert iva_rate_kind(resolve_iva_rate_token("EXEMPT", date.today())) == IvaRateKind("exempt")
+    assert iva_rate_kind(resolve_iva_rate_token("NOT_SUBJECT", date.today())) is None
+    assert iva_rate_percentage(resolve_iva_rate_token("EXEMPT", date.today()), on_date=_BINDING_DATE) is None
+    assert iva_rate_percentage(resolve_iva_rate_token("NOT_SUBJECT", date.today()), on_date=_BINDING_DATE) is None
 
 
 # ---------------------------------------------------------------------------

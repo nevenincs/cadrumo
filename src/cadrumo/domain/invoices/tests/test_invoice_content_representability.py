@@ -17,6 +17,7 @@ coupling between the two; a separate gating decision is a different scope.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -25,6 +26,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import InvoiceLegalMention, resolve_iva_rate_token
 
 from ....core.resources.bundled_data import bundled_path
@@ -33,6 +35,13 @@ from ..enums import PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _authority_operation() -> Iterator[None]:
+    """Validate invoices under the generation-pinned authority production uses."""
+    with bundled_indexed_authority().operation():
+        yield
 
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")

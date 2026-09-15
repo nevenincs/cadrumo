@@ -408,7 +408,7 @@ def test_result_provisional_requires_period() -> None:
         operaciones_con_derecho_deduccion=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
     )
-    with pytest.raises(ValidationError, match=r"provisional prorrata result must carry a period"):
+    with pytest.raises(ValidationError, match=r"prorrata kind requires a period"):
         ProrrataResult(
             regime=ProrrataRegime("general"),
             kind=ProrrataKind.from_registry("provisional"),

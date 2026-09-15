@@ -25,9 +25,9 @@ from functools import cache, partial
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
-from pydantic import ValidationError
 
 from ....core.descendant_relacion import DescendantRelacion
+from ....core.errors.hierarchy import ProfileAnswerTypeError
 from ...calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_entitling_tokens,
     descendant_relacion_tokens,
@@ -39,6 +39,7 @@ from ..descendant_facts import (
     parse_descendiente_flag,
 )
 from ..descendant_maternity import art_81_1_maternity_relations
+from ..errors import ProfileValidationError
 from ..family_fact_context import FamilyFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -222,7 +223,7 @@ def test_an_entry_date_under_an_excluded_relacion_refuses(
     re-checking the relación would grant the increase.
     """
     anchor = date(2020, 1, 1)
-    with pytest.raises((ValidationError, ValueError)):
+    with pytest.raises(ProfileValidationError):
         if field == "inscripcion_registro_civil_date":
             DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, inscripcion_registro_civil_date=anchor)
         else:
@@ -344,13 +345,13 @@ def test_an_unstated_relacion_with_an_inscription_reads_as_adoptado() -> None:
     """
     child = DescendantInfo(birth_date=_OLD_BIRTH, inscripcion_registro_civil_date=date(2024, 2, 1))
 
-    assert child.relacion is DescendantRelacion.from_registry("adoptado")
+    assert child.relacion == DescendantRelacion.from_registry("adoptado")
     assert child.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is True
 
 
 def test_an_unstated_relacion_defaults_to_the_ordinary_descendant() -> None:
     """Absence of the fact means an ordinary descendant, the overwhelming case."""
-    assert DescendantInfo(birth_date=_OLD_BIRTH).relacion is DescendantRelacion.from_registry("descendiente")
+    assert DescendantInfo(birth_date=_OLD_BIRTH).relacion == DescendantRelacion.from_registry("descendiente")
 
 
 # ── the entry doors carry the axis ──────────────────────────────────────────
@@ -367,7 +368,7 @@ def test_the_flag_parser_reads_every_relacion_member() -> None:
         authority=_FACT_CONTEXT.authority,
     ):
         parsed = parse_descendiente_flag(f"NACIMIENTO=2010-01-01,RELACION={member.value}")
-        assert parsed.relacion is member
+        assert parsed.relacion == member
 
 
 def test_the_flag_parser_refuses_a_relacion_outside_the_closed_set() -> None:
@@ -377,7 +378,7 @@ def test_the_flag_parser_refuses_a_relacion_outside_the_closed_set() -> None:
     ``acogimiento_temporal`` onto it would strip the record of the one
     distinction keeping the Art. 58.2 increase away from that carer.
     """
-    with pytest.raises((ValueError, ValidationError)):
+    with pytest.raises(ProfileAnswerTypeError):
         parse_descendiente_flag("NACIMIENTO=2010-01-01,RELACION=acogimiento")
 
 
@@ -474,7 +475,7 @@ def test_deleting_the_stored_relacion_changes_the_reloaded_record() -> None:
     (reloaded,) = descendant_list_from_facts(facts)
 
     assert reloaded != temporal
-    assert reloaded.relacion is DescendantRelacion.from_registry("descendiente")
+    assert reloaded.relacion == DescendantRelacion.from_registry("descendiente")
     assert reloaded.is_eligible_minimo_incremento_menor_tres(_YEAR, context=_FACT_CONTEXT) is False
 
 
@@ -484,7 +485,7 @@ def test_corrupting_the_stored_relacion_refuses_rather_than_coercing() -> None:
     facts = dict(descendant_facts_from_list((child,)))
     facts["renta_family.descendiente.0.relacion"] = "acogimiento"
 
-    with pytest.raises((ValueError, ValidationError)):
+    with pytest.raises(ProfileAnswerTypeError):
         descendant_list_from_facts(facts)
 
 
@@ -498,7 +499,7 @@ def test_a_stored_entry_date_under_an_excluded_relacion_refuses_on_reload() -> N
     facts = dict(descendant_facts_from_list((child,)))
     facts["renta_family.descendiente.0.acogimiento_resolucion"] = "2020-01-01"
 
-    with pytest.raises((ValueError, ValidationError)):
+    with pytest.raises(ProfileValidationError):
         descendant_list_from_facts(facts)
 
 
@@ -555,7 +556,7 @@ class TestGuardaYCustodiaJudicial:
         this is the behavioural half of the assertion above rather than a
         restatement of it.
         """
-        with pytest.raises((ValueError, ValidationError)):
+        with pytest.raises(ProfileValidationError):
             self._child(acogimiento_resolucion_date=date(2020, 1, 1))
 
     def test_it_is_excluded_from_the_art_81_1_maternidad_population(self) -> None:
@@ -576,7 +577,7 @@ class TestGuardaYCustodiaJudicial:
         """A member no operator can select is not a modelled case."""
         parsed = parse_descendiente_flag(f"NACIMIENTO={_OLD_BIRTH.isoformat()},RELACION=guarda_y_custodia_judicial")
 
-        assert parsed.relacion is DescendantRelacion.from_registry("guarda_y_custodia_judicial")
+        assert parsed.relacion == DescendantRelacion.from_registry("guarda_y_custodia_judicial")
 
     def test_it_survives_the_fact_roundtrip(self) -> None:
         """The relación is persisted and reloaded rather than defaulting back.
@@ -589,7 +590,7 @@ class TestGuardaYCustodiaJudicial:
         reloaded = descendant_list_from_facts(dict(descendant_facts_from_list(original)))
 
         assert reloaded == original
-        assert reloaded[0].relacion is DescendantRelacion.from_registry("guarda_y_custodia_judicial")
+        assert reloaded[0].relacion == DescendantRelacion.from_registry("guarda_y_custodia_judicial")
 
 
 def test_no_grandchild_member_exists_on_the_relacion_axis() -> None:

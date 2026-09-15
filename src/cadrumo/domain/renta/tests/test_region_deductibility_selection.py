@@ -105,7 +105,7 @@ def _context(residence_ccaa: CCAA | None) -> RentaDeductibilityContext:
 def test_residence_ccaa_defaults_to_none_and_accepts_a_member() -> None:
     """The D1 axis is optional (default ``None``) and accepts a CCAA member."""
     assert RentaDeductibilityContext(profile_year=2025).residence_ccaa is None
-    assert _context(CCAA.CANARIAS).residence_ccaa is CCAA.CANARIAS
+    assert _context(CCAA.CANARIAS).residence_ccaa == CCAA.CANARIAS
 
 
 def test_override_layer_is_provisioned_but_empty() -> None:

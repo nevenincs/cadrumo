@@ -36,11 +36,12 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.descendant_relacion import DescendantRelacion
+from ....core.errors.hierarchy import ProfileAnswerTypeError
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_entitling_tokens,
     descendant_relacion_tokens,
 )
-from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -158,7 +159,7 @@ class TestParseDescendienteFlagMesesTrabajo:
             ("not-a-number", "NACIMIENTO=2022-06-01,MESES_TRABAJO=abc"),
         ):
             try:
-                with pytest.raises(ValueError):
+                with pytest.raises(ProfileAnswerTypeError):
                     parse_descendiente_flag(spec)
             except AssertionError as exc:
                 raise AssertionError(f"malformed MESES_TRABAJO was accepted: {case_id}") from exc
@@ -187,7 +188,7 @@ class TestAltaPosteriorNacimientoMes:
             ("zero", "NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=0"),
         ):
             try:
-                with pytest.raises(ValueError, match="ALTA_POSTERIOR_MES must be 1"):
+                with pytest.raises(ProfileAnswerTypeError, match="ALTA_POSTERIOR_MES must be 1"):
                     parse_descendiente_flag(spec)
             except AssertionError as exc:
                 raise AssertionError(f"out-of-range ALTA_POSTERIOR_MES was accepted: {case_id}") from exc
@@ -230,7 +231,7 @@ class TestAltaPosteriorNacimientoMes:
         facts = dict(descendant_facts_from_list((original,)))
         facts["renta_family.descendiente.0.alta_posterior_nacimiento_mes"] = "13"
 
-        with pytest.raises(ValueError, match="alta_posterior_nacimiento_mes must be a month 1-12"):
+        with pytest.raises(ProfileAnswerTypeError, match="alta_posterior_nacimiento_mes must be a month 1-12"):
             descendant_list_from_facts(facts)
 
 
@@ -437,7 +438,7 @@ class TestArt811EntryWindowDivergesFromArt582:
 
     #: Inscribed 15 November 2021. Art. 58.2 grants periods 2021, 2022 and 2023.
     #: Art. 81.1 runs from November 2021 to October 2024 inclusive.
-    with validating_governed_facts(compiled_bundled_authority()):
+    with bundled_indexed_authority().operation():
         _ADOPTADO = DescendantInfo(
             birth_date=date(2016, 3, 2),
             relacion=DescendantRelacion.from_registry("adoptado"),

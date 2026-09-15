@@ -18,6 +18,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...invoices.enums import IvaRate
+from ...invoices.errors import InvoiceValidationError
 from ..classification import InvoiceKind
 from ..deduction_facts import IvaDeductionClassificationProvenance
 from ..flow import IvaFlowDirection, IvaSettlementSide
@@ -70,7 +71,7 @@ def test_classify_invoice_rejects_not_subject_rate() -> None:
     """NOT_SUBJECT operations are out of scope of IVA — the standard-case
     helper rejects them so callers explicitly handle them via
     IvaCategory.OPERACION_NO_SUJETA."""
-    with pytest.raises(ValueError, match="NOT_SUBJECT"):
+    with pytest.raises(InvoiceValidationError, match="out-of-scope IVA slot"):
         classify_invoice_line_for_iva(iva_rate=IvaRate.from_registry("NOT_SUBJECT"), invoice_kind=InvoiceKind.ISSUED)
 
 
@@ -113,7 +114,7 @@ def test_classification_record_validates_settlement_sides_against_flow() -> None
     """Constructor must reject inconsistent (flow_direction,
     settlement_sides) pairs — guards against drift between the two
     fields."""
-    with pytest.raises(ValueError, match="does not match flow_direction"):
+    with pytest.raises(InvoiceValidationError, match="does not match flow_direction"):
         IvaInvoiceClassification(
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
@@ -136,7 +137,7 @@ def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejec
     """Even if the IvaCategory says reverse-charge, the constructor
     only accepts INVERSION_SUJETO_PASIVO when settlement_sides has both — the
     cross-check is on (flow, sides), not on category."""
-    with pytest.raises(ValueError, match="does not match flow_direction"):
+    with pytest.raises(InvoiceValidationError, match="does not match flow_direction"):
         IvaInvoiceClassification(
             category=IvaCategory("domestic_reverse_charge"),
             rate_kind=IvaRateKind("general"),
