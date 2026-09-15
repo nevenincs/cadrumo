@@ -22,11 +22,17 @@ _profile_field: str | None = None
 def _resume_active_profile(passphrase: str) -> None:
     from cadrumo.application.user_profile.login_session import login_profile
     from cadrumo.application.workflow.profile_health import assess_active_profile_health
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-    profile_name = assess_active_profile_health().active_profile_label
-    if profile_name is None:
-        raise RuntimeError("profile-secret channel requires an active profile")
-    login_profile(name=profile_name, passphrase_callback=lambda: passphrase)
+    with bundled_indexed_authority().operation() as operation:
+        profile_name = assess_active_profile_health(operation=operation).active_profile_label
+        if profile_name is None:
+            raise RuntimeError("profile-secret channel requires an active profile")
+        login_profile(
+            name=profile_name,
+            passphrase_callback=lambda: passphrase,
+            profile_decode_context=operation.profile_decode_context(),
+        )
 
 
 def _authoritative_fields() -> tuple[str, ...]:

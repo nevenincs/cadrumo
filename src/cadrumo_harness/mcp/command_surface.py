@@ -16,17 +16,21 @@ import subprocess
 from dataclasses import dataclass
 from functools import cache
 from types import MappingProxyType
-from typing import Any, ClassVar, override
+from typing import Any, ClassVar, TypeGuard, override
 
 from pydantic import ConfigDict
 
-from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from cadrumo.application.operator_actions.catalogue import (
+    OPERATOR_ACTION_CATALOGUE,
+    ActionArgumentBindingSpecification,
+)
 from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.operator_actions.ports import (
     PreconditionActionResolutionPort,
     project_precondition_action,
 )
 from cadrumo.application.operator_surface.command_ports import (
+    Capability,
     CommandCapabilityClass,
     CommandExecutionPolicy,
     CommandNodeKind,
@@ -35,6 +39,8 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandRegistrationMetadata,
     CommandRegistrationProjection,
     CommandSurfacePort,
+    CommandWriteRoute,
+    CommandWriteRouteValue,
     JsonType,
     LiveNodeRegistrationMetadata,
     MachineSecretFieldMetadata,
@@ -42,9 +48,11 @@ from cadrumo.application.operator_surface.command_ports import (
     MachineSecretPresence,
     MachineSecretVariantConditionMetadata,
     ParameterKind,
+    PerformanceClass,
     ProfileAuthenticationContractMetadata,
     ProfileAuthenticationPosture,
     SchemaResolutionError,
+    SideEffect,
     VerbInputSchema,
     VerbLeafResolutionFailure,
 )
@@ -139,6 +147,75 @@ def _profile_authentication_contract(payload: dict[str, Any]) -> ProfileAuthenti
     )
 
 
+_CAPABILITIES: tuple[Capability, ...] = (
+    "state-free",
+    "local-storage",
+    "registry",
+    "profile-custody",
+    "encrypted-facts",
+    "network",
+    "browser",
+    "google",
+    "calculation",
+    "filing",
+    "crypto",
+    "subprocess",
+)
+_SIDE_EFFECTS: tuple[SideEffect, ...] = ("none", "local-state", "network", "browser", "google")
+_PERFORMANCE_CLASSES: tuple[PerformanceClass, ...] = (
+    "metadata",
+    "local-io",
+    "compute",
+    "external-io",
+    "interactive",
+)
+_WRITE_ROUTES: tuple[CommandWriteRouteValue, ...] = (
+    CommandWriteRoute.NONE,
+    CommandWriteRoute.PROFILE_BOUND,
+    CommandWriteRoute.BOOTSTRAP_ROOT,
+)
+
+
+def _is_capability(value: str) -> TypeGuard[Capability]:
+    return value in _CAPABILITIES
+
+
+def _capability(value: object) -> Capability:
+    if not isinstance(value, str) or not _is_capability(value):
+        raise RuntimeError(f"command-surface manifest contains unknown capability: {value!r}")
+    return value
+
+
+def _is_side_effect(value: str) -> TypeGuard[SideEffect]:
+    return value in _SIDE_EFFECTS
+
+
+def _side_effect(value: object) -> SideEffect:
+    if not isinstance(value, str) or not _is_side_effect(value):
+        raise RuntimeError(f"command-surface manifest contains unknown side effect: {value!r}")
+    return value
+
+
+def _is_performance_class(value: str) -> TypeGuard[PerformanceClass]:
+    return value in _PERFORMANCE_CLASSES
+
+
+def _performance_class(value: object) -> PerformanceClass:
+    if not isinstance(value, str) or not _is_performance_class(value):
+        raise RuntimeError(f"command-surface manifest contains unknown performance class: {value!r}")
+    return value
+
+
+def _is_write_route(value: str) -> TypeGuard[CommandWriteRouteValue]:
+    return value in _WRITE_ROUTES
+
+
+def _write_route(value: object) -> CommandWriteRouteValue:
+    if not isinstance(value, str) or not _is_write_route(value):
+        raise RuntimeError(f"command-surface manifest contains unknown write route: {value!r}")
+    return value
+
+
 def _command_parameter(payload: dict[str, Any]) -> CommandParameterMetadata:
     default = payload.get("default")
     return CommandParameterMetadata(
@@ -160,10 +237,10 @@ def _command_policy_metadata(payload: dict[str, Any] | None) -> CommandPolicyMet
     if payload is None:
         return None
     return CommandPolicyMetadata(
-        capabilities=frozenset(str(item) for item in payload["capabilities"]),
-        side_effects=frozenset(str(item) for item in payload["side_effects"]),
-        performance=str(payload["performance"]),
-        write_route=str(payload["write_route"]),
+        capabilities=frozenset(_capability(item) for item in payload["capabilities"]),
+        side_effects=frozenset(_side_effect(item) for item in payload["side_effects"]),
+        performance=_performance_class(payload["performance"]),
+        write_route=_write_route(payload["write_route"]),
         destructive=bool(payload["destructive"]),
         handoff=bool(payload["handoff"]),
         live_write=bool(payload["live_write"]),
@@ -308,11 +385,11 @@ def _build_snapshot(payload: dict[str, Any]) -> CommandSurfaceSnapshot:
     policies = {
         key: CommandExecutionPolicy(
             classification=CommandCapabilityClass(
-                capabilities=frozenset(str(item) for item in value["capabilities"]),
-                side_effects=frozenset(str(item) for item in value["side_effects"]),
-                performance=str(value["performance"]),
+                capabilities=frozenset(_capability(item) for item in value["capabilities"]),
+                side_effects=frozenset(_side_effect(item) for item in value["side_effects"]),
+                performance=_performance_class(value["performance"]),
             ),
-            write_route=str(value["write_route"]),
+            write_route=_write_route(value["write_route"]),
             destructive=bool(value["destructive"]),
             handoff=bool(value["handoff"]),
             live_write=bool(value["live_write"]),
@@ -355,7 +432,7 @@ class _PreconditionResolver(PreconditionActionResolutionPort):
         )
         if schema is None:
             raise LookupError(f"action target has no live input schema: {declaration.target_command_key}")
-        specifications_by_name: dict[str, list[object]] = {}
+        specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]] = {}
         for specification in declaration.argument_specifications:
             specifications_by_name.setdefault(specification.argument_name, []).append(specification)
         for binding in verdict.argument_bindings:
