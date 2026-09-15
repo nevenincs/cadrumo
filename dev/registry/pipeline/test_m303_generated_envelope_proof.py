@@ -74,6 +74,7 @@ from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_modelo_directory, load_registry_tree
 from ..compiler.supplementary_orden import compile_supplementary_ordenes
 from ._export_tree import render_complete_export_tree
+from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
 from ._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_validation import GeneratedExportTreeValidationContext
 from .candidate_staging import stage_continuity_metadata
@@ -84,13 +85,8 @@ from .export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     normalised_loader_semantics,
 )
+from .generated_tree_inventory import generated_export_trees
 from .render_check import parsed_tree_file
-from .test_generated_export_trees import (
-    _GENERATED_TREES,
-    _authorities,
-    _isolated_authority,
-    _supporting_modelos,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -106,7 +102,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _m303_2026_tree():
     return next(
         tree
-        for tree in _GENERATED_TREES
+        for tree in generated_export_trees()
         if tree.modelo == "303" and tree.source_ref == "aeat-dr-303-2026" and tree.epoch == "2026"
     )
 
@@ -122,8 +118,8 @@ def _tree_bytes(export_root: Path) -> dict[str, bytes]:
 def _render_isolated_tree(tree, root: Path):
     assert root.drive == tree.committed.drive == bundled_path().drive
     assert not root.exists()
-    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
-    registry_root = _isolated_authority(tree, root)
+    joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
+    registry_root = isolated_authority(tree, root)
     continuity_metadata_modelo_root = stage_continuity_metadata(
         bundled_path("registry", "aeat", "modelos", tree.modelo),
         root,
@@ -340,7 +336,7 @@ def _m303_2026_6919_regimen_evidence(snapshot, *, operation: PinnedAuthorityOper
 def _m303_2026_committed_snapshot(tmp_path: Path):
     """Build a filing snapshot from the committed M303 target, not the mutable whole tree."""
     tree = _m303_2026_tree()
-    registry_root = _isolated_authority(tree, tmp_path / "m303-authority")
+    registry_root = isolated_authority(tree, tmp_path / "m303-authority")
     isolated_modelo = load_modelo_directory(registry_root / "modelos" / tree.modelo)
     (isolated_modelo_revision,) = isolated_modelo.revisions.values()
     committed_modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", tree.modelo))
@@ -506,7 +502,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
         assert normalised_loader_semantics(first_layout) == normalised_loader_semantics(second_layout)
 
         check_root = temp_path / "check"
-        check_registry_root = _isolated_authority(tree, check_root)
+        check_registry_root = isolated_authority(tree, check_root)
         metadata_root = stage_continuity_metadata(
             bundled_path("registry", "aeat", "modelos", tree.modelo),
             check_root,
@@ -517,7 +513,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
         for sibling in (published_modelo_root / "revisions").iterdir():
             if sibling.name != tree.revision:
                 shutil.rmtree(sibling)
-        semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+        joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
         before = _committed_tree_hashes(tree)
         # While the revision is drift-pinned, check mode REFUSES rather than
         # agreeing: the shipped manifest attests digests the corrected generator
@@ -536,7 +532,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
                             ),
                             filing_year=tree.filing_year,
                             period=tree.period,
-                            supporting_modelos=_supporting_modelos(tree),
+                            supporting_modelos=supporting_modelos(tree),
                             continuity_metadata_modelo_root=metadata_root,
                         ),
                         temporary_root=check_root,
@@ -562,7 +558,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
                     target=ExportFragmentTarget(modelo=tree.modelo, revision_id=tree.revision, design_epoch=tree.epoch),
                     filing_year=tree.filing_year,
                     period=tree.period,
-                    supporting_modelos=_supporting_modelos(tree),
+                    supporting_modelos=supporting_modelos(tree),
                     continuity_metadata_modelo_root=metadata_root,
                 ),
                 temporary_root=check_root,

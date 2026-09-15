@@ -83,6 +83,7 @@ class _CandidateInventory(TypedDict):
 
 class _RatchetCounts(TypedDict):
     approved_active: int
+    root_boundary: int
     new_unapproved: int
     expanded_existing: int
     expired: int
@@ -136,7 +137,7 @@ def build_import_health(
     graph = _graph_summary(linter_output)
     candidate = _candidate_inventory(authority, checker.occurrences)
     candidate_path = _write_candidate_artifact(authority.repository, candidate)
-    ratchet = _reconcile_ratchet(authority.repository, candidate)
+    ratchet = _reconcile_ratchet(authority.repository, candidate, _root_boundary_pairs(authority))
 
     blocking_findings = [finding for finding in checker.findings if not finding.advisory and not finding.fatal]
     advisory_findings = [finding for finding in checker.findings if finding.advisory]
@@ -176,6 +177,7 @@ def build_import_health(
             f"{load_failures} governed module load failure(s) across {load_root_causes} root-cause group(s)"
         )
     for key, label in (
+        ("root_boundary", "shipped-root occurrence(s) reaching a repository-only root, which no ratchet can approve"),
         ("new_unapproved", "new unapproved occurrence(s)"),
         ("expanded_existing", "expanded occurrence(s)"),
         ("expired", "expired debt occurrence(s)"),
@@ -306,6 +308,7 @@ def render_import_health(payload: dict[str, object]) -> str:
             f"({loadability['loaded']}/{loadability['attempted']} loaded; "
             f"{loadability['root_cause_count']} root-cause group(s))",
             f"Approved debt: {counts['approved_active']} occurrence(s)",
+            f"Repository-only reach (not ratchetable): {counts['root_boundary']} occurrence(s)",
             "New / expanded / expired: "
             f"{counts['new_unapproved']} / {counts['expanded_existing']} / {counts['expired']}",
             "Retirement missing evidence / ready / verified: "
@@ -320,6 +323,7 @@ def unavailable_import_health(reason: str) -> dict[str, object]:
     """Return the same schema when authority cannot be initialized."""
     empty_counts = {
         "approved_active": 0,
+        "root_boundary": 0,
         "expanded_existing": 0,
         "expired": 0,
         "malformed": 0,
@@ -575,13 +579,51 @@ def _write_candidate_artifact(repository: Path, candidate: _CandidateInventory) 
     return path
 
 
-def _reconcile_ratchet(repository: Path, candidate: _CandidateInventory) -> _RatchetReport:
+def _root_boundary_pairs(authority: Authority) -> frozenset[tuple[str, str]]:
+    """Return the root-to-root separations declared by forbidden contracts.
+
+    A contract whose source and forbidden members are both whole first-party
+    roots separates independently shipped trees.  That separation holds for
+    every module in the source root, test modules included, so it is never
+    ratchetable debt.
+    """
+    roots = authority.root_names
+    return frozenset(
+        (source, forbidden)
+        for contract in authority.forbidden_contracts
+        for source in contract.source_modules
+        if source in roots
+        for forbidden in contract.forbidden_modules
+        if forbidden in roots
+    )
+
+
+def _crosses_root_boundary(source_module: str, target_module: str, pairs: frozenset[tuple[str, str]]) -> bool:
+    return (source_module.partition(".")[0], target_module.partition(".")[0]) in pairs
+
+
+def _reconcile_ratchet(
+    repository: Path,
+    candidate: _CandidateInventory,
+    root_boundaries: frozenset[tuple[str, str]],
+) -> _RatchetReport:
     path = repository / _RATCHET_RELATIVE_PATH
     rows = candidate["occurrences"]
-    current = {row["fingerprint"]: row for row in rows}
+    current = {
+        row["fingerprint"]: row
+        for row in rows
+        if not _crosses_root_boundary(row["source_module"], row["target_module"], root_boundaries)
+    }
+    boundary_rows = [row for row in rows if row["fingerprint"] not in current]
+    details: defaultdict[str, list[str]] = defaultdict(list)
+    for row in boundary_rows:
+        evidence = row["evidence"][0] if row["evidence"] else None
+        location = f"{evidence['path']}:{evidence['line']}" if evidence is not None else row["source_module"]
+        details["root_boundary"].append(f"{location} imports {row['target_module']}")
     counts: Counter[str] = Counter(
         {
             "approved_active": 0,
+            "root_boundary": sum(int(row["multiplicity"]) for row in boundary_rows),
             "new_unapproved": 0,
             "expanded_existing": 0,
             "expired": 0,
@@ -592,15 +634,15 @@ def _reconcile_ratchet(repository: Path, candidate: _CandidateInventory) -> _Rat
             "retired_verified": 0,
         }
     )
-    details: defaultdict[str, list[str]] = defaultdict(list)
     if not path.is_file():
         counts["new_unapproved"] = sum(int(row["multiplicity"]) for row in current.values())
         baseline_status = "not_required" if not current else "unestablished"
+        details["new_unapproved"].extend(current)
         return {
             "baseline_status": baseline_status,
             "counts": _ratchet_counts(counts),
-            "detail_counts": {"new_unapproved": len(current)},
-            "details": {"new_unapproved": sorted(current)[:20]},
+            "detail_counts": {key: len(values) for key, values in sorted(details.items())},
+            "details": {key: sorted(values)[:20] for key, values in sorted(details.items())},
             "path": str(path),
             "schema_version": _RATCHET_SCHEMA_VERSION,
         }
@@ -639,6 +681,10 @@ def _reconcile_ratchet(repository: Path, candidate: _CandidateInventory) -> _Rat
         if isinstance(validated, str):
             counts["malformed"] += 1
             details["malformed"].append(f"{fingerprint}: {validated}")
+            continue
+        if _crosses_root_boundary(validated["source_module"], validated["target_module"], root_boundaries):
+            counts["malformed"] += 1
+            details["malformed"].append(f"{fingerprint}: a shipped root reaching a repository-only root is not debt")
             continue
         approved[fingerprint] = validated
         allowed = validated["multiplicity"]
@@ -689,6 +735,7 @@ def _ratchet_counts(counts: Counter[str]) -> _RatchetCounts:
     """Materialize the closed ratchet-count schema from its mutable counter."""
     return {
         "approved_active": counts["approved_active"],
+        "root_boundary": counts["root_boundary"],
         "new_unapproved": counts["new_unapproved"],
         "expanded_existing": counts["expanded_existing"],
         "expired": counts["expired"],

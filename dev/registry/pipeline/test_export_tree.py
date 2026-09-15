@@ -38,7 +38,7 @@ from ..author_family_identities import derive_projection_endpoint_id
 from ..compiler.loader import load_modelo_directory
 from . import _export_tree
 from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
-from ._generated_tree_test_support import bundled_revision_inspection
+from ._generated_tree_test_support import bundled_revision_inspection, isolated_authorities
 from .export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
@@ -48,6 +48,7 @@ from .export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
+from .generated_tree_inventory import generated_export_trees
 from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
 from .record_design_intermediate import (
     RecordDesignIntermediate,
@@ -1268,10 +1269,8 @@ def test_renderer_refuses_unstructured_quoted_numeric_prose(tmp_path) -> None:
     target = tmp_path / "export"
     joined = _joined(
         _m130_inspection(),
-        # Four digits each, matching the slot the fixture declares. The values
-        # were five digits wide, so the slot-width refusal fired first and this
-        # case never reached the ambiguity it is about -- both refusals are
-        # correct, but only one is this test's subject.
+        # Four digits each, matching the declared slot width, so the ambiguity
+        # refusal is reached rather than the slot-width refusal.
         numeric_content='"0000" only if the taxpayer elects "0050"',
     )
 
@@ -1782,10 +1781,8 @@ def _joined_fields_by_aeat_type(modelo: str) -> dict[str, JoinedRecordDesignFiel
     hand-built stand-in would prove the helper's `if`, not that the official type
     column actually reaches it.
     """
-    from .test_generated_export_trees import _GENERATED_TREES, _authorities
-
-    tree = next(item for item in _GENERATED_TREES if item.modelo == modelo)
-    _map, _profile, joined, _evidence, _transport = _authorities(tree)
+    tree = next(item for item in generated_export_trees() if item.modelo == modelo)
+    joined, _map, _transport, _profile, _evidence = isolated_authorities(tree)
     found: dict[str, JoinedRecordDesignField] = {}
     for field in joined.fields:
         found.setdefault(field.parser_field.aeat_type, field)
@@ -1810,8 +1807,7 @@ def test_a_signed_official_type_derives_a_signed_slot() -> None:
     numeric fields are right-aligned and zero-filled SIN SIGNOS, and only
     NEGATIVE amounts are preceded by the character ``N``. So a signed slot
     reserves no byte -- the marker displaces the leading digit when the value is
-    negative -- and the derivation reads that grounding rather than refusing, as
-    it once did before the representation was grounded.
+    negative -- and the derivation reads that grounding rather than refusing.
     """
     from ._export_tree import _derive_sign_from_official_type
 

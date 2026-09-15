@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#gate-integrity-adjudication'
 date: '2026-09-02'
-modified: '2026-09-14'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb90ab0fb80ebbbc62c5ee2722e509db7cc8985fed9daebcd3eadac4b8056f51'
+body_hash: 'sha256:8e9b2b67bacf7e854fc1b0aafa89ee40da2dc869b90905ffd33840261cf0f6ea'
 related:
   - '[[2026-09-02-gate-integrity-adjudication-catalogue-iteration-override-adr]]'
   - '[[2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr]]'
@@ -27,7 +27,7 @@ Auto-generated index of all documents tagged with `#gate-integrity-adjudication`
 ### adr
 
 - `2026-09-02-gate-integrity-adjudication-catalogue-iteration-override-adr` - `gate-integrity-adjudication` adr: `catalogue iteration overrides` | (**status:** `proposed`)
-- `2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr` - `gate-integrity-adjudication` adr: `mechanical gates stay verify-only and out of commit time` | (**status:** `accepted`)
+- `2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr` - `gate-integrity-adjudication` adr: `commit-time hooks stay uninstalled and repair stays explicit and path-scoped` | (**status:** `accepted`)
 - `2026-09-02-gate-integrity-adjudication-negative-test-typing-adr` - `gate-integrity-adjudication` adr: `no suppression policy: the deliberate-wrong-type population is empty` | (**status:** `accepted`)
 - `2026-09-02-gate-integrity-adjudication-tui-entrypoint-contracts-adr` - `gate-integrity-adjudication` adr: `the CLI-to-TUI import edges are a code defect, not a stale contract` | (**status:** `accepted`)
 - `2026-09-03-gate-integrity-adjudication-unreachable-ratchet-supplier-deferral-adr` - `gate-integrity-adjudication` adr: `a frozen cluster's exclusive suppliers inherit its deferral` | (**status:** `accepted`)

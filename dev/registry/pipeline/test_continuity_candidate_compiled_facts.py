@@ -4,8 +4,9 @@ A generated candidate for a multi-revision modelo is validated through its
 continuity witness rather than through a full authority build. That route must
 still validate the target against the same compiled catalogues the authority
 publishes: the governed facts are compiled from the candidate's own ``facts``
-directory, so a candidate staged with them validates and a candidate missing a
-migrated legal-parameter fact is refused by name.
+directory, so a candidate staged with them validates, a candidate missing a
+retired-provider fact is refused by name, and a candidate without the facts
+directory is refused before any validation runs.
 
 The tests drive the real candidate staging, continuity staging and validation
 over a temporary copy of the bundled registry, with no substituted component.
@@ -22,7 +23,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 
 from ..compiler.loader import load_modelo_directory
 from ._tree_validation import GeneratedExportTreeValidationContext, _validated_target_snapshot
@@ -35,9 +36,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _MODELO = "210"
 _REVISION = "2026-y-siguientes"
 _FILING_YEAR = 2026
-_PERIOD = "EVENT-N"
-_MIGRATED_FACT_ID = "lirpf-art-101:retencion-administrador-general"
-_MIGRATED_FACT_FILE = "0001-lirpf-art-101-retencion-administrador-general.toml"
+_PERIOD = "EVENT-1"
+_RETIRED_PROVIDER_FACT_ID = "lirpf-art-101:retencion-administrador-general"
+_RETIRED_PROVIDER_FACT_FILE = "0001-lirpf-art-101-retencion-administrador-general.toml"
 
 
 def _staged_candidate(work: Path) -> tuple[Path, Path]:
@@ -83,16 +84,18 @@ def _validate(candidate_root: Path, witness: Path) -> str:
 
 def test_a_continuity_witnessed_candidate_validates_with_its_staged_facts(tmp_path: Path) -> None:
     candidate_root, witness = _staged_candidate(tmp_path)
-    assert (candidate_root / "facts" / _MIGRATED_FACT_FILE).is_file()
+    assert (candidate_root / "facts" / _RETIRED_PROVIDER_FACT_FILE).is_file()
 
     assert _validate(candidate_root, witness) == _REVISION
 
 
-def test_a_continuity_witnessed_candidate_missing_a_migrated_fact_is_refused(tmp_path: Path) -> None:
+def test_a_continuity_witnessed_candidate_missing_a_retired_provider_fact_is_refused(tmp_path: Path) -> None:
     candidate_root, witness = _staged_candidate(tmp_path)
-    (candidate_root / "facts" / _MIGRATED_FACT_FILE).unlink()
+    (candidate_root / "facts" / _RETIRED_PROVIDER_FACT_FILE).unlink()
 
-    with pytest.raises(RegistryValidationError, match=f"migrated legal-parameter fact '{_MIGRATED_FACT_ID}' is not"):
+    with pytest.raises(
+        RegistryValidationError, match=f"retired-provider fact '{_RETIRED_PROVIDER_FACT_ID}' is not authored"
+    ):
         _validate(candidate_root, witness)
 
 
@@ -100,5 +103,5 @@ def test_a_continuity_witnessed_candidate_without_its_facts_directory_is_refused
     candidate_root, witness = _staged_candidate(tmp_path)
     shutil.rmtree(candidate_root / "facts")
 
-    with pytest.raises(RegistryValidationError, match="migrated legal-parameter fact"):
+    with pytest.raises(RegistryLoadError, match="authored governed-facts directory is missing"):
         _validate(candidate_root, witness)

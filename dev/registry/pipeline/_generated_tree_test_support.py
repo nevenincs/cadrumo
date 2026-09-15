@@ -42,6 +42,9 @@ ISOLATED_TREE: Final[GeneratedExportTree] = GeneratedExportTree(
     "184", "2025-y-siguientes", "aeat-dr-184-2025", "2025", 2025, "0A"
 )
 
+#: The repository root, so authoring inputs resolve independently of the working directory.
+_REPOSITORY_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+
 
 def isolated_authority(tree: GeneratedExportTree, root: Path) -> Path:
     """Stage one modelo's non-export authority without loading unrelated modelos."""
@@ -61,7 +64,7 @@ def isolated_authority(tree: GeneratedExportTree, root: Path) -> Path:
         registry_root,
         modelo=tree.modelo,
         revision=tree.revision,
-        supporting_modelos=_supporting_modelos(tree),
+        supporting_modelos=supporting_modelos(tree),
         bootstrap_target=bootstrap_target,
     )
     if (modelo_root / "revisions" / tree.revision / "export").exists():
@@ -77,7 +80,8 @@ _SOURCE_MODELO_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
-def _supporting_modelos(tree: GeneratedExportTree) -> frozenset[str]:
+def supporting_modelos(tree: GeneratedExportTree) -> frozenset[str]:
+    """The bundled modelos a tree's revisions fold values in from, excluding the tree's own modelo."""
     modelo_root = bundled_path("registry", "aeat", "modelos", tree.modelo)
     referenced: set[str] = set()
     for path in modelo_root.rglob("*.toml"):
@@ -117,8 +121,12 @@ def isolated_authorities(
     inputs are checked-in authoring sources that a test session never mutates.
     Tests derive defects with ``model_copy`` and stage their own on-disk trees.
     """
-    semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_{tree.modelo}") / tree.epoch)
-    render_profile = load_render_profile(Path(f"dev/registry/render_profiles/modelo_{tree.modelo}") / tree.epoch)
+    semantic_map = load_semantic_map(
+        _REPOSITORY_ROOT / "dev" / "registry" / "mappings" / f"modelo_{tree.modelo}" / tree.epoch
+    )
+    render_profile = load_render_profile(
+        _REPOSITORY_ROOT / "dev" / "registry" / "render_profiles" / f"modelo_{tree.modelo}" / tree.epoch
+    )
     catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
     inspection = bundled_revision_inspection(tree.modelo, tree.revision)
     intermediate = load_record_design_intermediate(

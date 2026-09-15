@@ -4,14 +4,14 @@ tags:
   - '#index'
   - '#cli-pull-file-standard'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:cbf82a8999c0a3d19e2aeff3c722a4655a6b25af5b1bee04a6bba7b94d15a54b'
+body_hash: 'sha256:17674ecfb9bd9e74b6c896dae8fbc17a1f9a65dcb296212bd53faa3acb71c900'
 related:
   - '[[2026-06-10-cli-pull-file-standard-adr]]'
+  - '[[2026-06-10-cli-pull-file-standard-ledger]]'
   - '[[2026-06-10-cli-pull-file-standard-plan]]'
   - '[[2026-06-10-cli-pull-file-standard-research]]'
-  - '[[2026-06-11-cli-pull-file-standard-exec]]'
 ---
 
 # `cli-pull-file-standard` feature index
@@ -26,7 +26,7 @@ Auto-generated index of all documents tagged with `#cli-pull-file-standard`.
 
 ### exec
 
-- `2026-06-11-cli-pull-file-standard-exec` - cli pull file standard execution
+- `2026-06-10-cli-pull-file-standard-ledger` - `cli-pull-file-standard` ledger
 
 ### plan
 

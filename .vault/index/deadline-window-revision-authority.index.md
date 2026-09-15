@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-30'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9a08a9fb00dc032c2a65426ba2b58cb64af3067a75d1e176b8670f4925f08f0'
+body_hash: 'sha256:ae121f69c2af3c7d58ab0086a4ef6d1371e3c50cee8d0156bef1a5f5041348ca'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
@@ -42,7 +42,6 @@ related:
   - '[[2026-08-25-deadline-window-revision-authority-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-completion-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-consumer-canonical-api-audit]]'
-  - '[[2026-08-25-deadline-window-revision-authority-exec]]'
   - '[[2026-08-25-deadline-window-revision-authority-final-architecture-review-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-historical-engine-cli-scenarios-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-ordered-consumer-multiplicity-audit]]'
@@ -104,7 +103,6 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 ### exec
 
 - `2026-08-24-deadline-window-revision-authority-ledger` - `deadline-window-revision-authority` ledger
-- `2026-08-25-deadline-window-revision-authority-exec` - Fleet periodic deadline completeness hard gate
 
 ### plan
 

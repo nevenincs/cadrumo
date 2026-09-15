@@ -4,12 +4,11 @@ tags:
   - '#index'
   - '#cli-envelope-notice-standardisation'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:e171ba94cdbc1badc3b3eeb4c5483c7db08b3d17ec54781915a04cfd4c21bdd7'
+body_hash: 'sha256:af00e48c6a117dace4e6b60ff96ff623c2831cfa34d5ed7516a72181cd094bcd'
 related:
   - '[[2026-06-10-cli-envelope-notice-standardisation-adr]]'
-  - '[[2026-06-10-cli-envelope-notice-standardisation-exec]]'
   - '[[2026-06-10-cli-envelope-notice-standardisation-ledger]]'
   - '[[2026-06-10-cli-envelope-notice-standardisation-plan]]'
   - '[[2026-06-10-cli-envelope-notice-standardisation-research]]'
@@ -27,7 +26,6 @@ Auto-generated index of all documents tagged with `#cli-envelope-notice-standard
 
 ### exec
 
-- `2026-06-10-cli-envelope-notice-standardisation-exec` - notice and status standardisation landing
 - `2026-06-10-cli-envelope-notice-standardisation-ledger` - `cli-envelope-notice-standardisation` ledger
 
 ### plan

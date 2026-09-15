@@ -5,7 +5,7 @@ tags:
 date: '2026-09-15'
 modified: '2026-09-15'
 body_schema: 'body-v2'
-body_hash: 'sha256:615b431070c018f3248d438aea06b1f2a302b52807de48a9a2fc71d29917fa26'
+body_hash: 'sha256:80c898a806f6f26f3b6d715dc790b0c95bbfde9de9ab0bde0850ce7162d350df'
 related: []
 ---
 
@@ -57,5 +57,5 @@ Unproven: whether any consumer besides `modelo list` actually fails at runtime (
 
 - For `L01-R01-F02`: the follow-on decision is which invariant owns `reviewed_against` integrity. One option is to validate it only at whole-modelo compile or publication and keep single-revision runtime views free of cross-revision references. The other is to have runtime views carry, or check against, the directory's full revision identity set. It needs an ADR or an amendment to the governing authority decision before remediation. The smallest evidence probe that follows is one execution of a selected-snapshot consumer (for example `aeat app modelo describe 131`) to confirm that the blast radius extends beyond `modelo list`.
 
-- For `L01-R01-F01`: next evidence lane should establish which authority `aeat app modelo list` consumes (published generation versus source) and whether that artifact carries `038/2024-desde-06`. If the loader intentionally omits out-of-envelope predecessors, the follow-on decision is whether `reviewed_against` validation runs against the full authored revision set or the selected one; that choice belongs in an ADR, not here.
+- For `L01-R01-F01`: answered. The original recommendation asked which authority `aeat app modelo list` consumes (published generation or source) and whether that artifact carries `038/2024-desde-06`. `L01-R01-F02` answered both: `modelo list` reads the published generation `2bdbfabc…2c66`, and that generation lists both 038 revisions. The runtime reader API corroborates this independently. The lane02-r01 authority-read audit resolved the same descriptor, generation, and database through `bundled_indexed_authority()`. The out-of-envelope branch no longer applies, because publication does not omit the predecessor. The open decision is the one stated under `L01-R01-F02`. Still unproven: lane02-r01 did not establish whether `modelo_directory()` exercises the failing `ModeloDirectoryMetadata.materialize()` path. The repair and its verification belong to lane01-r02.
 - Remediation is not authorized by this lane.

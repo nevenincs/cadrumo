@@ -63,14 +63,14 @@ def test_pipeline_cli_registers_the_separate_check_and_publish_verbs() -> None:
 
 
 def _republish_invocation(expected_manifest_sha256: str) -> _Invocation:
-    return _Invocation("296", "2024-y-siguientes", "aeat-dr-296-2024", 2024, "0A", expected_manifest_sha256)
+    return _Invocation("190", "2024", "aeat-dr-190-2024", 2024, "0A", expected_manifest_sha256)
 
 
 def _republish_comparison(*, differing: tuple[str, ...]) -> RenderComparison:
     return RenderComparison(
-        modelo="296",
-        revision="2024-y-siguientes",
-        layout_id="generated-modelo-296-2024-y-siguientes-fichero",
+        modelo="190",
+        revision="2024",
+        layout_id="generated-modelo-190-2024-fichero",
         files_compared=3,
         differing=differing,
         only_committed=(),
@@ -103,9 +103,10 @@ def test_republish_admits_only_provenance_only_drift() -> None:
     The digest proves someone looked at the artefact. It does not say why the
     records differ, so on its own it still admits nothing beyond attestation
     drift; a record change additionally needs a disposition row stating the
-    reason. This modelo carries none, which is why both record-drift cases below
-    are refused.
+    reason. The subject is asserted to carry no such row, so both record-drift
+    cases below are refused.
     """
+    assert "190/2024" not in {row.subject for row in record_drift_dispositions()}
     digest = "a" * 64
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
@@ -118,14 +119,14 @@ def test_republish_admits_only_provenance_only_drift() -> None:
         _republish_invocation(digest),
         state,
         RenderComparison(
-            modelo="296",
-            revision="2024-y-siguientes",
-            layout_id="generated-modelo-296-2024-y-siguientes-fichero",
+            modelo="190",
+            revision="2024",
+            layout_id="generated-modelo-190-2024-fichero",
             files_compared=3,
-            differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0002-record-m296-declarado.toml"),
+            differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0002-record-m190-perceptor.toml"),
             only_committed=(),
             only_rendered=(),
-            serialization_only=("0002-record-m296-declarado.toml",),
+            serialization_only=("0002-record-m190-perceptor.toml",),
         ),
     )
     with pytest.raises(ValueError, match="refuses an unexplained record change"):
@@ -133,7 +134,7 @@ def test_republish_admits_only_provenance_only_drift() -> None:
             _republish_invocation(digest),
             state,
             _republish_comparison(
-                differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0002-record-m296-declarado.toml"),
+                differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0002-record-m190-perceptor.toml"),
             ),
         )
     with pytest.raises(ValueError, match="refuses an unexplained record change"):
@@ -141,9 +142,9 @@ def test_republish_admits_only_provenance_only_drift() -> None:
             _republish_invocation(digest),
             state,
             RenderComparison(
-                modelo="296",
-                revision="2024-y-siguientes",
-                layout_id="generated-modelo-296-2024-y-siguientes-fichero",
+                modelo="190",
+                revision="2024",
+                layout_id="generated-modelo-190-2024-fichero",
                 files_compared=3,
                 differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,),
                 only_committed=(),
@@ -489,6 +490,9 @@ def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_pa
     assert rendered.output_files
 
 
+# A full candidate compile of modelo 390 and its supporting modelos runs about
+# 245s serially, so the lane's 300s ceiling leaves no margin under parallel load.
+@pytest.mark.timeout(900)
 def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_path: Path) -> None:
     """The operator path validates M390 without consulting either prior export tree."""
     prepared = _prepare(

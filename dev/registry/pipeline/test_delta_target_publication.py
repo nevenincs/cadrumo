@@ -1,10 +1,10 @@
 """Staging and publishing a generated export tree whose target edition inherits.
 
-A migrated edition names a predecessor and states only the casilla rows it
-changed. These tests migrate a real edition in a temporary registry copy -- the
-successor of modelo 210 keeps the rows that differ from its predecessor and
-inherits the rest -- and drive the real candidate staging, generator, validator
-and publication entry points over it, with no substituted component.
+Modelo 210 is authored as a delta chain: its root edition states every casilla
+row and each later edition names its predecessor and inherits the rows it does
+not restate. These tests drive the real candidate staging, generator, validator
+and publication entry points over a temporary registry copy of that chain, with
+no substituted component.
 
 The candidate must be the complete edition the loader resolves, naming no
 predecessor, and a delta whose predecessor is gone must be refused rather than
@@ -17,7 +17,6 @@ full-copy form carries.
 from __future__ import annotations
 
 import shutil
-import tomllib
 from pathlib import Path
 
 import pytest
@@ -26,11 +25,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
-from ..analysis.delta_minimality import MinimalityVerdict, judge_definition
 from ..compiler.authority import compiled_bundled_authority
-from ..compiler.edition_materialisation import materialise_edition
+from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ..compiler.loader import load_modelo_directory
-from ._export_tree import render_toml_bytes
 from ._tree_validation import GeneratedExportTreeValidationContext
 from .candidate_staging import (
     ignore_export_authority_directories,
@@ -42,7 +39,7 @@ from .cli import (
     _Invocation,
     _PreparedInvocation,
     _publish,
-    stage_isolated_edition,
+    _stage_published_modelo,
     supporting_modelos,
 )
 from .export_fragment_provenance import ExportFragmentTarget
@@ -51,12 +48,10 @@ from .render_check import revision_render_inputs
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO = "210"
-_PREDECESSOR = "2025"
 _REVISION = "2026-y-siguientes"
 _SOURCE_REF = "aeat-dr-210-2026"
-_PREDECESSOR_SOURCE_REF = "aeat-dr-210-2022"
 _FILING_YEAR = 2026
-_PERIOD = "EVENT-N"
+_PERIOD = "EVENT-1"
 
 
 def _registry_copy(root: Path) -> Path:
@@ -71,49 +66,44 @@ def _registry_copy(root: Path) -> Path:
     return target
 
 
-def _migrate(registry_root: Path) -> frozenset[str]:
-    """Make the successor a delta: name its predecessor and drop every row it restates unchanged.
+def _declared_predecessor(modelo_root: Path, revision: str) -> str:
+    """Return the predecessor the edition's own manifest names, refusing an edition that names none."""
+    predecessor = materialise_edition(modelo_root, revision).inherits_from
+    assert predecessor is not None, f"edition {_MODELO}/{revision} must inherit, or it is not a delta target"
+    return predecessor
 
-    Returns the ids of the dropped rows, which the edition now inherits.
-    """
-    modelo_root = registry_root / "modelos" / _MODELO
-    revision_root = modelo_root / "revisions" / _REVISION
-    dropped = frozenset(
-        judgement.casilla
-        for judgement in judge_definition(load_modelo_directory(modelo_root), modelo_id=_MODELO)
-        if judgement.revision == _REVISION and judgement.kind == MinimalityVerdict.RESTATED_UNCHANGED
+
+def _root_edition(modelo_root: Path) -> str:
+    """Walk the live predecessor chain back to the edition that states every row."""
+    revision = _REVISION
+    while (predecessor := materialise_edition(modelo_root, revision).inherits_from) is not None:
+        revision = predecessor
+    return revision
+
+
+def _inherited_row_ids(edition: MaterialisedEdition) -> frozenset[str]:
+    """Return the casilla ids the edition resolves from an earlier edition rather than stating."""
+    rows = edition.table["casillas"]
+    origins = edition.label_origins
+    assert isinstance(rows, tuple | list)
+    assert origins is not None and len(origins) == len(rows)
+    return frozenset(
+        str(row["id"]) for row, origin in zip(rows, origins, strict=True) if origin not in (None, edition.revision_id)
     )
-    for path in sorted((revision_root / "casillas").glob("*.toml")):
-        rows = tomllib.loads(path.read_text("utf-8"))["revisions"][_REVISION]["casillas"]
-        kept = [row for row in rows if row["id"] not in dropped]
-        if kept:
-            path.write_bytes(render_toml_bytes(path.name, {"revisions": {_REVISION: {"casillas": kept}}}))
-        else:
-            path.unlink()
-    manifest_path = revision_root / "revision.toml"
-    manifest = manifest_path.read_text("utf-8")
-    header = f'[revisions."{_REVISION}"]\n'
-    assert manifest.count(header) == 1, "the successor manifest must open with its own revision table"
-    manifest_path.write_text(
-        manifest.replace(header, f'{header}predecessor = "{_PREDECESSOR}"\nreviewed_against = "{_PREDECESSOR}"\n'),
-        encoding="utf-8",
-        newline="",
-    )
-    return dropped
 
 
-def _cite_successor_design_on_inherited_rows(registry_root: Path) -> None:
-    """Make the predecessor's rows cite the successor's record design.
+def _cite_successor_design_on_inherited_rows(registry_root: Path, *, inherited_source_ref: str) -> None:
+    """Make the rows the successor inherits cite the successor's record design.
 
-    An inherited row otherwise carries the predecessor's own design reference,
-    which falls outside the successor's validity window and is refused by
-    validation before publication is reached. Rewriting it isolates the
-    publication boundary these tests are about.
+    An inherited row otherwise carries the record design of the edition that
+    states it, which falls outside the successor's validity window and is
+    refused by validation before publication is reached. Rewriting it isolates
+    the publication boundary these tests are about.
     """
-    for path in (registry_root / "modelos" / _MODELO / "revisions" / _PREDECESSOR / "casillas").glob("*.toml"):
+    for path in (registry_root / "modelos" / _MODELO / "revisions").glob("*/casillas/*.toml"):
         text = path.read_text("utf-8")
         path.write_text(
-            text.replace(f'"{_PREDECESSOR_SOURCE_REF}"', f'"{_SOURCE_REF}"'),
+            text.replace(f'"{inherited_source_ref}"', f'"{_SOURCE_REF}"'),
             encoding="utf-8",
             newline="",
         )
@@ -156,13 +146,7 @@ def _prepared(work: Path, target_root: Path) -> _PreparedInvocation:
         candidate_root=candidate_root,
         target_root=target_root,
         target_export_root=modelo_root / "revisions" / _REVISION / "export",
-        published_modelo_root=stage_isolated_edition(
-            modelo_root,
-            work / "published-modelo" / _MODELO,
-            revision=_REVISION,
-            source_locales_root=bundled_path().parent / "locales",
-            staged_locales_root=work / "published-locales",
-        ).modelo_root,
+        published_modelo_root=_stage_published_modelo(work, modelo=_MODELO, revision=_REVISION),
     )
 
 
@@ -172,11 +156,10 @@ def _tree_bytes(root: Path) -> dict[str, bytes]:
 
 def test_a_delta_target_stages_as_the_complete_edition_it_resolves_to(tmp_path: Path) -> None:
     registry_root = _registry_copy(tmp_path / "source")
-    inherited = _migrate(registry_root)
-    assert inherited, "the migration must leave the successor inheriting rows, or it proves nothing"
     modelo_root = registry_root / "modelos" / _MODELO
     resolved = materialise_edition(modelo_root, _REVISION)
-    assert resolved.inherits_from == _PREDECESSOR
+    assert resolved.inherits_from is not None, "the target must name a predecessor, or staging it proves nothing"
+    assert _inherited_row_ids(resolved), "the target must inherit rows, or staging it proves nothing"
 
     staged_modelo = stage_generated_export_candidate(
         registry_root,
@@ -201,11 +184,12 @@ def test_a_delta_target_stages_as_the_complete_edition_it_resolves_to(tmp_path: 
 
 def test_a_delta_target_whose_predecessor_is_absent_is_refused(tmp_path: Path) -> None:
     registry_root = _registry_copy(tmp_path / "source")
-    _migrate(registry_root)
-    shutil.rmtree(registry_root / "modelos" / _MODELO / "revisions" / _PREDECESSOR)
+    modelo_root = registry_root / "modelos" / _MODELO
+    predecessor = _declared_predecessor(modelo_root, _REVISION)
+    shutil.rmtree(modelo_root / "revisions" / predecessor)
     candidate_root = tmp_path / "candidate" / "registry" / "aeat"
 
-    with pytest.raises(RegistryLoadError, match=_PREDECESSOR):
+    with pytest.raises(RegistryLoadError, match=predecessor):
         stage_generated_export_candidate(
             registry_root,
             candidate_root,
@@ -219,21 +203,25 @@ def test_a_delta_target_whose_predecessor_is_absent_is_refused(tmp_path: Path) -
 
 def test_a_target_stating_every_row_stages_as_the_plain_copy_it_always_was(tmp_path: Path) -> None:
     registry_root = _registry_copy(tmp_path / "source")
+    modelo_root = registry_root / "modelos" / _MODELO
+    root_revision = _root_edition(modelo_root)
+    assert root_revision != _REVISION, "the plain-copy case needs an edition other than the delta target"
+
     staged_modelo = stage_generated_export_candidate(
         registry_root,
         tmp_path / "candidate" / "registry" / "aeat",
         modelo=_MODELO,
-        revision=_REVISION,
+        revision=root_revision,
         supporting_modelos=(),
     )
     expected = tmp_path / "expected"
     shutil.copytree(
-        registry_root / "modelos" / _MODELO / "revisions" / _REVISION,
+        modelo_root / "revisions" / root_revision,
         expected,
         ignore=ignore_export_authority_directories,
     )
 
-    assert _tree_bytes(staged_modelo / "revisions" / _REVISION) == _tree_bytes(expected)
+    assert _tree_bytes(staged_modelo / "revisions" / root_revision) == _tree_bytes(expected)
 
 
 def test_a_delta_target_with_its_existing_tree_is_refused_for_its_withdrawn_review_without_writing(
@@ -241,7 +229,6 @@ def test_a_delta_target_with_its_existing_tree_is_refused_for_its_withdrawn_revi
 ) -> None:
     """Check of a published tree demands a reviewed edition, and a staged delta's review does not carry over."""
     target_root = _registry_copy(tmp_path / "target")
-    _migrate(target_root)
     prepared = _prepared(tmp_path / "work", target_root)
     before = _tree_bytes(target_root / "modelos" / _MODELO)
 
@@ -254,9 +241,11 @@ def test_a_delta_target_with_its_existing_tree_is_refused_for_its_withdrawn_revi
 
 def test_an_absent_tree_on_a_delta_target_publishes_and_derives_the_full_copys_references(tmp_path: Path) -> None:
     target_root = _registry_copy(tmp_path / "target")
-    inherited = _migrate(target_root)
-    _cite_successor_design_on_inherited_rows(target_root)
     modelo_root = target_root / "modelos" / _MODELO
+    inherited = _inherited_row_ids(materialise_edition(modelo_root, _REVISION))
+    root_revision = _root_edition(modelo_root)
+    root_design = load_modelo_directory(modelo_root).revisions[root_revision].casillas[0].source_refs[0]
+    _cite_successor_design_on_inherited_rows(target_root, inherited_source_ref=str(root_design))
     shutil.rmtree(modelo_root / "revisions" / _REVISION / "export")
     declarations_before = _tree_bytes(modelo_root)
 

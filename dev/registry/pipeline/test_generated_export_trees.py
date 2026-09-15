@@ -21,11 +21,9 @@ pipeline-owned adjudication keyed by the source file it describes.
 from __future__ import annotations
 
 import filecmp
-import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -34,37 +32,25 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import (
     load_modelo_directory,
-    load_registry_tree,
 )
-from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from ._export_tree import render_complete_export_tree
+from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
 from ._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from .candidate_staging import (
-    generated_export_bootstrap_target,
     stage_continuity_metadata,
-    stage_generated_export_candidate,
 )
 from .export_fragment_provenance import (
     ExportFragmentTarget,
 )
 from .generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from .generated_tree_inventory import GeneratedExportTree, generated_export_trees
-from .joined_record_design import JoinedRecordDesign, design_view, join_record_design_semantics
-from .record_design_intermediate import load_record_design_intermediate
+from .joined_record_design import design_view
 from .render_check import compare_revision_against_committed, parsed_tree_file
-from .render_profile import (
-    RenderProfile,
-    RenderProfileSourceEvidence,
-    load_render_profile,
-    load_render_profile_source_evidence,
-)
-from .semantic_map import SemanticMap, load_semantic_map
 from .source_defects import source_defects_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -95,123 +81,6 @@ _REPRODUCTION_PENDING = {
         check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
     ),
 }
-
-
-def _isolated_authority(tree: GeneratedExportTree, root: Path) -> Path:
-    """Copy the target's authored NON-export authority into an isolated root.
-
-    The export directory is deliberately never copied: check mode renders the
-    candidate afresh, so copying one would let a stale tree validate itself.
-    """
-    registry_root = root / "registry" / "aeat"
-    supporting_modelos = _supporting_modelos(tree)
-    source = next(
-        (item for ref, item in compiled_bundled_authority().catalogues.sources.items() if str(ref) == tree.source_ref),
-        None,
-    )
-    assert source is not None, f"{tree}: declared render source {tree.source_ref!r} is absent"
-    bootstrap_target = generated_export_bootstrap_target(
-        modelo=tree.modelo,
-        revision=tree.revision,
-        source_ref=tree.source_ref,
-        source_sha256=source.sha256,
-    )
-    modelo_root = stage_generated_export_candidate(
-        bundled_path("registry", "aeat"),
-        registry_root,
-        modelo=tree.modelo,
-        revision=tree.revision,
-        supporting_modelos=supporting_modelos,
-        bootstrap_target=bootstrap_target,
-    )
-    assert not (modelo_root / "revisions" / tree.revision / "export").exists(), (
-        f"{tree}: the isolated candidate must not carry a copied export tree"
-    )
-    assert not (modelo_root / "revisions" / tree.revision / "export_layouts").exists(), (
-        f"{tree}: the isolated candidate must not carry a copied superseded manual export tree"
-    )
-    return registry_root
-
-
-#: How a revision names another modelo it folds a value in from.
-_SOURCE_MODELO_RE: Final[re.Pattern[str]] = re.compile(r'^\s*source_modelo\s*=\s*"(?P<modelo>[^"]+)"', re.MULTILINE)
-
-
-def _supporting_modelos(tree: GeneratedExportTree) -> frozenset[str]:
-    """The modelos staged beside the target because the target depends on them.
-
-    A revision folds a value in from another modelo, and the source declaration
-    names it. Governed-fact projections are deliberately NOT included: their two
-    target modelos pull a transitive closure of nineteen, which is very nearly
-    the whole registry, so staging them would leave a candidate containing every
-    modelo and the isolation this set exists to create would mean nothing. That
-    dependency is answered where it arises, in fact compilation.
-    """
-    referenced = _referenced_modelos(bundled_path("registry", "aeat", "modelos", tree.modelo))
-    depended_on = referenced - {tree.modelo}
-    return frozenset(modelo for modelo in depended_on if bundled_path("registry", "aeat", "modelos", modelo).is_dir())
-
-
-def _referenced_modelos(modelo_root: Path) -> frozenset[str]:
-    found: set[str] = set()
-    for path in modelo_root.rglob("*.toml"):
-        for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8")):
-            modelo = match.group("modelo")
-            assert isinstance(modelo, str), "the named group always participates in this pattern"
-            found.add(modelo)
-    return frozenset(found)
-
-
-def _authorities(
-    tree: GeneratedExportTree,
-) -> tuple[SemanticMap, RenderProfile, JoinedRecordDesign, RenderProfileSourceEvidence, ExportTreeTransportProfile]:
-    semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_{tree.modelo}") / tree.epoch)
-    render_profile = load_render_profile(Path(f"dev/registry/render_profiles/modelo_{tree.modelo}") / tree.epoch)
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo = next(m for m in modelos if str(m.id) == tree.modelo)
-    inspection = RegistryRevisionInspection.from_revision(
-        modelo=modelo,
-        revision=modelo.revisions[tree.revision],
-        source_root=bundled_path(),
-        sources=catalogues.sources,
-        legal_ref_ids=frozenset(catalogues.legal),
-    )
-    intermediate = load_record_design_intermediate(
-        bundled_path(),
-        catalogues.sources,
-        source_ref=tree.source_ref,
-        filing_year=tree.filing_year,
-        design_epoch=tree.epoch,
-    )
-    joined = join_record_design_semantics(semantic_map, intermediate, inspection)
-    transport = ExportTreeTransportProfile(
-        modelo=tree.modelo,
-        design_epoch=tree.epoch,
-        source_ref=tree.source_ref,
-        source_sha256=intermediate.source.source_sha256,
-        layout_id=tree.layout_id,
-        format="fixed_width",
-        encoding=ExportEncoding.ISO_8859_1,
-        line_ending="crlf",
-        serializer_convention="rtoml-pretty-v1",
-    )
-    # A rule of either kind may claim an official cell, and such a claim only
-    # validates against text actually read back out of the hash-verified design
-    # binary. A profile whose every rule is a reviewed policy claims no cell, and
-    # reading the workbook for it would be both pointless and a refusal for a
-    # design that is not a workbook at all.
-    claims_official = any(
-        rule.evidence.authority_kind != "reviewed_policy"
-        for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)
-    )
-    evidence = (
-        load_render_profile_source_evidence(
-            bundled_path() / catalogues.sources[tree.source_ref].corpus_path, render_profile
-        )
-        if claims_official
-        else RenderProfileSourceEvidence(design_identity=render_profile.design_identity, entries=())
-    )
-    return semantic_map, render_profile, joined, evidence, transport
 
 
 #: Check mode's exact current refusal, projected from the same source-bound pins
@@ -295,7 +164,7 @@ def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_supp
     """The enrolled-tree harness renders without copying either export authority."""
     tree = next(item for item in _GENERATED_TREES if item.modelo == "390" and item.revision == "2022")
 
-    registry_root = _isolated_authority(tree, tmp_path)
+    registry_root = isolated_authority(tree, tmp_path)
     revision_root = registry_root / "modelos" / "390" / "revisions" / "2022"
 
     assert not (revision_root / "export").exists()
@@ -305,7 +174,7 @@ def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_supp
     assert "modelo-390-2022-fichero-boe" not in construct_text
     assert "generated-modelo-390-2022-fichero" in construct_text
 
-    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     rendered = render_complete_export_tree(
         revision_root / "export",
         revision_id=tree.revision,
@@ -327,7 +196,7 @@ def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_supp
             ),
             filing_year=tree.filing_year,
             period=tree.period,
-            supporting_modelos=_supporting_modelos(tree),
+            supporting_modelos=supporting_modelos(tree),
         ),
         joined=joined,
         semantic_map=semantic_map,
@@ -356,7 +225,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     it, the refusal is pinned to a named reason per tree, so the day a revision
     becomes reviewable this test fails and the pin has to be removed.
     """
-    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     source_defects = source_defects_for(tree.source_ref)
     fresh_root = tmp_path / "fresh" / "export"
 
@@ -473,7 +342,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         )
 
     candidate_root = tmp_path / "candidate"
-    registry_root = _isolated_authority(tree, candidate_root)
+    registry_root = isolated_authority(tree, candidate_root)
     continuity_metadata_modelo_root = stage_continuity_metadata(
         bundled_path("registry", "aeat", "modelos", tree.modelo),
         candidate_root,
@@ -505,7 +374,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             ),
             filing_year=tree.filing_year,
             period=tree.period,
-            supporting_modelos=_supporting_modelos(tree),
+            supporting_modelos=supporting_modelos(tree),
             continuity_metadata_modelo_root=continuity_metadata_modelo_root,
         ),
         temporary_root=candidate_root,
@@ -557,7 +426,7 @@ def test_m184_sheet_type_literals_replace_the_blank_capable_casilla_path(
     tmp_path: Path,
 ) -> None:
     """Both Tipo-2 record markers emit official bytes without a manual casilla path."""
-    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     rendered = render_complete_export_tree(
         tmp_path / "export",
         revision_id=tree.revision,
@@ -609,9 +478,9 @@ def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tm
     refuse through the ordinary strict-continuity validator.
     """
     tree = next(item for item in _GENERATED_TREES if item.modelo == "303" and item.revision == "2026-y-siguientes")
-    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    joined, semantic_map, transport, render_profile, evidence = isolated_authorities(tree)
     candidate_root = tmp_path / "candidate"
-    registry_root = _isolated_authority(tree, candidate_root)
+    registry_root = isolated_authority(tree, candidate_root)
     metadata_modelo_root = stage_continuity_metadata(
         bundled_path("registry", "aeat", "modelos", tree.modelo),
         candidate_root,
@@ -689,7 +558,7 @@ def test_every_official_anchor_reaches_exactly_one_generated_field(tree: Generat
     fixed-width return is indistinguishable from a legitimately empty one once
     the bytes are written, so anchor coverage is proven against the source.
     """
-    _semantic_map, _profile, joined, _evidence, _transport = _authorities(tree)
+    joined, _semantic_map, _transport, _profile, _evidence = isolated_authorities(tree)
 
     official_anchors = [
         (field.record_identity, field.offset) for record in joined.records for field in record.parser_sheet.fields
